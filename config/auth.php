@@ -68,16 +68,35 @@ return [
     |
     */
 
+    // 'providers' => [
+    //     'users' => [
+    //         'driver' => 'eloquent',
+    //         'model' => env('AUTH_MODEL', App\Models\User::class),
+    //     ],
+
+    //     // 'users' => [
+    //     //     'driver' => 'database',
+    //     //     'table' => 'users',
+    //     // ],
+    // ],
     'providers' => [
+        // Default user model
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
+            'model' => App\Models\User::class,
         ],
 
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
+        // 🟢 Public users
+        'public_users' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\PublicUser::class,
+        ],
+
+        // 🏢 Internal users
+        'internal_users' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\InternalUser::class,
+        ],
     ],
 
     /*

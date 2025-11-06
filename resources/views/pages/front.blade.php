@@ -15,9 +15,9 @@
 
     <!-- Title-->
     <title> Xintra - Laravel Bootstrap 5 Premium Admin & Dashboard Template </title>
+
+
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
-
     <!-- Main Theme JS -->
     <script src="{{ asset('build2/assets/main.js') }}"></script>
 
@@ -73,36 +73,7 @@
 
     <div class="page">
 
-        <!-- Main-Header -->
-        <header class="app-header sticky" id="header">
-
-            <!-- Start::main-header-container -->
-            @include('pages.includes.header')
-            <!-- End::main-header-container -->
-
-        </header>
-        <!-- End Main-Header -->
-
-        <!--Main-Sidebar-->
-        @include('pages.includes.aside')
-        <!-- End Main-Sidebar-->
-
-        <!-- Start::app-content -->
-        <div class="main-content app-content">
-            <div class="container-fluid">
-
-
-                <!-- Page Header -->
-                @yield('breadcrumb')
-
-                <!-- Page Header Close -->
-
-                @yield('content')
-
-            </div>
-        </div>
-        <!-- End::content  -->
-
+        @yield('content')
 
 
 
@@ -111,13 +82,6 @@
 
     </div>
 
-    <!-- SCRIPTS -->
-    <!-- Scroll To Top -->
-    {{-- <div class="scrollToTop">
-        <span class="arrow"><i class="ti ti-arrow-narrow-up fs-20"></i></span>
-    </div> --}}
-    <div id="responsive-overlay"></div>
-    <!-- Scroll To Top -->
 
     <!-- Popper JS -->
     <script src="{{ asset('build2/assets/libs/@popperjs/core/umd/popper.min.js') }}"></script>
@@ -158,8 +122,8 @@
     <script src="{{ asset('build2/assets/sticky.js') }}"></script>
 
     <!-- Custom Switcher JS -->
-    <link rel="modulepreload" href="{{ asset('build2/assets/custom-switcher-BayzdO2G.js') }}" />
-    <script type="module" src="{{ asset('build2/assets/custom-switcher-BayzdO2G.js') }}"></script>
+    {{-- <link rel="modulepreload" href="{{ asset('build2/assets/custom-switcher-BayzdO2G.js') }}" />
+    <script type="module" src="{{ asset('build2/assets/custom-switcher-BayzdO2G.js') }}"></script> --}}
 
     <!-- APP JS -->
     <link rel="modulepreload" href="{{ asset('build2/assets/app-C4M4tSMb.js') }}" />
