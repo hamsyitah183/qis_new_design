@@ -8,11 +8,12 @@ use Spatie\Permission\Traits\HasRoles;
 use Laravel\Sanctum\HasApiTokens;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
 
 class InternalUser extends Authenticatable implements MustVerifyEmail
 {
     //
-    use HasRoles, HasRoles;
+    use Notifiable, HasRoles, HasRoles;
 
     protected $table = 'internal_users';
     protected $guard_name = 'internal';

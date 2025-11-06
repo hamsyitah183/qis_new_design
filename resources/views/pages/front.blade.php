@@ -14,7 +14,7 @@
         content="laravel template, laravel, laravel admin, admin bootstrap, laravel admin template, dashboard, admin panel template, laravel framework, admin template, laravel admin panel, admin, laravel dashboard, dashboard for laravel, admin panel for laravel, bootstrap admin panel template.">
 
     <!-- Title-->
-    <title> Xintra - Laravel Bootstrap 5 Premium Admin & Dashboard Template </title>
+    <title> {{ $title }} </title>
 
 
     <meta name="csrf-token" content="{{ csrf_token() }}">

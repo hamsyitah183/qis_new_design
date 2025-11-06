@@ -19,7 +19,7 @@ class PublicUserSeeder extends Seeder
             'uuid' => \Illuminate\Support\Str::uuid(),
             'fullname' => 'Nur Hamsyitah',
             'no_ic' => '900101-12-3456', // you can change this
-            'email' => 'hamsyitahnur@example.com',
+            'email' => 'hamsyitahnur@gmail.com',
             'account_type' => 'individu',
             'phone_number' => '0123456789',
             'office_number' => null,

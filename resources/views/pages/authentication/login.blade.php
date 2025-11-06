@@ -1,7 +1,7 @@
 @extends('pages.front')
 
 @push('scripts')
-    @vite(['resources/js/pages/login.js'])
+    @vite(['resources/js/pages/auth/login.js'])
 @endpush
 
 @section('content')

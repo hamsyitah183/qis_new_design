@@ -291,27 +291,28 @@
                 aria-labelledby="mainHeaderProfile">
                 <li>
                     <div class="dropdown-item text-center border-bottom">
-                        <span>
-                            Mr.Henry
+                        <span>{{ Auth::user()->fullname ?? 'Guest' }}</span>
+                        <span class="d-block fs-12 text-muted">
+                            {{ Auth::guard('internal')->check() ? 'Internal User' : 'Public User' }}
                         </span>
-                        <span class="d-block fs-12 text-muted">UI/UX Designer</span>
                     </div>
                 </li>
-                <li><a class="dropdown-item d-flex align-items-center"
-                        href="https://laravelui.spruko.com/xintra/profile"><i
-                            class="fe fe-user p-1 rounded-circle bg-primary-transparent me-2 fs-16"></i>Profile</a>
+
+
+
+                <li>
+                    <form id="logoutForm" action="{{ route('logout') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="dropdown-item d-flex align-items-center text-start w-100">
+                            <i class="fe fe-lock p-1 rounded-circle bg-primary-transparent me-2 fs-16"></i>
+                            Log Out
+                        </button>
+                    </form>
+
                 </li>
 
-                <li><a class="dropdown-item d-flex align-items-center"
-                        href="https://laravelui.spruko.com/xintra/mail-settings"><i
-                            class="fe fe-settings p-1 rounded-circle bg-primary-transparent ings me-2 fs-16"></i>Settings</a>
-                </li>
-
-                <li><a class="dropdown-item d-flex align-items-center"
-                        href="https://laravelui.spruko.com/xintra/sign-in-cover"><i
-                            class="fe fe-lock p-1 rounded-circle bg-primary-transparent ut me-2 fs-16"></i>Log
-                        Out</a></li>
             </ul>
+
         </li>
         <!-- End::header-element -->
 
@@ -320,3 +321,18 @@
     <!-- End::header-content-right -->
 
 </div>
+
+@push('scripts')
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const logoutForm = document.getElementById("logoutForm");
+
+            if (logoutForm) {
+                logoutForm.addEventListener("submit", function(e) {
+                    e.preventDefault();
+                    this.submit(); // let Laravel handle redirect
+                });
+            }
+        });
+    </script>
+@endpush

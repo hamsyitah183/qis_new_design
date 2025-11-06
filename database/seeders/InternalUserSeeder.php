@@ -32,6 +32,22 @@ class InternalUserSeeder extends Seeder
         );
         $admin->assignRole('admin');
 
+        $admin2 = InternalUser::firstOrCreate(
+            ['email' => 'hamsyitahnur@gmail.com'],
+            [
+                'uuid' => Str::uuid(),
+                'name' => 'Hamsyitah Internal',
+                'username' => 'admin',
+                'email' => 'hamsyitahnur@gmail.com',
+                'phone' => '0130400001',
+                'position' => 'Administrator',
+                'office' => 'HQ',
+                'no_ic' => '000101-01-0001',
+                'password' => Hash::make('password123'),
+            ]
+        );
+        $admin2->assignRole('admin');
+
         // 🔹 Officer
         $officer = InternalUser::firstOrCreate(
             ['email' => 'officer@example.com'],

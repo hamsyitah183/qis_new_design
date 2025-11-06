@@ -7,12 +7,12 @@
             ['label' => 'Home', 'url' => '#'],
           
         ]" 
-        title="Internal Users"
+        title="Dashboard"
     >
      
     </x-breadcrumb>
 @endsection
 
 @section('content')
-    
+    hello internal user
 @endsection
