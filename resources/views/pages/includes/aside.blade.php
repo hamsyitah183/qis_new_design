@@ -64,26 +64,30 @@
                 </li>
 
                 <!-- User Management -->
-                <li class="slide__category"><span class="category-name">User</span></li>
+                @if (auth('internal')->check())
+                    <li class="slide__category"><span class="category-name">User</span></li>
 
-              <li class="slide has-sub {{ Str::startsWith($currentRoute, 'public.') || Str::startsWith($currentRoute, 'internal.') ? 'open active' : '' }}">
-                <a href="javascript:void(0);" class="side-menu__item">
-                    <i class="ri-arrow-down-s-line side-menu__angle"></i>
-                    <i class="ti ti-user side-menu__icon"></i>
-                    <span class="side-menu__label">User Management</span>
-                </a>
-                <ul class="slide-menu child1">
-                    <li class="slide side-menu__label1"><a href="javascript:void(0)">Users</a></li>
+                    <li class="slide has-sub {{ Str::startsWith($currentRoute, 'internal.') ? 'open active' : '' }}">
+                        <a href="javascript:void(0);" class="side-menu__item">
+                            <i class="ri-arrow-down-s-line side-menu__angle"></i>
+                            <i class="ti ti-user side-menu__icon"></i>
+                            <span class="side-menu__label">User Management</span>
+                        </a>
+                        <ul class="slide-menu child1">
+                            <li class="slide side-menu__label1"><a href="javascript:void(0)">Users</a></li>
 
-                    <li class="slide {{ $currentRoute === 'internal.public.list' ? 'active' : '' }}">
-                        <a href="{{ route('internal.public.list') }}" class="side-menu__item">Public Users</a>
+                            <li class="slide {{ $currentRoute === 'internal.public.list' ? 'active' : '' }}">
+                                <a href="{{ route('internal.public.list') }}" class="side-menu__item">Public Users</a>
+                            </li>
+
+                            <li class="slide {{ $currentRoute === 'internal.internal.list' ? 'active' : '' }}">
+                                <a href="{{ route('internal.internal.list') }}" class="side-menu__item">Internal
+                                    Users</a>
+                            </li>
+                        </ul>
                     </li>
+                @endif
 
-                    <li class="slide {{ $currentRoute === 'internal.internal.list' ? 'active' : '' }}">
-                        <a href="#" class="side-menu__item">Internal Users</a>
-                    </li>
-                </ul>
-            </li>
 
             </ul>
 
