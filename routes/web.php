@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
@@ -62,4 +63,8 @@ Route::prefix('internal')
     ->middleware(['redirect.other.guard:internal', 'auth:internal', 'verified'])
     ->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
+
+        // user managemet
+        Route::get('/user_public/list', [UserController::class, 'public_list'])->name('public.list');
+        Route::get('/user_public/list/data', [UserController::class, 'public_list_data'])->name('public.list.data');
     });

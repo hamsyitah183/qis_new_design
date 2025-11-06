@@ -91,11 +91,7 @@
         <div class="main-content app-content">
             <div class="container-fluid">
 
-
-                <!-- Page Header -->
                 @yield('breadcrumb')
-
-                <!-- Page Header Close -->
 
                 @yield('content')
 
