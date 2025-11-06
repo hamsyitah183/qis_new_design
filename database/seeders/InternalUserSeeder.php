@@ -1,0 +1,69 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\InternalUser;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+
+class InternalUserSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        // 🔹 Admin
+        $admin = InternalUser::firstOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'uuid' => Str::uuid(),
+                'name' => 'System Admin',
+                'username' => 'admin',
+                'email' => 'admin@example.com',
+                'phone' => '0130000001',
+                'position' => 'Administrator',
+                'office' => 'HQ',
+                'no_ic' => '900101-01-0001',
+                'password' => Hash::make('password123'),
+            ]
+        );
+        $admin->assignRole('admin');
+
+        // 🔹 Officer
+        $officer = InternalUser::firstOrCreate(
+            ['email' => 'officer@example.com'],
+            [
+                'uuid' => Str::uuid(),
+                'name' => 'Department Officer',
+                'username' => 'officer',
+                'email' => 'officer@example.com',
+                'phone' => '0130000002',
+                'position' => 'Officer',
+                'office' => 'District Office',
+                'no_ic' => '900101-01-0002',
+                'password' => Hash::make('password123'),
+            ]
+        );
+        $officer->assignRole('officer');
+
+        // 🔹 Clerk
+        $clerk = InternalUser::firstOrCreate(
+            ['email' => 'clerk@example.com'],
+            [
+                'uuid' => Str::uuid(),
+                'name' => 'Department Clerk',
+                'username' => 'clerk',
+                'email' => 'clerk@example.com',
+                'phone' => '0130000003',
+                'position' => 'Clerk',
+                'office' => 'District Office',
+                'no_ic' => '900101-01-0003',
+                'password' => Hash::make('password123'),
+            ]
+        );
+        $clerk->assignRole('clerk');
+    }
+}
