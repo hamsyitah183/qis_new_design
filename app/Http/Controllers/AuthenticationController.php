@@ -15,37 +15,37 @@ class AuthenticationController extends Controller
 
     public function loginAction(Request $request)
     {
-        // ✅ Validate form input
         $credentials = $request->validate([
             'userType' => 'required|in:public,internal',
-            'email'    => 'required|email',
+            'email' => 'required|email',
             'password' => 'required|string',
         ]);
 
-        // ✅ Determine which guard to use based on userType
         $guard = $credentials['userType'];
 
-        // ✅ Attempt login using the selected guard
         if (Auth::guard($guard)->attempt([
-            'email'    => $credentials['email'],
+            'email' => $credentials['email'],
             'password' => $credentials['password'],
         ])) {
-            // Regenerate session for security
             $request->session()->regenerate();
 
-            // ✅ Redirect to the correct dashboard
-            if ($guard === 'public') {
-                return redirect()->route('public.dashboard');
-            } else {
-                return redirect()->route('internal.dashboard');
-            }
+            $redirect = $guard === 'public'
+                ? route('public.dashboard')
+                : route('internal.dashboard');
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Login successful!',
+                'redirect' => $redirect,
+            ]);
         }
 
-        // ❌ Authentication failed
-        return back()->withErrors([
-            'email' => 'Invalid credentials or user type.',
-        ])->onlyInput('email');
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Invalid credentials or user type.',
+        ], 422);
     }
+
 
     public function register()
     {

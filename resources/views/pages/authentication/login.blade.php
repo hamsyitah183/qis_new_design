@@ -33,74 +33,47 @@
                             <p class="h5 mb-2 text-center">Sign In</p>
                             <img src="https://qis-app.sabah.gov.my/assets/QIS-a3dc1042.gif" class="img-fluid mb-2"
                                 style="object-fit: contain;">
-                            <form method="POST" action="{{ route('login.action') }}">
+                            <form id="loginForm" method="POST" action="{{ route('login.action') }}">
                                 @csrf
                                 <div class="row gy-3">
-                                    <div class="col-xl-12" style="display: none;">
-                                        <label for="customeCheckbox" class="form-label text-default">User Type</label>
-                                        <div class="d-flex justify-content-center flex-nowrap gap-3" id="customeCheckbox">
-                                            <!-- Option 1 -->
-                                            <div class="xintra-radio-box text-center">
-                                                <input type="radio" name="planType" id="planBasic"
-                                                    class="xintra-radio-input">
-                                                <label for="planBasic" class="xintra-radio-label">
-                                                    <div class="xintra-radio-content">
-                                                        <i class="bx bx-user fs-2 mb-2 text-primary"></i>
-                                                        <h6 class="mb-1">Public</h6>
-                                                    </div>
-                                                </label>
-                                            </div>
-
-                                            <!-- Option 2 -->
-                                            <div class="xintra-radio-box text-center">
-                                                <input type="radio" name="planType" id="planStandard"
-                                                    class="xintra-radio-input">
-                                                <label for="planStandard" class="xintra-radio-label">
-                                                    <div class="xintra-radio-content">
-                                                        <i class="bx bx-rocket fs-2 mb-2 text-primary"></i>
-                                                        <h6 class="mb-1">Standard</h6>
-                                                    </div>
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-
                                     <div class="col-xl-12">
-                                        <label for="signin-username" class="form-label text-default">User Type</label>
+                                        <label for="planSelect" class="form-label text-default">User Type</label>
                                         <select id="planSelect" name="userType" class="form-select xintra-select">
                                             <option value="public" selected>Public</option>
                                             <option value="internal">Internal</option>
                                         </select>
                                     </div>
+
                                     <div class="col-xl-12">
                                         <label for="signin-username" class="form-label text-default">Email</label>
                                         <input type="email" name="email" class="form-control" id="signin-username"
                                             placeholder="Email">
                                     </div>
+
                                     <div class="col-xl-12 mb-2">
                                         <label for="signin-password"
                                             class="form-label text-default d-block">Password</label>
                                         <div class="position-relative">
                                             <input type="password" name="password"
                                                 class="form-control create-password-input" id="signin-password"
-                                                placeholder="password">
+                                                placeholder="Password">
                                             <a href="javascript:void(0);" class="show-password-button text-muted"
-                                                onclick="createpassword('signin-password',this)" id="button-addon2"><i
-                                                    class="ri-eye-off-line align-middle"></i></a>
-                                        </div>
-                                        <!-- Forget password link -->
-                                        <div class="mt-2 text-end">
-                                            <a href="https://laravelui.spruko.com/xintra/reset-password-basic"
-                                                class="fw-normal text-muted">
-                                                Forgot password?
+                                                onclick="createpassword('signin-password', this)" id="button-addon2">
+                                                <i class="ri-eye-off-line align-middle"></i>
                                             </a>
+                                        </div>
+                                        <div class="mt-2 text-end">
+                                            <a href="#" class="fw-normal text-muted">Forgot
+                                                password?</a>
                                         </div>
                                     </div>
                                 </div>
+
                                 <div class="d-grid mt-4">
                                     <button type="submit" class="btn btn-primary">Sign In</button>
                                 </div>
                             </form>
+
                             <div class="text-center">
                                 <p class="text-muted mt-3 mb-0">Doesn't have account? <a
                                         href="https://laravelui.spruko.com/xintra/sign-up-basic"
