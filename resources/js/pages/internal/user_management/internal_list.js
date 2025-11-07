@@ -1,13 +1,33 @@
-import DataTable from "datatables.net-dt";
-// import "datatables.net-dt/css/dataTables.dataTables.css";
-
-import Swal from "sweetalert2";
-
 /**
- * ✅ Initialize DataTable for Internal Users
+ * ✅ Lazy Initialize DataTable for Internal Users
  */
-function data_table_init() {
-    const table = new DataTable("#internalUsersTable", {
+// ✅ Modern ES Module version for Vite
+async function data_table_init() {
+    // Import DataTables modules
+    const [
+        { default: DataTable },
+        _bs5,           // Bootstrap 5 integration
+        _responsive,    // Responsive extension
+        _buttons,       // Buttons extension
+        _buttonsHtml5,  // HTML5 export buttons
+        _buttonsPrint   // Print button
+    ] = await Promise.all([
+        import("datatables.net-bs5"),              // Core + Bootstrap 5 styling
+        import("datatables.net-responsive-bs5"),   // Responsive
+        import("datatables.net-buttons-bs5"),      // Buttons styling
+        import("datatables.net-buttons/js/buttons.html5.mjs"), // CSV, Excel, PDF
+        import("datatables.net-buttons/js/buttons.print.mjs"), // Print
+    ]);
+
+    // Import styles
+    await Promise.all([
+        import("datatables.net-bs5/css/dataTables.bootstrap5.min.css"),
+        // import("datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css"),
+        import("datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css"),
+    ]);
+
+    // ✅ Initialize DataTable
+    new DataTable("#internalUsersTable", {
         processing: true,
         serverSide: true,
         ajax: "/internal/user_internal/list/data",
@@ -26,52 +46,54 @@ function data_table_init() {
             },
         ],
         responsive: true,
+        // dom: "Bfrtip", 
+        // buttons: ["copy", "csv", "excel", "pdf", "print"],
+        pageLength: 10,
     });
+}
+
+
+async function getSwal() {
+    const { default: Swal } = await import("sweetalert2");
+    return Swal;
 }
 
 /**
  * ✅ Open modal for Add / Edit / View
  */
-function open_internal_user_modal(mode = "add", userId = null) {
+async function open_internal_user_modal(mode = "add", userId = null) {
+    const Swal = await getSwal();
+
     const isAdd = mode === "add";
     const isView = mode === "view";
     const isEdit = mode === "edit";
 
-    // 🔹 Modal title
     const title = isAdd
         ? "Add Internal User"
         : isView
         ? "View Internal User"
         : "Edit Internal User";
-    $("#internalUserModalLabel").text(title);
 
-    // 🔹 Reset form
+    $("#internalUserModalLabel").text(title);
     $("#internalUserForm")[0].reset();
     $(".form-control").removeClass("is-invalid");
     $(".invalid-feedback").text("");
 
-    // 🔹 Footer visibility
     if (isView) $("#internalUserModal .modal-footer").hide();
     else $("#internalUserModal .modal-footer").show();
 
-    // 🔹 Readonly toggle
     $("#internalUserForm input, #internalUserForm select").prop(
         "readonly",
         isView
     );
     $("#internalUserForm select").prop("disabled", isView);
 
-    // 🔹 Add Mode → open empty modal
     if (isAdd) {
         $("#userUuid").val("");
-        const modal = new bootstrap.Modal(
-            document.getElementById("internalUserModal")
-        );
-        modal.show();
+        new bootstrap.Modal("#internalUserModal").show();
         return;
     }
 
-    // 🔹 View/Edit → Fetch user data
     Swal.fire({
         title: "Loading...",
         allowOutsideClick: false,
@@ -91,10 +113,7 @@ function open_internal_user_modal(mode = "add", userId = null) {
             $("#no_ic").val(user.no_ic || "");
 
             Swal.close();
-            const modal = new bootstrap.Modal(
-                document.getElementById("internalUserModal")
-            );
-            modal.show();
+            new bootstrap.Modal("#internalUserModal").show();
         },
         error: function () {
             Swal.fire("Error", "Unable to load user details", "error");
@@ -105,10 +124,12 @@ function open_internal_user_modal(mode = "add", userId = null) {
 /**
  * ✅ Handle Add + Edit form submission
  */
-function handle_internal_user_submit() {
+async function handle_internal_user_submit() {
+    const Swal = await getSwal();
+
     $(document)
         .off("submit", "#internalUserForm")
-        .on("submit", "#internalUserForm", function (e) {
+        .on("submit", "#internalUserForm", async function (e) {
             e.preventDefault();
 
             $(".form-control").removeClass("is-invalid");
@@ -140,10 +161,7 @@ function handle_internal_user_submit() {
                         text: response.message,
                     });
 
-                    const modalEl = document.getElementById("internalUserModal");
-                    const modal = bootstrap.Modal.getInstance(modalEl);
-                    modal.hide();
-
+                    bootstrap.Modal.getInstance("#internalUserModal").hide();
                     $("#internalUsersTable").DataTable().ajax.reload();
                 },
                 error: function (xhr) {
@@ -168,9 +186,11 @@ function handle_internal_user_submit() {
 }
 
 /**
- * ✅ Delete handler
+ * ✅ Delete handler (lazy SweetAlert)
  */
-function delete_internal_user() {
+async function delete_internal_user() {
+    const Swal = await getSwal();
+
     $(document).on("click", ".deleteInternalUser", function (e) {
         e.preventDefault();
         const userId = $(this).data("id");
@@ -211,33 +231,29 @@ function delete_internal_user() {
 }
 
 /**
- * ✅ Initialize all handlers
+ * ✅ Initialize everything (with lazy module loading)
  */
-function internal_user_list() {
-    data_table_init();
-    handle_internal_user_submit();
+async function internal_user_list() {
+    await data_table_init();
+    await handle_internal_user_submit();
 
-    // Add
-    $(document).on("click", ".addInternalUser-modal", function (e) {
+    $(document).on("click", ".addInternalUser-modal", (e) => {
         e.preventDefault();
         open_internal_user_modal("add");
     });
 
-    // View
-    $(document).on("click", ".viewInternalUser-modal", function (e) {
+    $(document).on("click", ".viewInternalUser-modal", (e) => {
         e.preventDefault();
-        open_internal_user_modal("view", $(this).data("id"));
+        open_internal_user_modal("view", $(e.currentTarget).data("id"));
     });
 
-    // Edit
-    $(document).on("click", ".editInternalUser-modal", function (e) {
+    $(document).on("click", ".editInternalUser-modal", (e) => {
         e.preventDefault();
-        open_internal_user_modal("edit", $(this).data("id"));
+        open_internal_user_modal("edit", $(e.currentTarget).data("id"));
     });
 
-    delete_internal_user();
+    await delete_internal_user();
 
-    // Reset modal on close
     $("#internalUserModal").on("hidden.bs.modal", function () {
         $("#internalUserModalLabel").text("Add Internal User");
         $("#internalUserForm")[0].reset();
