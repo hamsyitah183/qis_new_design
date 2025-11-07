@@ -1,87 +1,77 @@
 import DataTable from "datatables.net-dt";
-// import 'datatables.net-dt/css/dataTables.dataTables.css';
+// import "datatables.net-dt/css/dataTables.dataTables.css";
 
 import Swal from "sweetalert2";
 
 /**
- * ✅ Initialize DataTable for Public Users
+ * ✅ Initialize DataTable for Internal Users
  */
 function data_table_init() {
-    const table = new DataTable("#publicUsersTable", {
+    const table = new DataTable("#internalUsersTable", {
         processing: true,
         serverSide: true,
-        ajax: "/internal/user_public/list/data",
+        ajax: "/internal/user_internal/list/data",
         columns: [
-            { data: "fullname", name: "fullname" }, // Name
-            { data: "account_type", name: "account_type" }, // Account Type
-            { data: "email", name: "email" }, // Email
-            { data: "phone_number", name: "phone_number" }, // Phone Number
-            { data: "created_at", name: "created_at" }, // Created At
-            {
-                data: "doa_verified",
-                name: "doa_verified",
-                orderable: false,
-                searchable: false,
-            }, // Verified
+            { data: "name", name: "name" },
+            { data: "email", name: "email" },
+            { data: "phone", name: "phone" },
+            { data: "position", name: "position" },
+            { data: "role", name: "role", orderable: false, searchable: false },
+            { data: "office", name: "office" },
             {
                 data: "action",
                 name: "action",
                 orderable: false,
                 searchable: false,
-            }, // Action
+            },
         ],
-
-        responsive: !0,
+        responsive: true,
     });
 }
 
 /**
  * ✅ Open modal for Add / Edit / View
  */
-function open_public_user_modal(mode = "add", userId = null) {
-    const isAddMode = mode === "add";
-    const isViewMode = mode === "view";
-    const isEditMode = mode === "edit";
+function open_internal_user_modal(mode = "add", userId = null) {
+    const isAdd = mode === "add";
+    const isView = mode === "view";
+    const isEdit = mode === "edit";
 
     // 🔹 Modal title
-    const title = isAddMode
-        ? "Add Public User"
-        : isViewMode
-        ? "View Public User"
-        : "Edit Public User";
-    $("#publicUserModalLabel").text(title);
+    const title = isAdd
+        ? "Add Internal User"
+        : isView
+        ? "View Internal User"
+        : "Edit Internal User";
+    $("#internalUserModalLabel").text(title);
 
-    // 🔹 Reset form + validation states
-    $("#publicUserForm")[0].reset();
+    // 🔹 Reset form
+    $("#internalUserForm")[0].reset();
     $(".form-control").removeClass("is-invalid");
     $(".invalid-feedback").text("");
 
-    // 🔹 Toggle footer and buttons visibility
-    const footerElements = $("#publicUserModal .modal-footer");
-    if (isViewMode) {
-        footerElements.hide();
-    } else {
-        footerElements.show();
-    }
+    // 🔹 Footer visibility
+    if (isView) $("#internalUserModal .modal-footer").hide();
+    else $("#internalUserModal .modal-footer").show();
 
-    // 🔹 Make inputs read-only in view mode
-    $("#publicUserForm input, #publicUserForm select").prop(
+    // 🔹 Readonly toggle
+    $("#internalUserForm input, #internalUserForm select").prop(
         "readonly",
-        isViewMode
+        isView
     );
-    $("#publicUserForm select").prop("disabled", isViewMode);
+    $("#internalUserForm select").prop("disabled", isView);
 
     // 🔹 Add Mode → open empty modal
-    if (isAddMode) {
+    if (isAdd) {
         $("#userUuid").val("");
         const modal = new bootstrap.Modal(
-            document.getElementById("publicUserModal")
+            document.getElementById("internalUserModal")
         );
         modal.show();
         return;
     }
 
-    // 🔹 View/Edit → fetch user data
+    // 🔹 View/Edit → Fetch user data
     Swal.fire({
         title: "Loading...",
         allowOutsideClick: false,
@@ -89,29 +79,20 @@ function open_public_user_modal(mode = "add", userId = null) {
     });
 
     $.ajax({
-        url: `/internal/user_public/user/data/${userId}`,
+        url: `/internal/internal-users/${userId}`,
         type: "GET",
-        success: function (response) {
-            const user = response.user;
-
-            // 🔹 Fill form fields
+        success: function (user) {
             $("#userUuid").val(user.uuid);
-            $("#fullname").val(user.fullname);
-            $("#no_ic").val(user.no_ic);
+            $("#fullname").val(user.name);
             $("#email").val(user.email);
-            $("#account_type").val(user.account_type);
-            $("#phone_number").val(user.phone_number);
-            $("#office_number").val(user.office_number || "");
-            $("#address_1").val(user.address_1);
-            $("#address_2").val(user.address_2 || "");
-            $("#postcode").val(user.postcode);
-            $("#district").val(user.district);
-            $("#state").val(user.state);
+            $("#phone_number").val(user.phone);
+            $("#office_number").val(user.office || "");
+            $("#position").val(user.position || "");
+            $("#no_ic").val(user.no_ic || "");
 
             Swal.close();
-
             const modal = new bootstrap.Modal(
-                document.getElementById("publicUserModal")
+                document.getElementById("internalUserModal")
             );
             modal.show();
         },
@@ -124,18 +105,18 @@ function open_public_user_modal(mode = "add", userId = null) {
 /**
  * ✅ Handle Add + Edit form submission
  */
-function handle_public_user_submit() {
+function handle_internal_user_submit() {
     $(document)
-        .off("submit", "#publicUserForm")
-        .on("submit", "#publicUserForm", function (e) {
+        .off("submit", "#internalUserForm")
+        .on("submit", "#internalUserForm", function (e) {
             e.preventDefault();
 
             $(".form-control").removeClass("is-invalid");
             $(".invalid-feedback").text("");
 
             const formData = $(this).serialize();
-            const userUuid = $("#userUuid").val();
-            const isEdit = Boolean(userUuid);
+            const uuid = $("#userUuid").val();
+            const isEdit = Boolean(uuid);
 
             Swal.fire({
                 title: isEdit ? "Updating user..." : "Saving user...",
@@ -144,8 +125,8 @@ function handle_public_user_submit() {
             });
 
             $.ajax({
-                url: "/internal/user_public/save", // ✅ your controller route
-                method: "POST",
+                url: `/internal/internal-users/${uuid}`,
+                method: isEdit ? "PUT" : "POST",
                 data: formData,
                 headers: {
                     "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
@@ -159,11 +140,11 @@ function handle_public_user_submit() {
                         text: response.message,
                     });
 
-                    const modalEl = document.getElementById("publicUserModal");
+                    const modalEl = document.getElementById("internalUserModal");
                     const modal = bootstrap.Modal.getInstance(modalEl);
                     modal.hide();
 
-                    $("#publicUsersTable").DataTable().ajax.reload();
+                    $("#internalUsersTable").DataTable().ajax.reload();
                 },
                 error: function (xhr) {
                     Swal.close();
@@ -189,8 +170,8 @@ function handle_public_user_submit() {
 /**
  * ✅ Delete handler
  */
-function delete_public_user() {
-    $(document).on("click", ".deletePublicUser", function (e) {
+function delete_internal_user() {
+    $(document).on("click", ".deleteInternalUser", function (e) {
         e.preventDefault();
         const userId = $(this).data("id");
 
@@ -205,20 +186,20 @@ function delete_public_user() {
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: `/internal/user_public/delete/${userId}`,
+                    url: `/internal/internal-users/${userId}`,
                     type: "DELETE",
                     headers: {
                         "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
                             "content"
                         ),
                     },
-                    success: function (response) {
+                    success: function () {
                         Swal.fire(
                             "Deleted!",
                             "User deleted successfully.",
                             "success"
                         );
-                        $("#publicUsersTable").DataTable().ajax.reload();
+                        $("#internalUsersTable").DataTable().ajax.reload();
                     },
                     error: function () {
                         Swal.fire("Error!", "Failed to delete user.", "error");
@@ -230,46 +211,46 @@ function delete_public_user() {
 }
 
 /**
- * ✅ Attach handlers
+ * ✅ Initialize all handlers
  */
-function public_user_list() {
+function internal_user_list() {
     data_table_init();
-    handle_public_user_submit();
+    handle_internal_user_submit();
 
     // Add
-    $(document).on("click", ".addPublicUser-modal", function (e) {
+    $(document).on("click", ".addInternalUser-modal", function (e) {
         e.preventDefault();
-        open_public_user_modal("add");
+        open_internal_user_modal("add");
     });
 
     // View
-    $(document).on("click", ".viewPublicUser-modal", function (e) {
+    $(document).on("click", ".viewInternalUser-modal", function (e) {
         e.preventDefault();
-        open_public_user_modal("view", $(this).data("id"));
+        open_internal_user_modal("view", $(this).data("id"));
     });
 
     // Edit
-    $(document).on("click", ".editPublicUser-modal", function (e) {
+    $(document).on("click", ".editInternalUser-modal", function (e) {
         e.preventDefault();
-        open_public_user_modal("edit", $(this).data("id"));
+        open_internal_user_modal("edit", $(this).data("id"));
     });
 
-    delete_public_user();
+    delete_internal_user();
 
     // Reset modal on close
-    $("#publicUserModal").on("hidden.bs.modal", function () {
-        $("#publicUserModalLabel").text("Add Public User");
-        $("#publicUserForm")[0].reset();
-        $("#publicUserForm input, #publicUserForm select").prop(
+    $("#internalUserModal").on("hidden.bs.modal", function () {
+        $("#internalUserModalLabel").text("Add Internal User");
+        $("#internalUserForm")[0].reset();
+        $("#internalUserForm input, #internalUserForm select").prop(
             "readonly",
             false
         );
-        $("#publicUserForm select").prop("disabled", false);
+        $("#internalUserForm select").prop("disabled", false);
         $(".form-control").removeClass("is-invalid");
         $(".invalid-feedback").text("");
-        $("#publicUserModal .modal-footer").show();
+        $("#internalUserModal .modal-footer").show();
     });
 }
 
-// ✅ Initialize
-public_user_list();
+// ✅ Initialize on page load
+internal_user_list();

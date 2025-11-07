@@ -4,12 +4,12 @@
 @endpush
 
 @push('scripts')
-    @vite(['resources/js/pages/internal/user_management/public_list.js'])
+    @vite(['resources/js/pages/internal/user_management/internal_list.js'])
 @endpush
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/'], ['label' => 'Public User List', 'url' => '#']]" title="Public User List">
+    <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/'], ['label' => 'Internal User List', 'url' => '#']]" title="Internal User List">
 
     </x-breadcrumb>
 @endsection
@@ -20,21 +20,22 @@
             <div class="card custom-card">
                 <div class="card-header">
                     <div class="ms-auto">
-                        <button class="btn btn-success btn-sm addPublicUser-modal">Add Public User</button>
+                        <button class="btn btn-success btn-sm addInternalUser-modal">Add Internal User</button>
                     </div>
                 </div>
 
                 <div class="card-body">
-                    <table id="publicUsersTable" class="table table-bordered text-nowrap w-100">
+                    <table id="internalUsersTable" class="table table-bordered text-nowrap w-100">
                         <thead>
                             <tr>
 
                                 <th>Name</th>
-                                <th>Account Type</th>
+
                                 <th>Email</th>
                                 <th>Phone Number</th>
-                                <th>Created At</th>
-                                <th>Verified</th>
+                                <th>Position</th>
+                                <th>Role</th>
+                                <th>Office</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -46,20 +47,21 @@
     </div>
 
 
-    <!-- Public User Modal -->
-    <div class="modal fade" id="publicUserModal" tabindex="-1" aria-labelledby="publicUserModalLabel" aria-hidden="true">
+    <!-- Internal User Modal -->
+    <div class="modal fade" id="internalUserModal" tabindex="-1" aria-labelledby="internalUserModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="publicUserModalLabel">Public User Details</h5>
+                    <h5 class="modal-title" id="internalUserModalLabel">Internal User Details</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
 
-                <form id="publicUserForm">
+                <form id="internalUserForm">
                     @csrf
                     <div class="modal-body">
-                        <div id="formPublicUser" class="alert alert-danger d-none"></div>
+                        <div id="formInternalUser" class="alert alert-danger d-none"></div>
 
                         <div class="row g-3">
                             <input type="hidden" id="userUuid" name="uuid">
