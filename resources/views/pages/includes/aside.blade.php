@@ -81,7 +81,7 @@
                             </li>
 
                             <li class="slide {{ $currentRoute === 'internal.internal.list' ? 'active' : '' }}">
-                                <a href="{{ route('internal.internal.list') }}" class="side-menu__item">Internal
+                                <a href="#" class="side-menu__item">Internal
                                     Users</a>
                             </li>
                         </ul>
