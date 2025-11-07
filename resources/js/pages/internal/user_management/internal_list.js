@@ -79,7 +79,7 @@ function open_internal_user_modal(mode = "add", userId = null) {
     });
 
     $.ajax({
-        url: `/internal/internal-users/${userId}`,
+        url: `/internal/user_internal/user/data/${userId}`,
         type: "GET",
         success: function (user) {
             $("#userUuid").val(user.uuid);

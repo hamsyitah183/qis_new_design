@@ -110,4 +110,13 @@ class UserController extends Controller
 
         return response()->json(['success' => true, 'message' => 'User updated successfully']);
     }
+
+     public function internal_user_data($id)
+    {
+        $public = InternalUser::where('uuid', $id)->first();
+
+        return response()->json([
+            'user' => $public
+        ]);
+    }
 }
