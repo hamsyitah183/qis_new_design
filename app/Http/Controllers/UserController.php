@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\InternalUser;
 use App\Models\PublicUser;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Facades\DataTables;
 
 class UserController extends Controller
@@ -12,48 +13,49 @@ class UserController extends Controller
     //
     public function public_list()
     {
+        // dd(Auth::guard('internal')->user());
         return view('pages.internal.user_management.list_public');
     }
 
     public function public_list_data()
     {
         $users = PublicUser::query();
+        $currentUser = Auth::guard('internal')->user();
+
 
         return DataTables::of($users)
-            ->addColumn('action', function ($user) {
-                // $verifyBtn = $user->email_verified_at
-                //     ? '<span class="badge bg-success">Verified</span>'
-                //     : '<button class="btn btn-sm btn-primary verify-btn" data-id="' . $user->id . '">Verify</button>';
-
-                // return $verifyBtn;
+            ->addColumn('action', function ($user) use ($currentUser) {
+                // Always available buttons
                 $actionHtml = '
-                    <div class="d-flex align-items-center gap-2">
-                        <button class="btn btn-sm btn-primary text-white viewPublicUser-modal" data-id="' . $user->uuid . '" title="Edit">
-                            <i class="ti ti-eye"></i>
-                        </button>
-                        <button class="btn btn-sm btn-primary text-white editPublicUser-modal" data-id="' . $user->uuid . '" title="Edit">
-                            <i class="ti ti-pencil"></i>
-                        </button>
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-sm btn-primary text-white viewPublicUser-modal" data-id="' . $user->uuid . '" title="View">
+                        <i class="ti ti-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-primary text-white editPublicUser-modal" data-id="' . $user->uuid . '" title="Edit">
+                        <i class="ti ti-pencil"></i>
+                    </button>
+            ';
+
+              
+                if (!$currentUser || $currentUser->uuid !== $user->uuid) {
+                    $actionHtml .= '
                         <button class="btn btn-sm btn-danger text-white deleteBtn" data-id="' . $user->uuid . '" title="Delete">
                             <i class="bx bx-trash-alt"></i>
                         </button>
-                    </div>
-                ';
+                    ';
+                }
+
+                $actionHtml .= '</div>';
 
                 return $actionHtml;
             })
-            ->editColumn('created_at', function ($user) {
-                return $user->created_at->format('d-m-Y H:i');
-            })
-            ->editColumn('account_type', function ($user) {
-                return ucfirst($user->account_type);
-            })
-            ->editColumn('doa_verified', function ($user) {
-                return $user->doa_verified ? 'Yes' : 'No';
-            })
+            ->editColumn('created_at', fn($user) => $user->created_at->format('d-m-Y H:i'))
+            ->editColumn('account_type', fn($user) => ucfirst($user->account_type))
+            ->editColumn('doa_verified', fn($user) => $user->doa_verified ? 'Yes' : 'No')
             ->rawColumns(['action'])
             ->make(true);
     }
+
 
     public function user_data($id)
     {
@@ -63,6 +65,30 @@ class UserController extends Controller
             'user' => $public
         ]);
     }
+
+    function public_user_save(Request $request)
+    {
+        $uuid = $request->input('uuid');
+
+        if ($uuid) {
+            $public = PublicUser::where('uuid', $uuid)->first();
+
+
+            return response()->json([
+                'message' => 'Save Public User',
+                'user' => $public
+            ]);
+        } else {
+            // register
+            return response()->json([
+                'message' => 'Create Public User',
+
+            ]);
+        }
+    }
+
+
+    // internal
 
     public function internal_list()
     {
@@ -111,7 +137,7 @@ class UserController extends Controller
         return response()->json(['success' => true, 'message' => 'User updated successfully']);
     }
 
-     public function internal_user_data($id)
+    public function internal_user_data($id)
     {
         $public = InternalUser::where('uuid', $id)->first();
 

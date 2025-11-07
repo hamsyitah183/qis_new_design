@@ -98,6 +98,10 @@ async function public_user_list() {
             return;
         }
 
+        if(isEdit) {
+            $("#email").prop('readonly',isEdit )
+        }
+
         Swal.fire({
             title: "Loading...",
             allowOutsideClick: false,
@@ -164,6 +168,7 @@ async function public_user_list() {
                         ),
                     },
                     success: function (response) {
+                        console.log('response detal', response)
                         Swal.fire({
                             icon: "success",
                             title: isEdit ? "User Updated!" : "User Added!",

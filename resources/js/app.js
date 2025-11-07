@@ -1,5 +1,6 @@
 import './bootstrap';
 import { IconHome, IconUser } from 'tabler-icons';
+// import './feather-icons';
 
 import $ from 'jquery';
 window.$ = window.jQuery = $; // make it global

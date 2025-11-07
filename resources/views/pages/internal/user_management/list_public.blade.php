@@ -55,8 +55,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="publicUserModalLabel">Public User Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                        aria-label="Close"> </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"> </button>
                 </div>
 
                 <form id="publicUserForm">
@@ -100,19 +99,21 @@
                                 <input type="text" class="form-control" id="office_number" name="office_number">
                             </div>
 
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <label class="form-label">Address 1</label>
-                                <input type="text" class="form-control" id="address_1" name="address_1" required>
+                                {{-- <input type="text" class="form-control" id="address_1" name="address_1" required> --}}
+                                <textarea class="form-control" name="address_1" id="address_1" cols="30" rows="2" required></textarea>
                             </div>
 
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <label class="form-label">Address 2</label>
-                                <input type="text" class="form-control" id="address_2" name="address_2">
+                                {{-- <input type="text" class="form-control" id="address_2" name="address_2"> --}}
+                                <textarea class="form-control" id="address_2" name="address_2" cols="30" rows="2" required></textarea>
                             </div>
 
                             <div class="col-md-4">
-                                <label class="form-label">Postcode</label>
-                                <input type="text" class="form-control" id="postcode" name="postcode" required>
+                                <label class="form-label">State</label>
+                                <input type="text" class="form-control" id="state" name="state" required>
                             </div>
 
                             <div class="col-md-4">
@@ -121,9 +122,13 @@
                             </div>
 
                             <div class="col-md-4">
-                                <label class="form-label">State</label>
-                                <input type="text" class="form-control" id="state" name="state" required>
+                                <label class="form-label">Postcode</label>
+                                <input type="text" class="form-control" id="postcode" name="postcode" required>
                             </div>
+
+
+
+
                         </div>
                     </div>
 
