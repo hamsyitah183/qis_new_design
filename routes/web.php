@@ -73,4 +73,5 @@ Route::prefix('internal')
         Route::get('/user_internal/list', [UserController::class, 'internal_list'])->name('internal.list');
         Route::get('/user_internal/list/data', [UserController::class, 'internal_list_data'])->name('internal.list.data');
         Route::get('/user_internal/user/data/{id}', [UserController::class, 'internal_user_data']);
+        Route::post('/user_internal/save', [UserController::class, 'internal_user_save']);
     });

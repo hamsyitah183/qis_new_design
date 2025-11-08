@@ -85,16 +85,13 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Account Type</label>
-                                <select class="form-select" id="account_type" name="account_type" required>
-                                    <option value="individu">Individu</option>
-                                    <option value="company">Company</option>
-                                </select>
+                                <label class="form-label">Phone Number</label>
+                                <input type="text" class="form-control" id="phone_number" name="phone_number" required>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Phone Number</label>
-                                <input type="text" class="form-control" id="phone_number" name="phone_number" required>
+                                <label class="form-label">Position</label>
+                                <input type="text" class="form-control" id="position" name="position" required>
                             </div>
 
                             <div class="col-md-6">
@@ -102,30 +99,7 @@
                                 <input type="text" class="form-control" id="office_number" name="office_number">
                             </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label">Address 1</label>
-                                <input type="text" class="form-control" id="address_1" name="address_1" required>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label">Address 2</label>
-                                <input type="text" class="form-control" id="address_2" name="address_2">
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label">Postcode</label>
-                                <input type="text" class="form-control" id="postcode" name="postcode" required>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label">District</label>
-                                <input type="text" class="form-control" id="district" name="district" required>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label">State</label>
-                                <input type="text" class="form-control" id="state" name="state" required>
-                            </div>
+                           
                         </div>
                     </div>
 

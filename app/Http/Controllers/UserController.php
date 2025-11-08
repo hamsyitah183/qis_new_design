@@ -20,7 +20,7 @@ class UserController extends Controller
     public function public_list_data()
     {
         $users = PublicUser::query();
-        $currentUser = Auth::guard('internal')->user();
+        $currentUser = Auth::guard('public')->user();
 
         return DataTables::of($users)
             ->addColumn('action', function ($user) use ($currentUser) {
@@ -30,7 +30,7 @@ class UserController extends Controller
                     <button class="btn btn-sm btn-primary text-white viewPublicUser-modal" data-id="' . $user->uuid . '" title="View">
                         <i class="ti ti-eye"></i>
                     </button>
-                    <button class="btn btn-sm btn-primary text-white editPublicUser-modal" data-id="' . $user->uuid . '" title="Edit">
+                    <button class="btn btn-sm btn-secondary text-white editPublicUser-modal" data-id="' . $user->uuid . '" title="Edit">
                         <i class="ti ti-pencil"></i>
                     </button>
             ';
@@ -98,24 +98,43 @@ class UserController extends Controller
 
     public function internal_list()
     {
+        // if (Auth::guard('internal')->check()) {
+        //     $user = Auth::guard('internal')->user();
+        //     dd('Internal user logged in:', $user);
+        // }
         return view('pages.internal.user_management.list_internal');
     }
 
     public function internal_list_data(Request $request)
     {
         $query = InternalUser::select(['uuid', 'name', 'email', 'phone', 'position', 'office'])
-            ->with('roles'); // If using Spatie roles
+            ->with('roles'); // Using Spatie roles
+
+        $currentUser = Auth::guard('internal')->user();
 
         return DataTables::of($query)
             ->addColumn('role', function ($user) {
                 return $user->roles->pluck('name')->implode(', ') ?: 'N/A';
             })
-            ->addColumn('action', function ($user) {
-                return '
-                    <button class="btn btn-sm btn-primary editInternalUser-modal" data-id="' . $user->uuid . '">
-                        <i class="ti ti-edit"></i>
+            ->addColumn('action', function ($user) use ($currentUser) {
+                $actionHtml = '
+                <button class="btn btn-sm btn-primary viewInternalUser-modal" data-id="' . $user->uuid . '" title="View">
+                    <i class="ti ti-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-secondary editInternalUser-modal" data-id="' . $user->uuid . '" title="Edit">
+                    <i class="ti ti-edit"></i>
+                </button>
+            ';
+
+                if (!$currentUser || $currentUser->uuid !== $user->uuid) {
+                    $actionHtml .= '
+                    <button class="btn btn-sm btn-danger text-white deleteBtn" data-id="' . $user->uuid . '" title="Delete">
+                        <i class="bx bx-trash-alt"></i>
                     </button>
                 ';
+                }
+
+                return $actionHtml; // <-- Must return the HTML
             })
             ->rawColumns(['action'])
             ->make(true);
@@ -145,10 +164,27 @@ class UserController extends Controller
 
     public function internal_user_data($id)
     {
-        $public = InternalUser::where('uuid', $id)->first();
+        $internal = InternalUser::where('uuid', $id)->first();
 
         return response()->json([
-            'user' => $public
+            'user' => $internal
         ]);
+    }
+
+    public function internal_user_save(Request $request)
+    {
+        $uuid = $request->input('uuid');
+
+        if($uuid) {
+            return response()->json([
+                'used id' => $uuid,
+                'message' => 'User Updated'
+            ]);
+        } else {
+              return response()->json([
+                'used id' => $uuid,
+                'message' => 'User Created'
+            ]);
+        }
     }
 }

@@ -2,19 +2,20 @@
  * ✅ Lazy Initialize DataTable for Internal Users
  */
 // ✅ Modern ES Module version for Vite
+let internalListTable;
 async function data_table_init() {
     // Import DataTables modules
     const [
         { default: DataTable },
-        _bs5,           // Bootstrap 5 integration
-        _responsive,    // Responsive extension
-        _buttons,       // Buttons extension
-        _buttonsHtml5,  // HTML5 export buttons
-        _buttonsPrint   // Print button
+        _bs5, // Bootstrap 5 integration
+        _responsive, // Responsive extension
+        _buttons, // Buttons extension
+        _buttonsHtml5, // HTML5 export buttons
+        _buttonsPrint, // Print button
     ] = await Promise.all([
-        import("datatables.net-bs5"),              // Core + Bootstrap 5 styling
-        import("datatables.net-responsive-bs5"),   // Responsive
-        import("datatables.net-buttons-bs5"),      // Buttons styling
+        import("datatables.net-bs5"), // Core + Bootstrap 5 styling
+        import("datatables.net-responsive-bs5"), // Responsive
+        import("datatables.net-buttons-bs5"), // Buttons styling
         import("datatables.net-buttons/js/buttons.html5.mjs"), // CSV, Excel, PDF
         import("datatables.net-buttons/js/buttons.print.mjs"), // Print
     ]);
@@ -27,7 +28,7 @@ async function data_table_init() {
     ]);
 
     // ✅ Initialize DataTable
-    new DataTable("#internalUsersTable", {
+    internalListTable = new DataTable("#internalUsersTable", {
         processing: true,
         serverSide: true,
         ajax: "/internal/user_internal/list/data",
@@ -46,12 +47,11 @@ async function data_table_init() {
             },
         ],
         responsive: true,
-        // dom: "Bfrtip", 
+        // dom: "Bfrtip",
         // buttons: ["copy", "csv", "excel", "pdf", "print"],
         pageLength: 10,
     });
 }
-
 
 async function getSwal() {
     const { default: Swal } = await import("sweetalert2");
@@ -94,6 +94,13 @@ async function open_internal_user_modal(mode = "add", userId = null) {
         return;
     }
 
+    if (isEdit) {
+        $("#email").prop(
+            "readonly",
+            isEdit
+        );
+    }
+
     Swal.fire({
         title: "Loading...",
         allowOutsideClick: false,
@@ -103,7 +110,8 @@ async function open_internal_user_modal(mode = "add", userId = null) {
     $.ajax({
         url: `/internal/user_internal/user/data/${userId}`,
         type: "GET",
-        success: function (user) {
+        success: function (response) {
+            let user = response.user;
             $("#userUuid").val(user.uuid);
             $("#fullname").val(user.name);
             $("#email").val(user.email);
@@ -146,8 +154,8 @@ async function handle_internal_user_submit() {
             });
 
             $.ajax({
-                url: `/internal/internal-users/${uuid}`,
-                method: isEdit ? "PUT" : "POST",
+                url: `/internal/user_internal/save`,
+                method: "POST",
                 data: formData,
                 headers: {
                     "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
@@ -155,6 +163,7 @@ async function handle_internal_user_submit() {
                     ),
                 },
                 success: function (response) {
+                    console.log('respinse', response)
                     Swal.fire({
                         icon: "success",
                         title: isEdit ? "User Updated!" : "User Added!",
@@ -162,7 +171,7 @@ async function handle_internal_user_submit() {
                     });
 
                     bootstrap.Modal.getInstance("#internalUserModal").hide();
-                    $("#internalUsersTable").DataTable().ajax.reload();
+                    internalListTable.ajax.reload();
                 },
                 error: function (xhr) {
                     Swal.close();

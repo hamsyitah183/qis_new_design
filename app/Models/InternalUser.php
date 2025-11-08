@@ -9,6 +9,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Models\Role;
 
 class InternalUser extends Authenticatable implements MustVerifyEmail
 {
@@ -39,4 +40,9 @@ class InternalUser extends Authenticatable implements MustVerifyEmail
             }
         });
     }
+
+    // public function roles()
+    // {
+    //     return $this->belongsToMany(Role::class, 'internal_user_roles', 'user_id', 'role_id');
+    // }
 }
