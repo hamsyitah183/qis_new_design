@@ -1,3 +1,7 @@
+import $ from "jquery";
+
+let publicUsersTable;
+
 async function public_user_list() {
     // 🔹 Lazy-load heavy libraries
     const [{ default: DataTable }, { default: Swal }] = await Promise.all([
@@ -32,7 +36,7 @@ async function public_user_list() {
             // ),
             import("datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css"),
         ]);
-        new DataTable("#publicUsersTable", {
+        publicUsersTable = new DataTable("#publicUsersTable", {
             processing: true,
             serverSide: true,
             ajax: "/internal/user_public/list/data",
@@ -98,8 +102,8 @@ async function public_user_list() {
             return;
         }
 
-        if(isEdit) {
-            $("#email").prop('readonly',isEdit )
+        if (isEdit) {
+            $("#email").prop("readonly", isEdit);
         }
 
         Swal.fire({
@@ -168,7 +172,7 @@ async function public_user_list() {
                         ),
                     },
                     success: function (response) {
-                        console.log('response detal', response)
+                        console.log("response detal", response);
                         Swal.fire({
                             icon: "success",
                             title: isEdit ? "User Updated!" : "User Added!",
@@ -180,7 +184,7 @@ async function public_user_list() {
                         const modal = bootstrap.Modal.getInstance(modalEl);
                         modal.hide();
 
-                        $("#publicUsersTable").DataTable().ajax.reload();
+                        if (publicUsersTable) publicUsersTable.ajax.reload();
                     },
                     error: function (xhr) {
                         Swal.close();
@@ -203,9 +207,7 @@ async function public_user_list() {
             });
     }
 
-    /**
-     * ✅ Delete handler
-     */
+    // delete
     function delete_public_user() {
         $(document).on("click", ".deletePublicUser", function (e) {
             e.preventDefault();
@@ -250,9 +252,6 @@ async function public_user_list() {
         });
     }
 
-    /**
-     * ✅ Initialize Handlers
-     */
     data_table_init();
     handle_public_user_submit();
 
@@ -289,11 +288,59 @@ async function public_user_list() {
         $(".invalid-feedback").text("");
         $("#publicUserModal .modal-footer").show();
     });
+
+    // verification modal
+    $(document).on("click", ".badge-verification", function (e) {
+        e.preventDefault();
+
+        Swal.fire({
+            title: "Loading...",
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading(),
+        });
+
+        let id = $(this).data("id");
+        let verified = $(this).data("verified");
+
+        const modalVerificationEl =
+            document.getElementById("verificationModal");
+
+        if (!modalVerificationEl) {
+            console.error("Modal element not found!");
+            Swal.close();
+            return;
+        }
+
+        // Initialize the modal (or get existing instance)
+        const modalVerification =
+            bootstrap.Modal.getOrCreateInstance(modalVerificationEl);
+
+        // Show the modal
+        modalVerification.show();
+
+        // Reset button classes first
+        $("#verificationBtn")
+            .removeClass() // remove all existing classes
+            .addClass("btn"); // keep basic btn class
+
+        if (verified === "yes") {
+            console.log("yes verified", verified);
+            $("#verificationBtn")
+                .addClass("btn-light btn-wave waves-effect waves-light")
+                .text("Unverified User")
+                .attr("data-id", id);
+        } else {
+            console.log("not verified");
+            $("#verificationBtn")
+                .addClass("btn-success")
+                .text("Verified User")
+                .attr("data-id", id);
+        }
+
+        Swal.close();
+    });
 }
 
-/**
- * ✅ Only load this feature when needed (lazy)
- */
 document.addEventListener("DOMContentLoaded", () => {
     const tableEl = document.querySelector("#publicUsersTable");
     if (tableEl) public_user_list();

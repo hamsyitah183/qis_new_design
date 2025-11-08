@@ -48,96 +48,96 @@
         </div>
     </div>
 
+    <x-modal id="publicUserModal" title='Add Public User'>
+        <form id="publicUserForm">
+            @csrf
+            <div id="formPublicUser" class="alert alert-danger d-none"></div>
 
-    <!-- Public User Modal -->
-    <div class="modal fade" id="publicUserModal" tabindex="-1" aria-labelledby="publicUserModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="publicUserModalLabel">Public User Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"> </button>
+            <div class="row g-3">
+                <input type="hidden" id="userUuid" name="uuid">
+
+                <div class="col-md-6">
+                    <label class="form-label ">Full Name</label>
+                    <input type="text" class="form-control" id="fullname" name="fullname" required>
                 </div>
 
-                <form id="publicUserForm">
-                    @csrf
-                    <div class="modal-body">
-                        <div id="formPublicUser" class="alert alert-danger d-none"></div>
+                <div class="col-md-6">
+                    <label class="form-label ">IC Number</label>
+                    <input type="text" class="form-control" id="no_ic" name="no_ic" required>
+                </div>
 
-                        <div class="row g-3">
-                            <input type="hidden" id="userUuid" name="uuid">
+                <div class="col-md-6">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label ">Full Name</label>
-                                <input type="text" class="form-control" id="fullname" name="fullname" required>
-                            </div>
+                <div class="col-md-6">
+                    <label class="form-label">Account Type</label>
+                    <select class="form-select" id="account_type" name="account_type" required>
+                        <option value="individu">Individu</option>
+                        <option value="company">Company</option>
+                    </select>
+                </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label ">IC Number</label>
-                                <input type="text" class="form-control" id="no_ic" name="no_ic" required>
-                            </div>
+                <div class="col-md-6">
+                    <label class="form-label">Phone Number</label>
+                    <input type="text" class="form-control" id="phone_number" name="phone_number" required>
+                </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label">Email</label>
-                                <input type="email" class="form-control" id="email" name="email" required>
-                            </div>
+                <div class="col-md-6">
+                    <label class="form-label">Office Number</label>
+                    <input type="text" class="form-control" id="office_number" name="office_number">
+                </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label">Account Type</label>
-                                <select class="form-select" id="account_type" name="account_type" required>
-                                    <option value="individu">Individu</option>
-                                    <option value="company">Company</option>
-                                </select>
-                            </div>
+                <div class="col-md-12">
+                    <label class="form-label">Address 1</label>
 
-                            <div class="col-md-6">
-                                <label class="form-label">Phone Number</label>
-                                <input type="text" class="form-control" id="phone_number" name="phone_number" required>
-                            </div>
+                    <textarea class="form-control" name="address_1" id="address_1" cols="30" rows="2" required></textarea>
+                </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label">Office Number</label>
-                                <input type="text" class="form-control" id="office_number" name="office_number">
-                            </div>
+                <div class="col-md-12">
+                    <label class="form-label">Address 2</label>
 
-                            <div class="col-md-12">
-                                <label class="form-label">Address 1</label>
-                                {{-- <input type="text" class="form-control" id="address_1" name="address_1" required> --}}
-                                <textarea class="form-control" name="address_1" id="address_1" cols="30" rows="2" required></textarea>
-                            </div>
+                    <textarea class="form-control" id="address_2" name="address_2" cols="30" rows="2"></textarea>
+                </div>
 
-                            <div class="col-md-12">
-                                <label class="form-label">Address 2</label>
-                                {{-- <input type="text" class="form-control" id="address_2" name="address_2"> --}}
-                                <textarea class="form-control" id="address_2" name="address_2" cols="30" rows="2" required></textarea>
-                            </div>
+                <div class="col-md-4">
+                    <label class="form-label">State</label>
+                    <input type="text" class="form-control" id="state" name="state" required>
+                </div>
 
-                            <div class="col-md-4">
-                                <label class="form-label">State</label>
-                                <input type="text" class="form-control" id="state" name="state" required>
-                            </div>
+                <div class="col-md-4">
+                    <label class="form-label">District</label>
+                    <input type="text" class="form-control" id="district" name="district" required>
+                </div>
 
-                            <div class="col-md-4">
-                                <label class="form-label">District</label>
-                                <input type="text" class="form-control" id="district" name="district" required>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label">Postcode</label>
-                                <input type="text" class="form-control" id="postcode" name="postcode" required>
-                            </div>
+                <div class="col-md-4">
+                    <label class="form-label">Postcode</label>
+                    <input type="text" class="form-control" id="postcode" name="postcode" required>
+                </div>
 
 
 
 
-                        </div>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-success">Save Changes</button>
-                    </div>
-                </form>
             </div>
-        </div>
-    </div>
+
+            @slot('footer')
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" form="publicUserForm" class="btn btn-primary" id="saveUserBtn">Save</button>
+            @endslot
+        </form>
+    </x-modal>
+
+    <x-modal id="verificationModal" title="User Verification">
+        <form id="userVerificationForm">
+            @csrf
+            {{-- Add any form fields here if needed --}}
+
+            @slot('footer')
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" form="userVerificationForm" class="btn btn-primary"
+                    id="verificationBtn">Save</button>
+            @endslot
+        </form>
+    </x-modal>
 @endsection

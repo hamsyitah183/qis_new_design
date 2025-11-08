@@ -22,10 +22,9 @@ class UserController extends Controller
         $users = PublicUser::query();
         $currentUser = Auth::guard('internal')->user();
 
-
         return DataTables::of($users)
             ->addColumn('action', function ($user) use ($currentUser) {
-                // Always available buttons
+
                 $actionHtml = '
                 <div class="d-flex align-items-center gap-2">
                     <button class="btn btn-sm btn-primary text-white viewPublicUser-modal" data-id="' . $user->uuid . '" title="View">
@@ -36,13 +35,13 @@ class UserController extends Controller
                     </button>
             ';
 
-              
+                // Only show delete button if not current user
                 if (!$currentUser || $currentUser->uuid !== $user->uuid) {
                     $actionHtml .= '
-                        <button class="btn btn-sm btn-danger text-white deleteBtn" data-id="' . $user->uuid . '" title="Delete">
-                            <i class="bx bx-trash-alt"></i>
-                        </button>
-                    ';
+                    <button class="btn btn-sm btn-danger text-white deleteBtn" data-id="' . $user->uuid . '" title="Delete">
+                        <i class="bx bx-trash-alt"></i>
+                    </button>
+                ';
                 }
 
                 $actionHtml .= '</div>';
@@ -51,10 +50,17 @@ class UserController extends Controller
             })
             ->editColumn('created_at', fn($user) => $user->created_at->format('d-m-Y H:i'))
             ->editColumn('account_type', fn($user) => ucfirst($user->account_type))
-            ->editColumn('doa_verified', fn($user) => $user->doa_verified ? 'Yes' : 'No')
-            ->rawColumns(['action'])
+            ->editColumn('doa_verified', function ($user) {
+                if ($user->doa_verified) {
+                    return '<span class="badge bg-success-transparent cursor-pointer badge-verification" data-id="' . $user->uuid . '" data-verified = "yes">Verified</span>';
+                } else {
+                    return '<span class="badge bg-dark-transparent cursor-pointer badge-verification" data-id="' . $user->uuid . '" data-verified = "no">Not Verified</span>';
+                }
+            })
+            ->rawColumns(['action', 'doa_verified'])
             ->make(true);
     }
+
 
 
     public function user_data($id)
