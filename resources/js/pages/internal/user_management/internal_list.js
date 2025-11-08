@@ -95,10 +95,7 @@ async function open_internal_user_modal(mode = "add", userId = null) {
     }
 
     if (isEdit) {
-        $("#email").prop(
-            "readonly",
-            isEdit
-        );
+        $("#email").prop("readonly", isEdit);
     }
 
     Swal.fire({
@@ -115,9 +112,9 @@ async function open_internal_user_modal(mode = "add", userId = null) {
             $("#userUuid").val(user.uuid);
             $("#fullname").val(user.name);
             $("#email").val(user.email);
-            $("#phone_number").val(user.phone);
-            $("#office_number").val(user.office || "");
+            $("#phone").val(user.phone);
             $("#position").val(user.position || "");
+            $("#office").val(user.office || "");
             $("#no_ic").val(user.no_ic || "");
 
             Swal.close();
@@ -163,7 +160,7 @@ async function handle_internal_user_submit() {
                     ),
                 },
                 success: function (response) {
-                    console.log('respinse', response)
+                    console.log("respinse", response);
                     Swal.fire({
                         icon: "success",
                         title: isEdit ? "User Updated!" : "User Added!",
@@ -179,8 +176,8 @@ async function handle_internal_user_submit() {
                         const errors = xhr.responseJSON.errors;
                         Object.keys(errors).forEach((key) => {
                             const input = $(`#${key}`);
-                            input.addClass("is-invalid");
-                            $(`#error-${key}`).text(errors[key][0]);
+                            input.addClass("is-invalid"); // highlight the input
+                            $(`#error-${key}`).text(errors[key][0]); // show error below input
                         });
                     } else {
                         Swal.fire({

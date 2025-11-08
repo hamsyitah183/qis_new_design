@@ -26,7 +26,7 @@ class InternalUserSeeder extends Seeder
                 'phone' => '0130000001',
                 'position' => 'Administrator',
                 'office' => 'HQ',
-                'no_ic' => '900101-01-0001',
+                'no_ic' => '900101010001',
                 'password' => Hash::make('password123'),
             ]
         );
@@ -42,7 +42,7 @@ class InternalUserSeeder extends Seeder
                 'phone' => '0130400001',
                 'position' => 'Administrator',
                 'office' => 'HQ',
-                'no_ic' => '000101-01-0001',
+                'no_ic' => '000101010001',
                 'password' => Hash::make('password123'),
             ]
         );
@@ -59,7 +59,7 @@ class InternalUserSeeder extends Seeder
                 'phone' => '0130000002',
                 'position' => 'Officer',
                 'office' => 'District Office',
-                'no_ic' => '900101-01-0002',
+                'no_ic' => '900101010002',
                 'password' => Hash::make('password123'),
             ]
         );
@@ -76,7 +76,7 @@ class InternalUserSeeder extends Seeder
                 'phone' => '0130000003',
                 'position' => 'Clerk',
                 'office' => 'District Office',
-                'no_ic' => '900101-01-0003',
+                'no_ic' => '900101010003',
                 'password' => Hash::make('password123'),
             ]
         );

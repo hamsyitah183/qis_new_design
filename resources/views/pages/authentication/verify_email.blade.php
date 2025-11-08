@@ -1,5 +1,8 @@
 @extends('pages.front')
 
+@push('scripts')
+    @vite(['resources/js/pages/auth/verify.js'])
+@endpush
 
 @section('content')
     <div class="container-lg">
@@ -27,7 +30,11 @@
                                             @csrf
                                             <button type="submit" class="btn btn-primary">Resend Email</button>
                                         </form>
-                                        <a href="{{ route('logout') }}" class="btn btn-secondary">Logout</a>
+                                        <form method="POST" action="/logout">
+                                            @csrf
+                                            <button type="submit" class="btn btn-secondary">Logout</button>
+                                        </form>
+                                        {{-- <a href="{{ route('logout') }}" class="btn btn-secondary">Logout</a> --}}
                                     </div>
                                 </div>
                             </div>
@@ -37,12 +44,7 @@
                 </div>
                 <div class="mt-5 text-center">
                     <p>Didn't receive an email ? <a href="#" class="fw-medium text-primary"> Resend </a> </p>
-                    <p>©
-                        <script>
-                            document.write(new Date().getFullYear())
-                        </script>2025 Skote. Crafted with <i class="mdi mdi-heart text-danger"></i> by
-                        Themesbrand
-                    </p>
+                  
                 </div>
 
             </div>

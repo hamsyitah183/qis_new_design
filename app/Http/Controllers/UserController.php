@@ -6,6 +6,7 @@ use App\Models\InternalUser;
 use App\Models\PublicUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Yajra\DataTables\Facades\DataTables;
 
 class UserController extends Controller
@@ -175,13 +176,57 @@ class UserController extends Controller
     {
         $uuid = $request->input('uuid');
 
-        if($uuid) {
+        if ($uuid) {
+            $internalUser = InternalUser::where('uuid', $uuid)->first();
+
+            $request->validate([
+                'fullname' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:internal_users,email,' . $internalUser->id,
+                'no_ic' => 'required|digits:12|unique:internal_users,no_ic,' . $internalUser->id,
+                'phone' => 'required|digits_between:7,15|unique:internal_users,phone,' . $internalUser->id,
+                'position' => 'required|string|max:255',
+                'office' => 'required|string|max:255',
+            ]);
+
+            $internalUser->update([
+                'name' => $request['fullname'],
+                'email' => $request['email'],
+                'no_ic' => $request['no_ic'],
+                'phone' => $request['phone'],
+                'position' => $request['position'],
+                'office' => $request['office']
+            ]);
+
             return response()->json([
                 'used id' => $uuid,
                 'message' => 'User Updated'
             ]);
         } else {
-              return response()->json([
+            $request->validate([
+                'fullname' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:internal_users,email,',
+                'no_ic' => 'required|digits:12|unique:internal_users,no_ic,',
+                'phone' => 'required|digits_between:7,15|unique:internal_users,phone,',
+                'position' => 'required|string|max:255',
+                'office' => 'required|string|max:255',
+            ]);
+
+            $internalUser = InternalUser::create([
+                'name' => $request->fullname,
+                'username' => $request->fullname,
+                'email' => $request->email,
+                'no_ic' => $request->no_ic,
+                'phone' => $request->phone,
+                'position' =>  $request->position,
+                'office' =>  $request->office,
+                'password' => Hash::make($request->no_ic)
+
+                // 'email_verified_at' => now(),
+            ]);
+
+            $internalUser->assignRole($request['role']);
+
+            return response()->json([
                 'used id' => $uuid,
                 'message' => 'User Created'
             ]);

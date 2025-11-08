@@ -96,7 +96,7 @@
                             </div>
 
                             <!-- Password -->
-                            <div class="col-xl-6">
+                            <div class="col-xl-12">
                                 <label class="form-label text-default">Password</label>
                                 <input type="password" name="password" class="form-control" placeholder="Password">
                             </div>
@@ -104,13 +104,13 @@
                             <!-- Address 1 -->
                             <div class="col-xl-12">
                                 <label class="form-label text-default">Address 1</label>
-                                <input type="text" name="address_1" class="form-control" placeholder="Address 1">
+                                <textarea name="address_1" id="" cols="30" rows="3" class="form-control border"></textarea>
                             </div>
 
                             <!-- Address 2 (optional) -->
                             <div class="col-xl-12">
                                 <label class="form-label text-default">Address 2 (Optional)</label>
-                                <input type="text" name="address_2" class="form-control" placeholder="Address 2">
+                                <textarea name="address_2" id="" cols="30" rows="3" class="form-control border"></textarea>
                             </div>
 
                             <!-- Postcode -->

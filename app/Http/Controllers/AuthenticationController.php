@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\PublicUser;
+use App\Notifications\VerifyEmailNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -75,27 +77,45 @@ class AuthenticationController extends Controller
             'state' => 'required',
         ]);
 
-        $user = PublicUser::create([
-            'fullname' => $validated['fullname'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'no_ic' => $validated['no_ic'],
-            'account_type' => $validated['account_type'],
-            'phone_number' => $validated['phone_number'],
-            'address_1' => $validated['address_1'],
-            'address_2' => $request->address_2,
-            'postcode' => $validated['postcode'],
-            'district' => $validated['district'],
-            'state' => $validated['state'],
-        ]);
+        try {
+            DB::beginTransaction();
 
-        // Send email verification
-        $user->notify(new VerifyEmailNotification());
+            $user = PublicUser::create([
+                'fullname'     => $validated['fullname'],
+                'email'        => $validated['email'],
+                'password'     => Hash::make($validated['password']),
+                'no_ic'        => $validated['no_ic'],
+                'account_type' => $validated['account_type'],
+                'phone_number' => $validated['phone_number'],
+                'address_1'    => $validated['address_1'],
+                'address_2'    => $request->address_2,
+                'postcode'     => $validated['postcode'],
+                'district'     => $validated['district'],
+                'state'        => $validated['state'],
+            ]);
 
-        return response()->json([
-            'message' => 'Registration successful! Please check your email to verify your account.',
-        ]);
+            // Automatically log in the user
+            Auth::guard('public')->login($user);
+
+            //  Send verification email
+            $user->notify(new VerifyEmailNotification());
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Registration successful! Please verify your email to continue.',
+                'redirect' => route('verify.email'), // user is already logged in
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Registration failed. Please try again.',
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
     }
+
 
     public function logout(Request $request)
     {

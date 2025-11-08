@@ -24,13 +24,13 @@ export default defineConfig({
             input: [
                 'resources/js/app.js',
                 'resources/css/app.css',
-                // Automatically include all page-specific JS files
+
+                // 🔹 Automatically include all JS under `resources/js/pages/**`
                 ...globSync(path.resolve(__dirname, 'resources/js/pages/**/*.js')),
-                ...globSync(path.resolve(__dirname, 'resources/js/internal/**/*.js')),
-                ...globSync(path.resolve(__dirname, 'resources/js/public/**/*.js')),
             ],
             refresh: true,
         }),
         tailwindcss(),
     ],
 });
+

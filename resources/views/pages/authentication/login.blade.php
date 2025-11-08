@@ -76,7 +76,7 @@
 
                             <div class="text-center">
                                 <p class="text-muted mt-3 mb-0">Doesn't have account? <a
-                                        href="https://laravelui.spruko.com/xintra/sign-up-basic"
+                                        href="/register"
                                         class="text-primary">Register here</a></p>
                             </div>
                         </div>

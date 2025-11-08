@@ -57,8 +57,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="internalUserModalLabel">Internal User Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
                 <form id="internalUserForm">
@@ -72,34 +71,50 @@
                             <div class="col-md-6">
                                 <label class="form-label ">Full Name</label>
                                 <input type="text" class="form-control" id="fullname" name="fullname" required>
+                                <div class="invalid-feedback" id="error-fullname"></div>
+
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label ">IC Number</label>
                                 <input type="text" class="form-control" id="no_ic" name="no_ic" required>
+                                <div class="invalid-feedback" id="error-no_ic"></div>
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label">Email</label>
                                 <input type="email" class="form-control" id="email" name="email" required>
+                                <div class="invalid-feedback" id="error-email"></div>
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label">Phone Number</label>
-                                <input type="text" class="form-control" id="phone_number" name="phone_number" required>
+                                <input type="text" class="form-control" id="phone" name="phone" required>
+                                <div class="invalid-feedback" id="error-phone"></div>
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label">Position</label>
                                 <input type="text" class="form-control" id="position" name="position" required>
+                                <div class="invalid-feedback" id="error-position"></div>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Office Number</label>
-                                <input type="text" class="form-control" id="office_number" name="office_number">
+                                <label class="form-label">Office</label>
+                                <input type="text" class="form-control" id="office" name="office" required>
+                                <div class="invalid-feedback" id="error-office"></div>
                             </div>
 
-                           
+                            <div class="col-md-6">
+                                <label class="form-label">Role</label>
+                                <select class="form-select" id="role" name="role" required>
+                                    <option value="admin">Superadmin</option>
+                                    <option value="officer">Officer</option>
+                                    <option value="clerk">Clerk</option>
+                                </select>
+                            </div>
+
+
                         </div>
                     </div>
 

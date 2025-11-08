@@ -11,9 +11,9 @@ $(document).ready(function () {
             const form = $(this);
             const formData = form.serialize();
 
-            // Clear previous errors
+            // 🔹 Clear old validation feedback
             form.find(".is-invalid").removeClass("is-invalid");
-            form.find(".invalid-feedback").remove(); // remove previous error messages
+            form.find(".invalid-feedback").remove();
 
             Swal.fire({
                 title: "Logging in...",
@@ -31,7 +31,7 @@ $(document).ready(function () {
                 success: function (response) {
                     Swal.fire({
                         icon: "success",
-                        title: response.message,
+                        title: response.message || "Login successful!",
                         showConfirmButton: false,
                         timer: 1000,
                     }).then(() => {
@@ -42,27 +42,43 @@ $(document).ready(function () {
                     Swal.close();
 
                     if (xhr.status === 422) {
-                        // Validation errors
+                        // 🔸 Validation errors
                         const errors = xhr.responseJSON.errors;
-
                         for (let field in errors) {
                             const input = form.find(`[name="${field}"]`);
                             input.addClass("is-invalid");
 
-                            // Append error message below input
                             if (input.next(".invalid-feedback").length === 0) {
                                 input.after(
                                     `<div class="invalid-feedback">${errors[field][0]}</div>`
                                 );
                             }
                         }
+                    } else if (xhr.status === 401 || xhr.status === 400) {
+                        // 🔸 Authentication or general login failure
+                        const errorMsg = xhr.responseJSON?.message || "Invalid credentials.";
+                        const emailInput = form.find(`[name="email"]`);
+                        const passwordInput = form.find(`[name="password"]`);
+
+                        // Highlight both fields
+                        emailInput.addClass("is-invalid");
+                        passwordInput.addClass("is-invalid");
+
+                        // Show feedback below password
+                        if (passwordInput.next(".invalid-feedback").length === 0) {
+                            passwordInput.after(
+                                `<div class="invalid-feedback">${errorMsg}</div>`
+                            );
+                        }
                     } else {
-                        // Other errors
-                        let errorMsg = xhr.responseJSON?.message || "Something went wrong.";
+                        // 🔸 Unexpected server error
+                        let errorMsg =
+                            xhr.responseJSON?.message ||
+                            "Something went wrong. Please try again later.";
                         Swal.fire({
                             icon: "error",
-                            title: "Failed!",
-                            html: errorMsg,
+                            title: "Login Failed",
+                            text: errorMsg,
                         });
                     }
                 },
