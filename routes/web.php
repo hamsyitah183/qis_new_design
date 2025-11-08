@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Request;
@@ -18,6 +19,14 @@ Route::middleware(['multi.guest'])->group(function () {
     Route::post('/login', [AuthenticationController::class, 'loginAction'])->name('login.action');
 
     Route::post('/register', [AuthenticationController::class, 'registerPublic'])->name('register.public');
+
+    Route::get('/forgot-password', [PasswordResetController::class, 'resetPage'])->name('password.request');
+
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
+
+    Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
+
+    Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.update');
 });
 
 

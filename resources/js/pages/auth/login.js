@@ -26,7 +26,9 @@ $(document).ready(function () {
                 method: "POST",
                 data: formData,
                 headers: {
-                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
+                        "content"
+                    ),
                 },
                 success: function (response) {
                     Swal.fire({
@@ -41,46 +43,75 @@ $(document).ready(function () {
                 error: function (xhr) {
                     Swal.close();
 
-                    if (xhr.status === 422) {
-                        // 🔸 Validation errors
+                    let errorMsg =
+                        "Something went wrong. Please try again later.";
+                    let swalIcon = "error";
+                    let swalTitle = "Login Failed";
+                    let redirectUrl = null;
+
+                    // 🔸 Handle unverified users (403)
+                    if (
+                        xhr.status === 403 &&
+                        xhr.responseJSON?.status === "unverified"
+                    ) {
+                        Swal.fire({
+                            icon: "warning",
+                            title: "Email Not Verified",
+                            text: xhr.responseJSON.message,
+                            confirmButtonText: "Go to Verify Page",
+                        }).then(() => {
+                            window.location.href = xhr.responseJSON.redirect;
+                        });
+                        return;
+                    }
+
+                    // 🔸 Validation errors (422)
+                    if (xhr.status === 422 && xhr.responseJSON?.errors) {
                         const errors = xhr.responseJSON.errors;
+                        let combinedMessages = Object.values(errors)
+                            .map((errArr) => errArr.join(" "))
+                            .join("\n");
+
+                        // Highlight inputs
                         for (let field in errors) {
                             const input = form.find(`[name="${field}"]`);
                             input.addClass("is-invalid");
-
-                            if (input.next(".invalid-feedback").length === 0) {
-                                input.after(
-                                    `<div class="invalid-feedback">${errors[field][0]}</div>`
-                                );
-                            }
                         }
-                    } else if (xhr.status === 401 || xhr.status === 400) {
-                        // 🔸 Authentication or general login failure
-                        const errorMsg = xhr.responseJSON?.message || "Invalid credentials.";
-                        const emailInput = form.find(`[name="email"]`);
-                        const passwordInput = form.find(`[name="password"]`);
 
-                        // Highlight both fields
-                        emailInput.addClass("is-invalid");
-                        passwordInput.addClass("is-invalid");
-
-                        // Show feedback below password
-                        if (passwordInput.next(".invalid-feedback").length === 0) {
-                            passwordInput.after(
-                                `<div class="invalid-feedback">${errorMsg}</div>`
-                            );
-                        }
-                    } else {
-                        // 🔸 Unexpected server error
-                        let errorMsg =
-                            xhr.responseJSON?.message ||
-                            "Something went wrong. Please try again later.";
                         Swal.fire({
                             icon: "error",
-                            title: "Login Failed",
+                            title: "Validation Error",
+                            text: combinedMessages,
+                        });
+                        return;
+                    }
+
+                    // 🔸 Invalid credentials (401 or 400)
+                    if (xhr.status === 401 || xhr.status === 400) {
+                        errorMsg =
+                            xhr.responseJSON?.message ||
+                            "Invalid credentials or password.";
+                        swalIcon = "error";
+                        swalTitle = "Authentication Failed";
+
+                        Swal.fire({
+                            icon: swalIcon,
+                            title: swalTitle,
                             text: errorMsg,
                         });
+                        return;
                     }
+
+                    // 🔸 Catch-all (any unexpected error)
+                    if (xhr.responseJSON?.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+
+                    Swal.fire({
+                        icon: swalIcon,
+                        title: swalTitle,
+                        text: errorMsg,
+                    });
                 },
             });
         });

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\InternalUser;
 use App\Models\PublicUser;
 use App\Notifications\VerifyEmailNotification;
 use Illuminate\Http\Request;
@@ -31,12 +32,38 @@ class AuthenticationController extends Controller
 
         $guard = $credentials['userType'];
 
+        // Retrieve user first
+        $user = ($guard === 'public' ? PublicUser::class : InternalUser::class)
+            ::where('email', $credentials['email'])
+            ->first();
+
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User not found.',
+            ], 422);
+        }
+
+        // Attempt login first
         if (Auth::guard($guard)->attempt([
             'email' => $credentials['email'],
             'password' => $credentials['password'],
         ])) {
             $request->session()->regenerate();
 
+            // After login, check if email not verified
+            if (method_exists($user, 'hasVerifiedEmail') && !$user->hasVerifiedEmail()) {
+                // Send verification email
+                $user->notify(new VerifyEmailNotification());
+
+                return response()->json([
+                    'status' => 'unverified',
+                    'message' => 'Your email is not verified. A verification email has been sent.',
+                    'redirect' => route('verify.email'),
+                ]);
+            }
+
+            // Normal redirect if verified
             $redirect = $guard === 'public'
                 ? route('public.dashboard')
                 : route('internal.dashboard');
@@ -53,6 +80,7 @@ class AuthenticationController extends Controller
             'message' => 'Invalid credentials or user type.',
         ], 422);
     }
+
 
 
     public function register()

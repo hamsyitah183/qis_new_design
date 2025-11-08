@@ -63,7 +63,7 @@
                                             </a>
                                         </div>
                                         <div class="mt-2 text-end">
-                                            <a href="#" class="fw-normal text-muted">Forgot
+                                            <a href="/forgot-password" class="fw-normal text-muted">Forgot
                                                 password?</a>
                                         </div>
                                     </div>
