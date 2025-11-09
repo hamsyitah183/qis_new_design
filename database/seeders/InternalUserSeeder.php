@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\InternalUser;
+use Carbon\Carbon;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -21,13 +22,14 @@ class InternalUserSeeder extends Seeder
             [
                 'uuid' => Str::uuid(),
                 'name' => 'System Admin',
-                'username' => 'admin',
+                //'username' => 'admin',
                 'email' => 'admin@example.com',
                 'phone' => '0130000001',
                 'position' => 'Administrator',
                 'office' => 'HQ',
                 'no_ic' => '900101010001',
                 'password' => Hash::make('password123'),
+                
             ]
         );
         $admin->assignRole('admin');
@@ -37,13 +39,14 @@ class InternalUserSeeder extends Seeder
             [
                 'uuid' => Str::uuid(),
                 'name' => 'Hamsyitah Internal',
-                'username' => 'admin',
+                //'username' => 'admin',
                 'email' => 'hamsyitahnur@gmail.com',
                 'phone' => '0130400001',
                 'position' => 'Administrator',
                 'office' => 'HQ',
                 'no_ic' => '000101010001',
                 'password' => Hash::make('password123'),
+                'email_verified_at' => Carbon::now()
             ]
         );
         $admin2->assignRole('admin');
@@ -54,7 +57,7 @@ class InternalUserSeeder extends Seeder
             [
                 'uuid' => Str::uuid(),
                 'name' => 'Department Officer',
-                'username' => 'officer',
+                //'username' => 'officer',
                 'email' => 'officer@example.com',
                 'phone' => '0130000002',
                 'position' => 'Officer',
@@ -71,7 +74,7 @@ class InternalUserSeeder extends Seeder
             [
                 'uuid' => Str::uuid(),
                 'name' => 'Department Clerk',
-                'username' => 'clerk',
+                //'username' => 'clerk',
                 'email' => 'clerk@example.com',
                 'phone' => '0130000003',
                 'position' => 'Clerk',
