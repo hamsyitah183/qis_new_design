@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Models\InternalUser;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -62,6 +63,8 @@ class VerifyEmailNotification extends Notification
 
     protected function verificationUrl($notifiable)
     {
+        $guard = $notifiable instanceof InternalUser ? 'internal' : 'public';
+
         // Generate a temporary signed URL (valid for 60 minutes)
         return URL::temporarySignedRoute(
             'verification.verify', // 🔹 Your verification route name
@@ -69,6 +72,7 @@ class VerifyEmailNotification extends Notification
             [
                 'id' => $notifiable->getKey(),
                 'hash' => sha1($notifiable->getEmailForVerification()),
+                'guard' => $guard,
             ]
         );
     }

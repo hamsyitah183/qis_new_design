@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\InternalUser;
 use App\Models\PublicUser;
 use App\Notifications\VerifyEmailNotification;
+use Illuminate\Auth\Events\Verified;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -167,5 +169,50 @@ class AuthenticationController extends Controller
             'title' => 'Verify Email',
             'email' => $user->email
         ]);
+    }
+
+    public function verify_link(Request $request)
+    {
+        $guard = $request->query('guard', 'public'); // default to public if not set
+        $id = $request->route('id');
+        $hash = $request->route('hash');
+
+        // Determine which model to use
+        $user = $guard === 'internal'
+            ? InternalUser::findOrFail($id)
+            : PublicUser::findOrFail($id);
+
+        // Validate hash
+        if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+            abort(403, 'Invalid verification link.');
+        }
+
+        // Check if already verified
+        if ($user->hasVerifiedEmail()) {
+            return redirect()->route('login.form')->with('message', 'Email already verified.');
+        }
+
+        // Mark as verified
+        $user->markEmailAsVerified();
+        event(new Verified($user));
+
+        auth()->guard($guard)->login($user);
+
+        return redirect()->route(
+            $guard === 'public' ? 'public.dashboard' : 'internal.dashboard'
+        )->with('message', 'Your email has been successfully verified!');
+    }
+
+    public function resend_verify_link(Request $request)
+    {
+        $user = auth('public')->user() ?? auth('internal')->user();
+
+        if (!$user) {
+            return back()->withErrors(['message' => 'No authenticated user found.']);
+        }
+
+        $user->notify(new VerifyEmailNotification());
+
+        return back()->with('message', 'Verification link sent!');
     }
 }

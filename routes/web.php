@@ -46,18 +46,14 @@ Route::get('/', function () {
 Route::get('/verify-email', [AuthenticationController::class, 'verify_email'])
     ->middleware(['auth.any', 'unverified'])
     ->name('verify.email');
+
 // Verification link callback
-Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
-    $request->fulfill(); // marks the user as verified
-    return redirect('/'); // redirect to dashboard or home
-})->middleware(['auth:public,internal', 'signed'])->name('verification.verify');
+Route::get('/email/verify/{id}/{hash}', [AuthenticationController::class, 'verify_link'])
+    ->middleware('signed')
+    ->name('verification.verify');
 
 // Resend verification email
-Route::post('/email/verification-notification', function (Request $request) {
-    $user = auth('public')->user() ?? auth('internal')->user();
-    $user->sendEmailVerificationNotification();
-    return back()->with('message', 'Verification link sent!');
-})->middleware(['auth:public,internal', 'throttle:6,1'])->name('verification.send');
+Route::post('/email/verification-notification', [AuthenticationController::class, 'resend_verify_link'])->middleware(['auth:public,internal', 'throttle:6,1'])->name('verification.send');
 
 // Dashboard routes
 Route::prefix('public')
