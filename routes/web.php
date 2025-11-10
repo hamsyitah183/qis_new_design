@@ -2,13 +2,14 @@
 
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\public\importPermit\PermitApplicationController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
 
 // Logout route
-Route::post('/logout', [AuthenticationController::class, 'logout'])->name('logout');
+Route::get('/logout', [AuthenticationController::class, 'logout'])->name('logout');
 
 // Guest routes
 Route::middleware(['multi.guest'])->group(function () {
@@ -56,6 +57,7 @@ Route::prefix('public')
     ->middleware(['redirect.other.guard:public', 'auth:public', 'verified'])
     ->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
+        Route::get('/permit_application', [PermitApplicationController::class, 'show'])->name('permitApplication');
     });
 
 Route::prefix('internal')

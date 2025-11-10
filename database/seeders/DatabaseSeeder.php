@@ -26,6 +26,10 @@ class DatabaseSeeder extends Seeder
                 RoleAndPermissionSeeder::class,
                 PublicUserSeeder::class,
                 InternalUserSeeder::class,
+
+                IpEntryPointSeeder::class,
+                PublicCodeSeeder::class,
+                CountrySeeder::class,
             ]);
 
             DB::commit();
