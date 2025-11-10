@@ -232,4 +232,15 @@ class UserController extends Controller
             ]);
         }
     }
+
+    public function user_list($type)
+    {
+        if ($type === 'public') {
+            $users = PublicUser::select(['fullname', 'id'])->get();
+        } else {
+            $users = InternalUser::select(['name', 'id'])->get();
+        }
+
+        return response()->json($users);
+    }
 }

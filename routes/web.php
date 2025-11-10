@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PasswordResetController;
@@ -79,4 +80,9 @@ Route::prefix('internal')
         Route::get('/user_internal/list/data', [UserController::class, 'internal_list_data'])->name('internal.list.data');
         Route::get('/user_internal/user/data/{id}', [UserController::class, 'internal_user_data']);
         Route::post('/user_internal/save', [UserController::class, 'internal_user_save']);
+
+        Route::get('/activity_log', [ActivityLogController::class, 'log']);
+        Route::get('/activity_log/data', [ActivityLogController::class, 'data']);
+
+        Route::get('/user_list/{type}', [UserController::class, 'user_list']);
     });

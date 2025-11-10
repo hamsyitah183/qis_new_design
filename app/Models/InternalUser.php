@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasActivityLog;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Spatie\Permission\Traits\HasRoles;
@@ -14,7 +15,8 @@ use Spatie\Permission\Models\Role;
 class InternalUser extends Authenticatable implements MustVerifyEmail
 {
     //
-    use Notifiable, HasRoles, HasRoles;
+    
+    use Notifiable, HasRoles, HasRoles, HasActivityLog;
 
     protected $table = 'internal_users';
     protected $guard_name = 'internal';

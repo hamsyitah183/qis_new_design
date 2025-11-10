@@ -7711,49 +7711,55 @@ fieldset:disabled .btn-light.btn {
     color: var(--primary-color) !important
 }
 
+/* Default dropdown (downwards) */
 .dropdown-toggle:after {
     display: inline-block;
     margin-inline-start: .25rem;
     vertical-align: 0;
-    content: "ïŠ‚";
-    font-family: bootstrap-icons !important;
+    content: "\f0d7"; /* down arrow */
+    font-family: "bootstrap-icons" !important;
     border: 0;
     font-size: .6rem;
-    font-weight: 400
+    font-weight: 400;
 }
 
+/* Dropup (upwards) */
 .dropup .dropdown-toggle:after {
     display: inline-block;
     margin-inline-start: .25rem;
     vertical-align: 0;
-    content: "ïŠ†";
-    font-family: bootstrap-icons !important;
+    content: "\f0d8"; /* up arrow */
+    font-family: "bootstrap-icons" !important;
     border: 0;
     font-size: .6rem;
-    font-weight: 400
+    font-weight: 400;
 }
 
+/* Dropend (rightwards) */
 .dropend .dropdown-toggle:after {
     display: inline-block;
     margin-inline-start: .25rem;
     vertical-align: 0;
-    content: "ïŠ…";
-    font-family: bootstrap-icons !important;
+    content: "\f0da"; /* right arrow */
+    font-family: "bootstrap-icons" !important;
     border: 0;
     font-size: .6rem;
-    font-weight: 400
+    font-weight: 400;
 }
 
+/* Dropstart (leftwards) */
 .dropstart .dropdown-toggle:before {
     display: inline-block;
     margin-inline-start: .25rem;
     vertical-align: 0;
-    content: "ïŠ„";
-    font-family: bootstrap-icons !important;
+    content: "\f0d9"; /* left arrow */
+    font-family: "bootstrap-icons" !important;
     border: 0;
     font-size: .6rem;
-    font-weight: 400
+    font-weight: 400;
 }
+
+
 
 .btn.dropdown-toggle-split {
     opacity: .85

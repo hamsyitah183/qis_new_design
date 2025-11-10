@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\Models\Activity;
 
 class AuthenticationController extends Controller
 {
@@ -149,10 +150,34 @@ class AuthenticationController extends Controller
 
     public function logout(Request $request)
     {
+        $user = null;
+        $guard = null;
+
         if (Auth::guard('public')->check()) {
+            $user = Auth::guard('public')->user();
+            $guard = 'public';
             Auth::guard('public')->logout();
         } elseif (Auth::guard('internal')->check()) {
+            $user = Auth::guard('internal')->user();
+            $guard = 'internal';
             Auth::guard('internal')->logout();
+        }
+
+        if ($user) {
+            $username = $user->name ?? $user->fullname ?? 'Unknown user';
+
+            activity()
+                ->tap(function (Activity $activity) {
+                    $activity->log_name = 'user_activity';
+                })
+                ->event('logout')
+                ->causedBy($user)
+                ->performedOn($user)
+                ->withProperties([
+                    'ip' => $request->ip(),
+                    'guard' => $guard,
+                ])
+                ->log("{$username} logged out from the system ({$guard} guard).");
         }
 
         $request->session()->invalidate();
@@ -160,6 +185,7 @@ class AuthenticationController extends Controller
 
         return redirect('/login');
     }
+
 
     // verify email
     public function verify_email()
