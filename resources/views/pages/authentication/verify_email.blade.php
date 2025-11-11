@@ -25,8 +25,10 @@
                                     <p>We have sent you verification email <span
                                             class="fw-semibold">{{ $user->email ?? '' }}</span>,
                                         Please check it</p>
+                                    <div class="alert alert-success text-center mb-4" id="emailSent" style="display: none">
+                                    </div>
                                     <div class="mt-4 d-flex justify-content-center gap-2">
-                                        <form method="POST" action="{{ route('verification.send') }}">
+                                        <form method="POST" action="{{ route('verification.send') }}" id="verifyEmailForm">
                                             @csrf
                                             <button type="submit" class="btn btn-primary">Resend Email</button>
                                         </form>
@@ -44,7 +46,7 @@
                 </div>
                 <div class="mt-5 text-center">
                     <p>Didn't receive an email ? <a href="#" class="fw-medium text-primary"> Resend </a> </p>
-                  
+
                 </div>
 
             </div>
