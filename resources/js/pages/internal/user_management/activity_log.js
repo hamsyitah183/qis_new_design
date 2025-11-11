@@ -3,27 +3,99 @@ import Swal from "sweetalert2";
 import flatpickr from "flatpickr";
 
 let userTypeVal = 0; // ✅ Define globally so all functions can access it
+let start = null;
+let end = null;
+let userIds = [];
+let startTime = null;
+let endTime = null;
 
-// 🗓️ Initialize flatpickr date range picker
-const picker = flatpickr("#daterange", {
-    mode: "range",
-    dateFormat: "Y-m-d",
-    onChange(selectedDates, dateStr, instance) {
-        if (selectedDates.length === 2) {
-            const start = selectedDates[0].toISOString().split("T")[0];
-            const end = selectedDates[1].toISOString().split("T")[0];
-            loadActivityTimeline(start, end);
-            instance.close();
+window.allUsers = [];
+window.selectedUserIds = new Set();
+
+// ✅ Start DateTime Picker (12-hour format)
+const startDateTimePicker = flatpickr("#startDateTime", {
+    enableTime: true,
+    dateFormat: "Y-m-d h:i K", // 12-hour format with AM/PM
+    time_24hr: false,
+    defaultHour: 0,
+    defaultMinute: 0,
+    onChange(selectedDates, dateStr) {
+        if (selectedDates.length > 0) {
+            const selected = selectedDates[0];
+
+            // Format the date in local time
+            const yyyy = selected.getFullYear();
+            const mm = String(selected.getMonth() + 1).padStart(2, "0");
+            const dd = String(selected.getDate()).padStart(2, "0");
+            start = `${yyyy}-${mm}-${dd}`;
+
+            // Get time part from dateStr (12-hour format)
+            startTime = dateStr.split(" ")[1] + " " + dateStr.split(" ")[2];
+
+            console.log("selected start", 'start', start, 'startTime', startTime);
+
+            loadActivityTimeline(
+                start,
+                end,
+                startTime,
+                endTime,
+                userTypeVal,
+                userIds
+            );
         }
     },
 });
 
+// ✅ End DateTime Picker (12-hour format)
+const endDateTimePicker = flatpickr("#endDateTime", {
+    enableTime: true,
+    dateFormat: "Y-m-d h:i K", // 12-hour format with AM/PM
+    time_24hr: false,
+    defaultHour: 11, // 11 PM
+    defaultMinute: 59,
+    onChange(selectedDates, dateStr) {
+        if (selectedDates.length > 0) {
+            const selected = selectedDates[0];
+
+            // Format the date in local time
+            const yyyy = selected.getFullYear();
+            const mm = String(selected.getMonth() + 1).padStart(2, "0");
+            const dd = String(selected.getDate()).padStart(2, "0");
+            end = `${yyyy}-${mm}-${dd}`;
+
+            // Get time part from dateStr (12-hour format)
+            endTime = dateStr.split(" ")[1] + " " + dateStr.split(" ")[2];
+
+            console.log("selected end", 'end', end, 'endTime', endTime);
+
+            loadActivityTimeline(
+                start,
+                end,
+                startTime,
+                endTime,
+                userTypeVal,
+                userIds
+            );
+        }
+    },
+});
+
+
 // ✅ Load all activity logs when page loads
 loadActivityTimeline();
 
-// 🚀 Load activity timeline (with optional date filter)
-async function loadActivityTimeline(startDate = null, endDate = null) {
-    const allInputs = document.querySelectorAll("input, select, button, textarea");
+// 🚀 Load activity timeline (with optional filters)
+async function loadActivityTimeline(
+    startDate = null,
+    endDate = null,
+    startTime = null,
+    endTime = null,
+    userTypeVal,
+    userId = null
+) {
+    const allInputs = document.querySelectorAll(
+        "input, select, button, textarea"
+    );
     allInputs.forEach((el) => (el.disabled = true));
 
     try {
@@ -34,19 +106,28 @@ async function loadActivityTimeline(startDate = null, endDate = null) {
         });
 
         const params = {};
-        if (startDate && endDate) {
-            params.start_date = startDate;
-            params.end_date = endDate;
-        }
 
-        // 🧍 Filter by user type if selected
+        // ✅ Combine date & time filters
+        if (startDate) params.start_date = startDate;
+        if (endDate) params.end_date = endDate;
+        if (startTime) params.start_time = startTime;
+        if (endTime) params.end_time = endTime;
+
         if (userTypeVal === "public") {
             params.causer_type = "App\\Models\\PublicUser";
         } else if (userTypeVal === "internal") {
             params.causer_type = "App\\Models\\InternalUser";
         }
 
-        const { data: activities } = await axios.get("/internal/activity_log/data", { params });
+        if (userId && userId.length) {
+            params.causer_id = userId;
+        }
+
+        const { data: activities } = await axios.get(
+            "/internal/activity_log/data",
+            { params }
+        );
+
         const groupedActivities = groupActivitiesByDate(activities);
         renderTimeline(groupedActivities);
 
@@ -89,7 +170,9 @@ function renderTimeline(groupedActivities) {
     }
 
     Object.entries(groupedActivities).forEach(([date, activities]) => {
-        activities.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        activities.sort(
+            (a, b) => new Date(a.created_at) - new Date(b.created_at)
+        );
         const dateSection = document.createElement("div");
         dateSection.classList.add("timeline-date-section");
         dateSection.innerHTML = `
@@ -103,9 +186,12 @@ function renderTimeline(groupedActivities) {
                     <div class="timeline-right">
                         <div class="timeline-content">
                             <p class="timeline-date text-muted mb-2">
-                                ${new Date(activity.created_at).toLocaleTimeString([], {
+                                ${new Date(
+                                    activity.created_at
+                                ).toLocaleTimeString([], {
                                     hour: "2-digit",
                                     minute: "2-digit",
+                                    hour12: true,
                                 })}
                             </p>
                             <div class="timeline-box">
@@ -113,8 +199,12 @@ function renderTimeline(groupedActivities) {
                                 ${
                                     activity.properties?.attributes
                                         ? `<p class="text-muted mb-0 ms-2">
-                                            Changed <b>${Object.keys(activity.properties.attributes).join(", ")}</b>
-                                            to <b>${Object.values(activity.properties.attributes).join(", ")}</b>
+                                            Changed <b>${Object.keys(
+                                                activity.properties.attributes
+                                            ).join(", ")}</b>
+                                            to <b>${Object.values(
+                                                activity.properties.attributes
+                                            ).join(", ")}</b>
                                         </p>`
                                         : ""
                                 }
@@ -128,17 +218,47 @@ function renderTimeline(groupedActivities) {
     });
 }
 
-// 🔄 Handle user type change
+// 🔹 When user changes type (public/internal)
 $("#userType").on("change", function (e) {
     e.preventDefault();
+
+    $("#searchUserInput").val("");
+    $("#userList input:checkbox").prop("checked", false);
+
     userTypeVal = $(this).val();
     console.log("Selected user type:", userTypeVal);
 
-    const modalTitle = $("#accountUserModalLabel");
-    const dropdownMenu = $(".dropdown-menu");
-    const dropdownButton = $("#categoryDropdown");
+    if (!userTypeVal || userTypeVal == 0) {
+        Swal.fire("Error", "Choose User Type first!", "error");
+        return;
+    }
 
-    // 🧭 Update modal + dropdown items
+    // 🔸 Setup modal title & dropdowns
+    setupUserModal(userTypeVal);
+
+    // 🔸 Load user list separately
+    loadUserList(userTypeVal);
+
+    // Optional: load timeline
+    loadActivityTimeline(start, end, startTime, endTime, userTypeVal, userIds);
+});
+
+// 🔹 When user clicks the account button
+$("#userAccountBtn").on("click", function (e) {
+    e.preventDefault();
+    const modal = new bootstrap.Modal("#accountUserModal");
+    modal.show();
+});
+
+// 🔹 Setup modal interface (title + dropdown)
+function setupUserModal(userTypeVal) {
+    const modal = $("#accountUserModal");
+    const modalTitle = modal.find("#accountUserModalLabel");
+    const dropdownButton = modal.find("#categoryDropdown");
+    const dropdownMenu = modal.find(".dropdown-menu");
+
+    dropdownButton.css("display", "block");
+
     if (userTypeVal === "public") {
         modalTitle.text("Choose Public User Account");
         dropdownButton.text("Category");
@@ -156,22 +276,139 @@ $("#userType").on("change", function (e) {
             <li><a class="dropdown-item" href="#">Manager</a></li>
             <li><a class="dropdown-item" href="#">Staff</a></li>
         `);
+    } else {
+        modalTitle.text("Choose User Account");
+        dropdownButton.css("display", "none");
     }
 
-    // ✅ Rebind dropdown click events safely
-    dropdownMenu.find(".dropdown-item").off("click").on("click", function () {
-        const selectedText = $(this).text().trim();
-        dropdownButton.text(selectedText);
+    // 🔹 Handle dropdown click
+    dropdownMenu
+        .off("click", ".dropdown-item")
+        .on("click", ".dropdown-item", function (e) {
+            e.preventDefault();
+            const selectedText = $(this).text().trim();
+            dropdownButton.text(selectedText);
+            console.log("Selected dropdown:", selectedText);
+        });
+}
+
+function loadUserList(userTypeVal) {
+    Swal.fire({
+        title: "Loading...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
     });
+
+    window.selectedUserIds.clear();
+
+    $.ajax({
+        url: `/internal/user_list/${userTypeVal}`,
+        type: "GET",
+        success: function (response) {
+            Swal.close();
+            if (response && response.users) {
+                window.allUsers = response.users;
+                listUser(response.users);
+            } else {
+                Swal.fire("No Data", "No users found for this type.", "info");
+            }
+        },
+        error: function () {
+            Swal.fire("Error", "Unable to load user details", "error");
+        },
+    });
+}
+
+// 🔹 Search filter (real-time)
+$("#searchUserInput").on("input", function () {
+    const keyword = $(this).val().toLowerCase().trim();
+    const filteredUsers = window.allUsers.filter((user) =>
+        user.fullname.toLowerCase().includes(keyword)
+    );
+    listUser(filteredUsers);
 });
 
-// 🧩 Open modal after selecting user type
-$("#userAccountBtn").on("click", function (e) {
+// 🔹 Render user list
+function listUser(users) {
+    console.log("Rendering users:", users);
+    let listUserText = "";
+
+    users.forEach((user) => {
+        const isChecked = window.selectedUserIds.has(user.id) ? "checked" : "";
+        listUserText += `
+        <div class="col-6 pb-2"> 
+            <div class="form-check">
+                <input class="form-check-input me-2 user-checkbox" type="checkbox" value="${user.id}" id="user-${user.id}" ${isChecked}>
+                <label class="form-check-label" for="user-${user.id}">
+                    ${user.fullname}
+                </label>
+            </div>
+        </div>`;
+    });
+
+    $("#userList").html(listUserText);
+    $(".user-checkbox")
+        .off("change")
+        .on("change", function () {
+            const userId = parseInt($(this).val());
+            if ($(this).is(":checked")) {
+                window.selectedUserIds.add(userId);
+            } else {
+                window.selectedUserIds.delete(userId);
+            }
+            console.log("Selected IDs:", Array.from(window.selectedUserIds));
+        });
+}
+
+$("#submitBtn").on("click", function (e) {
     e.preventDefault();
-    if (userTypeVal === 0) {
-        Swal.fire("Error", "Please choose user type first!", "error");
-        return;
+
+    const selectedIds = Array.from(window.selectedUserIds);
+    console.log("submit selected IDs:", selectedIds);
+
+    userIds = selectedIds;
+
+    // Pass user IDs as the correct 5th argument (userId)
+    loadActivityTimeline(start, end, startTime, endTime, userTypeVal, userIds);
+
+    // Hide modal properly
+    const modalEl = document.getElementById("accountUserModal");
+    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (modalInstance) modalInstance.hide();
+});
+
+$("#clearAll").on("click", function (e) {
+    e.preventDefault();
+
+    // Reset global variables
+    userTypeVal = 0;
+    start = null;
+    end = null;
+    userIds = [];
+
+    window.allUsers = [];
+    window.selectedUserIds = new Set();
+
+    // Reset dropdown to default
+    if (userTypeVal) {
+        $("#userType").val(0).trigger("change");
     }
-    const modal = new bootstrap.Modal("#accountUserModal");
-    modal.show();
+
+    // Reset flatpickr date range
+    if (startDateTimePicker) startDateTimePicker.clear();
+    if (endDateTimePicker) endDateTimePicker.clear();
+
+    // Clear checkboxes and user list
+    $("#searchUserInput").val("");
+    $("#userList").empty();
+    $("#userList input:checkbox").prop("checked", false);
+
+    // Reload timeline without any filters
+    loadActivityTimeline();
+});
+
+$("#find").on("click", function (e) {
+    e.preventDefault();
+
+    loadActivityTimeline(start, end, startTime, endTime, userTypeVal, userIds);
 });

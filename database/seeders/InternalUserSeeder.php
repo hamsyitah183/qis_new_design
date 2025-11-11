@@ -21,7 +21,7 @@ class InternalUserSeeder extends Seeder
             ['email' => 'admin@example.com'],
             [
                 'uuid' => Str::uuid(),
-                'name' => 'System Admin',
+                'fullname' => 'System Admin',
                 //'username' => 'admin',
                 'email' => 'admin@example.com',
                 'phone' => '0130000001',
@@ -38,7 +38,7 @@ class InternalUserSeeder extends Seeder
             ['email' => 'hamsyitahnur@gmail.com'],
             [
                 'uuid' => Str::uuid(),
-                'name' => 'Hamsyitah Internal',
+                'fullname' => 'Hamsyitah Internal',
                 //'username' => 'admin',
                 'email' => 'hamsyitahnur@gmail.com',
                 'phone' => '0130400001',
@@ -56,7 +56,7 @@ class InternalUserSeeder extends Seeder
             ['email' => 'officer@example.com'],
             [
                 'uuid' => Str::uuid(),
-                'name' => 'Department Officer',
+                'fullname' => 'Department Officer',
                 //'username' => 'officer',
                 'email' => 'officer@example.com',
                 'phone' => '0130000002',
@@ -73,7 +73,7 @@ class InternalUserSeeder extends Seeder
             ['email' => 'clerk@example.com'],
             [
                 'uuid' => Str::uuid(),
-                'name' => 'Department Clerk',
+                'fullname' => 'Department Clerk',
                 //'username' => 'clerk',
                 'email' => 'clerk@example.com',
                 'phone' => '0130000003',

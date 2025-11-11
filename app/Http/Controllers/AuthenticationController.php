@@ -215,7 +215,7 @@ class AuthenticationController extends Controller
 
         // Check if already verified
         if ($user->hasVerifiedEmail()) {
-            return redirect()->route('login.form')->with('message', 'Email already verified.');
+            return redirect()->route('login')->with('message', 'Email already verified.');
         }
 
         // Mark as verified

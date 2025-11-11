@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -108,14 +109,14 @@ class UserController extends Controller
 
     public function internal_list_data(Request $request)
     {
-        $query = InternalUser::select(['uuid', 'name', 'email', 'phone', 'position', 'office'])
+        $query = InternalUser::select(['uuid', 'fullname', 'email', 'phone', 'position', 'office'])
             ->with('roles'); // Using Spatie roles
 
         $currentUser = Auth::guard('internal')->user();
 
         return DataTables::of($query)
             ->addColumn('role', function ($user) {
-                return $user->roles->pluck('name')->implode(', ') ?: 'N/A';
+                return $user->roles->pluck('fullname')->implode(', ') ?: 'N/A';
             })
             ->addColumn('action', function ($user) use ($currentUser) {
                 $actionHtml = '
@@ -151,7 +152,7 @@ class UserController extends Controller
         $user = InternalUser::where('uuid', $uuid)->firstOrFail();
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'fullname' => 'required|string|max:255',
             'email' => 'required|email|unique:internal_users,email,' . $user->id,
             'phone' => 'required|string|unique:internal_users,phone,' . $user->id,
             'position' => 'nullable|string|max:255',
@@ -177,7 +178,7 @@ class UserController extends Controller
         $uuid = $request->input('uuid');
 
         if ($uuid) {
-            $internalUser = InternalUser::where('uuid', $uuid)->first();
+            $internalUser = InternalUser::where('uuid', $uuid)->firstOrFail();
 
             $request->validate([
                 'fullname' => 'required|string|max:255',
@@ -189,12 +190,12 @@ class UserController extends Controller
             ]);
 
             $internalUser->update([
-                'name' => $request['fullname'],
-                'email' => $request['email'],
-                'no_ic' => $request['no_ic'],
-                'phone' => $request['phone'],
-                'position' => $request['position'],
-                'office' => $request['office']
+                'fullname' => $request->fullname,
+                'email' => $request->email,
+                'no_ic' => $request->no_ic,
+                'phone' => $request->phone,
+                'position' => $request->position,
+                'office' => $request->office,
             ]);
 
             return response()->json([
@@ -204,43 +205,45 @@ class UserController extends Controller
         } else {
             $request->validate([
                 'fullname' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:internal_users,email,',
-                'no_ic' => 'required|digits:12|unique:internal_users,no_ic,',
-                'phone' => 'required|digits_between:7,15|unique:internal_users,phone,',
+                'email' => 'required|string|email|max:255|unique:internal_users,email',
+                'no_ic' => 'required|digits:12|unique:internal_users,no_ic',
+                'phone' => 'required|digits_between:7,15|unique:internal_users,phone',
                 'position' => 'required|string|max:255',
                 'office' => 'required|string|max:255',
+                'role' => 'required|string', // Make sure role is sent
             ]);
 
             $internalUser = InternalUser::create([
-                'name' => $request->fullname,
-                'username' => $request->fullname,
+                'uuid' => Str::uuid()->toString(), // ✅ Add a UUID
+                'fullname' => $request->fullname,
                 'email' => $request->email,
                 'no_ic' => $request->no_ic,
                 'phone' => $request->phone,
-                'position' =>  $request->position,
-                'office' =>  $request->office,
-                'password' => Hash::make($request->no_ic)
-
-                // 'email_verified_at' => now(),
+                'position' => $request->position,
+                'office' => $request->office,
+                'password' => Hash::make($request->no_ic),
             ]);
 
-            $internalUser->assignRole($request['role']);
+            $internalUser->assignRole($request->role);
 
             return response()->json([
-                'used id' => $uuid,
+                'used id' => $internalUser->uuid, // Return the new UUID
                 'message' => 'User Created'
             ]);
         }
     }
+
 
     public function user_list($type)
     {
         if ($type === 'public') {
             $users = PublicUser::select(['fullname', 'id'])->get();
         } else {
-            $users = InternalUser::select(['name', 'id'])->get();
+            $users = InternalUser::select(['fullname', 'id'])->get();
         }
 
-        return response()->json($users);
+        return response()->json([
+            'users' => $users
+        ]);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\InternalUser;
 use App\Models\PublicUser;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Spatie\Activitylog\Models\Activity;
 
@@ -21,26 +22,63 @@ class ActivityLogController extends Controller
     {
         $query = Activity::orderBy('created_at', 'desc');
 
-        // 📅 Optional date range filter
-        if ($request->has(['start_date', 'end_date'])) {
+        if ($request->filled('start_date') || $request->filled('end_date') || $request->filled('start_time') || $request->filled('end_time')) {
+
+            $startDate = $request->start_date ?? now()->toDateString();
+            $endDate   = $request->end_date ?? $startDate;
+
+            // ✅ Convert 12-hour AM/PM to 24-hour format
+            $startTime = $request->start_time
+                ? Carbon::createFromFormat('h:i A', $request->start_time, config('app.timezone'))->format('H:i:s')
+                : '00:00:00';
+
+            $endTime = $request->end_time
+                ? Carbon::createFromFormat('h:i A', $request->end_time, config('app.timezone'))->format('H:i:s')
+                : '23:59:59';
+
+            // ✅ If end time is 12:00 AM and end date = start date, set to 23:59:59
+            if ($endTime === '00:00:00' && $endDate === $startDate) {
+                $endTime = '23:59:59';
+            }
+
+            $startDateTime = Carbon::createFromFormat('Y-m-d H:i:s', "{$startDate} {$startTime}", config('app.timezone'));
+            $endDateTime   = Carbon::createFromFormat('Y-m-d H:i:s', "{$endDate} {$endTime}", config('app.timezone'));
+
+            // ✅ Ensure end >= start
+            if ($endDateTime->lessThan($startDateTime)) {
+                $endDateTime = $startDateTime->copy()->endOfDay();
+            }
+
+            // ✅ Convert to UTC for DB
             $query->whereBetween('created_at', [
-                $request->start_date . ' 00:00:00',
-                $request->end_date . ' 23:59:59',
+                $startDateTime->copy()->setTimezone('UTC'),
+                $endDateTime->copy()->setTimezone('UTC')
             ]);
         }
 
-        // 👥 Optional causer_type filter
         if ($request->filled('causer_type')) {
             $query->where('causer_type', $request->causer_type);
         }
 
+        if ($request->filled('causer_id')) {
+            $causerIds = is_array($request->causer_id)
+                ? $request->causer_id
+                : explode(',', $request->causer_id);
+            $query->whereIn('causer_id', $causerIds);
+        }
+
+        $query->whereNotNull('causer_id');
+
         $activity_log = $query->get()->map(function ($activity) {
             $causer = null;
+
             if ($activity->causer_type === \App\Models\InternalUser::class) {
                 $causer = \App\Models\InternalUser::find($activity->causer_id);
             } elseif ($activity->causer_type === \App\Models\PublicUser::class) {
                 $causer = \App\Models\PublicUser::find($activity->causer_id);
             }
+
+            if (!$causer) return null;
 
             return [
                 'id' => $activity->id,
@@ -52,18 +90,18 @@ class ActivityLogController extends Controller
                 'causer_type' => $activity->causer_type,
                 'causer_id' => $activity->causer_id,
                 'properties' => $activity->properties,
-                'created_at' => $activity->created_at,
-                'updated_at' => $activity->updated_at,
-                'causer' => $causer ? [
+                'created_at' => $activity->created_at->copy()->setTimezone(config('app.timezone'))->toDateTimeString(),
+                'updated_at' => $activity->updated_at->copy()->setTimezone(config('app.timezone'))->toDateTimeString(),
+                'causer' => [
                     'id' => $causer->id,
                     'name' => $causer->name ?? $causer->fullname ?? 'Unknown User',
                     'email' => $causer->email ?? null,
                     'phone' => $causer->phone ?? null,
                     'type' => class_basename($activity->causer_type),
-                ] : null,
+                ],
             ];
-        });
+        })->filter();
 
-        return response()->json($activity_log);
+        return response()->json($activity_log->values());
     }
 }

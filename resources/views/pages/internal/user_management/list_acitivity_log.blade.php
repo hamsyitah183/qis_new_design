@@ -23,10 +23,10 @@
             <div class="col-xxl-11">
                 <div class="card custom-card border overflow-hidden">
 
-                    <div class="card-header pb-5 d-block">
+                    <div class="card-header pb-2 d-block">
                         <div class="row">
 
-                            <div class="col-4">
+                            <div class="col-6">
                                 <span class="mb-1">User Type</span>
                                 <select class="form-select form-select-lg" aria-label=".form-select-lg example"
                                     id="userType" disabled>
@@ -36,7 +36,7 @@
                                 </select>
                             </div>
 
-                            <div class="col-4">
+                            <div class="col-6">
                                 <span class="mb-1">User Account</span>
                                 <div class="input-group">
                                     <div class="btn btn-md btn-primary w-100" id="userAccountBtn" disabled>
@@ -45,14 +45,34 @@
                                 </div>
                             </div>
 
-                            <div class="col-4">
-                                <span class="mb-1">Date</span>
+                            <div class="col-6 mt-4">
+                                <span class="mb-1">Start Date & Time</span>
                                 <div class="input-group">
-                                    <div class="input-group-text text-muted"> <i class="ri-calendar-line"></i> </div>
-                                    <input type="text" class="form-control flatpickr-input" id="daterange"
-                                        placeholder="Date range picker" readonly disabled>
+                                    <div class="input-group-text text-muted">
+                                        <i class="ri-calendar-line"></i>
+                                    </div>
+                                    <input type="text" id="startDateTime" class="form-control flatpickr"
+                                        placeholder="Select start date & time">
                                 </div>
                             </div>
+
+                            <div class="col-6 mt-4">
+                                <span class="mb-1">End Date & Time</span>
+                                <div class="input-group">
+                                    <div class="input-group-text text-muted">
+                                        <i class="ri-calendar-line"></i>
+                                    </div>
+                                    <input type="text" id="endDateTime" class="form-control flatpickr"
+                                        placeholder="Select end date & time">
+                                </div>
+                            </div>
+
+                        </div>
+
+                        {{-- clear button --}}
+                        <div class="me-auto pt-2 d-flex align-items-end justify-content-end">
+                            <button class="btn btn-sm btn-primary me-1" id="find">Search</button>
+                            <button class="btn btn-sm btn-secondary" id="clearAll">Clear All</button>
                         </div>
                     </div>
 
@@ -109,7 +129,7 @@
         <form id="accountUserList">
             <div class="input-group input-group-sm input-btn-outline mb-3">
                 <input type="text" class="form-control" aria-label="Text input with dropdown button"
-                    placeholder="Search Name....">
+                    placeholder="Search Name...." id="searchUserInput">
 
                 <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"
                     aria-expanded="false" id="categoryDropdown">Category</button>
@@ -119,6 +139,20 @@
                     <li><a class="dropdown-item" href="javascript:void(0);">Company</a></li>
                 </ul>
             </div>
+
+            <div>
+                <div class="px-0 py-3 pb-0">
+                    <div class="row g-2" id="userList">
+
+                    </div>
+                </div>
+
+            </div>
         </form>
+
+        @slot('footer')
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" form="userVerificationForm" class="btn btn-primary" id="submitBtn">Submit</button>
+        @endslot
     </x-modal>
 @endsection
