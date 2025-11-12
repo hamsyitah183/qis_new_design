@@ -290,30 +290,36 @@
             <ul class="main-header-dropdown dropdown-menu pt-0 overflow-hidden header-profile-dropdown dropdown-menu-end"
                 aria-labelledby="mainHeaderProfile">
                 <li>
-                    <div class="dropdown-item text-center border-bottom" id = "redirectProfile">
-                        <span>{{ Auth::user()->fullname ?? 'Guest' }}</span>
+                    <div class="dropdown-item text-center border-bottom" id="redirectProfile">
                         @php
-                            $user = Auth::guard('public')->user();
+                            $internalUser = Auth::guard('internal')->user();
+                            $publicUser = Auth::guard('public')->user();
                         @endphp
 
+                        <span>
+                            {{ $internalUser->name ?? ($publicUser->fullname ?? 'Guest') }}
+                        </span>
+
                         <span class="d-block fs-12 text-muted">
-                            @if (Auth::guard('internal')->check())
+                            @if ($internalUser)
                                 Internal User
-                            @elseif ($user)
+                            @elseif ($publicUser)
                                 Public User
-                                @if ($user->doa_verified)
+                                @if ($publicUser->approved->doa_verified)
                                     <span class="badge bg-success-transparent ms-1" title="Verified by DOA">
                                         <i class="bx bx-check"></i>
                                     </span>
                                 @else
                                     <span class="badge bg-dark-transparent ms-1" title="Not verified by DOA">
-                                        <i class="bx bx-check"></i>
+                                        <i class="bx bx-x"></i>
                                     </span>
                                 @endif
+                            @else
+                                Guest
                             @endif
                         </span>
-
                     </div>
+
                 </li>
 
 

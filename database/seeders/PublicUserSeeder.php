@@ -29,9 +29,9 @@ class PublicUserSeeder extends Seeder
             'district' => 'Tambunan',
             'state' => 'Sabah',
             'password' => Hash::make('password123'), // change this if needed
-            'doa_verified' => 0,
-            'verification_attachment' => null,
-            'email_verified_at' => null,
+            // 'doa_verified' => 0,
+            // 'verification_attachment' => null,
+            'email_verified_at' => now(),
         ]);
 
         if ($public = PublicUser::where('email', 'hamsyitahnur@example.com')->first()) {

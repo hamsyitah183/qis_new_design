@@ -81,7 +81,7 @@
 
                 <div class="col-md-6">
                     <label class="form-label">Phone Number</label>
-                    <input type="text" class="form-control" id="phone_number" name="phone" required>
+                    <input type="text" class="form-control" id="phone_number" name="phone_number" required>
                 </div>
 
                 <div class="col-md-6">
@@ -132,6 +132,11 @@
         <form id="userVerificationForm">
             @csrf
             {{-- Add any form fields here if needed --}}
+            <div class="mb-2 text-center fs-14"><span class="fw-bold me-2 ">User IC: </span> <span class="ic"></span></div>
+
+            <div class="" id="userIC">
+                
+            </div>
 
             @slot('footer')
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

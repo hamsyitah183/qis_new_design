@@ -168,7 +168,7 @@
 
             {{-- buttons --}}
             <div class="d-flex justify-content-end align-items-end">
-                <button class="btn-sm btn-secondary" type="submit">Update</button>
+                <button class="btn-sm btn-secondary border" type="submit">Update</button>
             </div>
         </div>
     </li>

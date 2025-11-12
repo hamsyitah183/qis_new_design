@@ -62,6 +62,9 @@ Route::prefix('public')
     ->middleware(['redirect.other.guard:public', 'auth:public', 'verified'])
     ->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
+
+        Route::post('/upload-verification', [UserController::class, 'uploadVerificationAttachment'])
+            ->name('user.uploadVerification');
     });
 
 Route::prefix('internal')
@@ -85,6 +88,8 @@ Route::prefix('internal')
         Route::get('/activity_log/data', [ActivityLogController::class, 'data']);
 
         Route::get('/user_list/{type}', [UserController::class, 'user_list']);
+
+        Route::get('/verification/{id}', [UserController::class, 'verificationAttachment']);
     });
 
 

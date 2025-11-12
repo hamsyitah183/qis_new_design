@@ -31,8 +31,8 @@ class PublicUser extends Authenticatable implements MustVerifyEmail
         'district',
         'state',
         'password',
-        'doa_verified',
-        'verification_attachment',
+        // 'doa_verified',
+        // 'verification_attachment',
         'email_verified_at',
     ];
 
@@ -53,5 +53,10 @@ class PublicUser extends Authenticatable implements MustVerifyEmail
                 $user->uuid = (string) Str::uuid();
             }
         });
+    }
+
+    public function approved()
+    {
+        return $this->hasOne(ApprovedPublic::class, 'user_id', 'uuid');
     }
 }

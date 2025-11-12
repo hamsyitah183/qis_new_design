@@ -46,6 +46,7 @@ function fillTheData(user, type) {
     const fullAddress =
         user.office ??
         user.address_1 + (user.address_2 ? `, ${user.address_2}` : "");
+    let badgeVerification = "";
     $(".type").val(type);
     $(".uuid").val(user.uuid);
     $(".fullname").val(user.fullname).text(user.fullname);
@@ -70,6 +71,42 @@ function fillTheData(user, type) {
         $(".email").prop("readonly", true);
         $(".ic").prop("readonly", true);
     }
+
+    if (type === "public") {
+        if (user.approved?.doa_verified) {
+            badgeVerification += ` <span class="badge bg-success-transparent ms-1" title="Verified by DOA">
+            Verified by DOA
+        </span>`;
+        } else {
+            badgeVerification = ` <span class="badge bg-dark-transparent ms-1" title="Not verified by DOA">
+                Not Verified by DOA
+            </span>`;
+        }
+
+        $("#imgLink").attr("src", user.approved.verification_attachment);
+        $(".submittedVerification").text(formatTime(user.approved?.updated_at) ?? "");
+        // Approver name
+        $(".approvedBy").text(user.approved?.approver?.fullname ?? "");
+        $(".approvedDate").text(
+            user.approved?.doa_approved_time ? `on (${formatTime(user.approved.doa_approved_time)})` : ""
+        );
+
+
+        let statusText = '';
+
+        if (user.approved?.status?.includes('waiting')) {
+            statusText = `<div class="alert alert-warning" role="alert">
+                <i class="ti ti-alert-circle me-2 fs-16"></i>
+                ${user.approved.status}
+            </div>`;
+        }
+
+        $('.status').html(statusText)
+
+
+    }
+
+    $(".mainFullName").html(badgeVerification);
 }
 
 function editProfile() {
@@ -176,8 +213,30 @@ function editProfile() {
     });
 }
 
+function formatTime(timestamp) {
+    const utcDate = new Date(timestamp);
+
+    // Malaysia Time (UTC+8)
+    const malaysiaOffset = 8 * 60; // minutes
+    const localTime = new Date(utcDate.getTime() + malaysiaOffset * 60 * 1000);
+
+    const options = {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+    };
+
+    const formatted = new Intl.DateTimeFormat("en-GB", options).format(localTime);
+
+    return formatted;
+}
+
+
 function changePassword() {
-      $("#edit-password-tab-pane").on("submit", function (e) {
+    $("#edit-password-tab-pane").on("submit", function (e) {
         e.preventDefault();
 
         if (!user) {
@@ -195,7 +254,6 @@ function changePassword() {
         allInputs.prop("disabled", true);
         $form.find(".is-invalid").removeClass("is-invalid");
         $form.find(".invalid-feedback").remove();
-
 
         const submitForm = () => {
             Swal.fire({

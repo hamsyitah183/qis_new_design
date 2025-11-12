@@ -10,3 +10,12 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+
+.dropzone .dz-remove {
+    background-color: rgb(var(--danger-rgb)) !important;
+    color: white;
+    margin-top: 5px;
+    border-radius: 5px;
+    padding: 5px;
+}

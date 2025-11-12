@@ -293,51 +293,105 @@ async function public_user_list() {
     $(document).on("click", ".badge-verification", function (e) {
         e.preventDefault();
 
+        let id = $(this).data("id");
+
+        $(".ic").text("");
+        const container = $("#userIC");
+        container.empty(); // clear previous content
+
+        // Show Swal loader
         Swal.fire({
             title: "Loading...",
             allowOutsideClick: false,
             didOpen: () => Swal.showLoading(),
         });
 
-        let id = $(this).data("id");
-        let verified = $(this).data("verified");
+        $.ajax({
+            url: `/internal/verification/${id}`,
+            method: "GET",
+            success: function (response) {
+                // Close the loader
+                const user = response.public_user;
+                Swal.close();
 
-        const modalVerificationEl =
-            document.getElementById("verificationModal");
+                const modalVerificationEl =
+                    document.getElementById("verificationModal");
+                if (!modalVerificationEl) {
+                    console.error("Modal element not found!");
+                    return;
+                }
 
-        if (!modalVerificationEl) {
-            console.error("Modal element not found!");
-            Swal.close();
-            return;
-        }
+                // Initialize or get existing modal
+                const modalVerification =
+                    bootstrap.Modal.getOrCreateInstance(modalVerificationEl);
 
-        // Initialize the modal (or get existing instance)
-        const modalVerification =
-            bootstrap.Modal.getOrCreateInstance(modalVerificationEl);
+                // Show the modal
+                modalVerification.show();
 
-        // Show the modal
-        modalVerification.show();
+                // Reset button classes
+                $("#verificationBtn").removeClass().addClass("btn");
 
-        // Reset button classes first
-        $("#verificationBtn")
-            .removeClass() // remove all existing classes
-            .addClass("btn"); // keep basic btn class
+                // Set button based on verified status from response
+                if (response.verified === "yes") {
+                    $("#verificationBtn")
+                        .addClass("btn-light btn-wave waves-effect waves-light")
+                        .text("Unverified User")
+                        .attr("data-id", id);
+                } else {
+                    $("#verificationBtn")
+                        .addClass("btn-success")
+                        .text("Verified User")
+                        .attr("data-id", id);
+                }
 
-        if (verified === "yes") {
-            console.log("yes verified", verified);
-            $("#verificationBtn")
-                .addClass("btn-light btn-wave waves-effect waves-light")
-                .text("Unverified User")
-                .attr("data-id", id);
-        } else {
-            console.log("not verified");
-            $("#verificationBtn")
-                .addClass("btn-success")
-                .text("Verified User")
-                .attr("data-id", id);
-        }
+                console.log("user ic", response);
+                $(".ic").text(user.no_ic);
 
-        Swal.close();
+                // // Optionally, you can populate modal content with attachment
+                if (response.verification_attachment) {
+                    const fileUrl = response.verification_attachment;
+                    const fileExtension = fileUrl
+                        .split(".")
+                        .pop()
+                        .toLowerCase(); // get extension
+
+                    // const container = $("#userIC");
+                    container.empty(); // clear previous content
+
+                    if (
+                        ["jpg", "jpeg", "png", "gif", "webp"].includes(
+                            fileExtension
+                        )
+                    ) {
+                        // It's an image
+                        container.append(
+                            `<img src="/${fileUrl}" class="img-fluid" alt="Verification Attachment">`
+                        );
+                    } else if (fileExtension === "pdf") {
+                        // It's a PDF
+                        container.append(`
+                            <iframe src="/${fileUrl}" class="w-100" style="height:500px;" frameborder="0"></iframe>
+                        `);
+                        // OR use <embed>:
+                        // container.append(`<embed src="${fileUrl}" type="application/pdf" width="100%" height="500px">`);
+                    } else {
+                        container.append(
+                            `<p>Unsupported file format: ${fileExtension}</p>`
+                        );
+                    }
+                } else {
+                    $("#userIC").html("<p>No attachment uploaded yet.</p>");
+                }
+            },
+            error: function (xhr, status, error) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "Failed to load verification info.",
+                });
+                console.error(error);
+            },
+        });
     });
 }
 

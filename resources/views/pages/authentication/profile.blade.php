@@ -1,7 +1,7 @@
 @extends('pages.app')
 
 @push('scripts')
-    @vite(['resources/js/pages/auth/profile.js'])
+    @vite(['resources/js/pages/auth/profile.js', 'resources/js/pages/auth/verification.js'])
 @endpush
 
 @php
@@ -13,15 +13,23 @@
         ->implode('');
 @endphp
 
+@section('breadcrumb')
+    <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/'], ['label' => 'My Profile', 'url' => '#']]" title="My Profile">
+
+    </x-breadcrumb>
+@endsection
+
 @section('content')
     <div class="container-lg">
         <div class="row">
             <div class="col-xl-12">
                 <div class="card custom-card profile-card">
-                    <div class="profile-banner-img">
+                    {{-- <div class="profile-banner-img">
                         <img src="https://laravelui.spruko.com/xintra/build/assets/images/media/media-3.jpg"
                             class="card-img-top" alt="...">
-                    </div>
+                    </div> --}}
+                    <div class="profile-banner-img bg-primary" style="height: 150px;"></div>
+
                     <div class="card-body pb-0 position-relative">
                         <div class="row profile-content">
                             <div class="col-xl-3">
@@ -33,7 +41,9 @@
                                                 style="width: 64px; height: 64px;">
                                                 {{ $initials }}
                                             </span>
-                                            <h5 class="fw-semibold mb-1 fullname"></h5>
+                                            <h5 class="fw-semibold mb-1  "> <span class="fullname"></span> </h5>
+
+                                            <p class = "fs-13 mainFullName"></p>
                                            
                                             <p class="fs-12 mb-0 text-muted"> 
                                                 <span>
@@ -58,12 +68,11 @@
                                            
                                             <li class="list-group-item pt-2 border-0">
                                                 <div><span class="fw-medium me-2">Email :</span><span
-                                                        class="text-muted email">spencer.robin22@example.com</span></div>
+                                                        class="text-muted email"></span></div>
                                             </li>
                                             <li class="list-group-item pt-2 border-0">
                                                 <div><span class="fw-medium me-2">Phone :</span>
-                                                    <span class="text-muted phone_number">+1
-                                                        (222) 111 - 57840</span></div>
+                                                    <span class="text-muted phone_number"></span></div>
                                             </li>
                                             <li class="list-group-item pt-2 border-0">
                                                 <div><span class="fw-medium me-2">IC :</span>

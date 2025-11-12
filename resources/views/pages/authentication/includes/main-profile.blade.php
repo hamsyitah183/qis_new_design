@@ -6,16 +6,30 @@
                     data-bs-target="#profile-about-tab-pane" type="button" role="tab"
                     aria-controls="profile-about-tab-pane" aria-selected="true">About</button>
             </li>
+
             <li class="nav-item" role="presentation">
                 <button class="nav-link w-100 text-start" id="edit-profile-tab" data-bs-toggle="tab"
                     data-bs-target="#edit-profile-tab-pane" type="button" role="tab"
                     aria-controls="edit-profile-tab-pane" aria-selected="false" tabindex="-1">Edit Profile</button>
             </li>
+
+            @if ($user['type'] == 'public')
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link w-100 text-start" id="edit-verification-tab" data-bs-toggle="tab"
+                        data-bs-target="#edit-verification-tab-pane" type="button" role="tab"
+                        aria-controls="edit-verification-tab-pane" aria-selected="false"
+                        tabindex="-1">Verification</button>
+                </li>
+            @endif
+
             <li class="nav-item" role="presentation">
                 <button class="nav-link w-100 text-start" id="edit-password-tab" data-bs-toggle="tab"
                     data-bs-target="#edit-password-tab-pane" type="button" role="tab"
-                    aria-controls="edit-password-tab-pane" aria-selected="false" tabindex="-1">Change Password</button>
+                    aria-controls="edit-password-tab-pane" aria-selected="false" tabindex="-1">Change
+                    Password</button>
             </li>
+
+
 
         </ul>
         <div class="tab-content" id="profile-tabs">
@@ -33,6 +47,14 @@
                 <input type="hidden" name="uuid" class="uuid">
                 @include('pages.authentication.includes.main-profile.edit')
             </form>
+
+
+            @if ($user['type'] == 'public')
+                <div class="tab-pane p-0 border-0" id="edit-verification-tab-pane" role="tabpanel"
+                    aria-labelledby="edit-verification-tab" tabindex="0">
+                    @include('pages.authentication.includes.main-profile.verification')
+                </div>
+            @endif
 
             <form class="tab-pane p-0 border-0" id="edit-password-tab-pane" role="tabpanel"
                 aria-labelledby="edit-password-tab" tabindex="0">

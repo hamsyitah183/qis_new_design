@@ -15,7 +15,7 @@ use Spatie\Permission\Models\Role;
 class InternalUser extends Authenticatable implements MustVerifyEmail
 {
     //
-    
+
     use Notifiable, HasRoles, HasRoles, HasActivityLog;
 
     protected $table = 'internal_users';
@@ -42,6 +42,12 @@ class InternalUser extends Authenticatable implements MustVerifyEmail
             }
         });
     }
+
+    public function approvalsGiven()
+    {
+        return $this->hasMany(ApprovedPublic::class, 'approved_by', 'uuid');
+    }
+
 
     // public function roles()
     // {

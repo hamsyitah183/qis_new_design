@@ -37,7 +37,7 @@
 
 
                 <div class="d-flex justify-content-end align-items-end">
-                    <button class="btn btn-secondary btn-sm mt-3" type="submit">Update</button>
+                    <button class="btn btn-secondary btn-sm mt-3 border" type="submit">Update</button>
                 </div>
             </div>
         </form>

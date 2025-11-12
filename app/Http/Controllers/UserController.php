@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\InternalUser;
 use App\Models\PublicUser;
+use App\Models\ApprovedPublic;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -54,12 +55,18 @@ class UserController extends Controller
             ->editColumn('created_at', fn($user) => $user->created_at->format('d-m-Y H:i'))
             ->editColumn('account_type', fn($user) => ucfirst($user->account_type))
             ->editColumn('doa_verified', function ($user) {
-                if ($user->doa_verified) {
-                    return '<span class="badge bg-success-transparent cursor-pointer badge-verification" data-id="' . $user->uuid . '" data-verified = "yes">Verified</span>';
-                } else {
-                    return '<span class="badge bg-dark-transparent cursor-pointer badge-verification" data-id="' . $user->uuid . '" data-verified = "no">Not Verified</span>';
+                if (!$user->approved) {
+                    return '<span class="badge bg-dark-transparent cursor-pointer badge-verification" data-id="'
+                        . $user->uuid . '" data-verified="no">Not Verified</span>';
                 }
+
+                return $user->approved->doa_verified
+                    ? '<span class="badge bg-success-transparent cursor-pointer badge-verification" data-id="'
+                    . $user->uuid . '" data-verified="yes">Verified</span>'
+                    : '<span class="badge bg-dark-transparent cursor-pointer badge-verification" data-id="'
+                    . $user->uuid . '" data-verified="no">Not Verified</span>';
             })
+
             ->rawColumns(['action', 'doa_verified'])
             ->make(true);
     }
@@ -389,5 +396,26 @@ class UserController extends Controller
         return response()->json([
             'message' => 'Password updated successfully.',
         ]);
+    }
+
+    public function uploadVerificationAttachment(Request $request)
+    {
+        if ($request->hasFile('attachment')) {
+            return response()->json([
+                'status' => 'ok',
+                'original_name' => $request->file('attachment')->getClientOriginalName(),
+            ]);
+        }
+        return response()->json(['status' => 'no file']);
+    }
+
+    public function verificationAttachment($id)
+    {
+
+        $verification = ApprovedPublic::with(['publicUser', 'approver'])
+            ->where('user_id', $id)
+            ->first();
+
+        return response()->json($verification);
     }
 }
