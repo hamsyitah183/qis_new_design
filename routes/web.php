@@ -86,3 +86,9 @@ Route::prefix('internal')
 
         Route::get('/user_list/{type}', [UserController::class, 'user_list']);
     });
+
+
+Route::middleware(['auth.any'])->get('/profile', [UserController::class, 'profile'])->name('profile');
+Route::middleware(['auth.any'])->get('/data', [UserController::class, 'userData']);
+Route::middleware(['auth.any'])->post('/data', [UserController::class, 'updateData']);
+Route::middleware(['auth.any'])->post('/password', [UserController::class, 'password']);

@@ -290,7 +290,7 @@
             <ul class="main-header-dropdown dropdown-menu pt-0 overflow-hidden header-profile-dropdown dropdown-menu-end"
                 aria-labelledby="mainHeaderProfile">
                 <li>
-                    <div class="dropdown-item text-center border-bottom">
+                    <div class="dropdown-item text-center border-bottom" id = "redirectProfile">
                         <span>{{ Auth::user()->fullname ?? 'Guest' }}</span>
                         @php
                             $user = Auth::guard('public')->user();

@@ -241,4 +241,6 @@ class AuthenticationController extends Controller
 
         return back()->with('message', 'Verification link sent!');
     }
+
+  
 }

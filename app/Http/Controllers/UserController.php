@@ -6,6 +6,7 @@ use App\Models\InternalUser;
 use App\Models\PublicUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Str;
@@ -74,24 +75,106 @@ class UserController extends Controller
         ]);
     }
 
-    function public_user_save(Request $request)
+    public function public_user_save(Request $request)
     {
         $uuid = $request->input('uuid');
 
         if ($uuid) {
-            $public = PublicUser::where('uuid', $uuid)->first();
+            // UPDATE existing user
+            $public = PublicUser::where('uuid', $uuid)->firstOrFail();
 
-
-            return response()->json([
-                'message' => 'Save Public User',
-                'user' => $public
+            $validated = $request->validate([
+                'fullname'     => 'required|string|max:255',
+                'email'        => 'required|email|unique:public_users,email,' . $public->id,
+                // 'password' => 'sometimes|min:8',
+                'no_ic'        => 'required|unique:public_users,no_ic,' . $public->id,
+                'account_type' => 'required|in:individu,company',
+                'phone' => 'required|unique:public_users,phone_number,' . $public->id,
+                'address_1'    => 'required',
+                'postcode'     => 'required',
+                'district'     => 'required',
+                'state'        => 'required',
             ]);
+
+            try {
+                DB::beginTransaction();
+
+                $public->update([
+                    'fullname'     => $validated['fullname'],
+                    'email'        => $validated['email'],
+                    // Only update password if provided
+                    'password'     => $request->filled('password') ? Hash::make($request->password) : $public->password,
+                    'no_ic'        => $validated['no_ic'],
+                    'account_type' => $validated['account_type'],
+                    'phone_number' => $validated['phone'],
+                    'address_1'    => $validated['address_1'],
+                    'address_2'    => $request->address_2,
+                    'postcode'     => $validated['postcode'],
+                    'district'     => $validated['district'],
+                    'state'        => $validated['state'],
+                    'office_number' => $request->office_number
+                ]);
+
+                DB::commit();
+
+                return response()->json([
+                    'message' => 'Public User Updated',
+                    'user'    => $public,
+                ]);
+            } catch (\Exception $e) {
+                DB::rollBack();
+
+                return response()->json([
+                    'message' => 'Update failed. Please try again.',
+                    'error'   => $e->getMessage(),
+                ], 500);
+            }
         } else {
-            // register
-            return response()->json([
-                'message' => 'Create Public User',
-
+            // CREATE new user
+            $validated = $request->validate([
+                'fullname'     => 'required|string|max:255',
+                'email'        => 'required|email|unique:public_users,email',
+                // 'password' => 'required|min:8',
+                'no_ic'        => 'required|unique:public_users,no_ic',
+                'account_type' => 'required|in:individu,company',
+                'phone_number' => 'required|unique:public_users,phone_number',
+                'address_1'    => 'required',
+                'postcode'     => 'required',
+                'district'     => 'required',
+                'state'        => 'required',
             ]);
+
+            try {
+                DB::beginTransaction();
+
+                $user = PublicUser::create([
+                    'fullname'     => $validated['fullname'],
+                    'email'        => $validated['email'],
+                    'password'     => Hash::make($validated['no_ic']),
+                    'no_ic'        => $validated['no_ic'],
+                    'account_type' => $validated['account_type'],
+                    'phone_number' => $validated['phone_number'],
+                    'address_1'    => $validated['address_1'],
+                    'address_2'    => $request->address_2,
+                    'postcode'     => $validated['postcode'],
+                    'district'     => $validated['district'],
+                    'state'        => $validated['state'],
+                ]);
+
+                DB::commit();
+
+                return response()->json([
+                    'message' => 'Public User Created',
+                    'user'    => $user,
+                ]);
+            } catch (\Exception $e) {
+                DB::rollBack();
+
+                return response()->json([
+                    'message' => 'Registration failed. Please try again.',
+                    'error'   => $e->getMessage(),
+                ], 500);
+            }
         }
     }
 
@@ -244,6 +327,67 @@ class UserController extends Controller
 
         return response()->json([
             'users' => $users
+        ]);
+    }
+
+    public function profile()
+    {
+        return view('pages.authentication.profile', [
+            'title' => 'Profile'
+        ]);
+    }
+
+    public function userData()
+    {
+        $user = authUser();
+
+        return response()->json($user);
+    }
+
+    public function updateData(Request $request)
+    {
+        if ($request->type == 'public') {
+            // call update
+            return $this->public_user_save($request);
+        } else {
+            // call internal_user_save
+            return $this->internal_user_save($request);
+        }
+    }
+
+    public function password(Request $request)
+    {
+        $validated = $request->validate([
+            'type' => 'required|in:public,internal',
+            'uuid' => 'required|uuid',
+            'old_password' => 'nullable|string',
+            'new_password' => 'required|string|min:8|confirmed', // expects new_password + new_password_confirmation
+        ]);
+
+        // Select correct user model
+        $user = $validated['type'] === 'public'
+            ? PublicUser::where('uuid', $validated['uuid'])->first()
+            : InternalUser::where('uuid', $validated['uuid'])->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'User not found.',
+            ], 404);
+        }
+
+        // If old password is required (e.g., user changing their own password)
+        if ($validated['old_password'] && !Hash::check($validated['old_password'], $user->password)) {
+            return response()->json([
+                'message' => 'Old password is incorrect.',
+            ], 400);
+        }
+
+        // Update password
+        $user->password = Hash::make($validated['new_password']);
+        $user->save();
+
+        return response()->json([
+            'message' => 'Password updated successfully.',
         ]);
     }
 }

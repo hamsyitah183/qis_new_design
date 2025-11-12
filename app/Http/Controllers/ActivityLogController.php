@@ -22,12 +22,17 @@ class ActivityLogController extends Controller
     {
         $query = Activity::orderBy('created_at', 'desc');
 
-        if ($request->filled('start_date') || $request->filled('end_date') || $request->filled('start_time') || $request->filled('end_time')) {
-
+        // 🧩 Handle date & time filters
+        if (
+            $request->filled('start_date') ||
+            $request->filled('end_date') ||
+            $request->filled('start_time') ||
+            $request->filled('end_time')
+        ) {
             $startDate = $request->start_date ?? now()->toDateString();
             $endDate   = $request->end_date ?? $startDate;
 
-            // ✅ Convert 12-hour AM/PM to 24-hour format
+            // ✅ Convert 12-hour AM/PM to 24-hour format using app timezone
             $startTime = $request->start_time
                 ? Carbon::createFromFormat('h:i A', $request->start_time, config('app.timezone'))->format('H:i:s')
                 : '00:00:00';
@@ -36,11 +41,12 @@ class ActivityLogController extends Controller
                 ? Carbon::createFromFormat('h:i A', $request->end_time, config('app.timezone'))->format('H:i:s')
                 : '23:59:59';
 
-            // ✅ If end time is 12:00 AM and end date = start date, set to 23:59:59
+            // ✅ Special case: endTime = 12:00 AM -> set to 23:59:59
             if ($endTime === '00:00:00' && $endDate === $startDate) {
                 $endTime = '23:59:59';
             }
 
+            // ✅ Combine date + time (in Malaysia timezone)
             $startDateTime = Carbon::createFromFormat('Y-m-d H:i:s', "{$startDate} {$startTime}", config('app.timezone'));
             $endDateTime   = Carbon::createFromFormat('Y-m-d H:i:s', "{$endDate} {$endTime}", config('app.timezone'));
 
@@ -49,17 +55,16 @@ class ActivityLogController extends Controller
                 $endDateTime = $startDateTime->copy()->endOfDay();
             }
 
-            // ✅ Convert to UTC for DB
-            $query->whereBetween('created_at', [
-                $startDateTime->copy()->setTimezone('UTC'),
-                $endDateTime->copy()->setTimezone('UTC')
-            ]);
+            // ✅ Query in DB timezone (assume same as Malaysia time)
+            $query->whereBetween('created_at', [$startDateTime, $endDateTime]);
         }
 
+        // ✅ Filter by causer type
         if ($request->filled('causer_type')) {
             $query->where('causer_type', $request->causer_type);
         }
 
+        // ✅ Filter by causer IDs
         if ($request->filled('causer_id')) {
             $causerIds = is_array($request->causer_id)
                 ? $request->causer_id
@@ -69,6 +74,7 @@ class ActivityLogController extends Controller
 
         $query->whereNotNull('causer_id');
 
+        // ✅ Map results and format timestamps in Malaysia timezone
         $activity_log = $query->get()->map(function ($activity) {
             $causer = null;
 

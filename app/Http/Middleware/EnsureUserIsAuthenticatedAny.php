@@ -16,6 +16,8 @@ class EnsureUserIsAuthenticatedAny
      */
     public function handle(Request $request, Closure $next)
     {
+        // dd('auth.any triggered');
+
         // Check if either public or internal user is logged in
         if (Auth::guard('public')->check() || Auth::guard('internal')->check()) {
             return $next($request);

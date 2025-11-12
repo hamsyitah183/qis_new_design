@@ -81,7 +81,7 @@
 
                 <div class="col-md-6">
                     <label class="form-label">Phone Number</label>
-                    <input type="text" class="form-control" id="phone_number" name="phone_number" required>
+                    <input type="text" class="form-control" id="phone_number" name="phone" required>
                 </div>
 
                 <div class="col-md-6">

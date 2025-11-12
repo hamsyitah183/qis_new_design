@@ -17,6 +17,7 @@
         "vite": "^7.0.7"
     },
     "dependencies": {
+        "@fortawesome/fontawesome-free": "^7.1.0",
         "@tabler/icons-webfont": "^3.35.0",
         "datatables": "^1.10.18",
         "datatables.net-bs5": "^2.3.4",
