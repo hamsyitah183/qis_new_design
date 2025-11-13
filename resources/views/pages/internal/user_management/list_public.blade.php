@@ -132,16 +132,22 @@
         <form id="userVerificationForm">
             @csrf
             {{-- Add any form fields here if needed --}}
-            <div class="mb-2 text-center fs-14"><span class="fw-bold me-2 ">User IC: </span> <span class="ic"></span></div>
+            <div class="mb-2 fs-14"><span class="fw-bold me-2 ">User IC: </span> <span class="ic"></span></div>
+
 
             <div class="" id="userIC">
+
                 
+
             </div>
+
+            <div class="status mt-3"></div>
+            <div class="fs-12 mt-3"> <span class="fw-bold">Submitted On: </span>  <span class="updated_at text-muted"></span> </div>
 
             @slot('footer')
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="submit" form="userVerificationForm" class="btn btn-primary"
-                    id="verificationBtn">Save</button>
+                <button type="submit" class="btn btn-primary" id="verificationBtn">Verified</button>
+                <button type="submit" class="btn btn-danger" id="unverificationBtn">Reject</button>
             @endslot
         </form>
     </x-modal>

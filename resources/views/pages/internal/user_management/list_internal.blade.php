@@ -89,7 +89,7 @@
 
                             <div class="col-md-6">
                                 <label class="form-label">Phone Number</label>
-                                <input type="text" class="form-control" id="phone" name="phone" required>
+                                <input type="text" class="form-control" id="phone_number" name="phone_number" required>
                                 <div class="invalid-feedback" id="error-phone"></div>
                             </div>
 

@@ -31,7 +31,7 @@ async function data_table_init() {
         columns: [
             { data: "fullname", name: "fullname" },
             { data: "email", name: "email" },
-            { data: "phone", name: "phone" },
+            { data: "phone_number", name: "phone_number" },
             { data: "position", name: "position" },
             { data: "role", name: "role", orderable: false, searchable: false },
             { data: "office", name: "office" },
@@ -87,7 +87,7 @@ async function open_internal_user_modal(mode = "add", userId = null) {
             $("#userUuid").val(user.uuid);
             $("#fullname").val(user.fullname);
             $("#email").val(user.email);
-            $("#phone").val(user.phone);
+            $("#phone_number").val(user.phone_number);
             $("#position").val(user.position || "");
             $("#office").val(user.office || "");
             $("#no_ic").val(user.no_ic || "");

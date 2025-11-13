@@ -32,3 +32,26 @@ $('#redirectProfile').on('click', function(e) {
 
     window.location.href = '/profile'
 })
+
+export function formatTime(timestamp) {
+    const utcDate = new Date(timestamp);
+
+    // Malaysia Time (UTC+8)
+    const malaysiaOffset = 8 * 60; // minutes
+    const localTime = new Date(utcDate.getTime() + malaysiaOffset * 60 * 1000);
+
+    const options = {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+    };
+
+    const formatted = new Intl.DateTimeFormat("en-GB", options).format(
+        localTime
+    );
+
+    return formatted;
+}

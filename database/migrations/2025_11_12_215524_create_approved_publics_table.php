@@ -23,7 +23,7 @@ return new class extends Migration
 
             $table->string('verification_attachment')->nullable();
 
-            $table->time('doa_approved_time')->nullable();
+            $table->timestamp('doa_approved_time')->nullable();
 
             // Nullable foreign key for the approver
             $table->uuid('approved_by')->nullable();

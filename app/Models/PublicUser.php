@@ -31,7 +31,7 @@ class PublicUser extends Authenticatable implements MustVerifyEmail
         'district',
         'state',
         'password',
-        // 'doa_verified',
+        'doa_verified',
         // 'verification_attachment',
         'email_verified_at',
     ];

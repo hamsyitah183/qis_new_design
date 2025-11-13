@@ -83,7 +83,7 @@
                 </div>
             </div>
             <div class="col-xl-9">
-                <input type="text" name="phone" class="form-control phone_number" placeholder="Placeholder"
+                <input type="text" name="phone_number" class="form-control phone_number" placeholder="Placeholder"
                     value="">
             </div>
             @if ($user['type'] == 'public')

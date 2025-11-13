@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Str;
 
@@ -87,6 +88,7 @@ class UserController extends Controller
         $uuid = $request->input('uuid');
 
         if ($uuid) {
+            // dd($request->all());
             // UPDATE existing user
             $public = PublicUser::where('uuid', $uuid)->firstOrFail();
 
@@ -96,7 +98,7 @@ class UserController extends Controller
                 // 'password' => 'sometimes|min:8',
                 'no_ic'        => 'required|unique:public_users,no_ic,' . $public->id,
                 'account_type' => 'required|in:individu,company',
-                'phone' => 'required|unique:public_users,phone_number,' . $public->id,
+                'phone_number' => 'required|unique:public_users,phone_number,' . $public->id,
                 'address_1'    => 'required',
                 'postcode'     => 'required',
                 'district'     => 'required',
@@ -113,7 +115,7 @@ class UserController extends Controller
                     'password'     => $request->filled('password') ? Hash::make($request->password) : $public->password,
                     'no_ic'        => $validated['no_ic'],
                     'account_type' => $validated['account_type'],
-                    'phone_number' => $validated['phone'],
+                    'phone_number' => $validated['phone_number'],
                     'address_1'    => $validated['address_1'],
                     'address_2'    => $request->address_2,
                     'postcode'     => $validated['postcode'],
@@ -199,7 +201,7 @@ class UserController extends Controller
 
     public function internal_list_data(Request $request)
     {
-        $query = InternalUser::select(['uuid', 'fullname', 'email', 'phone', 'position', 'office'])
+        $query = InternalUser::select(['uuid', 'fullname', 'email', 'phone_number', 'position', 'office'])
             ->with('roles'); // Using Spatie roles
 
         $currentUser = Auth::guard('internal')->user();
@@ -274,7 +276,7 @@ class UserController extends Controller
                 'fullname' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:internal_users,email,' . $internalUser->id,
                 'no_ic' => 'required|digits:12|unique:internal_users,no_ic,' . $internalUser->id,
-                'phone' => 'required|digits_between:7,15|unique:internal_users,phone,' . $internalUser->id,
+                'phone_number' => 'required|digits_between:7,15|unique:internal_users,phone_number,' . $internalUser->id,
                 'position' => 'required|string|max:255',
                 'office' => 'required|string|max:255',
             ]);
@@ -283,7 +285,7 @@ class UserController extends Controller
                 'fullname' => $request->fullname,
                 'email' => $request->email,
                 'no_ic' => $request->no_ic,
-                'phone' => $request->phone,
+                'phone_number' => $request->phone_number,
                 'position' => $request->position,
                 'office' => $request->office,
             ]);
@@ -297,7 +299,7 @@ class UserController extends Controller
                 'fullname' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:internal_users,email',
                 'no_ic' => 'required|digits:12|unique:internal_users,no_ic',
-                'phone' => 'required|digits_between:7,15|unique:internal_users,phone',
+                'phone_number' => 'required|digits_between:7,15|unique:internal_users,phone',
                 'position' => 'required|string|max:255',
                 'office' => 'required|string|max:255',
                 'role' => 'required|string', // Make sure role is sent
@@ -308,7 +310,7 @@ class UserController extends Controller
                 'fullname' => $request->fullname,
                 'email' => $request->email,
                 'no_ic' => $request->no_ic,
-                'phone' => $request->phone,
+                'phone_number' => $request->phone_number,
                 'position' => $request->position,
                 'office' => $request->office,
                 'password' => Hash::make($request->no_ic),
@@ -400,16 +402,69 @@ class UserController extends Controller
 
     public function uploadVerificationAttachment(Request $request)
     {
-        if ($request->hasFile('attachment')) {
+        $userId = $request->input('user_id');
+
+        if (!$userId) {
             return response()->json([
-                'status' => 'ok',
-                'original_name' => $request->file('attachment')->getClientOriginalName(),
-            ]);
+                'success' => false,
+                'message' => 'User ID is required.',
+            ], 400);
         }
-        return response()->json(['status' => 'no file']);
+
+        DB::beginTransaction();
+
+        try {
+            $verification = ApprovedPublic::where('user_id', $userId)->first();
+
+            // Create a new record if it doesn't exist yet
+            if (!$verification) {
+                $verification = new ApprovedPublic();
+                $verification->user_id = $userId;
+            }
+
+            if ($request->hasFile('attachment')) {
+                $file = $request->file('attachment');
+
+                // Make sure the directory exists
+                $destinationPath = public_path('storage/app/public/verifications');
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
+                }
+
+                $filename = time() . '_' . $file->getClientOriginalName();
+                $file->move($destinationPath, $filename);
+
+                // Save relative path for database
+                $verification->verification_attachment = 'storage/app/public/verifications/' . $filename;
+            }
+
+            $verification->status = 'waiting for approval';
+
+            $verification->save();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'file_url' => $verification->verification_attachment,
+                'message' => 'File uploaded successfully.',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Verification upload failed: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while uploading the file.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
-    public function verificationAttachment($id)
+
+
+    public function verification_attachment($id)
     {
 
         $verification = ApprovedPublic::with(['publicUser', 'approver'])
@@ -417,5 +472,66 @@ class UserController extends Controller
             ->first();
 
         return response()->json($verification);
+    }
+
+    public function save_attachment($id, Request $request)
+    {
+        $internal = authUser()['user'];
+
+            //  dd('requesr', $request->all(), ' id', $id);
+
+        DB::beginTransaction();
+
+        try {
+            // 🔹 Fetch related records
+            $verification = ApprovedPublic::with(['publicUser', 'approver'])
+                ->where('user_id', $id)
+                ->firstOrFail();
+
+            $user = PublicUser::where('uuid', $id)->firstOrFail();
+
+            // 🔹 Update based on approval type
+            if ($request->input('approved') === 'yes') {
+                $verification->doa_verified = 1;
+                $user->doa_verified = 1;
+                $verification->doa_approved_time = now();
+                $verification->approved_by = $internal->uuid;
+                $verification->status = 'Verified and approved';
+                $verification->reason = null;
+            } else {
+                // dd('requesr', $request->all());
+                $verification->doa_verified = 0;
+                $user->doa_verified = 0;
+                $verification->doa_approved_time = now();
+                $verification->approved_by = $internal->uuid;
+                $verification->status = 'Verification is rejected';
+                $verification->reason = $request->input('reason');
+            }
+
+            // 🔹 Save both models
+            $verification->save();
+            $user->save();
+
+            // 🔹 Commit if all good
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => $request->input('approved') === 'yes'
+                    ? 'User successfully verified.'
+                    : 'User verification has been rejected.',
+            ], 200);
+        } catch (\Exception $e) {
+            // 🔹 Rollback on failure
+            DB::rollBack();
+
+            Log::error('Verification update failed: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while saving verification status.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }

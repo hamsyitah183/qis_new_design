@@ -1,28 +1,47 @@
 <div class="border rounded-3 p-3">
     @php
-        // dd($user['user']->approved);
-        $imgLink = $user['user']->approved['verification_attachment'];
-        $verifiedDOA = $user['user']->approved['doa_verified'];
-
+        $approved = $user['user']->approved ?? null;
+        $imgLink = $approved->verification_attachment ?? null;
+        $verifiedDOA = $approved->doa_verified ?? null;
     @endphp
 
-    @if ($imgLink)
-        <img src="" class="img-fluid" alt="" id="imgLink">
+    <div class="hasImage" style="display:none;">
+        <div id="imgLink"></div>
 
-        <div class="mt-1 status">
-            
-        </div>
+        <div class="mt-3 status"></div>
 
         <div class="mt-3">
-            <span class="fs-12 "><span class="fw-bold">Submitted on :</span> <span class="submittedVerification text-muted"></span></span> <br>
-            <span class="fs-12 "><span class="fw-bold">Approved By :</span> <span class="approvedBy text-muted"></span> <span
-                    class="approvedDate text-muted"></span></span>
+            <span class="fs-12">
+                <span class="fw-bold">Submitted on :</span>
+                <span class="submittedVerification text-muted">
+                    {{ $approved->created_at ?? 'N/A' }}
+                </span>
+            </span>
+            <br>
+            <span class="fs-12">
+                <span class="fw-bold">View By :</span>
+                <span class="approvedBy text-muted">
+                    {{ $approved->approver->name ?? 'N/A' }}
+                </span>
+                <span class="approvedDate text-muted">
+                    {{ $approved->doa_approved_time ?? '' }}
+                </span>
+            </span>
         </div>
-    @else
+    </div>
+
+
+
+    <div class="hasNoImage" style="display: none;">
         <form class="dropzone" id="verificationDropzone" enctype="multipart/form-data">
+
             <div class="dz-message p-5 text-center">
-                <h5 class="display-3 text-muted"><i class="ti ti-folder-down"></i></h5>
-                <div class="text-muted">Drop your verification file here or click to upload.</div>
+                <h5 class="display-3 text-muted">
+                    <i class="ti ti-folder-down"></i>
+                </h5>
+                <div class="text-muted">
+                    Drop your verification file here or click to upload.
+                </div>
             </div>
         </form>
 
@@ -31,6 +50,6 @@
                 Upload File
             </button>
         </div>
-    @endif
+    </div>
 
 </div>

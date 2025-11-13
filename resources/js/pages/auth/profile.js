@@ -3,7 +3,8 @@ import Swal from "sweetalert2";
 
 let user = null;
 
-async function loadProfile() {
+export async function loadProfile() {
+    console.log('call the load profile function')
     const allInputs = document.querySelectorAll(
         "input, select, button, textarea"
     );
@@ -49,6 +50,7 @@ function fillTheData(user, type) {
     let badgeVerification = "";
     $(".type").val(type);
     $(".uuid").val(user.uuid);
+    $('#uploadBtn').attr('data-id', user.uuid)
     $(".fullname").val(user.fullname).text(user.fullname);
     $(".address").val(fullAddress).text(fullAddress);
     $(".phone_number")
@@ -57,7 +59,8 @@ function fillTheData(user, type) {
     $(".email").val(user.email).text(user.email);
     $(".ic")
         .val(user.no_ic ?? user.ic)
-        .text(user.ic ?? user.no_ic);
+        .text(user.ic ?? user.no_ic)
+        .prop("readonly", true);
     $(".position").val(user.position).text(user.position);
     $(".address_1").val(user.address_1);
     $(".address_2").val(user.address_2);
@@ -73,37 +76,98 @@ function fillTheData(user, type) {
     }
 
     if (type === "public") {
-        if (user.approved?.doa_verified) {
-            badgeVerification += ` <span class="badge bg-success-transparent ms-1" title="Verified by DOA">
-            Verified by DOA
-        </span>`;
+        const approved = user.approved ?? {}; // ✅ Fallback to empty object
+
+        // 🔹 Handle DOA verification badge
+        let badgeVerification = `<span class="badge bg-dark-transparent ms-1" title="Not verified by DOA">
+                Not Verified by DOA
+            </span>`;
+        if (approved.doa_verified) {
+            badgeVerification = `
+            <span class="badge bg-success-transparent ms-1" title="Verified by DOA">
+                Verified by DOA
+            </span>`;
         } else {
-            badgeVerification = ` <span class="badge bg-dark-transparent ms-1" title="Not verified by DOA">
+            badgeVerification = `
+            <span class="badge bg-dark-transparent ms-1" title="Not verified by DOA">
                 Not Verified by DOA
             </span>`;
         }
 
-        $("#imgLink").attr("src", user.approved.verification_attachment);
-        $(".submittedVerification").text(formatTime(user.approved?.updated_at) ?? "");
-        // Approver name
-        $(".approvedBy").text(user.approved?.approver?.fullname ?? "");
-        $(".approvedDate").text(
-            user.approved?.doa_approved_time ? `on (${formatTime(user.approved.doa_approved_time)})` : ""
+        // 🔹 Handle attachment
+        const container = $("#imgLink");
+        container.empty();
+
+        const fileUrl = approved.verification_attachment ?? null;
+
+        if (fileUrl) {
+            const ext = fileUrl.split(".").pop().toLowerCase();
+
+            if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) {
+                container.append(
+                    `<img src="${fileUrl}" class="img-fluid" alt="Verification Attachment">`
+                );
+            } else if (ext === "pdf") {
+                container.append(
+                    `<iframe src="${fileUrl}" class="w-100" style="height:500px;" frameborder="0"></iframe>`
+                );
+            } else {
+                container.append(`<p>Unsupported file format: ${ext}</p>`);
+            }
+
+            $('.hasImage').css('display', 'block');
+            $('.hasNoImage').css('display', 'none');
+
+            // $('.approvedBy').text(approved)
+
+        } else {
+            container.append("<p>No attachment uploaded yet.</p>");
+            $('.hasImage').css('display', 'none');
+            $('.hasNoImage').css('display', 'block');
+        }
+
+        // 🔹 Dates and approver info
+        $(".submittedVerification").text(
+            approved.updated_at ? formatTime(approved.updated_at) : "N/A"
         );
 
+        $(".approvedBy").text(approved.approver?.fullname ?? "N/A");
 
-        let statusText = '';
+        $(".approvedDate").text(
+            approved.doa_approved_time
+                ? `on (${formatTime(approved.doa_approved_time)})`
+                : ""
+        );
 
-        if (user.approved?.status?.includes('waiting')) {
-            statusText = `<div class="alert alert-warning" role="alert">
+        // 🔹 Status display
+        let statusText = "";
+
+        if (approved.status?.toLowerCase().includes("waiting")) {
+            statusText = `
+            <div class="alert alert-warning" role="alert">
                 <i class="ti ti-alert-circle me-2 fs-16"></i>
-                ${user.approved.status}
+                ${approved.status.toUpperCase()}
+            </div>`;
+        } else if (approved.status?.toLowerCase().includes("approved")) {
+            statusText = `
+            <div class="alert alert-success" role="alert">
+                <i class="ti ti-rosette-discount-check me-2 fs-16"></i>
+                ${approved.status.toUpperCase()}
+            </div>`;
+        } else if (approved.status?.toLowerCase().includes("rejected")) {
+            statusText = `
+            <div class="alert alert-danger" role="alert">
+                <i class="ti ti-rosette-discount-x me-2 fs-16"></i>
+                ${approved.status.toUpperCase()}
+            </div>`;
+        } else {
+            statusText = `
+            <div class="alert alert-secondary" role="alert">
+                No verification status available.
             </div>`;
         }
 
-        $('.status').html(statusText)
-
-
+        $(".status").html(statusText);
     }
 
     $(".mainFullName").html(badgeVerification);
@@ -133,7 +197,7 @@ function editProfile() {
 
         const submitForm = () => {
             Swal.fire({
-                title: "Registering...",
+                title: "Updating...",
                 allowOutsideClick: false,
                 didOpen: () => Swal.showLoading(),
             });
@@ -229,11 +293,12 @@ function formatTime(timestamp) {
         hour12: true,
     };
 
-    const formatted = new Intl.DateTimeFormat("en-GB", options).format(localTime);
+    const formatted = new Intl.DateTimeFormat("en-GB", options).format(
+        localTime
+    );
 
     return formatted;
 }
-
 
 function changePassword() {
     $("#edit-password-tab-pane").on("submit", function (e) {

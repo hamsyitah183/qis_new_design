@@ -89,7 +89,9 @@ Route::prefix('internal')
 
         Route::get('/user_list/{type}', [UserController::class, 'user_list']);
 
-        Route::get('/verification/{id}', [UserController::class, 'verificationAttachment']);
+        Route::get('/verification/{id}', [UserController::class, 'verification_attachment']);
+
+        Route::post('/verification/{id}/save', [UserController::class, 'save_attachment']);
     });
 
 

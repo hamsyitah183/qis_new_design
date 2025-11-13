@@ -297,7 +297,7 @@
                         @endphp
 
                         <span>
-                            {{ $internalUser->name ?? ($publicUser->fullname ?? 'Guest') }}
+                            {{ $internalUser->fullname ?? ($publicUser->fullname ?? 'Guest') }}
                         </span>
 
                         <span class="d-block fs-12 text-muted">
@@ -305,7 +305,7 @@
                                 Internal User
                             @elseif ($publicUser)
                                 Public User
-                                @if ($publicUser->approved->doa_verified)
+                                @if ($publicUser->doa_verified)
                                     <span class="badge bg-success-transparent ms-1" title="Verified by DOA">
                                         <i class="bx bx-check"></i>
                                     </span>

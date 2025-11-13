@@ -20,7 +20,7 @@ class InternalUser extends Authenticatable implements MustVerifyEmail
 
     protected $table = 'internal_users';
     protected $guard_name = 'internal';
-    protected $fillable = ['fullname', 'username', 'email', 'phone', 'position', 'office', 'password', 'no_ic'];
+    protected $fillable = ['fullname', 'username', 'email', 'phone_number', 'position', 'office', 'password', 'no_ic'];
     protected $hidden = ['password', 'remember_token'];
 
     public function hasVerifiedEmail()

@@ -2,10 +2,12 @@ import Dropzone from "dropzone";
 import $ from "jquery";
 import Swal from "sweetalert2";
 import "dropzone/dist/dropzone.css";
+import { loadProfile } from "./profile";
 
 Dropzone.autoDiscover = false;
 
 let attachmentVar = []; // ✅ Will contain files currently in queue or uploaded
+
 
 // Initialize Dropzone
 const verificationDropzone = new Dropzone("#verificationDropzone", {
@@ -14,6 +16,9 @@ const verificationDropzone = new Dropzone("#verificationDropzone", {
     paramName: "attachment",
     maxFilesize: 5,
     maxFiles: 1,
+    // data: {
+    //     uuid: user_id
+    // },
     acceptedFiles: ".jpg,.jpeg,.png,.pdf",
     addRemoveLinks: true,
     dictDefaultMessage: "Drop your verification file here or click to upload.",
@@ -52,6 +57,10 @@ verificationDropzone.on("removedfile", function (file) {
 
 // ✅ When user clicks upload button
 $("#uploadBtn").on("click", function () {
+    let userId = $(this).data('id'); // get user_id from button
+
+    console.log('user id', userId);
+
     if (verificationDropzone.getQueuedFiles().length === 0) {
         Swal.fire({
             icon: "warning",
@@ -61,8 +70,14 @@ $("#uploadBtn").on("click", function () {
         return;
     }
 
+    // Add user_id to each file upload
+    verificationDropzone.on("sending", function (file, xhr, formData) {
+        formData.append("user_id", userId); // ✅ append user_id to request
+    });
+
     verificationDropzone.processQueue(); // start upload
 });
+
 
 // ✅ When upload succeeds
 verificationDropzone.on("success", function (file, response) {
@@ -76,7 +91,12 @@ verificationDropzone.on("success", function (file, response) {
     const uploaded = attachmentVar.find(f => f.name === file.name);
     if (uploaded) uploaded.url = response.file_url;
 
+
+    loadProfile();
+
     console.log("Upload success — updated attachmentVar:", attachmentVar);
+
+    attachmentVar = [];
 });
 
 // ✅ When upload fails
