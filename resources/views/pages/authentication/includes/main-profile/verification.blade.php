@@ -9,6 +9,7 @@
         <div id="imgLink"></div>
 
         <div class="mt-3 status"></div>
+        <div class="fs-13 reason"></div>
 
         <div class="mt-3">
             <span class="fs-12">
@@ -28,6 +29,8 @@
                 </span>
             </span>
         </div>
+
+        <div class="rejectedBtn p-1 d-flex justify-content-end align-items-end"></div>
     </div>
 
 

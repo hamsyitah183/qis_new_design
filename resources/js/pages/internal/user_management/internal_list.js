@@ -149,7 +149,7 @@ function handle_internal_user_submit() {
  */
 async function delete_internal_user() {
     const Swal = await getSwal();
-    $(document).on("click", ".deleteInternalUser", function (e) {
+    $(document).on("click", ".deleteBtn", function (e) {
         e.preventDefault();
         const userId = $(this).data("id");
 
@@ -164,7 +164,7 @@ async function delete_internal_user() {
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: `/internal/internal-users/${userId}`,
+                    url: `/internal/user_internal/delete/${userId}`,
                     type: "DELETE",
                     headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
                     success: function () {

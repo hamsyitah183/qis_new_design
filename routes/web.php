@@ -78,11 +78,13 @@ Route::prefix('internal')
         Route::get('/user_public/list/data', [UserController::class, 'public_list_data'])->name('public.list.data');
         Route::get('/user_public/user/data/{id}', [UserController::class, 'user_data']);
         Route::post('/user_public/save', [UserController::class, 'public_user_save']);
+        Route::delete('/user_public/delete/{id}', [UserController::class, 'public_user_delete']);
 
         Route::get('/user_internal/list', [UserController::class, 'internal_list'])->name('internal.list');
         Route::get('/user_internal/list/data', [UserController::class, 'internal_list_data'])->name('internal.list.data');
         Route::get('/user_internal/user/data/{id}', [UserController::class, 'internal_user_data']);
         Route::post('/user_internal/save', [UserController::class, 'internal_user_save']);
+        Route::delete('/user_internal/delete/{id}', [UserController::class, 'internal_user_delete']);
 
         Route::get('/activity_log', [ActivityLogController::class, 'log'])->name('internal.activity_log');
         Route::get('/activity_log/data', [ActivityLogController::class, 'data']);

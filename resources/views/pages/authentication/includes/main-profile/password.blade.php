@@ -4,6 +4,9 @@
         <form id="update-password-form">
             <div class="row gy-3 align-items-center">
 
+                {{-- <input type="hidden" name="uuid" class="uuid">
+                <input type="hidden" name="type" class="type"> --}}
+
                 {{-- Old Password --}}
                 <div class="col-xl-3">
                     <div class="lh-1">
@@ -37,7 +40,7 @@
 
 
                 <div class="d-flex justify-content-end align-items-end">
-                    <button class="btn btn-secondary btn-sm mt-3 border" type="submit">Update</button>
+                    <button class="btn btn-secondary btn-sm mt-3 border">Update</button>
                 </div>
             </div>
         </form>

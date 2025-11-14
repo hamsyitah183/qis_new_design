@@ -4,7 +4,8 @@ import Swal from "sweetalert2";
 let user = null;
 
 export async function loadProfile() {
-    console.log('call the load profile function')
+    $(".uploadAgain").hide();
+    console.log("call the load profile function");
     const allInputs = document.querySelectorAll(
         "input, select, button, textarea"
     );
@@ -44,13 +45,14 @@ export async function loadProfile() {
 }
 
 function fillTheData(user, type) {
+    console.log('user id', user)
     const fullAddress =
         user.office ??
         user.address_1 + (user.address_2 ? `, ${user.address_2}` : "");
     let badgeVerification = "";
     $(".type").val(type);
     $(".uuid").val(user.uuid);
-    $('#uploadBtn').attr('data-id', user.uuid)
+    $("#uploadBtn").attr("data-id", user.uuid);
     $(".fullname").val(user.fullname).text(user.fullname);
     $(".address").val(fullAddress).text(fullAddress);
     $(".phone_number")
@@ -115,15 +117,22 @@ function fillTheData(user, type) {
                 container.append(`<p>Unsupported file format: ${ext}</p>`);
             }
 
-            $('.hasImage').css('display', 'block');
-            $('.hasNoImage').css('display', 'none');
+            $(".hasImage").css("display", "block");
+            $(".hasNoImage").css("display", "none");
+
+            if (approved.status?.toLowerCase().includes("rejected")) {
+                $(".rejectedBtn").html(`
+                    <div class = "btn btn-sm btn-warning uploadAgain">
+                        Upload Again
+                    </div>
+                `);
+            }
 
             // $('.approvedBy').text(approved)
-
         } else {
             container.append("<p>No attachment uploaded yet.</p>");
-            $('.hasImage').css('display', 'none');
-            $('.hasNoImage').css('display', 'block');
+            $(".hasImage").css("display", "none");
+            $(".hasNoImage").css("display", "block");
         }
 
         // 🔹 Dates and approver info
@@ -141,25 +150,32 @@ function fillTheData(user, type) {
 
         // 🔹 Status display
         let statusText = "";
+        let reason = "";
 
         if (approved.status?.toLowerCase().includes("waiting")) {
             statusText = `
             <div class="alert alert-warning" role="alert">
                 <i class="ti ti-alert-circle me-2 fs-16"></i>
-                ${approved.status.toUpperCase()}
+                ${approved.status}
             </div>`;
         } else if (approved.status?.toLowerCase().includes("approved")) {
             statusText = `
             <div class="alert alert-success" role="alert">
                 <i class="ti ti-rosette-discount-check me-2 fs-16"></i>
-                ${approved.status.toUpperCase()}
+                ${approved.status}
             </div>`;
         } else if (approved.status?.toLowerCase().includes("rejected")) {
             statusText = `
             <div class="alert alert-danger" role="alert">
                 <i class="ti ti-rosette-discount-x me-2 fs-16"></i>
-                ${approved.status.toUpperCase()}
+                ${approved.status}
             </div>`;
+
+            reason = `
+               <div class = "me-2 mt-2 border rounded-3 p-3">
+                <span class = "fw-bold">Reason: </span> 
+                <span class = "text-muted">${approved.reason}</span>
+               </div>`;
         } else {
             statusText = `
             <div class="alert alert-secondary" role="alert">
@@ -168,13 +184,27 @@ function fillTheData(user, type) {
         }
 
         $(".status").html(statusText);
+        $(".reason").html(reason);
     }
 
     $(".mainFullName").html(badgeVerification);
 }
 
+$(document).on("click", ".uploadAgain", function () {
+    // Hide the container showing existing image
+    $(".hasImage").css("display", "none");
+
+    // Show the container for uploading new image
+    $(".hasNoImage").css("display", "block");
+
+    // Optional: clear the previous Dropzone files if needed
+    if (typeof verificationDropzone !== "undefined") {
+        verificationDropzone.removeAllFiles(true);
+    }
+});
+
 function editProfile() {
-    $("#edit-profile-tab-pane").on("submit", function (e) {
+    $("#edit-profile-tab-pane").off("submit").on("submit", function (e){
         e.preventDefault();
 
         if (!user) {
@@ -301,7 +331,7 @@ function formatTime(timestamp) {
 }
 
 function changePassword() {
-    $("#edit-password-tab-pane").on("submit", function (e) {
+    $("#edit-password-tab-pane").off("submit").on("submit", function (e) {
         e.preventDefault();
 
         if (!user) {
@@ -315,10 +345,14 @@ function changePassword() {
 
         const $form = $(this);
         const formData = new FormData(this);
+
         const allInputs = $form.find("input, select, button, textarea");
         allInputs.prop("disabled", true);
         $form.find(".is-invalid").removeClass("is-invalid");
         $form.find(".invalid-feedback").remove();
+
+        // $(".type").val(type);
+        // $(".uuid").val(user.uuid);
 
         const submitForm = () => {
             Swal.fire({

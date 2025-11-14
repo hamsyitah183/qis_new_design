@@ -34,7 +34,7 @@ class PublicUserSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
 
-        if ($public = PublicUser::where('email', 'hamsyitahnur@example.com')->first()) {
+        if ($public = PublicUser::where('email', 'hamsyitahnur@gmail.com')->first()) {
             $public->assignRole('public');
         }
     }

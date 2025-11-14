@@ -43,7 +43,7 @@ class UserController extends Controller
                 // Only show delete button if not current user
                 if (!$currentUser || $currentUser->uuid !== $user->uuid) {
                     $actionHtml .= '
-                    <button class="btn btn-sm btn-danger text-white deleteBtn" data-id="' . $user->uuid . '" title="Delete">
+                    <button class="btn btn-sm btn-danger text-white deletePublicUser" data-id="' . $user->uuid . '" title="Delete">
                         <i class="bx bx-trash-alt"></i>
                     </button>
                 ';
@@ -87,10 +87,13 @@ class UserController extends Controller
     {
         $uuid = $request->input('uuid');
 
+        // dd($request->all());
+
         if ($uuid) {
             // dd($request->all());
             // UPDATE existing user
             $public = PublicUser::where('uuid', $uuid)->firstOrFail();
+        
 
             $validated = $request->validate([
                 'fullname'     => 'required|string|max:255',
@@ -185,6 +188,28 @@ class UserController extends Controller
                 ], 500);
             }
         }
+    }
+
+    public function public_user_delete($id)
+    {
+        $public = PublicUser::where('uuid', $id)->first();
+
+        $public->delete();
+
+        return response()->json([
+            'user' => $public
+        ]);
+    }
+
+    public function internal_user_delete($id)
+    {
+        $public = InternalUser::where('uuid', $id)->first();
+
+        $public->delete();
+
+        return response()->json([
+            'user' => $public
+        ]);
     }
 
 
@@ -299,7 +324,7 @@ class UserController extends Controller
                 'fullname' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:internal_users,email',
                 'no_ic' => 'required|digits:12|unique:internal_users,no_ic',
-                'phone_number' => 'required|digits_between:7,15|unique:internal_users,phone',
+                'phone_number' => 'required|digits_between:7,15|unique:internal_users,phone_number',
                 'position' => 'required|string|max:255',
                 'office' => 'required|string|max:255',
                 'role' => 'required|string', // Make sure role is sent
@@ -366,17 +391,18 @@ class UserController extends Controller
 
     public function password(Request $request)
     {
+        // dd($request->all());
         $validated = $request->validate([
-            'type' => 'required|in:public,internal',
-            'uuid' => 'required|uuid',
+            // 'type' => 'required|in:public,internal',
+            // 'uuid' => 'required|uuid',
             'old_password' => 'nullable|string',
             'new_password' => 'required|string|min:8|confirmed', // expects new_password + new_password_confirmation
         ]);
 
         // Select correct user model
-        $user = $validated['type'] === 'public'
-            ? PublicUser::where('uuid', $validated['uuid'])->first()
-            : InternalUser::where('uuid', $validated['uuid'])->first();
+        $user = $request['type'] === 'public'
+            ? PublicUser::where('uuid', $request['uuid'])->first()
+            : InternalUser::where('uuid', $request['uuid'])->first();
 
         if (!$user) {
             return response()->json([
@@ -423,6 +449,11 @@ class UserController extends Controller
             }
 
             if ($request->hasFile('attachment')) {
+                // Delete old file if it exists
+                if ($verification->verification_attachment && file_exists(public_path($verification->verification_attachment))) {
+                    unlink(public_path($verification->verification_attachment));
+                }
+
                 $file = $request->file('attachment');
 
                 // Make sure the directory exists
@@ -464,6 +495,7 @@ class UserController extends Controller
 
 
 
+
     public function verification_attachment($id)
     {
 
@@ -478,7 +510,7 @@ class UserController extends Controller
     {
         $internal = authUser()['user'];
 
-            //  dd('requesr', $request->all(), ' id', $id);
+        //  dd('requesr', $request->all(), ' id', $id);
 
         DB::beginTransaction();
 
