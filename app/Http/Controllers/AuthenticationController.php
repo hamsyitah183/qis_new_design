@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Spatie\Activitylog\Models\Activity;
+use App\Services\VerificationService;
 
 class AuthenticationController extends Controller
 {
@@ -93,8 +94,9 @@ class AuthenticationController extends Controller
         ]);
     }
 
-    public function registerPublic(Request $request)
+    public function registerPublic(Request $request,  VerificationService $verificationService)
     {
+        // dd($request->all(), $request->hasFile('attachment'));
         $validated = $request->validate([
             'fullname' => 'required|string|max:255',
             'email' => 'required|email|unique:public_users,email',
@@ -125,11 +127,22 @@ class AuthenticationController extends Controller
                 'state'        => $validated['state'],
             ]);
 
+
+            if ($request->hasFile('attachment')) {
+                $userId = $user->uuid;
+                $file = $request->file('attachment');
+
+                $result = $verificationService->uploadVerificationAttachment($userId, $file);
+            }
+
+
             // Automatically log in the user
             Auth::guard('public')->login($user);
 
             //  Send verification email
             $user->notify(new VerifyEmailNotification());
+
+
 
             DB::commit();
 
@@ -242,5 +255,11 @@ class AuthenticationController extends Controller
         return back()->with('message', 'Verification link sent!');
     }
 
-  
+
+    public function register_test()
+    {
+        return view('pages.authentication.register_test', [
+            'title' => 'Register'
+        ]);
+    }
 }

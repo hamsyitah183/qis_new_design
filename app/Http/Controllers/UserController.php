@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Log;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Str;
 
+use App\Services\VerificationService;
+
 class UserController extends Controller
 {
     //
@@ -93,7 +95,7 @@ class UserController extends Controller
             // dd($request->all());
             // UPDATE existing user
             $public = PublicUser::where('uuid', $uuid)->firstOrFail();
-        
+
 
             $validated = $request->validate([
                 'fullname'     => 'required|string|max:255',
@@ -426,71 +428,82 @@ class UserController extends Controller
         ]);
     }
 
-    public function uploadVerificationAttachment(Request $request)
+    // public function uploadVerificationAttachment(Request $request, $id)
+    // {
+    //     // $userId = $request->input('user_id');
+    //     $userId = $id ?? $request->input('user_id');
+
+    //     if (!$userId) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'User ID is required.',
+    //         ], 400);
+    //     }
+
+    //     DB::beginTransaction();
+
+    //     try {
+    //         $verification = ApprovedPublic::where('user_id', $userId)->first();
+
+    //         // Create a new record if it doesn't exist yet
+    //         if (!$verification) {
+    //             $verification = new ApprovedPublic();
+    //             $verification->user_id = $userId;
+    //         }
+
+    //         if ($request->hasFile('attachment')) {
+    //             // Delete old file if it exists
+    //             if ($verification->verification_attachment && file_exists(public_path($verification->verification_attachment))) {
+    //                 unlink(public_path($verification->verification_attachment));
+    //             }
+
+    //             $file = $request->file('attachment');
+
+    //             // Make sure the directory exists
+    //             $destinationPath = public_path('storage/app/public/verifications');
+    //             if (!file_exists($destinationPath)) {
+    //                 mkdir($destinationPath, 0755, true);
+    //             }
+
+    //             $filename = time() . '_' . $file->getClientOriginalName();
+    //             $file->move($destinationPath, $filename);
+
+    //             // Save relative path for database
+    //             $verification->verification_attachment = 'storage/app/public/verifications/' . $filename;
+    //         }
+
+    //         $verification->status = 'waiting for approval';
+
+    //         $verification->save();
+
+    //         DB::commit();
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'file_url' => $verification->verification_attachment,
+    //             'message' => 'File uploaded successfully.',
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+
+    //         Log::error('Verification upload failed: ' . $e->getMessage());
+
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'An error occurred while uploading the file.',
+    //             'error' => $e->getMessage(),
+    //         ], 500);
+    //     }
+    // }
+
+    public function uploadVerificationAttachment(Request $request, VerificationService $verificationService)
     {
-        $userId = $request->input('user_id');
+        $userId = $request->user_id;
+        $file = $request->file('attachment');
 
-        if (!$userId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User ID is required.',
-            ], 400);
-        }
+        $result = $verificationService->uploadVerificationAttachment($userId, $file);
 
-        DB::beginTransaction();
-
-        try {
-            $verification = ApprovedPublic::where('user_id', $userId)->first();
-
-            // Create a new record if it doesn't exist yet
-            if (!$verification) {
-                $verification = new ApprovedPublic();
-                $verification->user_id = $userId;
-            }
-
-            if ($request->hasFile('attachment')) {
-                // Delete old file if it exists
-                if ($verification->verification_attachment && file_exists(public_path($verification->verification_attachment))) {
-                    unlink(public_path($verification->verification_attachment));
-                }
-
-                $file = $request->file('attachment');
-
-                // Make sure the directory exists
-                $destinationPath = public_path('storage/app/public/verifications');
-                if (!file_exists($destinationPath)) {
-                    mkdir($destinationPath, 0755, true);
-                }
-
-                $filename = time() . '_' . $file->getClientOriginalName();
-                $file->move($destinationPath, $filename);
-
-                // Save relative path for database
-                $verification->verification_attachment = 'storage/app/public/verifications/' . $filename;
-            }
-
-            $verification->status = 'waiting for approval';
-
-            $verification->save();
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'file_url' => $verification->verification_attachment,
-                'message' => 'File uploaded successfully.',
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            Log::error('Verification upload failed: ' . $e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'An error occurred while uploading the file.',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json($result, $result['success'] ? 200 : 500);
     }
 
 
