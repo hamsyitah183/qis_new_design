@@ -26,13 +26,13 @@
             <!-- Office number (optional) -->
             <div class="col-xl-6">
                 <label class="form-label text-default officeLabel">Office Number (Optional)</label>
-                <input type="text" name="office_number" class="form-control" placeholder="Office Number">
+                <input type="text" name="office_number" class="form-control" placeholder=" (415) 555-0132">
             </div>
 
             <!-- Email -->
             <div class="col-xl-6">
                 <label class="form-label text-default">Email</label>
-                <input type="email" name="email" class="form-control" placeholder="Email" id="email">
+                <input type="email" name="email" class="form-control" placeholder="Johndoe@gmail.com" id="email">
             </div>
 
             <!-- Password -->
@@ -44,35 +44,35 @@
             <!-- Address 1 -->
             <div class="col-xl-12">
                 <label class="form-label text-default">Address 1</label>
-                <textarea name="address_1" id="" cols="30" rows="3" class="form-control border"></textarea>
+                <textarea name="address_1" id="" cols="30" rows="2" class="form-control border"></textarea>
             </div>
 
             <!-- Address 2 (optional) -->
             <div class="col-xl-12">
                 <label class="form-label text-default">Address 2 (Optional)</label>
-                <textarea name="address_2" id="" cols="30" rows="3" class="form-control border"></textarea>
+                <textarea name="address_2" id="" cols="30" rows="2" class="form-control border"></textarea>
             </div>
 
             <!-- Postcode -->
             <div class="col-xl-6">
                 <label class="form-label text-default">Postcode</label>
-                <input type="text" name="postcode" class="form-control" placeholder="Postcode">
+                <input type="text" name="postcode" class="form-control" placeholder=" 89657">
             </div>
 
             <!-- District -->
             <div class="col-xl-6">
                 <label class="form-label text-default">District</label>
-                <input type="text" name="district" class="form-control" placeholder="District">
+                <input type="text" name="district" class="form-control" placeholder=" Kota Kinabalu">
             </div>
 
             <!-- State -->
             <div class="col-xl-12">
                 <label class="form-label text-default">State</label>
-                <input type="text" name="state" class="form-control" placeholder="State">
+                <input type="text" name="state" class="form-control" placeholder=" Sabah">
             </div>
         </div>
     </div>
-    <div class="p-3 border-top border-block-start-dashed d-sm-flex justify-content-between">
+    <div class="p-3 border-top border-block-start-dashed d-flex justify-content-between">
         <button class="btn btn-secondary" id="backToAccountTab" type="button">
             <i class="ri-arrow-left-line me-2 align-middle"></i>
             Back

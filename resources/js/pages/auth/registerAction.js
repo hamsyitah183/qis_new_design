@@ -107,22 +107,17 @@ $(document).ready(function () {
         $(".icLabel").text(
             type === "individual"
                 ? "Identification Number"
-                : "Company Identification Number"
+                : "Company Registration Number"
         );
 
         $("#fullname").attr(
             "placeholder",
-            type === "individual" ? "Name" : "Company Name"
+            type === "individual" ? "John Doe" : " ABC Sdn. Bhd."
         );
-        $("#phone_number").attr(
-            "placeholder",
-            type === "individual" ? "Phone Number" : "Company Phone Number"
-        );
+        $("#phone_number").attr("placeholder", " +60111111111");
         $("#no_ic").attr(
             "placeholder",
-            type === "individual"
-                ? "Indentification Number"
-                : "Company Identification Number"
+            type === "individual" ? " 000000120000" : " 000000-X"
         );
     }
 
@@ -203,35 +198,28 @@ $(document).ready(function () {
     $("#finishRegistrationBtn").on("click", function (e) {
         e.preventDefault();
 
-        const form = $("#registerForm")[0]; // get the raw form element
-        const formData = new FormData(form); // create FormData object
+        const form = $("#registerForm")[0];
+        const formData = new FormData(form);
 
-        let account_type = null; 
-
-        if(type = 'individual') {
-            account_type = 'individu';
-        } else {
-            account_type = type;
-        }
+        let account_type = type === "individual" ? "individu" : type;
         formData.append("account_type", account_type);
 
-        // Optional: append the file manually if your input is outside the form
+        // Append file manually
         const fileInput = document.getElementById("fileInput");
         if (fileInput && fileInput.files.length > 0) {
-            formData.append(fileInput.name || "attachment", fileInput.files[0]);
+            formData.append("attachment", fileInput.files[0]);
         }
 
         $.ajax({
-            url: $(form).attr("action"), // form action
-            type: $(form).attr("method") || "POST", // form method
+            url: $(form).attr("action"),
+            type: $(form).attr("method") || "POST",
             data: formData,
-            processData: false, // important for FormData
-            contentType: false, // important for FormData
+            processData: false,
+            contentType: false,
             headers: {
                 "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
             },
             beforeSend: function () {
-                // Optional: show loader
                 $("#finishRegistrationBtn")
                     .prop("disabled", true)
                     .text("Submitting...");
@@ -243,26 +231,53 @@ $(document).ready(function () {
                 });
             },
             success: function (response) {
-                console.log("Form submitted successfully", response);
-                // Optional: show success message
                 Swal.fire({
                     icon: "success",
                     title: "Registration Successful",
                     text: response.message || "Your form has been submitted!",
+                }).then(() => {
+                    window.location.href = response.redirect;
                 });
             },
             error: function (xhr, status, error) {
-                console.error("Error submitting form:", error);
-                Swal.fire({
-                    icon: "error",
-                    title: "Submission Failed",
-                    text: xhr.responseJSON?.message || "Something went wrong!",
-                });
-            },
-            complete: function () {
+                Swal.close();
+
+                if (xhr.status === 422) {
+                    const errors = xhr.responseJSON.errors;
+
+                    for (const key in errors) {
+                        const $input = $(form).find(`[name="${key}"]`);
+
+                        if ($input.length) {
+                            $input.addClass("is-invalid");
+
+                            // Remove old error first
+                            $input.next(".invalid-feedback").remove();
+
+                            $input.after(
+                                `<div class="invalid-feedback">${errors[key][0]}</div>`
+                            );
+                        }
+                    }
+
+                    Swal.fire({
+                        icon: "error",
+                        title: "Validation Failed",
+                        text: "Please check your input fields.",
+                    });
+                } else {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text:
+                            xhr.responseJSON?.message ||
+                            "Something went wrong. Please try again.",
+                    });
+                }
+
                 $("#finishRegistrationBtn")
                     .prop("disabled", false)
-                    .text("Continue");
+                    .text("Submit");
             },
         });
     });

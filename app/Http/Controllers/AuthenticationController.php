@@ -133,6 +133,8 @@ class AuthenticationController extends Controller
                 $file = $request->file('attachment');
 
                 $result = $verificationService->uploadVerificationAttachment($userId, $file);
+
+                
             }
 
 

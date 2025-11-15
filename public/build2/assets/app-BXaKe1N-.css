@@ -14498,6 +14498,10 @@ button {
     .header-fullscreen {
         display: none !important
     }
+
+    .notifications-dropdown {
+        display: block !important;
+    }
 }
 
 .btn-close:focus {

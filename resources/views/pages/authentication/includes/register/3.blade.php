@@ -27,15 +27,15 @@
     </div>
 
 
-    <div class="p-3 border-top border-block-start-dashed d-sm-flex justify-content-between">
+    <div class="p-3 border-top border-block-start-dashed d-flex justify-content-between">
         <button class="btn btn-secondary" id="backToDetailsTab" type="button">
             <i class="ri-arrow-left-line me-2 align-middle"></i>
             Back
         </button>
 
         <button class="btn btn-primary" id="finishRegistrationBtn" type="button">
-            Continue
-            <i class="ri-arrow-right-line ms-2 align-middle"></i>
+            Submit
+            
         </button>
     </div>
 </div>

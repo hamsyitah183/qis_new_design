@@ -7,17 +7,17 @@
         <div class="header-element">
             <div class="horizontal-logo">
                 <a href="https://laravelui.spruko.com/xintra/index" class="header-logo">
-                    <img src="https://laravelui.spruko.com/xintra/build2/assets/images/brand-logos/desktop-logo.png"
+                    <img src="{{ asset('/asset/image.png') }}"
                         alt="logo" class="desktop-logo">
-                    <img src="https://laravelui.spruko.com/xintra/build2/assets/images/brand-logos/toggle-dark.png"
+                    <img src="{{ asset('/asset/image.png') }}"
                         alt="logo" class="toggle-dark">
-                    <img src="https://laravelui.spruko.com/xintra/build2/assets/images/brand-logos/desktop-dark.png"
+                    <img src="{{ asset('/asset/image.png') }}"
                         alt="logo" class="desktop-dark">
-                    <img src="https://laravelui.spruko.com/xintra/build2/assets/images/brand-logos/toggle-logo.png"
+                    <img src="{{ asset('/asset/image.png') }}"
                         alt="logo" class="toggle-logo">
-                    <img src="https://laravelui.spruko.com/xintra/build2/assets/images/brand-logos/toggle-white.png"
+                    <img src="{{ asset('/asset/image.png') }}"
                         alt="logo" class="toggle-white">
-                    <img src="https://laravelui.spruko.com/xintra/build2/assets/images/brand-logos/desktop-white.png"
+                    <img src="{{ asset('/asset/image.png') }}"
                         alt="logo" class="desktop-white">
                 </a>
             </div>
@@ -102,7 +102,7 @@
 
 
         <!-- Start::header-element -->
-        <li class="header-element notifications-dropdown d-xl-block d-none dropdown">
+        <li class="header-element notifications-dropdown dropdown d-block">
             <!-- Start::header-link|dropdown-toggle -->
             <a href="javascript:void(0);" class="header-link dropdown-toggle" data-bs-toggle="dropdown"
                 data-bs-auto-close="outside" id="messageDropdown" aria-expanded="false">
@@ -111,7 +111,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round"
                         d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0M3.124 7.5A8.969 8.969 0 0 1 5.292 3m13.416 0a8.969 8.969 0 0 1 2.168 4.5" />
                 </svg>
-                <span class="header-icon-pulse bg-primary2 rounded pulse pulse-secondary"></span>
+                
             </a>
             <!-- End::header-link|dropdown-toggle -->
             <!-- Start::main-header-dropdown -->
@@ -324,7 +324,7 @@
 
 
 
-                <li>
+                <li class="p-4 p-md-0">
                     <form id="logoutForm" action="{{ route('logout') }}" method="POST">
                         @csrf
                         <button type="submit" class="dropdown-item d-flex align-items-center text-start w-100">
