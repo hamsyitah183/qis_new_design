@@ -20,9 +20,15 @@ class UserController extends Controller
     //
     public function public_list()
     {
-        // dd(Auth::guard('internal')->user());
+        $user = authUser()['user'];
+
+        if (!$user->can('create public user')) {
+            abort(403, 'Unauthorized action.'); // or redirect to another page
+        }
+
         return view('pages.internal.user_management.list_public');
     }
+
 
     public function public_list_data()
     {
@@ -368,6 +374,12 @@ class UserController extends Controller
 
     public function profile()
     {
+        // $user = authUser()['user'];
+
+        // $roles = $user->getRoleNames(); // returns a collection of role names
+
+        // $permissions = $user->getAllPermissions(); // returns a collection of Permission models
+
         return view('pages.authentication.profile', [
             'title' => 'Profile'
         ]);

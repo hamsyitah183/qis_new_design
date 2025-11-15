@@ -13,7 +13,9 @@ class InternalUserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Make sure roles exist first
+        // ==================================================
+        // 1️⃣ Ensure roles exist first
+        // ==================================================
         $roles = [
             'admin' => 'internal',
             'officer' => 'internal',
@@ -27,7 +29,9 @@ class InternalUserSeeder extends Seeder
             ]);
         }
 
-        // Users data
+        // ==================================================
+        // 2️⃣ Users data
+        // ==================================================
         $users = [
             [
                 'email' => 'admin@example.com',
@@ -58,6 +62,7 @@ class InternalUserSeeder extends Seeder
                 'office' => 'District Office',
                 'no_ic' => '900101010002',
                 'password' => 'password123',
+                'email_verified_at' => Carbon::now(),
                 'role' => 'officer',
             ],
             [
@@ -72,12 +77,15 @@ class InternalUserSeeder extends Seeder
             ],
         ];
 
+        // ==================================================
+        // 3️⃣ Seed users safely
+        // ==================================================
         foreach ($users as $data) {
-            // Check if user exists
+            // Create or update the user
             $user = InternalUser::updateOrCreate(
-                ['email' => $data['email']], // search criteria
+                ['email' => $data['email']], // search by email
                 [
-                    'uuid' => Str::uuid(),
+                    'uuid' => Str::uuid(), // make sure UUID is always set
                     'fullname' => $data['fullname'],
                     'phone_number' => $data['phone_number'],
                     'position' => $data['position'],
@@ -88,9 +96,9 @@ class InternalUserSeeder extends Seeder
                 ]
             );
 
-            // Assign role safely
-            if (!$user->hasRole($data['role'])) {
-                $user->assignRole($data['role']);
+            // Assign role if not already assigned
+            if (!$user->hasRole($data['role'], 'internal')) {
+                $user->assignRole($data['role']); // internal guard
             }
         }
     }

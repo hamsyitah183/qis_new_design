@@ -17,6 +17,10 @@ class PublicUser extends Authenticatable implements MustVerifyEmail
     protected $table = 'public_users';
     protected $guard_name = 'public';
 
+    protected $primaryKey = 'uuid';
+    public $incrementing = false; // important for UUID
+    protected $keyType = 'string';
+
     protected $fillable = [
         'uuid',
         'fullname',

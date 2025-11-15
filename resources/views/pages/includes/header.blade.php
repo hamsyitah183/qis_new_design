@@ -7,18 +7,12 @@
         <div class="header-element">
             <div class="horizontal-logo">
                 <a href="https://laravelui.spruko.com/xintra/index" class="header-logo">
-                    <img src="{{ asset('/asset/image.png') }}"
-                        alt="logo" class="desktop-logo">
-                    <img src="{{ asset('/asset/image.png') }}"
-                        alt="logo" class="toggle-dark">
-                    <img src="{{ asset('/asset/image.png') }}"
-                        alt="logo" class="desktop-dark">
-                    <img src="{{ asset('/asset/image.png') }}"
-                        alt="logo" class="toggle-logo">
-                    <img src="{{ asset('/asset/image.png') }}"
-                        alt="logo" class="toggle-white">
-                    <img src="{{ asset('/asset/image.png') }}"
-                        alt="logo" class="desktop-white">
+                    <img src="{{ asset('/asset/image.png') }}" alt="logo" class="desktop-logo">
+                    <img src="{{ asset('/asset/image.png') }}" alt="logo" class="toggle-dark">
+                    <img src="{{ asset('/asset/image.png') }}" alt="logo" class="desktop-dark">
+                    <img src="{{ asset('/asset/image.png') }}" alt="logo" class="toggle-logo">
+                    <img src="{{ asset('/asset/image.png') }}" alt="logo" class="toggle-white">
+                    <img src="{{ asset('/asset/image.png') }}" alt="logo" class="desktop-white">
                 </a>
             </div>
         </div>
@@ -111,151 +105,191 @@
                     <path stroke-linecap="round" stroke-linejoin="round"
                         d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0M3.124 7.5A8.969 8.969 0 0 1 5.292 3m13.416 0a8.969 8.969 0 0 1 2.168 4.5" />
                 </svg>
-                
+
             </a>
             <!-- End::header-link|dropdown-toggle -->
             <!-- Start::main-header-dropdown -->
-            <div class="main-header-dropdown dropdown-menu dropdown-menu-end" data-popper-placement="none">
+            <div class="main-header-dropdown dropdown-menu dropdown-menu-end" data-popper-placement="bottom-end"
+                style="position: absolute; inset: 0px 0px auto auto; margin: 0px; transform: translate(0px, 34px);">
                 <div class="p-3">
                     <div class="d-flex align-items-center justify-content-between">
                         <p class="mb-0 fs-15 fw-medium">Notifications</p>
-                        <span class="badge bg-secondary text-fixed-white" id="notifiation-data">5
-                            Unread</span>
+                        <span class="badge bg-secondary text-fixed-white" id="notifiation-data">5 Unread</span>
                     </div>
                 </div>
                 <div class="dropdown-divider"></div>
-                <ul class="list-unstyled mb-0" id="header-notification-scroll">
-                    <li class="dropdown-item">
-                        <div class="d-flex align-items-center">
-                            <div class="pe-2 lh-1">
-                                <span class="avatar avatar-md avatar-rounded bg-primary">
-                                    <img src="https://laravelui.spruko.com/xintra/build2/assets/images/faces/1.jpg"
-                                        alt="user1">
-                                </span>
-                            </div>
-                            <div class="flex-grow-1 d-flex align-items-center justify-content-between">
-                                <div>
-                                    <p class="mb-0 fw-medium"><a href="https://laravelui.spruko.com/xintra/chat">New
-                                            Messages</a></p>
-                                    <div class="text-muted fw-normal fs-12 header-notification-text text-truncate">
-                                        Jane Sam sent you a message.</div>
-                                    <div class="fw-normal fs-10 text-muted op-8">Now</div>
-                                </div>
-                                <div>
-                                    <a href="javascript:void(0);" class="min-w-fit-content dropdown-item-close1">
-                                        <i class="ri-close-line"></i>
-                                    </a>
-                                </div>
-                            </div>
+                <ul class="list-unstyled mb-0 simplebar-scrollable-y" id="header-notification-scroll"
+                    data-simplebar="init">
+                    <div class="simplebar-wrapper" style="margin: 0px;">
+                        <div class="simplebar-height-auto-observer-wrapper">
+                            <div class="simplebar-height-auto-observer"></div>
                         </div>
-                    </li>
-                    <li class="dropdown-item">
-                        <div class="d-flex align-items-center">
-                            <div class="pe-2 lh-1">
-                                <span class="avatar avatar-md bg-primary avatar-rounded fs-20">
-                                    <i class="fe fe-shopping-cart lh-1 "></i>
-                                </span>
-                            </div>
-                            <div class="flex-grow-1 d-flex align-items-center justify-content-between">
-                                <div>
-                                    <p class="mb-0 fw-medium"><a href="https://laravelui.spruko.com/xintra/chat">Order
-                                            Updates</a></p>
-                                    <div class="text-muted fw-normal fs-12 header-notification-text text-truncate">
-                                        Order <span class="text-primary1">#54321</span> has been shipped.
+                        <div class="simplebar-mask">
+                            <div class="simplebar-offset" style="right: 0px; bottom: 0px;">
+                                <div class="simplebar-content-wrapper" tabindex="0" role="region"
+                                    aria-label="scrollable content" style="height: auto; overflow: hidden scroll;">
+                                    <div class="simplebar-content" style="padding: 0px;">
+                                        <li class="dropdown-item">
+                                            <div class="d-flex align-items-center">
+                                                <div class="pe-2 lh-1">
+                                                    <span class="avatar avatar-md avatar-rounded bg-primary">
+                                                        <img src="https://laravelui.spruko.com/xintra/build/assets/images/faces/1.jpg"
+                                                            alt="user1">
+                                                    </span>
+                                                </div>
+                                                <div
+                                                    class="flex-grow-1 d-flex align-items-center justify-content-between">
+                                                    <div>
+                                                        <p class="mb-0 fw-medium"><a
+                                                                href="https://laravelui.spruko.com/xintra/chat">New
+                                                                Messages</a></p>
+                                                        <div
+                                                            class="text-muted fw-normal fs-12 header-notification-text text-truncate">
+                                                            Jane Sam sent you a message.</div>
+                                                        <div class="fw-normal fs-10 text-muted op-8">Now</div>
+                                                    </div>
+                                                    <div>
+                                                        <a href="javascript:void(0);"
+                                                            class="min-w-fit-content dropdown-item-close1">
+                                                            <i class="ri-close-line"></i>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="dropdown-item">
+                                            <div class="d-flex align-items-center">
+                                                <div class="pe-2 lh-1">
+                                                    <span class="avatar avatar-md bg-primary avatar-rounded fs-20">
+                                                        <i class="fe fe-shopping-cart lh-1 "></i>
+                                                    </span>
+                                                </div>
+                                                <div
+                                                    class="flex-grow-1 d-flex align-items-center justify-content-between">
+                                                    <div>
+                                                        <p class="mb-0 fw-medium"><a
+                                                                href="https://laravelui.spruko.com/xintra/chat">Order
+                                                                Updates</a></p>
+                                                        <div
+                                                            class="text-muted fw-normal fs-12 header-notification-text text-truncate">
+                                                            Order <span class="text-primary1">#54321</span> has been
+                                                            shipped.</div>
+                                                        <div class="fw-normal fs-10 text-muted op-8">2 hours ago</div>
+                                                    </div>
+                                                    <div>
+                                                        <a href="javascript:void(0);"
+                                                            class="min-w-fit-content dropdown-item-close1">
+                                                            <i class="ri-close-line"></i>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="dropdown-item">
+                                            <div class="d-flex align-items-center">
+                                                <div class="pe-2 lh-1">
+                                                    <span class="avatar avatar-md bg-orange avatar-rounded">
+                                                        <img src="https://laravelui.spruko.com/xintra/build/assets/images/faces/10.jpg"
+                                                            alt="user1">
+                                                    </span>
+                                                </div>
+                                                <div
+                                                    class="flex-grow-1 d-flex align-items-center justify-content-between">
+                                                    <div>
+                                                        <p class="mb-0 fw-medium"><a
+                                                                href="https://laravelui.spruko.com/xintra/chat">Comment
+                                                                on Post</a></p>
+                                                        <div
+                                                            class="text-muted fw-normal fs-12 header-notification-text text-truncate">
+                                                            Reacted: <span class="text-primary3">John Richard</span> on
+                                                            your next purchase!</div>
+                                                        <div class="fw-normal fs-10 text-muted op-8">2 hours ago</div>
+                                                    </div>
+                                                    <div>
+                                                        <a href="javascript:void(0);"
+                                                            class="min-w-fit-content dropdown-item-close1">
+                                                            <i class="ri-close-line"></i>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="dropdown-item">
+                                            <div class="d-flex align-items-center">
+                                                <div class="pe-2 lh-1">
+                                                    <span class="avatar avatar-md bg-success avatar-rounded">
+                                                        <img src="https://laravelui.spruko.com/xintra/build/assets/images/faces/11.jpg"
+                                                            alt="user1">
+                                                    </span>
+                                                </div>
+                                                <div
+                                                    class="flex-grow-1 d-flex align-items-center justify-content-between">
+                                                    <div>
+                                                        <p class="mb-0 fw-medium"><a
+                                                                href="https://laravelui.spruko.com/xintra/chat">Follow
+                                                                Request</a></p>
+                                                        <div
+                                                            class="text-muted fw-normal fs-12 header-notification-text text-truncate">
+                                                            <span class="text-info">Kelin Brown</span> has sent you the
+                                                            request.</div>
+                                                        <div class="fw-normal fs-10 text-muted op-8">1 Day ago</div>
+                                                    </div>
+                                                    <div>
+                                                        <a href="javascript:void(0);"
+                                                            class="min-w-fit-content dropdown-item-close1">
+                                                            <i class="ri-close-line"></i>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="dropdown-item">
+                                            <div class="d-flex align-items-center">
+                                                <div class="pe-2 lh-1">
+                                                    <span class="avatar avatar-md bg-primary2 avatar-rounded">
+                                                        <i class="ri-gift-line lh-1 fs-16"></i>
+                                                    </span>
+                                                </div>
+                                                <div
+                                                    class="flex-grow-1 d-flex align-items-center justify-content-between">
+                                                    <div>
+                                                        <p class="mb-0 fw-medium"><a
+                                                                href="https://laravelui.spruko.com/xintra/chat">Exclusive
+                                                                Offers</a></p>
+                                                        <div
+                                                            class="text-muted fw-normal fs-12 header-notification-text text-truncate">
+                                                            Enjoy<span class="text-success">20% off</span> on your next
+                                                            purchase!</div>
+                                                        <div class="fw-normal fs-10 text-muted op-8">5 hours ago</div>
+                                                    </div>
+                                                    <div>
+                                                        <a href="javascript:void(0);"
+                                                            class="min-w-fit-content dropdown-item-close1">
+                                                            <i class="ri-close-line"></i>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
                                     </div>
-                                    <div class="fw-normal fs-10 text-muted op-8">2 hours ago</div>
-                                </div>
-                                <div>
-                                    <a href="javascript:void(0);" class="min-w-fit-content dropdown-item-close1">
-                                        <i class="ri-close-line"></i>
-                                    </a>
                                 </div>
                             </div>
                         </div>
-                    </li>
-                    <li class="dropdown-item">
-                        <div class="d-flex align-items-center">
-                            <div class="pe-2 lh-1">
-                                <span class="avatar avatar-md bg-orange avatar-rounded">
-                                    <img src="https://laravelui.spruko.com/xintra/build2/assets/images/faces/10.jpg"
-                                        alt="user1">
-                                </span>
-                            </div>
-                            <div class="flex-grow-1 d-flex align-items-center justify-content-between">
-                                <div>
-                                    <p class="mb-0 fw-medium"><a
-                                            href="https://laravelui.spruko.com/xintra/chat">Comment on
-                                            Post</a></p>
-                                    <div class="text-muted fw-normal fs-12 header-notification-text text-truncate">
-                                        Reacted: <span class="text-primary3">John Richard</span> on your
-                                        next purchase!</div>
-                                    <div class="fw-normal fs-10 text-muted op-8">2 hours ago</div>
-                                </div>
-                                <div>
-                                    <a href="javascript:void(0);" class="min-w-fit-content dropdown-item-close1">
-                                        <i class="ri-close-line"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                    <li class="dropdown-item">
-                        <div class="d-flex align-items-center">
-                            <div class="pe-2 lh-1">
-                                <span class="avatar avatar-md bg-success avatar-rounded">
-                                    <img src="https://laravelui.spruko.com/xintra/build/assets/images/faces/11.jpg"
-                                        alt="user1">
-                                </span>
-                            </div>
-                            <div class="flex-grow-1 d-flex align-items-center justify-content-between">
-                                <div>
-                                    <p class="mb-0 fw-medium"><a
-                                            href="https://laravelui.spruko.com/xintra/chat">Follow
-                                            Request</a></p>
-                                    <div class="text-muted fw-normal fs-12 header-notification-text text-truncate">
-                                        <span class="text-info">Kelin Brown</span> has sent you the
-                                        request.
-                                    </div>
-                                    <div class="fw-normal fs-10 text-muted op-8">1 Day ago</div>
-                                </div>
-                                <div>
-                                    <a href="javascript:void(0);" class="min-w-fit-content dropdown-item-close1">
-                                        <i class="ri-close-line"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                    <li class="dropdown-item">
-                        <div class="d-flex align-items-center">
-                            <div class="pe-2 lh-1">
-                                <span class="avatar avatar-md bg-primary2 avatar-rounded">
-                                    <i class="ri-gift-line lh-1 fs-16"></i>
-                                </span>
-                            </div>
-                            <div class="flex-grow-1 d-flex align-items-center justify-content-between">
-                                <div>
-                                    <p class="mb-0 fw-medium"><a
-                                            href="https://laravelui.spruko.com/xintra/chat">Exclusive
-                                            Offers</a></p>
-                                    <div class="text-muted fw-normal fs-12 header-notification-text text-truncate">
-                                        Enjoy<span class="text-success">20% off</span> on your next
-                                        purchase!</div>
-                                    <div class="fw-normal fs-10 text-muted op-8">5 hours ago</div>
-                                </div>
-                                <div>
-                                    <a href="javascript:void(0);" class="min-w-fit-content dropdown-item-close1">
-                                        <i class="ri-close-line"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
+                        <div class="simplebar-placeholder" style="width: 334px; height: 367px;"></div>
+                    </div>
+                    <div class="simplebar-track simplebar-horizontal" style="visibility: hidden;">
+                        <div class="simplebar-scrollbar" style="width: 0px; display: none;"></div>
+                    </div>
+                    <div class="simplebar-track simplebar-vertical" style="visibility: visible;">
+                        <div class="simplebar-scrollbar"
+                            style="height: 279px; display: block; transform: translate3d(0px, 0px, 0px);"></div>
+                    </div>
                 </ul>
 
                 <div class="p-3 empty-header-item1 border-top">
                     <div class="d-grid">
-                        <a href="javascript:void(0);" class="btn btn-primary btn-wave">View All</a>
+                        <a href="javascript:void(0);" class="btn btn-primary btn-wave waves-effect waves-light">View
+                            All</a>
                     </div>
                 </div>
                 <div class="p-5 empty-item1 d-none">

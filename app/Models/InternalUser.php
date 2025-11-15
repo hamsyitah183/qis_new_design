@@ -23,6 +23,10 @@ class InternalUser extends Authenticatable implements MustVerifyEmail
     protected $fillable = ['fullname', 'username', 'email', 'phone_number', 'position', 'office', 'password', 'no_ic'];
     protected $hidden = ['password', 'remember_token'];
 
+    protected $primaryKey = 'uuid';
+    public $incrementing = false; // important for UUID
+    protected $keyType = 'string';
+
     public function hasVerifiedEmail()
     {
         return !is_null($this->email_verified_at);

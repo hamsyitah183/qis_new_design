@@ -3,22 +3,17 @@
 namespace Database\Seeders;
 
 use App\Models\PublicUser;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class PublicUserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        //
-        PublicUser::create([
+        $public = PublicUser::create([
             'uuid' => \Illuminate\Support\Str::uuid(),
             'fullname' => 'Nur Hamsyitah',
-            'no_ic' => '900101123456', // you can change this
+            'no_ic' => '900101123456',
             'email' => 'hamsyitahnur@gmail.com',
             'account_type' => 'individu',
             'phone_number' => '0123456789',
@@ -28,14 +23,11 @@ class PublicUserSeeder extends Seeder
             'postcode' => '89657',
             'district' => 'Tambunan',
             'state' => 'Sabah',
-            'password' => Hash::make('password123'), // change this if needed
-            // 'doa_verified' => 0,
-            // 'verification_attachment' => null,
+            'password' => Hash::make('password123'),
             'email_verified_at' => now(),
         ]);
 
-        if ($public = PublicUser::where('email', 'hamsyitahnur@gmail.com')->first()) {
-            $public->assignRole('public');
-        }
+        // Assign public role
+        $public->assignRole('public');
     }
 }
