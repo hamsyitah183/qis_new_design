@@ -1,5 +1,6 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
+import { initTooltips } from "../../../app";
 
 console.log("list role");
 
@@ -75,15 +76,12 @@ async function role_list() {
         });
     }
 
-    
     // Click only FIRST <td> (Role Name)
     $("#roleTable").on("click", "tbody td:first-child", function () {
         const row = $(this).closest("tr");
         const rowData = roleTable.row(row).data();
 
         if (!rowData) return;
-
-        initTooltips();
 
         // Highlight selected row
         $("#roleTable tbody tr").removeClass("active");
@@ -92,33 +90,77 @@ async function role_list() {
         // Build modal content
         const detailsHtml = `
         <div class="mb-2 fw-bold fs-6">${rowData.name}</div>
-        <p><strong>User Count:</strong> ${rowData.user_count}</p>
-        <p><strong>Permissions:</strong> ${(
-            rowData.permission_names || []
-        ).join(", ")}</p>
-    `;
+            <p><strong>users:</strong> ${listUser(rowData.user_count)}
+            <p><strong>Permissions:</strong> ${listPermission(rowData.permission_names)}
+        `;
 
         // OPEN MODAL for ALL VIEWPORTS
         $("#roleDetailsContentModal").html(detailsHtml);
 
+        initTooltips();
+
         const modal = new bootstrap.Modal(
             document.getElementById("roleDetailsModal")
         );
+
         modal.show();
     });
 
     await data_table_init();
 }
 
-function initTooltips() {
-    // remove old tooltip instances to avoid duplicates
-    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => {
-        if (bootstrap.Tooltip.getInstance(el)) {
-            bootstrap.Tooltip.getInstance(el).dispose();
-        }
-        new bootstrap.Tooltip(el);
-    });
+function listUser(users) {
+    // Ensure we have an array
+    if (typeof users === "string") {
+        users = JSON.parse(users);
+    }
+
+    console.log("users", users);
+
+    let userHTML = '<div class="avatar-list-stacked my-3">';
+
+    if (users) {
+        users.forEach((user) => {
+            // Generate initials from fullname
+            const initials = user.fullname
+                .split(" ")
+                .map((word) => word[0].toUpperCase())
+                .join("");
+
+            userHTML += `
+            <span class="avatar avatar-md avatar-rounded border border-white bg-primary text-fixed-white"
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="${user.fullname}">
+                ${initials}
+            </span>
+        `;
+        });
+    } else {
+        userHTML += '';
+    }
+
+    userHTML += "</div>";
+    return userHTML;
 }
+
+function listPermission(permissions) {
+    console.log(permissions);
+
+    let permissionHTML = `<div class="d-flex gap-2 flex-wrap">`
+
+    permissions.forEach((permission) => {
+        permissionHTML += `<span class="badge bg-dark-transparent p-1">
+            ${permission}
+        </span>`
+    })
+
+    permissionHTML += `</div>`;
+
+    return permissionHTML;
+}
+
 
 role_list();
 initTooltips();
+

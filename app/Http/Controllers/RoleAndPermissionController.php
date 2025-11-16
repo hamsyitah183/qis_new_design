@@ -17,11 +17,12 @@ class RoleAndPermissionController extends Controller
 
     public function role_list_data()
     {
-        $roles = Role::with('permissions', 'users'); // eager load for counts
+        $roles = Role::with('permissions', 'users')
+            ->where('name', '!=', 'public'); // exclude public role
 
         return DataTables::of($roles)
             ->addColumn('user_count', function ($role) {
-                return $role->users->count();
+                return $role->users;
             })
             ->addColumn('permission_names', function ($role) {
                 return $role->permissions->pluck('name')->toArray();
@@ -139,7 +140,7 @@ class RoleAndPermissionController extends Controller
                 if ($count <= $maxDisplay) {
                     $permissionHTML .= '
                 <span class="badge bg-secondary-transparent p-1 d-flex align-items-center gap-1">
-                    <i class="ti ti-pencil"></i> ...
+                    <i class="ti ti-pencil"></i>
                 </span>';
                 }
 

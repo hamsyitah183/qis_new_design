@@ -35,7 +35,7 @@
                             <tr>
                                 <th>Name</th>
                                 <th class="text-center">User</th>
-                                <th class="text-center">Permission</th>
+                                <th class="text-center" style="width: 50%;">Permission</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
