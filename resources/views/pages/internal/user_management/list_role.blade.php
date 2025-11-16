@@ -9,8 +9,6 @@
         #roleTable tbody tr {
             cursor: pointer;
         }
-
-      
     </style>
 @endpush
 
@@ -44,11 +42,11 @@
             </div>
         </div>
 
-      
+
 
     </div>
 
-    <!-- MOBILE MODAL -->
+
     <div class="modal fade" id="roleDetailsModal" tabindex="-1" aria-labelledby="roleDetailsModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -62,6 +60,19 @@
             </div>
         </div>
     </div>
+
+    <x-modal id="userModal" title="User List">
+        <form id="userModalForm">
+            @csrf
+            
+          
+
+            @slot('footer')
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type = "submit" class ="btn btn-primary">Submit</button>
+            @endslot
+        </form>
+    </x-modal>
 @endsection
 
 {{-- <div class="avatar-list-stacked">
@@ -78,5 +89,3 @@
         +5
     </a>
 </div> --}}
-
-

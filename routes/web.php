@@ -98,6 +98,8 @@ Route::prefix('internal')
         Route::get('/roles', [RoleAndPermissionController::class, 'role'])->name('internal.role');
         Route::get('/roles/list/data', [RoleAndPermissionController::class, 'role_list_data']);
 
+
+
         // ===========================================================
     });
 

@@ -90,9 +90,9 @@ class RoleAndPermissionController extends Controller
                 if ($count > $maxDisplay) {
                     $extra = $count - $maxDisplay;
                     $userHTML .= '
-                    <a class="avatar avatar-sm bg-secondary border border-white text-fixed-white avatar-rounded "
+                    <a class="userModal avatar avatar-sm bg-secondary border border-white text-fixed-white avatar-rounded "
                       data-bs-toggle="tooltip" data-bs-placement="top" title = "More"
-                        href="javascript:void(0);">
+                        href="javascript:void(0);" data-role = "' . $role->name .'">
                         +' . $extra . '
                     </a>';
                 }
@@ -100,9 +100,9 @@ class RoleAndPermissionController extends Controller
                 // CASE B: Less than max → show a "+" add icon
                 if ($count < $maxDisplay) {
                     $userHTML .= '
-                    <a class="avatar avatar-sm bg-secondary border border-white text-fixed-white avatar-rounded 
+                    <a class="userModal avatar avatar-sm bg-secondary border border-white text-fixed-white avatar-rounded 
                         " data-bs-toggle="tooltip" data-bs-placement="top" title = "Add User"
-                        href="javascript:void(0);">
+                        href="javascript:void(0);" data-role = "' . $role->name .'">
                         <i class="ti ti-plus"></i>
                     </a>';
                 }
