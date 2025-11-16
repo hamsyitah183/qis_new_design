@@ -19,3 +19,32 @@
     border-radius: 5px;
     padding: 5px;
 }
+
+
+.scrollable-grey {
+    max-height: 300px; /* adjust as needed */
+    overflow-y: auto;
+    padding-right: 10px; /* avoid content hiding behind scrollbar */
+}
+
+/* Webkit browsers (Chrome, Edge, Safari) */
+.scrollable-grey::-webkit-scrollbar {
+    width: 8px;
+}
+
+.scrollable-grey::-webkit-scrollbar-track {
+    background: #f0f0f0; /* light grey track */
+    border-radius: 4px;
+}
+
+.scrollable-grey::-webkit-scrollbar-thumb {
+    background-color: #c0c0c0; /* grey thumb */
+    border-radius: 4px;
+    border: 2px solid #f0f0f0; /* optional: adds padding around thumb */
+}
+
+/* Firefox */
+.scrollable-grey {
+    scrollbar-width: thin;
+    scrollbar-color: #c0c0c0 #f0f0f0;
+}

@@ -5,15 +5,27 @@ import { initTooltips } from "../../../app";
 console.log("list role");
 
 let roleTable;
+let roleName;
 
 let allUsers = [];
+let permissions = [];
 
 async function loadInternalUsers() {
     const res = await fetch("/internal/user_internal/list/data");
     const json = await res.json();
 
-    allUsers = json.data; // store all users
-    // console.log("Loaded users:", allUsers);
+    allUsers = [];
+    allUsers = json.data;
+}
+
+async function getPermission() {
+    const res = await fetch("/internal/permission/data");
+    const json = await res.json();
+
+    permissions = [];
+    permissions = json.data;
+
+    console.log("permission", permissions);
 }
 
 async function role_list() {
@@ -181,7 +193,7 @@ function listUserModal() {
     $(document).on("click", ".userModal", async function (e) {
         e.preventDefault();
 
-        const roleName = $(this).data("role");
+        roleName = $(this).data("role");
         console.log("Clicked role:", roleName);
 
         Swal.fire({
@@ -205,7 +217,8 @@ function listUserModal() {
             html += `
                 <label class="list-group-item d-flex align-items-center gap-2">
                     <input type="checkbox"
-                        class="form-check-input user-check"
+                        class="form-check-input user-check" name = "users[]" 
+                        value = "${user.uuid}"
                         data-user="${user.uuid}"
                         ${hasRole ? "checked" : ""}>
                     <span>${user.fullname}</span>
@@ -215,7 +228,7 @@ function listUserModal() {
 
         html += `</div>`;
 
-        $("#userModal .modal-body").html(html);
+        $("#userListContainer").html(html);
 
         Swal.close();
 
@@ -223,7 +236,210 @@ function listUserModal() {
     });
 }
 
+function updateRole() {
+    $(document)
+        .off("submit", "#userModalForm")
+        .on("submit", "#userModalForm", function (e) {
+            e.preventDefault();
+            $(".form-control").removeClass("is-invalid");
+            $(".invalid-feedback").text("");
+
+            // Use FormData to append extra data like role
+            const formEl = this;
+            const formData = new FormData(formEl);
+
+            formData.append("role", roleName);
+
+            Swal.fire({
+                title: "Updating role...",
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading(),
+            });
+
+            $.ajax({
+                url: "/internal/roles/update",
+                method: "POST",
+                data: formData,
+                processData: false, // important for FormData
+                contentType: false, // important for FormData
+                headers: {
+                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
+                        "content"
+                    ),
+                },
+                success: function (response) {
+                    console.log("response detail", response);
+                    Swal.fire({
+                        icon: "success",
+                        title: "Role Updated!",
+                        text: response.message,
+                    });
+
+                    const modalEl = document.getElementById("userModal");
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    modal.hide();
+
+                    if (roleTable) roleTable.ajax.reload();
+                    loadInternalUsers();
+                },
+                error: function (xhr) {
+                    Swal.close();
+                    if (xhr.status === 422) {
+                        const errors = xhr.responseJSON.errors;
+                        Object.keys(errors).forEach((key) => {
+                            const input = $(`#${key}`);
+                            input.addClass("is-invalid");
+                            $(`#error-${key}`).text(errors[key][0]);
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Failed!",
+                            text: "Something went wrong while saving the user.",
+                        });
+                    }
+                },
+            });
+        });
+}
+
+function listPermissionModal() {
+    const modalEl = document.getElementById("permissionModal");
+    if (!modalEl) return console.error("Modal not found!");
+
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+    $(document).on("click", ".permissionModal", async function (e) {
+        e.preventDefault();
+
+        roleName = $(this).data("role");
+        console.log("Clicked role:", roleName);
+
+        Swal.fire({
+            title: "Loading...",
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => Swal.showLoading(),
+        });
+
+        // Get the clicked row
+        const rowData = roleTable.row($(this).closest("tr")).data();
+
+        let rolePerms = [];
+        if (rowData) {
+            rolePerms =
+                typeof rowData.permission_names === "string"
+                    ? JSON.parse(rowData.permission_names)
+                    : rowData.permission_names;
+        }
+
+        console.log("Role permissions from datatable:", rolePerms);
+
+        // Build modal content
+        let html = `
+        <div class="fw-bold mb-2">Permission List for: ${roleName}</div>
+        <div class="list-group scrollable-grey" style = "max-height: 400px; overflow-y: scroll;">
+    `;
+
+        permissions.forEach((permission) => {
+            const checked = rolePerms.includes(permission) ? "checked" : "";
+
+            html += `
+            <label class="list-group-item d-flex align-items-center gap-2">
+                <input type="checkbox"
+                    class="form-check-input user-check"
+                    name="permission[]"
+                    value="${permission}"
+                    ${checked}>
+                <span>${permission}</span>
+            </label>
+        `;
+        });
+
+        html += `</div>`;
+
+        $("#permissionListContainer").html(html);
+
+        Swal.close();
+        bootstrap.Modal.getOrCreateInstance(
+            document.getElementById("permissionModal")
+        ).show();
+    });
+}
+
+function updatePermission() {
+    $(document)
+        .off("submit", "#permissionModalForm")
+        .on("submit", "#permissionModalForm", function (e) {
+            e.preventDefault();
+            $(".form-control").removeClass("is-invalid");
+            $(".invalid-feedback").text("");
+
+            // Use FormData to append extra data like role
+            const formEl = this;
+            const formData = new FormData(formEl);
+
+            formData.append("role", roleName);
+
+            Swal.fire({
+                title: "Updating role permission...",
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading(),
+            });
+
+            $.ajax({
+                url: "/internal/permission/update",
+                method: "POST",
+                data: formData,
+                processData: false, // important for FormData
+                contentType: false, // important for FormData
+                headers: {
+                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
+                        "content"
+                    ),
+                },
+                success: function (response) {
+                    console.log("response detail", response);
+                    Swal.fire({
+                        icon: "success",
+                        title: "Role Updated!",
+                        text: response.message,
+                    });
+
+                    const modalEl = document.getElementById("permissionModal");
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    modal.hide();
+
+                    if (roleTable) roleTable.ajax.reload();
+                    loadInternalUsers();
+
+                },
+                error: function (xhr) {
+                    Swal.close();
+                    if (xhr.status === 422) {
+                        const errors = xhr.responseJSON.errors;
+                        Object.keys(errors).forEach((key) => {
+                            const input = $(`#${key}`);
+                            input.addClass("is-invalid");
+                            $(`#error-${key}`).text(errors[key][0]);
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Failed!",
+                            text: "Something went wrong while saving the user.",
+                        });
+                    }
+                },
+            });
+        });
+}
+
 loadInternalUsers();
 role_list();
 listUserModal();
 initTooltips();
+updateRole();
+getPermission();
+listPermissionModal();
+updatePermission();

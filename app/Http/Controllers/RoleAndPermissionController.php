@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\RoleService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -15,141 +19,65 @@ class RoleAndPermissionController extends Controller
         ]);
     }
 
-    public function role_list_data()
+    public function role_list_data(RoleService $roleService)
     {
-        $roles = Role::with('permissions', 'users')
-            ->where('name', '!=', 'public'); // exclude public role
+        return $roleService->roleDataTable();
+    }
 
-        return DataTables::of($roles)
-            ->addColumn('user_count', function ($role) {
-                return $role->users;
-            })
-            ->addColumn('permission_names', function ($role) {
-                return $role->permissions->pluck('name')->toArray();
-            })
-            ->editColumn('name', function ($role) {
+    public function update_role(Request $request, RoleService $roleService)
+    {
+        $roleName = $request->input('role'); // the role name
+        $userIds = $request->input('users', []); // array of selected users
 
-                // Role → icon
-                $iconRole = [
-                    'admin'   => '<i class="fs-23 ti ti-user-star"></i>',
-                    'cleark'  => '<i class="fs-23 ti ti-user-cog"></i>',
-                    'officer' => '<i class="fs-23 ti ti-user-shield"></i>',
-                    'public'  => '<i class="fs-23 ti ti-users"></i>',
-                ];
+        $result = $roleService->updateRole($roleName, $userIds);
+    }
 
-                // Role → background class
-                $bgColor = [
-                    'admin'   => 'bg-primary',       // red
-                    'cleark'  => 'bg-primary2',      // yellow
-                    'officer' => 'bg-primary1',      // blue
-                    'public'  => 'bg-primary3',      // green
-                ];
+    public function get_permission()
+    {
+        // Order by creation date ascending (earliest first)
+        $permission = Permission::orderBy('created_at', 'asc')->pluck('name');
 
-                // Fetch icon + bg class
-                $icon = $iconRole[$role->name] ?? '<i class="fs-23 ti ti-user"></i>';
-                $bgClass = $bgColor[$role->name] ?? 'bg-secondary';
+        return response()->json([
+            'data' => $permission
+        ]);
+    }
 
-                // Build HTML
-                return '
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="avatar avatar-md fs-14 ' . $bgClass . ' svg-white d-flex justify-content-center align-items-center">
-                            ' . $icon . '
-                        </div>
-                        <span>' . e($role->name) . '</span>
-                    </div>
-                ';
-            })
+    public function update_permission(Request $request)
+    {
+        $request->validate([
+            'role' => 'required|string|exists:roles,name',
+            'permission' => 'array',
+            'permission.*' => 'string|exists:permissions,name',
+        ]);
 
+        $roleName = $request->input('role');
+        $permissions = $request->input('permission', []);
 
-            ->editColumn('users', function ($role) {
-                $users = $role->users;
-                $maxDisplay = 5;
-                $count = $users->count();
+        DB::beginTransaction();
 
-                $userHTML = '<div class="avatar-list-stacked">';
+        try {
+            // Get the role
+            $role = Role::where('name', $roleName)->firstOrFail();
 
-                $displayUsers = $users->take($maxDisplay);
+            // Sync the permissions (replaces old permissions)
+            $role->syncPermissions($permissions);
 
-                foreach ($displayUsers as $user) {
+            DB::commit();
 
-                    // Generate initials
-                    $initials = collect(explode(' ', $user->fullname))
-                        ->map(fn($word) => strtoupper(substr($word, 0, 1)))
-                        ->join('');
+            return response()->json([
+                'success' => true,
+                'message' => "Permissions for role '{$roleName}' updated successfully.",
+                'permissions' => $role->permissions->pluck('name'),
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to update role permissions: ' . $e->getMessage());
 
-                    $userHTML .= '
-                    <span class="avatar avatar-sm avatar-rounded border border-white bg-primary text-fixed-whiter"
-                        data-bs-toggle="tooltip"
-                        data-bs-placement="top"
-                        title="' . e($user->fullname) . '">
-                        ' . $initials . '
-                    </span>';
-                }
-
-                // CASE A: More than max → show +X
-                if ($count > $maxDisplay) {
-                    $extra = $count - $maxDisplay;
-                    $userHTML .= '
-                    <a class="userModal avatar avatar-sm bg-secondary border border-white text-fixed-white avatar-rounded "
-                      data-bs-toggle="tooltip" data-bs-placement="top" title = "More"
-                        href="javascript:void(0);" data-role = "' . $role->name .'">
-                        +' . $extra . '
-                    </a>';
-                }
-
-                // CASE B: Less than max → show a "+" add icon
-                if ($count < $maxDisplay) {
-                    $userHTML .= '
-                    <a class="userModal avatar avatar-sm bg-secondary border border-white text-fixed-white avatar-rounded 
-                        " data-bs-toggle="tooltip" data-bs-placement="top" title = "Add User"
-                        href="javascript:void(0);" data-role = "' . $role->name .'">
-                        <i class="ti ti-plus"></i>
-                    </a>';
-                }
-
-                $userHTML .= '</div>';
-
-                return $userHTML;
-            })
-
-            ->editColumn('permissions', function ($role) {
-
-                $permissions = $role->permissions;
-                $maxDisplay = 5;
-                $count = $permissions->count();
-                $displayPermissions = $permissions->take($maxDisplay);
-
-                $permissionHTML = '<div class="d-flex gap-2 flex-wrap">';
-
-                foreach ($displayPermissions as $permission) {
-                    $permissionHTML .= '
-                <span class="badge bg-dark-transparent p-1">
-                    ' . e($permission->name) . '
-                </span>';
-                }
-
-                // CASE A: More than max
-                if ($count > $maxDisplay) {
-                    $permissionHTML .= '
-                <a class="badge bg-dark-transparent p-1" href="javascript:void(0);">
-                    more...
-                </a>';
-                }
-
-                // CASE B: Less/equal → show pencil + "..."
-                if ($count <= $maxDisplay) {
-                    $permissionHTML .= '
-                <span class="badge bg-secondary-transparent p-1 d-flex align-items-center gap-1">
-                    <i class="ti ti-pencil"></i>
-                </span>';
-                }
-
-                $permissionHTML .= '</div>';
-
-                return $permissionHTML;
-            })
-
-            ->rawColumns(['users', 'permissions', 'name'])
-            ->make(true);
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while updating permissions.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }

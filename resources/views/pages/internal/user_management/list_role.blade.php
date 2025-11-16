@@ -62,16 +62,35 @@
     </div>
 
     <x-modal id="userModal" title="User List">
+
         <form id="userModalForm">
             @csrf
-            
-          
+            <input type="hidden" name="role" id="roleVal">
+            <div id="userListContainer"></div>
 
-            @slot('footer')
+            <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type = "submit" class ="btn btn-primary">Submit</button>
-            @endslot
+                <button type="submit" class="btn btn-primary" id="updateRoleBtn">Submit</button>
+            </div>
         </form>
+
+
+    </x-modal>
+
+    <x-modal id="permissionModal" title="Permission List">
+
+        <form id="permissionModalForm">
+            @csrf
+            <input type="hidden" name="role" id="roleVal">
+            <div id="permissionListContainer"></div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary" id="updatePermissionBtn">Submit</button>
+            </div>
+        </form>
+
+
     </x-modal>
 @endsection
 

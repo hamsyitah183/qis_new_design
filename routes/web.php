@@ -97,8 +97,10 @@ Route::prefix('internal')
 
         Route::get('/roles', [RoleAndPermissionController::class, 'role'])->name('internal.role');
         Route::get('/roles/list/data', [RoleAndPermissionController::class, 'role_list_data']);
-
-
+        Route::post('/roles/update', [RoleAndPermissionController::class, 'update_role']);
+        
+        Route::get('/permission/data', [ RoleAndPermissionController::class, 'get_permission']);
+        Route::post('/permission/update', [ RoleAndPermissionController::class, 'update_permission']);
 
         // ===========================================================
     });
