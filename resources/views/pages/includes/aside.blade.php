@@ -89,6 +89,11 @@
                                 <a href="{{ route('internal.internal.activity_log') }}" class="side-menu__item">
                                     Activity Log</a>
                             </li>
+
+                            <li class="slide {{ $currentRoute === 'internal.internal.role' ? 'active' : '' }}">
+                                <a href="{{ route('internal.internal.role') }}" class="side-menu__item">
+                                    Role and Permission</a>
+                            </li>
                         </ul>
                     </li>
                 @endif

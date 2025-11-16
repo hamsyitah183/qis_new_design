@@ -95,7 +95,7 @@ Route::prefix('internal')
         Route::post('/verification/{id}/save', [UserController::class, 'save_attachment']);
 
 
-        Route::get('/roles', [RoleAndPermissionController::class, 'role']);
+        Route::get('/roles', [RoleAndPermissionController::class, 'role'])->name('internal.role');
         Route::get('/roles/list/data', [RoleAndPermissionController::class, 'role_list_data']);
 
         // ===========================================================

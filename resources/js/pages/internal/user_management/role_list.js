@@ -31,6 +31,8 @@ async function role_list() {
             import("datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css"),
         ]);
 
+        initTooltips();
+
         roleTable = new DataTable("#roleTable", {
             processing: true,
             serverSide: true,
@@ -52,60 +54,71 @@ async function role_list() {
                     orderable: false,
                     searchable: false,
                 },
+                {
+                    data: "user_count",
+                    orderable: false,
+                    searchable: false,
+                    visible: false,
+                },
+                {
+                    data: "permission_names",
+                    orderable: false,
+                    searchable: false,
+                    visible: false,
+                },
             ],
             responsive: true,
         });
+
+        roleTable.on("draw.dt", function () {
+            initTooltips();
+        });
     }
 
-    /**
-     * Row Click Event
-     */
-    $("#roleTable").on("click", "tbody tr", function () {
-        const rowData = roleTable.row(this).data();
+    
+    // Click only FIRST <td> (Role Name)
+    $("#roleTable").on("click", "tbody td:first-child", function () {
+        const row = $(this).closest("tr");
+        const rowData = roleTable.row(row).data();
 
-        // Remove active from all rows
+        if (!rowData) return;
+
+        initTooltips();
+
+        // Highlight selected row
         $("#roleTable tbody tr").removeClass("active");
+        row.addClass("active");
 
-        // Add active to selected row
-        $(this).addClass("active");
-
-        if (!rowData) return; // avoid null errors on placeholder rows
-
+        // Build modal content
         const detailsHtml = `
-            <p><strong>Name:</strong> ${rowData.name}</p>
-            <p><strong>User Count:</strong> ${rowData.user_count}</p>
-            <p><strong>Permissions:</strong> ${(
-                rowData.permission_names || []
-            ).join(", ")}</p>
-        `;
+        <div class="mb-2 fw-bold fs-6">${rowData.name}</div>
+        <p><strong>User Count:</strong> ${rowData.user_count}</p>
+        <p><strong>Permissions:</strong> ${(
+            rowData.permission_names || []
+        ).join(", ")}</p>
+    `;
 
-        // 📱 MOBILE — Show modal
-        if (window.innerWidth < 992) {
-            $("#roleDetailsContentModal").html(detailsHtml);
+        // OPEN MODAL for ALL VIEWPORTS
+        $("#roleDetailsContentModal").html(detailsHtml);
 
-            const modal = new bootstrap.Modal(
-                document.getElementById("roleDetailsModal")
-            );
-            modal.show();
-
-            return;
-        }
-
-        // 🖥 DESKTOP — Show details panel
-        $("#roleDetailsContentDesktop").html(detailsHtml);
-
-        // Shrink left table
-        $("#roleTableWrapper")
-            .removeClass("table-expanded")
-            .addClass("table-shrink");
-
-        // Reveal right panel with fade animation
-        $("#roleDetailsWrapper")
-            .css({ display: "block", opacity: 0 })
-            .animate({ opacity: 1 }, 200);
+        const modal = new bootstrap.Modal(
+            document.getElementById("roleDetailsModal")
+        );
+        modal.show();
     });
 
     await data_table_init();
 }
 
+function initTooltips() {
+    // remove old tooltip instances to avoid duplicates
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => {
+        if (bootstrap.Tooltip.getInstance(el)) {
+            bootstrap.Tooltip.getInstance(el).dispose();
+        }
+        new bootstrap.Tooltip(el);
+    });
+}
+
 role_list();
+initTooltips();

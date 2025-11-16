@@ -30,10 +30,10 @@ class RoleAndPermissionController extends Controller
 
                 // Role → icon
                 $iconRole = [
-                    'admin'   => '<i class="ti ti-user-star"></i>',
-                    'cleark'  => '<i class="ti ti-user-cog"></i>',
-                    'officer' => '<i class="ti ti-user-shield"></i>',
-                    'public'  => '<i class="ti ti-users"></i>',
+                    'admin'   => '<i class="fs-23 ti ti-user-star"></i>',
+                    'cleark'  => '<i class="fs-23 ti ti-user-cog"></i>',
+                    'officer' => '<i class="fs-23 ti ti-user-shield"></i>',
+                    'public'  => '<i class="fs-23 ti ti-users"></i>',
                 ];
 
                 // Role → background class
@@ -45,35 +45,109 @@ class RoleAndPermissionController extends Controller
                 ];
 
                 // Fetch icon + bg class
-                $icon = $iconRole[$role->name] ?? '<i class="ti ti-user"></i>';
+                $icon = $iconRole[$role->name] ?? '<i class="fs-23 ti ti-user"></i>';
                 $bgClass = $bgColor[$role->name] ?? 'bg-secondary';
 
                 // Build HTML
                 return '
-        <div class="d-flex align-items-center gap-2">
-            <div class="avatar avatar-md fs-14 ' . $bgClass . ' svg-white d-flex justify-content-center align-items-center">
-                ' . $icon . '
-            </div>
-            <span>' . e($role->name) . '</span>
-        </div>
-    ';
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="avatar avatar-md fs-14 ' . $bgClass . ' svg-white d-flex justify-content-center align-items-center">
+                            ' . $icon . '
+                        </div>
+                        <span>' . e($role->name) . '</span>
+                    </div>
+                ';
             })
 
 
             ->editColumn('users', function ($role) {
-                return '<div>
-                <button class="btn btn rounded-pill btn-primary-light">
-                    ' . $role->users->count() . '
-                </button>
-            </div>';
+                $users = $role->users;
+                $maxDisplay = 5;
+                $count = $users->count();
+
+                $userHTML = '<div class="avatar-list-stacked">';
+
+                $displayUsers = $users->take($maxDisplay);
+
+                foreach ($displayUsers as $user) {
+
+                    // Generate initials
+                    $initials = collect(explode(' ', $user->fullname))
+                        ->map(fn($word) => strtoupper(substr($word, 0, 1)))
+                        ->join('');
+
+                    $userHTML .= '
+                    <span class="avatar avatar-sm avatar-rounded border border-white bg-primary text-fixed-whiter"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
+                        title="' . e($user->fullname) . '">
+                        ' . $initials . '
+                    </span>';
+                }
+
+                // CASE A: More than max → show +X
+                if ($count > $maxDisplay) {
+                    $extra = $count - $maxDisplay;
+                    $userHTML .= '
+                    <a class="avatar avatar-sm bg-secondary border border-white text-fixed-white avatar-rounded "
+                      data-bs-toggle="tooltip" data-bs-placement="top" title = "More"
+                        href="javascript:void(0);">
+                        +' . $extra . '
+                    </a>';
+                }
+
+                // CASE B: Less than max → show a "+" add icon
+                if ($count < $maxDisplay) {
+                    $userHTML .= '
+                    <a class="avatar avatar-sm bg-secondary border border-white text-fixed-white avatar-rounded 
+                        " data-bs-toggle="tooltip" data-bs-placement="top" title = "Add User"
+                        href="javascript:void(0);">
+                        <i class="ti ti-plus"></i>
+                    </a>';
+                }
+
+                $userHTML .= '</div>';
+
+                return $userHTML;
             })
+
             ->editColumn('permissions', function ($role) {
-                return '<div>
-                <button class="btn btn rounded-pill btn-primary1-light">
-                    ' . $role->permissions->count() . '
-                </button>
-            </div>';
+
+                $permissions = $role->permissions;
+                $maxDisplay = 5;
+                $count = $permissions->count();
+                $displayPermissions = $permissions->take($maxDisplay);
+
+                $permissionHTML = '<div class="d-flex gap-2 flex-wrap">';
+
+                foreach ($displayPermissions as $permission) {
+                    $permissionHTML .= '
+                <span class="badge bg-dark-transparent p-1">
+                    ' . e($permission->name) . '
+                </span>';
+                }
+
+                // CASE A: More than max
+                if ($count > $maxDisplay) {
+                    $permissionHTML .= '
+                <a class="badge bg-dark-transparent p-1" href="javascript:void(0);">
+                    more...
+                </a>';
+                }
+
+                // CASE B: Less/equal → show pencil + "..."
+                if ($count <= $maxDisplay) {
+                    $permissionHTML .= '
+                <span class="badge bg-secondary-transparent p-1 d-flex align-items-center gap-1">
+                    <i class="ti ti-pencil"></i> ...
+                </span>';
+                }
+
+                $permissionHTML .= '</div>';
+
+                return $permissionHTML;
             })
+
             ->rawColumns(['users', 'permissions', 'name'])
             ->make(true);
     }

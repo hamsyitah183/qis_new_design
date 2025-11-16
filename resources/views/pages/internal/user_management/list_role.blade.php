@@ -10,40 +10,7 @@
             cursor: pointer;
         }
 
-        /* Wrapper for smooth layout animation */
-        .role-layout {
-            display: flex;
-            flex-wrap: nowrap;
-            gap: 15px;
-        }
-
-        /* Table always full width initially */
-        #roleTableWrapper {
-            width: 100% !important;
-            transition: width 0.3s ease;
-        }
-
-        /* When showing details, shrink table */
-        .table-shrink {
-            width: 45% !important;
-            /* matches col-lg-5 */
-        }
-
-        /* Details hidden initially */
-        #roleDetailsWrapper {
-            width: 55%;
-            display: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        #roleTableWrapper {
-            transition: width 0.3s ease;
-        }
-
-        #roleTable tbody tr.active {
-            background: pink;
-        }
+      
     </style>
 @endpush
 
@@ -77,19 +44,7 @@
             </div>
         </div>
 
-        <!-- RIGHT DETAILS (hidden first) -->
-        <div id="roleDetailsWrapper">
-            <div class="card custom-card" style="min-height: 400px;">
-                <div class="card-header">
-                    <div class="card-title">Role Details</div>
-                </div>
-                <div class="card-body" id="roleDetailsContentDesktop">
-                    <div class="border border-container rounded p-3 d-flex justify-content-center align-items-center w-100">
-                        <div class="text-muted fs-15">Select a role to see role details</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+      
 
     </div>
 
@@ -108,3 +63,20 @@
         </div>
     </div>
 @endsection
+
+{{-- <div class="avatar-list-stacked">
+    <span class="avatar avatar-sm avatar-rounded">
+        <img src="https://laravelui.spruko.com/xintra/build/assets/images/faces/2.jpg" alt="img">
+    </span>
+    <span class="avatar avatar-sm avatar-rounded">
+        <img src="https://laravelui.spruko.com/xintra/build/assets/images/faces/8.jpg" alt="img">
+    </span>
+    <span class="avatar avatar-sm avatar-rounded">
+        <img src="https://laravelui.spruko.com/xintra/build/assets/images/faces/2.jpg" alt="img">
+    </span>
+    <a class="avatar avatar-sm bg-primary text-fixed-white avatar-rounded" href="javascript:void(0);">
+        +5
+    </a>
+</div> --}}
+
+
