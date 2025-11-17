@@ -16,9 +16,9 @@
                 </div> --}}
                 <div class="aunthentication-cover-content d-flex align-items-center justify-content-center">
                     <div class="d-flex justify-content-center align-items-center flex-column">
-                        
-                        <img src="https://qis-app.sabah.gov.my/assets/logo-small-2e441c05.png" class="mb-2"
-                            style="object-fit: contain; height: 350px;" >
+                        <h4 class="text-center text-white">Login</h4>
+                        <img src="https://qis-app.sabah.gov.my/assets/QIS-a3dc1042.gif" class="mb-2"
+                            style="object-fit: contain; height: 350px;">
 
                         {{-- <img src="https://qis-app.sabah.gov.my/assets/preparedby-f6029c92.png" alt="" srcset="" style="height: 70px;" class="bg-white p-2 rounded-3"> --}}
                     </div>
@@ -30,9 +30,9 @@
                 <div class="col-xxl-10 col-xl-9 col-lg-6 col-md-6 col-sm-8 col-12">
                     <div class="card custom-card my-auto border">
                         <div class="card-body p-5">
-                            <p class="h5 mb-2 text-center">Sign In</p>
+                            {{-- <p class="h5 mb-2 text-center">Sign In</p>
                             <img src="https://qis-app.sabah.gov.my/assets/QIS-a3dc1042.gif" class="img-fluid mb-2"
-                                style="object-fit: contain; height: 200px; margin-inline: auto;">
+                                style="object-fit: contain; height: 200px; margin-inline: auto;"> --}}
                             <form id="loginForm" method="POST" action="{{ route('login.action') }}">
                                 @csrf
                                 <div class="row gy-3">

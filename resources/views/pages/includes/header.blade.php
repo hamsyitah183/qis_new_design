@@ -35,7 +35,7 @@
 
 
         <!-- Start::header-element -->
-        <li class="header-element country-selector dropdown">
+        {{-- <li class="header-element country-selector dropdown">
             <!-- Start::header-link|dropdown-toggle -->
             <a href="javascript:void(0);" class="header-link dropdown-toggle" data-bs-auto-close="outside"
                 data-bs-toggle="dropdown">
@@ -63,7 +63,7 @@
                 </li>
 
             </ul>
-        </li>
+        </li> --}}
         <!-- End::header-element -->
 
         <!-- Start::header-element -->

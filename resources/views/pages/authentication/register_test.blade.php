@@ -86,7 +86,7 @@
                                             aria-controls="confirmed-tab" aria-selected="false" tabindex="-1">
                                             <span class="d-flex flex-column gap-1 align-items-center d-md-inline">
                                                 <i class="ti ti-edit me-2 align-middle"></i>
-                                                <span class="text-type text-wrap">Personal Info </span>
+                                                <span class="text-type text-wrap">Account Details </span>
                                             </span>
                                         </button>
                                     </li>
@@ -96,7 +96,7 @@
                                             aria-controls="shipped-tab" aria-selected="false" tabindex="-1">
                                             <span class="d-flex flex-column gap-1 align-items-center d-md-inline">
                                                 <i class="ti ti-download me-2 align-middle"></i>
-                                                <span class="text-type text-wrap"> Upload Attachment </span>
+                                                <span class="text-type text-wrap"> Verification Attachment </span>
                                             </span>
                                         </button>
                                     </li>
