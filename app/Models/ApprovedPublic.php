@@ -11,6 +11,7 @@ class ApprovedPublic extends Model
     protected $table = 'approved_publics';
 
     protected $fillable = [
+        'user_id',
         'doa_verified',
         'verification_attachment',
         'approved_by', 'status', 'reason'
