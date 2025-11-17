@@ -77,5 +77,47 @@ class PublicUserSeeder extends Seeder
                 $user->assignRole('public');
             }
         }
+
+        $user2 = PublicUser::create([
+            'uuid' => \Illuminate\Support\Str::uuid(),
+            'fullname' => 'Aaron Chin',
+            'no_ic' => '911117-12-6557',
+            'email' => 'aarondalejchin@gmail.com',
+            'account_type' => 'individu',
+            'phone_number' => '0198887777',
+            'office_number' => '087-456789',
+            'address_1' => 'Lot 45, Jalan Tun Fuad Stephens',
+            'address_2' => 'Kota Kinabalu Industrial Area',
+            'postcode' => '88000',
+            'district' => 'Kota Kinabalu',
+            'state' => 'Sabah',
+            'password' => Hash::make('12345678'),
+            'doa_verified' => 0,
+            'verification_attachment' => null,
+            'email_verified_at' => now(),
+        ]);
+
+        $user2->assignRole('public');
+
+        $user3 = PublicUser::create([
+            'uuid' => \Illuminate\Support\Str::uuid(),
+            'fullname' => 'Company',
+            'no_ic' => '0178606030',
+            'email' => 'croptonic@gmail.com',
+            'account_type' => 'company',
+            'phone_number' => '0198227530',
+            'office_number' => '087-456789',
+            'address_1' => 'Lot 45, Jalan Tun Fuad Stephens',
+            'address_2' => 'Kota Kinabalu Industrial Area',
+            'postcode' => '88000',
+            'district' => 'Kota Kinabalu',
+            'state' => 'Sabah',
+            'password' => Hash::make('12345678'),
+            'doa_verified' => 1,
+            'verification_attachment' => null,
+            'email_verified_at' => now(),
+        ]);
+
+        $user3->assignRole('public');
     }
 }

@@ -63,6 +63,42 @@
                     </ul>
                 </li>
 
+                <!-- Public -->
+                @if (auth('public')->check())
+                    <li class="slide__category"><span class="category-name">Application</span></li>
+
+                    <li class="slide {{ Str::startsWith($currentRoute, 'public.') ? 'open active' : '' }}">
+                        <a href="{{ route('public.newApplication') }}" class="side-menu__item active">
+							<i class="bi bi-box side-menu__icon"></i>
+							<span class="side-menu__label">Apply New</span>
+						</a>
+                    </li>
+
+                    <li class="slide has-sub {{ Str::startsWith($currentRoute, 'public.') ? 'open active' : '' }}">
+					    <a href="javascript:void(0);" class="side-menu__item">
+							<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 side-menu__icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 0 1 2.012 1.244l.256.512a2.25 2.25 0 0 0 2.013 1.244h3.218a2.25 2.25 0 0 0 2.013-1.244l.256-.512a2.25 2.25 0 0 1 2.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 0 0-2.15-1.588H6.911a2.25 2.25 0 0 0-2.15 1.588L2.35 13.177a2.25 2.25 0 0 0-.1.661Z" />
+							</svg>
+							<span class="side-menu__label d-flex justify-content-between">Application List</span><!--<span class="badge ms-2 bg-primary1 text-end">4</span> -->
+							<i class="ri-arrow-down-s-line side-menu__angle"></i>
+						</a>
+						<ul class="slide-menu child1">
+							<li class="slide">
+								<a href="{{ route('public.verifyapplication') }}" class="side-menu__item d-flex justify-content-between" >To Review </a>
+							</li>
+                            <li class="slide">
+								<a href="{{ route('public.showallapplicationlist') }}" class="side-menu__item">All Application</a>
+							</li>
+							<!-- <li class="slide">
+								<a href="https://laravelui.spruko.com/xintra/borders" class="side-menu__item">Borders</a>
+							</li>
+							<li class="slide">
+								<a href="https://laravelui.spruko.com/xintra/breakpoints" class="side-menu__item">Breakpoints</a>
+							</li> -->
+						</ul>
+					</li>
+                @endif
+
                 <!-- User Management -->
                 @if (auth('internal')->check())
                     <li class="slide__category"><span class="category-name">User</span></li>

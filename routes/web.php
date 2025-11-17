@@ -3,6 +3,8 @@
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\public\importPermit\PermitApplicationController;
+use App\Http\Controllers\PublicController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\RoleAndPermissionController;
 use App\Http\Controllers\UserController;
@@ -11,7 +13,7 @@ use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
 
 // Logout route
-Route::post('/logout', [AuthenticationController::class, 'logout'])->name('logout');
+Route::get('/logout', [AuthenticationController::class, 'logout'])->name('logout');
 
 // Guest routes
 Route::middleware(['multi.guest'])->group(function () {
@@ -60,6 +62,25 @@ Route::prefix('public')
     ->middleware(['redirect.other.guard:public', 'auth:public', 'verified'])
     ->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
+        Route::get('/import_permit_application', [PermitApplicationController::class, 'show'])->name('permitApplication');
+        Route::get('/import_assign_application', action: [PermitApplicationController::class, 'showassign'])->name('permitAssignApplication');
+        Route::get('/new_application', [PublicController::class, 'show'])->name('newApplication');
+        Route::get('/newtest', [PublicController::class, 'showthis'])->name('newApplicatasdion');
+        Route::post('/store_exporter', [PermitApplicationController::class, 'storeExporter'])->name('storeExp');
+        Route::get('/get_importers/{idno}', [PermitApplicationController::class, 'getImporters'])->name('getImporters');
+        Route::get('/get_exporters', [PermitApplicationController::class, 'getExporters'])->name('getExporters');
+        Route::get('/get_entry_point', [PermitApplicationController::class, 'getEntryPoint'])->name('getEntryPoint');        
+        Route::get('/get_consignment/{countryCode}', [PermitApplicationController::class, 'getConsignmentFromCountry'])->name('getItemFromCountry');
+        Route::get('/consignment_uses/{id}', [PermitApplicationController::class, 'getConsignmentUses'])->name('consignmentUses');
+        Route::post('/save-application', [PermitApplicationController::class, 'saveApplication'])->name('saveApplication');
+        Route::post('/upload_attachment', [PermitApplicationController::class, 'uploadAttachment'])->name('uploadAttachment');
+        Route::post('/temp_upload', [PermitApplicationController::class, 'tempUpload'])->name('tempUpload');
+
+        // view application
+        Route::get('/view_all_application', [PublicController::class, 'showallapplicationlist'])->name('showallapplicationlist');
+        Route::get('/verify_application', [PublicController::class, 'verifyapplication'])->name('verifyapplication');
+        Route::get('/view_application/{uuid}', [PublicController::class, 'viewapplication'])->name('viewApplication');
+        
 
         Route::post('/upload-verification', [UserController::class, 'uploadVerificationAttachment'])
             ->name('user.uploadVerification');
