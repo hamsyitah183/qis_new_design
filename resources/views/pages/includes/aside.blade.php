@@ -120,6 +120,11 @@
                                 <a href="{{ route('internal.internal.list') }}" class="side-menu__item">Internal
                                     Users</a>
                             </li>
+
+                            <li class="slide {{ $currentRoute === 'internal.internal.activity_log' ? 'active' : '' }}">
+                                <a href="{{ route('internal.internal.activity_log') }}" class="side-menu__item">
+                                    Activity Log</a>
+                            </li>
                         </ul>
                     </li>
                 @endif

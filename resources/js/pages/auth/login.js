@@ -11,9 +11,9 @@ $(document).ready(function () {
             const form = $(this);
             const formData = form.serialize();
 
-            // Clear previous errors
+            // 🔹 Clear old validation feedback
             form.find(".is-invalid").removeClass("is-invalid");
-            form.find(".invalid-feedback").remove(); // remove previous error messages
+            form.find(".invalid-feedback").remove();
 
             Swal.fire({
                 title: "Logging in...",
@@ -26,12 +26,14 @@ $(document).ready(function () {
                 method: "POST",
                 data: formData,
                 headers: {
-                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
+                        "content"
+                    ),
                 },
                 success: function (response) {
                     Swal.fire({
                         icon: "success",
-                        title: response.message,
+                        title: response.message || "Login successful!",
                         showConfirmButton: false,
                         timer: 1000,
                     }).then(() => {
@@ -41,30 +43,75 @@ $(document).ready(function () {
                 error: function (xhr) {
                     Swal.close();
 
-                    if (xhr.status === 422) {
-                        // Validation errors
-                        const errors = xhr.responseJSON.errors;
+                    let errorMsg =
+                        "Something went wrong. Please try again later.";
+                    let swalIcon = "error";
+                    let swalTitle = "Login Failed";
+                    let redirectUrl = null;
 
+                    // 🔸 Handle unverified users (403)
+                    if (
+                        xhr.status === 403 &&
+                        xhr.responseJSON?.status === "unverified"
+                    ) {
+                        Swal.fire({
+                            icon: "warning",
+                            title: "Email Not Verified",
+                            text: xhr.responseJSON.message,
+                            confirmButtonText: "Go to Verify Page",
+                        }).then(() => {
+                            window.location.href = xhr.responseJSON.redirect;
+                        });
+                        return;
+                    }
+
+                    // 🔸 Validation errors (422)
+                    if (xhr.status === 422 && xhr.responseJSON?.errors) {
+                        const errors = xhr.responseJSON.errors;
+                        let combinedMessages = Object.values(errors)
+                            .map((errArr) => errArr.join(" "))
+                            .join("\n");
+
+                        // Highlight inputs
                         for (let field in errors) {
                             const input = form.find(`[name="${field}"]`);
                             input.addClass("is-invalid");
-
-                            // Append error message below input
-                            if (input.next(".invalid-feedback").length === 0) {
-                                input.after(
-                                    `<div class="invalid-feedback">${errors[field][0]}</div>`
-                                );
-                            }
                         }
-                    } else {
-                        // Other errors
-                        let errorMsg = xhr.responseJSON?.message || "Something went wrong.";
+
                         Swal.fire({
                             icon: "error",
-                            title: "Failed!",
-                            html: errorMsg,
+                            title: "Validation Error",
+                            text: combinedMessages,
                         });
+                        return;
                     }
+
+                    // 🔸 Invalid credentials (401 or 400)
+                    if (xhr.status === 401 || xhr.status === 400) {
+                        errorMsg =
+                            xhr.responseJSON?.message ||
+                            "Invalid credentials or password.";
+                        swalIcon = "error";
+                        swalTitle = "Authentication Failed";
+
+                        Swal.fire({
+                            icon: swalIcon,
+                            title: swalTitle,
+                            text: errorMsg,
+                        });
+                        return;
+                    }
+
+                    // 🔸 Catch-all (any unexpected error)
+                    if (xhr.responseJSON?.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+
+                    Swal.fire({
+                        icon: swalIcon,
+                        title: swalTitle,
+                        text: errorMsg,
+                    });
                 },
             });
         });

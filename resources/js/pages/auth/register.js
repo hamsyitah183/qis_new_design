@@ -8,7 +8,6 @@ $(document).ready(function () {
         const $form = $(this);
         const formData = new FormData(this);
 
-        // Clear previous errors
         $form.find(".is-invalid").removeClass("is-invalid");
         $form.find(".invalid-feedback").remove();
 
@@ -33,15 +32,16 @@ $(document).ready(function () {
                     icon: "success",
                     title: "Success!",
                     text: response.message,
-                    confirmButtonText: "OK",
+                    showConfirmButton: false,
+                    timer: 1200,
                 }).then(() => {
-                    $form[0].reset();
+                    window.location.href = response.redirect;
                 });
             },
             error: function (xhr) {
                 Swal.close();
+
                 if (xhr.status === 422) {
-                    // Validation errors
                     const errors = xhr.responseJSON.errors;
                     for (const key in errors) {
                         const $input = $form.find(`[name="${key}"]`);

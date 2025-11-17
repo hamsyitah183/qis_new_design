@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasActivityLog;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Str;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class PublicUser extends Authenticatable implements MustVerifyEmail
 {
-    use Notifiable, HasRoles, HasFactory;
+    use Notifiable, HasRoles, HasFactory, HasActivityLog;
 
     protected $table = 'public_users';
     protected $guard_name = 'public';
@@ -31,7 +32,7 @@ class PublicUser extends Authenticatable implements MustVerifyEmail
         'state',
         'password',
         'doa_verified',
-        'verification_attachment',
+        // 'verification_attachment',
         'email_verified_at',
     ];
 
@@ -52,5 +53,10 @@ class PublicUser extends Authenticatable implements MustVerifyEmail
                 $user->uuid = (string) Str::uuid();
             }
         });
+    }
+
+    public function approved()
+    {
+        return $this->hasOne(ApprovedPublic::class, 'user_id', 'uuid');
     }
 }

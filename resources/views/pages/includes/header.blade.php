@@ -290,12 +290,36 @@
             <ul class="main-header-dropdown dropdown-menu pt-0 overflow-hidden header-profile-dropdown dropdown-menu-end"
                 aria-labelledby="mainHeaderProfile">
                 <li>
-                    <div class="dropdown-item text-center border-bottom">
-                        <span>{{ Auth::user()->fullname ?? 'Guest' }}</span>
+                    <div class="dropdown-item text-center border-bottom" id="redirectProfile">
+                        @php
+                            $internalUser = Auth::guard('internal')->user();
+                            $publicUser = Auth::guard('public')->user();
+                        @endphp
+
+                        <span>
+                            {{ $internalUser->fullname ?? ($publicUser->fullname ?? 'Guest') }}
+                        </span>
+
                         <span class="d-block fs-12 text-muted">
-                            {{ Auth::guard('internal')->check() ? 'Internal User' : 'Public User' }}
+                            @if ($internalUser)
+                                Internal User
+                            @elseif ($publicUser)
+                                Public User
+                                @if ($publicUser->doa_verified)
+                                    <span class="badge bg-success-transparent ms-1" title="Verified by DOA">
+                                        <i class="bx bx-check"></i>
+                                    </span>
+                                @else
+                                    <span class="badge bg-dark-transparent ms-1" title="Not verified by DOA">
+                                        <i class="bx bx-x"></i>
+                                    </span>
+                                @endif
+                            @else
+                                Guest
+                            @endif
                         </span>
                     </div>
+
                 </li>
 
 
@@ -304,7 +328,8 @@
                     <form id="logoutForm" action="{{ route('logout') }}" method="POST">
                         @csrf
                         <button type="submit" class="dropdown-item d-flex align-items-center text-start w-100">
-                            <i class="fe fe-lock p-1 rounded-circle bg-primary-transparent me-2 fs-16"></i>
+
+                            <i class="ti ti-lock p-1 rounded-circle bg-primary-transparent me-2 fs-16"></i>
                             Log Out
                         </button>
                     </form>
