@@ -55,3 +55,13 @@ export function formatTime(timestamp) {
 
     return formatted;
 }
+
+export function initTooltips() {
+    // remove old tooltip instances to avoid duplicates
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => {
+        if (bootstrap.Tooltip.getInstance(el)) {
+            bootstrap.Tooltip.getInstance(el).dispose();
+        }
+        new bootstrap.Tooltip(el);
+    });
+}

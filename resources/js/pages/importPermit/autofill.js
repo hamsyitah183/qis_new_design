@@ -1,5 +1,6 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
+import { summarySubmit } from "./summarysubmit";
 
 $(document).ready(function() {
     const select = $('#selectexp');

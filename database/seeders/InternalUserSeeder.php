@@ -13,7 +13,9 @@ class InternalUserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Make sure roles exist first
+        // ==================================================
+        // 1️⃣ Ensure roles exist first
+        // ==================================================
         $roles = [
             'admin' => 'internal',
             'officer' => 'internal',
@@ -27,7 +29,9 @@ class InternalUserSeeder extends Seeder
             ]);
         }
 
-        // Users data
+        // ==================================================
+        // 2️⃣ Default users
+        // ==================================================
         $users = [
             [
                 'email' => 'admin@example.com',
@@ -38,6 +42,7 @@ class InternalUserSeeder extends Seeder
                 'no_ic' => '900101010001',
                 'password' => 'password123',
                 'role' => 'admin',
+                'email_verified_at' => Carbon::now(),
             ],
             [
                 'email' => 'hamsyitahnur@gmail.com',
@@ -47,8 +52,8 @@ class InternalUserSeeder extends Seeder
                 'office' => 'HQ',
                 'no_ic' => '000101010001',
                 'password' => 'password123',
-                'email_verified_at' => Carbon::now(),
                 'role' => 'admin',
+                'email_verified_at' => Carbon::now(),
             ],
             [
                 'email' => 'officer@example.com',
@@ -59,6 +64,7 @@ class InternalUserSeeder extends Seeder
                 'no_ic' => '900101010002',
                 'password' => 'password123',
                 'role' => 'officer',
+                'email_verified_at' => Carbon::now(),
             ],
             [
                 'email' => 'clerk@example.com',
@@ -69,13 +75,34 @@ class InternalUserSeeder extends Seeder
                 'no_ic' => '900101010003',
                 'password' => 'password123',
                 'role' => 'clerk',
+                'email_verified_at' => Carbon::now(),
             ],
         ];
 
+        // ==================================================
+        // 3️⃣ Add 30 more internal users (randomized)
+        // ==================================================
+        for ($i = 1; $i <= 30; $i++) {
+            $role = ['admin', 'officer', 'clerk'][array_rand(['admin','officer','clerk'])];
+            $users[] = [
+                'email' => "internal{$i}@example.com",
+                'fullname' => "Internal User {$i}",
+                'phone_number' => '013' . str_pad(rand(1000004, 9999999), 7, '0', STR_PAD_LEFT),
+                'position' => ucfirst($role),
+                'office' => 'HQ',
+                'no_ic' => str_pad(rand(900101010004, 900101019999), 12, '0', STR_PAD_LEFT),
+                'password' => 'password123',
+                'role' => $role,
+                'email_verified_at' => Carbon::now(),
+            ];
+        }
+
+        // ==================================================
+        // 4️⃣ Seed users safely
+        // ==================================================
         foreach ($users as $data) {
-            // Check if user exists
             $user = InternalUser::updateOrCreate(
-                ['email' => $data['email']], // search criteria
+                ['email' => $data['email']],
                 [
                     'uuid' => Str::uuid(),
                     'fullname' => $data['fullname'],
@@ -88,8 +115,7 @@ class InternalUserSeeder extends Seeder
                 ]
             );
 
-            // Assign role safely
-            if (!$user->hasRole($data['role'])) {
+            if (!$user->hasRole($data['role'], 'internal')) {
                 $user->assignRole($data['role']);
             }
         }
