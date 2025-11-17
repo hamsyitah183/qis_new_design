@@ -30,6 +30,8 @@ class DatabaseSeeder extends Seeder
                 IpEntryPointSeeder::class,
                 PublicCodeSeeder::class,
                 CountrySeeder::class,
+                IpConditionSeeder::class,
+                ExporterSeeder::class,
             ]);
 
             DB::commit();

@@ -52,7 +52,7 @@
                                             </div>
                                         </aside>
                                         <aside class="wizard-content container">
-                                            @include('pages.public.permit.step0')
+                                            @include('pages.public.permit.stepCompany')                                            
                                             @include('pages.public.permit.step1')
                                             @include('pages.public.permit.step2')
                                             @include('pages.public.permit.step3')
@@ -129,7 +129,6 @@
 
     Dropzone.autoDiscover = false;
 </script>
-
 
     @vite(['resources/js/pages/importPermit/summarysubmit.js'])
     @vite(['resources/js/pages/importPermit/itemmodal.js'])

@@ -17,9 +17,9 @@ return new class extends Migration
             $table->string('permit_number', 25)->nullable();
             $table->text('consignment_detail')->comment('JSON form: get from ip_condition table (id, category, item_name, usage)');
             $table->float('quantity');
-            $table->integer('unit_measurement')->comment("from public_code table: unit_measurement");
+            $table->string('unit_measurement')->comment("from public_code table: unit_measurement");
             $table->float('value');
-            $table->integer('purpose')->comment("from public_code table: consignment_purpose");
+            $table->string('purpose')->comment("from public_code table: consignment_purpose");
             $table->timestamps();
 
             //Foreign Key

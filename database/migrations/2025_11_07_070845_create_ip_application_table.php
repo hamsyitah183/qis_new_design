@@ -18,6 +18,7 @@ return new class extends Migration
             $table->enum('transport_type',['Air', 'Sea', 'Land']);
             $table->integer('entry_point');
             $table->unsignedBigInteger('user_id')->comment('Submitted by');
+            $table->unsignedBigInteger('importer_id');
             $table->unsignedBigInteger('exporter_id');
             $table->text('importer_detail')->comment('get json form during application - imp.id, imp.name, imp.phone, imp.fullAddress');
             $table->tinyInteger('category_application')->default(0)->comment('0: self Importer, 1: as agent');
@@ -27,6 +28,7 @@ return new class extends Migration
 
             //Foreign Key
             $table->foreign('user_id')->references('id')->on('public_users');
+            $table->foreign('importer_id')->references('id')->on('public_users');
             $table->foreign('exporter_id')->references('id')->on('exporter');
         });
     }
