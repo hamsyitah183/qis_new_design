@@ -14,14 +14,14 @@ return new class extends Migration
         Schema::create('internal_users', function (Blueprint $table) {
             $table->id();
             $table->uuid('uuid')->unique();
-            $table->string('name');
-            $table->string('username');
+            $table->string('fullname');
             $table->string('email')->unique();
-            $table->string('phone')->unique();
+            $table->string('phone_number')->unique();
             $table->string('position')->nullable();
             $table->string('office')->nullable();
             $table->string('no_ic')->nullable();
             $table->string('password');
+            $table->boolean('first_time_login')->default(0);
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamps();
         });

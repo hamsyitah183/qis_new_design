@@ -27,7 +27,7 @@ return new class extends Migration
             $table->string('state');
             $table->string('password');
             $table->boolean('doa_verified')->default(0);
-            $table->string('verification_attachment')->nullable();
+            // $table->string('verification_attachment')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->rememberToken();
             $table->timestamps();

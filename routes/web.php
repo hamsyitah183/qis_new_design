@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\public\importPermit\PermitApplicationController;
 use App\Http\Controllers\PublicController;
+use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Request;
@@ -20,6 +22,14 @@ Route::middleware(['multi.guest'])->group(function () {
     Route::post('/login', [AuthenticationController::class, 'loginAction'])->name('login.action');
 
     Route::post('/register', [AuthenticationController::class, 'registerPublic'])->name('register.public');
+
+    Route::get('/forgot-password', [PasswordResetController::class, 'resetPage'])->name('password.request');
+
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
+
+    Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
+
+    Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.update');
 });
 
 
@@ -39,18 +49,14 @@ Route::get('/', function () {
 Route::get('/verify-email', [AuthenticationController::class, 'verify_email'])
     ->middleware(['auth.any', 'unverified'])
     ->name('verify.email');
+
 // Verification link callback
-Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
-    $request->fulfill(); // marks the user as verified
-    return redirect('/'); // redirect to dashboard or home
-})->middleware(['auth:public,internal', 'signed'])->name('verification.verify');
+Route::get('/email/verify/{id}/{hash}', [AuthenticationController::class, 'verify_link'])
+    ->middleware('signed')
+    ->name('verification.verify');
 
 // Resend verification email
-Route::post('/email/verification-notification', function (Request $request) {
-    $user = auth('public')->user() ?? auth('internal')->user();
-    $user->sendEmailVerificationNotification();
-    return back()->with('message', 'Verification link sent!');
-})->middleware(['auth:public,internal', 'throttle:6,1'])->name('verification.send');
+Route::post('/email/verification-notification', [AuthenticationController::class, 'resend_verify_link'])->middleware(['auth:public,internal', 'throttle:6,1'])->name('verification.send');
 
 // Dashboard routes
 Route::prefix('public')
@@ -77,6 +83,9 @@ Route::prefix('public')
         Route::get('/verify_application', [PublicController::class, 'verifyapplication'])->name('verifyapplication');
         Route::get('/view_application/{uuid}', [PublicController::class, 'viewapplication'])->name('viewApplication');
         
+
+        Route::post('/upload-verification', [UserController::class, 'uploadVerificationAttachment'])
+            ->name('user.uploadVerification');
     });
 
 Route::prefix('internal')
@@ -89,8 +98,27 @@ Route::prefix('internal')
         Route::get('/user_public/list', [UserController::class, 'public_list'])->name('public.list');
         Route::get('/user_public/list/data', [UserController::class, 'public_list_data'])->name('public.list.data');
         Route::get('/user_public/user/data/{id}', [UserController::class, 'user_data']);
+        Route::post('/user_public/save', [UserController::class, 'public_user_save']);
+        Route::delete('/user_public/delete/{id}', [UserController::class, 'public_user_delete']);
 
         Route::get('/user_internal/list', [UserController::class, 'internal_list'])->name('internal.list');
         Route::get('/user_internal/list/data', [UserController::class, 'internal_list_data'])->name('internal.list.data');
-        Route::get('/user_internal/user/data/{id}', [UserController::class, 'user_data']);
+        Route::get('/user_internal/user/data/{id}', [UserController::class, 'internal_user_data']);
+        Route::post('/user_internal/save', [UserController::class, 'internal_user_save']);
+        Route::delete('/user_internal/delete/{id}', [UserController::class, 'internal_user_delete']);
+
+        Route::get('/activity_log', [ActivityLogController::class, 'log'])->name('internal.activity_log');
+        Route::get('/activity_log/data', [ActivityLogController::class, 'data']);
+
+        Route::get('/user_list/{type}', [UserController::class, 'user_list']);
+
+        Route::get('/verification/{id}', [UserController::class, 'verification_attachment']);
+
+        Route::post('/verification/{id}/save', [UserController::class, 'save_attachment']);
     });
+
+
+Route::middleware(['auth.any'])->get('/profile', [UserController::class, 'profile'])->name('profile');
+Route::middleware(['auth.any'])->get('/data', [UserController::class, 'userData']);
+Route::middleware(['auth.any'])->post('/data', [UserController::class, 'updateData']);
+Route::middleware(['auth.any'])->post('/password', [UserController::class, 'password']);

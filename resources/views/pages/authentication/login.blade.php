@@ -63,7 +63,7 @@
                                             </a>
                                         </div>
                                         <div class="mt-2 text-end">
-                                            <a href="#" class="fw-normal text-muted">Forgot
+                                            <a href="/forgot-password" class="fw-normal text-muted">Forgot
                                                 password?</a>
                                         </div>
                                     </div>
@@ -76,7 +76,7 @@
 
                             <div class="text-center">
                                 <p class="text-muted mt-3 mb-0">Doesn't have account? <a
-                                        href="https://laravelui.spruko.com/xintra/sign-up-basic"
+                                        href="/register"
                                         class="text-primary">Register here</a></p>
                             </div>
                         </div>

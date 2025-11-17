@@ -18,7 +18,7 @@ class PublicUserSeeder extends Seeder
         PublicUser::create([
             'uuid' => \Illuminate\Support\Str::uuid(),
             'fullname' => 'Nur Hamsyitah',
-            'no_ic' => '900101-12-3456', // you can change this
+            'no_ic' => '900101123456', // you can change this
             'email' => 'hamsyitahnur@gmail.com',
             'account_type' => 'individu',
             'phone_number' => '0123456789',
@@ -29,12 +29,12 @@ class PublicUserSeeder extends Seeder
             'district' => 'Tambunan',
             'state' => 'Sabah',
             'password' => Hash::make('password123'), // change this if needed
-            'doa_verified' => 0,
-            'verification_attachment' => null,
-            'email_verified_at' => null,
+            // 'doa_verified' => 0,
+            // 'verification_attachment' => null,
+            'email_verified_at' => now(),
         ]);
 
-        if ($public = PublicUser::where('email', 'hamsyitahnur@example.com')->first()) {
+        if ($public = PublicUser::where('email', 'hamsyitahnur@gmail.com')->first()) {
             $public->assignRole('public');
         }
 
