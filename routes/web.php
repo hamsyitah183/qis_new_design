@@ -122,8 +122,7 @@ Route::prefix('internal')
         
         Route::get('/permission/data', [ RoleAndPermissionController::class, 'get_permission']);
         Route::post('/permission/update', [ RoleAndPermissionController::class, 'update_permission']);
-
-        // ===========================================================
+        // ==================== user managemet =================
     });
 
 Route::middleware(['auth.any'])

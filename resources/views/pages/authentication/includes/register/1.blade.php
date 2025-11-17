@@ -1,3 +1,10 @@
+@push('style')
+    <style>
+        .cursor-pointer {
+            cursor: pointer !important;
+        }
+    </style>
+@endpush
 
 
 <div class="tab-pane fade border-0 p-0 active show" id="order-tab-pane" role="tabpanel" aria-labelledby="order-tab-pane"

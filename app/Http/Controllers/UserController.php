@@ -362,9 +362,9 @@ class UserController extends Controller
     public function user_list($type)
     {
         if ($type === 'public') {
-            $users = PublicUser::select(['fullname', 'id'])->get();
+            $users = PublicUser::select(['fullname', 'id', 'uuid'])->get();
         } else {
-            $users = InternalUser::select(['fullname', 'id'])->get();
+            $users = InternalUser::select(['fullname', 'id', 'uuid'])->get();
         }
 
         return response()->json([

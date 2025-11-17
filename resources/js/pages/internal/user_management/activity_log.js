@@ -338,8 +338,8 @@ function listUser(users) {
         listUserText += `
         <div class="col-6 pb-2"> 
             <div class="form-check">
-                <input class="form-check-input me-2 user-checkbox" type="checkbox" value="${user.id}" id="user-${user.id}" ${isChecked}>
-                <label class="form-check-label" for="user-${user.id}">
+                <input class="form-check-input me-2 user-checkbox" type="checkbox" value="${user.uuid}" id="user-${user.uuid}" ${isChecked}>
+                <label class="form-check-label" for="user-${user.uuid}">
                     ${user.fullname}
                 </label>
             </div>
