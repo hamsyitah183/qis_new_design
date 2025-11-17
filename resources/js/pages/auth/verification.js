@@ -8,6 +8,14 @@ Dropzone.autoDiscover = false;
 
 let attachmentVar = []; // ✅ Will contain files currently in queue or uploaded
 
+const dzElement = document.querySelector("#verificationDropzone");
+
+// If already initialized → destroy it
+if (dzElement.dropzone) {
+    dzElement.dropzone.destroy();
+}
+
+
 
 // Initialize Dropzone
 const verificationDropzone = new Dropzone("#verificationDropzone", {

@@ -127,7 +127,7 @@
     let tempAttachments = [];
     let temporaryItemsAttachment = [];
 
-    Dropzone.autoDiscover = false;
+    // Dropzone.autoDiscover = false;
 </script>
 
 
