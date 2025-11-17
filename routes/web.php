@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
 
 // Logout route
-Route::get('/logout', [AuthenticationController::class, 'logout'])->name('logout');
+Route::post('/logout', [AuthenticationController::class, 'logout'])->name('logout');
 
 // Guest routes
 Route::middleware(['multi.guest'])->group(function () {
