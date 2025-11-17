@@ -208,14 +208,14 @@ function listUserModal() {
 
         let html = `
             <div class="fw-bold mb-2">Assign Users to Role: ${roleName}</div>
-            <div class="list-group">
+            <div class="list-group scrollable-grey">
         `;
 
         allUsers.forEach((user) => {
             const hasRole = user.roles.some((r) => r.name === roleName);
 
             html += `
-                <label class="list-group-item d-flex align-items-center gap-2">
+                <label class="list-group-item d-flex align-items-center gap-2 ">
                     <input type="checkbox"
                         class="form-check-input user-check" name = "users[]" 
                         value = "${user.uuid}"
