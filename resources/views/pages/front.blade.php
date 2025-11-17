@@ -72,9 +72,8 @@
     <!-- Loader -->
 
     <div class="page">
-
-        @yield('content')
-
+        <span id="year"></span>
+        @yield('content')   
 
 
 
@@ -115,15 +114,15 @@
     <script src="{{ asset('build2/assets/form-wizard.js') }}"></script>
 
     <!-- Form Wizard Init -->
-    {{-- <link rel="modulepreload" href="{{ asset('build2/assets/form-wizard-init-iKT7VXTT.js') }}" />
-    <script type="module" src="{{ asset('build2/assets/form-wizard-init-iKT7VXTT.js') }}"></script> --}}
+    {{--  --}}<link rel="modulepreload" href="{{ asset('build2/assets/form-wizard-init-iKT7VXTT.js') }}" />
+    <script type="module" src="{{ asset('build2/assets/form-wizard-init-iKT7VXTT.js') }}"></script>
 
     <!-- Sticky JS -->
     <script src="{{ asset('build2/assets/sticky.js') }}"></script>
 
     <!-- Custom Switcher JS -->
-    {{-- <link rel="modulepreload" href="{{ asset('build2/assets/custom-switcher-BayzdO2G.js') }}" />
-    <script type="module" src="{{ asset('build2/assets/custom-switcher-BayzdO2G.js') }}"></script> --}}
+    {{--  --}}<link rel="modulepreload" href="{{ asset('build2/assets/custom-switcher-BayzdO2G.js') }}" />
+    <script type="module" src="{{ asset('build2/assets/custom-switcher-BayzdO2G.js') }}"></script>
 
     <!-- APP JS -->
     <link rel="modulepreload" href="{{ asset('build2/assets/app-C4M4tSMb.js') }}" />
