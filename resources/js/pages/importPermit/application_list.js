@@ -1,3 +1,4 @@
+console.log('application list');
 let applicationListTable;
 
 async function data_table_init() {
