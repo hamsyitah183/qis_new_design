@@ -8,6 +8,14 @@ Dropzone.autoDiscover = false;
 
 let attachmentVar = []; // ✅ Will contain files currently in queue or uploaded
 
+const dzElement = document.querySelector("#verificationDropzone");
+
+// If already initialized → destroy it
+if (dzElement.dropzone) {
+    dzElement.dropzone.destroy();
+}
+
+
 
 // Initialize Dropzone
 const verificationDropzone = new Dropzone("#verificationDropzone", {
@@ -16,9 +24,6 @@ const verificationDropzone = new Dropzone("#verificationDropzone", {
     paramName: "attachment",
     maxFilesize: 5,
     maxFiles: 1,
-    // data: {
-    //     uuid: user_id
-    // },
     acceptedFiles: ".jpg,.jpeg,.png,.pdf",
     addRemoveLinks: true,
     dictDefaultMessage: "Drop your verification file here or click to upload.",
@@ -27,41 +32,36 @@ const verificationDropzone = new Dropzone("#verificationDropzone", {
     },
 });
 
-// ✅ When a file is added to Dropzone
+// When a file is added
 verificationDropzone.on("addedfile", function (file) {
+    // Always keep only the latest file
     if (attachmentVar.length >= 1) {
-        Swal.fire({
-            icon: "error",
-            title: "Upload Failed",
-            text: "Only one file can be uploaded.",
-        });
-        verificationDropzone.removeFile(file); // prevent adding more
-        return;
+        const oldFile = attachmentVar[0].fileObj;
+        verificationDropzone.removeFile(oldFile);
+        attachmentVar = [];
     }
 
     attachmentVar.push({
         name: file.name,
         size: file.size,
         type: file.type,
-        fileObj: file, // keep reference to Dropzone file object
+        fileObj: file,
     });
 
     console.log("File added to attachmentVar:", attachmentVar);
 });
 
-// ✅ When a file is removed from Dropzone
+// When a file is removed manually
 verificationDropzone.on("removedfile", function (file) {
     attachmentVar = attachmentVar.filter(f => f.name !== file.name);
     console.log("File removed from attachmentVar:", attachmentVar);
 });
 
-// ✅ When user clicks upload button
+// Upload button click
 $("#uploadBtn").on("click", function () {
-    let userId = $(this).data('id'); // get user_id from button
+    const userId = $(this).data("id");
 
-    console.log('user id', userId);
-
-    if (verificationDropzone.getQueuedFiles().length === 0) {
+    if (attachmentVar.length === 0) {
         Swal.fire({
             icon: "warning",
             title: "No file selected",
@@ -70,16 +70,15 @@ $("#uploadBtn").on("click", function () {
         return;
     }
 
-    // Add user_id to each file upload
+    // Attach user_id before sending
     verificationDropzone.on("sending", function (file, xhr, formData) {
-        formData.append("user_id", userId); // ✅ append user_id to request
+        formData.append("user_id", userId);
     });
 
-    verificationDropzone.processQueue(); // start upload
+    verificationDropzone.processQueue();
 });
 
-
-// ✅ When upload succeeds
+// On successful upload
 verificationDropzone.on("success", function (file, response) {
     Swal.fire({
         icon: "success",
@@ -87,26 +86,28 @@ verificationDropzone.on("success", function (file, response) {
         text: response.message,
     });
 
-    // Update the URL in attachmentVar for the uploaded file
+    // Update the URL in attachmentVar
     const uploaded = attachmentVar.find(f => f.name === file.name);
     if (uploaded) uploaded.url = response.file_url;
-
 
     loadProfile();
 
     console.log("Upload success — updated attachmentVar:", attachmentVar);
 
+    // Clear queue on success
     attachmentVar = [];
+    verificationDropzone.removeAllFiles(true);
 });
 
-// ✅ When upload fails
+// On upload error
 verificationDropzone.on("error", function (file, errorMessage) {
     Swal.fire({
         icon: "error",
         title: "Upload Failed",
-        text:
-            typeof errorMessage === "string"
-                ? errorMessage
-                : errorMessage.message || "Something went wrong.",
+        text: typeof errorMessage === "string" ? errorMessage : errorMessage.message || "Something went wrong.",
     });
+
+    // Keep the latest file in attachmentVar for retry
+    // Do not clear attachmentVar or remove file
+    console.log("Upload failed — attachmentVar still contains:", attachmentVar);
 });

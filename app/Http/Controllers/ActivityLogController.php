@@ -99,7 +99,7 @@ class ActivityLogController extends Controller
                 'created_at' => $activity->created_at->copy()->setTimezone(config('app.timezone'))->toDateTimeString(),
                 'updated_at' => $activity->updated_at->copy()->setTimezone(config('app.timezone'))->toDateTimeString(),
                 'causer' => [
-                    'id' => $causer->id,
+                    'id' => $causer->uuid,
                     'name' => $causer->name ?? $causer->fullname ?? 'Unknown User',
                     'email' => $causer->email ?? null,
                     'phone' => $causer->phone ?? null,

@@ -228,6 +228,8 @@ $("#userType").on("change", function (e) {
     userTypeVal = $(this).val();
     console.log("Selected user type:", userTypeVal);
 
+    window.selectedUserIds.clear();
+
     if (!userTypeVal || userTypeVal == 0) {
         Swal.fire("Error", "Choose User Type first!", "error");
         return;
@@ -338,8 +340,8 @@ function listUser(users) {
         listUserText += `
         <div class="col-6 pb-2"> 
             <div class="form-check">
-                <input class="form-check-input me-2 user-checkbox" type="checkbox" value="${user.id}" id="user-${user.id}" ${isChecked}>
-                <label class="form-check-label" for="user-${user.id}">
+                <input class="form-check-input me-2 user-checkbox" type="checkbox" value="${user.uuid}" id="user-${user.uuid}" ${isChecked}>
+                <label class="form-check-label" for="user-${user.uuid}">
                     ${user.fullname}
                 </label>
             </div>
@@ -350,7 +352,8 @@ function listUser(users) {
     $(".user-checkbox")
         .off("change")
         .on("change", function () {
-            const userId = parseInt($(this).val());
+            // const userId = parseInt($(this).val());
+            const userId = $(this).val();
             if ($(this).is(":checked")) {
                 window.selectedUserIds.add(userId);
             } else {

@@ -47,7 +47,8 @@ class PermitApplicationController extends Controller
             'phone_no' => $validated['phone_no'],
             'address' => $validated['address'],
             'country' => $validated['country'],
-            'registered_by' => auth()->id() ?? 2, // fallback if not logged in
+            // 'registered_by' => auth()->id() ?? 2, // fallback if not logged in
+            'registered_by' => authUser()['user']['uuid'],
             'created_at' => now(),
             'updated_at' => now(),
         ]);

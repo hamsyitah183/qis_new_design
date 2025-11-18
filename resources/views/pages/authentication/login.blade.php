@@ -6,33 +6,33 @@
 
 @section('content')
     <div class="row authentication authentication-cover-main mx-0">
-        <div class="col-xxl-6 col-xl-7 col-lg-12 d-xl-block d-none px-0">
+        <div class="col-xxl-5 col-xl-5 col-lg-12 d-xl-block d-none px-0">
             <div class="authentication-cover overflow-hidden">
-                <div class="authentication-cover-logo">
+                {{-- <div class="authentication-cover-logo">
                     <a href="https://laravelui.spruko.com/xintra/index">
                         <img src="https://laravelui.spruko.com/xintra/build/assets/images/brand-logos/desktop-white.png"
                             alt="" class="authentication-brand desktop-white">
                     </a>
-                </div>
+                </div> --}}
                 <div class="aunthentication-cover-content d-flex align-items-center justify-content-center">
-                    <div>
-                        <h3 class="text-fixed-white mb-1 fw-medium">Welcome Henry!</h3>
-                        <h6 class="text-fixed-white mb-3 fw-medium">Login to Your Account</h6>
-                        <p class="text-fixed-white mb-1 op-6">Welcome to the Admin Dashboard. Please log in to securely
-                            manage your administrative tools and oversee platform activities. Your credentials ensure system
-                            integrity and functionality.</p>
+                    <div class="d-flex justify-content-center align-items-center flex-column">
+                        <h4 class="text-center text-white">Login</h4>
+                        <img src="https://qis-app.sabah.gov.my/assets/QIS-a3dc1042.gif" class="mb-2"
+                            style="object-fit: contain; height: 350px;">
+
+                        {{-- <img src="https://qis-app.sabah.gov.my/assets/preparedby-f6029c92.png" alt="" srcset="" style="height: 70px;" class="bg-white p-2 rounded-3"> --}}
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-xxl-5 col-xl-5">
+        <div class="col-xxl-7 col-xl-7">
             <div class="row justify-content-center align-items-center h-100">
                 <div class="col-xxl-10 col-xl-9 col-lg-6 col-md-6 col-sm-8 col-12">
                     <div class="card custom-card my-auto border">
                         <div class="card-body p-5">
-                            <p class="h5 mb-2 text-center">Sign In</p>
+                            {{-- <p class="h5 mb-2 text-center">Sign In</p>
                             <img src="https://qis-app.sabah.gov.my/assets/QIS-a3dc1042.gif" class="img-fluid mb-2"
-                                style="object-fit: contain;">
+                                style="object-fit: contain; height: 200px; margin-inline: auto;"> --}}
                             <form id="loginForm" method="POST" action="{{ route('login.action') }}">
                                 @csrf
                                 <div class="row gy-3">

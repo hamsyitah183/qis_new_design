@@ -19,8 +19,29 @@ class RoleAndPermissionSeeder extends Seeder
         // ==================================================
         $permissions = [
             'view dashboard',
+
+            // ======== user management ====================
+
+            // internal
             'create internal user',
+            'read internal user',
+            'update internal user',
+            'delete internal user',
+
+
+            // public
+            'create public user',
+            'read public user',
+            'update public user',
+            'delete public user',
             'approve public user',
+
+
+            // activity log
+            'read activity log'
+
+
+            // ================================================
         ];
 
         foreach ($permissions as $permission) {
@@ -46,7 +67,7 @@ class RoleAndPermissionSeeder extends Seeder
             // Internal roles
             'admin' => [
                 'guard_name' => 'internal',
-                'permissions' => ['view dashboard', 'create internal user', 'approve public user'],
+                'permissions' => ['view dashboard', 'create internal user', 'create public user', 'approve public user'],
             ],
             'officer' => [
                 'guard_name' => 'internal',

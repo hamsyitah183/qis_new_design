@@ -142,7 +142,7 @@
 
             <div>
                 <div class="px-0 py-3 pb-0">
-                    <div class="row g-2" id="userList">
+                    <div class="row g-2 scrollable-grey" id="userList">
 
                     </div>
                 </div>

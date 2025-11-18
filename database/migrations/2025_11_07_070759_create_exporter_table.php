@@ -17,10 +17,14 @@ return new class extends Migration
             $table->string('phone_no', 25);
             $table->text('address');
             $table->string('country', 50);
-            $table->unsignedBigInteger('registered_by');
+
+            // UUID FK
+            $table->uuid('registered_by');
+
             $table->timestamps();
 
-             $table->foreign('registered_by')->references('id')->on('public_users');
+            $table->foreign('registered_by')->references('uuid')->on('public_users')
+                ->onDelete('cascade');
         });
     }
 

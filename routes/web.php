@@ -6,29 +6,27 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\public\importPermit\PermitApplicationController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\RoleAndPermissionController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
 
 // Logout route
-Route::get('/logout', [AuthenticationController::class, 'logout'])->name('logout');
+Route::post('/logout', [AuthenticationController::class, 'logout'])->name('logout');
 
 // Guest routes
 Route::middleware(['multi.guest'])->group(function () {
     Route::get('/login', [AuthenticationController::class, 'login'])->name('login');
-    Route::get('/register', [AuthenticationController::class, 'register'])->name('register');
-
+    // Route::get('/register', [AuthenticationController::class, 'register'])->name('register');
+    Route::get('/register', [AuthenticationController::class, 'register_test'])->name('register');
     Route::post('/login', [AuthenticationController::class, 'loginAction'])->name('login.action');
-
     Route::post('/register', [AuthenticationController::class, 'registerPublic'])->name('register.public');
 
+
     Route::get('/forgot-password', [PasswordResetController::class, 'resetPage'])->name('password.request');
-
     Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
-
     Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
-
     Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.update');
 });
 
@@ -94,7 +92,7 @@ Route::prefix('internal')
     ->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
 
-        // user managemet
+        // ==================== user managemet =================
         Route::get('/user_public/list', [UserController::class, 'public_list'])->name('public.list');
         Route::get('/user_public/list/data', [UserController::class, 'public_list_data'])->name('public.list.data');
         Route::get('/user_public/user/data/{id}', [UserController::class, 'user_data']);
@@ -110,15 +108,27 @@ Route::prefix('internal')
         Route::get('/activity_log', [ActivityLogController::class, 'log'])->name('internal.activity_log');
         Route::get('/activity_log/data', [ActivityLogController::class, 'data']);
 
+
         Route::get('/user_list/{type}', [UserController::class, 'user_list']);
 
-        Route::get('/verification/{id}', [UserController::class, 'verification_attachment']);
 
+        Route::get('/verification/{id}', [UserController::class, 'verification_attachment']);
         Route::post('/verification/{id}/save', [UserController::class, 'save_attachment']);
+
+
+        Route::get('/roles', [RoleAndPermissionController::class, 'role'])->name('internal.role');
+        Route::get('/roles/list/data', [RoleAndPermissionController::class, 'role_list_data']);
+        Route::post('/roles/update', [RoleAndPermissionController::class, 'update_role']);
+        
+        Route::get('/permission/data', [ RoleAndPermissionController::class, 'get_permission']);
+        Route::post('/permission/update', [ RoleAndPermissionController::class, 'update_permission']);
+        // ==================== user managemet =================
     });
 
-
-Route::middleware(['auth.any'])->get('/profile', [UserController::class, 'profile'])->name('profile');
-Route::middleware(['auth.any'])->get('/data', [UserController::class, 'userData']);
-Route::middleware(['auth.any'])->post('/data', [UserController::class, 'updateData']);
-Route::middleware(['auth.any'])->post('/password', [UserController::class, 'password']);
+Route::middleware(['auth.any'])
+    ->group(function () {
+        Route::get('/profile', [UserController::class, 'profile'])->name('profile');
+        Route::get('/data', [UserController::class, 'userData']);
+        Route::post('/data', [UserController::class, 'updateData']);
+        Route::post('/password', [UserController::class, 'password']);
+    });
