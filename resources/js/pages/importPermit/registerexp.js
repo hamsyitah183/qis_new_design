@@ -2,23 +2,30 @@ import $ from "jquery";
 import Swal from "sweetalert2";
 
 $(document).ready(function () {
+    const modalEl = document.getElementById("addExporterModal");
+    const modal = new bootstrap.Modal(modalEl);
 
-    $('#addExporterbtn').on('click', function(e) {
+    $("#openExporterModalBtn").on("click", function (e) {
+        e.preventDefault();
+        modal.show();
+    });
+
+    $("#addExporterbtn").on("click", function (e) {
         e.preventDefault();
         // console.log("show this - ");
-        const routeUrl = $(this).data('route');
+        const routeUrl = $(this).data("route");
         // console.log(routeUrl);
         // Collect input values
-        const name = $('#addexpName').val();
-        const phone_no = $('#addexpfonno').val();
-        const address1 = $('#addexpaddress1').val();
-        const address2 = $('#addexpaddress2').val();
-        const full_address = address1 + ' ' + address2;
-        const country = $('#addexpcountry').val();
+        const name = $("#addexpName").val();
+        const phone_no = $("#addexpfonno").val();
+        const address1 = $("#addexpaddress1").val();
+        const address2 = $("#addexpaddress2").val();
+        const full_address = address1 + " " + address2;
+        const country = $("#addexpcountry").val();
 
         // Optional: validation check before sending
         if (!name || !phone_no || !country) {
-            alert('⚠️ Please fill in all required fields.');
+            alert("⚠️ Please fill in all required fields.");
             return;
         }
 
@@ -29,146 +36,158 @@ $(document).ready(function () {
                 name: name,
                 phone_no: phone_no,
                 address: full_address,
-                country: country
+                country: country,
             },
             headers: {
-                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
-                },
-            success: function(response) {
+                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+            },
+            success: function (response) {
                 rebuildExporterSelect();
                 // Example success alert
                 Swal.fire({
-                    icon: 'success',
-                    title: 'Exporter Saved!',
-                    text: 'The exporter has been successfully added to the list.',
+                    icon: "success",
+                    title: "Exporter Saved!",
+                    text: "The exporter has been successfully added to the list.",
                     showConfirmButton: false,
                     timer: 1800,
                     timerProgressBar: true,
-                    position: 'center'
+                    position: "center",
                 });
-                $('#addExporterModal').modal('hide');
-                
-                // Optionally clear form
-                $('#addexpName, #addexpfonno, #addexpaddress1, #addexpaddress2, #addexpcountry').val('');
+                $("#addExporterModal").modal("hide");
 
+                // Optionally clear form
+                $(
+                    "#addexpName, #addexpfonno, #addexpaddress1, #addexpaddress2, #addexpcountry"
+                ).val("");
             },
-            error: function(xhr) {
+            error: function (xhr) {
                 console.error(xhr.responseText);
-                alert('❌ Failed to save exporter. Please check your input or try again.');
-            }
+                alert(
+                    "❌ Failed to save exporter. Please check your input or try again."
+                );
+            },
         });
     });
 
-
-    $('#btnFindImp').on('click', function(e) {
-        const findtheimp = document.getElementById('findImporter').value.trim();
+    $("#btnFindImp").on("click", function (e) {
+        const findtheimp = document.getElementById("findImporter").value.trim();
 
         if (!findtheimp) {
-            alert('⚠️ Identity number is empty!');
+            alert("⚠️ Identity number is empty!");
             return;
         }
 
         fetch(`${window.baseUrl}/public/get_importers/` + findtheimp)
-        .then(response => response.json())
-        .then(data => {
+            .then((response) => response.json())
+            .then((data) => {
+                // NOT FOUND (status = not_found)
+                if (data.status === "not_found") {
+                    document.getElementById("searchresult").style.display =
+                        "block";
+                    document.getElementById("doanotver").style.display = "none";
+                    document.getElementById("emailnotver").style.display =
+                        "none";
+                    document.getElementById("impname").value = ""; // clear input
+                    document.getElementById("impid").value = "";
+                    document.getElementById("impfonno").value = "";
+                    document.getElementById("impaddress1").value = "";
+                    document.getElementById("impaddress2").value = "";
+                    document.getElementById("imp_id").value = "";
+                    document.getElementById("impemail").value = "";
+                    return;
+                }
 
-            // NOT FOUND (status = not_found)
-            if (data.status === 'not_found') {
-                document.getElementById('searchresult').style.display = 'block';
-            document.getElementById('doanotver').style.display = 'none';
-            document.getElementById('emailnotver').style.display = 'none';
-                document.getElementById('impname').value = ""; // clear input
-            document.getElementById('impid').value = ""; 
-                document.getElementById('impfonno').value = ""; 
-                document.getElementById('impaddress1').value = ""; 
-                document.getElementById('impaddress2').value = ""; 
-                document.getElementById('imp_id').value = ""; 
-                document.getElementById('impemail').value = ""; 
-                return;
-            }
+                if (data.status === "not_verified_email") {
+                    document.getElementById("emailnotver").style.display =
+                        "block";
+                    document.getElementById("searchresult").style.display =
+                        "none";
+                    document.getElementById("doanotver").style.display = "none";
+                    document.getElementById("impname").value = ""; // clear input
+                    document.getElementById("impid").value = "";
+                    document.getElementById("impfonno").value = "";
+                    document.getElementById("impaddress1").value = "";
+                    document.getElementById("impaddress2").value = "";
+                    document.getElementById("imp_id").value = "";
+                    document.getElementById("impemail").value = "";
+                    return;
+                }
 
-            if (data.status === 'not_verified_email') {
-                document.getElementById('emailnotver').style.display = 'block';
-            document.getElementById('searchresult').style.display = 'none';
-            document.getElementById('doanotver').style.display = 'none';
-                document.getElementById('impname').value = ""; // clear input
-            document.getElementById('impid').value = ""; 
-                document.getElementById('impfonno').value = ""; 
-                document.getElementById('impaddress1').value = ""; 
-                document.getElementById('impaddress2').value = ""; 
-                document.getElementById('imp_id').value = ""; 
-                document.getElementById('impemail').value = ""; 
-                return;
-            }
+                if (data.status === "not_verified_doa") {
+                    document.getElementById("doanotver").style.display =
+                        "block";
+                    document.getElementById("searchresult").style.display =
+                        "none";
+                    document.getElementById("emailnotver").style.display =
+                        "none";
+                    document.getElementById("impname").value = ""; // clear input
+                    document.getElementById("impid").value = "";
+                    document.getElementById("impfonno").value = "";
+                    document.getElementById("impaddress1").value = "";
+                    document.getElementById("impaddress2").value = "";
+                    document.getElementById("imp_id").value = "";
+                    document.getElementById("impemail").value = "";
+                    return;
+                }
 
-            if (data.status === 'not_verified_doa') {
-                document.getElementById('doanotver').style.display = 'block';
-            document.getElementById('searchresult').style.display = 'none';
-            document.getElementById('emailnotver').style.display = 'none';
-                document.getElementById('impname').value = ""; // clear input                
-            document.getElementById('impid').value = ""; 
-                document.getElementById('impfonno').value = ""; 
-                document.getElementById('impaddress1').value = ""; 
-                document.getElementById('impaddress2').value = ""; 
-                document.getElementById('imp_id').value = ""; 
-                document.getElementById('impemail').value = ""; 
-                return;
-            }
+                // SUCCESS
+                console.log("SUCCESS:", data);
 
-            // SUCCESS
-            console.log("SUCCESS:", data);
+                // Hide warning message
+                document.getElementById("searchresult").style.display = "none";
+                document.getElementById("doanotver").style.display = "none";
+                document.getElementById("emailnotver").style.display = "none";
 
-            // Hide warning message
-            document.getElementById('searchresult').style.display = 'none';
-            document.getElementById('doanotver').style.display = 'none';
-            document.getElementById('emailnotver').style.display = 'none';
-
-            // Fill importer name
-            document.getElementById('impname').value = data.data.fullname; 
-            document.getElementById('impid').value = data.data.id; 
-            document.getElementById('impfonno').value = data.data.phone_number; 
-            document.getElementById('impaddress1').value = data.data.address_1; 
-            document.getElementById('impaddress2').value = data.data.address_2; 
-            document.getElementById('imp_id').value = data.data.id; 
-            document.getElementById('impemail').value = data.data.email; 
-            
-        })
-        .catch(error => {
-            console.error("ERROR:", error);
-        });
-    });    
-
+                // Fill importer name
+                document.getElementById("impname").value = data.data.fullname;
+                document.getElementById("impid").value = data.data.id;
+                document.getElementById("impfonno").value =
+                    data.data.phone_number;
+                document.getElementById("impaddress1").value =
+                    data.data.address_1;
+                document.getElementById("impaddress2").value =
+                    data.data.address_2;
+                document.getElementById("imp_id").value = data.data.id;
+                document.getElementById("impemail").value = data.data.email;
+            })
+            .catch((error) => {
+                console.error("ERROR:", error);
+            });
+    });
 
     function rebuildExporterSelect() {
-        const select = $('#selectexp');
-        const url = select.data('route'); 
+        const select = $("#selectexp");
+        const url = select.data("route");
 
         $.ajax({
             url: url,
             type: "GET",
-            success: function(data) {
+            success: function (data) {
                 // Clear old options
                 select.empty();
 
                 // Add the default option
-                select.append('<option value="">-- Select Exporter --</option>');
+                select.append(
+                    '<option value="">-- Select Exporter --</option>'
+                );
 
                 // Populate new options from response
-                $.each(data, function(index, exporter) {
-                    select.append(`<option value="${exporter.id}">${exporter.name}</option>`);
+                $.each(data, function (index, exporter) {
+                    select.append(
+                        `<option value="${exporter.id}">${exporter.name}</option>`
+                    );
                 });
 
                 // If using select2, reinitialize
-                if (select.hasClass('xintra-select2')) {
-                    select.trigger('change.select2');
+                if (select.hasClass("xintra-select2")) {
+                    select.trigger("change.select2");
                 }
             },
-            error: function(xhr) {
+            error: function (xhr) {
                 console.error(xhr.responseText);
-                alert('❌ Failed to reload exporter list.');
-            }
+                alert("❌ Failed to reload exporter list.");
+            },
         });
-    } rebuildExporterSelect();
-
-    
+    }
+    rebuildExporterSelect();
 });

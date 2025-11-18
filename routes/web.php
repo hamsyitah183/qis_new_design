@@ -3,6 +3,7 @@
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\internal\MiscController;
 use App\Http\Controllers\public\importPermit\PermitApplicationController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\PasswordResetController;
@@ -126,7 +127,7 @@ Route::prefix('internal')
 
         //MISC
 
-        Route::get('/control_panel', [\App\Http\Controllers\internal\MiscController::class, 'showcontrolpanel']);
+        Route::get('/control_panel', [MiscController::class, 'showcontrolpanel']);
     });
 
 Route::middleware(['auth.any'])
