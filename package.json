@@ -31,6 +31,7 @@
         "feather-icons": "^4.29.2",
         "flatpickr": "^4.6.13",
         "jquery": "^3.7.1",
+        "select2": "^4.1.0-rc.0",
         "sweetalert2": "^11.26.3",
         "tabler-icons": "^1.35.0"
     }

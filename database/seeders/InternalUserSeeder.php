@@ -75,14 +75,23 @@ class InternalUserSeeder extends Seeder
                 'no_ic' => '900101010003',
                 'password' => 'password123',
                 'role' => 'clerk',
+            ],[
+                'email' => 'aarondalejchin@gmail.com',
+                'fullname' => 'Aaron Internal',
+                'phone_number' => '0198227530',
+                'position' => 'Administrator',
+                'office' => 'HQ',
+                'no_ic' => '911117126657',
+                'password' => '12345678',
                 'email_verified_at' => Carbon::now(),
-            ],
+                'role' => 'admin',
+            ]
         ];
 
         // ==================================================
         // 3️⃣ Add 30 more internal users (randomized)
         // ==================================================
-        for ($i = 1; $i <= 30; $i++) {
+        for ($i = 1; $i <= 3; $i++) {
             $role = ['admin', 'officer', 'clerk'][array_rand(['admin','officer','clerk'])];
             $users[] = [
                 'email' => "internal{$i}@example.com",

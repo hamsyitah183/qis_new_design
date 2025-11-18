@@ -33,7 +33,7 @@
                     <input type="hidden" id="app_cate" value="1">
                     <div class="col-xl-12">
                         <label for="impname" class="form-label">Name</label>
-                        <input type="text" id="impid">
+                        <input type="hidden" id="impid">
                         <input type="text" class="form-control " id="impname" name="impname" disabled >
                         <input type="hidden" id="impemail" name="impemail">
                     </div>

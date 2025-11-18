@@ -1,10 +1,9 @@
-import './bootstrap';
-import { IconHome, IconUser } from 'tabler-icons';
-import '@fortawesome/fontawesome-free/css/all.min.css';
+import "./bootstrap";
+import { IconHome, IconUser } from "tabler-icons";
+import "@fortawesome/fontawesome-free/css/all.min.css";
 // import './feather-icons';
 
 // If you are using JavaScript/ECMAScript modules:
-
 
 // // If you are using an older version than Dropzone 6.0.0,
 // // then you need to disabled the autoDiscover behaviour here:
@@ -15,9 +14,9 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 //   console.log(`File added: ${file.name}`);
 // });
 
-import $ from 'jquery';
+import $ from "jquery";
 window.$ = window.jQuery = $; // make it global
-
+import "select2";
 
 // $.ajaxSetup({
 //     headers: {
@@ -25,13 +24,13 @@ window.$ = window.jQuery = $; // make it global
 //     },
 // });
 
-$('#redirectProfile').on('click', function(e) {
+$("#redirectProfile").on("click", function (e) {
     e.preventDefault();
 
-    console.log('redirect ');
+    console.log("redirect ");
 
-    window.location.href = '/profile'
-})
+    window.location.href = "/profile";
+});
 
 export function formatTime(timestamp) {
     const utcDate = new Date(timestamp);
@@ -65,3 +64,4 @@ export function initTooltips() {
         new bootstrap.Tooltip(el);
     });
 }
+

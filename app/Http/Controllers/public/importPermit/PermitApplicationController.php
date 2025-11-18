@@ -12,6 +12,7 @@ use App\Models\PublicCode;
 use App\Models\TempAttachment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -56,11 +57,12 @@ class PermitApplicationController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function getImporters($idno){
+    public function getImporters($idno)
+    {
         $importers = \DB::table('public_users')
-                ->where('no_ic', $idno)
-                ->first();
-        
+            ->where('no_ic', $idno)
+            ->first();
+
         // If no data found
         if (!$importers) {
             return response()->json([
@@ -111,29 +113,29 @@ class PermitApplicationController extends Controller
         $type = $request->query('type');
 
         $entryp = \DB::table('ip_entry_point')
-        ->leftJoin('public_code', 'ip_entry_point.district', '=', 'public_code.cate_code')
-        ->where('public_code.cate_name','district_entry')
-        ->where('ip_entry_point.transport_type', $type)
-        ->select('ip_entry_point.id', \DB::raw('CONCAT(public_code.description, " - ", ip_entry_point.entry_name) AS entry_display'))
-        ->get();
-        
+            ->leftJoin('public_code', 'ip_entry_point.district', '=', 'public_code.cate_code')
+            ->where('public_code.cate_name', 'district_entry')
+            ->where('ip_entry_point.transport_type', $type)
+            ->select('ip_entry_point.id', \DB::raw('CONCAT(public_code.description, " - ", ip_entry_point.entry_name) AS entry_display'))
+            ->get();
+
         return response()->json($entryp);
     }
 
     public function getConsignmentFromCountry($countryCode)
     {
-        
+
         $countryCode = strtoupper(trim($countryCode));
         //dd($countryCode);
         $data = IpCondition::whereJsonContains('country', $countryCode)
-        ->leftJoin('public_code', 'ip_condition.category', '=', 'public_code.cate_code')
-        ->where('public_code.cate_name','condition_category')
-        ->select(
-            'ip_condition.id',
-            \DB::raw('CONCAT(public_code.description, " - ", ip_condition.item_name) AS entry_display'),
-            'ip_condition.usage'            
-        )
-        ->get();
+            ->leftJoin('public_code', 'ip_condition.category', '=', 'public_code.cate_code')
+            ->where('public_code.cate_name', 'condition_category')
+            ->select(
+                'ip_condition.id',
+                \DB::raw('CONCAT(public_code.description, " - ", ip_condition.item_name) AS entry_display'),
+                'ip_condition.usage'
+            )
+            ->get();
 
         return response()->json($data);
     }
@@ -149,76 +151,98 @@ class PermitApplicationController extends Controller
 
     public function saveApplication(Request $request)
     {
-        // dd($request->all(), $request->file());
-        // Decode JSON strings into PHP arrays
-        $exporter     = json_decode($request->exporterData, true);
-        $importer     = json_decode($request->importerData, true);
-        $permit       = json_decode($request->permitDetails, true);
-        $items        = json_decode($request->items, true);
-        // $attachment   = json_decode($request->attached, true);
-        //dd($attachment);
+        DB::beginTransaction(); // start transaction
 
-        
-        // Step 2: Create IpApplication
-        $application = IpApplication::create([
-            'application_id'      => Str::uuid(),
-            'eta'                 => $permit['eta'],
-            'transport_type'      => $permit['tranType'],
-            'entry_point'         => $permit['entrypoint'],
-            'user_id'             => Auth::id(),                 // submitted by logged-in user
-            'exporter_id'         => $exporter['id'],// need to change later
-            'importer_id'         => $importer['id'],
-            'importer_detail'     => json_encode($importer), // JSON stored
-            'category_application'=> $permit['applCate'],
-            'importer_verify'     => false,
-            'date_importer_verify' => null,
-        ]);
+        // Keep track of moved files to rollback if needed
+        $movedFiles = [];
 
-        $appId = $application->id;
-        $jsencode = json_encode($items);
-        // Step 4: Create IpConsignmentPermit
-        foreach($items as $item){
-            $consignment = IpConsignmentPermit::create([
-                'application_id'     => $appId, // FK
-                'permit_number'      => null,   // not yet issued
-                'consignment_detail' => $jsencode, // JSON
-                'quantity'           => $item['quantity'],
-                'unit_measurement'   => $item['measure'],
-                'value'              => $item['value'],
-                'purpose'            => $item['purpose'],
+        try {
+            $exporter = json_decode($request->exporterData, true);
+            $importer = json_decode($request->importerData, true);
+            $permit = json_decode($request->permitDetails, true);
+            $items = json_decode($request->items, true);
+
+            // dd($exporter, $importer);
+
+            // Step 1: Create IpApplication
+            $application = IpApplication::create([
+                'application_id'       => Str::uuid(),
+                'eta'                  => $permit['eta'],
+                'transport_type'       => $permit['tranType'],
+                'entry_point'          => $permit['entrypoint'],
+                'user_id'              => Auth::user()->uuid,
+                'exporter_id'          => $exporter['id'],
+                'importer_id'          => $importer['uuid'],
+                'importer_detail'      => json_encode($importer),
+                'category_application' => $permit['applCate'],
+                'importer_verify'      => false,
+                'date_importer_verify' => null,
             ]);
 
-            // Save attachments (temp -> permanent)
-            if (!empty($item['temp'])) {
+            $appId = $application->id;
+            $jsencode = json_encode($items);
 
-                foreach ($item['temp'] as $tempatt) {
-
-                    // Move from temp/ to public/permitAttachment/
-                    Storage::move(
-                        "public/" . $tempatt['temp_path'],                 // FROM: storage/app/public/temp/...
-                        "public/permitAttachment/" . $tempatt['temp_name'] // TO: storage/app/public/permitAttachment/...
-                    );
-
-                    // Save final attachment record
-                    IpConsignmentAttachment::create([
-                        'permit_id' => $consignment->id,
-                        'file_name'      => $tempatt['original_name'],
-                        'file_path'      => "/storage/permitAttachment/" . $tempatt['temp_name'],
-                        'file_type'      => $tempatt['mime_type']
+            // Step 2: Create IpConsignmentPermit & attachments
+            if ($items) {
+                foreach ($items as $item) {
+                    $consignment = IpConsignmentPermit::create([
+                        'application_id'     => $appId,
+                        'permit_number'      => null,
+                        'consignment_detail' => $jsencode,
+                        'quantity'           => $item['quantity'],
+                        'unit_measurement'   => $item['measure'],
+                        'value'              => $item['value'],
+                        'purpose'            => $item['purpose'],
                     ]);
 
-                    // Delete temp DB entry
-                    TempAttachment::where('id', $tempatt['id'])->delete();
+                    // Handle attachments
+                    if (!empty($item['temp'])) {
+                        foreach ($item['temp'] as $tempatt) {
+                            $from = "public/" . $tempatt['temp_path'];
+                            $to = "public/permitAttachment/" . $tempatt['temp_name'];
+
+                            if (Storage::exists($from)) {
+                                Storage::move($from, $to);
+                                $movedFiles[] = $to;
+                            }
+
+                            IpConsignmentAttachment::create([
+                                'permit_id' => $consignment->id,
+                                'file_name' => $tempatt['original_name'],
+                                'file_path' => "/storage/permitAttachment/" . $tempatt['temp_name'],
+                                'file_type' => $tempatt['mime_type'],
+                            ]);
+
+                            // Delete temp DB record
+                            TempAttachment::where('id', $tempatt['id'])->delete();
+                        }
+                    }
                 }
             }
-        }
 
-        // Step 5: Respond to frontend
-        return response()->json([
-            'status' => 'success',
-            'message' => $request->all(),//,
-            
-        ]);
+            DB::commit(); // commit transaction if everything succeeded
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Application saved successfully',
+                'application_id' => $application->application_id,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack(); // rollback all DB changes
+
+            // Rollback any moved files
+            foreach ($movedFiles as $file) {
+                if (Storage::exists($file)) {
+                    Storage::delete($file);
+                }
+            }
+
+            // Return error response
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to save application: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function uploadAttachment(Request $request)
@@ -261,7 +285,7 @@ class PermitApplicationController extends Controller
 
         $file = $request->file('file');
 
-        $filename = time().'_'.$file->getClientOriginalName();
+        $filename = time() . '_' . $file->getClientOriginalName();
         $path = $file->storeAs('temp', $filename, 'public'); // temp folder
 
         $record = TempAttachment::create([
@@ -281,6 +305,4 @@ class PermitApplicationController extends Controller
             'size'          => $record->size,
         ]);
     }
-
-
 }

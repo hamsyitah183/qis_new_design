@@ -1,0 +1,183 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\IpApplication;
+use App\Models\IpConsignmentAttachment;
+use App\Models\IpConsignmentPermit;
+use Illuminate\Http\Request;
+use Yajra\DataTables\Facades\DataTables;
+
+
+class ApplicationController extends Controller
+{
+    //
+    public function show()
+    {
+        return view('pages.public.new_application');
+    }
+
+    public function showthis()
+    {
+        return view('pages.public.formw');
+    }
+
+    public function showallapplicationlist()
+    {
+        return view('pages.public.application_list');
+    }
+
+    public function getallapplicationlist()
+    {
+        $userUuid = authUser()['user']->uuid;
+        $type = authUser()['type'];
+
+        // Always build query (never call ->get())
+        $query = IpApplication::with([
+            'user',
+            'importer',
+            'exporter',
+            'entryPoint.districtCode'
+        ]);
+
+        if ($type === 'public') {
+            $query->where('user_id', $userUuid);
+        }
+
+        return DataTables::of($query)
+            ->addIndexColumn()
+
+            ->addColumn('importer', function ($row) {
+                return $row->importer->fullname ?? '-';
+            })
+
+            ->addColumn('exporter', function ($row) {
+                return $row->exporter->name ?? '-';
+            })
+
+            ->addColumn('submitted_by', function ($row) {
+                return $row->user->fullname ?? '-';
+            })
+
+            ->addColumn('importer_type', function ($row) {
+                $type = $row->category_application == 1 ? 'Others' : 'Self';
+
+                return '<span class="badge bg-primary-transparent fs-13 p-1">'
+                    . $type .
+                    '</span>';
+            })
+
+            ->addColumn('date', function ($row) {
+                return $row->eta ? $row->eta->format('Y-m-d') : '-';
+            })
+
+            ->addColumn('status', function ($row) {
+                $status = strtolower($row->status ?? 'pending');
+
+                if (str_contains($status, 'pending')) {
+                    $badge = '<span class="badge bg-warning fs-13 p-1">Pending</span>';
+                } elseif (str_contains($status, 'rejected')) {
+                    $badge = '<span class="badge bg-danger fs-13 p-1">Rejected</span>';
+                } elseif (str_contains($status, 'success')) {
+                    $badge = '<span class="badge bg-success fs-13 p-1">Success</span>';
+                } else {
+                    $badge = '<span class="badge bg-secondary fs-13 p-1">'
+                        . ucfirst($status) .
+                        '</span>';
+                }
+
+                return $badge;
+            })
+
+            ->addColumn('action', function($row) {
+                return 'action';
+            })
+
+            ->rawColumns(['status', 'importer_type', 'action'])
+            ->make(true);
+    }
+
+
+    public function verifyapplication()
+    {
+        $application = IpApplication::with([
+            'user',         // submitted by
+            'importer',     // importer user
+            'exporter',       // exporter record
+            'entryPoint.districtCode'
+        ])
+            ->where('importer_id', auth()->id())
+            ->where('category_application', true)
+            ->get();
+
+        return view('pages.public.application_review_list', compact('application'));
+    }
+
+    public function viewapplication($uuid)
+    {
+        $application = IpApplication::with([
+            'user',         // submitted by
+            'importer',     // importer user
+            'exporter',       // exporter record
+            // 'exporter.country',
+            'entryPoint.districtCode'
+        ])
+            ->where('application_id', $uuid)
+            ->orderBy('created_at', 'desc')
+            ->firstOrFail();
+
+        $itemId = $application->id;
+
+        $consignment = IpConsignmentPermit::with([
+            'unit',
+            'purposeCode'
+        ])
+            ->where('application_id', $itemId)
+            ->get();
+
+        $allDetails = [];
+
+        // foreach ($consignment as $consitem) {
+        //     $details = json_decode($consitem->consignment_detail, true); // decode as ARRAY
+        //     if (is_array($details)) {
+        //         foreach ($details as $d) {
+        //             $allDetails[] = $d;   // push one by one
+        //         }
+        //     }
+        // }
+
+        foreach ($consignment as $index => $consitem) {
+
+            $details = json_decode($consitem->consignment_detail, true);
+
+            // make sure details is an array and the index exists
+            if (is_array($details) && isset($details[$index])) {
+                $single = $details[$index];
+                // include consignment DB id
+                $single['consignment_id'] = $consitem->id;
+
+                // include its attachments
+                $single['attachments'] = $consitem->attachments;
+                // $allDetails[] = $details[$index];
+                $allDetails[] = $single;
+            }
+        }
+        // dd($allDetails);
+        return view('pages.public.view_application', [
+            'application'        => $application,
+            'consignment'        => $consignment,
+            'consignmentDetails' => $allDetails
+        ]); //, 'consignment', 'attachment'
+    }
+
+    public function modalspeItem($id)
+    {
+        $cons = IpConsignmentPermit::with(['attachments'])
+            ->findOrFail($id);
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $cons
+        ]);
+    }
+}
