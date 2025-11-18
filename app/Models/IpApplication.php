@@ -40,12 +40,12 @@ class IpApplication extends Model
     // Who submitted the application
     public function user()
     {
-        return $this->belongsTo(PublicUser::class, 'user_id', 'id');
+        return $this->belongsTo(PublicUser::class, 'user_id', 'uuid');
     }
 
     public function importer()
     {
-        return $this->belongsTo(PublicUser::class, 'importer_id', 'id');
+        return $this->belongsTo(PublicUser::class, 'importer_id', 'uuid');
     }
 
     // Exporter information

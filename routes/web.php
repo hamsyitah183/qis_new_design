@@ -5,7 +5,7 @@ use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\internal\MiscController;
 use App\Http\Controllers\public\importPermit\PermitApplicationController;
-use App\Http\Controllers\PublicController;
+use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\RoleAndPermissionController;
 use App\Http\Controllers\UserController;
@@ -65,12 +65,12 @@ Route::prefix('public')
         Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
         Route::get('/import_permit_application', [PermitApplicationController::class, 'show'])->name('permitApplication');
         Route::get('/import_assign_application', action: [PermitApplicationController::class, 'showassign'])->name('permitAssignApplication');
-        Route::get('/new_application', [PublicController::class, 'show'])->name('newApplication');
-        Route::get('/newtest', [PublicController::class, 'showthis'])->name('newApplicatasdion');
+        Route::get('/new_application', [ApplicationController::class, 'show'])->name('newApplication');
+        Route::get('/newtest', [ApplicationController::class, 'showthis'])->name('newApplicatasdion');
         Route::post('/store_exporter', [PermitApplicationController::class, 'storeExporter'])->name('storeExp');
         Route::get('/get_importers/{idno}', [PermitApplicationController::class, 'getImporters'])->name('getImporters');
         Route::get('/get_exporters', [PermitApplicationController::class, 'getExporters'])->name('getExporters');
-        Route::get('/get_entry_point', [PermitApplicationController::class, 'getEntryPoint'])->name('getEntryPoint');        
+        Route::get('/get_entry_point', [PermitApplicationController::class, 'getEntryPoint'])->name('getEntryPoint');
         Route::get('/get_consignment/{countryCode}', [PermitApplicationController::class, 'getConsignmentFromCountry'])->name('getItemFromCountry');
         Route::get('/consignment_uses/{id}', [PermitApplicationController::class, 'getConsignmentUses'])->name('consignmentUses');
         Route::post('/save-application', [PermitApplicationController::class, 'saveApplication'])->name('saveApplication');
@@ -78,10 +78,11 @@ Route::prefix('public')
         Route::post('/temp_upload', [PermitApplicationController::class, 'tempUpload'])->name('tempUpload');
 
         // view application
-        Route::get('/view_all_application', [PublicController::class, 'showallapplicationlist'])->name('showallapplicationlist');
-        Route::get('/verify_application', [PublicController::class, 'verifyapplication'])->name('verifyapplication');
-        Route::get('/view_application/{uuid}', [PublicController::class, 'viewapplication'])->name('viewApplication');
-        
+        Route::get('/view_all_application', [ApplicationController::class, 'showallapplicationlist'])->name('showallapplicationlist');
+        Route::get('/application/list/data', [ApplicationController::class, 'getallapplicationlist']);
+        Route::get('/verify_application', [ApplicationController::class, 'verifyapplication'])->name('verifyapplication');
+        Route::get('/view_application/{uuid}', [ApplicationController::class, 'viewapplication'])->name('viewApplication');
+
 
         Route::post('/upload-verification', [UserController::class, 'uploadVerificationAttachment'])
             ->name('user.uploadVerification');
@@ -120,10 +121,16 @@ Route::prefix('internal')
         Route::get('/roles', [RoleAndPermissionController::class, 'role'])->name('internal.role');
         Route::get('/roles/list/data', [RoleAndPermissionController::class, 'role_list_data']);
         Route::post('/roles/update', [RoleAndPermissionController::class, 'update_role']);
-        
-        Route::get('/permission/data', [ RoleAndPermissionController::class, 'get_permission']);
-        Route::post('/permission/update', [ RoleAndPermissionController::class, 'update_permission']);
+
+        Route::get('/permission/data', [RoleAndPermissionController::class, 'get_permission']);
+        Route::post('/permission/update', [RoleAndPermissionController::class, 'update_permission']);
         // ==================== user managemet =================
+
+
+        // ======================= application ========================
+        Route::get('/view_all_application', [ApplicationController::class, 'showallapplicationlist'])->name('showallapplicationlist');
+        Route::get('/application/list/data', [ApplicationController::class, 'getallapplicationlist']);
+
 
         //MISC
 

@@ -9,6 +9,14 @@ let importer = null;
 let importerData = null;
 let impAddrs = null;
 
+// --------if self apply -----------
+function selfImport() {
+    if (window.location.pathname.includes("public/import_permit_application")) {
+        importer = window.authUser;
+        console.log('importer', importer)
+    }
+}
+
 // ------------------------- Exporter List -------------------------
 function fetchExporterList() {
     const $select = $("#selectexp");
@@ -191,14 +199,15 @@ function initImporterSearch() {
 
         fetch(`/public/get_importers/${identityNumber}`)
             .then((res) => {
-                Swal.close()
-                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                Swal.close();
+                if (!res.ok)
+                    throw new Error(`HTTP error! status: ${res.status}`);
                 return res.json();
             })
             .then(handleImporterResponse)
             .catch((err) => {
                 console.error("Importer search error:", err);
-                Swal.close()
+                Swal.close();
                 Swal.fire({
                     icon: "error",
                     title: "Search Failed",
@@ -207,7 +216,6 @@ function initImporterSearch() {
             });
     });
 }
-
 
 function handleImporterResponse(data) {
     console.log("handleImporterResponse", data);
@@ -220,7 +228,7 @@ function handleImporterResponse(data) {
 
     importer = null;
     importer = data.data;
-    console.log('importer data', importer);
+    console.log("importer data", importer);
 
     if (data.status !== "success") return hideAll();
 
@@ -301,9 +309,11 @@ export function summarySubmit() {
     const sourceTable = document.querySelector("#itemListTbl tbody");
     const targetTable = document.querySelector("#summaryTable3 tbody");
 
-    impAddrs = importer.address2
-        ? `${importer.address_1}, ${importer.address_2}`
-        : importer.address_1;
+    const impAddrs = importer
+        ? [importer.address_1, importer.address_2]
+              .filter((x) => x && x.trim() !== "")
+              .join(", ")
+        : "";
 
     permitDetails = {
         applCate: document.getElementById("app_cate").value,
@@ -314,15 +324,14 @@ export function summarySubmit() {
     console.log(permitDetails);
 
     document.getElementById("importerName").textContent = importer.fullname;
-    document.getElementById("importerPhoneno").textContent = importer.phone_number;
+    document.getElementById("importerPhoneno").textContent =
+        importer.phone_number;
     document.getElementById("simpAdd").textContent = impAddrs;
-
 
     document.getElementById("sexpName").textContent = exporter.name;
     document.getElementById("sexpfonno").textContent = exporter.phone_no;
     document.getElementById("sexpAddress").textContent = exporter.address;
     document.getElementById("sexpCountry").textContent = exporter.country;
-
 
     document.getElementById("seta").textContent = permitDetails.eta;
     document.getElementById("strty").textContent = permitDetails.tranType;
@@ -426,6 +435,8 @@ $(document).ready(function () {
     initAddExporterModal();
     initImporterSearch();
     permitDetails();
+
+    selfImport();
 
     $("#itemSelect").on("change", function () {
         loadUses($(this).val());
