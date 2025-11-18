@@ -109,14 +109,23 @@
                         <div class="modal-dialog modal-md modal-dialog-centered">
                             <div class="modal-content">
 
-                                <div class="modal-header bg-primary text-white">
+                                <div class="modal-header ">
                                     <h5 class="modal-title" id="addModalTitle">Add Something</h5>
                                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                 </div>
 
                                 <form id="addGenericForm">
                                     <div class="modal-body" id="modalFields">
-                                        <!-- Dynamic fields inserted here -->
+                                        <input type="text" id="addItemType">
+                                        <div class="mb-3">
+                                            <label for="addCodev" class="form-label">Item Code</label>
+                                            <input type="text" id="addCodev" class="form-control">
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="addDescv" class="form-label">Item Description</label>
+                                            <input type="text" id="addDescv" class="form-control">
+                                        </div>
                                     </div>
 
                                     <div class="modal-footer">

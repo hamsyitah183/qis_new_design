@@ -22,15 +22,15 @@ $(document).ready(function() {
                 break;
 
             case "condition_category":
-                tableId = "#tabletab2";
+                tableId = "#tabletab4";
                 break;
             
             case "consignment_purpose":
-                tableId = "#tabletab3";
+                tableId = "#tabletab2";
                 break;
 
             case "unit_measurement":
-                tableId = "#tabletab4";
+                tableId = "#tabletab3";
                 break;
 
             case "reject_purpose":
@@ -229,9 +229,15 @@ $(document).ready(function() {
     } window.deletePBData = deletePBData;
 
     function addmodal(cate) {
+        const thismodal = new bootstrap.Modal(document.getElementById("addGenericModal"), {
+            backdrop: 'static',
+            keyboard: false
+        });
+        thismodal.show();
+        
         var categoryTitle;
         var cateName;
-        switch (cate) {
+        switch (cate) {  // addItemType
             case "entry":
                 categoryTitle = "District Entry";
                 cateName = "district_entry";
@@ -255,6 +261,65 @@ $(document).ready(function() {
             default:
                 break;
         }
-    }
+
+        document.getElementById("addItemType").value = cateName;
+        document.getElementById("addModalTitle").innerText = `Add ${categoryTitle}`;
+    }window.addmodal = addmodal;
+
+
+    document.getElementById("addGenericForm").addEventListener("submit", function () {
+        const cate = document.getElementById("addItemType").value;
+        const code = document.getElementById("addCodev").value;
+        const desc = document.getElementById("addDescv").value;
+
+        const fd = new FormData();
+            fd.append("category", cate);
+            fd.append("item_code", code);
+            fd.append("item_desc", desc);
+
+        $.ajax({
+            url: `${window.baseUrl}/internal/addpbdata`,   
+            type: 'POST',
+            data: fd,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },  
+            success: function(response) {
+                if (response.status === 'success') {
+                    Swal.fire({ 
+                        icon: 'success',
+                        title: 'Success',   
+                        text: 'Item added successfully.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    loadPBDataForAllCategories();
+                } else {
+                    Swal.fire({ 
+                        icon: 'error',  
+                        title: 'Error',
+                        text: response.message || 'Failed to add item.',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                }
+            }, 
+            error: function(xhr) {
+                console.error('Error adding PB data:', xhr);
+                Swal.fire({ 
+                    icon: 'error',  
+                    title: 'Error',
+                    text: 'An error occurred while adding the item.',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            }
+        });
+        // Close modal
+        thismodal.hide();
+    });
+    
 });
 

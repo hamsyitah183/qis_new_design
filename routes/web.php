@@ -131,6 +131,8 @@ Route::prefix('internal')
         Route::get('/getspecificpbdata/{id}', [\App\Http\Controllers\internal\MiscController::class, 'getspecificpbdata']);
         Route::post('/updatepbdata', [\App\Http\Controllers\internal\MiscController::class, 'updatepbdata']);
         Route::delete('/deletepbdata/{id}', [\App\Http\Controllers\internal\MiscController::class, 'deletepbdata']);
+        Route::post('/addpbdata', [\App\Http\Controllers\internal\MiscController::class, 'addpbdata']);
+        
     });
 
 Route::middleware(['auth.any'])

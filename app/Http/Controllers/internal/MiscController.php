@@ -66,4 +66,24 @@ class MiscController extends Controller
             'message'   => 'Public code deleted successfully.'
         ]);
     }
+
+    public function addpbdata(Request $request)
+    {
+        $cate = $request->input('category');
+        $code = $request->input('item_code');
+        $desc = $request->input('item_desc');
+        // dd($cate,$code,$desc);
+
+        $pbdata = new PublicCode();
+        $pbdata->cate_name = $cate;
+        $pbdata->cate_code = $code;
+        $pbdata->description = $desc;
+        $pbdata->is_del = false;
+        $pbdata->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message'   => 'Public code added successfully.'
+        ]);
+    }
 }
