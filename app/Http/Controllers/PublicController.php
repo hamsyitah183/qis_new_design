@@ -45,7 +45,7 @@ class PublicController extends Controller
             ->where('category_application', true)
             ->get();
 
-        return view('pages.public.application_list', compact('application'));
+        return view('pages.public.application_review_list', compact('application'));
     }
 
     public function viewapplication($uuid)
@@ -87,9 +87,14 @@ class PublicController extends Controller
 
             // make sure details is an array and the index exists
             if (is_array($details) && isset($details[$index])) {
+                $single = $details[$index];
+                // include consignment DB id
+                $single['consignment_id'] = $consitem->id;
 
-                // get only the matching item inside the JSON list
-                $allDetails[] = $details[$index];
+                // include its attachments
+                $single['attachments'] = $consitem->attachments;
+                // $allDetails[] = $details[$index];
+                $allDetails[] = $single;
             }
         }
         // dd($allDetails);
@@ -98,6 +103,16 @@ class PublicController extends Controller
                         'consignment'        => $consignment,
                         'consignmentDetails' => $allDetails
                     ]); //, 'consignment', 'attachment'
+    }
+
+    public function modalspeItem($id){
+        $cons = IpConsignmentPermit::with(['attachments'])
+            ->findOrFail($id);
+        
+            return response()->json([
+                'status' => 'success',
+                'data'   => $cons
+            ]);
     }
     
 }

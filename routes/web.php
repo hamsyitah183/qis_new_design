@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
 
 // Logout route
-Route::post('/logout', [AuthenticationController::class, 'logout'])->name('logout');
+Route::get('/logout', [AuthenticationController::class, 'logout'])->name('logout');
 
 // Guest routes
 Route::middleware(['multi.guest'])->group(function () {
@@ -123,6 +123,10 @@ Route::prefix('internal')
         Route::get('/permission/data', [ RoleAndPermissionController::class, 'get_permission']);
         Route::post('/permission/update', [ RoleAndPermissionController::class, 'update_permission']);
         // ==================== user managemet =================
+
+        //MISC
+
+        Route::get('/control_panel', [\App\Http\Controllers\internal\MiscController::class, 'showcontrolpanel']);
     });
 
 Route::middleware(['auth.any'])
