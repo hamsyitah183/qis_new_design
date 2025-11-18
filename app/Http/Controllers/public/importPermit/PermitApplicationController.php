@@ -202,7 +202,7 @@ class PermitApplicationController extends Controller
                     IpConsignmentAttachment::create([
                         'permit_id' => $consignment->id,
                         'file_name'      => $tempatt['original_name'],
-                        'file_path'      => "/storage/permitAttachment/" . $tempatt['temp_name'],
+                        'file_path'      => "/storage/temp/" . $tempatt['temp_name'],
                         'file_type'      => $tempatt['mime_type']
                     ]);
 

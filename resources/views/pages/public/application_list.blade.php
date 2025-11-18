@@ -61,6 +61,7 @@
                                                             <th style="text-align: center;">Importer Type</th> <!-- self or other -->
                                                             <th>Date</th>
                                                             <th>Status</th>
+                                                            <th>Action</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
@@ -70,17 +71,36 @@
                                                                 <td>{{$appl->importer->fullname}}</td>
                                                                 <td>{{$appl->exporter->name}}</td>
                                                                 <td>{{$appl->user->fullname}}</td>
-                                                                <td style="text-align:center">
+                                                                
                                                                     @if ($appl->category_application == 0)
-                                                                        <span class="badge bg-success">SELF</span>
+                                                                        <td style="text-align:center">
+                                                                            <span class="badge bg-success">SELF</span>
+                                                                        </td>
+                                                                        <td>{{ $appl->created_at }}</td>
+                                                                        <td  style="text-align:center"><span class="badge bg-success">Submitted</span></td>
                                                                     @elseif ($appl->category_application == 1)
-                                                                        <span class="badge bg-primary">OTHERS</span>
+                                                                        <td style="text-align:center">
+                                                                            <span class="badge bg-primary">OTHERS</span>
+                                                                        </td>
+                                                                        <td>{{ $appl->created_at }}</td>
+                                                                        @if ($appl->importer_verify == false && $appl->date_importer_verify == null)
+                                                                            <td style="text-align:center">
+                                                                                <span class="badge bg-warning">Pending Verification</span>
+                                                                            </td>
+                                                                        @elseif ($appl->importer_verify == false && $appl->date_importer_verify != null)
+                                                                            <td style="text-align:center">
+                                                                                <span class="badge bg-danger">Rejected</span>
+                                                                            </td>
+                                                                        @endif
                                                                     @else
-                                                                        <span class="badge bg-secondary">Unknown</span>
+                                                                        <td style="text-align:center">
+                                                                            <span class="badge bg-secondary">Unknown</span>
+                                                                        </td>
+                                                                        <td>{{ $appl->created_at }}</td>
+                                                                        <td></td>
                                                                     @endif
-                                                                </td>
-                                                                <td>{{ $appl->created_at }}</td>
-                                                                <td><a type="button" href="{{ route('public.viewApplication', $appl->application_id) }}" class="btn btn-info btn-sm">View Application</td>
+                                                                    
+                                                                <td  style="text-align:center"><a type="button" href="{{ route('public.viewApplication', $appl->application_id) }}" class="btn btn-info btn-sm">View Application</td>
                                                             </tr>
                                                         @empty
                                                             <tr>

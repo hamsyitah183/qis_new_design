@@ -17,11 +17,12 @@
                                                                     <div class="modal-body">
                                                                         <div class="row gy-4 mb-3">
                                                                             <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                                                                                <label for="itemSelect" class="form-label">Item</label>
+                                                                                <label for="itemSelect" class="form-label">Item </label>
                                                                                 <select class="form-select" id="itemSelect" name="itemSelect">
                                                                                     <!-- <option value="aa" >-- Select Item</option>
                                                                                     <option value="aasda" >aaadwd</option> -->
                                                                                 </select>
+                                                                                <small style="color:red">Item refering to the exporter's Country</small>
                                                                             </div>
                                                                             <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
                                                                                 <label for="itemValue" class="form-label">Value (RM)</label>

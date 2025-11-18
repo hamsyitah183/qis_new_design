@@ -3,6 +3,7 @@
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MiscController;
 use App\Http\Controllers\public\importPermit\PermitApplicationController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\PasswordResetController;
@@ -117,6 +118,9 @@ Route::prefix('internal')
         Route::get('/verification/{id}', [UserController::class, 'verification_attachment']);
 
         Route::post('/verification/{id}/save', [UserController::class, 'save_attachment']);
+
+        //MISC
+        Route::get('/control_panel', [\App\Http\Controllers\internal\MiscController::class, 'showcontrolpanel']);
     });
 
 

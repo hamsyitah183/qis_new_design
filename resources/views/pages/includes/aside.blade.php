@@ -127,6 +127,32 @@
                             </li>
                         </ul>
                     </li>
+
+
+                    <li class="slide__category"><span class="category-name">Misc</span></li>
+                    <li class="slide has-sub {{ Str::startsWith($currentRoute, 'internal.') ? 'open active' : '' }}">
+                        <a href="javascript:void(0);" class="side-menu__item">
+                            <i class="ri-arrow-down-s-line side-menu__angle"></i>
+                            <i class="ti ti-user side-menu__icon"></i>
+                            <span class="side-menu__label">System Configuration</span>
+                        </a>
+                        <ul class="slide-menu child1">
+                            <li class="slide side-menu__label1"><a href="javascript:void(0)">Misc</a></li>
+
+                            <li class="slide {{ $currentRoute === 'internal.public.list' ? 'active' : '' }}">
+                                <a href="#" class="side-menu__item">Control Panel</a>
+                            </li>
+
+                            <li class="slide {{ $currentRoute === 'internal.internal.list' ? 'active' : '' }}">
+                                <a href="#" class="side-menu__item">Permit Conditoin</a>
+                            </li>
+
+                            <li style="display:none" class="slide {{ $currentRoute === 'internal.internal.activity_log' ? 'active' : '' }} >
+                                <a href="{{ route('internal.internal.activity_log') }}" class="side-menu__item">
+                                    Activity Log</a>
+                            </li>
+                        </ul>
+                    </li>
                 @endif
 
 

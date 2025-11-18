@@ -325,7 +325,7 @@
 
 
                 <li>
-                    <form id="logoutForm" action="{{ route('logout') }}" method="POST">
+                    <form id="logoutForm" action="{{ route('logout') }}" method="GET">
                         @csrf
                         <button type="submit" class="dropdown-item d-flex align-items-center text-start w-100">
 
