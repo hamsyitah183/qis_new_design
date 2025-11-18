@@ -148,7 +148,7 @@
                                             <!-- step2 -->
                                                                                         
                                             
-                                            <div class="wizard-step" data-title="PERMIT ITEM DETAILS" data-id="H53WJiv9blN17MYTztq4g8U6eSVkaZDx" data-step="2">
+                                            <!-- <div class="wizard-step" data-title="PERMIT ITEM DETAILS" data-id="H53WJiv9blN17MYTztq4g8U6eSVkaZDx" data-step="2">
                                                 <div class="row justify-content-center summary-view">
                                                     <div class="table-responsive">
                                                         <table id="itemListTbl" class="table text-nowrap">
@@ -161,7 +161,7 @@
                                                                     <th scope="col">Uses</th>
                                                                     <th scope="col">Value</th>
                                                                     <th scope="col">Uploaded Item</th>
-                                                                    <!-- <th scope="col" style="text-align: center">Action</th> -->
+                                                                    <th scope="col" style="text-align: center">Action</th> 
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
@@ -182,7 +182,7 @@
                                                                         </td>
                                                                     </tr>
                                                                 @endforelse
-                                                                <!-- <tr>
+                                                                <tr>
                                                                     <td>1</td>
                                                                     <td scope="row">Durian - Fresh Fruit</td>
                                                                     <td>500 KG</td>
@@ -193,14 +193,14 @@
                                                                     <td style="text-align: center">
                                                                         <button type="button" class="btn btn-sm btn-primary-light">Remove</button>
                                                                     </td>
-                                                                </tr> -->
+                                                                </tr> 
                                                             </tbody>
                                                         </table>
                                                         
                                                     </div>
                                                     
                                                 </div>
-                                            </div>
+                                            </div> -->
                                             <!-- step3 -->
                                             <div class="wizard-step" data-title="SUMMARY" data-id="dOM0iRAyJXsLTr9b3KZfQ2jNv4pgn6Gu" data-limit="3" data-step="3">
                                                 <div class="row">
@@ -327,6 +327,51 @@
                                                                                 </td>
                                                                             </tr>
                                                                         </tbody>
+                                                                        <tfooter>
+                                                                            <tr>
+                                                                                <td colspan="3">
+                                                                                    <button 
+                                                                                        type="button" 
+                                                                                        class="btn btn-primary"
+                                                                                        data-bs-toggle="modal" 
+                                                                                        data-bs-target="#editExporterModal">
+                                                                                        <i class="bx bx-edit"></i> Edit Permit Detail
+                                                                                    </button>
+                                                                                </td>
+                                                                            </tr>
+                                                                            
+                                                                            <div class="modal fade" id="editExporterModal" tabindex="-1">
+                                                                                <div class="modal-dialog modal-lg">
+                                                                                    <div class="modal-content">
+                                                                                        <div class="modal-header">
+                                                                                            <h5 class="modal-title">Edit Application Detail</h5>
+                                                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                                                        </div>
+                                                                                        <div class="modal-body">
+                                                                                            <div class="mb-3">
+                                                                                                <label class="form-label">ETA</label>
+                                                                                                <input type="date" class="form-control" id="edit_eta" name="edit_eta" >
+                                                                                            </div>
+
+                                                                                            <!-- Registration Number -->
+                                                                                            <div class="mb-3">
+                                                                                                <label class="form-label">Transport Type</label>
+                                                                                                <input type="text" class="form-control" id="edit_transporttype" >
+                                                                                            </div>
+
+                                                                                            <!-- Email Address -->
+                                                                                            <div class="mb-3">
+                                                                                                <label class="form-label">Entry Point</label>
+                                                                                                <input type="email" class="form-control" id="edit_entryPoint" >
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        <div class="modal-footer">
+                                                                                            <button class="btn btn-md btn-info">Update Details</button>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </tfooter>
                                                                     </table>
                                                                 </div>
                                                             </div>
@@ -355,9 +400,9 @@
                                                                                                     <th scope="col">Item Name</th>
                                                                                                     <th scope="col">Quantity</th>
                                                                                                     <th scope="col" style="">Purpose</th>
-                                                                                                    <th scope="col">Uses</th>
                                                                                                     <th scope="col">Value</th>
                                                                                                     <th scope="col">Attachment</th>
+                                                                                                    <th scope="col">Action</th/th>
                                                                                                 </tr>
                                                                                             </thead>
                                                                                             <tbody>
@@ -365,11 +410,24 @@
                                                                                                     <tr>
                                                                                                         <td>{{ $index + 1 }}</td>
                                                                                                         <td>{{ $item['item_name'] ?? '—' }}</td>
-                                                                                                        <td>{{ $item['quantity'] ?? '—' }}</td>
-                                                                                                        <td>{{ $item['measure'] ?? '—' }}</td>
-                                                                                                        <td>{{ $item['purpose'] ?? '—' }}</td>
+                                                                                                        <td>{{ $item['quantity'] ?? '—' }} {{ $item['measure'] ?? '—' }}</td>
                                                                                                         <td>{{ $item['uses'] ?? '—' }}</td>
-                                                                                                        <td>{{ $item['value'] ?? '—' }}</td>
+                                                                                                        <td>RM {{ $item['value'] ?? '—' }}</td>
+                                                                                                        <td>
+                                                                                                            @foreach ($item['attachments'] as $file)
+                                                                                                                <img src="{{ asset($file->file_path) }}"
+                                                                                                                    style="width:100px; height:100px; object-fit:cover; margin-left:8px;"
+                                                                                                                    class="img-thumbnail">
+                                                                                                            @endforeach
+                                                                                                        </td>
+                                                                                                        <td>
+                                                                                                            <a type="button" 
+                                                                                                                data-bs-toggle="modal" 
+                                                                                                                data-bs-target="#editIpItemModal"
+                                                                                                                class="btn btn-sm btn-info">Edit Consignment Details
+                                                                                                            </a><br>
+                                                                                                            <a type="button" class="btn btn-sm btn-danger mt-2">RemoveDetails</a>
+                                                                                                        </td>
                                                                                                     </tr>
                                                                                                 @empty
                                                                                                     <tr>
@@ -380,6 +438,67 @@
                                                                                                 @endforelse
                                                                                             </tbody>
                                                                                         </table>
+                                                                                        <div class="modal fade" id="editIpItemModal" tabindex="-1">
+                                                                                            <div class="modal-dialog modal-xl">
+                                                                                                <div class="modal-content">
+                                                                                                    <div class="modal-header">
+                                                                                                        <h5 class="modal-title">Edit Consignment Details</h5>
+                                                                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                                                                    </div>
+                                                                                                    <div class="modal-body">
+                                                                                                        <div class="row gy-4 mb-3">
+                                                                                                            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                                                                                                                <label for="itemSelect" class="form-label">Item </label>
+                                                                                                                <!-- <select class="form-select" id="itemSelect" name="itemSelect">
+                                                                                                                    <option value="aa" >-- Select Item</option>
+                                                                                                                    <option value="aasda" >aaadwd</option> 
+                                                                                                                </select> -->
+                                                                                                                <input type="text" class="form-control" value="Fresh Fruit - CORN" disabled>
+                                                                                                                <small style="color:red">Item refering to the exporter's Country</small>
+                                                                                                            </div>
+                                                                                                            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                                                                                                                <label for="itemValue" class="form-label">Value (RM)</label>
+                                                                                                                <input type="text" class="form-control" id="itemValue" name="itemValue" placeholder="RM ..." >
+                                                                                                            </div>
+                                                                                                            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                                                                                                                <label for="itemQuantity" class="form-label">Quantity</label>
+                                                                                                                <input type="text" class="form-control" id="itemQuantity" name="itemQuantity" >
+                                                                                                            </div>
+                                                                                                            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                                                                                                                <label for="itemMeasure" class="form-label">Measurement Unit</label>
+                                                                                                                <select class="form-select" id="itemMeasure" name="itemMeasure">
+                                                                                                                    <option value="">-- Select Measurement Unit --</option>
+                                                                                                                    
+                                                                                                                </select>
+                                                                                                                
+                                                                                                            </div>
+                                                                                                            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                                                                                                                <label for="itemPurpose" class="form-label">Purpose</label>
+                                                                                                                <select class="form-select" id="itemPurpose" name="itemPurpose">
+                                                                                                                    <option value="">-- Select Purpose --</option>
+                                                                                                                    
+                                                                                                                </select>
+                                                                                                            </div>
+                                                                                                            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                                                                                                                <label for="itemUses" class="form-label">Uses</label>
+                                                                                                                <select class="form-select" id="itemUses" name="itemUses">
+                                                                                                                    
+                                                                                                                </select>
+                                                                                                            </div>
+                                                                                                            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12" style="display:none">
+                                                                                                                <label for="itemUses" class="form-label">Attachments</label>
+                                                                                                                <select class="form-select" id="itemUses" name="itemUses">
+                                                                                                                    
+                                                                                                                </select>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                    <div class="modal-footer">
+                                                                                                        <button class="btn btn-info btn-md">Update Details</button>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
                                                                                     </div>
                                                                                 </td>
                                                                             </tr>

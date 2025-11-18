@@ -52,4 +52,9 @@ class IpConsignmentPermit extends Model
         return $this->belongsTo(PublicCode::class, 'unit_measurement', 'cate_code')
         ->where('cate_name', 'consignment_purpose');
     }
+
+    public function attachments()
+    {
+        return $this->hasMany(IpConsignmentAttachment::class, 'permit_id', 'id');
+    }
 }
