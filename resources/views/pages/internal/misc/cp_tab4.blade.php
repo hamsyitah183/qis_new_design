@@ -6,14 +6,14 @@
                                                             <div class="card-header justify-content-between d-sm-flex d-block">
                                                                 <div class="card-title">Candition Category</div>
                                                                 <div class="mt-sm-0 mt-2">
-                                                                    <button class="btn btn-sm btn-primary"><i class="ri-add-line me-1"></i> Add Condition Category</button>
+                                                                    <button class="btn btn-sm btn-primary" onclick="addmodal('condition')"><i class="ri-add-line me-1"></i> Add Condition Category</button>
                                                                 </div>
                                                             </div>
                                                             <div class="card-body">
                                                                 <ul class="list-group">
                                                                     <li class="list-group-item">
                                                                         <div class="d-sm-flex d-block align-items-top">
-                                                                            <table id="tabletab1" class="table text-nowrap table-bordered">
+                                                                            <table id="tabletab4" class="table table-striped text-nowrap table-hover table-bordered">
                                                                                 <thead>
                                                                                     <tr>
                                                                                         <th scope="col">#</th>
@@ -23,19 +23,7 @@
                                                                                     </tr>
                                                                                 </thead>
                                                                                 <tbody>
-                                                                                    <tr>
-                                                                                        <td></td>
-                                                                                        <td></td>
-                                                                                        <td></td>
-                                                                                        <td>
-                                                                                            <div class="hstack gap-2 flex-wrap">
-                                                                                                <a href="javascript:void(0);" class="text-info fs-14 lh-1"><i
-                                                                                                        class="ri-edit-line"></i></a>
-                                                                                                <a href="javascript:void(0);" class="text-danger fs-14 lh-1"><i
-                                                                                                        class="ri-delete-bin-5-line"></i></a>
-                                                                                            </div>
-                                                                                        </td>
-                                                                                    </tr>
+                                                                                    
                                                                                 </tbody>
                                                                             </table>
                                                                         </div>

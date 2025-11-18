@@ -127,6 +127,10 @@ Route::prefix('internal')
         //MISC
 
         Route::get('/control_panel', [\App\Http\Controllers\internal\MiscController::class, 'showcontrolpanel']);
+        Route::get('/get_pbdata/{cate}', [\App\Http\Controllers\internal\MiscController::class, 'getpbdata']);
+        Route::get('/getspecificpbdata/{id}', [\App\Http\Controllers\internal\MiscController::class, 'getspecificpbdata']);
+        Route::post('/updatepbdata', [\App\Http\Controllers\internal\MiscController::class, 'updatepbdata']);
+        Route::delete('/deletepbdata/{id}', [\App\Http\Controllers\internal\MiscController::class, 'deletepbdata']);
     });
 
 Route::middleware(['auth.any'])
