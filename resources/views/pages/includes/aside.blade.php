@@ -41,7 +41,7 @@
 
                 <!-- Dashboards -->
                 <li class="slide {{ Str::contains($currentRoute, 'dashboard') ? 'open active' : '' }}">
-                    <a href="{{ route(auth()->user()->guard == 'public' ? 'public.dashboard' : 'internal.dashboard') }}"
+                    <a href="{{ route(authUser()['type'] == 'public' ? 'public.dashboard' : 'internal.dashboard') }}"
                         class="side-menu__item">
 
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 side-menu__icon" fill="none"
