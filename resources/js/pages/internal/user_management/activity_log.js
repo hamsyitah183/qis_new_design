@@ -228,6 +228,8 @@ $("#userType").on("change", function (e) {
     userTypeVal = $(this).val();
     console.log("Selected user type:", userTypeVal);
 
+    window.selectedUserIds.clear();
+
     if (!userTypeVal || userTypeVal == 0) {
         Swal.fire("Error", "Choose User Type first!", "error");
         return;
@@ -350,7 +352,8 @@ function listUser(users) {
     $(".user-checkbox")
         .off("change")
         .on("change", function () {
-            const userId = parseInt($(this).val());
+            // const userId = parseInt($(this).val());
+            const userId = $(this).val();
             if ($(this).is(":checked")) {
                 window.selectedUserIds.add(userId);
             } else {
