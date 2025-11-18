@@ -1,6 +1,120 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
 
+let exporterListArray = [];
+let url = null;
+
+function exporterList()
+{
+    const select = $("#selectexp");
+    url = select.data("route");
+
+    loadExporterList();
+
+    // 2️⃣ When user changes selection
+    select.on("change", function () {
+        const selectedId = $(this).val();
+        // console.log(selectedId);
+        // Clear fields if no selection
+        if (!selectedId) {
+            $(
+                "#expid, #addexpName, #addexpfonno, #addexpaddress1, #addexpaddress2"
+            ).val("");
+            $("#addexpcountry").val("").trigger("change");
+            return;
+        }
+
+        // Find exporter from stored list
+        const exporter = exporterListArray.find((e) => e.id == selectedId);
+        console.log(exporter);
+        if (exporter) {
+            $("#expid").val(exporter.id || "");
+            $("#expname").val(exporter.name || "");
+            $("#expfonno").val(exporter.phone_no || "");
+            $("#expaddress1").val(exporter.address1 || exporter.address || "");
+            $("#expcountryCode").val(exporter.ccode || "");
+            // $('#addexpaddress2').val(exporter.address2 || '');
+            $("#expcountry").val(exporter.country || "");
+        }
+
+        loadConsignmentSelection();
+    });
+}
+
+function loadExporterList() {
+    $.ajax({
+        url: url, // same route from data-route
+        type: "GET", // equivalent to $.get()
+        dataType: "json", // expect JSON response
+        cache: false, // prevent caching
+        success: function (data) {
+            exporterListArray = [];
+            exporterListArray = data; // store full list in memory
+            // console.log(exporterList);
+
+            // optional: update dropdown immediately
+            const select = $("#selectexp");
+            select
+                .empty()
+                .append('<option value="">-- Select Exporter --</option>');
+            data.forEach((exp) => {
+                select.append(`<option value="${exp.id}">${exp.name}</option>`);
+            });
+
+            // if you're using select2
+            if (select.hasClass("xintra-select2")) {
+                select.trigger("change.select2");
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error(
+                "❌ Failed to reload exporter list:",
+                xhr.responseText
+            );
+            Swal.fire({
+                icon: "error",
+                title: "Failed to Load Exporters",
+                text: "Please try again or check your connection.",
+            });
+        },
+    });
+}
+
+    function rebuildExporterSelect() {
+        const select = $("#selectexp");
+        const url = select.data("route");
+
+        $.ajax({
+            url: url,
+            type: "GET",
+            success: function (data) {
+                // Clear old options
+                select.empty();
+
+                // Add the default option
+                select.append(
+                    '<option value="">-- Select Exporter --</option>'
+                );
+
+                // Populate new options from response
+                $.each(data, function (index, exporter) {
+                    select.append(
+                        `<option value="${exporter.id}">${exporter.name}</option>`
+                    );
+                });
+
+                // If using select2, reinitialize
+                if (select.hasClass("xintra-select2")) {
+                    select.trigger("change.select2");
+                }
+            },
+            error: function (xhr) {
+                console.error(xhr.responseText);
+                alert("❌ Failed to reload exporter list.");
+            },
+        });
+    }
+
 $(document).ready(function () {
     const modalEl = document.getElementById("addExporterModal");
     const modal = new bootstrap.Modal(modalEl);
@@ -59,6 +173,8 @@ $(document).ready(function () {
                 $(
                     "#addexpName, #addexpfonno, #addexpaddress1, #addexpaddress2, #addexpcountry"
                 ).val("");
+
+                loadExporterList();
             },
             error: function (xhr) {
                 console.error(xhr.responseText);
@@ -155,39 +271,8 @@ $(document).ready(function () {
             });
     });
 
-    function rebuildExporterSelect() {
-        const select = $("#selectexp");
-        const url = select.data("route");
 
-        $.ajax({
-            url: url,
-            type: "GET",
-            success: function (data) {
-                // Clear old options
-                select.empty();
 
-                // Add the default option
-                select.append(
-                    '<option value="">-- Select Exporter --</option>'
-                );
-
-                // Populate new options from response
-                $.each(data, function (index, exporter) {
-                    select.append(
-                        `<option value="${exporter.id}">${exporter.name}</option>`
-                    );
-                });
-
-                // If using select2, reinitialize
-                if (select.hasClass("xintra-select2")) {
-                    select.trigger("change.select2");
-                }
-            },
-            error: function (xhr) {
-                console.error(xhr.responseText);
-                alert("❌ Failed to reload exporter list.");
-            },
-        });
-    }
     rebuildExporterSelect();
+    exporterList();
 });
