@@ -33,7 +33,7 @@ class PublicUserSeeder extends Seeder
         // ==================================================
         // 2️⃣ Generate 100 additional public users
         // ==================================================
-        for ($i = 1; $i <= 10; $i++) {
+        for ($i = 1; $i <= 5; $i++) {
             $users[] = [
                 'fullname' => "Public User {$i}",
                 'no_ic' => '900101' . str_pad(rand(100000, 999999), 6, '0', STR_PAD_LEFT),

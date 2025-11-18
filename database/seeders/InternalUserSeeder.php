@@ -91,7 +91,7 @@ class InternalUserSeeder extends Seeder
         // ==================================================
         // 3️⃣ Add 30 more internal users (randomized)
         // ==================================================
-        for ($i = 1; $i <= 30; $i++) {
+        for ($i = 1; $i <= 3; $i++) {
             $role = ['admin', 'officer', 'clerk'][array_rand(['admin','officer','clerk'])];
             $users[] = [
                 'email' => "internal{$i}@example.com",
