@@ -359,14 +359,13 @@
 
 
                 <li class="p-4 p-md-0">
-                    <form id="logoutForm" action="{{ route('logout') }}" method="POST">
-                        @csrf
-                        <button type="submit" class="dropdown-item d-flex align-items-center text-start w-100">
+                    
+                        <a type="button" href="{{ route('logout') }}" class="dropdown-item d-flex align-items-center text-start w-100">
 
                             <i class="ti ti-lock p-1 rounded-circle bg-primary-transparent me-2 fs-16"></i>
                             Log Out
-                        </button>
-                    </form>
+</a>
+                    
 
                 </li>
 
