@@ -1,4 +1,4 @@
-console.log('application list');
+console.log("application list");
 let applicationListTable;
 
 async function data_table_init() {
@@ -24,17 +24,35 @@ async function data_table_init() {
     applicationListTable = new DataTable("#applicationListTable", {
         processing: true,
         serverSide: true,
-        ajax: "/public/application/list/data", // UPDATE THIS!
+        ajax: "/public/application/list/data",
         columns: [
-            { data: "DT_RowIndex", name: "DT_RowIndex", orderable: false, searchable: false },
+            {
+                data: "DT_RowIndex",
+                name: "DT_RowIndex",
+                orderable: false,
+                searchable: false,
+            },
             { data: "importer", name: "importer" },
             { data: "exporter", name: "exporter" },
-            { data: "submitted_by", name: "submitted_by" },
             { data: "importer_type", name: "importer_type" },
             { data: "date", name: "date" },
             { data: "status", name: "status" },
+            { data: "submitted_by", name: "submitted_by" },
             { data: "action", name: "action" },
         ],
+
+        columnDefs: [
+            { width: "50px", targets: 0 }, // #
+            { width: "150px", targets: 1 }, // Importer
+            { width: "150px", targets: 2 }, // Exporter
+            { width: "120px", targets: 3 }, // Importer Type
+            { width: "100px", targets: 4 }, // ETA
+            { width: "100px", targets: 5 }, // Status
+            { width: "150px", targets: 6 }, // Submitted By
+            { width: "120px", targets: 7 }, // Action
+        ],
+
+        autoWidth: false,
         responsive: true,
         pageLength: 10,
     });

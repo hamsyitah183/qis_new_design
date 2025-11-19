@@ -7,8 +7,7 @@
 @endpush
 
 @push('scripts')
-     @vite(['resources/js/pages/importPermit/application_list.js'])
-
+    @vite(['resources/js/pages/importPermit/application_list.js'])
 @endpush
 
 @section('pageName', 'List All Application')
@@ -25,10 +24,10 @@
     <div class="row">
         <div class="col-xl-12">
             <div class="card custom-card">
-               
+
                 <div class="card-body">
                     <div id="" class="dataTables_wrapper dt-bootstrap5 no-footer">
-                      
+
                         <div class="row">
                             <div class="col-sm-12">
                                 <table id="applicationListTable"
@@ -39,21 +38,21 @@
                                             <th>#</th>
                                             <th>Importer</th>
                                             <th>Exporter</th>
-                                            <th>Submitted By</th>
                                             <th style="text-align: center;">Importer Type</th> <!-- self or other -->
-                                            <th>Date</th>
+                                            <th>ETA</th>
                                             <th>Status</th>
+                                            <th>Submitted By</th>
                                             <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                      
+
 
                                     </tbody>
                                 </table>
                             </div>
                         </div>
-                       
+
                     </div>
                 </div>
             </div>
