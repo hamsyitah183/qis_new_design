@@ -18,6 +18,14 @@ use App\Services\VerificationService;
 class UserController extends Controller
 {
     //
+
+    public function userInfo()
+    {
+        $user = authUser()['user'];
+
+        return response()->json($user);
+    }
+
     public function public_list()
     {
         $user = authUser()['user'];

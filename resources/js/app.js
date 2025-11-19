@@ -18,18 +18,36 @@ import $ from "jquery";
 window.$ = window.jQuery = $; // make it global
 import "select2";
 
-// $.ajaxSetup({
-//     headers: {
-//         "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
-//     },
-// });
-
 $("#redirectProfile").on("click", function (e) {
     e.preventDefault();
 
     console.log("redirect ");
 
     window.location.href = "/profile";
+});
+
+export async function getAuthUser() {
+    if (window.authUserPromise) return window.authUserPromise;
+
+    window.authUserPromise = fetch("/api/auth-user")
+        .then((res) => {
+            if (!res.ok) throw new Error("Failed to get auth user");
+            return res.json();
+        })
+        .then((user) => {
+            window.authUser = user; // store globally
+            return user;
+        })
+        .catch((err) => {
+            console.error(err);
+            return null;
+        });
+
+    return window.authUserPromise;
+}
+
+getAuthUser().then((user) => {
+    window.authUser = user;
 });
 
 export function formatTime(timestamp) {
@@ -64,4 +82,3 @@ export function initTooltips() {
         new bootstrap.Tooltip(el);
     });
 }
-

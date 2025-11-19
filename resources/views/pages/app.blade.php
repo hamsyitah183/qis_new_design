@@ -17,9 +17,7 @@
     <title>QIS SYSTEM | @yield('pageName')</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <script>
-        window.authUser = @json(authUser()['user'] ?? null);
-    </script>
+  
     
     <!-- Main Theme JS -->
     <script src="{{ asset('build2/assets/main.js') }}"></script>

@@ -160,15 +160,7 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    <!-- <tr>
-                                                                                                    <td>1</td>
-                                                                                                    <td scope="row">Durian - Fresh Fruit</td>
-                                                                                                    <td>500 KG</td>
-                                                                                                    <td>Commercial (Trade)</td>
-                                                                                                    <td>Fresh Produce</td>
-                                                                                                    <td>RM 10,000</td>
-                                                                                                    <td>WhatsApp Image 2025-10-06 at 11.28.23_ced3de5b.jpg</td>
-                                                                                                </tr> -->
+
                                                 </tbody>
                                             </table>
                                         </div>

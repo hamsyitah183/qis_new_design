@@ -22,7 +22,7 @@
                     </div>
                 </div>
                 <div class="card-body p-0"> <!-- method="POST"  data-wizard="active" style="display: block;"-->
-                    <form id="wizardForm" class="wizard wizard-tab horizontal">
+                    <form id="wizardForm" class="wizard wizard-tab horizontal" accept="multipart/form-data">
                         <aside class="wizard-nav dots">
                             <div class="wizard-step active" data-step="0">
                                 <span class="dot"></span>
@@ -115,24 +115,5 @@
         })();
     </script>
 
-    <script>
-        // page variables intialization
-        let tempItems = [];
-        let tempAttachments = [];
-        let temporaryItemsAttachment = [];
-
-        // Dropzone.autoDiscover = false;
-    </script>
-
-
-    @vite(['resources/js/pages/importPermit/summarysubmit.js'])
-    @vite(['resources/js/pages/importPermit/itemmodal.js'])
-    <!-- auto fill in Importer $ Exporter -->
-    @vite(['resources/js/pages/importPermit/autofill.js'])
-    <!-- auto fill entry point -->
-    @vite(['resources/js/pages/importPermit/entrypoint.js'])
-    <!-- modal functions -->
-    @vite(['resources/js/pages/importPermit/step2modal.js'])
-    <!-- // add new exporter and rebuild exporter selection -->
     @vite(['resources/js/pages/importPermit/registerexp.js'])
 @endpush

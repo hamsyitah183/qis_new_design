@@ -1,19 +1,29 @@
+import Dropzone from "dropzone";
 import $ from "jquery";
 import Swal from "sweetalert2";
+import { getAuthUser } from "../../app";
+import "dropzone/dist/dropzone.css";
+
+Dropzone.autoDiscover = false;
 
 // Global state
 let exporterListArray = [];
 let entryName = null;
 let exporter = null;
 let importer = null;
-let importerData = null;
 let impAddrs = null;
+let itemDropzone = null;
+
+let tempItems = [];
+let tempAttachments = [];
+let itemPurpose = null;
+let temporaryItemsAttachment = [];
 
 // --------if self apply -----------
-function selfImport() {
+async function selfImport() {
     if (window.location.pathname.includes("public/import_permit_application")) {
-        importer = window.authUser;
-        console.log('importer', importer)
+        importer = await getAuthUser();
+        console.log("importer", importer);
     }
 }
 
@@ -251,6 +261,12 @@ function permitDetails() {
     if (!trnptType) return;
 
     trnptType.addEventListener("change", function () {
+        Swal.fire({
+            title: "Loading...",
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading(),
+        });
+
         const value = this.value; // Air / Sea / Land
         const route = this.dataset.route; // /public/transport/options
 
@@ -270,7 +286,7 @@ function permitDetails() {
             success: function (data) {
                 console.log("something here");
                 console.log(data);
-
+                Swal.close();
                 // rebuild next dropdown
                 const detailsSelect = $("#entryPoint"); // if using jQuery
                 let options =
@@ -286,6 +302,10 @@ function permitDetails() {
             error: function (xhr, status, error) {
                 console.error("AJAX Error:", error);
                 console.log(xhr.responseText); // helpful for Laravel debug messages
+                Swal.close();
+                Swal.fire("Error", "Error", "error");
+                console.error("ERROR RESPONSE:");
+                console.error();
             },
         });
     });
@@ -302,6 +322,264 @@ function permitDetails() {
     });
 }
 
+
+
+// ============= attachment =====================
+function itemConsigment() {
+    
+    const tempDropzoneUrl = `${window.baseUrl}/public/temp_upload`;
+
+    itemDropzone = new Dropzone("#itemDropzone", {
+        url: tempDropzoneUrl,
+        paramName: "file",
+        maxFilesize: 10, // MB
+        acceptedFiles: ".jpg,.jpeg,.png,.pdf",
+        addRemoveLinks: true,
+        headers: {
+            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
+                .content,
+        },
+        // --- 1. SWAL LOADING BEFORE LOAD (Processing) ---
+        processing: function (file) {
+            Swal.fire({
+                title: "Uploading...",
+                html: "Please wait while your file is being uploaded.",
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+            });
+        },
+        // --- 2. SWAL SUCCESS AFTER LOAD ---
+        success: (file, response) => {
+            // Close the loading Swal
+            Swal.close();
+
+            // Store temporary file info returned from backend
+            tempAttachments.push({
+                id: response.id,
+                original_name: response.original_name,
+                temp_name: response.temp_name,
+                temp_path: response.temp_path,
+                mime_type: response.mime_type,
+                size: response.size,
+            });
+
+            // *** IMPORTANT: Attach the server ID to the Dropzone file object ***
+            file.temp_id = response.id;
+
+            groupPreview();
+
+            console.log("temp", tempAttachments);
+
+            // Show success notification
+            Swal.fire({
+                icon: "success",
+                title: "Upload Successful!",
+                text: `${response.original_name} has been uploaded.`,
+                timer: 3000,
+                showConfirmButton: false,
+            });
+        },
+        // --- 3. SWAL ERROR AFTER LOAD ---
+        error: (file, message, xhr) => {
+            // ... (error handling remains the same)
+            Swal.close();
+            itemDropzone.removeFile(file);
+            Swal.fire({
+                icon: "error",
+                title: "Upload Failed",
+                text:
+                    message.error || "An unknown error occurred during upload.",
+                footer: "Please try again.",
+            });
+            console.error("Dropzone Error:", message);
+        },
+        // --- 4. HANDLE FILE REMOVAL (dz-remove click) ---
+        removedfile: function (file) {
+            // Only proceed if the file has a temp_id (meaning it was successfully uploaded)
+            if (file.temp_id) {
+                // Find the index of the attachment in the array using the file's temp_id
+                const indexToRemove = tempAttachments.findIndex(
+                    (attachment) => attachment.id === file.temp_id
+                );
+
+                if (indexToRemove > -1) {
+                    // Remove the item from tempAttachments array
+                    const removedItem = tempAttachments.splice(
+                        indexToRemove,
+                        1
+                    );
+                    console.log(
+                        `Removed file ID ${file.temp_id} from tempAttachments:`,
+                        removedItem
+                    );
+                }
+            }
+
+            // This line is crucial: it physically removes the file preview element from the DOM
+            const _ref = file.previewElement;
+            if (_ref) {
+                _ref.parentNode.removeChild(_ref);
+            }
+
+            groupPreview(); // Call groupPreview to re-organize if needed
+        },
+    });
+
+    $("#itemPurpose").on("change", function () {
+        const selectedValue = $(this).val();
+        const selectedOption = $(this).find("option:selected");
+        const dataDescription = selectedOption.data("description");
+        itemPurpose = dataDescription;
+    });
+}
+
+function groupPreview() {
+    $(document).ready(function () {
+        setTimeout(function () {
+            var $dropzone = $("#itemDropzone");
+            var $previews = $dropzone.find(".dz-preview");
+
+            // Check if group already exists
+            var $group = $dropzone.find(".dz-preview-group");
+            if ($group.length === 0) {
+                // Create group if it doesn't exist
+                $group = $('<div class="dz-preview-group"></div>');
+                $dropzone.find(".dz-message").after($group);
+            }
+
+            // Move all previews into the group
+            $previews.appendTo($group);
+
+            // tgk queue file
+            const queuedFiles = itemDropzone.getQueuedFiles();
+            console.log(
+                "Files still in the queue (not yet uploaded):",
+                queuedFiles
+            );
+        }, 100); // adjust delay if necessary
+    });
+}
+
+function saveConsignmentAttachment() {
+    // ------------------------- Save Item Handler -------------------------
+    document.getElementById("saveBtn").addEventListener("click", function (e) {
+        e.preventDefault();
+
+        const itemSelect = document.getElementById("itemSelect");
+        const itemValue = document.getElementById("itemValue").value.trim();
+        const itemQuantity = document
+            .getElementById("itemQuantity")
+            .value.trim();
+        const itemMeasure = document.getElementById("itemMeasure").value.trim();
+        // const itemPurpose = document.getElementById("itemPurpose").value;
+        const itemUses = document.getElementById("itemUses").value;
+
+        // Get uploaded file names
+        const uploadedFileNames = itemDropzone
+            .getAcceptedFiles()
+            .map((file) => file.upload?.filename || file.name);
+        const uploadedFiles = uploadedFileNames.length
+            ? uploadedFileNames
+            : ["—"];
+
+        // Build new item object
+        const newItem = {
+            id: crypto.randomUUID(),
+            item_id: itemSelect.value,
+            item_name: itemSelect.options[itemSelect.selectedIndex].text,
+            value: itemValue,
+            quantity: itemQuantity,
+            measure: itemMeasure,
+            purpose: itemPurpose,
+            uses: itemUses,
+            temp: tempAttachments, // raw attachment info
+            attachments: uploadedFiles, // displayable file names
+        };
+
+        // Add to temp items array
+        tempItems.push(newItem);
+        console.table(tempItems);
+
+        console.log("new item consignment", newItem);
+
+        // Render table row
+        const tableBody = document.querySelector("#itemListTbl tbody");
+        tableBody.insertAdjacentHTML(
+            "beforeend",
+            `<tr>
+            <td>${tableBody.rows.length + 1}</td>
+            <td>${newItem.item_name}</td>
+            <td>${newItem.quantity} ${newItem.measure}</td>
+            <td>${newItem.purpose}</td>
+            <td class = "text-center">
+                <button class = "btn btn-icon btn-success-light 
+                rounded-pill btn-wave waves-effect waves-light view-more-item"
+                data-id = "${newItem.id}">
+                    <i class="ti ti-eye"></i>
+                </button>
+            </td>
+        </tr>`
+        );
+
+        // Reset form & Dropzone for next item
+        itemSelect.selectedIndex = 0;
+        document.getElementById("itemValue").value = "";
+        document.getElementById("itemQuantity").value = "";
+        document.getElementById("itemMeasure").value = "";
+        document.getElementById("itemPurpose").selectedIndex = 0;
+        document.getElementById("itemUses").selectedIndex = 0;
+
+        itemDropzone.removeAllFiles(true);
+        tempAttachments = [];
+
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(
+            document.getElementById("addItemModal")
+        );
+        modal.hide();
+    });
+}
+
+function viewMore() {
+    $(document).on('click', '.view-more-item', function (e) {
+        e.preventDefault();
+
+        let id = $(this).data('id');
+        console.log(id);
+
+        // Ensure tempItems exists
+        if (typeof tempItems === 'undefined') {
+            console.error("tempItems array not found");
+            return;
+        }
+
+        // Find item
+        let item = tempItems.find(obj => obj.id == id);
+        if (!item) {
+            console.warn("Item not found for id:", id);
+            return;
+        }
+
+        console.log("Selected item:", item);
+
+        // Ensure modal exists
+        let modalEl = document.getElementById('ItemDetailsModal');
+        if (!modalEl) {
+            console.error("ItemDetailsModal not found in DOM");
+            return;
+        }
+        // Always create only one modal instance
+        let modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+    });
+}
+
+
+
+// ============= attachment =====================
+
 // ------------------------------summary details ---------------------
 export function summarySubmit() {
     const generateBtn = document.getElementById("generateSummary");
@@ -309,7 +587,7 @@ export function summarySubmit() {
     const sourceTable = document.querySelector("#itemListTbl tbody");
     const targetTable = document.querySelector("#summaryTable3 tbody");
 
-    const impAddrs = importer
+    impAddrs = importer
         ? [importer.address_1, importer.address_2]
               .filter((x) => x && x.trim() !== "")
               .join(", ")
@@ -428,24 +706,54 @@ function saveapplication() {
     });
 }
 
+// ------------------------------summary details ---------------------
+
 // ------------------------- Initialize -------------------------
-$(document).ready(function () {
-    fetchExporterList();
-    handleExporterChange();
-    initAddExporterModal();
-    initImporterSearch();
-    permitDetails();
-
-    selfImport();
-
-    $("#itemSelect").on("change", function () {
-        loadUses($(this).val());
+$(document).ready(async function () {
+    // Show loading swal
+    Swal.fire({
+        title: "Loading...",
+        html: "Please wait while the page initializes.",
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        },
     });
-    // Make globally accessible
-    window.loadConsignmentSelection = loadConsignmentSelection;
 
-    $(document).on("click", "#submitApps", function () {
-        console.log("submit clicked!");
-        saveapplication();
-    });
+    try {
+        // Wrap all initialization functions in promises if they are async
+        await Promise.all([
+            fetchExporterList(), // make sure these return promises
+            handleExporterChange(),
+            initAddExporterModal(),
+            initImporterSearch(),
+            permitDetails(),
+            itemConsigment(),
+            selfImport(),
+            saveConsignmentAttachment(),
+            viewMore()
+        ]);
+
+        // Optional: attach event listeners
+        $("#itemSelect").on("change", function () {
+            loadUses($(this).val());
+        });
+
+        window.loadConsignmentSelection = loadConsignmentSelection;
+
+        $(document).on("click", "#submitApps", function () {
+            console.log("submit clicked!");
+            saveapplication();
+        });
+    } catch (error) {
+        console.error("Error during initialization:", error);
+        Swal.fire(
+            "Error",
+            "Failed to initialize page. Check console for details.",
+            "error"
+        );
+    } finally {
+        // Close loading swal
+        Swal.close();
+    }
 });

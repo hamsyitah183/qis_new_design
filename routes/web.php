@@ -143,4 +143,6 @@ Route::middleware(['auth.any'])
         Route::get('/data', [UserController::class, 'userData']);
         Route::post('/data', [UserController::class, 'updateData']);
         Route::post('/password', [UserController::class, 'password']);
+
+        Route::get('/api/auth-user', [UserController::class, 'userInfo']);
     });

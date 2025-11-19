@@ -151,6 +151,8 @@ class PermitApplicationController extends Controller
 
     public function saveApplication(Request $request)
     {
+        // $items = json_decode($request->items, true);
+        // dd($items);
         DB::beginTransaction(); // start transaction
 
         // Keep track of moved files to rollback if needed
