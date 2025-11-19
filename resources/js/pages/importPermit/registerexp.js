@@ -115,18 +115,22 @@ function loadConsignmentSelection() {
         });
 }
 
-function loadUses(id) {
+function loadUses(itemId) {
     const $select = $("#itemUses");
-    $select.empty().append('<option value="">-- Select Item --</option>');
+    $select.empty().append('<option value="">-- Select Uses --</option>');
 
-    if (!id) return;
+    if (!itemId) return;
 
-    fetch(`${window.baseUrl}/public/consignment_uses/${id}`)
+    fetch(`/public/consignment_uses/${itemId}`)
         .then((res) => res.json())
         .then((data) => {
-            data.data.forEach((row) =>
-                $select.append(`<option value="${row}">${row}</option>`)
-            );
+            if (!data.data) return;
+            data.data.forEach((row) => {
+                $select.append(`<option value="${row}">${row}</option>`);
+            });
+        })
+        .catch((err) => {
+            console.error("Failed to load uses:", err);
         });
 }
 
@@ -325,6 +329,7 @@ function permitDetails() {
 // ============= attachment =====================
 function itemConsigment() {
     itemDropzone = new Dropzone("#itemDropzone", {
+        url: '/',
         autoProcessQueue: false,
         paramName: "file",
         maxFilesize: 10, // MB
@@ -411,11 +416,6 @@ function itemConsigment() {
     // ✅ Run groupPreview every time a file is added (before upload)
     itemDropzone.on("addedfile", function (file) {
         groupPreview();
-    });
-
-    $("#itemPurpose").on("change", function () {
-        const selectedOption = $(this).find("option:selected");
-        itemPurpose = selectedOption.data("description");
     });
 }
 
@@ -639,50 +639,63 @@ function saveapplication() {
 }
 
 // ------------------------- Initialize -------------------------
+// ------------------------- Initialize -------------------------
 $(document).ready(async function () {
     // Show loading swal
     Swal.fire({
         title: "Loading...",
         html: "Please wait while the page initializes.",
         allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        },
+        didOpen: () => Swal.showLoading(),
     });
 
     try {
-        // Wrap all initialization functions in promises if they are async
-        await Promise.all([
-            fetchExporterList(), // make sure these return promises
-            handleExporterChange(),
-            initAddExporterModal(),
-            initImporterSearch(),
-            permitDetails(),
-            itemConsigment(),
-            selfImport(),
-            saveConsignmentAttachment(),
-            viewMore(),
-        ]);
+        // Initialize self import
+        await selfImport();
 
-        // Optional: attach event listeners
-        $("#itemSelect").on("change", function () {
-            loadUses($(this).val());
+        // Fetch exporter list and set change handler
+        await fetchExporterList();
+        handleExporterChange();
+
+        // Initialize modals and search
+        initAddExporterModal();
+        initImporterSearch();
+        permitDetails();
+        itemConsigment();
+        saveConsignmentAttachment();
+        viewMore();
+
+        // ------------------- Item Purpose -------------------
+        $("#itemPurpose").on("change", function () {
+            const selectedOption = $(this).find("option:selected");
+            itemPurpose = selectedOption.data("description") || "";
+            console.log("Item purpose selected:", itemPurpose);
         });
 
+        // ------------------- Item Select (Consignment) -------------------
+        $("#itemSelect").on("change", function () {
+            const itemId = $(this).val();
+            const $itemUses = $("#itemUses");
+
+            // Reset uses dropdown
+            $itemUses
+                .empty()
+                .append('<option value="">-- Select Uses --</option>');
+
+            if (!itemId) return;
+
+            // Load uses for the selected item
+            loadUses(itemId);
+        });
+
+        // Expose loadConsignmentSelection globally if needed
         window.loadConsignmentSelection = loadConsignmentSelection;
 
+        // Submit button handler
         $(document).on("click", "#submitApps", function (e) {
-            e.preventDefault(); // stop actual form submission
-            $(this).prop("disabled", false); // ensure button stays enabled
-
-            console.log("submit clicked!");
-
-            try {
-                saveapplication();
-            } catch (err) {
-                console.error(err);
-                Swal.close(); // close any loading overlay
-            }
+            e.preventDefault();
+            console.log("Submit clicked!");
+            saveapplication();
         });
     } catch (error) {
         console.error("Error during initialization:", error);
@@ -692,7 +705,6 @@ $(document).ready(async function () {
             "error"
         );
     } finally {
-        // Close loading swal
         Swal.close();
     }
 });

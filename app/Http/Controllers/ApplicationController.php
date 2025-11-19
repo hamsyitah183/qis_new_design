@@ -32,7 +32,6 @@ class ApplicationController extends Controller
         $userUuid = authUser()['user']->uuid;
         $type = authUser()['type'];
 
-        // Always build query (never call ->get())
         $query = IpApplication::with([
             'user',
             'importer',
@@ -46,56 +45,34 @@ class ApplicationController extends Controller
 
         return DataTables::of($query)
             ->addIndexColumn()
-
-            ->addColumn('importer', function ($row) {
-                return $row->importer->fullname ?? '-';
-            })
-
-            ->addColumn('exporter', function ($row) {
-                return $row->exporter->name ?? '-';
-            })
-
-            ->addColumn('submitted_by', function ($row) {
-                return $row->user->fullname ?? '-';
-            })
-
+            ->addColumn('importer', fn($row) => $row->importer->fullname ?? '-')
+            ->addColumn('exporter', fn($row) => $row->exporter->name ?? '-')
+            ->addColumn('submitted_by', fn($row) => $row->user->fullname ?? '-')
             ->addColumn('importer_type', function ($row) {
                 $type = $row->category_application == 1 ? 'Others' : 'Self';
-
-                return '<span class="badge bg-primary-transparent fs-13 p-1">'
-                    . $type .
-                    '</span>';
+                return '<span class="badge bg-primary-transparent fs-13 p-1">' . $type . '</span>';
             })
-
-            ->addColumn('date', function ($row) {
-                return $row->eta ? $row->eta->format('Y-m-d') : '-';
-            })
-
+            ->addColumn('date', fn($row) => $row->eta ? $row->eta->format('Y-m-d') : '-')
             ->addColumn('status', function ($row) {
                 $status = strtolower($row->status ?? 'pending');
 
-                if (str_contains($status, 'pending')) {
-                    $badge = '<span class="badge bg-warning fs-13 p-1">Pending</span>';
-                } elseif (str_contains($status, 'rejected')) {
-                    $badge = '<span class="badge bg-danger fs-13 p-1">Rejected</span>';
-                } elseif (str_contains($status, 'success')) {
-                    $badge = '<span class="badge bg-success fs-13 p-1">Success</span>';
-                } else {
-                    $badge = '<span class="badge bg-secondary fs-13 p-1">'
-                        . ucfirst($status) .
-                        '</span>';
-                }
-
-                return $badge;
+                return match (true) {
+                    str_contains($status, 'pending') => '<span class="badge bg-warning fs-13 p-1">Pending</span>',
+                    str_contains($status, 'rejected') => '<span class="badge bg-danger fs-13 p-1">Rejected</span>',
+                    str_contains($status, 'success') => '<span class="badge bg-success fs-13 p-1">Success</span>',
+                    default => '<span class="badge bg-secondary fs-13 p-1">' . ucfirst($status) . '</span>',
+                };
             })
-
-            ->addColumn('action', function($row) {
-                return 'action';
+            ->addColumn('action', function ($row) {
+                $url = '/public/view_application/' . $row->application_id;
+                return '<a class="btn btn-sm btn-primary viewApplication" href="' . $url . '">View</a>';
             })
 
             ->rawColumns(['status', 'importer_type', 'action'])
             ->make(true);
     }
+
+
 
 
     public function verifyapplication()
