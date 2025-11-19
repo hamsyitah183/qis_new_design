@@ -334,4 +334,5 @@ class PermitApplicationController extends Controller
             'size'          => $record->size,
         ]);
     }
+
 }

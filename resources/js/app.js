@@ -82,3 +82,13 @@ export function initTooltips() {
         new bootstrap.Tooltip(el);
     });
 }
+
+export async function getCountry(code) {
+    const res = await fetch(`/country/${code}`);
+    return await res.json();  // return the actual country data
+}
+
+export async function getEntryPoint(id) {
+    const res = await fetch(`/entry_point/${id}`);
+    return await res.json();  // return the actual country data
+}

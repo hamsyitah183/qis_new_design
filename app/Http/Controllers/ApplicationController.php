@@ -113,7 +113,7 @@ class ApplicationController extends Controller
         ])
             ->where('application_id', $itemId)
             ->get();
-            
+
 
         return view('pages.public.view_application', [
             'application'        => $application,
@@ -131,5 +131,43 @@ class ApplicationController extends Controller
             'status' => 'success',
             'data'   => $cons
         ]);
+    }
+
+
+    public function getApplicationDetails($id)
+    {
+        $type = authUser()['type'];   // 'public' or 'admin'
+        $user = authUser()['user'];   // authenticated user object
+
+        // Fetch application without eager loading yet
+        $application = IpApplication::where('application_id', $id)->firstOrFail();
+        $application->load([
+            'user',
+            'importer',
+            'exporter',
+            'entryPoint.districtCode',
+            'consignmentPermits.attachments'
+        ]);
+    
+        if ($type === 'admin') {
+
+
+            return response()->json($application);
+        }
+
+        // Case 2: Public → only if they own the application
+        if ($type === 'public') {
+            if ($application->user_id !== $user->uuid) {
+                return response()->json([
+                    'message' => 'You do not have authority to view this application'
+                ], 403);
+            }
+            return response()->json($application);
+        }
+
+        // Default fallback
+        return response()->json([
+            'message' => 'User type not recognized'
+        ], 400);
     }
 }

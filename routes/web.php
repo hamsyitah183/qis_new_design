@@ -149,4 +149,9 @@ Route::middleware(['auth.any'])
         Route::post('/password', [UserController::class, 'password']);
 
         Route::get('/api/auth-user', [UserController::class, 'userInfo']);
+
+        Route::get('/application/{id}/data', [ApplicationController::class, 'getApplicationDetails']);
+
+        Route::get('/country/{code}', [DashboardController::class, 'get_country']);
+        Route::get('/entry_point/{id}', [DashboardController::class, 'get_entry_point']);
     });
