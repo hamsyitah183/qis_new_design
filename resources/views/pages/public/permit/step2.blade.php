@@ -41,14 +41,29 @@
 {{-- modal --}}
 <x-modal id="ItemDetailsModal" title="Item Details">
 
-
     <div id="itemDetailsInfo"></div>
+
     <hr>
-    <div id="itemFilesPreview" class="d-flex flex-wrap gap-2"></div>
+
+    <h6 class="mt-3">Uploaded Files</h6>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped" id="itemFilesTable">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 45%">File Name</th>
+                    <th style="width: 25%">File Type</th>
+                    <th style="width: 15%" class="text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- JS inserts rows here -->
+            </tbody>
+        </table>
+    </div>
 
     @slot('footer')
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
     @endslot
-
 
 </x-modal>

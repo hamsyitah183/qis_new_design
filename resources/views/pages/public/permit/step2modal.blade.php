@@ -83,7 +83,7 @@
 
             <!-- Footer -->
             <div class="modal-footer">
-                <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="bx bx-x me-1"></i> Cancel
                 </button>
                 <button id="saveBtn" type="submit" class="btn btn-primary">

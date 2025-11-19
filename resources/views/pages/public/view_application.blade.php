@@ -78,7 +78,7 @@
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div class="col-xl-6">
+                                                    <div class="col-xl-6 pt-sm-4 pt-lg-0">
                                                         <div class="register-page">
                                                             <h6 class="mb-3">Exporter :</h6>
                                                             <div class="row gy-3">

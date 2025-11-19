@@ -3,6 +3,7 @@ import $ from "jquery";
 import Swal from "sweetalert2";
 import { getAuthUser } from "../../app";
 import "dropzone/dist/dropzone.css";
+import { render } from "react-dom/cjs/react-dom.production.min";
 
 Dropzone.autoDiscover = false;
 
@@ -329,7 +330,7 @@ function permitDetails() {
 // ============= attachment =====================
 function itemConsigment() {
     itemDropzone = new Dropzone("#itemDropzone", {
-        url: '/',
+        url: "/",
         autoProcessQueue: false,
         paramName: "file",
         maxFilesize: 10, // MB
@@ -471,7 +472,6 @@ function saveConsignmentAttachment() {
         const itemMeasure = document.getElementById("itemMeasure").value.trim();
         const itemUses = document.getElementById("itemUses").value;
 
-        // Keep actual File objects from Dropzone
         const files = itemDropzone.getAcceptedFiles();
 
         const newItem = {
@@ -483,30 +483,15 @@ function saveConsignmentAttachment() {
             measure: itemMeasure,
             purpose: itemPurpose,
             uses: itemUses,
-            files: files, // ✅ keep the File objects
+            files: files,
         };
 
         tempItems.push(newItem);
 
-        // Render table
-        const tableBody = document.querySelector("#itemListTbl tbody");
-        tableBody.insertAdjacentHTML(
-            "beforeend",
-            `<tr>
-                <td>${tableBody.rows.length + 1}</td>
-                <td>${newItem.item_name}</td>
-                <td>${newItem.quantity} ${newItem.measure}</td>
-                <td>${newItem.purpose}</td>
-                <td class="text-center">
-                    <button class="btn btn-icon btn-success-light view-more-item"
-                    data-id="${newItem.id}">
-                        <i class="ti ti-eye"></i>
-                    </button>
-                </td>
-            </tr>`
-        );
+        // 👉 Render table row (Separated Function)
+        renderAllItems();
 
-        // Reset form but keep Dropzone files until submission
+        // Reset form fields
         itemSelect.selectedIndex = 0;
         document.getElementById("itemValue").value = "";
         document.getElementById("itemQuantity").value = "";
@@ -514,12 +499,45 @@ function saveConsignmentAttachment() {
         document.getElementById("itemPurpose").selectedIndex = 0;
         document.getElementById("itemUses").selectedIndex = 0;
 
-        tempAttachments = []; // optional: temp file info, not raw files
+        // Clear queued Dropzone files
+        itemDropzone.getQueuedFiles().forEach((file) => {
+            itemDropzone.removeFile(file);
+        });
 
         const modal = bootstrap.Modal.getInstance(
             document.getElementById("addItemModal")
         );
         modal.hide();
+        summarySubmit();
+    });
+}
+
+function renderAllItems() {
+    const tableBody = document.querySelector("#itemListTbl tbody");
+    tableBody.innerHTML = ""; // Clear existing rows
+
+    tempItems.forEach((item, index) => {
+        tableBody.insertAdjacentHTML(
+            "beforeend",
+            `<tr id="item-row-${item.id}">
+                <td>${index + 1}</td>
+                <td>${item.item_name}</td>
+                <td>${item.quantity} ${item.measure}</td>
+                <td>${item.purpose}</td>
+                <td class="text-center">
+                    <div class="d-flex justify-content-center align-items-center gap-2">
+                        <button class="btn btn-icon btn-success-light view-more-item"
+                            data-id="${item.id}">
+                            <i class="ti ti-eye"></i>
+                        </button>
+                        <button class="btn btn-icon btn-danger-light delete-item"
+                            data-id="${item.id}">
+                            <i class="ti ti-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>`
+        );
     });
 }
 
@@ -543,31 +561,101 @@ function viewMore() {
             <p><strong>Uses:</strong> ${item.uses}</p>
         `;
 
-        // Render uploaded files
-        const filesDiv = document.getElementById("itemFilesPreview");
-        filesDiv.innerHTML = ""; // clear previous
+        // Render files in a table
+        const filesTableBody = document.querySelector("#itemFilesTable tbody");
+        filesTableBody.innerHTML = ""; // clear old rows
 
         item.files.forEach((file) => {
             const reader = new FileReader();
+
             reader.onload = function (e) {
-                let preview;
-                if (file.type.startsWith("image/")) {
-                    preview = `<img src="${e.target.result}" class="img-thumbnail" style="width:100px;height:100px;object-fit:cover;">`;
-                } else if (file.type === "application/pdf") {
-                    preview = `<a href="${e.target.result}" target="_blank">PDF: ${file.name}</a>`;
-                } else {
-                    preview = `<span>${file.name}</span>`;
-                }
-                const wrapper = document.createElement("div");
-                wrapper.innerHTML = preview;
-                filesDiv.appendChild(wrapper);
+                const fileUrl = e.target.result;
+
+                filesTableBody.insertAdjacentHTML(
+                    "beforeend",
+                    `
+                    <tr>
+                        <td>${file.name}</td>
+                        <td>${file.type}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary view-file-btn" 
+                                data-url="${fileUrl}" type = "button">
+                                View
+                            </button>
+                        </td>
+                    </tr>
+                `
+                );
             };
-            reader.readAsDataURL(file); // convert File to data URL for preview
+
+            reader.readAsDataURL(file);
         });
 
         // Show modal
         const modalEl = document.getElementById("ItemDetailsModal");
         bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    });
+
+    // Handle view file button
+    $(document).on("click", ".view-file-btn", function () {
+        const base64DataUrl = $(this).data("url");
+
+        if (!base64DataUrl) {
+            console.error("No file URL found");
+            return;
+        }
+
+        // Extract Base64 & MIME type
+        const arr = base64DataUrl.split(",");
+        const mime = arr[0].match(/:(.*?);/)[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        let u8arr = new Uint8Array(n);
+
+        while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+
+        // Convert to Blob
+        const fileBlob = new Blob([u8arr], { type: mime });
+
+        // Create temporary URL
+        const fileURL = URL.createObjectURL(fileBlob);
+
+        // Open in a new tab
+        window.open(fileURL, "_blank");
+    });
+}
+
+function deleteItem() {
+    $(document).on("click", ".delete-item", function (e) {
+        e.preventDefault();
+
+        let id = $(this).data("id");
+
+        if (!tempItems) {
+            console.error("tempItems array not found");
+            return;
+        }
+
+        // Find item index in array
+        let index = tempItems.findIndex((obj) => obj.id === id);
+
+        if (index === -1) {
+            console.warn("Item not found:", id);
+            return;
+        }
+
+        // Remove from array
+        tempItems.splice(index, 1);
+
+        // Remove from UI
+        $("#item-card-" + id).remove();
+
+        renderAllItems();
+
+        console.log("Deleted item:", id, tempItems);
+        summarySubmit();
     });
 }
 
@@ -636,6 +724,8 @@ function saveapplication() {
             console.error("ERROR RESPONSE:", xhr);
         },
     });
+
+    summarySubmit();
 }
 
 // ------------------------- Initialize -------------------------
@@ -664,6 +754,7 @@ $(document).ready(async function () {
         itemConsigment();
         saveConsignmentAttachment();
         viewMore();
+        deleteItem();
 
         // ------------------- Item Purpose -------------------
         $("#itemPurpose").on("change", function () {
@@ -713,11 +804,9 @@ $(document).ready(async function () {
 
 // ------------------------------summary details ---------------------
 export function summarySubmit() {
-    const generateBtn = document.getElementById("generateSummary");
-
-    const sourceTable = document.querySelector("#itemListTbl tbody");
     const targetTable = document.querySelector("#summaryTable3 tbody");
 
+    // --- IMPORTER & EXPORTER SUMMARY ---
     impAddrs = importer
         ? [importer.address_1, importer.address_2]
               .filter((x) => x && x.trim() !== "")
@@ -730,52 +819,64 @@ export function summarySubmit() {
         tranType: document.getElementById("trnptType").value,
         entrypoint: document.getElementById("entryPoint").value,
     };
-    console.log(permitDetails);
 
+    // Insert importer details
     document.getElementById("importerName").textContent = importer.fullname;
     document.getElementById("importerPhoneno").textContent =
         importer.phone_number;
     document.getElementById("simpAdd").textContent = impAddrs;
 
+    // Exporter details
     document.getElementById("sexpName").textContent = exporter.name;
     document.getElementById("sexpfonno").textContent = exporter.phone_no;
     document.getElementById("sexpAddress").textContent = exporter.address;
     document.getElementById("sexpCountry").textContent = exporter.country;
 
+    // Permit details
     document.getElementById("seta").textContent = permitDetails.eta;
     document.getElementById("strty").textContent = permitDetails.tranType;
     document.getElementById("sentryp").textContent = entryName;
 
-    // ✅ Clear existing rows in summary table
-    targetTable.innerHTML = "";
+    // --- CONSIGNMENT DETAILS ---
+    targetTable.innerHTML = ""; // clear existing rows
 
-    // ✅ Copy each row from source table
-    const rows = sourceTable.querySelectorAll("tr");
-    rows.forEach((row, index) => {
-        const cols = row.querySelectorAll("td");
-        console.log(cols);
+    tempItems.forEach((item, index) => {
+        // --- Build attachment list ---
+        let attachmentHTML = "";
 
-        // Extract text content from each column
-        const rowData = Array.from(cols).map((td) => td.textContent.trim());
+        if (item.files && item.files.length > 0) {
+            attachmentHTML = item.files
+                .map((file, i) => {
+                    return `
+                        <button 
+                            class="btn btn-sm btn-primary view-more-item"
+                            data-id = "${item.id}"
+                        >
+                            File ${i + 1}
+                        </button>
+                    `;
+                })
+                .join("<br>");
+        } else {
+            attachmentHTML = `<span class="text-muted">No files</span>`;
+        }
 
-        // Build new row for summary table (excluding "Action" column)
+        // --- Insert summary row ---
         targetTable.insertAdjacentHTML(
             "beforeend",
             `
-            <tr>
-            <td>${index + 1}</td>
-            <td>${rowData[1] || ""}</td>
-            <td>${rowData[2] || ""}</td>
-            <td>${rowData[3] || ""}</td>
-            <td>${rowData[4] || ""}</td>
-            <td>${rowData[5] || ""}</td>
-            <td>${rowData[6] || ""}</td>
-            </tr>
-        `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${item.item_name || ""}</td>
+                    <td>${item.quantity || ""}</td>
+                    <td>${item.purpose || ""}</td>
+                    <td>${item.uses || ""}</td>
+                    <td>${item.value || ""}</td>
+                    <td>${attachmentHTML}</td>
+                </tr>
+            `
         );
     });
-
-    // ✅ Optional: Scroll to or highlight summary section
 }
 
 // ------------------------------summary details ---------------------
