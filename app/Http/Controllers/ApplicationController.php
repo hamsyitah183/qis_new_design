@@ -105,45 +105,20 @@ class ApplicationController extends Controller
 
         $itemId = $application->id;
 
+        // dd($application->consignmentPermits);
+
         $consignment = IpConsignmentPermit::with([
             'unit',
             'purposeCode'
         ])
             ->where('application_id', $itemId)
             ->get();
+            
 
-        $allDetails = [];
-
-        // foreach ($consignment as $consitem) {
-        //     $details = json_decode($consitem->consignment_detail, true); // decode as ARRAY
-        //     if (is_array($details)) {
-        //         foreach ($details as $d) {
-        //             $allDetails[] = $d;   // push one by one
-        //         }
-        //     }
-        // }
-
-        foreach ($consignment as $index => $consitem) {
-
-            $details = json_decode($consitem->consignment_detail, true);
-
-            // make sure details is an array and the index exists
-            if (is_array($details) && isset($details[$index])) {
-                $single = $details[$index];
-                // include consignment DB id
-                $single['consignment_id'] = $consitem->id;
-
-                // include its attachments
-                $single['attachments'] = $consitem->attachments;
-                // $allDetails[] = $details[$index];
-                $allDetails[] = $single;
-            }
-        }
-        // dd($allDetails);
         return view('pages.public.view_application', [
             'application'        => $application,
             'consignment'        => $consignment,
-            'consignmentDetails' => $allDetails
+            'consignmentDetails' => $consignment[0]->attachments
         ]); //, 'consignment', 'attachment'
     }
 

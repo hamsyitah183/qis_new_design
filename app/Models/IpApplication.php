@@ -58,4 +58,9 @@ class IpApplication extends Model
     {
         return $this->belongsTo(IpEntryPoint::class, 'entry_point', 'id');
     }
+
+    public function consignmentPermits()
+    {
+        return $this->hasMany(IpConsignmentPermit::class, 'application_id', 'id');
+    }
 }
