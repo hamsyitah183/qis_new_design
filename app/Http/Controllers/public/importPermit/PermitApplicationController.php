@@ -151,22 +151,15 @@ class PermitApplicationController extends Controller
 
     public function saveApplication(Request $request)
     {
-        // $items = json_decode($request->items, true);
-        // dd($items);
-        DB::beginTransaction(); // start transaction
-
-        // Keep track of moved files to rollback if needed
+        DB::beginTransaction();
         $movedFiles = [];
 
         try {
             $exporter = json_decode($request->exporterData, true);
             $importer = json_decode($request->importerData, true);
-            $permit = json_decode($request->permitDetails, true);
-            $items = json_decode($request->items, true);
+            $permit   = json_decode($request->permitDetails, true);
 
-            // dd($exporter, $importer);
-
-            // Step 1: Create IpApplication
+            // Step 1: Create application
             $application = IpApplication::create([
                 'application_id'       => Str::uuid(),
                 'eta'                  => $permit['eta'],
@@ -177,52 +170,61 @@ class PermitApplicationController extends Controller
                 'importer_id'          => $importer['uuid'],
                 'importer_detail'      => json_encode($importer),
                 'category_application' => $permit['applCate'],
-                'importer_verify'      => false,
-                'date_importer_verify' => null,
             ]);
 
             $appId = $application->id;
-            $jsencode = json_encode($items);
 
-            // Step 2: Create IpConsignmentPermit & attachments
-            if ($items) {
-                foreach ($items as $item) {
+            // Map of item index => consignment ID
+            $consignmentArray = [];
+
+            // Step 2: Create consignments
+            if ($request->has('items')) {
+                foreach ($request->items as $index => $item) {
+                    $itemData = json_decode($item['data'], true);
+
                     $consignment = IpConsignmentPermit::create([
                         'application_id'     => $appId,
                         'permit_number'      => null,
-                        'consignment_detail' => $jsencode,
-                        'quantity'           => $item['quantity'],
-                        'unit_measurement'   => $item['measure'],
-                        'value'              => $item['value'],
-                        'purpose'            => $item['purpose'],
+                        'consignment_detail' => json_encode($itemData),
+                        'quantity'           => $itemData['quantity'],
+                        'unit_measurement'   => $itemData['measure'],
+                        'value'              => $itemData['value'],
+                        'purpose'            => $itemData['purpose'],
                     ]);
 
-                    // Handle attachments
-                    if (!empty($item['temp'])) {
-                        foreach ($item['temp'] as $tempatt) {
-                            $from = "public/" . $tempatt['temp_path'];
-                            $to = "public/permitAttachment/" . $tempatt['temp_name'];
-
-                            if (Storage::exists($from)) {
-                                Storage::move($from, $to);
-                                $movedFiles[] = $to;
-                            }
-
-                            IpConsignmentAttachment::create([
-                                'permit_id' => $consignment->id,
-                                'file_name' => $tempatt['original_name'],
-                                'file_path' => "/storage/permitAttachment/" . $tempatt['temp_name'],
-                                'file_type' => $tempatt['mime_type'],
-                            ]);
-
-                            // Delete temp DB record
-                            TempAttachment::where('id', $tempatt['id'])->delete();
-                        }
-                    }
+                    $consignmentArray[$index] = $consignment->id;
                 }
             }
 
-            DB::commit(); // commit transaction if everything succeeded
+            // Step 3: Handle files
+            if ($request->hasFile('files')) {
+                foreach ($request->file('files') as $i => $file) {
+                    $itemIndex = $request->input('file_item_index')[$i] ?? null;
+                    if ($itemIndex === null) continue;
+
+                    $consignmentId = $consignmentArray[$itemIndex] ?? null;
+                    if (!$consignmentId) continue;
+
+                    // Generate unique filename
+                    $name = uniqid() . "_" . $file->getClientOriginalName();
+
+                    // Store in public disk
+                    $path = $file->storeAs('import', $name, 'public');
+                    $movedFiles[] = $path;
+
+                    // Store relative path in DB
+                    $relativePath = "/storage/import/$name";
+
+                    IpConsignmentAttachment::create([
+                        'permit_id' => $consignmentId,
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_path' => $relativePath, // store relative path
+                        'file_type' => $file->getClientOriginalExtension(),
+                    ]);
+                }
+            }
+
+            DB::commit();
 
             return response()->json([
                 'status' => 'success',
@@ -230,22 +232,47 @@ class PermitApplicationController extends Controller
                 'application_id' => $application->application_id,
             ]);
         } catch (\Exception $e) {
-            DB::rollBack(); // rollback all DB changes
+            DB::rollBack();
 
-            // Rollback any moved files
+            // Delete any moved files if something failed
             foreach ($movedFiles as $file) {
-                if (Storage::exists($file)) {
-                    Storage::delete($file);
+                if (Storage::disk('public')->exists($file)) {
+                    Storage::disk('public')->delete($file);
                 }
             }
 
-            // Return error response
             return response()->json([
                 'status' => 'error',
                 'message' => 'Failed to save application: ' . $e->getMessage(),
             ], 500);
         }
     }
+
+    /**
+     * Optional: Move old files from private/public/import to public/import
+     */
+    public function moveOldPrivateFiles()
+    {
+        $oldFiles = Storage::disk('local')->files('private/public/import');
+
+        foreach ($oldFiles as $file) {
+            $filename = basename($file);
+
+            // Move file to public disk
+            Storage::disk('public')->putFileAs('import', storage_path("app/$file"), $filename);
+
+            // Delete old file
+            Storage::disk('local')->delete($file);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Old private files moved to public successfully'
+        ]);
+    }
+
+
+
 
     public function uploadAttachment(Request $request)
     {

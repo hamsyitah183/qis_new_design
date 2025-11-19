@@ -42,6 +42,10 @@
 <x-modal id="ItemDetailsModal" title="Item Details">
 
 
+    <div id="itemDetailsInfo"></div>
+    <hr>
+    <div id="itemFilesPreview" class="d-flex flex-wrap gap-2"></div>
+
     @slot('footer')
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
     @endslot

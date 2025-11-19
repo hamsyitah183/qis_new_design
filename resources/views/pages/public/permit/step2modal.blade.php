@@ -65,7 +65,7 @@
                                 </div>
                             </div>
                             <div class="card-body">
-                                <form id="itemDropzone" method="post" action="{{ route('public.tempUpload') }}"
+                                <form id="itemDropzone" method="post"
                                     class="dz-clickable" enctype="multipart/form-data"><!--data-single="true"  -->
                                     @csrf
                                     <div class="dz-default dz-message">

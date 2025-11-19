@@ -322,15 +322,10 @@ function permitDetails() {
     });
 }
 
-
-
 // ============= attachment =====================
 function itemConsigment() {
-    
-    const tempDropzoneUrl = `${window.baseUrl}/public/temp_upload`;
-
     itemDropzone = new Dropzone("#itemDropzone", {
-        url: tempDropzoneUrl,
+        autoProcessQueue: false,
         paramName: "file",
         maxFilesize: 10, // MB
         acceptedFiles: ".jpg,.jpeg,.png,.pdf",
@@ -349,13 +344,12 @@ function itemConsigment() {
                     Swal.showLoading();
                 },
             });
+            groupPreview();
         },
         // --- 2. SWAL SUCCESS AFTER LOAD ---
         success: (file, response) => {
-            // Close the loading Swal
             Swal.close();
 
-            // Store temporary file info returned from backend
             tempAttachments.push({
                 id: response.id,
                 original_name: response.original_name,
@@ -365,14 +359,18 @@ function itemConsigment() {
                 size: response.size,
             });
 
-            // *** IMPORTANT: Attach the server ID to the Dropzone file object ***
             file.temp_id = response.id;
 
+            // ✅ Call groupPreview here too
             groupPreview();
 
             console.log("temp", tempAttachments);
+            console.log(
+                "Latest uploaded file:",
+                tempAttachments[tempAttachments.length - 1]
+            );
+            console.log("All attachments:", tempAttachments);
 
-            // Show success notification
             Swal.fire({
                 icon: "success",
                 title: "Upload Successful!",
@@ -383,7 +381,6 @@ function itemConsigment() {
         },
         // --- 3. SWAL ERROR AFTER LOAD ---
         error: (file, message, xhr) => {
-            // ... (error handling remains the same)
             Swal.close();
             itemDropzone.removeFile(file);
             Swal.fire({
@@ -395,48 +392,45 @@ function itemConsigment() {
             });
             console.error("Dropzone Error:", message);
         },
-        // --- 4. HANDLE FILE REMOVAL (dz-remove click) ---
+        // --- 4. HANDLE FILE REMOVAL ---
         removedfile: function (file) {
-            // Only proceed if the file has a temp_id (meaning it was successfully uploaded)
             if (file.temp_id) {
-                // Find the index of the attachment in the array using the file's temp_id
                 const indexToRemove = tempAttachments.findIndex(
-                    (attachment) => attachment.id === file.temp_id
+                    (a) => a.id === file.temp_id
                 );
-
-                if (indexToRemove > -1) {
-                    // Remove the item from tempAttachments array
-                    const removedItem = tempAttachments.splice(
-                        indexToRemove,
-                        1
-                    );
-                    console.log(
-                        `Removed file ID ${file.temp_id} from tempAttachments:`,
-                        removedItem
-                    );
-                }
+                if (indexToRemove > -1)
+                    tempAttachments.splice(indexToRemove, 1);
             }
-
-            // This line is crucial: it physically removes the file preview element from the DOM
             const _ref = file.previewElement;
-            if (_ref) {
-                _ref.parentNode.removeChild(_ref);
-            }
+            if (_ref) _ref.parentNode.removeChild(_ref);
 
-            groupPreview(); // Call groupPreview to re-organize if needed
+            groupPreview();
         },
     });
 
+    // ✅ Run groupPreview every time a file is added (before upload)
+    itemDropzone.on("addedfile", function (file) {
+        groupPreview();
+    });
+
     $("#itemPurpose").on("change", function () {
-        const selectedValue = $(this).val();
         const selectedOption = $(this).find("option:selected");
-        const dataDescription = selectedOption.data("description");
-        itemPurpose = dataDescription;
+        itemPurpose = selectedOption.data("description");
     });
 }
 
 function groupPreview() {
     $(document).ready(function () {
+        // Show Swal loading
+        Swal.fire({
+            title: "Updating Previews...",
+            // html: "Please wait while files are being grouped.",
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            },
+        });
+
         setTimeout(function () {
             var $dropzone = $("#itemDropzone");
             var $previews = $dropzone.find(".dz-preview");
@@ -452,18 +446,20 @@ function groupPreview() {
             // Move all previews into the group
             $previews.appendTo($group);
 
-            // tgk queue file
+            // Check queued files
             const queuedFiles = itemDropzone.getQueuedFiles();
             console.log(
                 "Files still in the queue (not yet uploaded):",
                 queuedFiles
             );
+
+            // Close Swal loading
+            Swal.close();
         }, 100); // adjust delay if necessary
     });
 }
 
 function saveConsignmentAttachment() {
-    // ------------------------- Save Item Handler -------------------------
     document.getElementById("saveBtn").addEventListener("click", function (e) {
         e.preventDefault();
 
@@ -473,18 +469,11 @@ function saveConsignmentAttachment() {
             .getElementById("itemQuantity")
             .value.trim();
         const itemMeasure = document.getElementById("itemMeasure").value.trim();
-        // const itemPurpose = document.getElementById("itemPurpose").value;
         const itemUses = document.getElementById("itemUses").value;
 
-        // Get uploaded file names
-        const uploadedFileNames = itemDropzone
-            .getAcceptedFiles()
-            .map((file) => file.upload?.filename || file.name);
-        const uploadedFiles = uploadedFileNames.length
-            ? uploadedFileNames
-            : ["—"];
+        // Keep actual File objects from Dropzone
+        const files = itemDropzone.getAcceptedFiles();
 
-        // Build new item object
         const newItem = {
             id: crypto.randomUUID(),
             item_id: itemSelect.value,
@@ -494,36 +483,30 @@ function saveConsignmentAttachment() {
             measure: itemMeasure,
             purpose: itemPurpose,
             uses: itemUses,
-            temp: tempAttachments, // raw attachment info
-            attachments: uploadedFiles, // displayable file names
+            files: files, // ✅ keep the File objects
         };
 
-        // Add to temp items array
         tempItems.push(newItem);
-        console.table(tempItems);
 
-        console.log("new item consignment", newItem);
-
-        // Render table row
+        // Render table
         const tableBody = document.querySelector("#itemListTbl tbody");
         tableBody.insertAdjacentHTML(
             "beforeend",
             `<tr>
-            <td>${tableBody.rows.length + 1}</td>
-            <td>${newItem.item_name}</td>
-            <td>${newItem.quantity} ${newItem.measure}</td>
-            <td>${newItem.purpose}</td>
-            <td class = "text-center">
-                <button class = "btn btn-icon btn-success-light 
-                rounded-pill btn-wave waves-effect waves-light view-more-item"
-                data-id = "${newItem.id}">
-                    <i class="ti ti-eye"></i>
-                </button>
-            </td>
-        </tr>`
+                <td>${tableBody.rows.length + 1}</td>
+                <td>${newItem.item_name}</td>
+                <td>${newItem.quantity} ${newItem.measure}</td>
+                <td>${newItem.purpose}</td>
+                <td class="text-center">
+                    <button class="btn btn-icon btn-success-light view-more-item"
+                    data-id="${newItem.id}">
+                        <i class="ti ti-eye"></i>
+                    </button>
+                </td>
+            </tr>`
         );
 
-        // Reset form & Dropzone for next item
+        // Reset form but keep Dropzone files until submission
         itemSelect.selectedIndex = 0;
         document.getElementById("itemValue").value = "";
         document.getElementById("itemQuantity").value = "";
@@ -531,10 +514,8 @@ function saveConsignmentAttachment() {
         document.getElementById("itemPurpose").selectedIndex = 0;
         document.getElementById("itemUses").selectedIndex = 0;
 
-        itemDropzone.removeAllFiles(true);
-        tempAttachments = [];
+        tempAttachments = []; // optional: temp file info, not raw files
 
-        // Close modal
         const modal = bootstrap.Modal.getInstance(
             document.getElementById("addItemModal")
         );
@@ -543,40 +524,178 @@ function saveConsignmentAttachment() {
 }
 
 function viewMore() {
-    $(document).on('click', '.view-more-item', function (e) {
+    $(document).on("click", ".view-more-item", function (e) {
         e.preventDefault();
 
-        let id = $(this).data('id');
-        console.log(id);
+        let id = $(this).data("id");
+        if (!tempItems) return console.error("tempItems array not found");
 
-        // Ensure tempItems exists
-        if (typeof tempItems === 'undefined') {
-            console.error("tempItems array not found");
-            return;
-        }
+        let item = tempItems.find((obj) => obj.id === id);
+        if (!item) return console.warn("Item not found for id:", id);
 
-        // Find item
-        let item = tempItems.find(obj => obj.id == id);
-        if (!item) {
-            console.warn("Item not found for id:", id);
-            return;
-        }
+        // Render item details
+        const detailsDiv = document.getElementById("itemDetailsInfo");
+        detailsDiv.innerHTML = `
+            <p><strong>Item Name:</strong> ${item.item_name}</p>
+            <p><strong>Quantity:</strong> ${item.quantity} ${item.measure}</p>
+            <p><strong>Value:</strong> ${item.value}</p>
+            <p><strong>Purpose:</strong> ${item.purpose}</p>
+            <p><strong>Uses:</strong> ${item.uses}</p>
+        `;
 
-        console.log("Selected item:", item);
+        // Render uploaded files
+        const filesDiv = document.getElementById("itemFilesPreview");
+        filesDiv.innerHTML = ""; // clear previous
 
-        // Ensure modal exists
-        let modalEl = document.getElementById('ItemDetailsModal');
-        if (!modalEl) {
-            console.error("ItemDetailsModal not found in DOM");
-            return;
-        }
-        // Always create only one modal instance
-        let modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-        modal.show();
+        item.files.forEach((file) => {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                let preview;
+                if (file.type.startsWith("image/")) {
+                    preview = `<img src="${e.target.result}" class="img-thumbnail" style="width:100px;height:100px;object-fit:cover;">`;
+                } else if (file.type === "application/pdf") {
+                    preview = `<a href="${e.target.result}" target="_blank">PDF: ${file.name}</a>`;
+                } else {
+                    preview = `<span>${file.name}</span>`;
+                }
+                const wrapper = document.createElement("div");
+                wrapper.innerHTML = preview;
+                filesDiv.appendChild(wrapper);
+            };
+            reader.readAsDataURL(file); // convert File to data URL for preview
+        });
+
+        // Show modal
+        const modalEl = document.getElementById("ItemDetailsModal");
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
     });
 }
 
+// ============= attachment =====================
 
+function saveapplication() {
+    const form = document.querySelector("#wizardForm");
+    if (!form) return console.error("Form not found");
+
+    const formData = new FormData(form);
+
+    // Append exporter, importer, permit info
+    formData.append("exporterData", JSON.stringify(exporter));
+    formData.append("importerData", JSON.stringify(importer));
+    formData.append("permitDetails", JSON.stringify(permitDetails));
+
+    tempItems.forEach((item, index) => {
+        const { files, ...otherData } = item;
+
+        // Append item data
+        formData.append(`items[${index}][data]`, JSON.stringify(otherData));
+
+        // Append files for this item
+        if (files && files.length > 0) {
+            files.forEach((file) => {
+                formData.append("files[]", file); // raw File object
+                formData.append("file_item_index[]", index); // maps file to the consignment
+            });
+        }
+    });
+
+    console.log("FormData ready to submit");
+
+    Swal.fire({
+        title: "Submitting...",
+        html: "Please wait while we save your application.",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+    });
+
+    $.ajax({
+        url: "/public/save-application",
+        type: "POST",
+        data: formData,
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        processData: false,
+        contentType: false,
+        success: function (response) {
+            Swal.fire({
+                icon: "success",
+                title: "Application Submitted!",
+                showConfirmButton: false,
+                timer: 1800,
+                timerProgressBar: true,
+                position: "center",
+            });
+            setTimeout(() => {
+                window.location.href = "/public/view_all_application";
+            }, 1500);
+        },
+        error: function (xhr) {
+            Swal.close();
+            Swal.fire("Error", "Failed to submit application", "error");
+            console.error("ERROR RESPONSE:", xhr);
+        },
+    });
+}
+
+// ------------------------- Initialize -------------------------
+$(document).ready(async function () {
+    // Show loading swal
+    Swal.fire({
+        title: "Loading...",
+        html: "Please wait while the page initializes.",
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        },
+    });
+
+    try {
+        // Wrap all initialization functions in promises if they are async
+        await Promise.all([
+            fetchExporterList(), // make sure these return promises
+            handleExporterChange(),
+            initAddExporterModal(),
+            initImporterSearch(),
+            permitDetails(),
+            itemConsigment(),
+            selfImport(),
+            saveConsignmentAttachment(),
+            viewMore(),
+        ]);
+
+        // Optional: attach event listeners
+        $("#itemSelect").on("change", function () {
+            loadUses($(this).val());
+        });
+
+        window.loadConsignmentSelection = loadConsignmentSelection;
+
+        $(document).on("click", "#submitApps", function (e) {
+            e.preventDefault(); // stop actual form submission
+            $(this).prop("disabled", false); // ensure button stays enabled
+
+            console.log("submit clicked!");
+
+            try {
+                saveapplication();
+            } catch (err) {
+                console.error(err);
+                Swal.close(); // close any loading overlay
+            }
+        });
+    } catch (error) {
+        console.error("Error during initialization:", error);
+        Swal.fire(
+            "Error",
+            "Failed to initialize page. Check console for details.",
+            "error"
+        );
+    } finally {
+        // Close loading swal
+        Swal.close();
+    }
+});
 
 // ============= attachment =====================
 
@@ -647,113 +766,4 @@ export function summarySubmit() {
     // ✅ Optional: Scroll to or highlight summary section
 }
 
-function saveapplication() {
-    const form = document.querySelector("#wizardForm");
-    if (!form) {
-        console.error("Form not found:", form);
-        return;
-    }
-
-    const formData = new FormData(form);
-
-    document
-        .querySelector("#summaryTable3")
-        .scrollIntoView({ behavior: "smooth" });
-
-    formData.append("exporterData", JSON.stringify(exporter));
-    formData.append("importerData", JSON.stringify(importer));
-    formData.append("permitDetails", JSON.stringify(permitDetails));
-    formData.append("items", JSON.stringify(tempItems));
-    console.log(" Summary  generated!");
-
-    Swal.fire({
-        title: "Loading...",
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading(),
-    });
-
-    $.ajax({
-        url: "/public/save-application",
-        type: "POST",
-        data: formData,
-        headers: {
-            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
-        },
-        processData: false, // IMPORTANT: do not convert to string
-        contentType: false, // IMPORTANT: allow multipart/form-data
-        success: function (response) {
-            // console.log("SUCCESS RESPONSE:");
-            // console.log(response);
-            Swal.fire({
-                icon: "success",
-                title: "Application submited!",
-                text: "The exporter has been successfully added to the list.",
-                showConfirmButton: false,
-                timer: 1800,
-                timerProgressBar: true,
-                position: "center",
-            });
-            setTimeout(() => {
-                window.location.href = "/public/view_all_application";
-            }, 1500);
-        },
-        error: function (xhr) {
-            Swal.close();
-            Swal.fire("Error", "Error", "error");
-            console.error("ERROR RESPONSE:");
-            console.error();
-        },
-    });
-}
-
 // ------------------------------summary details ---------------------
-
-// ------------------------- Initialize -------------------------
-$(document).ready(async function () {
-    // Show loading swal
-    Swal.fire({
-        title: "Loading...",
-        html: "Please wait while the page initializes.",
-        allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        },
-    });
-
-    try {
-        // Wrap all initialization functions in promises if they are async
-        await Promise.all([
-            fetchExporterList(), // make sure these return promises
-            handleExporterChange(),
-            initAddExporterModal(),
-            initImporterSearch(),
-            permitDetails(),
-            itemConsigment(),
-            selfImport(),
-            saveConsignmentAttachment(),
-            viewMore()
-        ]);
-
-        // Optional: attach event listeners
-        $("#itemSelect").on("change", function () {
-            loadUses($(this).val());
-        });
-
-        window.loadConsignmentSelection = loadConsignmentSelection;
-
-        $(document).on("click", "#submitApps", function () {
-            console.log("submit clicked!");
-            saveapplication();
-        });
-    } catch (error) {
-        console.error("Error during initialization:", error);
-        Swal.fire(
-            "Error",
-            "Failed to initialize page. Check console for details.",
-            "error"
-        );
-    } finally {
-        // Close loading swal
-        Swal.close();
-    }
-});

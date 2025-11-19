@@ -8,6 +8,7 @@ use App\Http\Controllers\public\importPermit\PermitApplicationController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\RoleAndPermissionController;
+use App\Http\Controllers\TempFileController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Request;
@@ -82,6 +83,9 @@ Route::prefix('public')
         Route::get('/application/list/data', [ApplicationController::class, 'getallapplicationlist']);
         Route::get('/verify_application', [ApplicationController::class, 'verifyapplication'])->name('verifyapplication');
         Route::get('/view_application/{uuid}', [ApplicationController::class, 'viewapplication'])->name('viewApplication');
+
+        // temporary file
+        Route::post('/temp-upload', [TempFileController::class, 'upload']);
 
 
         Route::post('/upload-verification', [UserController::class, 'uploadVerificationAttachment'])
