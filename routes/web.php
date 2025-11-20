@@ -149,7 +149,7 @@ Route::prefix('internal')
         Route::post('/addpbdata', [\App\Http\Controllers\internal\MiscController::class, 'addpbdata']);
 
         //PERMIT CONDITION
-        Route::get('/permit_condition', [\App\Http\Controllers\internal\MiscController::class, 'showpermitcondition']);
+        Route::get('/permit_condition', [\App\Http\Controllers\internal\MiscController::class, 'showpermitcondition'])->name('permitcondition');
         Route::get('/permit_add_condition', [\App\Http\Controllers\internal\MiscController::class, 'permitaddcondition']);
         Route::post('/save_condition', [\App\Http\Controllers\internal\MiscController::class, 'saveCondition'])->name('saveCondition');
         Route::get('/permit_edit_condition/{id}', [\App\Http\Controllers\internal\MiscController::class, 'editCondition']);

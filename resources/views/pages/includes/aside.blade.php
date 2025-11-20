@@ -112,15 +112,8 @@
                     <li class="slide__category"><span class="category-name">Application</span></li>
 
                     @php
-                        $applicationRoutes = ['internal.application.'];
-
-                        $isApplicationActive = false;
-                        foreach ($applicationRoutes as $prefix) {
-                            if (Str::startsWith($currentRoute, $prefix)) {
-                                $isApplicationActive = true;
-                                break;
-                            }
-                        }
+                        // Check if the route name contains "application"
+                        $isApplicationActive = Str::contains($currentRoute, 'application');
                     @endphp
 
                     <li class="slide has-sub {{ $isApplicationActive ? 'open active' : '' }}">
@@ -140,6 +133,7 @@
                             </li>
                         </ul>
                     </li>
+
 
 
 
