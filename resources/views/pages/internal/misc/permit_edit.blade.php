@@ -107,7 +107,7 @@
                                             </div>
 
                                             <!-- hidden input to submit HTML -->
-                                            <input type="hidden" name="permit_condition" id="permit-condition-input" value="{{ $condition->addional_condition }}">
+                                            <input type="hidden" name="permit_condition" id="permit-condition-input" value="{{ htmlspecialchars($condition->addional_condition) }}">
                                             <small class="form-text text-muted mt-2">You may use simple formatting — bold, lists, links.</small>
                                         </div>                                        
                                     </div>
@@ -139,12 +139,21 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
 
-        const conditionCountry = {!! json_encode($condition->country) !!};
-        console.log("Condition Country:", conditionCountry);
-        // const conditionUsage = {!! json_encode($condition->usage) !!};
+        const theCountry = {!! json_encode($condition->country) !!};
+        const conditionCountry = theCountry.map(i => ({
+                    value: i,
+                    name: i
+                }));
+        console.log("Condition Country this:", conditionCountry);
+
+        const theusage = {!! json_encode($condition->usage) !!};
+        const conditionUsage = theusage.map(i => ({
+                    value: i,
+                    name: i
+                }));
 
         $.ajax({
-            url: `/get_country`,
+            url: '/get_country',
             method: 'GET',
             success: function(response) {
                 const countryList = response.data;
@@ -162,6 +171,7 @@
                     dropdownFilter: (item, value) =>
                         item.name.toLowerCase().includes(value.toLowerCase())
                 });
+                countryTagify.addTags(conditionCountry);
 
                 console.log("Country loaded:", countryList);
             }
@@ -190,6 +200,7 @@
                     dropdownFilter: (item, value) =>
                         item.name.toLowerCase().includes(value.toLowerCase())
                 });
+                usageTagify.addTags(conditionUsage);
 
                 console.log("Usage loaded:", usageList);
             }
@@ -213,8 +224,17 @@
                     ['clean']
                 ]
             },
-            placeholder: 'Write permit conditions here...',
-            theme: 'snow'
+            // ⭐ Load Existing HTML into Quill
+            const oldHtml = document.getElementById("existingCondition").value;
+            if (oldHtml) {
+                quill.root.innerHTML = oldHtml;
+            }
+
+            // ⭐ Update hidden input on text change
+            quill.on("text-change", function () {
+                document.getElementById("permit-condition-input").value =
+                    quill.root.innerHTML;
+            });
         });
     });
 </script>

@@ -153,4 +153,28 @@ class MiscController extends Controller
 
         return view('pages.internal.misc.permit_edit', compact('condition', 'pbdata'));
     }
+
+    public function getpermitconditiondata()
+    {
+        $conditions = IpCondition::with(['code', 'condcategory'])
+                ->select('id', 'item_name', 'category', 'usage', 'country')
+                ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $conditions
+        ]);
+    }
+
+    public function getpermitconditionbyid($id)
+    {
+        $conditions = IpCondition::with(['code', 'condcategory'])
+                ->select('id', 'item_name', 'category', 'usage', 'addional_condition', 'quantity_limit', 'date_limit', 'country')
+                ->findOrFail($id);
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $conditions
+        ]);
+    }
 }

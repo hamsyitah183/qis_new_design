@@ -7,6 +7,7 @@ use App\Http\Controllers\internal\MiscController;
 use App\Http\Controllers\public\importPermit\PermitApplicationController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\PublicController;
 use App\Http\Controllers\RoleAndPermissionController;
 use App\Http\Controllers\TempFileController;
 use App\Http\Controllers\UserController;
@@ -147,10 +148,12 @@ Route::prefix('internal')
 
         //PERMIT CONDITION
         Route::get('/permit_condition', [\App\Http\Controllers\internal\MiscController::class, 'showpermitcondition']);
-        Route::get('/permit_add_condition', [\App\Http\Controllers\internal\MiscController::class, 'permitaddcondition']);
+        Route::get('/permit_condition/data', [\App\Http\Controllers\internal\MiscController::class, 'getpermitconditiondata']);
+        Route::get('/permit_condition/getdata/{id}', [\App\Http\Controllers\internal\MiscController::class, 'getpermitconditionbyid']);
+        Route::get('/permit_add_condition', [\App\Http\Controllers\internal\MiscController::class, 'permitaddcondition'])->name('permitaddcondition');
         Route::post('/save_condition', [\App\Http\Controllers\internal\MiscController::class, 'saveCondition'])->name('saveCondition');   
         Route::get('/permit_edit_condition/{id}', [\App\Http\Controllers\internal\MiscController::class, 'editCondition']);     
-        Route::get('/control_panel', [MiscController::class, 'showcontrolpanel']);
+        
     });
 
 Route::middleware(['auth.any'])
