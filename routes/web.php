@@ -135,10 +135,6 @@ Route::prefix('internal')
         // ======================= application ========================
         Route::get('/view_all_application', [ApplicationController::class, 'showallapplicationlist'])->name('application.list');
 
-        // Route::get('/application/list/data', [ApplicationController::class, 'getallapplicationlist'])->name('application.data');
-
-
-
         //MISC
 
         Route::get('/control_panel', [\App\Http\Controllers\internal\MiscController::class, 'showcontrolpanel']);
@@ -171,10 +167,13 @@ Route::middleware(['auth.any'])
         Route::get('/country/{code}', [DashboardController::class, 'get_country']);
         Route::get('/entry_point/{id}', [DashboardController::class, 'get_entry_point']);
 
-        // application
+        //============================= application ======================
+        Route::get('/application/list/data', [ApplicationController::class, 'getallapplicationlist'])
+            ->name('application.data');
+
         Route::get('/application/{id}/data', [ApplicationController::class, 'getApplicationDetails']);
-        Route::get('/application/list/data', [ApplicationController::class, 'getallapplicationlist']);
+        Route::get('/view_application/{uuid}', [ApplicationController::class, 'viewapplication'])
+            ->name('viewApplication');
 
-
-        Route::get('/view_application/{uuid}', [ApplicationController::class, 'viewapplication'])->name('viewApplication');
+        Route::get('/application/permit/{id}/data', [ApplicationController::class, 'get_application_permit']);
     });

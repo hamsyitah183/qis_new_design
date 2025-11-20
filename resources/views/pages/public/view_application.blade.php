@@ -8,7 +8,14 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="View Application">
+    <x-breadcrumb :items="[
+        ['label' => 'Dashboard', 'url' => '/'],
+        ['label' => 'Application List', 'url' => '/internal/view_all_application'],
+        ['label' => 'Application: '.$application->application_id, 'url' => '#']
+        
+        ]"
+         title="View Application"
+        >
 
     </x-breadcrumb>
 @endsection
@@ -20,11 +27,7 @@
     <div class="row">
         <div class="col-xl-12">
             <div class="card custom-card">
-                <div class="card-header">
-                    <div class="card-title">
-                        VIEW PERMIT APPLICATION
-                    </div>
-                </div>
+               
                 <div class="card-body p-0"> <!-- method="POST"  data-wizard="active" style="display: block;"-->
                     <form id="wizardForm" class="wizard wizard-tab horizontal">
                         <aside class="wizard-nav dots">
@@ -72,6 +75,14 @@
         </div>
     </div>
 
+    <x-modal id="consignmentModal" title="">
+
+
+        @slot('footer')
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        @endslot
+
+    </x-modal>
 
 @endsection
 

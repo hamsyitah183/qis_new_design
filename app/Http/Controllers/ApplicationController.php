@@ -64,7 +64,7 @@ class ApplicationController extends Controller
                 };
             })
             ->addColumn('action', function ($row) {
-                $url = '/public/view_application/' . $row->application_id;
+                $url = '/view_application/' . $row->application_id;
                 return '<a class="btn btn-sm btn-primary viewApplication" href="' . $url . '">View</a>';
             })
 
@@ -92,6 +92,7 @@ class ApplicationController extends Controller
 
     public function viewapplication($uuid)
     {
+
         $application = IpApplication::with([
             'user',         // submitted by
             'importer',     // importer user
@@ -149,9 +150,7 @@ class ApplicationController extends Controller
             'consignmentPermits.attachments'
         ]);
     
-        if ($type === 'admin') {
-
-
+        if ($type === 'internal') {
             return response()->json($application);
         }
 
@@ -170,4 +169,6 @@ class ApplicationController extends Controller
             'message' => 'User type not recognized'
         ], 400);
     }
+
+  
 }

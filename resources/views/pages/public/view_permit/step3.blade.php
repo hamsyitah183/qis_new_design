@@ -207,14 +207,14 @@
                                              <table id="summaryTable3" class="table text-nowrap">
                                                  <thead class="table-success">
                                                      <tr>
-                                                         <th scope="col">#</th>
+                                                
                                                          <th scope="col">Item Name</th>
                                                          <th scope="col">Quantity</th>
                                                          <th scope="col" style="">
                                                              Purpose</th>
                                                          <th scope="col">Value</th>
                                                          <th scope="col">Attachment</th>
-                                                         <th scope="col">Action</th>
+                                                 
                                                      </tr>
                                                  </thead>
                                                  <tbody>

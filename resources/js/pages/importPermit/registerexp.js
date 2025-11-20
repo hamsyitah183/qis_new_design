@@ -844,23 +844,13 @@ export function summarySubmit() {
         // --- Build attachment list ---
         let attachmentHTML = "";
 
-        if (item.files && item.files.length > 0) {
-            attachmentHTML = item.files
-                .map((file, i) => {
-                    return `
-                        <button 
-                            class="btn btn-sm btn-primary view-more-item"
-                            data-id = "${item.id}"
-                        >
-                            File ${i + 1}
-                        </button>
-                    `;
-                })
-                .join("<br>");
-        } else {
-            attachmentHTML = `<span class="text-muted">No files</span>`;
-        }
-
+      
+            attachmentHTML = `
+            <button class = "btn btn-sm btn-primary view-more-item" data-id = "${item.id}">
+                View More
+            </button>
+            `
+     
         // --- Insert summary row ---
         targetTable.insertAdjacentHTML(
             "beforeend",
