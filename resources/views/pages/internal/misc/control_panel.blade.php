@@ -62,6 +62,82 @@
                         </div>
                     </div>
 
+                    <!-- edit modal -->
+                    <div class="modal fade" id="editItemModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-md modal-dialog-centered">
+                            <div class="modal-content">
+
+                                <!-- Header -->
+                                <div class="modal-header bg-primary text-white">
+                                    <h5 class="modal-title">
+                                        <i class="ri-edit-line me-1"></i> Edit Item
+                                    </h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+
+                                <!-- Body -->
+                                <form id="edititemmdl">
+                                <div class="modal-body">
+                                    <input type="hidden" id="editItemId">
+                                    <div class="mb-3">
+                                        <label for="editICOde" class="form-label">Item Code</label>
+                                        <input type="text" id="editICOde" class="form-control">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="editDesc" class="form-label">Item Description</label>
+                                        <input type="text" id="editDesc" class="form-control">
+                                    </div>
+                                </div>
+                                </form>
+                                <!-- Footer -->
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">
+                                        Cancel
+                                    </button>
+                                    <button type="button" id="saveEditBtn" class="btn btn-primary">
+                                        Save Changes
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- add modal -->
+                    <div class="modal fade" id="addGenericModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-md modal-dialog-centered">
+                            <div class="modal-content">
+
+                                <div class="modal-header ">
+                                    <h5 class="modal-title" id="addModalTitle">Add Something</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+
+                                <form id="addGenericForm">
+                                    <div class="modal-body" id="modalFields">
+                                        <input type="hidden" id="addItemType">
+                                        <div class="mb-3">
+                                            <label for="addCodev" class="form-label">Item Code</label>
+                                            <input type="text" id="addCodev" class="form-control">
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="addDescv" class="form-label">Item Description</label>
+                                            <input type="text" id="addDescv" class="form-control">
+                                        </div>
+                                    </div>
+
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-primary" id="saveGenericBtn">Save</button>
+                                    </div>
+                                </form>
+
+                            </div>
+                        </div>
+                    </div>
+
 @endsection
 
 @push('scripts')
@@ -69,6 +145,6 @@
     window.baseUrl = "{{ url('/') }}";
 </script>
 
-    
+    @vite(['resources/js/pages/internal/misc/control_panel.js'])
 @endpush
 

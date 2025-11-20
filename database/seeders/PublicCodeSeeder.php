@@ -250,6 +250,52 @@ class PublicCodeSeeder extends Seeder
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
+            [
+                'cate_name' => 'consignment_application',
+                'cate_code' => '1',
+                'description' => 'Planting Material',
+                'is_del' => false,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'cate_name' => 'consignment_application',
+                'cate_code' => '2',
+                'description' => 'Fresh Produce',
+                'is_del' => false,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'cate_name' => 'consignment_application',
+                'cate_code' => '3',
+                'description' => 'Stored Produce',
+                'is_del' => false,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'cate_name' => 'consignment_application',
+                'cate_code' => '4',
+                'description' => 'For Animal Consumption',
+                'is_del' => false,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],[
+                'cate_name' => 'consignment_application',
+                'cate_code' => '5',
+                'description' => 'Logs or Wood Products',
+                'is_del' => false,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],[
+                'cate_name' => 'consignment_application',
+                'cate_code' => '6',
+                'description' => 'Fertilizers or Planting Media',
+                'is_del' => false,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
             
         ]);
     }
