@@ -1,0 +1,173 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\IpApplication;
+use App\Models\IpConsignmentAttachment;
+use App\Models\IpConsignmentPermit;
+use Illuminate\Http\Request;
+use Yajra\DataTables\Facades\DataTables;
+
+
+class ApplicationController extends Controller
+{
+    //
+    public function show()
+    {
+        return view('pages.public.new_application');
+    }
+
+    public function showthis()
+    {
+        return view('pages.public.formw');
+    }
+
+    public function showallapplicationlist()
+    {
+        return view('pages.public.application_list');
+    }
+
+    public function getallapplicationlist()
+    {
+        $userUuid = authUser()['user']->uuid;
+        $type = authUser()['type'];
+
+        $query = IpApplication::with([
+            'user',
+            'importer',
+            'exporter',
+            'entryPoint.districtCode'
+        ]);
+
+        if ($type === 'public') {
+            $query->where('user_id', $userUuid);
+        }
+
+        return DataTables::of($query)
+            ->addIndexColumn()
+            ->addColumn('importer', fn($row) => $row->importer->fullname ?? '-')
+            ->addColumn('exporter', fn($row) => $row->exporter->name ?? '-')
+            ->addColumn('submitted_by', fn($row) => $row->user->fullname ?? '-')
+            ->addColumn('importer_type', function ($row) {
+                $type = $row->category_application == 1 ? 'Others' : 'Self';
+                return '<span class="badge bg-primary-transparent fs-13 p-1">' . $type . '</span>';
+            })
+            ->addColumn('date', fn($row) => $row->eta ? $row->eta->format('Y-m-d') : '-')
+            ->addColumn('status', function ($row) {
+                $status = strtolower($row->status ?? 'pending');
+
+                return match (true) {
+                    str_contains($status, 'pending') => '<span class="badge bg-warning fs-13 p-1">Pending</span>',
+                    str_contains($status, 'rejected') => '<span class="badge bg-danger fs-13 p-1">Rejected</span>',
+                    str_contains($status, 'success') => '<span class="badge bg-success fs-13 p-1">Success</span>',
+                    default => '<span class="badge bg-secondary fs-13 p-1">' . ucfirst($status) . '</span>',
+                };
+            })
+            ->addColumn('action', function ($row) {
+                $url = '/public/view_application/' . $row->application_id;
+                return '<a class="btn btn-sm btn-primary viewApplication" href="' . $url . '">View</a>';
+            })
+
+            ->rawColumns(['status', 'importer_type', 'action'])
+            ->make(true);
+    }
+
+
+
+
+    public function verifyapplication()
+    {
+        $application = IpApplication::with([
+            'user',         // submitted by
+            'importer',     // importer user
+            'exporter',       // exporter record
+            'entryPoint.districtCode'
+        ])
+            ->where('importer_id', auth()->id())
+            ->where('category_application', true)
+            ->get();
+
+        return view('pages.public.application_review_list', compact('application'));
+    }
+
+    public function viewapplication($uuid)
+    {
+        $application = IpApplication::with([
+            'user',         // submitted by
+            'importer',     // importer user
+            'exporter',       // exporter record
+            // 'exporter.country',
+            'entryPoint.districtCode'
+        ])
+            ->where('application_id', $uuid)
+            ->orderBy('created_at', 'desc')
+            ->firstOrFail();
+
+        $itemId = $application->id;
+
+        // dd($application->consignmentPermits);
+
+        $consignment = IpConsignmentPermit::with([
+            'unit',
+            'purposeCode'
+        ])
+            ->where('application_id', $itemId)
+            ->get();
+
+
+        return view('pages.public.view_application', [
+            'application'        => $application,
+            'consignment'        => $consignment,
+            'consignmentDetails' => $consignment[0]->attachments
+        ]); //, 'consignment', 'attachment'
+    }
+
+    public function modalspeItem($id)
+    {
+        $cons = IpConsignmentPermit::with(['attachments'])
+            ->findOrFail($id);
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $cons
+        ]);
+    }
+
+
+    public function getApplicationDetails($id)
+    {
+        $type = authUser()['type'];   // 'public' or 'admin'
+        $user = authUser()['user'];   // authenticated user object
+
+        // Fetch application without eager loading yet
+        $application = IpApplication::where('application_id', $id)->firstOrFail();
+        $application->load([
+            'user',
+            'importer',
+            'exporter',
+            'entryPoint.districtCode',
+            'consignmentPermits.attachments'
+        ]);
+    
+        if ($type === 'admin') {
+
+
+            return response()->json($application);
+        }
+
+        // Case 2: Public → only if they own the application
+        if ($type === 'public') {
+            if ($application->user_id !== $user->uuid) {
+                return response()->json([
+                    'message' => 'You do not have authority to view this application'
+                ], 403);
+            }
+            return response()->json($application);
+        }
+
+        // Default fallback
+        return response()->json([
+            'message' => 'User type not recognized'
+        ], 400);
+    }
+}

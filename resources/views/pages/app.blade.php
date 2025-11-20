@@ -17,7 +17,8 @@
     <title>QIS SYSTEM | @yield('pageName')</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-
+  
+    
     <!-- Main Theme JS -->
     <script src="{{ asset('build2/assets/main.js') }}"></script>
 
@@ -57,11 +58,14 @@
     <link rel="stylesheet" href="{{ asset('build2/assets/libs/flatpickr/flatpickr.min.css') }}">
 
     <!-- Prism CSS -->
-        <link rel="stylesheet" href="https://laravelui.spruko.com/xintra/build/assets/libs/prismjs/themes/prism-coy.min.css">
-    
-        <link rel="stylesheet" href="https://laravelui.spruko.com/xintra/build/assets/libs/filepond/filepond.min.css">
-    <link rel="stylesheet" href="https://laravelui.spruko.com/xintra/build/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.css">
-    <link rel="stylesheet" href="https://laravelui.spruko.com/xintra/build/assets/libs/filepond-plugin-image-edit/filepond-plugin-image-edit.min.css">    
+    <link rel="stylesheet"
+        href="https://laravelui.spruko.com/xintra/build/assets/libs/prismjs/themes/prism-coy.min.css">
+
+    <link rel="stylesheet" href="https://laravelui.spruko.com/xintra/build/assets/libs/filepond/filepond.min.css">
+    <link rel="stylesheet"
+        href="https://laravelui.spruko.com/xintra/build/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.css">
+    <link rel="stylesheet"
+        href="https://laravelui.spruko.com/xintra/build/assets/libs/filepond-plugin-image-edit/filepond-plugin-image-edit.min.css">
     <link rel="stylesheet" href="https://laravelui.spruko.com/xintra/build/assets/libs/dropzone/dropzone.css">
 
     <!-- Tagify CSS -->
@@ -180,34 +184,47 @@
     <!-- END SCRIPTS -->
 
     <!-- Prism JS -->
-    <!-- --><script src="{{ asset('build2/assets/libs/prismjs/prism.js') }}"></script>
+    <!-- -->
+    <script src="{{ asset('build2/assets/libs/prismjs/prism.js') }}"></script>
     <link rel="modulepreload" href="{{ asset('build2/assets/prism-custom-DndhZ9SR.js') }}" />
-    <script type="module" src="{{ asset('build2/assets/prism-custom-DndhZ9SR.js') }}"></script> 
+    <script type="module" src="{{ asset('build2/assets/prism-custom-DndhZ9SR.js') }}"></script>
 
-        <!-- Filepond JS -->
-    <!-- --><script src="{{ asset('build2/assets/libs/filepond/filepond.min.js') }}"></script>    
-    <script src="{{ asset('build2/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.js') }}"></script>
-    <script src="{{ asset('build2/assets/libs/filepond-plugin-image-exif-orientation/filepond-plugin-image-exif-orientation.min.js') }}"></script>
-    <script src="{{ asset('build2/assets/libs/filepond-plugin-file-validate-size/filepond-plugin-file-validate-size.min.js') }}"></script>
-    <script src="{{ asset('build2/assets/libs/filepond-plugin-file-encode/filepond-plugin-file-encode.min.js') }}"></script>
+    <!-- Filepond JS -->
+    <!-- -->
+    <script src="{{ asset('build2/assets/libs/filepond/filepond.min.js') }}"></script>
+    <script src="{{ asset('build2/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.js') }}">
+    </script>
+    <script
+        src="{{ asset('build2/assets/libs/filepond-plugin-image-exif-orientation/filepond-plugin-image-exif-orientation.min.js') }}">
+    </script>
+    <script
+        src="{{ asset('build2/assets/libs/filepond-plugin-file-validate-size/filepond-plugin-file-validate-size.min.js') }}">
+    </script>
+    <script src="{{ asset('build2/assets/libs/filepond-plugin-file-encode/filepond-plugin-file-encode.min.js') }}">
+    </script>
     <script src="{{ asset('build2/assets/libs/filepond-plugin-image-edit/filepond-plugin-image-edit.min.js') }}"></script>
-    <script src="{{ asset('build2/assets/libs/filepond-plugin-file-validate-type/filepond-plugin-file-validate-type.min.js') }}"></script>
+    <script
+        src="{{ asset('build2/assets/libs/filepond-plugin-file-validate-type/filepond-plugin-file-validate-type.min.js') }}">
+    </script>
     <script src="{{ asset('build2/assets/libs/filepond-plugin-image-crop/filepond-plugin-image-crop.min.js') }}"></script>
-    <script src="{{ asset('build2/assets/libs/filepond-plugin-image-resize/filepond-plugin-image-resize.min.js') }}"></script>
-    <script src="{{ asset('build2/assets/libs/filepond-plugin-image-transform/filepond-plugin-image-transform.min.js') }}"></script> 
+    <script src="{{ asset('build2/assets/libs/filepond-plugin-image-resize/filepond-plugin-image-resize.min.js') }}">
+    </script>
+    <script src="{{ asset('build2/assets/libs/filepond-plugin-image-transform/filepond-plugin-image-transform.min.js') }}">
+    </script>
 
-     <!-- Dropzone JS -->
+    <!-- Dropzone JS -->
     <script src="{{ asset('build2/assets/libs/dropzone/dropzone-min.js') }}"></script>
 
-    <!-- Fileupload JS --> 
+    <!-- Fileupload JS -->
     <link rel="modulepreload" href="{{ asset('build2/assets/fileupload-DSJ_d_h8.js') }}" />
     <script type="module" src="{{ asset('build2/assets/fileupload-DSJ_d_h8.js') }}"></script>
-    
-    <!-- Dropzone CSS -->
-<!-- <link href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css" rel="stylesheet" /> -->
 
-<!-- Dropzone JS -->
-<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js"></script> -->
+    <!-- Dropzone CSS -->
+    <!-- <link href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css" rel="stylesheet" /> -->
+
+    <!-- Dropzone JS -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js"></script> -->
+
 
     <!-- intl-tel-input JS -->
     <script src="https://laravelui.spruko.com/xintra/build/assets/libs/intl-tel-input/build/js/intlTelInput.min.js"></script>
@@ -215,7 +232,6 @@
     <!-- Tagify JS -->
     <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
 
-    
     @stack('scripts')
 
 </body>

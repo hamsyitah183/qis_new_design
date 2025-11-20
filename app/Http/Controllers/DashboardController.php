@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Country;
+use App\Models\IpEntryPoint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -31,5 +33,19 @@ class DashboardController extends Controller
     protected function internal_dashboard()
     {
         return view('pages.internal.dashboard'); // Internal user dashboard
+    }
+
+    public function get_country($code)
+    {
+        $country = Country::where('code', $code)->first();
+
+        return response()->json($country);
+    }
+
+    public function get_entry_point($id)
+    {
+        $entry = IpEntryPoint::find($id);
+
+        return response()->json($entry);
     }
 }

@@ -1,10 +1,9 @@
-import './bootstrap';
-import { IconHome, IconUser } from 'tabler-icons';
-import '@fortawesome/fontawesome-free/css/all.min.css';
+import "./bootstrap";
+import { IconHome, IconUser } from "tabler-icons";
+import "@fortawesome/fontawesome-free/css/all.min.css";
 // import './feather-icons';
 
 // If you are using JavaScript/ECMAScript modules:
-
 
 // // If you are using an older version than Dropzone 6.0.0,
 // // then you need to disabled the autoDiscover behaviour here:
@@ -15,23 +14,41 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 //   console.log(`File added: ${file.name}`);
 // });
 
-import $ from 'jquery';
+import $ from "jquery";
 window.$ = window.jQuery = $; // make it global
+import "select2";
 
-
-// $.ajaxSetup({
-//     headers: {
-//         "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
-//     },
-// });
-
-$('#redirectProfile').on('click', function(e) {
+$("#redirectProfile").on("click", function (e) {
     e.preventDefault();
 
-    console.log('redirect ');
+    console.log("redirect ");
 
-    window.location.href = '/profile'
-})
+    window.location.href = "/profile";
+});
+
+export async function getAuthUser() {
+    if (window.authUserPromise) return window.authUserPromise;
+
+    window.authUserPromise = fetch("/api/auth-user")
+        .then((res) => {
+            if (!res.ok) throw new Error("Failed to get auth user");
+            return res.json();
+        })
+        .then((user) => {
+            window.authUser = user; // store globally
+            return user;
+        })
+        .catch((err) => {
+            console.error(err);
+            return null;
+        });
+
+    return window.authUserPromise;
+}
+
+getAuthUser().then((user) => {
+    window.authUser = user;
+});
 
 export function formatTime(timestamp) {
     const utcDate = new Date(timestamp);
@@ -64,4 +81,14 @@ export function initTooltips() {
         }
         new bootstrap.Tooltip(el);
     });
+}
+
+export async function getCountry(code) {
+    const res = await fetch(`/country/${code}`);
+    return await res.json();  // return the actual country data
+}
+
+export async function getEntryPoint(id) {
+    const res = await fetch(`/entry_point/${id}`);
+    return await res.json();  // return the actual country data
 }

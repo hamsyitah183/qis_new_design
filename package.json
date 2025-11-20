@@ -5,7 +5,7 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
-        "laravel-vite": "concurrently \"php artisan serve\" \"vite\""
+        "laravel-vite": "concurrently \"php artisan serve --host=0.0.0.0 --port=8000\" \"vite\""
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
@@ -30,6 +30,7 @@
         "feather-icons": "^4.29.2",
         "flatpickr": "^4.6.13",
         "jquery": "^3.7.1",
+        "select2": "^4.1.0-rc.0",
         "sweetalert2": "^11.26.3",
         "tabler-icons": "^1.35.0"
     }
