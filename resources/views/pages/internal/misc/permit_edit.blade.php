@@ -107,14 +107,14 @@
                                             </div>
 
                                             <!-- hidden input to submit HTML -->
-                                            <input type="hidden" name="permit_condition" id="permit-condition-input" value="{{ htmlspecialchars($condition->addional_condition) }}">
+                                            <input type="hidden" name="permit_condition" id="permit-condition-input">
                                             <small class="form-text text-muted mt-2">You may use simple formatting — bold, lists, links.</small>
                                         </div>                                        
                                     </div>
                                 </div>
                                 <div class="card-footer text-end">
                                     <button id="submitConditionBtn" type="submit" class="btn btn-primary">
-                                        <i class="ri-add-line me-1"></i> Add New Permit Condition
+                                        <i class="ri-add-line me-1"></i> Update Condition
                                     </button>
                                     <a  class="btn btn-secondary">Cancel</a>
                                 </div>
@@ -133,20 +133,35 @@
 <script>
     window.countryTagify = null;
     window.usageTagify = null;
-    window.quill = null;
 </script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
 
-        const theCountry = {!! json_encode($condition->country) !!};
-        const conditionCountry = theCountry.map(i => ({
-                    value: i,
-                    name: i
-                }));
-        console.log("Condition Country this:", conditionCountry);
 
-        const theusage = {!! json_encode($condition->usage) !!};
+        // 1. Raw data from Laravel
+        const theCountryRaw = {!! json_encode($condition->country) !!};
+        // console.log("Raw Country this:", theCountryRaw);
+
+        // 2. Fix: convert string "['CN','ID']" → real array
+        const theCountry = Array.isArray(theCountryRaw)
+            ? theCountryRaw
+            : JSON.parse(theCountryRaw ?? "[]");
+
+        // 3. Build the {value,name} pair list
+        const conditionCountry = theCountry.map(i => ({
+            value: i,
+            name: i
+        }));
+
+        
+
+
+        const theusageraw = {!! json_encode($condition->usage) !!};
+        const theusage = Array.isArray(theusageraw)
+                ? theusageraw
+                : JSON.parse(theusageraw ?? "[]");
+
         const conditionUsage = theusage.map(i => ({
                     value: i,
                     name: i
@@ -173,7 +188,7 @@
                 });
                 countryTagify.addTags(conditionCountry);
 
-                console.log("Country loaded:", countryList);
+                
             }
         });
 
@@ -202,7 +217,7 @@
                 });
                 usageTagify.addTags(conditionUsage);
 
-                console.log("Usage loaded:", usageList);
+                // console.log("Usage loaded:", usageList);
             }
         });
 
@@ -224,23 +239,19 @@
                     ['clean']
                 ]
             },
-            // ⭐ Load Existing HTML into Quill
-            const oldHtml = document.getElementById("existingCondition").value;
-            if (oldHtml) {
-                quill.root.innerHTML = oldHtml;
-            }
-
-            // ⭐ Update hidden input on text change
-            quill.on("text-change", function () {
-                document.getElementById("permit-condition-input").value =
-                    quill.root.innerHTML;
-            });
+            placeholder: 'Write permit conditions here...',
+            theme: 'snow'
         });
-    });
-</script>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
+        // Your long text from backend
+        const longText = `{!! $condition->addional_condition !!}`;
+
+        // Insert into Quill with formatting
+        quill.clipboard.dangerouslyPasteHTML(longText);
+    });
+
+
+    document.addEventListener("DOMContentLoaded", function () {  
 
         document.getElementById("submitConditionBtn").addEventListener("click", function () {
 

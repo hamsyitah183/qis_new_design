@@ -101,7 +101,7 @@ class MiscController extends Controller
     public function permitaddcondition()
     {
         $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')
-        ->where('cate_name', 'consignment_purpose')
+        ->where('cate_name', 'condition_category')
         ->where('is_del', false)
         ->get();
 
