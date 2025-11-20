@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\HasApplicationActivityLog;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class IpApplication extends Model
 {
-    use HasFactory;
+    use HasFactory, HasApplicationActivityLog;
     protected $table = 'ip_application';
 
     protected $fillable = [
@@ -22,12 +23,12 @@ class IpApplication extends Model
         'category_application',
         'importer_verify',
         'date_importer_verify',
+        'status'
     ];
 
     protected $casts = [
         'eta' => 'date',
         'importer_detail' => 'array',          // JSON stored importer info
-        'importer_verify' => 'boolean',
         'date_importer_verify' => 'datetime',
     ];
 
@@ -63,4 +64,11 @@ class IpApplication extends Model
     {
         return $this->hasMany(IpConsignmentPermit::class, 'application_id', 'id');
     }
+
+    public function activity_log()
+    {
+        return $this->hasMany(ImportPermitLog::class, 'application_id', 'application_id');
+    }
+
+
 }

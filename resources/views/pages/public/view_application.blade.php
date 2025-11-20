@@ -11,11 +11,8 @@
     <x-breadcrumb :items="[
         ['label' => 'Dashboard', 'url' => '/'],
         ['label' => 'Application List', 'url' => '/internal/view_all_application'],
-        ['label' => 'Application: '.$application->application_id, 'url' => '#']
-        
-        ]"
-         title="View Application"
-        >
+        ['label' => 'Application: ' . $application->application_id, 'url' => '#'],
+    ]" title="View Application">
 
     </x-breadcrumb>
 @endsection
@@ -27,7 +24,14 @@
     <div class="row">
         <div class="col-xl-12">
             <div class="card custom-card">
-               
+                <div class="card-header">
+
+                    <div class="ms-auto">
+                        <button class="btn btn-primary btn-wave btn-sm " id="applicationModal"><i
+                                class="ti ti-file-time fs-18"></i> Application Log</button>
+                    </div>
+
+                </div>
                 <div class="card-body p-0"> <!-- method="POST"  data-wizard="active" style="display: block;"-->
                     <form id="wizardForm" class="wizard wizard-tab horizontal">
                         <aside class="wizard-nav dots">
@@ -83,6 +87,33 @@
         @endslot
 
     </x-modal>
+
+    <x-modal id="activityLogModal" title="Activity Log">
+
+        <!-- Your table goes here -->
+        <div class="table-responsive">
+            <table class="table text-nowrap table-hover" id="applicationLogTable">
+                <thead class="table-primary">
+                    <tr>
+                        <th scope="col">Action</th>
+                        <th scope="col">User</th>
+                        <th scope="col">Remark</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Time and Date</th>
+                    </tr>
+                </thead>
+                <tbody class="table-group-divider">
+
+                </tbody>
+            </table>
+        </div>
+
+        @slot('footer')
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        @endslot
+
+    </x-modal>
+
 
 @endsection
 

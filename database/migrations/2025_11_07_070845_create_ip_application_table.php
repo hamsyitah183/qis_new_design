@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('ip_application', function (Blueprint $table) {
             $table->id();
             $table->uuid('application_id')->unique();
+            $table->string('reference_no')->nullable();
             $table->date('eta');
             $table->enum('transport_type', ['Air', 'Sea', 'Land']);
             $table->integer('entry_point');
@@ -24,7 +25,7 @@ return new class extends Migration
 
             $table->text('importer_detail')->comment('JSON with importer info');
             $table->tinyInteger('category_application')->default(0);
-            $table->boolean('importer_verify')->default(false);
+            $table->string('importer_verify')->default('pending');
             $table->dateTime('date_importer_verify')->nullable();
             $table->timestamps();
 

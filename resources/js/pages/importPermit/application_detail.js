@@ -1,6 +1,6 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
-import { getCountry, getEntryPoint } from "../../app";
+import { formatTime, getCountry, getEntryPoint } from "../../app";
 let application = null;
 
 /* -------------------------------
@@ -195,10 +195,10 @@ async function viewMore() {
 }
 
 function viewAttachment() {
-    $(document).on('click', '.view-file-btn', function (e) {
+    $(document).on("click", ".view-file-btn", function (e) {
         e.preventDefault();
 
-        let path = $(this).data('file');
+        let path = $(this).data("file");
 
         if (!path) {
             console.warn("No file path found!");
@@ -208,6 +208,146 @@ function viewAttachment() {
         // Open in a new tab
         window.open(path, "_blank");
     });
+}
+
+// verify application
+function verifyApplication() {
+    $("#verifyAppl").on("click", function (e) {
+        e.preventDefault();
+
+        let applicationId = application.application_id;
+
+        Swal.fire({
+            title: "Verify Application?",
+            text: "Are you sure you want to verify this application?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, verify it!",
+            cancelButtonText: "Cancel",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Send AJAX request to verify application
+                $.ajax({
+                    url: `/application/verify/${applicationId}`, // your route
+                    method: "POST",
+                    data: {
+                        _token: $("meta[name='csrf-token']").attr("content"), // CSRF token
+                        verified: 1,
+                    },
+                    success: function (res) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Application Verified!",
+                            text:
+                                res.message ||
+                                "The application has been successfully verified.",
+                            // timer: 1800,
+                            showConfirmButton: false,
+                            // timerProgressBar: true,
+                            position: "center",
+                        });
+                    },
+                    error: function (err) {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error!",
+                            text:
+                                err.responseJSON?.message ||
+                                "Something went wrong.",
+                        });
+                    },
+                });
+            }
+        });
+    });
+}
+
+// reject application
+function rejectApplication() {
+    $("#rejectAppl").on("click", function (e) {
+        e.preventDefault();
+
+        let applicationId = application.application_id;
+
+        Swal.fire({
+            title: "Verify Application?",
+            text: "Are you sure you want to verify this application?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, verify it!",
+            cancelButtonText: "Cancel",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Send AJAX request to verify application
+                $.ajax({
+                    url: `/application/verify/${applicationId}`, // your route
+                    method: "POST",
+                    data: {
+                        _token: $("meta[name='csrf-token']").attr("content"), // CSRF token
+                        verified: 0,
+                    },
+                    success: function (res) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Application Not Approved!",
+                            text:
+                                res.message ||
+                                "The application has been successfully not verified.",
+                            // timer: 1800,
+                            showConfirmButton: false,
+                            // timerProgressBar: true,
+                            position: "center",
+                        });
+                    },
+                    error: function (err) {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error!",
+                            text:
+                                err.responseJSON?.message ||
+                                "Something went wrong.",
+                        });
+                    },
+                });
+            }
+        });
+    });
+}
+
+// application log
+function applicationLog() {
+    $("#applicationModal")
+        .off("click")
+        .on("click", function (e) {
+            e.preventDefault();
+
+            const tableBody = $("#applicationLogTable tbody");
+            tableBody.empty(); // clear existing rows
+
+            console.log("application", application.activity_log);
+            let activity_log = application.activity_log;
+
+       
+
+            const modalEl = document.getElementById("activityLogModal");
+            modalEl.querySelector(".modal-title").textContent =
+                " Activity Log" || "Activity Log";
+
+            activity_log.forEach((log, index) => {
+               tableBody.append(`
+                    <tr>
+                        <td>${log.action}</td>
+                        <td>${log.causer.fullname}</td>
+                        <td>${log.remark}</td>
+                        <td>${log.status}</td>
+                        <td>${formatTime(log.created_at)}</td>
+                    </tr>
+                `);
+            });
+
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        });
 }
 
 
@@ -230,6 +370,11 @@ async function initApplicationDetails() {
 
     viewMore();
     viewAttachment();
+
+    verifyApplication();
+    rejectApplication();
+
+    applicationLog();
 
     Swal.close(); // Close after data is loaded
 }

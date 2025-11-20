@@ -36,11 +36,14 @@ class ApplicationController extends Controller
             'user',
             'importer',
             'exporter',
-            'entryPoint.districtCode'
+            'entryPoint.districtCode',
         ]);
 
         if ($type === 'public') {
-            $query->where('user_id', $userUuid);
+            $query->where(function ($q) use ($userUuid) {
+                $q->where('user_id', $userUuid)
+                    ->orWhere('importer_id', $userUuid);
+            });
         }
 
         return DataTables::of($query)
@@ -119,7 +122,7 @@ class ApplicationController extends Controller
         return view('pages.public.view_application', [
             'application'        => $application,
             'consignment'        => $consignment,
-            'consignmentDetails' => $consignment[0]->attachments
+            // 'consignmentDetails' => $consignment[0]->attachments
         ]); //, 'consignment', 'attachment'
     }
 
@@ -137,30 +140,33 @@ class ApplicationController extends Controller
 
     public function getApplicationDetails($id)
     {
-        $type = authUser()['type'];   // 'public' or 'admin'
+        $type = authUser()['type'];   // 'public' or 'internal'
         $user = authUser()['user'];   // authenticated user object
 
-        // Fetch application without eager loading yet
-        $application = IpApplication::where('application_id', $id)->firstOrFail();
-        $application->load([
-            'user',
-            'importer',
-            'exporter',
-            'entryPoint.districtCode',
-            'consignmentPermits.attachments'
-        ]);
-    
+        // Fetch application and eager load relationships
+        $application = IpApplication::where('application_id', $id)
+            ->with([
+                'user',
+                'importer',
+                'exporter',
+                'entryPoint.districtCode',
+                'consignmentPermits.attachments',
+                'activity_log.causer'
+            ])
+            ->firstOrFail();
+
         if ($type === 'internal') {
             return response()->json($application);
         }
 
-        // Case 2: Public → only if they own the application
         if ($type === 'public') {
-            if ($application->user_id !== $user->uuid) {
+            // Check if user is either the submitter or the importer
+            if ($application->user_id !== $user->uuid && $application->importer_id !== $user->uuid) {
                 return response()->json([
                     'message' => 'You do not have authority to view this application'
                 ], 403);
             }
+
             return response()->json($application);
         }
 
@@ -170,5 +176,45 @@ class ApplicationController extends Controller
         ], 400);
     }
 
-  
+    function verify_application_permit($id, Request $request)
+    {
+
+        $application = IpApplication::where('application_id', $id)->first();
+
+        if ($request->input('verified')) {
+
+
+
+            $application->logActivity(
+                action: 'Approved',
+                remark: 'Application Approved By The Importer',
+                status: 'Approved'
+            );
+
+            $application->logActivity(
+                action: 'Pending',
+                remark: 'Application Pending',
+                status: 'Pending'
+            );
+
+            $application->status = 'Pending';
+
+        } else {
+
+
+
+            $application->logActivity(
+                action: 'Not Approved',
+                remark: 'Not Application Not Approved By The Importer',
+                status: 'Not Approved'
+            );
+
+            $application->status = 'Not Approved';
+        }
+        $application->importer_verify = $request->input('verified');
+        $application->save();
+        return response()->json([
+            'message' => 'Application is verified'
+        ]);
+    }
 }
