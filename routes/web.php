@@ -83,7 +83,7 @@ Route::prefix('public')
         Route::get('/view_all_application', [ApplicationController::class, 'showallapplicationlist'])->name('showallapplicationlist');
 
         Route::get('/verify_application', [ApplicationController::class, 'verifyapplication'])->name('verifyapplication');
-        Route::get('/view_application/{uuid}', [ApplicationController::class, 'viewapplication'])->name('viewApplication');
+
 
         // temporary file
         Route::post('/temp-upload', [TempFileController::class, 'upload']);
@@ -172,6 +172,9 @@ Route::middleware(['auth.any'])
         Route::get('/entry_point/{id}', [DashboardController::class, 'get_entry_point']);
 
         // application
-        Route::get('/application/list/data', [ApplicationController::class, 'getallapplicationlist']);
         Route::get('/application/{id}/data', [ApplicationController::class, 'getApplicationDetails']);
+        Route::get('/application/list/data', [ApplicationController::class, 'getallapplicationlist']);
+
+
+        Route::get('/view_application/{uuid}', [ApplicationController::class, 'viewapplication'])->name('viewApplication');
     });
