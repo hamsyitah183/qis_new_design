@@ -108,6 +108,35 @@
 
                 <!-- User Management -->
                 @if (auth('internal')->check())
+                    {{-- Application Section --}}
+                    <li class="slide__category"><span class="category-name">Application</span></li>
+
+                    @php
+                        // Check if the route name contains "application"
+                        $isApplicationActive = Str::contains($currentRoute, 'application');
+                    @endphp
+
+                    <li class="slide has-sub {{ $isApplicationActive ? 'open active' : '' }}">
+                        <a href="javascript:void(0);" class="side-menu__item">
+                            <i class="ri-arrow-down-s-line side-menu__angle"></i>
+                            <i class="ti ti-file-info side-menu__icon"></i>
+                            <span class="side-menu__label">Applications</span>
+                        </a>
+
+                        <ul class="slide-menu child1">
+                            <li class="slide side-menu__label1"><a href="javascript:void(0)">Application</a></li>
+
+                            <li class="slide {{ $currentRoute === 'internal.application.list' ? 'active' : '' }}">
+                                <a href="{{ route('internal.application.list') }}" class="side-menu__item">
+                                    View All Applications
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+
+
+
                     <li class="slide__category"><span class="category-name">User</span></li>
 
                     @php
@@ -148,7 +177,8 @@
                                     Users</a>
                             </li>
 
-                            <li class="slide {{ $currentRoute === 'internal.internal.activity_log' ? 'active' : '' }}">
+                            <li
+                                class="slide {{ $currentRoute === 'internal.internal.activity_log' ? 'active' : '' }}">
                                 <a href="{{ route('internal.internal.activity_log') }}"
                                     class="side-menu__item">Activity Log</a>
                             </li>
@@ -171,7 +201,7 @@
                         <ul class="slide-menu child1">
                             <li class="slide side-menu__label1"><a href="javascript:void(0)">Misc</a></li>
 
-                            <li class="slide {{ $currentRoute === 'internal.public.list' ? 'active' : '' }}">
+                            <li class="slide {{ $currentRoute === 'internal.controlpanel' ? 'active' : '' }}">
                                 <a href="#" class="side-menu__item">Control Panel</a>
                             </li>
 
@@ -179,9 +209,11 @@
                                 <a href="#" class="side-menu__item">Permit Conditoin</a>
                             </li>
 
-                            <li style="display:none" class="slide {{ $currentRoute === 'internal.internal.activity_log' ? 'active' : '' }} >
-                                <a href="{{ route('internal.internal.activity_log') }}" class="side-menu__item">
-                                    Activity Log</a>
+                            <li style="display:none"
+                                class="slide {{ $currentRoute === 'internal.internal.activity_log' ? 'active' : '' }} >
+                                <a href="{{ route('internal.internal.activity_log') }}"
+                                class="side-menu__item">
+                                Activity Log</a>
                             </li>
                         </ul>
                     </li>
