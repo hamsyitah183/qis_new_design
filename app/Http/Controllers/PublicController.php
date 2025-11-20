@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\country;
 use App\Models\IpApplication;
 use App\Models\IpConsignmentAttachment;
 use App\Models\IpConsignmentPermit;
@@ -113,6 +114,15 @@ class PublicController extends Controller
                 'status' => 'success',
                 'data'   => $cons
             ]);
+    }
+
+    public function getCountry(){
+        $country = country::select('code as value', 'name')->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $country
+        ]);
     }
     
 }

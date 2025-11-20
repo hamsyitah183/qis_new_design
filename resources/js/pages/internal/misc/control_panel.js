@@ -14,27 +14,38 @@ $(document).ready(function() {
         keyboard: false
     });
 
+    const thismodal = new bootstrap.Modal(document.getElementById("addGenericModal"), {
+                backdrop: 'static',
+                keyboard: false
+            });
+    
+    // load PB data into tables
     function loadPBData(cate) {
         var tableId;
         switch (cate) {
             case "district_entry":
                 tableId = "#tabletab1";
+                document.getElementById("editICOde").disabled = true;
                 break;
 
             case "condition_category":
                 tableId = "#tabletab4";
+                document.getElementById("editICOde").disabled = true;
                 break;
             
             case "consignment_purpose":
                 tableId = "#tabletab2";
+                document.getElementById("editICOde").disabled = true;
                 break;
 
             case "unit_measurement":
                 tableId = "#tabletab3";
+                document.getElementById("editICOde").disabled = false;
                 break;
 
             case "reject_purpose":
                 tableId = "#tabletab5";
+                document.getElementById("editICOde").disabled = true;
                 break;
 
             default:
@@ -229,10 +240,7 @@ $(document).ready(function() {
     } window.deletePBData = deletePBData;
 
     function addmodal(cate) {
-        const thismodal = new bootstrap.Modal(document.getElementById("addGenericModal"), {
-            backdrop: 'static',
-            keyboard: false
-        });
+        
         thismodal.show();
         
         var categoryTitle;
@@ -241,22 +249,27 @@ $(document).ready(function() {
             case "entry":
                 categoryTitle = "District Entry";
                 cateName = "district_entry";
+                document.getElementById("addCodev").disabled = true;
                 break;
             case "condition":
                 categoryTitle = "Condition Category";
                 cateName = "condition_category";
+                document.getElementById("addCodev").disabled = true;
                 break;
             case "purpose":
                 categoryTitle = "Consignment Purpose";
                 cateName = "consignment_purpose";
+                document.getElementById("addCodev").disabled = true;
                 break;
             case "measurement":
                 categoryTitle = "Unit Measurement";
                 cateName = "unit_measurement";
+                document.getElementById("addCodev").disabled = false;
                 break;  
             case "reject":
                 categoryTitle = "Rejection Notes";
                 cateName = "reject_purpose";
+                document.getElementById("addCodev").disabled = true;
                 break;
             default:
                 break;
@@ -287,6 +300,10 @@ $(document).ready(function() {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             },  
             success: function(response) {
+                thismodal.hide();
+                document.getElementById("addItemType").value = "";
+                document.getElementById("addCodev").value = "";
+                document.getElementById("addDescv").value = "";
                 if (response.status === 'success') {
                     Swal.fire({ 
                         icon: 'success',

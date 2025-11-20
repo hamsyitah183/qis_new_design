@@ -132,7 +132,12 @@ Route::prefix('internal')
         Route::post('/updatepbdata', [\App\Http\Controllers\internal\MiscController::class, 'updatepbdata']);
         Route::delete('/deletepbdata/{id}', [\App\Http\Controllers\internal\MiscController::class, 'deletepbdata']);
         Route::post('/addpbdata', [\App\Http\Controllers\internal\MiscController::class, 'addpbdata']);
-        
+
+        //PERMIT CONDITION
+        Route::get('/permit_condition', [\App\Http\Controllers\internal\MiscController::class, 'showpermitcondition']);
+        Route::get('/permit_add_condition', [\App\Http\Controllers\internal\MiscController::class, 'permitaddcondition']);
+        Route::post('/save_condition', [\App\Http\Controllers\internal\MiscController::class, 'saveCondition'])->name('saveCondition');   
+        Route::get('/permit_edit_condition/{id}', [\App\Http\Controllers\internal\MiscController::class, 'editCondition']);     
     });
 
 Route::middleware(['auth.any'])
@@ -141,4 +146,5 @@ Route::middleware(['auth.any'])
         Route::get('/data', [UserController::class, 'userData']);
         Route::post('/data', [UserController::class, 'updateData']);
         Route::post('/password', [UserController::class, 'password']);
+        Route::get('/get_country', [PublicController::class, 'getCountry']);
     });

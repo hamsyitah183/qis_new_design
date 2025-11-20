@@ -116,7 +116,7 @@
 
                                 <form id="addGenericForm">
                                     <div class="modal-body" id="modalFields">
-                                        <input type="text" id="addItemType">
+                                        <input type="hidden" id="addItemType">
                                         <div class="mb-3">
                                             <label for="addCodev" class="form-label">Item Code</label>
                                             <input type="text" id="addCodev" class="form-control">

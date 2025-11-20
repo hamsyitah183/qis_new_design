@@ -64,6 +64,12 @@
     <link rel="stylesheet" href="https://laravelui.spruko.com/xintra/build/assets/libs/filepond-plugin-image-edit/filepond-plugin-image-edit.min.css">    
     <link rel="stylesheet" href="https://laravelui.spruko.com/xintra/build/assets/libs/dropzone/dropzone.css">
 
+    <!-- Tagify CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css">
+
+    <!-- Quill CSS -->
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     @stack('style')
@@ -122,6 +128,9 @@
     </div> --}}
     <div id="responsive-overlay"></div>
     <!-- Scroll To Top -->
+
+    <!-- Quill JS (place before your init script, near end of body) -->
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 
     <!-- Popper JS -->
     <script src="{{ asset('build2/assets/libs/@popperjs/core/umd/popper.min.js') }}"></script>
@@ -200,6 +209,11 @@
 <!-- Dropzone JS -->
 <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js"></script> -->
 
+    <!-- intl-tel-input JS -->
+    <script src="https://laravelui.spruko.com/xintra/build/assets/libs/intl-tel-input/build/js/intlTelInput.min.js"></script>
+
+    <!-- Tagify JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
 
     
     @stack('scripts')
