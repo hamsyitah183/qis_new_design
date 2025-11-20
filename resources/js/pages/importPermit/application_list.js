@@ -24,7 +24,7 @@ async function data_table_init() {
     applicationListTable = new DataTable("#applicationListTable", {
         processing: true,
         serverSide: true,
-        ajax: "/public/application/list/data",
+        ajax: "/application/list/data",
         columns: [
             {
                 data: "DT_RowIndex",

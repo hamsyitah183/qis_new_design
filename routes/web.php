@@ -7,6 +7,7 @@ use App\Http\Controllers\internal\MiscController;
 use App\Http\Controllers\public\importPermit\PermitApplicationController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\PublicController;
 use App\Http\Controllers\RoleAndPermissionController;
 use App\Http\Controllers\TempFileController;
 use App\Http\Controllers\UserController;
@@ -80,7 +81,7 @@ Route::prefix('public')
 
         // view application
         Route::get('/view_all_application', [ApplicationController::class, 'showallapplicationlist'])->name('showallapplicationlist');
-        Route::get('/application/list/data', [ApplicationController::class, 'getallapplicationlist']);
+
         Route::get('/verify_application', [ApplicationController::class, 'verifyapplication'])->name('verifyapplication');
         Route::get('/view_application/{uuid}', [ApplicationController::class, 'viewapplication'])->name('viewApplication');
 
@@ -132,8 +133,10 @@ Route::prefix('internal')
 
 
         // ======================= application ========================
-        Route::get('/view_all_application', [ApplicationController::class, 'showallapplicationlist'])->name('showallapplicationlist');
-        Route::get('/application/list/data', [ApplicationController::class, 'getallapplicationlist']);
+        Route::get('/view_all_application', [ApplicationController::class, 'showallapplicationlist'])->name('application.list');
+
+        // Route::get('/application/list/data', [ApplicationController::class, 'getallapplicationlist'])->name('application.data');
+
 
 
         //MISC
@@ -148,9 +151,9 @@ Route::prefix('internal')
         //PERMIT CONDITION
         Route::get('/permit_condition', [\App\Http\Controllers\internal\MiscController::class, 'showpermitcondition']);
         Route::get('/permit_add_condition', [\App\Http\Controllers\internal\MiscController::class, 'permitaddcondition']);
-        Route::post('/save_condition', [\App\Http\Controllers\internal\MiscController::class, 'saveCondition'])->name('saveCondition');   
-        Route::get('/permit_edit_condition/{id}', [\App\Http\Controllers\internal\MiscController::class, 'editCondition']);     
-        Route::get('/control_panel', [MiscController::class, 'showcontrolpanel']);
+        Route::post('/save_condition', [\App\Http\Controllers\internal\MiscController::class, 'saveCondition'])->name('saveCondition');
+        Route::get('/permit_edit_condition/{id}', [\App\Http\Controllers\internal\MiscController::class, 'editCondition']);
+        Route::get('/control_panel', [MiscController::class, 'showcontrolpanel'])->name('controlpanel');
     });
 
 Route::middleware(['auth.any'])
@@ -163,8 +166,12 @@ Route::middleware(['auth.any'])
 
         Route::get('/api/auth-user', [UserController::class, 'userInfo']);
 
-        Route::get('/application/{id}/data', [ApplicationController::class, 'getApplicationDetails']);
+
 
         Route::get('/country/{code}', [DashboardController::class, 'get_country']);
         Route::get('/entry_point/{id}', [DashboardController::class, 'get_entry_point']);
+
+        // application
+        Route::get('/application/list/data', [ApplicationController::class, 'getallapplicationlist']);
+        Route::get('/application/{id}/data', [ApplicationController::class, 'getApplicationDetails']);
     });
