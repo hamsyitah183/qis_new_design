@@ -156,7 +156,7 @@ Route::prefix('internal')
         Route::get('/permit_add_condition', [\App\Http\Controllers\internal\MiscController::class, 'permitaddcondition']);
         Route::post('/save_condition', [\App\Http\Controllers\internal\MiscController::class, 'saveCondition'])->name('saveCondition');
         Route::get('/permit_edit_condition/{id}', [\App\Http\Controllers\internal\MiscController::class, 'editCondition']);
-        Route::get('/control_panel', [MiscController::class, 'showcontrolpanel'])->name('controlpanel');
+        // Route::get('/control_panel', [MiscController::class, 'showcontrolpanel'])->name('controlpanel');
     });
 
 Route::middleware(['auth.any'])
