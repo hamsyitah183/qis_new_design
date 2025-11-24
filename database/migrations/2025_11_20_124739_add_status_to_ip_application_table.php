@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('ip_application', function (Blueprint $table) {
             //
-            $table->string('status')->nullable()  ->after('category_application');
+            $table->string('status')->nullable()->after('category_application')->default('submitted');
         });
     }
 

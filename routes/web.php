@@ -183,4 +183,5 @@ Route::middleware(['auth.any'])
             ->name('viewApplication');
 
         Route::get('/application/permit/{id}/data', [ApplicationController::class, 'get_application_permit']);
+        Route::post('/application/verify/{id}/', [ApplicationController::class, 'verify_application_permit']);
     });

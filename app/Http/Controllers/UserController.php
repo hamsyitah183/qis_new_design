@@ -23,6 +23,8 @@ class UserController extends Controller
     {
         $user = authUser()['user'];
 
+        $user->type = authUser()['type'];
+
         return response()->json($user);
     }
 

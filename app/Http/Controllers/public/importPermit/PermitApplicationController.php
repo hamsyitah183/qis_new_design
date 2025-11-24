@@ -4,6 +4,7 @@ namespace App\Http\Controllers\public\importPermit;
 
 use App\Http\Controllers\Controller;
 use App\Models\country;
+use App\Models\ImportPermitLog;
 use App\Models\IpApplication;
 use App\Models\IpCondition;
 use App\Models\IpConsignmentAttachment;
@@ -159,6 +160,12 @@ class PermitApplicationController extends Controller
             $importer = json_decode($request->importerData, true);
             $permit   = json_decode($request->permitDetails, true);
 
+            if ($permit['applCate'] == 0) {
+                $importer_verify = 'pending';
+            } else {
+                $importer_verify = 'wait for company approval';
+            }
+
             // Step 1: Create application
             $application = IpApplication::create([
                 'application_id'       => Str::uuid(),
@@ -170,6 +177,8 @@ class PermitApplicationController extends Controller
                 'importer_id'          => $importer['uuid'],
                 'importer_detail'      => json_encode($importer),
                 'category_application' => $permit['applCate'],
+                'status' => 'Pending',
+                'importer_verify' => $importer_verify,
             ]);
 
             $appId = $application->id;
@@ -223,6 +232,27 @@ class PermitApplicationController extends Controller
                     ]);
                 }
             }
+
+            $application->logActivity(
+                action: 'Submitted',
+                remark: 'Application Submitted',
+                status: 'Submitted'
+            );
+
+            if ($permit['applCate'] == 0) {
+                $application->logActivity(
+                    action: 'Pending',
+                    remark: 'Application Pending',
+                    status: 'Pending'
+                );
+            } else {
+                $application->logActivity(
+                    action: 'Waiting Approval',
+                    remark: 'Wait for approval',
+                    status: 'Wait for Company Approved'
+                );
+            }
+
 
             DB::commit();
 
@@ -334,5 +364,4 @@ class PermitApplicationController extends Controller
             'size'          => $record->size,
         ]);
     }
-
 }

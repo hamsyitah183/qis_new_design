@@ -207,19 +207,19 @@
                                              <table id="summaryTable3" class="table text-nowrap">
                                                  <thead class="table-success">
                                                      <tr>
-                                                
+
                                                          <th scope="col">Item Name</th>
                                                          <th scope="col">Quantity</th>
                                                          <th scope="col" style="">
                                                              Purpose</th>
                                                          <th scope="col">Value</th>
                                                          <th scope="col">Attachment</th>
-                                                 
+
                                                      </tr>
                                                  </thead>
                                                  <tbody>
-                                                     @forelse ($consignmentDetails as $index => $item)
-                                                         {{-- @dd($item) --}}
+                                                     {{-- @forelse ($consignmentDetails as $index => $item)
+                                                         
                                                          <tr>
                                                              <td>{{ $index + 1 }}</td>
                                                              <td>{{ $item['item_name'] ?? '—' }}
@@ -230,13 +230,7 @@
                                                              <td>{{ $item['uses'] ?? '—' }}</td>
                                                              <td>RM {{ $item['value'] ?? '—' }}
                                                              </td>
-                                                             {{-- <td>
-                                                                                            @foreach ($item['attachments'] as $file)
-                                                                                                <img src="{{ asset($file->file_path) }}"
-                                                                                                    style="width:100px; height:100px; object-fit:cover; margin-left:8px;"
-                                                                                                    class="img-thumbnail">
-                                                                                            @endforeach
-                                                                                        </td> --}}
+                                                            
                                                              <td>
                                                                  <a type="button" data-bs-toggle="modal"
                                                                      data-bs-target="#editIpItemModal"
@@ -253,7 +247,7 @@
                                                                  No consignment items found.
                                                              </td>
                                                          </tr>
-                                                     @endforelse
+                                                     @endforelse --}}
                                                  </tbody>
                                              </table>
                                              <div class="modal fade" id="editIpItemModal" tabindex="-1">
