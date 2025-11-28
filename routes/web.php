@@ -91,6 +91,12 @@ Route::prefix('public')
 
         Route::post('/upload-verification', [UserController::class, 'uploadVerificationAttachment'])
             ->name('user.uploadVerification');
+
+
+        // cart & checkout
+        Route::get('/cart', [PublicController::class, 'showcart'])->name('cart');
+        Route::get('/checkout', [PublicController::class, 'showcheckout'])->name('checkout');
+
     });
 
 Route::prefix('internal')
@@ -137,25 +143,25 @@ Route::prefix('internal')
 
         //MISC
 
-        Route::get('/control_panel', [\App\Http\Controllers\internal\MiscController::class, 'showcontrolpanel']);
-        Route::get('/get_pbdata/{cate}', [\App\Http\Controllers\internal\MiscController::class, 'getpbdata']);
-        Route::get('/getspecificpbdata/{id}', [\App\Http\Controllers\internal\MiscController::class, 'getspecificpbdata']);
-        Route::post('/updatepbdata', [\App\Http\Controllers\internal\MiscController::class, 'updatepbdata']);
-        Route::delete('/deletepbdata/{id}', [\App\Http\Controllers\internal\MiscController::class, 'deletepbdata']);
-        Route::post('/addpbdata', [\App\Http\Controllers\internal\MiscController::class, 'addpbdata']);
+        Route::get('/control_panel', [MiscController::class, 'showcontrolpanel']);
+        Route::get('/get_pbdata/{cate}', [MiscController::class, 'getpbdata']);
+        Route::get('/getspecificpbdata/{id}', [MiscController::class, 'getspecificpbdata']);
+        Route::post('/updatepbdata', [MiscController::class, 'updatepbdata']);
+        Route::delete('/deletepbdata/{id}', [MiscController::class, 'deletepbdata']);
+        Route::post('/addpbdata', [MiscController::class, 'addpbdata']);
 
         //PERMIT CONDITION
-        Route::get('/permit_condition', [\App\Http\Controllers\internal\MiscController::class, 'showpermitcondition']);
-        Route::get('/permit_condition/data', [\App\Http\Controllers\internal\MiscController::class, 'getpermitconditiondata']);
-        Route::get('/permit_condition/getdata/{id}', [\App\Http\Controllers\internal\MiscController::class, 'getpermitconditionbyid']);
-        Route::get('/permit_add_condition', [\App\Http\Controllers\internal\MiscController::class, 'permitaddcondition'])->name('permitaddcondition');
-        Route::post('/save_condition', [\App\Http\Controllers\internal\MiscController::class, 'saveCondition'])->name('saveCondition');   
-        Route::get('/permit_edit_condition/{id}', [\App\Http\Controllers\internal\MiscController::class, 'editCondition']);     
+        Route::get('/permit_condition', [MiscController::class, 'showpermitcondition']);
+        Route::get('/permit_condition/data', [MiscController::class, 'getpermitconditiondata']);
+        Route::get('/permit_condition/getdata/{id}', [MiscController::class, 'getpermitconditionbyid']);
+        Route::get('/permit_add_condition', [MiscController::class, 'permitaddcondition'])->name('permitaddcondition');
+        Route::post('/save_condition', [MiscController::class, 'saveCondition'])->name('saveCondition');   
+        Route::get('/permit_edit_condition/{id}', [MiscController::class, 'editCondition']);     
         
-        Route::get('/permit_condition', [\App\Http\Controllers\internal\MiscController::class, 'showpermitcondition'])->name('permitcondition');
-        Route::get('/permit_add_condition', [\App\Http\Controllers\internal\MiscController::class, 'permitaddcondition']);
-        Route::post('/save_condition', [\App\Http\Controllers\internal\MiscController::class, 'saveCondition'])->name('saveCondition');
-        Route::get('/permit_edit_condition/{id}', [\App\Http\Controllers\internal\MiscController::class, 'editCondition']);
+        Route::get('/permit_condition', [MiscController::class, 'showpermitcondition'])->name('permitcondition');
+        // Route::get('/permit_add_condition', [MiscController::class, 'permitaddcondition']);
+        Route::post('/save_condition', [MiscController::class, 'saveCondition'])->name('saveCondition');
+        // Route::get('/permit_edit_condition/{id}', [MiscController::class, 'editCondition']);
         // Route::get('/control_panel', [MiscController::class, 'showcontrolpanel'])->name('controlpanel');
     });
 

@@ -125,5 +125,15 @@ class PublicController extends Controller
             'data'   => $country
         ]);
     }
+
+    public function showcart()
+    {
+        return view('pages.public.cart');
+    }
+
+    public function showcheckout()
+    {
+        return view('pages.public.checkout');
+    }
     
 }
