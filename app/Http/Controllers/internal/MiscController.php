@@ -101,7 +101,7 @@ class MiscController extends Controller
     public function permitaddcondition()
     {
         $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')
-        ->where('cate_name', 'consignment_purpose')
+        ->where('cate_name', 'condition_category')
         ->where('is_del', false)
         ->get();
 
@@ -152,5 +152,29 @@ class MiscController extends Controller
         ->get();
 
         return view('pages.internal.misc.permit_edit', compact('condition', 'pbdata'));
+    }
+
+    public function getpermitconditiondata()
+    {
+        $conditions = IpCondition::with(['code', 'condcategory'])
+                ->select('id', 'item_name', 'category', 'usage', 'country')
+                ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $conditions
+        ]);
+    }
+
+    public function getpermitconditionbyid($id)
+    {
+        $conditions = IpCondition::with(['code', 'condcategory'])
+                ->select('id', 'item_name', 'category', 'usage', 'addional_condition', 'quantity_limit', 'date_limit', 'country')
+                ->findOrFail($id);
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $conditions
+        ]);
     }
 }

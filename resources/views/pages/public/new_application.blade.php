@@ -81,24 +81,27 @@
                                                     <div class="d-flex justify-content-center flex-nowrap gap-3" id="customeCheckbox">
                                                         <!-- Option 1 -->
                                                         <div class="xintra-radio-box text-center">
-                                                        <input type="radio" name="regType" value="Individu" id="planBasic" class="xintra-radio-input">
+                                                            <input type="radio" name="regType" value="Individu" id="planBasic" class="xintra-radio-input">
                                                             <label for="planBasic" class="xintra-radio-label">
                                                                 <div class="xintra-radio-content">
                                                                 <i class="bx bx-user fs-2 mb-2 text-primary"></i>
-                                                                <h6 class="mb-1">Yourself</h6>
+                                                                <!-- <h6 class="mb-1">Yourself</h6> -->
+                                                                <h6 class="mb-1">Self Import</h6>
+                                                                <p class="text-muted small mb-0">You are applying this import permit for yourself.</p>
                                                                 </div>
                                                             </label>
                                                         </div>
 
                                                         <!-- Option 2 -->
                                                         <div class="xintra-radio-box text-center">
-                                                        <input type="radio" name="regType" value="Company" id="planStandard" class="xintra-radio-input">
-                                                        <label for="planStandard" class="xintra-radio-label">
-                                                            <div class="xintra-radio-content">
-                                                            <i class="bx bx-buildings fs-2 mb-2 text-primary"></i>
-                                                            <h6 class="mb-1">Company</h6>
-                                                            </div>
-                                                        </label>
+                                                            <input type="radio" name="regType" value="Company" id="planStandard" class="xintra-radio-input">
+                                                            <label for="planStandard" class="xintra-radio-label">
+                                                                <div class="xintra-radio-content">
+                                                                <i class="bx bx-buildings fs-2 mb-2 text-primary"></i>
+                                                                <h6 class="mb-1">For Someone Else</h6>
+                                                                <p class="text-muted small mb-0">For companies or individuals you represent.</p>
+                                                                </div>
+                                                            </label>
                                                         </div>
                                                     </div>
                                             </div>

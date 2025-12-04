@@ -2,10 +2,63 @@ import $ from "jquery";
 import Swal from "sweetalert2";
 
 export function one() {
-    
+    document.addEventListener("DOMContentLoaded", function () {
+        $.ajax({
+            url: `${window.baseUrl}/get_country`,
+            method: 'GET',
+            success: function(response) {
+                const countryList = response.data;
+
+                countryTagify = new Tagify(document.getElementById("countryTag"), {
+                    whitelist: countryList,
+                    enforceWhitelist: false,
+                    editTags: false,
+                    dropdown: {
+                        enabled: 1,
+                        maxItems: 20,
+                        highlightFirst: true,
+                        mapValueTo: "name",
+                    },
+                    dropdownFilter: (item, value) =>
+                        item.name.toLowerCase().includes(value.toLowerCase())
+                });
+
+                console.log("Country loaded:", countryList);
+            }
+        });
+
+        // --- 2. Get usage list ---
+        $.ajax({
+            url: `${window.baseUrl}/internal/get_pbdata/consignment_application`,
+            method: 'GET',
+            success: function(response) {
+                const usageList = response.data.map(i => ({
+                    value: i.description,
+                    name: i.description
+                }));
+
+                usageTagify = new Tagify(document.getElementById("usageTags"), {
+                    whitelist: usageList,
+                    enforceWhitelist: false,
+                    editTags: false,
+                    dropdown: {
+                        enabled: 1,
+                        maxItems: 20,
+                        highlightFirst: true,
+                        mapValueTo: "name",
+                    },
+                    dropdownFilter: (item, value) =>
+                        item.name.toLowerCase().includes(value.toLowerCase())
+                });
+
+                console.log("Usage loaded:", usageList);
+            }
+        });
+
+    });
 } one();
 
-export function two() {
+export function three() {
     let quill;
 
     document.addEventListener("DOMContentLoaded", function () {
@@ -24,9 +77,8 @@ export function two() {
             theme: 'snow'
         });
     });
-}two();
 
-export function three() {
+
     document.addEventListener("DOMContentLoaded", function () {
 
         document.getElementById("submitConditionBtn").addEventListener("click", function () {
@@ -69,7 +121,10 @@ export function three() {
                     "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content")
                 },
                 success: function (res) {
-                    console.log("Saved:", res);
+                    Swal.fire("Success", "Permit condition saved successfully!", "success").then(() => {
+                        window.location.href = `${window.baseUrl}/internal/permit_condition`;
+                    });
+                    
                 },
                 error: function (xhr) {
                     console.error("Save Error:", xhr.responseText);

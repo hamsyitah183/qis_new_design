@@ -107,14 +107,14 @@
                                             </div>
 
                                             <!-- hidden input to submit HTML -->
-                                            <input type="hidden" name="permit_condition" id="permit-condition-input" value="{{ $condition->addional_condition }}">
+                                            <input type="hidden" name="permit_condition" id="permit-condition-input">
                                             <small class="form-text text-muted mt-2">You may use simple formatting — bold, lists, links.</small>
                                         </div>                                        
                                     </div>
                                 </div>
                                 <div class="card-footer text-end">
                                     <button id="submitConditionBtn" type="submit" class="btn btn-primary">
-                                        <i class="ri-add-line me-1"></i> Add New Permit Condition
+                                        <i class="ri-add-line me-1"></i> Update Condition
                                     </button>
                                     <a  class="btn btn-secondary">Cancel</a>
                                 </div>
@@ -133,18 +133,42 @@
 <script>
     window.countryTagify = null;
     window.usageTagify = null;
-    window.quill = null;
 </script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
 
-        const conditionCountry = {!! json_encode($condition->country) !!};
-        console.log("Condition Country:", conditionCountry);
-        // const conditionUsage = {!! json_encode($condition->usage) !!};
+
+        // 1. Raw data from Laravel
+        const theCountryRaw = {!! json_encode($condition->country) !!};
+        // console.log("Raw Country this:", theCountryRaw);
+
+        // 2. Fix: convert string "['CN','ID']" → real array
+        const theCountry = Array.isArray(theCountryRaw)
+            ? theCountryRaw
+            : JSON.parse(theCountryRaw ?? "[]");
+
+        // 3. Build the {value,name} pair list
+        const conditionCountry = theCountry.map(i => ({
+            value: i,
+            name: i
+        }));
+
+        
+
+
+        const theusageraw = {!! json_encode($condition->usage) !!};
+        const theusage = Array.isArray(theusageraw)
+                ? theusageraw
+                : JSON.parse(theusageraw ?? "[]");
+
+        const conditionUsage = theusage.map(i => ({
+                    value: i,
+                    name: i
+                }));
 
         $.ajax({
-            url: `/get_country`,
+            url: '/get_country',
             method: 'GET',
             success: function(response) {
                 const countryList = response.data;
@@ -162,8 +186,9 @@
                     dropdownFilter: (item, value) =>
                         item.name.toLowerCase().includes(value.toLowerCase())
                 });
+                countryTagify.addTags(conditionCountry);
 
-                console.log("Country loaded:", countryList);
+                
             }
         });
 
@@ -190,8 +215,9 @@
                     dropdownFilter: (item, value) =>
                         item.name.toLowerCase().includes(value.toLowerCase())
                 });
+                usageTagify.addTags(conditionUsage);
 
-                console.log("Usage loaded:", usageList);
+                // console.log("Usage loaded:", usageList);
             }
         });
 
@@ -216,11 +242,16 @@
             placeholder: 'Write permit conditions here...',
             theme: 'snow'
         });
-    });
-</script>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
+        // Your long text from backend
+        const longText = `{!! $condition->addional_condition !!}`;
+
+        // Insert into Quill with formatting
+        quill.clipboard.dangerouslyPasteHTML(longText);
+    });
+
+
+    document.addEventListener("DOMContentLoaded", function () {  
 
         document.getElementById("submitConditionBtn").addEventListener("click", function () {
 

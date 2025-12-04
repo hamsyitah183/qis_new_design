@@ -202,15 +202,15 @@
                             <li class="slide side-menu__label1"><a href="javascript:void(0)">Misc</a></li>
 
                             <li class="slide {{ $currentRoute === 'internal.controlpanel' ? 'active' : '' }}">
-                                <a href="#" class="side-menu__item">Control Panel</a>
+                                <a href="{{ url('/internal/control_panel') }}" class="side-menu__item">Control Panel</a>
                             </li>
 
                             <li class="slide {{ $currentRoute === 'internal.internal.list' ? 'active' : '' }}">
-                                <a href="#" class="side-menu__item">Permit Conditoin</a>
+                                <a href="{{ url('/internal/permit_condition') }}" class="side-menu__item">Permit Condition</a>
                             </li>
 
                             <li style="display:none"
-                                class="slide {{ $currentRoute === 'internal.internal.activity_log' ? 'active' : '' }} >
+                                class="slide {{ $currentRoute === 'internal.internal.activity_log' ? 'active' : '' }} ">
                                 <a href="{{ route('internal.internal.activity_log') }}"
                                 class="side-menu__item">
                                 Activity Log</a>

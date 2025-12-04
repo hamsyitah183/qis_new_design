@@ -131,7 +131,6 @@
 <script>
     window.countryTagify = null;
     window.usageTagify = null;
-    window.quill = null;
 </script>
 
     @vite(['resources/js/pages/internal/misc/permit_add.js'])

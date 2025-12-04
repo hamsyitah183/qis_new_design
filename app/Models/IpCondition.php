@@ -31,4 +31,10 @@ class IpCondition extends Model
     {
         return $this->belongsTo(PublicCode::class, 'category', 'cate_code');
     }
+
+    public function condcategory()
+    {
+        return $this->belongsTo(PublicCode::class, 'category', 'cate_code')
+                ->where('cate_name', 'condition_category');
+    }
 }

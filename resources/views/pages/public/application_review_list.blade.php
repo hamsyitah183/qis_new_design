@@ -106,7 +106,7 @@
                                                                         <td></td>
                                                                     @endif
                                                                     
-                                                                <td  style="text-align:center"><a type="button" href="{{ route('public.viewApplication', $appl->application_id) }}" class="btn btn-info btn-sm">View Application</td>
+                                                                <td  style="text-align:center"><a type="button" href="{{ route('viewApplication', $appl->application_id) }}" class="btn btn-info btn-sm">View Application</td>
                                                             </tr>
                                                         @empty
                                                             <tr>
