@@ -24,4 +24,9 @@ class Country extends Model
         'name',
         'is_del',
     ];
+
+    public function exporters()
+    {
+        return $this->hasMany(Exporter::class, 'country', 'code');
+    }
 }

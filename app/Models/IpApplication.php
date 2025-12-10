@@ -70,5 +70,7 @@ class IpApplication extends Model
         return $this->hasMany(ImportPermitLog::class, 'application_id', 'application_id');
     }
 
+    
+
 
 }

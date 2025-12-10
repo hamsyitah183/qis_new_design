@@ -24,4 +24,8 @@ class Exporter extends Model
         return $this->belongsTo(PublicUser::class, 'registered_by');
     }
     
+    public function countryInfo()
+    {
+        return $this->belongsTo(Country::class, 'country', 'code');
+    }
 }

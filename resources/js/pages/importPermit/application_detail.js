@@ -27,8 +27,8 @@ async function loadApplicationData() {
 }
 
 async function fillInInput() {
-    const country = await getCountry(application.exporter.country);
-    const entryPoint = await getEntryPoint(application.entry_point.id);
+    const country = application.exporter.country_info;
+    const entryPoint = application.entry_point;
 
     console.log("country", country.name);
     console.log("entry", entryPoint.entry_name);

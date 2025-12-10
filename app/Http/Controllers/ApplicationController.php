@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Exporter;
 use App\Models\IpApplication;
 use App\Models\IpConsignmentAttachment;
 use App\Models\IpConsignmentPermit;
@@ -148,7 +149,7 @@ class ApplicationController extends Controller
             ->with([
                 'user',
                 'importer',
-                'exporter',
+                'exporter.countryInfo',
                 'entryPoint.districtCode',
                 'consignmentPermits.attachments',
                 'activity_log.causer'
