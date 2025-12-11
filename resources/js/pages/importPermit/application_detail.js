@@ -132,7 +132,8 @@ async function viewMore() {
 
         // Build attachment table
         let attachmentContent = `
-            <table class="table table-bordered table-responsive">
+        <div class = "table-responsive">
+            <table class="table table-bordered table-responsive rounded">
                 <thead>
                     <tr>
                         <th>File Name</th>
@@ -164,28 +165,29 @@ async function viewMore() {
         attachmentContent += `
                 </tbody>
             </table>
+            </div>
         `;
 
         // Build modal body
         let modalContent = `
-            <div class="p-1">
-                <p><strong>Item Name:</strong> ${detail.item_name ?? "-"}</p>
-                <p><strong>Quantity:</strong> ${detail.quantity ?? "-"} ${
-            detail.measure ?? ""
-        }</p>
-                <p><strong>Value:</strong> RM ${detail.value ?? "-"}</p>
-                <p><strong>Purpose:</strong> ${detail.purpose ?? "-"}</p>
-                <p><strong>Uses:</strong> ${detail.uses ?? "-"}</p>
+            <div class="p-1 row">
+                <div class = "col-12 col-md-6"><p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-tag"></i></span> Item Name:</strong> ${detail.item_name ?? "-"}</p></div>
+                <div class = "col-12 col-md-6"><p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-scale-balanced"></i></span> Quantity:</strong> ${detail.quantity ?? "-"} ${
+                    detail.measure ?? ""}</p></div>
+                <div class = "col-12 col-md-6"><p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-money-bill"></i></span> Value:</strong> RM ${detail.value ?? "-"}</p></div>
+                <div class = "col-12 col-md-6"><p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-pen-fancy"></i></span> Purpose:</strong> ${detail.purpose ?? "-"}</p></div>
+                <div class = "col-12 col-md-6"><p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-gear"></i></span> Uses:</strong> ${detail.uses ?? "-"}</p></div>
 
-                <p class="mt-3"><strong>Attachment(s)</strong></p>
+                <p class="mt-3"><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-file"></i></span> Attachment(s)</strong></p>
                 ${attachmentContent}
             </div>
         `;
 
         // Modal
         const modalEl = document.getElementById("consignmentModal");
-        modalEl.querySelector(".modal-title").textContent =
-            detail.item_name || "Consignment Details";
+        let titleHTML = ``;
+        modalEl.querySelector(".modal-title").innerHTML =
+            titleHTML + ` ` + detail.item_name || "Consignment Details";
 
         modalEl.querySelector(".modal-body").innerHTML = modalContent;
 

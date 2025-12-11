@@ -15,7 +15,7 @@
                              <tbody>
                                  <tr>
                                      <td class="w-25">
-                                         <span class="d-block fw-semibold text-end"><strong>Importer</strong>
+                                         <span class="d-block fw-semibold  "><strong>Importer</strong>
                                              Name</span>
                                      </td>
                                      <td class="w-10">:</td>
@@ -25,7 +25,7 @@
                                  </tr>
                                  <tr>
                                      <td class="w-25">
-                                         <span class="d-block fw-semibold text-end">&nbsp;&nbsp;&nbsp;&nbsp;
+                                         <span class="d-block fw-semibold  ">&nbsp;&nbsp;&nbsp;&nbsp;
                                              Phone</span>
                                      </td>
                                      <td class="w-10">:</td>
@@ -35,7 +35,7 @@
                                  </tr>
                                  <tr>
                                      <td class="w-25">
-                                         <span class="d-block fw-semibold text-end">&nbsp;&nbsp;&nbsp;&nbsp;
+                                         <span class="d-block fw-semibold  ">&nbsp;&nbsp;&nbsp;&nbsp;
                                              Address</span>
                                      </td>
                                      <td class="w-10">:</td>
@@ -48,7 +48,7 @@
                                  </tr>
                                  <tr>
                                      <td class="w-25">
-                                         <span class="d-block fw-semibold text-end"><strong>Exporter</strong>
+                                         <span class="d-block fw-semibold  "><strong>Exporter</strong>
                                              Name</span>
                                      </td>
                                      <td class="w-10">:</td>
@@ -58,7 +58,7 @@
                                  </tr>
                                  <tr>
                                      <td class="w-25">
-                                         <span class="d-block fw-semibold text-end">&nbsp;&nbsp;&nbsp;&nbsp;
+                                         <span class="d-block fw-semibold  ">&nbsp;&nbsp;&nbsp;&nbsp;
                                              Phone</span>
                                      </td>
                                      <td class="w-10">:</td>
@@ -68,7 +68,7 @@
                                  </tr>
                                  <tr>
                                      <td class="w-25">
-                                         <span class="d-block fw-semibold text-end">&nbsp;&nbsp;&nbsp;&nbsp;
+                                         <span class="d-block fw-semibold  ">&nbsp;&nbsp;&nbsp;&nbsp;
                                              Address</span>
                                      </td>
                                      <td class="w-10">:</td>
@@ -78,7 +78,7 @@
                                  </tr>
                                  <tr>
                                      <td class="w-25">
-                                         <span class="d-block fw-semibold text-end">&nbsp;&nbsp;&nbsp;&nbsp;
+                                         <span class="d-block fw-semibold  ">&nbsp;&nbsp;&nbsp;&nbsp;
                                              Country</span>
                                      </td>
                                      <td class="w-10">:</td>
@@ -135,14 +135,14 @@
                                  </tr>
                              </tbody>
                              <tfooter>
-                                 <tr>
+                                 {{-- <tr>
                                      <td colspan="3">
                                          <button type="button" class="btn btn-primary" data-bs-toggle="modal"
                                              data-bs-target="#editExporterModal">
                                              <i class="bx bx-edit"></i> Edit Permit Detail
                                          </button>
                                      </td>
-                                 </tr>
+                                 </tr> --}}
 
                                  <div class="modal fade" id="editExporterModal" tabindex="-1">
                                      <div class="modal-dialog modal-lg">

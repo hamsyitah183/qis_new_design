@@ -15,7 +15,7 @@
                             <tbody>
                                 <tr>
                                     <td class="w-25">
-                                        <span class="d-block fw-semibold text-end"><strong>Importer</strong> Name</span>
+                                        <span class="d-block fw-semibold  "><strong>Importer</strong> Name</span>
                                     </td>
                                     <td class="w-10">:</td>
                                     <td class="text-start  text-muted" id="importerName">
@@ -24,7 +24,7 @@
                                 </tr>
                                 <tr>
                                     <td class="w-25">
-                                        <span class="d-block fw-semibold text-end">&nbsp;&nbsp;&nbsp;&nbsp; Phone</span>
+                                        <span class="d-block fw-semibold  ">&nbsp;&nbsp;&nbsp;&nbsp; Phone</span>
                                     </td>
                                     <td class="w-10">:</td>
                                     <td class="text-start text-muted" id="importerPhoneno">
@@ -33,7 +33,7 @@
                                 </tr>
                                 <tr>
                                     <td class="w-25">
-                                        <span class="d-block fw-semibold text-end">&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <span class="d-block fw-semibold  ">&nbsp;&nbsp;&nbsp;&nbsp;
                                             Address</span>
                                     </td>
                                     <td class="w-10">:</td>
@@ -43,7 +43,7 @@
                                 </tr>
                                 <tr>
                                     <td class="w-25">
-                                        <span class="d-block fw-semibold text-end"><strong>Exporter</strong> Name</span>
+                                        <span class="d-block fw-semibold  "><strong>Exporter</strong> Name</span>
                                     </td>
                                     <td class="w-10">:</td>
                                     <td class="text-start text-muted" id="sexpName">
@@ -52,7 +52,7 @@
                                 </tr>
                                 <tr>
                                     <td class="w-25">
-                                        <span class="d-block fw-semibold text-end">&nbsp;&nbsp;&nbsp;&nbsp; Phone</span>
+                                        <span class="d-block fw-semibold  ">&nbsp;&nbsp;&nbsp;&nbsp; Phone</span>
                                     </td>
                                     <td class="w-10">:</td>
                                     <td class="text-start text-muted" id="sexpfonno">
@@ -61,7 +61,7 @@
                                 </tr>
                                 <tr>
                                     <td class="w-25">
-                                        <span class="d-block fw-semibold text-end">&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <span class="d-block fw-semibold  ">&nbsp;&nbsp;&nbsp;&nbsp;
                                             Address</span>
                                     </td>
                                     <td class="w-10">:</td>
@@ -71,7 +71,7 @@
                                 </tr>
                                 <tr>
                                     <td class="w-25">
-                                        <span class="d-block fw-semibold text-end">&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <span class="d-block fw-semibold  ">&nbsp;&nbsp;&nbsp;&nbsp;
                                             Country</span>
                                     </td>
                                     <td class="w-10">:</td>
@@ -174,7 +174,7 @@
         </div>
     </div>
     <div class="row justify-content-center">
-        <div class="col-auto d-flex gap-3">
+        <div class="d-flex gap-3 align-items-end justify-content-end">
             {{-- <button id="generateSummary" type="button" class="btn btn-md btn-warning">Generate Summary</button> --}}
             <button id="submitApps" type="button" class="btn btn-md btn-info">Submit Application</button>
         </div>

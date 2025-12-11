@@ -45,11 +45,17 @@
 
     <hr>
 
-    <h6 class="mt-3">Uploaded Files</h6>
+    <p class="p-1 mt-3">
+        <strong class = "me-1">
+            <span class = "avatar avatar-sm avatar-rounded  bd-gray-500">
+                <i class="fa-solid fa-file"></i>
+            </span> Attachment(s)
+        </strong>
+    </p>
 
     <div class="table-responsive">
         <table class="table table-bordered table-striped" id="itemFilesTable">
-            <thead class="table-light">
+            <thead class="">
                 <tr>
                     <th style="width: 45%">File Name</th>
                     <th style="width: 25%">File Type</th>

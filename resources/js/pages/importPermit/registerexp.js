@@ -1,9 +1,18 @@
 import Dropzone from "dropzone";
 import $ from "jquery";
+window.$ = window.jQuery = $;
 import Swal from "sweetalert2";
 import { getAuthUser } from "../../app";
 import "dropzone/dist/dropzone.css";
 import { render } from "react-dom/cjs/react-dom.production.min";
+
+// Import Select2 module
+import select2 from "select2";
+
+// Force Select2 to attach to THIS jQuery:
+select2(window.jQuery);
+
+import "select2/dist/css/select2.min.css";
 
 Dropzone.autoDiscover = false;
 
@@ -51,6 +60,13 @@ function fetchExporterList() {
             if ($select.hasClass("xintra-select2")) {
                 $select.trigger("change.select2");
             }
+
+            $select.select2({
+                width: "100%",
+                placeholder: "-- Select Exporter --",
+                allowClear: true,
+                // dropdownParent: $("#addItemModal"), // Important: for modal
+            });
         },
         error: (xhr) => {
             console.error("Failed to load exporters:", xhr.responseText);
@@ -85,7 +101,7 @@ function handleExporterChange() {
         $("#expcountryCode").val(exporter.ccode || "");
         $("#expcountry").val(exporter.country || "");
 
-        loadConsignmentSelection();
+        // loadConsignmentSelection();
     });
 }
 
@@ -99,20 +115,52 @@ function loadConsignmentSelection() {
     const countryCode = $("#expcountryCode").val();
     const $select = $("#itemSelect");
 
-    console.log("country code", countryCode);
+    if (!countryCode) return;
 
+    // Reset select options
     $select.empty().append('<option value="">-- Select Item --</option>');
 
-    if (!countryCode) return;
+    // Destroy existing Select2 (if already initiated)
+    if ($select.hasClass("select2-hidden-accessible")) {
+        $select.select2("destroy");
+    }
+
+    // Disable select while loading
+    $select.prop("disabled", true);
+
+    // Show loading Swal
+    Swal.fire({
+        title: "Loading...",
+        // html: "Please wait while items are loaded.",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+    });
 
     fetch(`${window.baseUrl}/public/get_consignment/${countryCode}`)
         .then((res) => res.json())
         .then((data) => {
-            data.forEach((row) =>
+            $select.prop("disabled", false);
+
+            data.forEach((row) => {
                 $select.append(
                     `<option value="${row.id}">${row.entry_display}</option>`
-                )
-            );
+                );
+            });
+
+            // Initialize Select2
+            $select.select2({
+                width: "100%",
+                placeholder: "-- Select Item --",
+                allowClear: true,
+                dropdownParent: $("#addItemModal"), // Important: for modal
+            });
+
+            Swal.close(); // Close loading
+        })
+        .catch((e) => {
+            console.error("Error loading items:", e);
+            $select.prop("disabled", false);
+            Swal.fire("Error", "Failed to load consignment items.", "error");
         });
 }
 
@@ -122,6 +170,13 @@ function loadUses(itemId) {
 
     if (!itemId) return;
 
+    Swal.fire({
+        title: "Loading...",
+        // html: "Please wait while items are loaded.",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+    });
+
     fetch(`/public/consignment_uses/${itemId}`)
         .then((res) => res.json())
         .then((data) => {
@@ -129,6 +184,15 @@ function loadUses(itemId) {
             data.data.forEach((row) => {
                 $select.append(`<option value="${row}">${row}</option>`);
             });
+
+            $select.select2({
+                width: "100%",
+                placeholder: "-- Select Uses --",
+                allowClear: true,
+                dropdownParent: $("#addItemModal"), // Important: for modal
+            });
+
+            Swal.close();
         })
         .catch((err) => {
             console.error("Failed to load uses:", err);
@@ -363,6 +427,7 @@ function itemConsigment() {
                 temp_path: response.temp_path,
                 mime_type: response.mime_type,
                 size: response.size,
+                type: response.type,
             });
 
             file.temp_id = response.id;
@@ -422,24 +487,20 @@ function itemConsigment() {
 
 function groupPreview() {
     $(document).ready(function () {
-        // Show Swal loading
         Swal.fire({
-            title: "Updating Previews...",
-            // html: "Please wait while files are being grouped.",
+            title: "Loading...",
             allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            },
+            didOpen: () => Swal.showLoading(),
         });
 
         setTimeout(function () {
-            var $dropzone = $("#itemDropzone");
-            var $previews = $dropzone.find(".dz-preview");
+            const $dropzone = $("#itemDropzone");
+            const $previews = $dropzone.find(".dz-preview");
+            const $deleteBtns = $previews.find(".dz-remove");
 
-            // Check if group already exists
-            var $group = $dropzone.find(".dz-preview-group");
+            // Create group if it doesn't exist
+            let $group = $dropzone.find(".dz-preview-group");
             if ($group.length === 0) {
-                // Create group if it doesn't exist
                 $group = $('<div class="dz-preview-group"></div>');
                 $dropzone.find(".dz-message").after($group);
             }
@@ -447,16 +508,32 @@ function groupPreview() {
             // Move all previews into the group
             $previews.appendTo($group);
 
-            // Check queued files
-            const queuedFiles = itemDropzone.getQueuedFiles();
-            console.log(
-                "Files still in the queue (not yet uploaded):",
-                queuedFiles
-            );
+            // Replace PDF previews with PDF logo
+            for (const file of itemDropzone.getAcceptedFiles()) {
+                if (file.type === "application/pdf") {
+                    const $preview = $(file.previewElement);
+                    const $img = $preview.find(
+                        ".dz-image img[data-dz-thumbnail]"
+                    );
 
-            // Close Swal loading
+                    // Set your PDF logo path
+                    $img.attr(
+                        "src",
+                        "/images/pdf-logo.png" // <-- replace with your actual PDF logo path
+                    );
+                    $img.css({
+                        "object-fit": "contain",
+                        width: "100%",
+                        height: "100%",
+                    });
+                }
+            }
+
+            // Update delete buttons
+            $deleteBtns.html('<i class="ti ti-trash"></i>');
+
             Swal.close();
-        }, 100); // adjust delay if necessary
+        }, 100);
     });
 }
 
@@ -471,6 +548,22 @@ function saveConsignmentAttachment() {
             .value.trim();
         const itemMeasure = document.getElementById("itemMeasure").value.trim();
         const itemUses = document.getElementById("itemUses").value;
+
+        // ✅ Validation: check if required fields are empty
+        if (
+            !itemSelect.value ||
+            !itemValue ||
+            !itemQuantity ||
+            !itemMeasure ||
+            !itemUses
+        ) {
+            Swal.fire({
+                icon: "error",
+                title: "Incomplete Data",
+                text: "Please fill in all required fields before saving.",
+            });
+            return; // stop execution if validation fails
+        }
 
         const files = itemDropzone.getAcceptedFiles();
 
@@ -488,7 +581,6 @@ function saveConsignmentAttachment() {
 
         tempItems.push(newItem);
 
-        // 👉 Render table row (Separated Function)
         renderAllItems();
 
         // Reset form fields
@@ -504,10 +596,12 @@ function saveConsignmentAttachment() {
             itemDropzone.removeFile(file);
         });
 
+        // Hide modal
         const modal = bootstrap.Modal.getInstance(
             document.getElementById("addItemModal")
         );
         modal.hide();
+
         summarySubmit();
     });
 }
@@ -554,11 +648,23 @@ function viewMore() {
         // Render item details
         const detailsDiv = document.getElementById("itemDetailsInfo");
         detailsDiv.innerHTML = `
-            <p><strong>Item Name:</strong> ${item.item_name}</p>
-            <p><strong>Quantity:</strong> ${item.quantity} ${item.measure}</p>
-            <p><strong>Value:</strong> ${item.value}</p>
-            <p><strong>Purpose:</strong> ${item.purpose}</p>
-            <p><strong>Uses:</strong> ${item.uses}</p>
+            <div class="p-1 row">
+                <div class = "col-12 col-md-6">
+                    <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-tag"></i></span> Item Name:</strong> ${item.item_name}</p>
+                </div>
+                <div class = "col-12 col-md-6">
+                    <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-scale-balanced"></i></span> Quantity:</strong> ${item.quantity} ${item.measure}</p>
+                </div>
+                <div class = "col-12 col-md-6">
+                    <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-money-bill"></i></span> Value:</strong> ${item.value}</p>
+                </div>
+                <div class = "col-12 col-md-6">
+                    <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-pen-fancy"></i></span> Purpose:</strong> ${item.purpose}</p>
+                </div>
+                <div class = "col-12">
+                    <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-gear"></i></span> Uses:</strong> ${item.uses}</p>
+                </div>
+            </div>
         `;
 
         // Render files in a table
@@ -756,6 +862,20 @@ $(document).ready(async function () {
         viewMore();
         deleteItem();
 
+        $("#itemMeasure").select2({
+            width: "100%",
+            placeholder: "-- Select Measurement Unit --",
+            // allowClear: true,
+            dropdownParent: $("#addItemModal"), // Important: for modal
+        });
+
+        $("#itemPurpose").select2({
+            width: "100%",
+            placeholder: "-- Select Purpose --",
+            // allowClear: true,
+            dropdownParent: $("#addItemModal"), // Important: for modal
+        });
+
         // ------------------- Item Purpose -------------------
         $("#itemPurpose").on("change", function () {
             const selectedOption = $(this).find("option:selected");
@@ -780,7 +900,8 @@ $(document).ready(async function () {
         });
 
         // Expose loadConsignmentSelection globally if needed
-        window.loadConsignmentSelection = loadConsignmentSelection;
+        // loadConsignmentSelection();
+        $("#mdlAddItemBtn").on("click", loadConsignmentSelection);
 
         // Submit button handler
         $(document).on("click", "#submitApps", function (e) {
@@ -844,13 +965,12 @@ export function summarySubmit() {
         // --- Build attachment list ---
         let attachmentHTML = "";
 
-      
-            attachmentHTML = `
+        attachmentHTML = `
             <button class = "btn btn-sm btn-primary view-more-item" data-id = "${item.id}">
                 View More
             </button>
-            `
-     
+            `;
+
         // --- Insert summary row ---
         targetTable.insertAdjacentHTML(
             "beforeend",
