@@ -128,7 +128,7 @@
 
                             <li class="slide {{ $currentRoute === 'internal.application.list' ? 'active' : '' }}">
                                 <a href="{{ route('internal.application.list') }}" class="side-menu__item">
-                                    View All Applications
+                                    All Applications
                                 </a>
                             </li>
                         </ul>

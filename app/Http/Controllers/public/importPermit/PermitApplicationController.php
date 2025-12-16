@@ -155,30 +155,54 @@ class PermitApplicationController extends Controller
         DB::beginTransaction();
         $movedFiles = [];
 
-        try {
-            $exporter = json_decode($request->exporterData, true);
-            $importer = json_decode($request->importerData, true);
-            $permit   = json_decode($request->permitDetails, true);
+        // $isDraft = $request->boolean('is_draft');
 
-            if ($permit['applCate'] == 0) {
-                $importer_verify = 'pending';
-            } else {
-                $importer_verify = 'wait for company approval';
+
+        try {
+            $exporter = $request->exporterData
+                ? json_decode($request->exporterData, true)
+                : null;
+
+            $importer = $request->importerData
+                ? json_decode($request->importerData, true)
+                : null;
+
+            $permit = $request->permitDetails
+                ? json_decode($request->permitDetails, true)
+                : null;
+
+            $isDraft = $request->boolean('is_draft');
+
+
+            $importer_verify = null;
+
+            if (!$isDraft && isset($permit['applCate'])) {
+                $importer_verify = $permit['applCate'] == 0
+                    ? 'pending'
+                    : 'wait for company approval';
             }
 
             // Step 1: Create application
             $application = IpApplication::create([
                 'application_id'       => Str::uuid(),
-                'eta'                  => $permit['eta'],
-                'transport_type'       => $permit['tranType'],
-                'entry_point'          => $permit['entrypoint'],
+
+                // Permit info (nullable)
+                'eta'                  => $permit['eta'] ?? null,
+                'transport_type'       => $permit['tranType'] ?? null,
+                'entry_point'          => $permit['entrypoint'] ?? null,
+                'category_application' => $permit['applCate'] ?? null,
+
+                // User
                 'user_id'              => Auth::user()->uuid,
-                'exporter_id'          => $exporter['id'],
-                'importer_id'          => $importer['uuid'],
-                'importer_detail'      => json_encode($importer),
-                'category_application' => $permit['applCate'],
-                'status' => 'Pending',
-                'importer_verify' => $importer_verify,
+
+                // Exporter / Importer (nullable)
+                'exporter_id'          => $exporter['id'] ?? null,
+                'importer_id'          => $importer['uuid'] ?? null,
+                'importer_detail'      => $importer ? json_encode($importer) : null,
+
+                // Status
+                'status'               => $isDraft ? 'Draft' : 'Pending',
+                'importer_verify'      => $importer_verify,
             ]);
 
             $appId = $application->id;
@@ -233,25 +257,34 @@ class PermitApplicationController extends Controller
                 }
             }
 
-            $application->logActivity(
-                action: 'Submitted',
-                remark: 'Application Submitted',
-                status: 'Submitted'
-            );
-
-            if ($permit['applCate'] == 0) {
+            if ($isDraft) {
                 $application->logActivity(
-                    action: 'Pending',
-                    remark: 'Application Pending',
-                    status: 'Pending'
+                    action: 'Draft',
+                    remark: 'Application saved as draft',
+                    status: 'Draft'
                 );
             } else {
                 $application->logActivity(
-                    action: 'Waiting Approval',
-                    remark: 'Wait for approval',
-                    status: 'Wait for Company Approved'
+                    action: 'Submitted',
+                    remark: 'Application Submitted',
+                    status: 'Submitted'
                 );
+
+                if ($permit['applCate'] == 0) {
+                    $application->logActivity(
+                        action: 'Pending',
+                        remark: 'Application Pending',
+                        status: 'Pending'
+                    );
+                } else {
+                    $application->logActivity(
+                        action: 'Awaiting Approval',
+                        remark: 'Company approval required',
+                        status: 'Awaiting Company Approval'
+                    );
+                }
             }
+
 
 
             DB::commit();

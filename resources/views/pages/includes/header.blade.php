@@ -360,7 +360,7 @@
 
                 <li class="p-4 p-md-0">
                     
-                        <a type="button" href="{{ route('logout') }}" class="dropdown-item d-flex align-items-center text-start w-100">
+                        <a type="button" id="logoutButton" href="{{ route('logout') }}" class="dropdown-item d-flex align-items-center text-start w-100">
 
                             <i class="ti ti-lock p-1 rounded-circle bg-primary-transparent me-2 fs-16"></i>
                             Log Out

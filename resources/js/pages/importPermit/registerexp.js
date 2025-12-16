@@ -24,6 +24,8 @@ let importer = null;
 let impAddrs = null;
 let itemDropzone = null;
 
+let change = null;
+
 let tempItems = [];
 let tempAttachments = [];
 let itemPurpose = null;
@@ -65,7 +67,8 @@ function fetchExporterList() {
                 width: "100%",
                 placeholder: "-- Select Exporter --",
                 allowClear: true,
-                // dropdownParent: $("#addItemModal"), // Important: for modal
+                // templateResult: formatExporterOption,
+                // escapeMarkup: (m) => m,
             });
         },
         error: (xhr) => {
@@ -101,7 +104,7 @@ function handleExporterChange() {
         $("#expcountryCode").val(exporter.ccode || "");
         $("#expcountry").val(exporter.country || "");
 
-        // loadConsignmentSelection();
+        change = 1;
     });
 }
 
@@ -767,37 +770,33 @@ function deleteItem() {
 
 // ============= attachment =====================
 
-function saveapplication() {
+function saveapplication(isDraft = false) {
     const form = document.querySelector("#wizardForm");
     if (!form) return console.error("Form not found");
 
     const formData = new FormData(form);
 
-    // Append exporter, importer, permit info
+    // 🔑 tell backend this is draft or submit
+    formData.append("is_draft", isDraft ? 1 : 0);
+
     formData.append("exporterData", JSON.stringify(exporter));
     formData.append("importerData", JSON.stringify(importer));
     formData.append("permitDetails", JSON.stringify(permitDetails));
 
     tempItems.forEach((item, index) => {
         const { files, ...otherData } = item;
-
-        // Append item data
         formData.append(`items[${index}][data]`, JSON.stringify(otherData));
 
-        // Append files for this item
         if (files && files.length > 0) {
             files.forEach((file) => {
-                formData.append("files[]", file); // raw File object
-                formData.append("file_item_index[]", index); // maps file to the consignment
+                formData.append("files[]", file);
+                formData.append("file_item_index[]", index);
             });
         }
     });
 
-    console.log("FormData ready to submit");
-
     Swal.fire({
-        title: "Submitting...",
-        html: "Please wait while we save your application.",
+        title: isDraft ? "Saving Draft..." : "Submitting...",
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading(),
     });
@@ -814,24 +813,21 @@ function saveapplication() {
         success: function (response) {
             Swal.fire({
                 icon: "success",
-                title: "Application Submitted!",
+                title: isDraft ? "Draft Saved" : "Application Submitted!",
+                timer: 1500,
                 showConfirmButton: false,
-                timer: 1800,
-                timerProgressBar: true,
-                position: "center",
             });
-            setTimeout(() => {
-                window.location.href = "/public/view_all_application";
-            }, 1500);
+
+            if (!isDraft) {
+                setTimeout(() => {
+                    window.location.href = "/public/view_all_application";
+                }, 1500);
+            }
         },
         error: function (xhr) {
-            Swal.close();
-            Swal.fire("Error", "Failed to submit application", "error");
-            console.error("ERROR RESPONSE:", xhr);
+            Swal.fire("Error", "Failed to save application", "error");
         },
     });
-
-    summarySubmit();
 }
 
 // ------------------------- Initialize -------------------------
@@ -867,6 +863,13 @@ $(document).ready(async function () {
             placeholder: "-- Select Measurement Unit --",
             // allowClear: true,
             dropdownParent: $("#addItemModal"), // Important: for modal
+        });
+
+        $("#addexpcountry").select2({
+            width: "100%",
+            placeholder: "-- Select Country --",
+            // allowClear: true,
+            dropdownParent: $("#addExporterModal"), // Important: for modal
         });
 
         $("#itemPurpose").select2({
@@ -907,8 +910,48 @@ $(document).ready(async function () {
         $(document).on("click", "#submitApps", function (e) {
             e.preventDefault();
             console.log("Submit clicked!");
-            saveapplication();
+            saveapplication(false);
         });
+
+        $(document).on(
+            "click",
+            `#logoutButton, 
+            .app-sidebar.sticky button, .app-sidebar.sticky a`,
+            function (e) {
+                if (!change) return;
+
+                e.preventDefault();
+                const target = this;
+
+                Swal.fire({
+                    title: "Unsaved Changes",
+                    text: "You have unsaved changes. What would you like to do?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    showDenyButton: true,
+                    confirmButtonText: "Yes, leave",
+                    denyButtonText: "Save as Draft",
+                    cancelButtonText: "Stay",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Leave page
+                        change = false;
+
+                        if (target.tagName === "A") {
+                            window.location.href = target.href;
+                        } else {
+                            target.click();
+                        }
+                    }
+
+                    if (result.isDenied) {
+                        saveapplication(true); // ✅ draft
+                    }
+
+                    // result.isDismissed → user clicked "Stay"
+                });
+            }
+        );
     } catch (error) {
         console.error("Error during initialization:", error);
         Swal.fire(

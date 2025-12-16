@@ -56,7 +56,8 @@
                     </div>
                     <div class="col-xl-12">
                         <label for="expaddress" class="form-label">Address</label>
-                        <input type="text" class="form-control mb-2" id="expaddress1" name="expaddress1" disabled>
+                        {{-- <input type="text" class="form-control mb-2" id="expaddress1" name="expaddress1" disabled> --}}
+                        <textarea name="expadress1" id="expaddress1" class="form-control" cols="30" rows="3" disabled></textarea>
                         <!-- <input type="text" class="form-control " id="expaddress2"  name="expaddress2"> -->
                     </div>
                     <div class="col-lg-12">

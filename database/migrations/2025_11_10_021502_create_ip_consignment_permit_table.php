@@ -13,19 +13,31 @@ return new class extends Migration
     {
         Schema::create('ip_consignment_permit', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('application_id')->comment('From ip_application table');
-            $table->string('permit_number', 25)->nullable();
-            $table->text('consignment_detail')->comment('JSON form: get from ip_condition table (id, category, item_name, usage)');
-            $table->float('quantity');
-            $table->string('unit_measurement')->comment("from public_code table: unit_measurement");
-            $table->float('value');
-            $table->string('purpose')->comment("from public_code table: consignment_purpose");
-            $table->timestamps();
 
-            //Foreign Key
-            $table->foreign('application_id')->references('id')->on('ip_application');
+            $table->foreignId('application_id')
+                ->comment('References ip_application.id')
+                ->constrained('ip_application') // ✅ FIXED table name
+                ->onDelete('cascade');
+
+            $table->string('permit_number', 25)->nullable();
+
+            $table->text('consignment_detail')
+                ->comment('JSON form: get from ip_condition table (id, category, item_name, usage)');
+
+            $table->float('quantity');
+
+            $table->string('unit_measurement')
+                ->comment('from public_code table: unit_measurement');
+
+            $table->float('value');
+
+            $table->string('purpose')
+                ->comment('from public_code table: consignment_purpose');
+
+            $table->timestamps();
         });
     }
+
 
     /**
      * Reverse the migrations.

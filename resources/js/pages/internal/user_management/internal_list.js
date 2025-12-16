@@ -91,6 +91,7 @@ async function open_internal_user_modal(mode = "add", userId = null) {
             $("#position").val(user.position || "");
             $("#office").val(user.office || "");
             $("#no_ic").val(user.no_ic || "");
+            $('#no_ic').prop('readonly', true);
             Swal.close();
             new bootstrap.Modal("#internalUserModal").show();
         },

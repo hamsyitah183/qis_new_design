@@ -76,6 +76,54 @@ class ApplicationController extends Controller
             ->make(true);
     }
 
+    public function getAllReviewapplicationList()
+    {
+        $userUuid = authUser()['user']->uuid;
+        $type = authUser()['type'];
+
+        $query = IpApplication::with([
+            'user',
+            'importer',
+            'exporter',
+            'entryPoint.districtCode',
+        ]);
+
+        if ($type === 'public') {
+            $query->where(function ($q) use ($userUuid) {
+                $q->where('category_application',  1)
+                    ->where('importer_id', $userUuid);
+            });
+        }
+
+        return DataTables::of($query)
+            ->addIndexColumn()
+            ->addColumn('importer', fn($row) => $row->importer->fullname ?? '-')
+            ->addColumn('exporter', fn($row) => $row->exporter->name ?? '-')
+            ->addColumn('submitted_by', fn($row) => $row->user->fullname ?? '-')
+            ->addColumn('importer_type', function ($row) {
+                $type = $row->category_application == 1 ? 'Others' : 'Self';
+                return '<span class="badge bg-primary-transparent fs-13 p-1">' . $type . '</span>';
+            })
+            ->addColumn('date', fn($row) => $row->eta ? $row->eta->format('Y-m-d') : '-')
+            ->addColumn('status', function ($row) {
+                $status = strtolower($row->status ?? 'pending');
+
+                return match (true) {
+                    str_contains($status, 'pending') => '<span class="badge bg-warning fs-13 p-1">Pending</span>',
+                    str_contains($status, 'rejected') => '<span class="badge bg-danger fs-13 p-1">Rejected</span>',
+                    str_contains($status, 'success') => '<span class="badge bg-success fs-13 p-1">Success</span>',
+                    default => '<span class="badge bg-secondary fs-13 p-1">' . ucfirst($status) . '</span>',
+                };
+            })
+            ->addColumn('action', function ($row) {
+                $url = '/view_application/' . $row->application_id;
+                return '<a class="btn btn-sm btn-primary viewApplication" href="' . $url . '">View</a>';
+            })
+
+            ->rawColumns(['status', 'importer_type', 'action'])
+            ->make(true);
+    }
+
 
 
 
@@ -199,7 +247,6 @@ class ApplicationController extends Controller
             );
 
             $application->status = 'Pending';
-
         } else {
 
 
@@ -212,7 +259,9 @@ class ApplicationController extends Controller
 
             $application->status = 'Not Approved';
         }
-        $application->importer_verify = $request->input('verified');
+        if ($request->input('verified')) {
+            $application->importer_verify = "Pending";
+        }
         $application->save();
         return response()->json([
             'message' => 'Application is verified'

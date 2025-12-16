@@ -15,17 +15,17 @@ return new class extends Migration
             $table->id();
             $table->uuid('application_id')->unique();
             $table->string('reference_no')->nullable();
-            $table->date('eta');
-            $table->enum('transport_type', ['Air', 'Sea', 'Land']);
-            $table->integer('entry_point');
+            $table->date('eta')->nullable();
+            $table->enum('transport_type', ['Air', 'Sea', 'Land'])->nullable();
+            $table->integer('entry_point')->nullable();
 
             $table->uuid('user_id')->comment('Submitted by');        // matches public_users.uuid
             $table->uuid('importer_id');                             // matches public_users.uuid
             $table->unsignedBigInteger('exporter_id');              // references exporter.id
 
-            $table->text('importer_detail')->comment('JSON with importer info');
-            $table->tinyInteger('category_application')->default(0);
-            $table->string('importer_verify')->default('pending');
+            $table->text('importer_detail')->comment('JSON with importer info')->nullable();
+            $table->tinyInteger('category_application')->default(0)->nullable();
+            $table->string('importer_verify')->default('pending')->nullable();
             $table->dateTime('date_importer_verify')->nullable();
             $table->timestamps();
 

@@ -27,8 +27,8 @@ async function loadApplicationData() {
 }
 
 async function fillInInput() {
-    const country = application.exporter.country_info;
-    const entryPoint = application.entry_point;
+    const country = application.exporter.country_info ?? '';
+    const entryPoint = application.entry_point ?? '';
 
     console.log("country", country.name);
     console.log("entry", entryPoint.entry_name);
@@ -248,6 +248,7 @@ function verifyApplication() {
                             // timerProgressBar: true,
                             position: "center",
                         });
+                        window.location.reload();
                     },
                     error: function (err) {
                         Swal.fire({

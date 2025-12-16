@@ -13,20 +13,25 @@ return new class extends Migration
     {
         Schema::create('ip_consignment_attachment', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('permit_id'); // FK to ip_consignment_permit
+
+            $table->foreignId('permit_id')
+                ->comment('References ip_consignment_permit.id')
+                ->constrained('ip_consignment_permit') // ✅ FIXED table name
+                ->onDelete('cascade');
+
             $table->string('file_name');
             $table->string('file_path');
             $table->string('file_type')->nullable();
             $table->text('description')->nullable();
-            $table->boolean('is_del')->default(false)->comment('1 means deleted, 0 means active');
+
+            $table->boolean('is_del')
+                ->default(false)
+                ->comment('1 means deleted, 0 means active');
+
             $table->timestamps();
-
-            $table->foreign('permit_id')
-                ->references('id')
-                ->on('ip_consignment_permit');
         });
-
     }
+
 
     /**
      * Reverse the migrations.

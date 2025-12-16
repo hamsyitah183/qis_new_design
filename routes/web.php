@@ -183,6 +183,8 @@ Route::middleware(['auth.any'])
         //============================= application ======================
         Route::get('/application/list/data', [ApplicationController::class, 'getallapplicationlist'])
             ->name('application.data');
+        Route::get('/application/review/list/data', [ApplicationController::class, 'getAllReviewapplicationList'])
+            ->name('application.review.data');
 
         Route::get('/application/{id}/data', [ApplicationController::class, 'getApplicationDetails']);
         Route::get('/view_application/{uuid}', [ApplicationController::class, 'viewapplication'])
