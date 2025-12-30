@@ -26,7 +26,16 @@
             <div class="card custom-card">
                 <div class="card-header">
 
+                    {{-- @dd($application) --}}
+
+
+
                     <div class="ms-auto">
+                        @if ($application->status == 'Draft')
+                            <a class="btn btn-primary2 btn-wave btn-sm me-2" id="editButton" href="/edit_application/{{ $application->application_id }}">
+                                Edit
+                            </a>
+                        @endif
                         <button class="btn btn-primary btn-wave btn-sm " id="applicationModal"><i
                                 class="ti ti-file-time fs-18"></i> Application Log</button>
                     </div>

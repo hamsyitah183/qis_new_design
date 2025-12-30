@@ -189,6 +189,8 @@ Route::middleware(['auth.any'])
         Route::get('/application/{id}/data', [ApplicationController::class, 'getApplicationDetails']);
         Route::get('/view_application/{uuid}', [ApplicationController::class, 'viewapplication'])
             ->name('viewApplication');
+        Route::get('/edit_application/{uuid}', [ApplicationController::class, 'editApplication'])
+            ->name('editApplication');
 
         Route::get('/application/permit/{id}/data', [ApplicationController::class, 'get_application_permit']);
         Route::post('/application/verify/{id}/', [ApplicationController::class, 'verify_application_permit']);

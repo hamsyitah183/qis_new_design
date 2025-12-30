@@ -155,10 +155,12 @@ class PermitApplicationController extends Controller
         DB::beginTransaction();
         $movedFiles = [];
 
-        // $isDraft = $request->boolean('is_draft');
 
 
         try {
+            $applicationUuid = $request->input('applicationId');
+            $isDraft = $request->boolean('is_draft');
+
             $exporter = $request->exporterData
                 ? json_decode($request->exporterData, true)
                 : null;
@@ -169,147 +171,182 @@ class PermitApplicationController extends Controller
 
             $permit = $request->permitDetails
                 ? json_decode($request->permitDetails, true)
-                : null;
+                : [];
 
-            $isDraft = $request->boolean('is_draft');
-
-
+            // -----------------------------
+            // Importer verify logic
+            // -----------------------------
             $importer_verify = null;
-
             if (!$isDraft && isset($permit['applCate'])) {
                 $importer_verify = $permit['applCate'] == 0
                     ? 'pending'
                     : 'wait for company approval';
             }
 
-            // Step 1: Create application
-            $application = IpApplication::create([
-                'application_id'       => Str::uuid(),
+            // -----------------------------
+            // Create / Update Application
+            // -----------------------------
+            if ($applicationUuid) {
+                $application = IpApplication::where('application_id', $applicationUuid)->firstOrFail();
 
-                // Permit info (nullable)
-                'eta'                  => $permit['eta'] ?? null,
-                'transport_type'       => $permit['tranType'] ?? null,
-                'entry_point'          => $permit['entrypoint'] ?? null,
-                'category_application' => $permit['applCate'] ?? null,
-
-                // User
-                'user_id'              => Auth::user()->uuid,
-
-                // Exporter / Importer (nullable)
-                'exporter_id'          => $exporter['id'] ?? null,
-                'importer_id'          => $importer['uuid'] ?? null,
-                'importer_detail'      => $importer ? json_encode($importer) : null,
-
-                // Status
-                'status'               => $isDraft ? 'Draft' : 'Pending',
-                'importer_verify'      => $importer_verify,
-            ]);
+                $application->update([
+                    'eta'                  => $permit['eta'] ?? null,
+                    'transport_type'       => $permit['tranType'] ?? null,
+                    'entry_point'          => $permit['entrypoint'] ?? null,
+                    'category_application' => $permit['applCate'] ?? null,
+                    'user_id'              => Auth::user()->uuid,
+                    'exporter_id'          => $exporter['id'] ?? null,
+                    'importer_id'          => $importer['uuid'] ?? null,
+                    'importer_detail'      => $importer,
+                    'status'               => $isDraft ? 'Draft' : 'Pending',
+                    'importer_verify'      => $importer_verify,
+                ]);
+            } else {
+                $application = IpApplication::create([
+                    'application_id'       => Str::uuid(),
+                    'eta'                  => $permit['eta'] ?? null,
+                    'transport_type'       => $permit['tranType'] ?? null,
+                    'entry_point'          => $permit['entrypoint'] ?? null,
+                    'category_application' => $permit['applCate'] ?? null,
+                    'user_id'              => Auth::user()->uuid,
+                    'exporter_id'          => $exporter['id'] ?? null,
+                    'importer_id'          => $importer['uuid'] ?? null,
+                    'importer_detail'      => $importer,
+                    'status'               => $isDraft ? 'Draft' : 'Pending',
+                    'importer_verify'      => $importer_verify,
+                ]);
+            }
 
             $appId = $application->id;
 
-            // Map of item index => consignment ID
-            $consignmentArray = [];
+            // -----------------------------
+            // Sync Consignments
+            // -----------------------------
+            // dd('existing ids', $existingIds, ' deleted ids', $request->input('deleted_item_ids'));
 
-            // Step 2: Create consignments
+            $existingIds = IpConsignmentPermit::where('application_id', $appId)
+                ->pluck('id')
+                ->toArray();
+            $deletedPermits = $request->input('deleted_item_ids', []);
+
+            // Convert string → array
+            if (is_string($deletedPermits)) {
+                $deletedPermits = array_filter(explode(',', $deletedPermits));
+            }
+
+
+
+            if ($deletedPermits) {
+                foreach ($deletedPermits as $permitId) {
+
+                    $permit = IpConsignmentPermit::with('attachments')->find($permitId);
+
+                    if (!$permit) {
+                        continue;
+                    }
+
+                    foreach ($permit->attachments as $attachment) {
+                        if ($attachment->file_path) {
+                            $path = str_replace('/storage/', '', $attachment->file_path);
+
+                            if (Storage::disk('public')->exists($path)) {
+                                Storage::disk('public')->delete($path);
+                            }
+                        }
+
+                        $attachment->delete();
+                    }
+
+                    $permit->delete();
+                }
+            }
+
+            // dd($request->hasFile('files'));
+
+            // Create / Update consignments
             if ($request->has('items')) {
                 foreach ($request->items as $index => $item) {
-                    $itemData = json_decode($item['data'], true);
 
+                    $data = json_decode($item['data'], true);
+                    $permit_id = $data['permit_id'] ?? null;
+
+                    // 🔥 IF permit already exists → DO NOTHING
+                    if ($permit_id && in_array($permit_id, $existingIds)) {
+                        continue;
+                    }
+
+                    // 🔥 CREATE only NEW consignments
                     $consignment = IpConsignmentPermit::create([
                         'application_id'     => $appId,
                         'permit_number'      => null,
-                        'consignment_detail' => json_encode($itemData),
-                        'quantity'           => $itemData['quantity'],
-                        'unit_measurement'   => $itemData['measure'],
-                        'value'              => $itemData['value'],
-                        'purpose'            => $itemData['purpose'],
+                        'consignment_detail' => $data,
+                        'quantity'           => $data['quantity'] ?? 0,
+                        'unit_measurement'   => $data['measure'] ?? null,
+                        'value'              => $data['value'] ?? 0,
+                        'purpose'            => $data['purpose'] ?? null,
                     ]);
 
                     $consignmentArray[$index] = $consignment->id;
                 }
             }
 
-            // Step 3: Handle files
+
+
+
+            // -----------------------------
+            // Handle Attachments
+            // -----------------------------
             if ($request->hasFile('files')) {
                 foreach ($request->file('files') as $i => $file) {
                     $itemIndex = $request->input('file_item_index')[$i] ?? null;
-                    if ($itemIndex === null) continue;
+                    if (!isset($consignmentArray[$itemIndex])) continue;
 
-                    $consignmentId = $consignmentArray[$itemIndex] ?? null;
-                    if (!$consignmentId) continue;
-
-                    // Generate unique filename
-                    $name = uniqid() . "_" . $file->getClientOriginalName();
-
-                    // Store in public disk
+                    $name = uniqid() . '_' . $file->getClientOriginalName();
                     $path = $file->storeAs('import', $name, 'public');
                     $movedFiles[] = $path;
 
-                    // Store relative path in DB
-                    $relativePath = "/storage/import/$name";
-
                     IpConsignmentAttachment::create([
-                        'permit_id' => $consignmentId,
+                        'permit_id' => $consignmentArray[$itemIndex],
                         'file_name' => $file->getClientOriginalName(),
-                        'file_path' => $relativePath, // store relative path
+                        'file_path' => "/storage/{$path}",
                         'file_type' => $file->getClientOriginalExtension(),
                     ]);
                 }
             }
 
+            // -----------------------------
+            // Activity Log
+            // -----------------------------
             if ($isDraft) {
-                $application->logActivity(
-                    action: 'Draft',
-                    remark: 'Application saved as draft',
-                    status: 'Draft'
-                );
+                $application->logActivity('Draft', 'Application saved as draft', 'Draft');
             } else {
-                $application->logActivity(
-                    action: 'Submitted',
-                    remark: 'Application Submitted',
-                    status: 'Submitted'
-                );
+                $application->logActivity('Submitted', 'Application submitted', 'Submitted');
 
-                if ($permit['applCate'] == 0) {
-                    $application->logActivity(
-                        action: 'Pending',
-                        remark: 'Application Pending',
-                        status: 'Pending'
-                    );
-                } else {
-                    $application->logActivity(
-                        action: 'Awaiting Approval',
-                        remark: 'Company approval required',
-                        status: 'Awaiting Company Approval'
-                    );
-                }
+                $permit['applCate'] == 0
+                    ? $application->logActivity('Pending', 'Application pending', 'Pending')
+                    : $application->logActivity('Awaiting Approval', 'Company approval required', 'Awaiting Company Approval');
             }
-
-
 
             DB::commit();
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Application saved successfully',
                 'application_id' => $application->application_id,
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
 
-            // Delete any moved files if something failed
             foreach ($movedFiles as $file) {
-                if (Storage::disk('public')->exists($file)) {
-                    Storage::disk('public')->delete($file);
-                }
+                Storage::disk('public')->delete($file);
             }
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to save application: ' . $e->getMessage(),
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
+
 
     /**
      * Optional: Move old files from private/public/import to public/import

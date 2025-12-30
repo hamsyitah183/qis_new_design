@@ -47,6 +47,8 @@ async function attachmentTable() {
 
     const permits = application.consignment_permits;
 
+
+
     if (!permits || permits.length === 0) {
         tableBody.append(`
             <tr>
@@ -60,9 +62,11 @@ async function attachmentTable() {
 
     permits.forEach((permit, index) => {
         // Parse consignment_detail JSON
-        let detail = {};
+        let detail ;
         try {
-            detail = JSON.parse(permit.consignment_detail);
+            // detail = JSON.parse(permit.consignment_detail);
+            detail = permit.consignment_detail;
+            console.log('detail', detail)
         } catch (e) {
             console.error(
                 "Invalid JSON in consignment_detail:",
@@ -117,9 +121,10 @@ async function viewMore() {
 
         let attachments = permit.attachments || [];
 
-        let detail = {};
+        let detail;
         try {
-            detail = JSON.parse(permit.consignment_detail);
+            // detail = JSON.parse(permit.consignment_detail);
+            detail = permit.consignment_detail
         } catch (err) {
             console.error(
                 "Invalid JSON in consignment_detail:",
@@ -352,6 +357,8 @@ function applicationLog() {
             modal.show();
         });
 }
+
+
 
 
 /* -------------------------------

@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Country;
 use App\Models\Exporter;
 use App\Models\IpApplication;
 use App\Models\IpConsignmentAttachment;
 use App\Models\IpConsignmentPermit;
+use App\Models\PublicCode;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -166,13 +168,46 @@ class ApplicationController extends Controller
         ])
             ->where('application_id', $itemId)
             ->get();
-
+        
+            // dd($consignment);
 
         return view('pages.public.view_application', [
             'application'        => $application,
             'consignment'        => $consignment,
             // 'consignmentDetails' => $consignment[0]->attachments
         ]); //, 'consignment', 'attachment'
+    }
+    public function editApplication($uuid)
+    {
+
+        $application = IpApplication::with([
+            'user',         // submitted by
+            'importer',     // importer user
+            'exporter',       // exporter record
+            // 'exporter.country',
+            'entryPoint.districtCode',
+            'consignmentPermits.attachments'
+        ])
+            ->where('application_id', $uuid)
+            ->orderBy('created_at', 'desc')
+            ->firstOrFail();
+
+        $itemId = $application->id;
+
+        // dd($application->consignmentPermits);
+
+        $consignment = IpConsignmentPermit::with([
+            'unit',
+            'purposeCode'
+        ])
+            ->where('application_id', $itemId)
+            ->get();
+
+
+        $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
+        $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
+        $country = Country::where('is_del', false)->get();
+        return view('pages.public.edit_permit', compact('pubmeasure', 'pubpurpose', 'country', 'application')); // , compact('')
     }
 
     public function modalspeItem($id)
