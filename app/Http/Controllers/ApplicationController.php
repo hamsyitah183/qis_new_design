@@ -168,8 +168,8 @@ class ApplicationController extends Controller
         ])
             ->where('application_id', $itemId)
             ->get();
-        
-            // dd($consignment);
+
+        // dd($consignment);
 
         return view('pages.public.view_application', [
             'application'        => $application,
@@ -282,9 +282,9 @@ class ApplicationController extends Controller
             );
 
             $application->status = 'Pending';
-        } else {
-
-
+            $application->importer_verify = "Pending";
+        } 
+        else if($request->input('not_verified')) {
 
             $application->logActivity(
                 action: 'Not Approved',
@@ -294,8 +294,25 @@ class ApplicationController extends Controller
 
             $application->status = 'Not Approved';
         }
-        if ($request->input('verified')) {
-            $application->importer_verify = "Pending";
+
+        else if ($request->accepted) {
+            $application->logActivity(
+                action: 'Accepted',
+                remark: 'Application Accepted By Admin',
+                status: 'Approved'
+            );
+
+            $application->status = 'Accepted';
+            $application->importer_verify = "Accepted";
+        }
+        else if ($request->rejected) {
+            $application->logActivity(
+                action: 'Rejected',
+                remark: 'Application Rejected By Admin',
+                status: 'Rejected'
+            );
+
+            $application->status = 'Rejected';
         }
         $application->save();
         return response()->json([

@@ -27,7 +27,19 @@
                 @if ($application->category_application == 0 && str_contains($status, 'pending'))
                     {!! $statusIcon !!}
                     <h3 class="mt-2">Pending</h3>
-                    <p>Your permit application is currently pending.</p>
+                    @if (authUser()['type'] == 'public')
+                        <p>This permit application is currently pending verification by admin.</p>
+                    @else
+                        <p>Waiting for admin approval.</p>
+                        @if (authUser() && authUser()['user']->hasRole('admin'))
+                            <div class="d-flex justify-content-center gap-3 mt-3">
+                                <button id="acceptAppl" class="btn btn-sm btn-success">Accept Application</button>
+                                <button id="rejectAdminAppl" class="btn btn-sm btn-danger">Reject Application</button>
+                            </div>
+                        @endif
+
+
+                    @endif
                 @endif
 
 
@@ -56,7 +68,7 @@
 
 
                     {{-- Importer Verify = Pending --}}
-                    @dd($importerVerify)
+                    {{-- @dd($importerVerify)
                     @if (str_contains($importerVerify, 'pending'))
                         {!! $statusIcon !!}
                         <h3 class="mt-2">Pending</h3>
@@ -66,7 +78,7 @@
                         @else
                             <p>Waiting for admin approval.</p>
                         @endif
-                    @endif
+                    @endif --}}
 
                 @endif
 

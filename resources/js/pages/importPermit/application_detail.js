@@ -292,7 +292,7 @@ function rejectApplication() {
                     method: "POST",
                     data: {
                         _token: $("meta[name='csrf-token']").attr("content"), // CSRF token
-                        verified: 0,
+                        not_verified: 1,
                     },
                     success: function (res) {
                         Swal.fire({
@@ -301,6 +301,108 @@ function rejectApplication() {
                             text:
                                 res.message ||
                                 "The application has been successfully not verified.",
+                            // timer: 1800,
+                            showConfirmButton: false,
+                            // timerProgressBar: true,
+                            position: "center",
+                        });
+                    },
+                    error: function (err) {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error!",
+                            text:
+                                err.responseJSON?.message ||
+                                "Something went wrong.",
+                        });
+                    },
+                });
+            }
+        });
+    });
+}
+function adminRejectApplication() {
+    $("#rejectAdminAppl").on("click", function (e) {
+        e.preventDefault();
+
+        let applicationId = application.application_id;
+
+        Swal.fire({
+            title: "Verify Application?",
+            text: "Are you sure you want to verify this application?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes",
+            cancelButtonText: "Cancel",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Send AJAX request to verify application
+                $.ajax({
+                    url: `/application/verify/${applicationId}`, // your route
+                    method: "POST",
+                    data: {
+                        _token: $("meta[name='csrf-token']").attr("content"), // CSRF token
+                        rejected: 1,
+                    },
+                    success: function (res) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Application Rejected!",
+                            text:
+                                res.message ||
+                                "The application is rejected.",
+                            // timer: 1800,
+                            showConfirmButton: false,
+                            // timerProgressBar: true,
+                            position: "center",
+                        });
+                    },
+                    error: function (err) {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error!",
+                            text:
+                                err.responseJSON?.message ||
+                                "Something went wrong.",
+                        });
+                    },
+                });
+            }
+        });
+    });
+}
+
+function acceptApplication() {
+    $("#acceptAppl").on("click", function (e) {
+        e.preventDefault();
+
+        let applicationId = application.application_id;
+        let accepted = 1;
+
+        Swal.fire({
+            title: "Accept Application?",
+            text: "Are you sure you want to accept this application?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, accept it!",
+            cancelButtonText: "Cancel",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Send AJAX request to verify application
+                $.ajax({
+                    url: `/application/verify/${applicationId}`, // your route
+                    method: "POST",
+                    data: {
+                        _token: $("meta[name='csrf-token']").attr("content"), // CSRF token
+                        accepted: accepted,
+                    },
+                    success: function (res) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Application Accepted!",
+                            text:
+                                res.message ||
+                                "The application has been successfully accepted.",
                             // timer: 1800,
                             showConfirmButton: false,
                             // timerProgressBar: true,
@@ -383,6 +485,8 @@ async function initApplicationDetails() {
 
     verifyApplication();
     rejectApplication();
+    acceptApplication();
+    adminRejectApplication();
 
     applicationLog();
 
