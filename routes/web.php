@@ -12,8 +12,13 @@ use App\Http\Controllers\RoleAndPermissionController;
 use App\Http\Controllers\TempFileController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
+
+
+
+
 
 // Logout route
 Route::get('/logout', [AuthenticationController::class, 'logout'])->name('logout');
@@ -32,6 +37,7 @@ Route::middleware(['multi.guest'])->group(function () {
     Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
     Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.update');
 });
+
 
 
 
@@ -96,7 +102,6 @@ Route::prefix('public')
         // cart & checkout
         Route::get('/cart', [PublicController::class, 'showcart'])->name('cart');
         Route::get('/checkout', [PublicController::class, 'showcheckout'])->name('checkout');
-
     });
 
 Route::prefix('internal')
@@ -155,9 +160,9 @@ Route::prefix('internal')
         Route::get('/permit_condition/data', [MiscController::class, 'getpermitconditiondata']);
         Route::get('/permit_condition/getdata/{id}', [MiscController::class, 'getpermitconditionbyid']);
         Route::get('/permit_add_condition', [MiscController::class, 'permitaddcondition'])->name('permitaddcondition');
-        Route::post('/save_condition', [MiscController::class, 'saveCondition'])->name('saveCondition');   
-        Route::get('/permit_edit_condition/{id}', [MiscController::class, 'editCondition']);     
-        
+        Route::post('/save_condition', [MiscController::class, 'saveCondition'])->name('saveCondition');
+        Route::get('/permit_edit_condition/{id}', [MiscController::class, 'editCondition']);
+
         Route::get('/permit_condition', [MiscController::class, 'showpermitcondition'])->name('permitcondition');
         // Route::get('/permit_add_condition', [MiscController::class, 'permitaddcondition']);
         Route::post('/save_condition', [MiscController::class, 'saveCondition'])->name('saveCondition');
@@ -195,3 +200,7 @@ Route::middleware(['auth.any'])
         Route::get('/application/permit/{id}/data', [ApplicationController::class, 'get_application_permit']);
         Route::post('/application/verify/{id}/', [ApplicationController::class, 'verify_application_permit']);
     });
+
+// broadcast --dont kacau---
+// Broadcast::routes();
+// Broadcast::routes(['middleware' => ['auth:internal']]);

@@ -35,7 +35,12 @@ async function data_table_init() {
             { data: "position", name: "position" },
             { data: "role", name: "role", orderable: false, searchable: false },
             { data: "office", name: "office" },
-            { data: "action", name: "action", orderable: false, searchable: false },
+            {
+                data: "action",
+                name: "action",
+                orderable: false,
+                searchable: false,
+            },
         ],
         responsive: true,
         pageLength: 10,
@@ -56,13 +61,20 @@ async function open_internal_user_modal(mode = "add", userId = null) {
     const isView = mode === "view";
     const isEdit = mode === "edit";
 
-    const title = isAdd ? "Add Internal User" : isView ? "View Internal User" : "Edit Internal User";
+    const title = isAdd
+        ? "Add Internal User"
+        : isView
+        ? "View Internal User"
+        : "Edit Internal User";
     $("#internalUserModalLabel").text(title);
     $("#internalUserForm")[0].reset();
     $(".form-control").removeClass("is-invalid");
     $(".invalid-feedback").text("");
 
-    $("#internalUserForm input, #internalUserForm select").prop("readonly", isView);
+    $("#internalUserForm input, #internalUserForm select").prop(
+        "readonly",
+        isView
+    );
     $("#internalUserForm select").prop("disabled", isView);
     if (isView) $("#internalUserModal .modal-footer").hide();
     else $("#internalUserModal .modal-footer").show();
@@ -77,7 +89,11 @@ async function open_internal_user_modal(mode = "add", userId = null) {
         $("#email").prop("readonly", true);
     }
 
-    Swal.fire({ title: "Loading...", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    Swal.fire({
+        title: "Loading...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+    });
 
     $.ajax({
         url: `/internal/user_internal/user/data/${userId}`,
@@ -91,7 +107,7 @@ async function open_internal_user_modal(mode = "add", userId = null) {
             $("#position").val(user.position || "");
             $("#office").val(user.office || "");
             $("#no_ic").val(user.no_ic || "");
-            $('#no_ic').prop('readonly', true);
+            $("#no_ic").prop("readonly", true);
             Swal.close();
             new bootstrap.Modal("#internalUserModal").show();
         },
@@ -107,7 +123,7 @@ async function open_internal_user_modal(mode = "add", userId = null) {
 function handle_internal_user_submit() {
     $(document).on("submit", "#internalUserForm", async function (e) {
         e.preventDefault();
-        const Swal = await import("sweetalert2").then(m => m.default);
+        const Swal = await import("sweetalert2").then((m) => m.default);
 
         $(".form-control").removeClass("is-invalid");
         $(".invalid-feedback").text("");
@@ -116,15 +132,25 @@ function handle_internal_user_submit() {
         const uuid = $("#userUuid").val();
         const isEdit = Boolean(uuid);
 
-        Swal.fire({ title: isEdit ? "Updating user..." : "Saving user...", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        Swal.fire({
+            title: isEdit ? "Updating user..." : "Saving user...",
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading(),
+        });
 
         $.ajax({
             url: `/internal/user_internal/save`,
             method: "POST",
             data: formData,
-            headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
+            headers: {
+                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+            },
             success: function (response) {
-                Swal.fire({ icon: "success", title: isEdit ? "User Updated!" : "User Added!", text: response.message });
+                Swal.fire({
+                    icon: "success",
+                    title: isEdit ? "User Updated!" : "User Added!",
+                    text: response.message,
+                });
                 bootstrap.Modal.getInstance("#internalUserModal").hide();
                 internalListTable.ajax.reload();
             },
@@ -138,7 +164,11 @@ function handle_internal_user_submit() {
                         $(`#error-${key}`).text(errors[key][0]);
                     });
                 } else {
-                    Swal.fire({ icon: "error", title: "Failed!", text: "Something went wrong while saving the user." });
+                    Swal.fire({
+                        icon: "error",
+                        title: "Failed!",
+                        text: "Something went wrong while saving the user.",
+                    });
                 }
             },
         });
@@ -167,9 +197,17 @@ async function delete_internal_user() {
                 $.ajax({
                     url: `/internal/user_internal/delete/${userId}`,
                     type: "DELETE",
-                    headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
+                    headers: {
+                        "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
+                            "content"
+                        ),
+                    },
                     success: function () {
-                        Swal.fire("Deleted!", "User deleted successfully.", "success");
+                        Swal.fire(
+                            "Deleted!",
+                            "User deleted successfully.",
+                            "success"
+                        );
                         internalListTable.ajax.reload();
                     },
                     error: function () {
@@ -189,14 +227,26 @@ async function internal_user_list() {
     handle_internal_user_submit(); // bind once
     await delete_internal_user();
 
-    $(document).on("click", ".addInternalUser-modal", (e) => { e.preventDefault(); open_internal_user_modal("add"); });
-    $(document).on("click", ".viewInternalUser-modal", (e) => { e.preventDefault(); open_internal_user_modal("view", $(e.currentTarget).data("id")); });
-    $(document).on("click", ".editInternalUser-modal", (e) => { e.preventDefault(); open_internal_user_modal("edit", $(e.currentTarget).data("id")); });
+    $(document).on("click", ".addInternalUser-modal", (e) => {
+        e.preventDefault();
+        open_internal_user_modal("add");
+    });
+    $(document).on("click", ".viewInternalUser-modal", (e) => {
+        e.preventDefault();
+        open_internal_user_modal("view", $(e.currentTarget).data("id"));
+    });
+    $(document).on("click", ".editInternalUser-modal", (e) => {
+        e.preventDefault();
+        open_internal_user_modal("edit", $(e.currentTarget).data("id"));
+    });
 
     $("#internalUserModal").on("hidden.bs.modal", function () {
         $("#internalUserModalLabel").text("Add Internal User");
         $("#internalUserForm")[0].reset();
-        $("#internalUserForm input, #internalUserForm select").prop("readonly", false);
+        $("#internalUserForm input, #internalUserForm select").prop(
+            "readonly",
+            false
+        );
         $("#internalUserForm select").prop("disabled", false);
         $(".form-control").removeClass("is-invalid");
         $(".invalid-feedback").text("");
@@ -206,3 +256,7 @@ async function internal_user_list() {
 
 // ✅ Initialize on page load
 internal_user_list();
+
+
+
+

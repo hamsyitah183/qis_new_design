@@ -6,7 +6,34 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.bootstrap5.min.css">
 @endpush
 
+@php
+    $userId = authUser()['user']->uuid;
+    // dd($userId);
+@endphp
+
 @push('scripts')
+    <script>
+        let userId = @json($userId);
+        setTimeout(() => {
+            window.Echo.channel("internal-user-added").listen("InternalUserAdded", (e) => {
+                console.log(e.message);
+            });
+
+            window.Echo.private('internal-user-edited')
+                .listen('App\\Events\\InternalUserEdited', (e) => {
+                    console.log('✅ USER EDITED:', e.message);
+                });
+
+
+            window.Echo.channel("internal-user-deleted").listen("InternalUserDeleted", (e) => {
+                console.log(e.message);
+            });
+
+
+
+        }, 100);
+    </script>
+
     @vite(['resources/js/pages/internal/user_management/internal_list.js'])
 @endpush
 

@@ -16,6 +16,10 @@ class RedirectIfAuthenticatedMulti
      */
     public function handle(Request $request, Closure $next)
     {
+        if ($request->is('broadcasting/auth')) {
+            return $next($request);
+        }
+        
         // 🧩 If already logged in as PUBLIC
         if (Auth::guard('public')->check()) {
             return redirect()->route('public.dashboard');

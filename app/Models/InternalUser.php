@@ -18,6 +18,8 @@ class InternalUser extends Authenticatable implements MustVerifyEmail
 
     use Notifiable, HasRoles, HasRoles, HasActivityLog;
 
+    protected $guard = 'internal';
+
     protected $table = 'internal_users';
     protected $guard_name = 'internal';
     protected $fillable = ['fullname', 'username', 'email', 'phone_number', 'position', 'office', 'password', 'no_ic'];

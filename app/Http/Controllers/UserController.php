@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\InternalUserAdded;
+use App\Events\InternalUserDeleted;
+use App\Events\InternalUserEdited;
 use App\Models\InternalUser;
 use App\Models\PublicUser;
 use App\Models\ApprovedPublic;
@@ -225,6 +228,8 @@ class UserController extends Controller
 
         $public->delete();
 
+        event(new InternalUserDeleted($public->fullname . ' account has been deleted by ' . authUser()['user']->fullname));
+
         return response()->json([
             'user' => $public
         ]);
@@ -333,6 +338,8 @@ class UserController extends Controller
                 'office' => $request->office,
             ]);
 
+            event(new InternalUserEdited($internalUser->fullname . ' account has been edited by ' . authUser()['user']->fullname, $internalUser->uuid));
+
             return response()->json([
                 'used id' => $uuid,
                 'message' => 'User Updated'
@@ -360,6 +367,8 @@ class UserController extends Controller
             ]);
 
             $internalUser->assignRole($request->role);
+
+            event(new InternalUserAdded('A new internal user has been added.')); // ✅ Trigger event with message
 
             return response()->json([
                 'used id' => $internalUser->uuid, // Return the new UUID
