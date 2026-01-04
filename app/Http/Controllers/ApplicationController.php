@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\ApplicationDeleted;
 use App\Models\Country;
 use App\Models\Exporter;
 use App\Models\IpApplication;
@@ -9,6 +10,7 @@ use App\Models\IpConsignmentAttachment;
 use App\Models\IpConsignmentPermit;
 use App\Models\PublicCode;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 
 
@@ -71,7 +73,14 @@ class ApplicationController extends Controller
             })
             ->addColumn('action', function ($row) {
                 $url = '/view_application/' . $row->application_id;
-                return '<a class="btn btn-sm btn-primary viewApplication" href="' . $url . '">View</a>';
+                $view = '<a class="btn btn-sm btn-primary viewApplication" href="' . $url . '">  <i class="ti ti-eye"></i></a>';
+                $delete = '';
+                if (authUser()['type'] === 'internal') {
+                    $delete = '<button class="btn btn-sm btn-danger deleteApplication" data-id="' . $row->application_id . '"> <i class="ti ti-trash"></i></button>';
+                } else {
+                    $delete = '';
+                };
+                return $view . ' ' . $delete;
             })
 
             ->rawColumns(['status', 'importer_type', 'action'])
@@ -126,7 +135,36 @@ class ApplicationController extends Controller
             ->make(true);
     }
 
+    public function deleteApplication($id)
+    {
+        return DB::transaction(function () use ($id) {
+            // Find application or fail
+            $application = IpApplication::where('application_id', $id)->firstOrFail();
 
+            // Get related consignment permits (if any)
+            $consignments = IpConsignmentPermit::where('application_id', $application->id)->get();
+
+            if ($consignments->isNotEmpty()) {
+                $consignmentIds = $consignments->pluck('id');
+
+                // Delete all related attachments (correct foreign key)
+                IpConsignmentAttachment::whereIn('permit_id', $consignmentIds)->delete();
+
+                // Delete the consignment permits themselves
+                IpConsignmentPermit::whereIn('id', $consignmentIds)->delete();
+            }
+
+            // Finally, delete the application
+            $application->delete();
+
+            // Fire the deletion event
+            event(new ApplicationDeleted('Application with ID ' . $id . ' has been deleted.'));
+
+            return response()->json([
+                'message' => 'Application and its related data have been deleted successfully.'
+            ]);
+        });
+    }
 
 
     public function verifyapplication()
@@ -283,8 +321,7 @@ class ApplicationController extends Controller
 
             $application->status = 'Pending';
             $application->importer_verify = "Pending";
-        } 
-        else if($request->input('not_verified')) {
+        } else if ($request->input('not_verified')) {
 
             $application->logActivity(
                 action: 'Not Approved',
@@ -293,9 +330,7 @@ class ApplicationController extends Controller
             );
 
             $application->status = 'Not Approved';
-        }
-
-        else if ($request->accepted) {
+        } else if ($request->accepted) {
             $application->logActivity(
                 action: 'Accepted',
                 remark: 'Application Accepted By Admin',
@@ -304,8 +339,7 @@ class ApplicationController extends Controller
 
             $application->status = 'Accepted';
             $application->importer_verify = "Accepted";
-        }
-        else if ($request->rejected) {
+        } else if ($request->rejected) {
             $application->logActivity(
                 action: 'Rejected',
                 remark: 'Application Rejected By Admin',

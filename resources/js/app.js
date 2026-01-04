@@ -17,6 +17,7 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import $ from "jquery";
 window.$ = window.jQuery = $; // make it global
 import "select2";
+import { internalUserEcho } from "./broadcast_user";
 
 $("#redirectProfile").on("click", function (e) {
     e.preventDefault();
@@ -102,7 +103,7 @@ export function showToast(message) {
     toastTime.innerText = "just now";
 
     const toast = new bootstrap.Toast(toastEl, {
-        delay: 1000,
+        delay: 7000,
     });
 
     toast.show();
@@ -121,3 +122,5 @@ export function notifyUser(message, editor = null) {
     // 🍞 SHOW TOAST
     showToast(editor ? `${message} (by ${editor})` : message);
 }
+
+internalUserEcho();

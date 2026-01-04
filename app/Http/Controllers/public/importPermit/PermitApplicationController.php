@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\public\importPermit;
 
+use App\Events\ApplicationCreated;
 use App\Http\Controllers\Controller;
 use App\Models\country;
 use App\Models\ImportPermitLog;
@@ -201,6 +202,10 @@ class PermitApplicationController extends Controller
                     'status'               => $isDraft ? 'Draft' : 'Pending',
                     'importer_verify'      => $importer_verify,
                 ]);
+
+                event(new ApplicationCreated(
+                    'New import permit application draft by ' . $importer['name'] ?? 'Unknown Exporter',
+                ));
             } else {
                 $application = IpApplication::create([
                     'application_id'       => Str::uuid(),
@@ -215,6 +220,10 @@ class PermitApplicationController extends Controller
                     'status'               => $isDraft ? 'Draft' : 'Pending',
                     'importer_verify'      => $importer_verify,
                 ]);
+
+                event(new ApplicationCreated(
+                    'New import permit application created by ' . $exporter['name'] ?? 'Unknown Exporter',
+                ));
             }
 
             $appId = $application->id;

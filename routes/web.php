@@ -145,7 +145,7 @@ Route::prefix('internal')
 
         // ======================= application ========================
         Route::get('/view_all_application', [ApplicationController::class, 'showallapplicationlist'])->name('application.list');
-
+        Route::delete('/application/delete/{id}', [ApplicationController::class, 'deleteApplication'])->name('application.delete');
         //MISC
 
         Route::get('/control_panel', [MiscController::class, 'showcontrolpanel']);

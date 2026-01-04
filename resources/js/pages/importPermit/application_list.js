@@ -2,7 +2,6 @@ console.log("application list");
 let applicationListTable;
 let reviewApplicationListTable;
 
-
 async function data_table_init() {
     const [
         { default: DataTable },
@@ -93,6 +92,48 @@ async function data_table_init() {
         autoWidth: false,
         responsive: true,
         pageLength: 10,
+    });
+
+    $(document).on("click", ".deleteApplication", async function () {
+        const applicationId = $(this).data("id");
+        const csrfToken = document
+            .querySelector('meta[name="csrf-token"]')
+            .getAttribute("content");
+
+        const Swal = await import("sweetalert2").then((m) => m.default);
+
+        const result = await Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#4c5359ff",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, delete it!",
+        });
+
+        if (!result.isConfirmed) return;
+
+        fetch(`/internal/application/delete/${applicationId}`, {
+            method: "DELETE",
+            headers: {
+                "X-CSRF-TOKEN": csrfToken,
+                Accept: "application/json",
+            },
+        })
+            .then((res) => {
+                if (!res.ok) throw new Error("Delete failed");
+                return res.json();
+            })
+            .then((data) => {
+                Swal.fire("Deleted!", data.message, "success");
+                applicationListTable.ajax.reload(null, false);
+                reviewApplicationListTable.ajax.reload(null, false);
+            })
+            .catch((err) => {
+                console.error(err);
+                Swal.fire("Error!", "Failed to delete application.", "error");
+            });
     });
 }
 
