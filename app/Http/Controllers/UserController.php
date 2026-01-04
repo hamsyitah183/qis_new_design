@@ -8,6 +8,7 @@ use App\Events\InternalUserEdited;
 use App\Models\InternalUser;
 use App\Models\PublicUser;
 use App\Models\ApprovedPublic;
+use App\Notifications\InternalUserEditedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -339,6 +340,14 @@ class UserController extends Controller
             ]);
 
             event(new InternalUserEdited($internalUser->fullname . ' account has been edited by ' . authUser()['user']->fullname, $internalUser->uuid));
+            if ($internalUser->id !== authUser()['user']->uuid) {
+                $internalUser->notify(
+                    new InternalUserEditedNotification(
+                        'Your account has been updated',
+                        authUser()['user']->fullname
+                    )
+                );
+            }
 
             return response()->json([
                 'used id' => $uuid,

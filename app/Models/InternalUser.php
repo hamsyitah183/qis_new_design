@@ -54,6 +54,12 @@ class InternalUser extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(ApprovedPublic::class, 'approved_by', 'uuid');
     }
 
+    public function receivesBroadcastNotificationsOn()
+    {
+        return 'private-internal-user.' . $this->uuid;
+    }
+
+
 
     // public function roles()
     // {

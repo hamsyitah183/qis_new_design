@@ -32,10 +32,9 @@
                                             @csrf
                                             <button type="submit" class="btn btn-primary">Resend Email</button>
                                         </form>
-                                        <form method="POST" action="/logout">
-                                            @csrf
-                                            <button type="submit" class="btn btn-secondary">Logout</button>
-                                        </form>
+                                        
+                                            <a type="submit" class="btn btn-secondary" id="logoutBtn"  href="{{ route('logout') }}" >Logout</a>
+                                        
                                         {{-- <a href="{{ route('logout') }}" class="btn btn-secondary">Logout</a> --}}
                                     </div>
                                 </div>

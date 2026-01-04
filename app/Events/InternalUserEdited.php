@@ -26,9 +26,12 @@ class InternalUserEdited implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('internal-user-edited')
+            new PrivateChannel('internal-user-edited.' . $this->internalUserId),
         ];
     }
 
-   
+    public function broadcastAs(): string
+    {
+        return 'InternalUserEdited';
+    }
 }

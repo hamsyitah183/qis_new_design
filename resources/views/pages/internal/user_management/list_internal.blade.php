@@ -14,24 +14,8 @@
 @push('scripts')
     <script>
         let userId = @json($userId);
-        setTimeout(() => {
-            window.Echo.channel("internal-user-added").listen("InternalUserAdded", (e) => {
-                console.log(e.message);
-            });
-
-            window.Echo.private('internal-user-edited')
-                .listen('App\\Events\\InternalUserEdited', (e) => {
-                    console.log('✅ USER EDITED:', e.message);
-                });
-
-
-            window.Echo.channel("internal-user-deleted").listen("InternalUserDeleted", (e) => {
-                console.log(e.message);
-            });
-
-
-
-        }, 100);
+        // console.log('Current User ID:', userId);
+      
     </script>
 
     @vite(['resources/js/pages/internal/user_management/internal_list.js'])
@@ -45,6 +29,7 @@
 @endsection
 
 @section('content')
+   
     <div class="row">
         <div class="col-xl-12">
             <div class="card custom-card">

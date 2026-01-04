@@ -1,3 +1,5 @@
+import { notifyUser, showToast } from "../../../app";
+
 /**
  * ✅ Lazy Initialize DataTable for Internal Users
  */
@@ -252,11 +254,35 @@ async function internal_user_list() {
         $(".invalid-feedback").text("");
         $("#internalUserModal .modal-footer").show();
     });
+
+    console.log("user id", userId);
+    setTimeout(() => {
+        window.Echo.channel("internal-user-added").listen(
+            "InternalUserAdded",
+            (e) => {
+                console.log(e.message);
+            }
+        );
+
+        window.Echo.private(`internal-user-edited.${userId}`).listen(
+            ".InternalUserEdited",
+            (e) => {
+                console.log("✅ YOU were edited:", e.message);
+                showToast(`${e.message} (by ${e.editor})`);
+                notifyUser(e.message, e.editor);
+                
+            
+            }
+        );
+
+        window.Echo.channel("internal-user-deleted").listen(
+            "InternalUserDeleted",
+            (e) => {
+                console.log(e.message);
+            }
+        );
+    }, 100);
 }
 
 // ✅ Initialize on page load
 internal_user_list();
-
-
-
-

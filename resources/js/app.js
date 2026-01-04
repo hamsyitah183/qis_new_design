@@ -85,10 +85,39 @@ export function initTooltips() {
 
 export async function getCountry(code) {
     const res = await fetch(`/country/${code}`);
-    return await res.json();  // return the actual country data
+    return await res.json(); // return the actual country data
 }
 
 export async function getEntryPoint(id) {
     const res = await fetch(`/entry_point/${id}`);
-    return await res.json();  // return the actual country data
+    return await res.json(); // return the actual country data
+}
+
+export function showToast(message) {
+    const toastEl = document.getElementById("editToast");
+    const toastMessage = document.getElementById("toastMessage");
+    const toastTime = document.getElementById("toastTime");
+
+    toastMessage.innerText = message;
+    toastTime.innerText = "just now";
+
+    const toast = new bootstrap.Toast(toastEl, {
+        delay: 1000,
+    });
+
+    toast.show();
+}
+
+export function notifyUser(message, editor = null) {
+    // 🔔 PLAY SOUND
+    const sound = document.getElementById("notificationSound");
+
+    // Required for browser autoplay policy
+    sound.currentTime = 0;
+    sound.play().catch(() => {
+        console.warn("Sound blocked until user interacts with page");
+    });
+
+    // 🍞 SHOW TOAST
+    showToast(editor ? `${message} (by ${editor})` : message);
 }

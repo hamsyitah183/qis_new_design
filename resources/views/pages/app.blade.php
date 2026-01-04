@@ -17,8 +17,8 @@
     <title>QIS SYSTEM | @yield('pageName')</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-  
-    
+
+
     <!-- Main Theme JS -->
     <script src="{{ asset('build2/assets/main.js') }}"></script>
 
@@ -90,6 +90,28 @@
     <!-- Loader -->
 
     <div class="page">
+
+        {{-- toast notification --}}
+        <audio id="notificationSound" preload="auto">
+            <source src="{{ asset('sounds/notification.mp3') }}" type="audio/mpeg">
+        </audio>
+
+        <div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer">
+            <div id="editToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <img class="bd-placeholder-img rounded me-2"
+                        src="https://laravelui.spruko.com/xintra/build/assets/images/brand-logos/toggle-logo.png"
+                        alt="logo" width="20">
+                    <strong class="me-auto">System Notification</strong>
+                    <small id="toastTime">just now</small>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body" id="toastMessage">
+                    <!-- message injected here -->
+                </div>
+            </div>
+        </div>
+
 
         <!-- Main-Header -->
         <header class="app-header sticky" id="header">
@@ -227,7 +249,8 @@
 
 
     <!-- intl-tel-input JS -->
-    <script src="https://laravelui.spruko.com/xintra/build/assets/libs/intl-tel-input/build/js/intlTelInput.min.js"></script>
+    <script src="https://laravelui.spruko.com/xintra/build/assets/libs/intl-tel-input/build/js/intlTelInput.min.js">
+    </script>
 
     <!-- Tagify JS -->
     <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
