@@ -158,10 +158,7 @@ class PermitApplicationController extends Controller
     {
         DB::beginTransaction();
         $movedFiles = [];
-
         $isNewApplication = false;
-        $shouldNotify = false;
-
 
         try {
             $applicationUuid = $request->input('applicationId');
@@ -193,9 +190,7 @@ class PermitApplicationController extends Controller
             // Create / Update Application
             // -----------------------------
             if ($applicationUuid) {
-                if (!$isDraft) {
-                    $shouldNotify = true;
-                }
+                // Update existing application
                 $application = IpApplication::where('application_id', $applicationUuid)->firstOrFail();
 
                 $application->update([
@@ -212,11 +207,13 @@ class PermitApplicationController extends Controller
                 ]);
 
                 event(new ApplicationCreated(
-                    'New import permit application draft by ' . $importer['fullname'] ?? 'Unknown Exporter',
+                    $isDraft
+                        ? 'Import permit application saved as DRAFT by ' . ($importer['fullname'] ?? 'Unknown Importer')
+                        : 'Import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')
                 ));
             } else {
+                // Create new application
                 $isNewApplication = true;
-                $shouldNotify = !$isDraft;
                 $application = IpApplication::create([
                     'application_id'       => Str::uuid(),
                     'eta'                  => $permit['eta'] ?? null,
@@ -232,12 +229,10 @@ class PermitApplicationController extends Controller
                 ]);
 
                 event(new ApplicationCreated(
-                    'New import permit application created by ' . $importer['fullname'] ?? 'Unknown Exporter',
+                    $isDraft
+                        ? 'New import permit application DRAFT created by ' . ($importer['fullname'] ?? 'Unknown Importer')
+                        : 'New import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')
                 ));
-
-                $users = InternalUser::all(); // or filter by role/guard
-
-
             }
 
             $appId = $application->id;
@@ -245,60 +240,45 @@ class PermitApplicationController extends Controller
             // -----------------------------
             // Sync Consignments
             // -----------------------------
-            // dd('existing ids', $existingIds, ' deleted ids', $request->input('deleted_item_ids'));
-
             $existingIds = IpConsignmentPermit::where('application_id', $appId)
                 ->pluck('id')
                 ->toArray();
             $deletedPermits = $request->input('deleted_item_ids', []);
 
-            // Convert string → array
             if (is_string($deletedPermits)) {
                 $deletedPermits = array_filter(explode(',', $deletedPermits));
             }
 
-
-
             if ($deletedPermits) {
                 foreach ($deletedPermits as $permitId) {
+                    $permitItem = IpConsignmentPermit::with('attachments')->find($permitId);
+                    if (!$permitItem) continue;
 
-                    $permit = IpConsignmentPermit::with('attachments')->find($permitId);
-
-                    if (!$permit) {
-                        continue;
-                    }
-
-                    foreach ($permit->attachments as $attachment) {
+                    foreach ($permitItem->attachments as $attachment) {
                         if ($attachment->file_path) {
                             $path = str_replace('/storage/', '', $attachment->file_path);
-
                             if (Storage::disk('public')->exists($path)) {
                                 Storage::disk('public')->delete($path);
                             }
                         }
-
                         $attachment->delete();
                     }
 
-                    $permit->delete();
+                    $permitItem->delete();
                 }
             }
 
-            // dd($request->hasFile('files'));
-
+            // -----------------------------
             // Create / Update consignments
+            // -----------------------------
+            $consignmentArray = [];
             if ($request->has('items')) {
                 foreach ($request->items as $index => $item) {
-
                     $data = json_decode($item['data'], true);
                     $permit_id = $data['permit_id'] ?? null;
 
-                    // 🔥 IF permit already exists → DO NOTHING
-                    if ($permit_id && in_array($permit_id, $existingIds)) {
-                        continue;
-                    }
+                    if ($permit_id && in_array($permit_id, $existingIds)) continue;
 
-                    // 🔥 CREATE only NEW consignments
                     $consignment = IpConsignmentPermit::create([
                         'application_id'     => $appId,
                         'permit_number'      => null,
@@ -312,9 +292,6 @@ class PermitApplicationController extends Controller
                     $consignmentArray[$index] = $consignment->id;
                 }
             }
-
-
-
 
             // -----------------------------
             // Handle Attachments
@@ -344,7 +321,6 @@ class PermitApplicationController extends Controller
                 $application->logActivity('Draft', 'Application saved as draft', 'Draft');
             } else {
                 $application->logActivity('Submitted', 'Application submitted', 'Submitted');
-
                 $permit['applCate'] == 0
                     ? $application->logActivity('Pending', 'Application pending', 'Pending')
                     : $application->logActivity('Awaiting Approval', 'Company approval required', 'Awaiting Company Approval');
@@ -352,16 +328,22 @@ class PermitApplicationController extends Controller
 
             DB::commit();
 
-            if ($shouldNotify) {
-                $users = InternalUser::all();
-
-                Notification::send($users, new ApplicationNotification(
-                    $isNewApplication
+            // -----------------------------
+            // Send Notifications
+            // -----------------------------
+            $users = InternalUser::all(); // Adjust roles/guards if needed
+            $notificationUrl = route('viewApplication', $application->application_id);
+            Notification::send($users, new ApplicationNotification(
+                $isDraft
+                    ? ($isNewApplication
+                        ? 'New import permit draft created'
+                        : 'Import permit draft updated')
+                    : ($isNewApplication
                         ? 'New import permit application submitted'
-                        : 'Import permit application updated',
-                    Auth::user()->fullname
-                ));
-            }
+                        : 'Import permit application updated'),
+                Auth::user()->fullname,
+                $notificationUrl
+            ));
 
             return response()->json([
                 'status' => 'success',
@@ -380,6 +362,7 @@ class PermitApplicationController extends Controller
             ], 500);
         }
     }
+
 
 
     /**

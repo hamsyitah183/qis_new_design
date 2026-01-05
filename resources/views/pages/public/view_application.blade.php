@@ -28,10 +28,10 @@
 
                     {{-- @dd($application) --}}
 
-
+                    {{-- @dd($application->user_id, authUser()['user']->uuid) --}}
 
                     <div class="ms-auto">
-                        @if ($application->status == 'Draft')
+                        @if ($application->status == 'Draft' && $application->user_id == authUser()['user']->uuid)
                             <a class="btn btn-primary2 btn-wave btn-sm me-2" id="editButton" href="/edit_application/{{ $application->application_id }}">
                                 Edit
                             </a>

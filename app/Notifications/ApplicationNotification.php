@@ -16,13 +16,14 @@ class ApplicationNotification extends Notification
      */
     public $message;
     public $user;
-    public $time;
+    public $url;
 
-    public function __construct($message, $user, $time = null)
+    public function __construct($message, $user, $url = null)
     {
         $this->message = $message;
         $this->user = $user;
-        $this->time = $time;
+        $this->url = $url;
+        // $this->time = $time;
     }
 
 
@@ -41,6 +42,7 @@ class ApplicationNotification extends Notification
         return [
             'message' => $this->message,
             'user'  => $this->user,
+            'url' => $this->url,
         ];
     }
 

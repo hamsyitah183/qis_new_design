@@ -165,7 +165,7 @@ class ApplicationController extends Controller
             $users = InternalUser::all(); // or filter by role/guard
 
             Notification::send($users, new ApplicationNotification(
-                'Application with ID ' . $id . ' has been deleted.',
+                'Import Application with ID ' . $id . ' has been deleted .',
                 authUser()['user']->fullname
             ));
 
@@ -225,7 +225,7 @@ class ApplicationController extends Controller
         ]); //, 'consignment', 'attachment'
     }
     public function editApplication($uuid)
-    {
+    {   
 
         $application = IpApplication::with([
             'user',         // submitted by
@@ -238,6 +238,10 @@ class ApplicationController extends Controller
             ->where('application_id', $uuid)
             ->orderBy('created_at', 'desc')
             ->firstOrFail();
+
+        if($application->user_id != authUser()['user']->uuid || $application->status != 'Draft'){
+            abort(403, 'Cannot edit this application.');
+        }
 
         $itemId = $application->id;
 

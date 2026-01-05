@@ -12,12 +12,14 @@ class InternalUserEditedNotification extends Notification implements ShouldBroad
     use Queueable;
 
     public string $message;
-    public string $editorName;
+    public string $user;
+    public string $url;
 
-    public function __construct(string $message, string $editorName)
+    public function __construct(string $message, string $user, string $url = null)
     {
         $this->message = $message;
-        $this->editorName = $editorName;
+        $this->user = $user;
+        $this->url = $url;
     }
 
     /**
@@ -36,7 +38,8 @@ class InternalUserEditedNotification extends Notification implements ShouldBroad
     {
         return [
             'message' => $this->message,
-            'editor'  => $this->editorName,
+            'user'  => $this->user,
+            'url' => $this->url,
         ];
     }
 

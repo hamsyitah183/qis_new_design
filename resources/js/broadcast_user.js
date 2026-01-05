@@ -1,4 +1,5 @@
 import { notifyUser, showToast } from "./app";
+import { notification } from "./notification";
 
 console.log("hello from apply permit page");
 console.log("Internal dashboard loaded");
@@ -26,6 +27,7 @@ export function internalUserEcho() {
                 notifyUser(e.message, e.editor);
             }
         );
+
     }, 100);
 }
 

@@ -18,6 +18,7 @@ import $ from "jquery";
 window.$ = window.jQuery = $; // make it global
 import "select2";
 import { internalUserEcho } from "./broadcast_user";
+import { notification } from "./notification";
 
 $("#redirectProfile").on("click", function (e) {
     e.preventDefault();
@@ -124,3 +125,34 @@ export function notifyUser(message, editor = null) {
 }
 
 internalUserEcho();
+// notification();
+
+
+let notificationInterval = null;
+
+export function startNotificationPolling() {
+    if (notificationInterval) return; // prevent duplicates
+
+    notification(); // run immediately
+    notificationInterval = setInterval(notification, 10000);
+}
+
+export function stopNotificationPolling() {
+    if (!notificationInterval) return;
+
+    clearInterval(notificationInterval);
+    notificationInterval = null;
+}
+
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        stopNotificationPolling();
+    } else {
+        startNotificationPolling();
+    }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    startNotificationPolling();
+});
+

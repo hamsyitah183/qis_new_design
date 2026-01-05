@@ -6,6 +6,11 @@ use App\Models\Country;
 use App\Models\IpEntryPoint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Notifications\DatabaseNotification;
+
+
+// use Illuminate\Support\Facades\Notification;
 
 class DashboardController extends Controller
 {
@@ -27,12 +32,25 @@ class DashboardController extends Controller
 
     protected function public_dashboard()
     {
-        return view('pages.public.dashboard'); // Public user dashboard
+        // $notifications = auth()->user()->notifications()->latest()->take(10)->get();
+        $notifications = []; // Public users may not have notifications
+
+        return view('pages.public.dashboard', [
+            'notifications' => $notifications,
+        ]); // Public user dashboard
     }
 
     protected function internal_dashboard()
     {
-        return view('pages.internal.dashboard'); // Internal user dashboard
+        // $notifications = Notification::where('notifiable_type', 'internal')
+        //     ->where('notifiable_id', authUser()['user']->uuid)
+        //     ->latest()
+        //     ->take(10)
+        //     ->get();
+
+        return view('pages.internal.dashboard', [
+            // 'notifications' => $notifications,
+        ]); // Internal user dashboard
     }
 
     public function get_country($code)
@@ -47,5 +65,16 @@ class DashboardController extends Controller
         $entry = IpEntryPoint::find($id);
 
         return response()->json($entry);
+    }
+
+    public function get_notifications()
+    {
+        $notifications = DatabaseNotification::where('notifiable_type', 'internal')
+            ->where('notifiable_id', authUser()['user']->uuid)
+            ->latest()
+            ->take(10)
+            ->get();
+
+        return response()->json($notifications);
     }
 }

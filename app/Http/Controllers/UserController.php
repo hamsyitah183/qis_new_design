@@ -317,8 +317,13 @@ class UserController extends Controller
     public function internal_user_save(Request $request)
     {
         $uuid = $request->input('uuid');
+        $actor = authUser()['user']; // person doing the change
+        $url = route('internal.internal.list'); // Link to internal user list (or specific page)
 
         if ($uuid) {
+            // =========================
+            // UPDATE USER
+            // =========================
             $internalUser = InternalUser::where('uuid', $uuid)->firstOrFail();
 
             $request->validate([
@@ -339,52 +344,91 @@ class UserController extends Controller
                 'office' => $request->office,
             ]);
 
-            event(new InternalUserEdited($internalUser->fullname . ' account has been edited by ' . authUser()['user']->fullname, $internalUser->uuid));
-            if ($internalUser->id !== authUser()['user']->uuid) {
-                $internalUser->notify(
-                    new InternalUserEditedNotification(
-                        'Your account has been updated',
-                        authUser()['user']->fullname
-                    )
-                );
+            /*
+        |----------------------------------------------------------------------
+        | 1️⃣ Notify the USER WHO WAS EDITED
+        |----------------------------------------------------------------------
+        */
+            if ($internalUser->uuid !== $actor->uuid) {
+                $internalUser->notify(new InternalUserEditedNotification(
+                    'Your account was updated',
+                    'Your account details were updated by ' . $actor->fullname,
+                    $url // pass URL
+                ));
             }
 
+            /*
+        |----------------------------------------------------------------------
+        | 2️⃣ Notify the USER WHO DID THE EDIT
+        |----------------------------------------------------------------------
+        */
+            $actor->notify(new InternalUserEditedNotification(
+                'Account updated',
+                'You updated ' . $internalUser->fullname . '\'s account',
+                $url
+            ));
+
+            /*
+        |----------------------------------------------------------------------
+        | 3️⃣ Broadcast event (for live refresh / toast)
+        |----------------------------------------------------------------------
+        */
+            event(new InternalUserEdited(
+                $internalUser->fullname . ' account was edited by ' . $actor->fullname,
+                $internalUser->uuid
+            ));
+
             return response()->json([
-                'used id' => $uuid,
+                'used_id' => $uuid,
                 'message' => 'User Updated'
             ]);
-        } else {
-            $request->validate([
-                'fullname' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:internal_users,email',
-                'no_ic' => 'required|digits:12|unique:internal_users,no_ic',
-                'phone_number' => 'required|digits_between:7,15|unique:internal_users,phone_number',
-                'position' => 'required|string|max:255',
-                'office' => 'required|string|max:255',
-                'role' => 'required|string', // Make sure role is sent
-            ]);
-
-            $internalUser = InternalUser::create([
-                'uuid' => Str::uuid()->toString(), // ✅ Add a UUID
-                'fullname' => $request->fullname,
-                'email' => $request->email,
-                'no_ic' => $request->no_ic,
-                'phone_number' => $request->phone_number,
-                'position' => $request->position,
-                'office' => $request->office,
-                'password' => Hash::make($request->no_ic),
-            ]);
-
-            $internalUser->assignRole($request->role);
-
-            event(new InternalUserAdded('A new internal user has been added.')); // ✅ Trigger event with message
-
-            return response()->json([
-                'used id' => $internalUser->uuid, // Return the new UUID
-                'message' => 'User Created'
-            ]);
         }
+
+        // =========================
+        // CREATE USER
+        // =========================
+        $request->validate([
+            'fullname' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:internal_users,email',
+            'no_ic' => 'required|digits:12|unique:internal_users,no_ic',
+            'phone_number' => 'required|digits_between:7,15|unique:internal_users,phone_number',
+            'position' => 'required|string|max:255',
+            'office' => 'required|string|max:255',
+            'role' => 'required|string',
+        ]);
+
+        $internalUser = InternalUser::create([
+            'uuid' => Str::uuid(),
+            'fullname' => $request->fullname,
+            'email' => $request->email,
+            'no_ic' => $request->no_ic,
+            'phone_number' => $request->phone_number,
+            'position' => $request->position,
+            'office' => $request->office,
+            'password' => Hash::make($request->no_ic),
+        ]);
+
+        $internalUser->assignRole($request->role);
+
+        /*
+    |----------------------------------------------------------------------
+    | Notify creator
+    |----------------------------------------------------------------------
+    */
+        $actor->notify(new InternalUserEditedNotification(
+            'User created',
+            'You created a new user: ' . $internalUser->fullname,
+            $url
+        ));
+
+        event(new InternalUserAdded('A new internal user has been added'));
+
+        return response()->json([
+            'used_id' => $internalUser->uuid,
+            'message' => 'User Created'
+        ]);
     }
+
 
 
     public function user_list($type)

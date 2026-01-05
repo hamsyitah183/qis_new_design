@@ -8,30 +8,29 @@ use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Notifications\Notification;
 use Illuminate\Queue\SerializesModels;
 
-class InternalUserEdited implements ShouldBroadcast
+class InternalUserEdited extends Notification
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Queueable;
 
-    public $message;
-    public $internalUserId;
+    public function __construct(
+        public string $title,
+        public string $message
+    ) {}
 
-    public function __construct($message, $internalUserId)
+    public function via($notifiable): array
     {
-        $this->message = $message;
-        $this->internalUserId = $internalUserId;
+        return ['database'];
     }
 
-    public function broadcastOn(): array
+    public function toDatabase($notifiable): array
     {
         return [
-            new PrivateChannel('internal-user-edited.' . $this->internalUserId),
+            'title'   => $this->title,
+            'message' => $this->message,
         ];
-    }
-
-    public function broadcastAs(): string
-    {
-        return 'InternalUserEdited';
     }
 }

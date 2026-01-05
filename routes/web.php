@@ -168,6 +168,9 @@ Route::prefix('internal')
         Route::post('/save_condition', [MiscController::class, 'saveCondition'])->name('saveCondition');
         // Route::get('/permit_edit_condition/{id}', [MiscController::class, 'editCondition']);
         // Route::get('/control_panel', [MiscController::class, 'showcontrolpanel'])->name('controlpanel');
+
+        // ======================= notifications ===========================
+        Route::get('/notifications', [DashboardController::class, 'get_notifications'])->name('notifications');
     });
 
 Route::middleware(['auth.any'])
