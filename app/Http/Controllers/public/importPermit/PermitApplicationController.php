@@ -6,18 +6,21 @@ use App\Events\ApplicationCreated;
 use App\Http\Controllers\Controller;
 use App\Models\country;
 use App\Models\ImportPermitLog;
+use App\Models\InternalUser;
 use App\Models\IpApplication;
 use App\Models\IpCondition;
 use App\Models\IpConsignmentAttachment;
 use App\Models\IpConsignmentPermit;
 use App\Models\PublicCode;
 use App\Models\TempAttachment;
+use App\Notifications\ApplicationNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-
+// use App\Notifications\ApplicationNotification;
 class PermitApplicationController extends Controller
 {
     public function show()
@@ -156,6 +159,8 @@ class PermitApplicationController extends Controller
         DB::beginTransaction();
         $movedFiles = [];
 
+        $isNewApplication = false;
+        $shouldNotify = false;
 
 
         try {
@@ -188,6 +193,9 @@ class PermitApplicationController extends Controller
             // Create / Update Application
             // -----------------------------
             if ($applicationUuid) {
+                if (!$isDraft) {
+                    $shouldNotify = true;
+                }
                 $application = IpApplication::where('application_id', $applicationUuid)->firstOrFail();
 
                 $application->update([
@@ -204,9 +212,11 @@ class PermitApplicationController extends Controller
                 ]);
 
                 event(new ApplicationCreated(
-                    'New import permit application draft by ' . $importer['name'] ?? 'Unknown Exporter',
+                    'New import permit application draft by ' . $importer['fullname'] ?? 'Unknown Exporter',
                 ));
             } else {
+                $isNewApplication = true;
+                $shouldNotify = !$isDraft;
                 $application = IpApplication::create([
                     'application_id'       => Str::uuid(),
                     'eta'                  => $permit['eta'] ?? null,
@@ -222,8 +232,12 @@ class PermitApplicationController extends Controller
                 ]);
 
                 event(new ApplicationCreated(
-                    'New import permit application created by ' . $exporter['name'] ?? 'Unknown Exporter',
+                    'New import permit application created by ' . $importer['fullname'] ?? 'Unknown Exporter',
                 ));
+
+                $users = InternalUser::all(); // or filter by role/guard
+
+
             }
 
             $appId = $application->id;
@@ -337,6 +351,17 @@ class PermitApplicationController extends Controller
             }
 
             DB::commit();
+
+            if ($shouldNotify) {
+                $users = InternalUser::all();
+
+                Notification::send($users, new ApplicationNotification(
+                    $isNewApplication
+                        ? 'New import permit application submitted'
+                        : 'Import permit application updated',
+                    Auth::user()->fullname
+                ));
+            }
 
             return response()->json([
                 'status' => 'success',

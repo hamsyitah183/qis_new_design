@@ -5,12 +5,15 @@ namespace App\Http\Controllers;
 use App\Events\ApplicationDeleted;
 use App\Models\Country;
 use App\Models\Exporter;
+use App\Models\InternalUser;
 use App\Models\IpApplication;
 use App\Models\IpConsignmentAttachment;
 use App\Models\IpConsignmentPermit;
 use App\Models\PublicCode;
+use App\Notifications\ApplicationNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Yajra\DataTables\Facades\DataTables;
 
 
@@ -159,6 +162,12 @@ class ApplicationController extends Controller
 
             // Fire the deletion event
             event(new ApplicationDeleted('Application with ID ' . $id . ' has been deleted.'));
+            $users = InternalUser::all(); // or filter by role/guard
+
+            Notification::send($users, new ApplicationNotification(
+                'Application with ID ' . $id . ' has been deleted.',
+                authUser()['user']->fullname
+            ));
 
             return response()->json([
                 'message' => 'Application and its related data have been deleted successfully.'
