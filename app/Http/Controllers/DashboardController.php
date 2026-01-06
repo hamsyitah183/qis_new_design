@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Country;
 use App\Models\IpEntryPoint;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
@@ -79,5 +80,29 @@ class DashboardController extends Controller
         return response()->json($notifications);
     }
 
-    
+    public function notifications_page()
+    {
+        return view('pages.notifications');
+    }
+
+    public function notifications_data(Request $request)
+    {
+        $type = authUser()['type'];
+        $user = authUser()['user'];
+
+        $query = DatabaseNotification::where('notifiable_type', $type)
+            ->where('notifiable_id', $user->uuid);
+
+        if ($request->filled('hours')) {
+            $query->where(
+                'created_at',
+                '>=',
+                Carbon::now()->subHours($request->hours)
+            );
+        }
+
+        return response()->json(
+            $query->latest()->get()
+        );
+    }
 }

@@ -1,3 +1,6 @@
+import $ from "jquery";
+import Swal from "sweetalert2";
+
 export function notification() {
     console.log("Notification script loaded.");
 
@@ -6,7 +9,7 @@ export function notification() {
     const notificationContent = document.getElementById("notificationContent");
     const notificationCount = document.getElementById("notifiation-data");
 
-    fetch("/notifications")
+    fetch("/notifications/data")
         .then((response) => {
             if (!response.ok) throw new Error("Network response was not ok");
             return response.json();
@@ -122,3 +125,88 @@ function formatTime(dateString) {
         day: "numeric",
     });
 }
+
+document.querySelectorAll('.dropdown-item-notification').forEach(item => {
+    item.addEventListener('click', function (e) {
+        e.preventDefault();
+        const hours = this.dataset.time;
+        notificationContent(hours);
+    });
+});
+
+
+export function notificationContent(hours = null) {
+    const notificationList = document.getElementById("notificationList");
+
+    Swal.fire({
+        title: 'Loading...',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    let url = "/notifications/data/get";
+
+    if (hours) {
+        url += `?hours=${hours}`;
+    }
+
+    fetch(url)
+        .then((response) => {
+            if (!response.ok) throw new Error("Network response was not ok");
+            return response.json();
+        })
+        .then((data) => {
+            notificationList.innerHTML = "";
+
+            if (!data.length) {
+                notificationList.innerHTML = `
+                    <li class="list-group-item border-bottom-0 text-center">
+                        <span class="fw-medium">No notification</span>
+                    </li>
+                `;
+                return;
+            }
+
+            data.forEach((notification) => {
+                const listItem = document.createElement("a");
+                listItem.className =
+                    "list-group-item border-bottom-0 d-flex gap-2 align-items-start pb-2 border-bottom";
+
+                listItem.href = notification.data.url ?? "#";
+
+                listItem.innerHTML = `
+                    <div class="pe-2">
+                        <span class="avatar avatar-md bg-primary avatar-rounded">
+                            <i class="ri-notification-3-line"></i>
+                        </span>
+                    </div>
+
+                    <div class="text-wrap">
+                        <span class="fw-medium">${notification.data.user}</span>
+                        <p class="text-muted mb-0 fs-12 w-100 text-wrap">
+                            ${notification.data.message}
+                        </p>
+                    </div>
+
+                    <span class="text-muted ms-auto fs-12">
+                        ${formatTime(notification.created_at)}
+                    </span>
+                `;
+
+                notificationList.appendChild(listItem);
+            });
+        })
+        .catch(() => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Failed to load notifications',
+                text: 'Please try again later.'
+            });
+        })
+        .finally(() => Swal.close());
+}
+
+
+
+notificationContent();

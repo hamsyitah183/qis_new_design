@@ -18,7 +18,7 @@ import $ from "jquery";
 window.$ = window.jQuery = $; // make it global
 import "select2";
 import { internalUserEcho, publicUserEcho } from "./broadcast_user";
-import { notification } from "./notification";
+import { notification, notificationContent } from "./notification";
 
 $("#redirectProfile").on("click", function (e) {
     e.preventDefault();
@@ -132,6 +132,7 @@ export function notifyUser(message, editor = null) {
 
     // 🍞 SHOW TOAST
     showToast(editor ? `${message} (by ${editor})` : message);
+    notificationContent();
 }
 
 

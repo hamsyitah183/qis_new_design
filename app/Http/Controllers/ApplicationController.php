@@ -11,6 +11,7 @@ use App\Models\IpApplication;
 use App\Models\IpConsignmentAttachment;
 use App\Models\IpConsignmentPermit;
 use App\Models\PublicCode;
+use App\Models\PublicUser;
 use App\Notifications\ApplicationNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -358,6 +359,13 @@ class ApplicationController extends Controller
             $users = InternalUser::all(); // or filter by role/guard
 
             Notification::send($users, new ApplicationNotification(
+                'Import Application with ID ' . $id . ' has been accepted.',
+                authUser()['user']->fullname,
+                $notificationUrl
+            ));
+            $user = PublicUser::where('uuid', $application->user_id)->first();
+
+            Notification::send($user, new ApplicationNotification(
                 'Import Application with ID ' . $id . ' has been accepted.',
                 authUser()['user']->fullname,
                 $notificationUrl

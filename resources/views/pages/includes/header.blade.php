@@ -146,7 +146,7 @@
 
                 <div class="p-3 empty-header-item1 border-top">
                     <div class="d-grid">
-                        <a href="javascript:void(0);" class="btn btn-primary btn-wave waves-effect waves-light">View
+                        <a href="/notifications" class="btn btn-primary btn-wave waves-effect waves-light">View
                             All</a>
                     </div>
                 </div>

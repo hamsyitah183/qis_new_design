@@ -204,8 +204,8 @@ Route::middleware(['auth.any'])
         Route::get('/application/permit/{id}/data', [ApplicationController::class, 'get_application_permit']);
         Route::post('/application/verify/{id}/', [ApplicationController::class, 'verify_application_permit']);
 
-        Route::get('/notifications', [DashboardController::class, 'get_notifications'])->name('notifications');
-        // Route::get('/notifications/data', [DashboardController::class, 'get_notifications_data'])->name('notifications.data');
+        Route::get('/notifications/data', [DashboardController::class, 'get_notifications'])->name('notifications');
+        Route::get('/notifications/data/get', [DashboardController::class, 'notifications_data']);
         Route::post('/notifications/mark-read', function () {
             $type = authUser()['type'];
             $user = authUser()['user'];
@@ -226,6 +226,7 @@ Route::middleware(['auth.any'])
 
             return response()->json(['status' => 'success']);
         })->name('notifications.mark-read');
+        Route::get('/notifications', [DashboardController::class, 'notifications_page'])->name('notifications.page');
     });
 
 // broadcast --dont kacau---
