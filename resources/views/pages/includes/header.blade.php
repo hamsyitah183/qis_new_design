@@ -34,37 +34,6 @@
     <ul class="header-content-right">
 
 
-        <!-- Start::header-element -->
-        {{-- <li class="header-element country-selector dropdown">
-            <!-- Start::header-link|dropdown-toggle -->
-            <a href="javascript:void(0);" class="header-link dropdown-toggle" data-bs-auto-close="outside"
-                data-bs-toggle="dropdown">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 header-link-icon" fill="none"
-                    viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="m10.5 21 5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 0 1 6-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 0 1-3.827-5.802" />
-                </svg>
-
-            </a>
-            <!-- End::header-link|dropdown-toggle -->
-            <ul class="main-header-dropdown dropdown-menu dropdown-menu-end" data-popper-placement="none">
-                <li>
-                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center">
-                                <span class="avatar avatar-rounded avatar-xs lh-1 me-2">
-                                    <img src="https://laravelui.spruko.com/xintra/build2/assets/images/flags/us_flag.jpg"
-                                        alt="img">
-                                </span>
-                                English
-                            </div>
-                        </div>
-                    </a>
-                </li>
-
-            </ul>
-        </li> --}}
-        <!-- End::header-element -->
 
         <!-- Start::header-element -->
         <li class="header-element header-theme-mode">
@@ -105,6 +74,8 @@
                     <path stroke-linecap="round" stroke-linejoin="round"
                         d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0M3.124 7.5A8.969 8.969 0 0 1 5.292 3m13.416 0a8.969 8.969 0 0 1 2.168 4.5" />
                 </svg>
+                {{-- header-icon-pulse bg-primary2 rounded pulse pulse-secondary --}}
+                <span class="" id="pulse"></span>
 
             </a>
             <!-- End::header-link|dropdown-toggle -->
@@ -129,7 +100,7 @@
                                 <div class="simplebar-content-wrapper" tabindex="0" role="region"
                                     aria-label="scrollable content" style="height: auto; overflow: hidden scroll;">
                                     <div class="simplebar-content" style="padding: 0px;" id="notificationContent">
-                                       
+
                                         <li class="dropdown-item">
                                             <div class="d-flex align-items-center">
                                                 <div class="pe-2 lh-1">
@@ -246,13 +217,14 @@
 
 
                 <li class="p-4 p-md-0">
-                    
-                        <a type="button" id="logoutButton" href="{{ route('logout') }}" class="dropdown-item d-flex align-items-center text-start w-100">
 
-                            <i class="ti ti-lock p-1 rounded-circle bg-primary-transparent me-2 fs-16"></i>
-                            Log Out
-</a>
-                    
+                    <a type="button" id="logoutButton" href="{{ route('logout') }}"
+                        class="dropdown-item d-flex align-items-center text-start w-100">
+
+                        <i class="ti ti-lock p-1 rounded-circle bg-primary-transparent me-2 fs-16"></i>
+                        Log Out
+                    </a>
+
 
                 </li>
 

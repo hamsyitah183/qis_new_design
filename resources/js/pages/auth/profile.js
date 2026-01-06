@@ -31,6 +31,10 @@ export async function loadProfile() {
         user["type"] = response.type;
         fillTheData(user, response.type);
 
+        if (user.type === "public") {
+            publicUserAddUpdate(user);
+        }
+
         Swal.close();
     } catch (error) {
         console.error("Error loading profile:", error);
@@ -45,7 +49,7 @@ export async function loadProfile() {
 }
 
 function fillTheData(user, type) {
-    console.log('user id', user)
+    console.log("user id", user);
     const fullAddress =
         user.office ??
         user.address_1 + (user.address_2 ? `, ${user.address_2}` : "");
@@ -204,107 +208,109 @@ $(document).on("click", ".uploadAgain", function () {
 });
 
 function editProfile() {
-    $("#edit-profile-tab-pane").off("submit").on("submit", function (e){
-        e.preventDefault();
+    $("#edit-profile-tab-pane")
+        .off("submit")
+        .on("submit", function (e) {
+            e.preventDefault();
 
-        if (!user) {
-            Swal.fire({
-                icon: "info",
-                title: "Please wait...",
-                text: "Profile is still loading.",
-            });
-            return;
-        }
+            if (!user) {
+                Swal.fire({
+                    icon: "info",
+                    title: "Please wait...",
+                    text: "Profile is still loading.",
+                });
+                return;
+            }
 
-        const $form = $(this);
-        const formData = new FormData(this);
-        const allInputs = $form.find("input, select, button, textarea");
-        allInputs.prop("disabled", true);
-        $form.find(".is-invalid").removeClass("is-invalid");
-        $form.find(".invalid-feedback").remove();
+            const $form = $(this);
+            const formData = new FormData(this);
+            const allInputs = $form.find("input, select, button, textarea");
+            allInputs.prop("disabled", true);
+            $form.find(".is-invalid").removeClass("is-invalid");
+            $form.find(".invalid-feedback").remove();
 
-        const newEmail = $form.find(".email").val().trim();
+            const newEmail = $form.find(".email").val().trim();
 
-        const submitForm = () => {
-            Swal.fire({
-                title: "Updating...",
-                allowOutsideClick: false,
-                didOpen: () => Swal.showLoading(),
-            });
+            const submitForm = () => {
+                Swal.fire({
+                    title: "Updating...",
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading(),
+                });
 
-            $.ajax({
-                url: $form.attr("action") || "/data",
-                type: "POST",
-                data: formData,
-                processData: false,
-                contentType: false,
-                headers: {
-                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
-                        "content"
-                    ),
-                    Accept: "application/json",
-                },
-                success: function (response) {
-                    Swal.fire({
-                        icon: "success",
-                        title: "Success!",
-                        text: response.message,
-                        showConfirmButton: false,
-                        timer: 1200,
-                    });
-                    loadProfile();
-                },
-                error: function (xhr) {
-                    Swal.close();
-                    if (xhr.status === 422) {
-                        const errors = xhr.responseJSON.errors;
-                        for (const key in errors) {
-                            const $input = $form.find(`[name="${key}"]`);
-                            if ($input.length) {
-                                $input.addClass("is-invalid");
-                                $input.after(
-                                    `<div class="invalid-feedback">${errors[key][0]}</div>`
-                                );
+                $.ajax({
+                    url: $form.attr("action") || "/data",
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
+                            "content"
+                        ),
+                        Accept: "application/json",
+                    },
+                    success: function (response) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Success!",
+                            text: response.message,
+                            showConfirmButton: false,
+                            timer: 1200,
+                        });
+                        loadProfile();
+                    },
+                    error: function (xhr) {
+                        Swal.close();
+                        if (xhr.status === 422) {
+                            const errors = xhr.responseJSON.errors;
+                            for (const key in errors) {
+                                const $input = $form.find(`[name="${key}"]`);
+                                if ($input.length) {
+                                    $input.addClass("is-invalid");
+                                    $input.after(
+                                        `<div class="invalid-feedback">${errors[key][0]}</div>`
+                                    );
+                                }
                             }
+                            Swal.fire({
+                                icon: "error",
+                                title: "Validation Failed",
+                                text: "Please check your input fields.",
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                text:
+                                    xhr.responseJSON?.message ||
+                                    "Something went wrong. Please try again.",
+                            });
                         }
-                        Swal.fire({
-                            icon: "error",
-                            title: "Validation Failed",
-                            text: "Please check your input fields.",
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: "error",
-                            title: "Error",
-                            text:
-                                xhr.responseJSON?.message ||
-                                "Something went wrong. Please try again.",
-                        });
-                    }
-                },
-                complete: function () {
-                    allInputs.prop("disabled", false);
-                },
-            });
-        };
+                    },
+                    complete: function () {
+                        allInputs.prop("disabled", false);
+                    },
+                });
+            };
 
-        // Email changed?
-        if (user.email.trim() !== newEmail && user.type == "public") {
-            Swal.fire({
-                icon: "info",
-                title: "Change your email?",
-                text: "Changing your email may cause your verification to be retracted and require re-approval.",
-                showCancelButton: true,
-                confirmButtonText: "Continue",
-                cancelButtonText: "Cancel",
-            }).then((result) => {
-                if (result.isConfirmed) submitForm();
-                else allInputs.prop("disabled", false);
-            });
-        } else {
-            submitForm();
-        }
-    });
+            // Email changed?
+            if (user.email.trim() !== newEmail && user.type == "public") {
+                Swal.fire({
+                    icon: "info",
+                    title: "Change your email?",
+                    text: "Changing your email may cause your verification to be retracted and require re-approval.",
+                    showCancelButton: true,
+                    confirmButtonText: "Continue",
+                    cancelButtonText: "Cancel",
+                }).then((result) => {
+                    if (result.isConfirmed) submitForm();
+                    else allInputs.prop("disabled", false);
+                });
+            } else {
+                submitForm();
+            }
+        });
 }
 
 function formatTime(timestamp) {
@@ -331,93 +337,113 @@ function formatTime(timestamp) {
 }
 
 function changePassword() {
-    $("#edit-password-tab-pane").off("submit").on("submit", function (e) {
-        e.preventDefault();
+    $("#edit-password-tab-pane")
+        .off("submit")
+        .on("submit", function (e) {
+            e.preventDefault();
 
-        if (!user) {
-            Swal.fire({
-                icon: "info",
-                title: "Please wait...",
-                text: "Profile is still loading.",
-            });
+            if (!user) {
+                Swal.fire({
+                    icon: "info",
+                    title: "Please wait...",
+                    text: "Profile is still loading.",
+                });
+                return;
+            }
+
+            const $form = $(this);
+            const formData = new FormData(this);
+
+            const allInputs = $form.find("input, select, button, textarea");
+            allInputs.prop("disabled", true);
+            $form.find(".is-invalid").removeClass("is-invalid");
+            $form.find(".invalid-feedback").remove();
+
+            // $(".type").val(type);
+            // $(".uuid").val(user.uuid);
+
+            const submitForm = () => {
+                Swal.fire({
+                    title: "Updating...",
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading(),
+                });
+
+                $.ajax({
+                    url: $form.attr("action") || "/password",
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
+                            "content"
+                        ),
+                        Accept: "application/json",
+                    },
+                    success: function (response) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Success!",
+                            text: response.message,
+                            showConfirmButton: false,
+                            timer: 1200,
+                        });
+                    },
+                    error: function (xhr) {
+                        Swal.close();
+                        if (xhr.status === 422) {
+                            const errors = xhr.responseJSON.errors;
+                            for (const key in errors) {
+                                const $input = $form.find(`[name="${key}"]`);
+                                if ($input.length) {
+                                    $input.addClass("is-invalid");
+                                    $input.after(
+                                        `<div class="invalid-feedback">${errors[key][0]}</div>`
+                                    );
+                                }
+                            }
+                            Swal.fire({
+                                icon: "error",
+                                title: "Validation Failed",
+                                text: "Please check your input fields.",
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                text:
+                                    xhr.responseJSON?.message ||
+                                    "Something went wrong. Please try again.",
+                            });
+                        }
+                    },
+                    complete: function () {
+                        allInputs.prop("disabled", false);
+                    },
+                });
+            };
+
+            submitForm();
+        });
+}
+
+export async function publicUserAddUpdate(user) {
+    console.log("call public user echo function");
+    console.log("public user id", user);
+    setTimeout(() => {
+        if (!window.Echo) {
+            console.error("Echo not found");
             return;
         }
 
-        const $form = $(this);
-        const formData = new FormData(this);
-
-        const allInputs = $form.find("input, select, button, textarea");
-        allInputs.prop("disabled", true);
-        $form.find(".is-invalid").removeClass("is-invalid");
-        $form.find(".invalid-feedback").remove();
-
-        // $(".type").val(type);
-        // $(".uuid").val(user.uuid);
-
-        const submitForm = () => {
-            Swal.fire({
-                title: "Updating...",
-                allowOutsideClick: false,
-                didOpen: () => Swal.showLoading(),
-            });
-
-            $.ajax({
-                url: $form.attr("action") || "/password",
-                type: "POST",
-                data: formData,
-                processData: false,
-                contentType: false,
-                headers: {
-                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
-                        "content"
-                    ),
-                    Accept: "application/json",
-                },
-                success: function (response) {
-                    Swal.fire({
-                        icon: "success",
-                        title: "Success!",
-                        text: response.message,
-                        showConfirmButton: false,
-                        timer: 1200,
-                    });
-                },
-                error: function (xhr) {
-                    Swal.close();
-                    if (xhr.status === 422) {
-                        const errors = xhr.responseJSON.errors;
-                        for (const key in errors) {
-                            const $input = $form.find(`[name="${key}"]`);
-                            if ($input.length) {
-                                $input.addClass("is-invalid");
-                                $input.after(
-                                    `<div class="invalid-feedback">${errors[key][0]}</div>`
-                                );
-                            }
-                        }
-                        Swal.fire({
-                            icon: "error",
-                            title: "Validation Failed",
-                            text: "Please check your input fields.",
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: "error",
-                            title: "Error",
-                            text:
-                                xhr.responseJSON?.message ||
-                                "Something went wrong. Please try again.",
-                        });
-                    }
-                },
-                complete: function () {
-                    allInputs.prop("disabled", false);
-                },
-            });
-        };
-
-        submitForm();
-    });
+        window.Echo.private(`public-user.${user.uuid}`).listen(
+            ".PublicUser",
+            (e) => {
+                console.log("✅ Public user event:", e.message);
+            }
+        );
+    }, 100);
 }
 
 $(document).ready(function () {
@@ -425,4 +451,5 @@ $(document).ready(function () {
     loadProfile();
     editProfile();
     changePassword();
+    // publicUserAddUpdate(user);
 });

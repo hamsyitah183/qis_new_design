@@ -28,6 +28,26 @@ export function internalUserEcho() {
             }
         );
 
+        window.Echo.private("internal-users").listen(
+            ".PublicUserUpdated",
+            (e) => {
+                console.log("🔔 Internal notification:", e.message);
+                console.log("Public User UUID:", e.public_user_uuid);
+                notifyUser(e.message);
+            }
+        );
     }, 100);
 }
 
+export function publicUserEcho() {
+    setTimeout(() => {
+        if (!window.Echo) {
+            console.error("Echo not found");
+            return;
+        }
+
+        window.Echo.private("public-user").listen(".PublicUser", (e) => {
+            console.log("✅ Public user event:", e.message);
+        });
+    }, 100);
+}

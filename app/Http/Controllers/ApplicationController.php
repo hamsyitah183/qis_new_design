@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\ApplicationCreated;
 use App\Events\ApplicationDeleted;
 use App\Models\Country;
 use App\Models\Exporter;
@@ -225,7 +226,7 @@ class ApplicationController extends Controller
         ]); //, 'consignment', 'attachment'
     }
     public function editApplication($uuid)
-    {   
+    {
 
         $application = IpApplication::with([
             'user',         // submitted by
@@ -239,7 +240,7 @@ class ApplicationController extends Controller
             ->orderBy('created_at', 'desc')
             ->firstOrFail();
 
-        if($application->user_id != authUser()['user']->uuid || $application->status != 'Draft'){
+        if ($application->user_id != authUser()['user']->uuid || $application->status != 'Draft') {
             abort(403, 'Cannot edit this application.');
         }
 
@@ -352,6 +353,15 @@ class ApplicationController extends Controller
 
             $application->status = 'Accepted';
             $application->importer_verify = "Accepted";
+            $notificationUrl = route('viewApplication', $application->application_id);
+            event(new ApplicationCreated('Application with ID ' . $id . ' has been accepted.'));
+            $users = InternalUser::all(); // or filter by role/guard
+
+            Notification::send($users, new ApplicationNotification(
+                'Import Application with ID ' . $id . ' has been accepted.',
+                authUser()['user']->fullname,
+                $notificationUrl
+            ));
         } else if ($request->rejected) {
             $application->logActivity(
                 action: 'Rejected',

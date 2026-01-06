@@ -7,7 +7,7 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
 
-Broadcast::routes(['middleware' => ['web', 'auth:internal']]);
+Broadcast::routes(['middleware' => ['web', 'auth']]);
 
 Broadcast::channel('internal-users', function ($user) {
     \Illuminate\Support\Facades\Log::info('Internal users listening', [
@@ -28,6 +28,17 @@ Broadcast::channel('internal-user-edited.{internalUserId}', function ($user, $in
     return $user->uuid === $internalUserId;
 }, ['guards' => ['internal']]);
 
+
+Broadcast::channel('public-user.{uuid}', function ($user, $uuid) {
+    \Illuminate\Support\Facades\Log::info('Broadcast auth', [
+        'guard' => Auth::getDefaultDriver(),
+        'isGuardPublic' => Auth::guard('public')->check(),
+        'user uuid' => $user->uuid,
+        'uuid' => $uuid
+    ]);
+    return Auth::guard('public')->check()
+        && $user->uuid === $uuid;
+}, ['guards' => ['public']]);
 
 
 

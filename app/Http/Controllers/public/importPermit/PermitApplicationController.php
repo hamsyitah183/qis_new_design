@@ -160,6 +160,8 @@ class PermitApplicationController extends Controller
         $movedFiles = [];
         $isNewApplication = false;
 
+
+
         try {
             $applicationUuid = $request->input('applicationId');
             $isDraft = $request->boolean('is_draft');
@@ -344,6 +346,13 @@ class PermitApplicationController extends Controller
                 Auth::user()->fullname,
                 $notificationUrl
             ));
+            $publicUser = auth()->guard('public')->user();
+            $publicUser->notify(new ApplicationNotification(
+                'Your application has been submitted successfully',
+                'System',
+                route('applications.track', $application->application_id)
+            ));
+
 
             return response()->json([
                 'status' => 'success',

@@ -125,6 +125,7 @@ export function notifyUser(message, editor = null) {
 }
 
 internalUserEcho();
+// publicUserEcho();
 // notification();
 
 

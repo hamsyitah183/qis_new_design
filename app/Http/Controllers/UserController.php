@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Events\InternalUserAdded;
 use App\Events\InternalUserDeleted;
 use App\Events\InternalUserEdited;
+use App\Events\PublicUser as EventsPublicUser;
 use App\Models\InternalUser;
 use App\Models\PublicUser;
 use App\Models\ApprovedPublic;
@@ -150,6 +151,17 @@ class UserController extends Controller
                 ]);
 
                 DB::commit();
+
+                event(new \App\Events\PublicUserEvent(
+                    'Your profile has been updated',
+                    $public->uuid
+                ));
+
+
+                event(new \App\Events\PublicUserUpdatedForInternal(
+                    'A public user updated their profile',
+                    $public->uuid
+                ));
 
                 return response()->json([
                     'message' => 'Public User Updated',

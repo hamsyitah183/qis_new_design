@@ -12,6 +12,7 @@ use App\Http\Controllers\RoleAndPermissionController;
 use App\Http\Controllers\TempFileController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
@@ -170,7 +171,7 @@ Route::prefix('internal')
         // Route::get('/control_panel', [MiscController::class, 'showcontrolpanel'])->name('controlpanel');
 
         // ======================= notifications ===========================
-        Route::get('/notifications', [DashboardController::class, 'get_notifications'])->name('notifications');
+
     });
 
 Route::middleware(['auth.any'])
@@ -202,6 +203,29 @@ Route::middleware(['auth.any'])
 
         Route::get('/application/permit/{id}/data', [ApplicationController::class, 'get_application_permit']);
         Route::post('/application/verify/{id}/', [ApplicationController::class, 'verify_application_permit']);
+
+        Route::get('/notifications', [DashboardController::class, 'get_notifications'])->name('notifications');
+        // Route::get('/notifications/data', [DashboardController::class, 'get_notifications_data'])->name('notifications.data');
+        Route::post('/notifications/mark-read', function () {
+            $type = authUser()['type'];
+            $user = authUser()['user'];
+
+            // Get the latest 10 notifications (same as what you display in header)
+            $notifications = DatabaseNotification::where('notifiable_type', $type)
+                ->where('notifiable_id', $user->uuid)
+                ->latest()
+                ->take(10)
+                ->get();
+
+            // Mark only these notifications as read
+            foreach ($notifications as $notification) {
+                if (!$notification->read_at) {
+                    $notification->markAsRead();
+                }
+            }
+
+            return response()->json(['status' => 'success']);
+        })->name('notifications.mark-read');
     });
 
 // broadcast --dont kacau---

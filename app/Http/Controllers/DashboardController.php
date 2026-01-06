@@ -69,7 +69,8 @@ class DashboardController extends Controller
 
     public function get_notifications()
     {
-        $notifications = DatabaseNotification::where('notifiable_type', 'internal')
+        $type = authUser()['type'];
+        $notifications = DatabaseNotification::where('notifiable_type', $type)
             ->where('notifiable_id', authUser()['user']->uuid)
             ->latest()
             ->take(10)
@@ -77,4 +78,6 @@ class DashboardController extends Controller
 
         return response()->json($notifications);
     }
+
+    
 }
