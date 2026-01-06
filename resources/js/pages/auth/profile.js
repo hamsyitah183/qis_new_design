@@ -1,5 +1,6 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
+import { notifyUser } from "../../app";
 
 let user = null;
 
@@ -441,6 +442,7 @@ export async function publicUserAddUpdate(user) {
             ".PublicUser",
             (e) => {
                 console.log("✅ Public user event:", e.message);
+                notifyUser(e.message);
             }
         );
     }, 100);

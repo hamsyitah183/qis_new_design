@@ -17,7 +17,7 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import $ from "jquery";
 window.$ = window.jQuery = $; // make it global
 import "select2";
-import { internalUserEcho } from "./broadcast_user";
+import { internalUserEcho, publicUserEcho } from "./broadcast_user";
 import { notification } from "./notification";
 
 $("#redirectProfile").on("click", function (e) {
@@ -50,6 +50,16 @@ export async function getAuthUser() {
 
 getAuthUser().then((user) => {
     window.authUser = user;
+
+    if(window.authUser) {
+        if(window.authUser.type === 'internal') {
+            internalUserEcho();
+
+        } else {
+            publicUserEcho(window.authUser.uuid);
+        }
+    }
+
 });
 
 export function formatTime(timestamp) {
@@ -124,8 +134,7 @@ export function notifyUser(message, editor = null) {
     showToast(editor ? `${message} (by ${editor})` : message);
 }
 
-internalUserEcho();
-// publicUserEcho();
+
 // notification();
 
 

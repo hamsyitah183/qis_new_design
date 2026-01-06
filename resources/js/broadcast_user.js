@@ -12,7 +12,7 @@ export function internalUserEcho() {
         }
 
         window.Echo.private("internal-users").listen(
-            ".ApplicationCreated",
+            ".ApplicationCreatedInternalUser",
             (e) => {
                 console.log("✅ Application created:", e.message);
                 notifyUser(e.message, e.editor);
@@ -39,7 +39,7 @@ export function internalUserEcho() {
     }, 100);
 }
 
-export function publicUserEcho() {
+export function publicUserEcho(uuid) {
     setTimeout(() => {
         if (!window.Echo) {
             console.error("Echo not found");
@@ -49,5 +49,13 @@ export function publicUserEcho() {
         window.Echo.private("public-user").listen(".PublicUser", (e) => {
             console.log("✅ Public user event:", e.message);
         });
+
+        window.Echo.private(`public-user.${uuid}`).listen(
+            ".ApplicationCreatedPublicUser",
+            (e) => {
+                console.log("✅ Application Public user event:", e.message);
+                notifyUser(e.message);
+            }
+        );
     }, 100);
 }

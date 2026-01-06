@@ -7,7 +7,8 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
 
-Broadcast::routes(['middleware' => ['web', 'auth']]);
+// Broadcast::routes(['middleware' => ['web', 'auth:internal']]);
+Broadcast::routes(['middleware' => ['web']]);
 
 Broadcast::channel('internal-users', function ($user) {
     \Illuminate\Support\Facades\Log::info('Internal users listening', [

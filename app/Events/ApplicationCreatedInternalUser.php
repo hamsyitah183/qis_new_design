@@ -12,7 +12,7 @@ use Illuminate\Queue\SerializesModels;
 
 
 
-class ApplicationCreated implements ShouldBroadcast
+class ApplicationCreatedInternalUser implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -32,7 +32,7 @@ class ApplicationCreated implements ShouldBroadcast
 
     public function broadcastAs(): string
     {
-        return 'ApplicationCreated';
+        return 'ApplicationCreatedInternalUser';
     }
 
     public function broadcastWith(): array

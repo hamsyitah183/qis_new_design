@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers\public\importPermit;
 
-use App\Events\ApplicationCreated;
+use App\Events\ApplicationCreatedInternalUser;
+use App\Events\ApplicationCreatedPublicUser;
 use App\Http\Controllers\Controller;
 use App\Models\country;
 use App\Models\ImportPermitLog;
@@ -208,10 +209,16 @@ class PermitApplicationController extends Controller
                     'importer_verify'      => $importer_verify,
                 ]);
 
-                event(new ApplicationCreated(
+                event(new ApplicationCreatedInternalUser(
                     $isDraft
                         ? 'Import permit application saved as DRAFT by ' . ($importer['fullname'] ?? 'Unknown Importer')
                         : 'Import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')
+                ));
+                event(new ApplicationCreatedPublicUser(
+                    $isDraft
+                        ? 'Import permit application saved as DRAFT by ' . ($importer['fullname'] ?? 'Unknown Importer')
+                        : 'Import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer'),
+                    Auth::user()->uuid
                 ));
             } else {
                 // Create new application
@@ -230,7 +237,7 @@ class PermitApplicationController extends Controller
                     'importer_verify'      => $importer_verify,
                 ]);
 
-                event(new ApplicationCreated(
+                event(new ApplicationCreatedInternalUser(
                     $isDraft
                         ? 'New import permit application DRAFT created by ' . ($importer['fullname'] ?? 'Unknown Importer')
                         : 'New import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')
@@ -350,7 +357,7 @@ class PermitApplicationController extends Controller
             $publicUser->notify(new ApplicationNotification(
                 'Your application has been submitted successfully',
                 'System',
-                route('applications.track', $application->application_id)
+                route('viewApplication', $application->application_id)
             ));
 
 

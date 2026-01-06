@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\ApplicationCreated;
+use App\Events\ApplicationCreatedInternalUser;
 use App\Events\ApplicationDeleted;
 use App\Models\Country;
 use App\Models\Exporter;
@@ -354,7 +354,7 @@ class ApplicationController extends Controller
             $application->status = 'Accepted';
             $application->importer_verify = "Accepted";
             $notificationUrl = route('viewApplication', $application->application_id);
-            event(new ApplicationCreated('Application with ID ' . $id . ' has been accepted.'));
+            event(new ApplicationCreatedInternalUser('Application with ID ' . $id . ' has been accepted.'));
             $users = InternalUser::all(); // or filter by role/guard
 
             Notification::send($users, new ApplicationNotification(

@@ -10,6 +10,7 @@ use App\Models\InternalUser;
 use App\Models\PublicUser;
 use App\Models\ApprovedPublic;
 use App\Notifications\InternalUserEditedNotification;
+use App\Notifications\UserNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,7 @@ use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Str;
 
 use App\Services\VerificationService;
+use Illuminate\Support\Facades\Notification;
 
 class UserController extends Controller
 {
@@ -163,6 +165,22 @@ class UserController extends Controller
                     $public->uuid
                 ));
 
+                $users = InternalUser::all(); // or filter by role/guard
+
+                Notification::send($users, new UserNotification(
+                    $public->fullname . ' account has been updated.',
+                    authUser()['user']->fullname,
+                    route('internal.public.list')
+                ));
+
+                Notification::send($public, new UserNotification(
+                    'You update your account.',
+                    'QIS',
+                    '/profile'
+                ));
+
+
+
                 return response()->json([
                     'message' => 'Public User Updated',
                     'user'    => $public,
@@ -208,6 +226,26 @@ class UserController extends Controller
                 ]);
 
                 DB::commit();
+
+                event(new \App\Events\PublicUserUpdatedForInternal(
+                    'A public user created an account',
+                    $user->uuid
+                ));
+
+                $users = InternalUser::all(); // or filter by role/guard
+
+                Notification::send($users, new UserNotification(
+                    $user->fullname . ' account has been created.',
+                    authUser()['user']->fullname,
+                    route('internal.public.list')
+                ));
+
+                Notification::send($user, new UserNotification(
+                    'You created an account.',
+                    'QIS',
+                    '#'
+                ));
+
 
                 return response()->json([
                     'message' => 'Public User Created',

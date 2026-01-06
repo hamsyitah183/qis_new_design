@@ -20,6 +20,7 @@ window.Echo = new Echo({
                 .content,
         },
     },
+    // withCredentials: true, 
 });
 // import Echo from 'laravel-echo';
 
