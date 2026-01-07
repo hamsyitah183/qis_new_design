@@ -13,6 +13,7 @@ use App\Models\IpCondition;
 use App\Models\IpConsignmentAttachment;
 use App\Models\IpConsignmentPermit;
 use App\Models\PublicCode;
+use App\Models\PublicUser;
 use App\Models\TempAttachment;
 use App\Notifications\ApplicationNotification;
 use Illuminate\Http\Request;
@@ -359,6 +360,19 @@ class PermitApplicationController extends Controller
                 'System',
                 route('viewApplication', $application->application_id)
             ));
+
+            if($application->category_application == 1 && !$isDraft){
+                $company = PublicUser::where('uuid', $application['importer_id'])->first();
+                event(new ApplicationCreatedInternalUser(
+                    'Import permit application requires company approval for ' . ($company['fullname'] ?? 'Unknown Importer')
+                ));
+
+                $company->notify(new ApplicationNotification(
+                    'An import permit application requires your approval',
+                    'System',
+                    route('viewApplication', $application->application_id)
+                ));
+            }
 
 
             return response()->json([

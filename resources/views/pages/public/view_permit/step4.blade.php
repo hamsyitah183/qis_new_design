@@ -23,6 +23,7 @@
 
             <div class="text-center p-4">
 
+
                 {{-- Category 0 - Pending --}}
                 @if ($application->category_application == 0 && str_contains($status, 'pending'))
                     {!! $statusIcon !!}
@@ -67,26 +68,21 @@
                     @endif
 
 
-                    {{-- Importer Verify = Pending --}}
-                    {{-- @dd($importerVerify)
-                    @if (str_contains($importerVerify, 'pending'))
-                        {!! $statusIcon !!}
-                        <h3 class="mt-2">Pending</h3>
-
-                        @if (authUser()['type'] == 'public')
-                            <p>This permit application is currently pending verification by admin.</p>
-                        @else
-                            <p>Waiting for admin approval.</p>
-                        @endif
-                    @endif --}}
+                    {{-- compnay reject --}}
+                    @if (str_contains($status, 'not approved'))
+                    {!! $statusIcon !!}
+                    <h3 class="mt-2">Rejected</h3>
+                    <p>This permit application has been rejected by the individual/company .</p>
+                @endif
 
                 @endif
 
-                 @if (str_contains($status, 'rejected'))
+                @if (str_contains($status, 'rejected'))
                     {!! $statusIcon !!}
                     <h3 class="mt-2">Rejected</h3>
                     @if (authUser()['type'] == 'public')
                         <p>This permit application has been rejected.</p>
+                        
                     @else
                         <p>Rejected</p>
                         @if (authUser() && authUser()['user']->hasRole('admin'))
@@ -99,6 +95,8 @@
 
                     @endif
                 @endif
+
+               
 
             </div>
 

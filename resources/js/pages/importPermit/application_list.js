@@ -2,6 +2,8 @@ console.log("application list");
 let applicationListTable;
 let reviewApplicationListTable;
 
+const isInternal = window.AUTH_TYPE === "internal";
+
 async function data_table_init() {
     const [
         { default: DataTable },
@@ -29,28 +31,28 @@ async function data_table_init() {
         columns: [
             {
                 data: "DT_RowIndex",
-                name: "DT_RowIndex",
                 orderable: false,
                 searchable: false,
             },
-            { data: "importer", name: "importer" },
-            { data: "exporter", name: "exporter" },
-            { data: "importer_type", name: "importer_type" },
-            { data: "date", name: "date" },
-            { data: "status", name: "status" },
-            { data: "submitted_by", name: "submitted_by" },
-            { data: "action", name: "action" },
+            { data: "importer" },
+            { data: "exporter" },
+            { data: "status" },
+
+            // 🔐 Only internal users see this
+            ...(isInternal ? [{ data: "submitted_by" }] : []),
+
+            { data: "action" },
         ],
 
         columnDefs: [
-            { width: "50px", targets: 0 }, // #
-            { width: "150px", targets: 1 }, // Importer
-            { width: "150px", targets: 2 }, // Exporter
-            { width: "120px", targets: 3 }, // Importer Type
-            { width: "100px", targets: 4 }, // ETA
-            { width: "100px", targets: 5 }, // Status
-            { width: "150px", targets: 6 }, // Submitted By
-            { width: "120px", targets: 7 }, // Action
+            { width: "50px", targets: 0 },
+            { width: "150px", targets: 1 },
+            { width: "150px", targets: 2 },
+            { width: "100px", targets: 3 },
+
+            ...(isInternal ? [{ width: "150px", targets: 4 }] : []),
+
+            { width: "120px", targets: isInternal ? 5 : 4 },
         ],
 
         autoWidth: false,

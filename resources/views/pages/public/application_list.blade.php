@@ -6,7 +6,16 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.bootstrap5.min.css">
 @endpush
 
+
+@php
+    $type = authUser()['type'];
+
+@endphp
+
 @push('scripts')
+    <script>
+         window.AUTH_TYPE = @json($type);
+    </script>
     @vite(['resources/js/pages/importPermit/application_list.js'])
 @endpush
 
@@ -38,10 +47,13 @@
                                             <th>#</th>
                                             <th>Importer</th>
                                             <th>Exporter</th>
-                                            <th style="text-align: center;">Importer Type</th> <!-- self or other -->
-                                            <th>ETA</th>
-                                            <th>Status</th>
-                                            <th>Submitted By</th>
+                                            {{-- <th style="text-align: center;">Importer Type</th> --}}
+                                            {{-- <th>ETA</th> --}}
+                                            <th>Application Status</th>
+                                            @if (authUser()['type'] == 'internal')
+                                                <th>Submitted By</th>
+                                            @endif
+
                                             <th>Action</th>
                                         </tr>
                                     </thead>

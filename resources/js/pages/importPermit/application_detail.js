@@ -27,8 +27,8 @@ async function loadApplicationData() {
 }
 
 async function fillInInput() {
-    const country = application.exporter.country_info ?? '';
-    const entryPoint = application.entry_point ?? '';
+    const country = application.exporter.country_info ?? "";
+    const entryPoint = application.entry_point ?? "";
 
     console.log("country", country.name);
     console.log("entry", entryPoint.entry_name);
@@ -47,8 +47,6 @@ async function attachmentTable() {
 
     const permits = application.consignment_permits;
 
-
-
     if (!permits || permits.length === 0) {
         tableBody.append(`
             <tr>
@@ -62,11 +60,11 @@ async function attachmentTable() {
 
     permits.forEach((permit, index) => {
         // Parse consignment_detail JSON
-        let detail ;
+        let detail;
         try {
             // detail = JSON.parse(permit.consignment_detail);
             detail = permit.consignment_detail;
-            console.log('detail', detail)
+            console.log("detail", detail);
         } catch (e) {
             console.error(
                 "Invalid JSON in consignment_detail:",
@@ -124,7 +122,7 @@ async function viewMore() {
         let detail;
         try {
             // detail = JSON.parse(permit.consignment_detail);
-            detail = permit.consignment_detail
+            detail = permit.consignment_detail;
         } catch (err) {
             console.error(
                 "Invalid JSON in consignment_detail:",
@@ -176,12 +174,21 @@ async function viewMore() {
         // Build modal body
         let modalContent = `
             <div class="p-1 row">
-                <div class = "col-12 col-md-6"><p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-tag"></i></span> Item Name:</strong> ${detail.item_name ?? "-"}</p></div>
-                <div class = "col-12 col-md-6"><p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-scale-balanced"></i></span> Quantity:</strong> ${detail.quantity ?? "-"} ${
-                    detail.measure ?? ""}</p></div>
-                <div class = "col-12 col-md-6"><p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-money-bill"></i></span> Value:</strong> RM ${detail.value ?? "-"}</p></div>
-                <div class = "col-12 col-md-6"><p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-pen-fancy"></i></span> Purpose:</strong> ${detail.purpose ?? "-"}</p></div>
-                <div class = "col-12 col-md-6"><p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-gear"></i></span> Uses:</strong> ${detail.uses ?? "-"}</p></div>
+                <div class = "col-12 col-md-6"><p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-tag"></i></span> Item Name:</strong> ${
+                    detail.item_name ?? "-"
+                }</p></div>
+                <div class = "col-12 col-md-6"><p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-scale-balanced"></i></span> Quantity:</strong> ${
+                    detail.quantity ?? "-"
+                } ${detail.measure ?? ""}</p></div>
+                <div class = "col-12 col-md-6"><p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-money-bill"></i></span> Value:</strong> RM ${
+                    detail.value ?? "-"
+                }</p></div>
+                <div class = "col-12 col-md-6"><p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-pen-fancy"></i></span> Purpose:</strong> ${
+                    detail.purpose ?? "-"
+                }</p></div>
+                <div class = "col-12 col-md-6"><p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-gear"></i></span> Uses:</strong> ${
+                    detail.uses ?? "-"
+                }</p></div>
 
                 <p class="mt-3"><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-file"></i></span> Attachment(s)</strong></p>
                 ${attachmentContent}
@@ -278,11 +285,11 @@ function rejectApplication() {
         let applicationId = application.application_id;
 
         Swal.fire({
-            title: "Verify Application?",
-            text: "Are you sure you want to verify this application?",
+            title: "Reject Application?",
+            text: "Are you sure you want to reject this application?",
             icon: "warning",
             showCancelButton: true,
-            confirmButtonText: "Yes, verify it!",
+            confirmButtonText: "Yes, reject it!",
             cancelButtonText: "Cancel",
         }).then((result) => {
             if (result.isConfirmed) {
@@ -298,14 +305,14 @@ function rejectApplication() {
                         Swal.fire({
                             icon: "success",
                             title: "Application Not Approved!",
-                            text:
-                                res.message ||
-                                "The application has been successfully not verified.",
+                            text: "The application has been successfully not verified.",
                             // timer: 1800,
                             showConfirmButton: false,
                             // timerProgressBar: true,
                             position: "center",
                         });
+
+                        window.location.reload();
                     },
                     error: function (err) {
                         Swal.fire({
@@ -328,34 +335,50 @@ function adminRejectApplication() {
         let applicationId = application.application_id;
 
         Swal.fire({
-            title: "Verify Application?",
-            text: "Are you sure you want to verify this application?",
+            title: "Reject Application",
+            html: `
+                <p class="mb-2">Please provide a reason for rejection:</p>
+                <textarea id="rejectReason"
+                    class="swal2-textarea"
+                    placeholder="Enter rejection reason..."></textarea>
+            `,
             icon: "warning",
             showCancelButton: true,
-            confirmButtonText: "Yes",
+            confirmButtonText: "Confirm",
             cancelButtonText: "Cancel",
+            focusConfirm: false,
+
+            preConfirm: () => {
+                const reason = document.getElementById("rejectReason").value;
+
+                if (!reason.trim()) {
+                    Swal.showValidationMessage("Rejection reason is required");
+                    return false;
+                }
+
+                return reason;
+            },
         }).then((result) => {
             if (result.isConfirmed) {
-                // Send AJAX request to verify application
                 $.ajax({
-                    url: `/application/verify/${applicationId}`, // your route
+                    url: `/application/verify/${applicationId}`,
                     method: "POST",
                     data: {
-                        _token: $("meta[name='csrf-token']").attr("content"), // CSRF token
+                        _token: $("meta[name='csrf-token']").attr("content"),
                         rejected: 1,
+                        reason: result.value, // 🔥 send reason
                     },
                     success: function (res) {
                         Swal.fire({
                             icon: "success",
                             title: "Application Rejected!",
                             text:
-                                res.message ||
-                                "The application is rejected.",
-                            // timer: 1800,
+                            
+                                "The application has been rejected.",
                             showConfirmButton: false,
-                            // timerProgressBar: true,
-                            position: "center",
+                            timer: 2000,
                         });
+                        window.location.reload();
                     },
                     error: function (err) {
                         Swal.fire({
@@ -437,14 +460,12 @@ function applicationLog() {
             console.log("application", application.activity_log);
             let activity_log = application.activity_log;
 
-       
-
             const modalEl = document.getElementById("activityLogModal");
             modalEl.querySelector(".modal-title").textContent =
                 " Activity Log" || "Activity Log";
 
             activity_log.forEach((log, index) => {
-               tableBody.append(`
+                tableBody.append(`
                     <tr>
                         <td>${log.action}</td>
                         <td>${log.causer.fullname}</td>
@@ -459,9 +480,6 @@ function applicationLog() {
             modal.show();
         });
 }
-
-
-
 
 /* -------------------------------
    Initializer (shows Swal first)

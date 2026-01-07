@@ -51,6 +51,7 @@ class ApplicationController extends Controller
             'entryPoint.districtCode',
         ]);
 
+        // Filter for public users
         if ($type === 'public') {
             $query->where(function ($q) use ($userUuid) {
                 $q->where('user_id', $userUuid)
@@ -58,41 +59,55 @@ class ApplicationController extends Controller
             });
         }
 
-        return DataTables::of($query)
+        $datatable = DataTables::eloquent($query)
             ->addIndexColumn()
             ->addColumn('importer', fn($row) => $row->importer->fullname ?? '-')
             ->addColumn('exporter', fn($row) => $row->exporter->name ?? '-')
-            ->addColumn('submitted_by', fn($row) => $row->user->fullname ?? '-')
-            ->addColumn('importer_type', function ($row) {
-                $type = $row->category_application == 1 ? 'Others' : 'Self';
-                return '<span class="badge bg-primary-transparent fs-13 p-1">' . $type . '</span>';
-            })
-            ->addColumn('date', fn($row) => $row->eta ? $row->eta->format('Y-m-d') : '-')
             ->addColumn('status', function ($row) {
                 $status = strtolower($row->status ?? 'pending');
 
                 return match (true) {
-                    str_contains($status, 'pending') => '<span class="badge bg-warning fs-13 p-1">Pending</span>',
-                    str_contains($status, 'rejected') => '<span class="badge bg-danger fs-13 p-1">Rejected</span>',
-                    str_contains($status, 'success') => '<span class="badge bg-success fs-13 p-1">Success</span>',
-                    default => '<span class="badge bg-secondary fs-13 p-1">' . ucfirst($status) . '</span>',
+                    str_contains($status, 'pending') =>
+                    '<span class="badge bg-warning fs-12 p-1">Pending</span>',
+                    str_contains($status, 'rejected') =>
+                    '<span class="badge bg-danger fs-12 p-1">Rejected</span>',
+                    str_contains($status, 'not approved') =>
+                    '<span class="badge bg-danger fs-12 p-1">Not Approved</span>',
+                    str_contains($status, 'accepted') =>
+                    '<span class="badge bg-success fs-12 p-1">Accepted</span>',
+                    default =>
+                    '<span class="badge bg-secondary fs-12 p-1">' . ucfirst($status) . '</span>',
                 };
             })
             ->addColumn('action', function ($row) {
                 $url = '/view_application/' . $row->application_id;
-                $view = '<a class="btn btn-sm btn-primary viewApplication" href="' . $url . '">  <i class="ti ti-eye"></i></a>';
-                $delete = '';
-                if (authUser()['type'] === 'internal') {
-                    $delete = '<button class="btn btn-sm btn-danger deleteApplication" data-id="' . $row->application_id . '"> <i class="ti ti-trash"></i></button>';
-                } else {
-                    $delete = '';
-                };
-                return $view . ' ' . $delete;
-            })
 
-            ->rawColumns(['status', 'importer_type', 'action'])
+                $view = '<a class="btn btn-sm btn-primary viewApplication" href="' . $url . '">
+                        <i class="ti ti-eye"></i>
+                     </a>';
+
+                $delete = '';
+
+                if (authUser()['type'] === 'internal') {
+                    $delete = '<button class="btn btn-sm btn-danger deleteApplication"
+                            data-id="' . $row->application_id . '">
+                            <i class="ti ti-trash"></i>
+                           </button>';
+                }
+
+                return $view . ' ' . $delete;
+            });
+
+      
+        if ($type === 'internal') {
+            $datatable->addColumn('submitted_by', fn($row) => $row->user->fullname ?? '-');
+        }
+
+        return $datatable
+            ->rawColumns(['status', 'action'])
             ->make(true);
     }
+
 
     public function getAllReviewapplicationList()
     {
@@ -353,6 +368,7 @@ class ApplicationController extends Controller
             );
 
             $application->status = 'Not Approved';
+            $application->importer_verify = "Not Approved";
 
             $status = 'Not Approved';
             $message = 'Application is not verified by importer';
@@ -371,7 +387,7 @@ class ApplicationController extends Controller
         } else if ($request->rejected) {
             $application->logActivity(
                 action: 'Rejected',
-                remark: 'Application Rejected By Admin',
+                remark: $request['reason'],
                 status: 'Rejected'
             );
 
@@ -402,6 +418,20 @@ class ApplicationController extends Controller
             authUser()['user']->fullname,
             $notificationUrl
         ));
+
+        if ($application->importer_id != $application->user_id) {
+            $importerUser = PublicUser::where('uuid', $application->importer_id)->first();
+            event(new ApplicationCreatedPublicUser(
+                'Import Application with ID ' . $id . ' has been ' . $status . '.',
+                $importerUser->uuid
+            ));
+            Notification::send($importerUser, new ApplicationNotification(
+                'Import Application with ID ' . $id . ' has been ' . $status . '.',
+                authUser()['user']->fullname,
+                $notificationUrl
+            ));
+        }
+
         return response()->json([
             'message' => 'Application is verified'
         ]);
