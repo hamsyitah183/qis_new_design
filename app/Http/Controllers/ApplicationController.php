@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Events\ApplicationCreatedInternalUser;
+use App\Events\ApplicationCreatedPublicUser;
 use App\Events\ApplicationDeleted;
+use App\Events\PublicUserEvent;
 use App\Models\Country;
 use App\Models\Exporter;
 use App\Models\InternalUser;
@@ -363,8 +365,11 @@ class ApplicationController extends Controller
                 authUser()['user']->fullname,
                 $notificationUrl
             ));
-            $user = PublicUser::where('uuid', $application->user_id)->first();
 
+            $user = PublicUser::where('uuid', $application->user_id)->first();
+            event(new ApplicationCreatedPublicUser(
+                'Your Application with ID ' . $id . ' has been accepted.', 
+                $user->uuid));
             Notification::send($user, new ApplicationNotification(
                 'Import Application with ID ' . $id . ' has been accepted.',
                 authUser()['user']->fullname,

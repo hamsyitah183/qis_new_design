@@ -439,7 +439,7 @@ export async function publicUserAddUpdate(user) {
         }
 
         window.Echo.private(`public-user.${user.uuid}`).listen(
-            ".PublicUser",
+            ".PublicUserEvent",
             (e) => {
                 console.log("✅ Public user event:", e.message);
                 notifyUser(e.message);

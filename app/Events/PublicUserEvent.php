@@ -29,7 +29,7 @@ class PublicUserEvent implements ShouldBroadcast
 
     public function broadcastAs(): string
     {
-        return 'PublicUser';
+        return 'PublicUserEvent';
     }
 
     public function broadcastWith(): array

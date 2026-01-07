@@ -41,12 +41,13 @@ export function internalUserEcho() {
 
 export function publicUserEcho(uuid) {
     setTimeout(() => {
+        console.log("Setting up Public User Echo for UUID:", uuid);
         if (!window.Echo) {
             console.error("Echo not found");
             return;
         }
 
-        window.Echo.private("public-user").listen(".PublicUser", (e) => {
+        window.Echo.private("public-user").listen(".PublicUserEvent", (e) => {
             console.log("✅ Public user event:", e.message);
         });
 
