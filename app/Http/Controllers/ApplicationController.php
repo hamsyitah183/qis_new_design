@@ -319,6 +319,9 @@ class ApplicationController extends Controller
     {
 
         $application = IpApplication::where('application_id', $id)->first();
+        $notificationUrl = '';
+        $message = '';
+        $status = '';
 
         if ($request->input('verified')) {
 
@@ -338,6 +341,9 @@ class ApplicationController extends Controller
 
             $application->status = 'Pending';
             $application->importer_verify = "Pending";
+
+            $status = 'Pending';
+            $message = 'Application is verified and pending admin approval';
         } else if ($request->input('not_verified')) {
 
             $application->logActivity(
@@ -347,6 +353,9 @@ class ApplicationController extends Controller
             );
 
             $application->status = 'Not Approved';
+
+            $status = 'Not Approved';
+            $message = 'Application is not verified by importer';
         } else if ($request->accepted) {
             $application->logActivity(
                 action: 'Accepted',
@@ -356,25 +365,9 @@ class ApplicationController extends Controller
 
             $application->status = 'Accepted';
             $application->importer_verify = "Accepted";
-            $notificationUrl = route('viewApplication', $application->application_id);
-            event(new ApplicationCreatedInternalUser('Application with ID ' . $id . ' has been accepted.'));
-            $users = InternalUser::all(); // or filter by role/guard
 
-            Notification::send($users, new ApplicationNotification(
-                'Import Application with ID ' . $id . ' has been accepted.',
-                authUser()['user']->fullname,
-                $notificationUrl
-            ));
-
-            $user = PublicUser::where('uuid', $application->user_id)->first();
-            event(new ApplicationCreatedPublicUser(
-                'Your Application with ID ' . $id . ' has been accepted.', 
-                $user->uuid));
-            Notification::send($user, new ApplicationNotification(
-                'Import Application with ID ' . $id . ' has been accepted.',
-                authUser()['user']->fullname,
-                $notificationUrl
-            ));
+            $status = 'Accepted';
+            $message = 'Application is accepted';
         } else if ($request->rejected) {
             $application->logActivity(
                 action: 'Rejected',
@@ -383,8 +376,32 @@ class ApplicationController extends Controller
             );
 
             $application->status = 'Rejected';
+            $status = 'Rejected';
+            $message = 'Application is rejected';
         }
         $application->save();
+
+
+        $notificationUrl = route('viewApplication', $application->application_id);
+
+        event(new ApplicationCreatedInternalUser('Application with ID ' . $id . ' has been ' . $status . '.'));
+        $users = InternalUser::all(); // or filter by role/guard
+        Notification::send($users, new ApplicationNotification(
+            'Import Application with ID ' . $id . ' has been ' . $status . '.',
+            authUser()['user']->fullname,
+            $notificationUrl
+        ));
+
+        $user = PublicUser::where('uuid', $application->user_id)->first();
+        event(new ApplicationCreatedPublicUser(
+            'Your Application with ID ' . $id . ' has been ' . $status . '.',
+            $user->uuid
+        ));
+        Notification::send($user, new ApplicationNotification(
+            'Import Application with ID ' . $id . ' has been ' . $status . '.',
+            authUser()['user']->fullname,
+            $notificationUrl
+        ));
         return response()->json([
             'message' => 'Application is verified'
         ]);
