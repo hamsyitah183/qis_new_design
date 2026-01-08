@@ -64,6 +64,30 @@ class PermitApplicationController extends Controller
         return response()->json(['success' => true]);
     }
 
+    public function deleteExporter($id)
+    {
+        // Ensure exporter belongs to the logged-in user
+        $exporter = \DB::table('exporter')
+            ->where('id', $id)
+            ->where('registered_by', authUser()['user']['uuid'])
+            ->first();
+
+        if (!$exporter) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Exporter not found or unauthorized.'
+            ], 404);
+        }
+
+        \DB::table('exporter')->where('id', $id)->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Exporter deleted successfully.'
+        ]);
+    }
+
+
     public function getImporters($idno)
     {
         $importers = \DB::table('public_users')
@@ -282,14 +306,14 @@ class PermitApplicationController extends Controller
             // Create / Update consignments
             // -----------------------------
             $consignmentArray = [];
-    
+
             if ($request->has('items')) {
                 foreach ($request->items as $index => $item) {
                     $data = json_decode($item['data'], true);
                     $permit_id = $data['permit_id'] ?? null;
 
                     if ($permit_id && in_array($permit_id, $existingIds)) continue;
-                   
+
                     $consignment = IpConsignmentPermit::create([
                         'application_id'     => $appId,
                         'permit_number'      => null,
@@ -300,7 +324,7 @@ class PermitApplicationController extends Controller
                         'purpose'            => $data['purpose'] ?? null,
                         'status'             => 'processing',
                     ]);
-                
+
                     $consignmentArray[$index] = $consignment->id;
                 }
             }
@@ -363,7 +387,7 @@ class PermitApplicationController extends Controller
                 route('viewApplication', $application->application_id)
             ));
 
-            if($application->category_application == 1 && !$isDraft){
+            if ($application->category_application == 1 && !$isDraft) {
                 $company = PublicUser::where('uuid', $application['importer_id'])->first();
                 event(new ApplicationCreatedInternalUser(
                     'Import permit application requires company approval for ' . ($company['fullname'] ?? 'Unknown Importer')

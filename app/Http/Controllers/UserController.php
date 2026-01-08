@@ -312,8 +312,9 @@ class UserController extends Controller
 
         return DataTables::of($query)
             ->addColumn('role', function ($user) {
-                return $user->roles->pluck('fullname')->implode(', ') ?: 'N/A';
+                return $user->getRoleNames()->implode(', ') ?: 'N/A';
             })
+
             ->addColumn('action', function ($user) use ($currentUser) {
                 $actionHtml = '
                 <button class="btn btn-sm btn-primary viewInternalUser-modal" data-id="' . $user->uuid . '" title="View">

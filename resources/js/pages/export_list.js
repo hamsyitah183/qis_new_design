@@ -114,3 +114,62 @@ $(document).ready(function () {
     // Submit form
     initAddExporterModal();
 });
+
+$(document).on("click", ".deleteExporter", function () {
+    const exporterId = $(this).data("id");
+
+    // First confirmation
+    Swal.fire({
+        title: "Are you sure?",
+        text: "This exporter will be permanently deleted.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, continue",
+        cancelButtonText: "Cancel",
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Second confirmation
+            Swal.fire({
+                title: "Confirm Deletion",
+                text: "This action cannot be undone.",
+                icon: "error",
+                showCancelButton: true,
+                confirmButtonText: "Yes, delete it",
+                cancelButtonText: "Cancel",
+            }).then((finalResult) => {
+                if (finalResult.isConfirmed) {
+                    $.ajax({
+                        url: `/public/delete_exporter/${exporterId}`,
+                        type: "DELETE",
+                        headers: {
+                            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+                        },
+                        success: function (res) {
+                            Swal.fire({
+                                icon: "success",
+                                title: "Deleted!",
+                                text: res.message,
+                                timer: 1500,
+                                showConfirmButton: false,
+                            });
+
+                            // ✅ Refresh DataTable
+                            $("#exporterTable")
+                                .DataTable()
+                                .ajax.reload(null, false);
+                        },
+                        error: function (xhr) {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Failed",
+                                text:
+                                    xhr.responseJSON?.message ||
+                                    "Unable to delete exporter.",
+                            });
+                        },
+                    });
+                }
+            });
+        }
+    });
+});
