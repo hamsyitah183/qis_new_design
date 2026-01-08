@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\ApprovedPublic;
+use App\Models\PublicUser;
+use App\Notifications\InternalUserEditedNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -44,6 +46,22 @@ class VerificationService
             $verification->save();
 
             DB::commit();
+            
+            if(authUser()['type'] === 'internal') {
+                $url = url('/internal/approved_publics');
+            } else {
+                $url = url('/profile');
+            }
+
+            $internalUser = PublicUser::where('uuid', $userId)->first();
+            $actor = authUser()['user'];
+            if ($internalUser->uuid !== $actor->uuid) {
+                $internalUser->notify(new InternalUserEditedNotification(
+                    'Your account was updated',
+                    'Your account details were updated by ' . $actor->fullname,
+                    $url // pass URL
+                ));
+            }
 
             return [
                 'success' => true,

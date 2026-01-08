@@ -245,6 +245,11 @@ class UserController extends Controller
                     'QIS',
                     '#'
                 ));
+                Notification::send($user, new UserNotification(
+                    'Upload your verification ID.',
+                    'QIS',
+                    '/profile'
+                ));
 
 
                 return response()->json([

@@ -297,6 +297,7 @@ class PermitApplicationController extends Controller
                         'unit_measurement'   => $data['measure'] ?? null,
                         'value'              => $data['value'] ?? 0,
                         'purpose'            => $data['purpose'] ?? null,
+                        'status'             => 'processing',
                     ]);
 
                     $consignmentArray[$index] = $consignment->id;

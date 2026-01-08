@@ -18,6 +18,7 @@ use App\Notifications\ApplicationNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 
 
@@ -79,6 +80,47 @@ class ApplicationController extends Controller
                     '<span class="badge bg-secondary fs-12 p-1">' . ucfirst($status) . '</span>',
                 };
             })
+            ->addColumn('permit_status', function ($row) {
+                // Map statuses to colors
+                $statusColors = [
+                    'processing' => 'bg-info', // blue
+                    'rejected'   => 'bg-danger',  // red
+                    'completed'  => 'bg-success', // green
+                ];
+
+                // Get all permit statuses for this row, lowercase
+                $permit_statuses = $row->consignmentPermits->pluck('status')
+                    ->map(fn($status) => strtolower($status))
+                    ->toArray();
+
+                // Count how many of each status
+                $statusCounts = [
+                    'processing' => 0,
+                    'rejected'   => 0,
+                    'completed'  => 0,
+                ];
+
+                foreach ($permit_statuses as $status) {
+                    if (isset($statusCounts[$status])) {
+                        $statusCounts[$status]++;
+                    }
+                }
+
+                // Build HTML boxes with count inside
+                $boxesHtml = '';
+                foreach ($statusColors as $status => $color) {
+                    $count = $statusCounts[$status] ?? 0;
+                    $boxesHtml .= '<div class="badge ' . $color . ' text-white text-center" 
+                           style="height:20px; width:20px; display:inline-flex; align-items:center; justify-content:center; margin-right:5px;">
+                           ' . $count . '
+                       </div>';
+                }
+
+                return $boxesHtml;
+            })
+
+
+
             ->addColumn('action', function ($row) {
                 $url = '/view_application/' . $row->application_id;
 
@@ -98,13 +140,13 @@ class ApplicationController extends Controller
                 return $view . ' ' . $delete;
             });
 
-      
+
         if ($type === 'internal') {
             $datatable->addColumn('submitted_by', fn($row) => $row->user->fullname ?? '-');
         }
 
         return $datatable
-            ->rawColumns(['status', 'action'])
+            ->rawColumns(['status', 'action', 'permit_status'])
             ->make(true);
     }
 
@@ -160,39 +202,63 @@ class ApplicationController extends Controller
     public function deleteApplication($id)
     {
         return DB::transaction(function () use ($id) {
-            // Find application or fail
+
             $application = IpApplication::where('application_id', $id)->firstOrFail();
 
-            // Get related consignment permits (if any)
             $consignments = IpConsignmentPermit::where('application_id', $application->id)->get();
 
             if ($consignments->isNotEmpty()) {
                 $consignmentIds = $consignments->pluck('id');
 
-                // Delete all related attachments (correct foreign key)
-                IpConsignmentAttachment::whereIn('permit_id', $consignmentIds)->delete();
+                // 🔥 Get attachments FIRST
+                $attachments = IpConsignmentAttachment::whereIn('permit_id', $consignmentIds)->get();
 
-                // Delete the consignment permits themselves
+                foreach ($attachments as $attachment) {
+                    if ($attachment->file_path) {
+                        // Convert "/storage/import/xxx.pdf" → "import/xxx.pdf"
+                        $path = str_replace('/storage/', '', $attachment->file_path);
+
+                        if (Storage::disk('public')->exists($path)) {
+                            Storage::disk('public')->delete($path);
+                        }
+                    }
+
+                    // Delete DB record
+                    $attachment->delete();
+                }
+
+                // Delete consignments
                 IpConsignmentPermit::whereIn('id', $consignmentIds)->delete();
             }
-
-            // Finally, delete the application
+            $user = PublicUser::where('uuid', $application->user_id)->first();
+            // Delete application
             $application->delete();
 
-            // Fire the deletion event
+            // Events & notifications
             event(new ApplicationDeleted('Application with ID ' . $id . ' has been deleted.'));
-            $users = InternalUser::all(); // or filter by role/guard
 
+            $users = InternalUser::all();
             Notification::send($users, new ApplicationNotification(
-                'Import Application with ID ' . $id . ' has been deleted .',
+                'Import Application with ID ' . $id . ' has been deleted.',
+                authUser()['user']->fullname
+            ));
+
+            event(new PublicUserEvent(
+                'Your Application with ID ' . $id . ' has been deleted.',
+                $user->uuid
+            ));
+
+            Notification::send($user, new ApplicationNotification(
+                'Import Application with ID ' . $id . ' has been deleted.',
                 authUser()['user']->fullname
             ));
 
             return response()->json([
-                'message' => 'Application and its related data have been deleted successfully.'
+                'message' => 'Application and all attachments deleted successfully.'
             ]);
         });
     }
+
 
 
     public function verifyapplication()

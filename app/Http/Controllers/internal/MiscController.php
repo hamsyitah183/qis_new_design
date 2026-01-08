@@ -4,6 +4,7 @@ namespace App\Http\Controllers\internal;
 
 use App\Http\Controllers\Controller;
 use App\Models\IpCondition;
+use App\Models\IpConsignmentPermit;
 use App\Models\PublicCode;
 use Illuminate\Http\Request;
 
@@ -175,6 +176,25 @@ class MiscController extends Controller
         return response()->json([
             'status' => 'success',
             'data'   => $conditions
+        ]);
+    }
+
+    function accept_permit($id, Request $request)
+    {
+        $accepted = $request->input('accepted');
+
+
+        $permit = IpConsignmentPermit::findOrFail($id);
+        if($accepted == 1) {
+            $permit->status = 'completed';
+        } else {
+            $permit->status = 'rejected';
+        }
+        $permit->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message'   => 'Permit condition updated successfully.'
         ]);
     }
 }

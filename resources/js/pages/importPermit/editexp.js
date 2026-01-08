@@ -574,73 +574,76 @@ function saveConsignmentAttachment() {
     document.getElementById("saveBtn").addEventListener("click", function (e) {
         e.preventDefault();
 
-        const itemSelect = document.getElementById("itemSelect");
-        const itemValue = document.getElementById("itemValue").value.trim();
-        const itemQuantity = document
-            .getElementById("itemQuantity")
-            .value.trim();
-        const itemMeasure = document.getElementById("itemMeasure").value.trim();
-        const itemUses = document.getElementById("itemUses").value;
+        // ✅ Get field values (handle Select2 if used)
+        const itemSelectValue = $("#itemSelect").val();
+        const itemSelectText = $("#itemSelect option:selected").text();
+        const itemValue = $("#itemValue").val().trim();
+        const itemQuantity = $("#itemQuantity").val().trim();
+        const itemMeasure = $("#itemMeasure").val();
+        const itemPurposeDescription = $("#itemPurpose option:selected").data("description") || $("#itemPurpose").val();
+        const itemUsesValue = $("#itemUses").val();
 
-        // ✅ Validation: check if required fields are empty
-        if (
-            !itemSelect.value ||
-            !itemValue ||
-            !itemQuantity ||
-            !itemMeasure ||
-            !itemUses
-        ) {
+        // ✅ Validation
+        if (!itemSelectValue || !itemValue || !itemQuantity || !itemMeasure || !itemPurposeDescription || !itemUsesValue) {
             Swal.fire({
                 icon: "error",
                 title: "Incomplete Data",
                 text: "Please fill in all required fields before saving.",
             });
-            return; // stop execution if validation fails
+            return;
         }
 
+        // ✅ Get Dropzone files
         const files = itemDropzone.getAcceptedFiles();
 
+        // ✅ Build the item object
         const newItem = {
             id: crypto.randomUUID(),
-            item_id: itemSelect.value,
-            item_name: itemSelect.options[itemSelect.selectedIndex].text,
+            item_id: itemSelectValue,
+            item_name: itemSelectText,
             value: itemValue,
             quantity: itemQuantity,
             measure: itemMeasure,
-            purpose: itemPurpose,
-            uses: itemUses,
-            // files: files,
-            files: [...files], // UI display
-            newFiles: [...files], // 🔥 ACTUAL upload
+            purpose: itemPurposeDescription,
+            uses: itemUsesValue,
+            files: [...files],       // UI display
+            newFiles: [...files],    // actual upload
         };
 
+        // ✅ Add to temp array
         tempItems.push(newItem);
 
+        // ✅ Render table
         renderAllItems();
 
-        // Reset form fields
-        itemSelect.selectedIndex = 0;
-        document.getElementById("itemValue").value = "";
-        document.getElementById("itemQuantity").value = "";
-        document.getElementById("itemMeasure").value = "";
-        document.getElementById("itemPurpose").selectedIndex = 0;
-        document.getElementById("itemUses").selectedIndex = 0;
+        // ✅ Reset modal fields
+        resetAddItemModal();
 
-        // Clear queued Dropzone files
-        itemDropzone.getQueuedFiles().forEach((file) => {
-            itemDropzone.removeFile(file);
-        });
+        // ✅ Hide modal
+        const modalEl = document.getElementById("addItemModal");
+        bootstrap.Modal.getInstance(modalEl).hide();
 
-        // Hide modal
-        const modal = bootstrap.Modal.getInstance(
-            document.getElementById("addItemModal")
-        );
-        modal.hide();
+        // ✅ Trigger summary / update
         change = 1;
-
         summarySubmit();
     });
 }
+
+function resetAddItemModal() {
+    // Clear plain inputs
+    $("#itemValue").val("");
+    $("#itemQuantity").val("");
+
+    // Reset Select2 or plain selects
+    $("#itemSelect").val(null).trigger("change");
+    $("#itemMeasure").val("").trigger("change");
+    $("#itemPurpose").val("").trigger("change");
+    $("#itemUses").val(null).trigger("change");
+
+    // Clear Dropzone files
+    if (itemDropzone) itemDropzone.removeAllFiles(true);
+}
+
 
 function renderAllItems() {
     const tableBody = document.querySelector("#itemListTbl tbody");
@@ -655,7 +658,7 @@ function renderAllItems() {
                 <td>${index + 1}</td>
                 <td>${item.item_name}</td>
                 <td>${item.quantity} ${item.measure}</td>
-                <td>${item.purpose}</td>
+                <td class = "text-wrap">${item.purpose}</td>
                 <td class="text-center">
                     <div class="d-flex justify-content-center align-items-center gap-2">
                         <button class="btn btn-icon btn-success-light view-more-item"
@@ -1151,8 +1154,8 @@ export function summarySubmit() {
         let attachmentHTML = "";
 
         attachmentHTML = `
-            <button class = "btn btn-sm btn-primary view-more-item" data-id = "${item.id}">
-                View More
+            <button class = "btn btn-icon btn-success-light view-more-item" data-id = "${item.id}">
+                 <i class="ti ti-eye"></i>
             </button>
             `;
 
@@ -1163,10 +1166,10 @@ export function summarySubmit() {
                 <tr>
                     <td>${index + 1}</td>
                     <td>${item.item_name || ""}</td>
-                    <td>${item.quantity || ""}</td>
-                    <td>${item.purpose || ""}</td>
-                    <td>${item.uses || ""}</td>
-                    <td>${item.value || ""}</td>
+                    <td>${item.quantity || ""}  ${item.measure || ""}</td>
+                    <td class = "text-wrap">${item.purpose || ""}</td>
+                    <td class = "text-wrap">${item.uses || ""}</td>
+                    <td>RM ${item.value || ""}</td>
                     <td>${attachmentHTML}</td>
                 </tr>
             `

@@ -24,12 +24,13 @@
                         <small style="color:red">Item refering to the exporter's Country</small>
                     </div>
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                        
                         <label for="itemValue" class="form-label">Value (RM)</label>
-                        <input type="text" class="form-control" id="itemValue" name="itemValue" placeholder="RM ...">
+                        <input type="number" class="form-control" id="itemValue" name="itemValue" placeholder="RM ...">
                     </div>
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
                         <label for="itemQuantity" class="form-label">Quantity</label>
-                        <input type="text" class="form-control" id="itemQuantity" name="itemQuantity">
+                        <input type="number" class="form-control" id="itemQuantity" name="itemQuantity">
                     </div>
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
                         <label for="itemMeasure" class="form-label">Measurement Unit</label>

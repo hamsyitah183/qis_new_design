@@ -33,6 +33,8 @@ return new class extends Migration
 
             $table->string('purpose')
                 ->comment('from public_code table: consignment_purpose');
+            
+            $table->string('status')->nullable();
 
             $table->timestamps();
         });

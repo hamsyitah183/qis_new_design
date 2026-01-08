@@ -50,6 +50,7 @@
                                             {{-- <th style="text-align: center;">Importer Type</th> --}}
                                             {{-- <th>ETA</th> --}}
                                             <th>Application Status</th>
+                                            <th>Permit Status</th>
                                             @if (authUser()['type'] == 'internal')
                                                 <th>Submitted By</th>
                                             @endif

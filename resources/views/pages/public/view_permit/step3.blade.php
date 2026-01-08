@@ -213,7 +213,7 @@
                                                          <th scope="col" style="">
                                                              Purpose</th>
                                                          <th scope="col">Value</th>
-                                                         <th scope="col">Attachment</th>
+                                                         <th scope="col">Action</th>
 
                                                      </tr>
                                                  </thead>

@@ -37,6 +37,7 @@ async function data_table_init() {
             { data: "importer" },
             { data: "exporter" },
             { data: "status" },
+            { data: "permit_status" },
 
             // 🔐 Only internal users see this
             ...(isInternal ? [{ data: "submitted_by" }] : []),
@@ -75,7 +76,7 @@ async function data_table_init() {
             { data: "exporter", name: "exporter" },
             { data: "importer_type", name: "importer_type" },
             { data: "date", name: "date" },
-            { data: "status", name: "status" },
+            { data: "status", name: "status" },  
             { data: "submitted_by", name: "submitted_by" },
             { data: "action", name: "action" },
         ],

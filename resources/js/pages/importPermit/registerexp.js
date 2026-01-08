@@ -544,70 +544,84 @@ function saveConsignmentAttachment() {
     document.getElementById("saveBtn").addEventListener("click", function (e) {
         e.preventDefault();
 
-        const itemSelect = document.getElementById("itemSelect");
-        const itemValue = document.getElementById("itemValue").value.trim();
-        const itemQuantity = document
-            .getElementById("itemQuantity")
-            .value.trim();
-        const itemMeasure = document.getElementById("itemMeasure").value.trim();
-        const itemUses = document.getElementById("itemUses").value;
+        console.log("Saving consignment item...");
 
-        // ✅ Validation: check if required fields are empty
+        // ✅ Get values (Select2 fields via jQuery)
+        const itemSelectValue = $("#itemSelect").val();
+        const itemSelectText = $("#itemSelect option:selected").text();
+        const itemValue = $("#itemValue").val().trim();
+        const itemQuantity = $("#itemQuantity").val().trim();
+        const itemMeasure = $("#itemMeasure").val();
+        const itemPurpose = $("#itemPurpose").val();
+        const itemUsesValue = $("#itemUses").val();
+
+        // ✅ Validation
         if (
-            !itemSelect.value ||
+            !itemSelectValue ||
             !itemValue ||
             !itemQuantity ||
             !itemMeasure ||
-            !itemUses
+            !itemPurpose ||
+            !itemUsesValue
         ) {
             Swal.fire({
                 icon: "error",
                 title: "Incomplete Data",
                 text: "Please fill in all required fields before saving.",
             });
-            return; // stop execution if validation fails
+            return;
         }
 
+        // ✅ Get files from Dropzone
         const files = itemDropzone.getAcceptedFiles();
+        const itemPurposeDescription = $("#itemPurpose option:selected").data("description") || $("#itemPurpose").val();
 
+        // ✅ Build new item
         const newItem = {
             id: crypto.randomUUID(),
-            item_id: itemSelect.value,
-            item_name: itemSelect.options[itemSelect.selectedIndex].text,
+            item_id: itemSelectValue,
+            item_name: itemSelectText,
             value: itemValue,
             quantity: itemQuantity,
             measure: itemMeasure,
-            purpose: itemPurpose,
-            uses: itemUses,
+            purpose: itemPurposeDescription,
+            uses: itemUsesValue,
             files: files,
         };
 
+        // ✅ Add to temporary array
         tempItems.push(newItem);
 
+        // ✅ Render the list table
         renderAllItems();
 
-        // Reset form fields
-        itemSelect.selectedIndex = 0;
-        document.getElementById("itemValue").value = "";
-        document.getElementById("itemQuantity").value = "";
-        document.getElementById("itemMeasure").value = "";
-        document.getElementById("itemPurpose").selectedIndex = 0;
-        document.getElementById("itemUses").selectedIndex = 0;
+        // ✅ Reset modal fields
+        resetAddItemModal();
 
-        // Clear queued Dropzone files
-        itemDropzone.getQueuedFiles().forEach((file) => {
-            itemDropzone.removeFile(file);
-        });
+        // ✅ Hide modal
+        const modalEl = document.getElementById("addItemModal");
+        bootstrap.Modal.getInstance(modalEl).hide();
 
-        // Hide modal
-        const modal = bootstrap.Modal.getInstance(
-            document.getElementById("addItemModal")
-        );
-        modal.hide();
-
+        // ✅ Trigger summary / submit update if needed
         summarySubmit();
     });
 }
+
+function resetAddItemModal() {
+    // Reset plain input fields
+    $("#itemValue").val("");
+    $("#itemQuantity").val("");
+
+    // Reset Select2 fields
+    $("#itemSelect").val(null).trigger("change");
+    $("#itemMeasure").val("").trigger("change");
+    $("#itemPurpose").val("").trigger("change");
+    $("#itemUses").val(null).trigger("change");
+
+    // Clear Dropzone files
+    if (itemDropzone) itemDropzone.removeAllFiles(true);
+}
+
 
 function renderAllItems() {
     const tableBody = document.querySelector("#itemListTbl tbody");
@@ -620,7 +634,7 @@ function renderAllItems() {
                 <td>${index + 1}</td>
                 <td>${item.item_name}</td>
                 <td>${item.quantity} ${item.measure}</td>
-                <td>${item.purpose}</td>
+                <td class = "text-wrap">${item.purpose}</td>
                 <td class="text-center">
                     <div class="d-flex justify-content-center align-items-center gap-2">
                         <button class="btn btn-icon btn-success-light view-more-item"
@@ -823,6 +837,8 @@ function saveapplication(isDraft = false) {
                     window.location.href = "/public/view_all_application";
                 }, 1500);
             }
+
+            window.location.reload();
         },
         error: function (xhr) {
             Swal.fire("Error", "Failed to save application", "error");

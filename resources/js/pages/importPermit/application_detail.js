@@ -77,6 +77,22 @@ async function attachmentTable() {
         if (permit.attachments && permit.attachments.length) {
             attachmentCount = permit.attachments.length;
         }
+        
+        let permitAction = '';
+        if(permit.status == 'processing'){
+          permitAction = `<div class = "btn btn-sm btn-primary-light btn-wave accept" data-permit = "${
+                            permit.id
+                        }">
+                            Approved
+                        </div>
+                        <div class = "btn btn-sm btn-danger-light btn-wave reject" data-permit = "${
+                            permit.id
+                        }">
+                            Rejected
+                        </div>`
+        } else {
+            permitAction = ``;
+        }
 
         tableBody.append(`
             <tr>
@@ -85,21 +101,148 @@ async function attachmentTable() {
 
                 <td>${detail.quantity ?? "—"} ${detail.measure ?? ""}</td>
 
-                <td>${detail.uses ?? "—"}</td>
+                <td class = "text-wrap">${detail.purpose ?? "—"}</td>
 
                 <td>RM ${detail.value ?? "—"}</td>
 
                 <td>
-                    <div class = "btn btn-sm btn-primary-light btn-wave view-attachment" data-permit = "${
-                        permit.id
-                    }">
-                        ${attachmentCount} attachment(s)
-                    </div>
+                   <div class = "d-flex gap-2 align-items-center">
+                         <div class = "btn btn-sm btn-success-light btn-wave view-attachment" data-permit = "${
+                             permit.id
+                         }">
+                            <i class="ti ti-eye"></i>
+                        </div>
+                         ${permitAction}
+                   </div>
                 </td>
 
                 
             </tr>
         `);
+    });
+}
+function acceptPermit() {
+    $(document).on("click", ".accept", function (e) {
+        e.preventDefault();
+        let id = $(this).data("permit");
+        console.log("Clicked Accept Permit ID:", id);
+
+        // First confirmation
+        Swal.fire({
+            title: "Are you sure?",
+            text: "Do you want to accept this permit?",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: "Yes, proceed",
+            cancelButtonText: "Cancel",
+        }).then((firstResult) => {
+            if (firstResult.isConfirmed) {
+                // Second confirmation
+                Swal.fire({
+                    title: "Please Confirm Again",
+                    text: "This action cannot be undone. Accept the permit?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes, accept it",
+                    cancelButtonText: "Cancel",
+                }).then((secondResult) => {
+                    if (secondResult.isConfirmed) {
+                        // ✅ Execute accept logic here
+                        $.ajax({
+                            url: `/internal/permit/${id}`, // your route
+                            method: "POST",
+                            data: {
+                                _token: $("meta[name='csrf-token']").attr(
+                                    "content"
+                                ), // CSRF token
+                                accepted: 1,
+                            },
+                            success: function (res) {
+                                Swal.fire(
+                                    "Accepted!",
+                                    "The permit has been accepted.",
+                                    "success"
+                                );
+                                attachmentTable();
+                            },
+                            error: function (err) {
+                                Swal.fire({
+                                    icon: "error",
+                                    title: "Error!",
+                                    text:
+                                        err.responseJSON?.message ||
+                                        "Something went wrong.",
+                                });
+                            },
+                        });
+                        console.log("Permit accepted:", id);
+                    }
+                });
+            }
+        });
+    });
+}
+
+function rejectPermit() {
+    $(document).on("click", ".reject", function (e) {
+        e.preventDefault();
+        let id = $(this).data("permit");
+        console.log("Clicked Reject Permit ID:", id);
+
+        // First confirmation
+        Swal.fire({
+            title: "Are you sure?",
+            text: "Do you want to reject this permit?",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: "Yes, proceed",
+            cancelButtonText: "Cancel",
+        }).then((firstResult) => {
+            if (firstResult.isConfirmed) {
+                // Second confirmation
+                Swal.fire({
+                    title: "Please Confirm Again",
+                    text: "This action cannot be undone. Reject the permit?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes, reject it",
+                    cancelButtonText: "Cancel",
+                }).then((secondResult) => {
+                    if (secondResult.isConfirmed) {
+                        // ✅ Execute reject logic here
+                        $.ajax({
+                            url: `/internal/permit/${id}`, // your route
+                            method: "POST",
+                            data: {
+                                _token: $("meta[name='csrf-token']").attr(
+                                    "content"
+                                ), // CSRF token
+                                accepted: 0,
+                            },
+                            success: function (res) {
+                                Swal.fire(
+                                    "Rejected!",
+                                    "The permit has been rejected.",
+                                    "success"
+                                );
+
+                                attachmentTable();
+                            },
+                            error: function (err) {
+                                Swal.fire({
+                                    icon: "error",
+                                    title: "Error!",
+                                    text:
+                                        err.responseJSON?.message ||
+                                        "Something went wrong.",
+                                });
+                            },
+                        });
+                        console.log("Permit rejected:", id);
+                    }
+                });
+            }
+        });
     });
 }
 
@@ -141,7 +284,7 @@ async function viewMore() {
                     <tr>
                         <th>File Name</th>
                         <th>Type</th>
-                        <th>Description</th>
+                    
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -153,7 +296,7 @@ async function viewMore() {
                 <tr>
                     <td>${file.file_name ?? "-"}</td>
                     <td>${file.file_type ?? "-"}</td>
-                    <td>${file.description ?? "-"}</td>
+                 
                     <td>
                         <button class="btn btn-sm btn-primary view-file-btn" data-file="${
                             file.file_path
@@ -372,9 +515,7 @@ function adminRejectApplication() {
                         Swal.fire({
                             icon: "success",
                             title: "Application Rejected!",
-                            text:
-                            
-                                "The application has been rejected.",
+                            text: "The application has been rejected.",
                             showConfirmButton: false,
                             timer: 2000,
                         });
@@ -507,6 +648,9 @@ async function initApplicationDetails() {
     adminRejectApplication();
 
     applicationLog();
+
+    acceptPermit();
+    rejectPermit();
 
     Swal.close(); // Close after data is loaded
 }

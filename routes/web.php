@@ -171,6 +171,7 @@ Route::prefix('internal')
         // Route::get('/control_panel', [MiscController::class, 'showcontrolpanel'])->name('controlpanel');
 
         // ======================= notifications ===========================
+        Route::post('/permit/{id}', [MiscController::class, 'accept_permit']);
 
     });
 
