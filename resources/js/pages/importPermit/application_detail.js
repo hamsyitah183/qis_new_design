@@ -63,8 +63,8 @@ async function attachmentTable() {
         let detail = permit.consignment_detail || {};
         let attachmentCount = permit.attachments?.length || 0;
 
-        let permitAction = '';
-        if (permit.status === 'processing') {
+        let permitAction = "";
+        if (permit.status === "processing") {
             permitAction = `
                 <div class="btn btn-sm btn-primary-light btn-wave accept" data-permit="${permit.id}">
                     Approved
@@ -82,7 +82,9 @@ async function attachmentTable() {
                 <td>RM ${detail.value ?? "—"}</td>
                 <td>
                     <div class="d-flex gap-2 align-items-center">
-                        <div class="btn btn-sm btn-success-light btn-wave view-attachment" data-permit="${permit.id}">
+                        <div class="btn btn-sm btn-success-light btn-wave view-attachment" data-permit="${
+                            permit.id
+                        }">
                             <i class="ti ti-eye"></i>
                         </div>
                         ${permitAction}
@@ -94,105 +96,123 @@ async function attachmentTable() {
 }
 
 function acceptPermit() {
-  $(document).off("click", ".accept").on("click", ".accept", function (e) {
-    e.preventDefault();
-    const id = $(this).data("permit");
+    $(document)
+        .off("click", ".accept")
+        .on("click", ".accept", function (e) {
+            e.preventDefault();
+            const id = $(this).data("permit");
 
-    Swal.fire({
-        title: "Are you sure?",
-        text: "Do you want to accept this permit?",
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonText: "Yes, proceed",
-        cancelButtonText: "Cancel",
-    }).then((firstResult) => {
-        if (firstResult.isConfirmed) {
             Swal.fire({
-                title: "Please Confirm Again",
-                text: "This action cannot be undone. Accept the permit?",
-                icon: "warning",
+                title: "Are you sure?",
+                text: "Do you want to accept this permit?",
+                icon: "question",
                 showCancelButton: true,
-                confirmButtonText: "Yes, accept it",
+                confirmButtonText: "Yes, proceed",
                 cancelButtonText: "Cancel",
-            }).then((secondResult) => {
-                if (secondResult.isConfirmed) {
-                    $.ajax({
-                        url: `/internal/permit/${id}`,
-                        method: "POST",
-                        data: {
-                            _token: $("meta[name='csrf-token']").attr("content"),
-                            accepted: 1,
-                        },
-                        success: function () {
-                            Swal.fire("Accepted!", "The permit has been accepted.", "success");
-                            // Refresh table
-                            loadApplicationData(); // <-- fetch latest permits into `application.consignment_permits`
-                            attachmentTable();
-                        },
-                        error: function (err) {
-                            Swal.fire({
-                                icon: "error",
-                                title: "Error!",
-                                text: err.responseJSON?.message || "Something went wrong.",
+            }).then((firstResult) => {
+                if (firstResult.isConfirmed) {
+                    Swal.fire({
+                        title: "Please Confirm Again",
+                        text: "This action cannot be undone. Accept the permit?",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonText: "Yes, accept it",
+                        cancelButtonText: "Cancel",
+                    }).then((secondResult) => {
+                        if (secondResult.isConfirmed) {
+                            $.ajax({
+                                url: `/internal/permit/${id}`,
+                                method: "POST",
+                                data: {
+                                    _token: $("meta[name='csrf-token']").attr(
+                                        "content"
+                                    ),
+                                    accepted: 1,
+                                },
+                                success: function () {
+                                    Swal.fire(
+                                        "Accepted!",
+                                        "The permit has been accepted.",
+                                        "success"
+                                    );
+                                    // Refresh table
+                                    initApplicationDetails();
+                                },
+                                error: function (err) {
+                                    Swal.fire({
+                                        icon: "error",
+                                        title: "Error!",
+                                        text:
+                                            err.responseJSON?.message ||
+                                            "Something went wrong.",
+                                    });
+                                },
                             });
-                        },
+                        }
                     });
                 }
             });
-        }
-    });
-});
+        });
 }
 
 function rejectPermit() {
-   $(document).off("click", ".reject").on("click", ".reject", function (e) {
-    e.preventDefault();
-    const id = $(this).data("permit");
+    $(document)
+        .off("click", ".reject")
+        .on("click", ".reject", function (e) {
+            e.preventDefault();
+            const id = $(this).data("permit");
 
-    Swal.fire({
-        title: "Are you sure?",
-        text: "Do you want to reject this permit?",
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonText: "Yes, proceed",
-        cancelButtonText: "Cancel",
-    }).then((firstResult) => {
-        if (firstResult.isConfirmed) {
             Swal.fire({
-                title: "Please Confirm Again",
-                text: "This action cannot be undone. Reject the permit?",
-                icon: "warning",
+                title: "Are you sure?",
+                text: "Do you want to reject this permit?",
+                icon: "question",
                 showCancelButton: true,
-                confirmButtonText: "Yes, reject it",
+                confirmButtonText: "Yes, proceed",
                 cancelButtonText: "Cancel",
-            }).then((secondResult) => {
-                if (secondResult.isConfirmed) {
-                    $.ajax({
-                        url: `/internal/permit/${id}`,
-                        method: "POST",
-                        data: {
-                            _token: $("meta[name='csrf-token']").attr("content"),
-                            accepted: 0,
-                        },
-                        success: function () {
-                            Swal.fire("Rejected!", "The permit has been rejected.", "success");
-                            // Refresh table
-                            loadApplicationData(); // <-- fetch latest permits into `application.consignment_permits`
-                            attachmentTable();
-                        },
-                        error: function (err) {
-                            Swal.fire({
-                                icon: "error",
-                                title: "Error!",
-                                text: err.responseJSON?.message || "Something went wrong.",
+            }).then((firstResult) => {
+                if (firstResult.isConfirmed) {
+                    Swal.fire({
+                        title: "Please Confirm Again",
+                        text: "This action cannot be undone. Reject the permit?",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonText: "Yes, reject it",
+                        cancelButtonText: "Cancel",
+                    }).then((secondResult) => {
+                        if (secondResult.isConfirmed) {
+                            $.ajax({
+                                url: `/internal/permit/${id}`,
+                                method: "POST",
+                                data: {
+                                    _token: $("meta[name='csrf-token']").attr(
+                                        "content"
+                                    ),
+                                    accepted: 0,
+                                },
+                                success: function () {
+                                    Swal.fire(
+                                        "Rejected!",
+                                        "The permit has been rejected.",
+                                        "success"
+                                    );
+                                    // Refresh table
+                                    initApplicationDetails();
+                                },
+                                error: function (err) {
+                                    Swal.fire({
+                                        icon: "error",
+                                        title: "Error!",
+                                        text:
+                                            err.responseJSON?.message ||
+                                            "Something went wrong.",
+                                    });
+                                },
                             });
-                        },
+                        }
                     });
                 }
             });
-        }
-    });
-});
+        });
 }
 
 async function viewMore() {

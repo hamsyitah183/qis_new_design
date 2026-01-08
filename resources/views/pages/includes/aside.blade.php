@@ -94,6 +94,9 @@
 
                         <ul class="slide-menu child1">
                             <li class="slide">
+                                <a href="/application/exporter" class="side-menu__item">Exporter</a>
+                            </li>
+                            <li class="slide">
                                 <a href="{{ route('public.verifyapplication') }}" class="side-menu__item">To Review</a>
                             </li>
 

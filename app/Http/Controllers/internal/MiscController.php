@@ -205,7 +205,7 @@ class MiscController extends Controller
 
         $users = InternalUser::all();
         Notification::send($users, new ApplicationNotification(
-            'Import Application with ID ' . $id . ' has been deleted.',
+            'A permit with application ID ' . $permit->application->uuid . ' has been ' . $status,
             authUser()['user']->fullname
         ));
 

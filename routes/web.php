@@ -147,6 +147,10 @@ Route::prefix('internal')
         // ======================= application ========================
         Route::get('/view_all_application', [ApplicationController::class, 'showallapplicationlist'])->name('application.list');
         Route::delete('/application/delete/{id}', [ApplicationController::class, 'deleteApplication'])->name('application.delete');
+       
+        // Route::get('/application/exporter/get', [ApplicationController::class, 'get_exporter'])->name('application.exporter.get');
+
+
         //MISC
 
         Route::get('/control_panel', [MiscController::class, 'showcontrolpanel']);
@@ -172,6 +176,8 @@ Route::prefix('internal')
 
         // ======================= notifications ===========================
         Route::post('/permit/{id}', [MiscController::class, 'accept_permit']);
+
+    
 
     });
 
@@ -228,6 +234,7 @@ Route::middleware(['auth.any'])
             return response()->json(['status' => 'success']);
         })->name('notifications.mark-read');
         Route::get('/notifications', [DashboardController::class, 'notifications_page'])->name('notifications.page');
+         Route::get('/application/exporter', [ApplicationController::class, 'show_exporter'])->name('application.exporter');
     });
 
 // broadcast --dont kacau---

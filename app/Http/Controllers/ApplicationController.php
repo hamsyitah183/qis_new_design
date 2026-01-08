@@ -502,4 +502,12 @@ class ApplicationController extends Controller
             'message' => 'Application is verified'
         ]);
     }
+
+    function show_exporter()
+    {
+        $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
+        $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
+        $country = country::where('is_del', false)->get();
+        return view('pages.public.exporter_list',  compact('pubmeasure', 'pubpurpose', 'country'));
+    }
 }
