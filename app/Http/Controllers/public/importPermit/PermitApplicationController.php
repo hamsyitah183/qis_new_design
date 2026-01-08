@@ -282,13 +282,14 @@ class PermitApplicationController extends Controller
             // Create / Update consignments
             // -----------------------------
             $consignmentArray = [];
+    
             if ($request->has('items')) {
                 foreach ($request->items as $index => $item) {
                     $data = json_decode($item['data'], true);
                     $permit_id = $data['permit_id'] ?? null;
 
                     if ($permit_id && in_array($permit_id, $existingIds)) continue;
-
+                   
                     $consignment = IpConsignmentPermit::create([
                         'application_id'     => $appId,
                         'permit_number'      => null,
@@ -299,7 +300,7 @@ class PermitApplicationController extends Controller
                         'purpose'            => $data['purpose'] ?? null,
                         'status'             => 'processing',
                     ]);
-
+                
                     $consignmentArray[$index] = $consignment->id;
                 }
             }

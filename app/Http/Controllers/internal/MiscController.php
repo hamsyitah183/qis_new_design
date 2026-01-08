@@ -2,15 +2,21 @@
 
 namespace App\Http\Controllers\internal;
 
+use App\Events\ApplicationDeleted;
+use App\Events\PublicUserEvent;
 use App\Http\Controllers\Controller;
+use App\Models\InternalUser;
 use App\Models\IpCondition;
 use App\Models\IpConsignmentPermit;
 use App\Models\PublicCode;
+use App\Models\PublicUser;
+use App\Notifications\ApplicationNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 
 class MiscController extends Controller
 {
-    
+
     public function showcontrolpanel()
     {
         return view('pages.internal.misc.control_panel');
@@ -19,9 +25,9 @@ class MiscController extends Controller
     public function getpbdata($cate)
     {
         $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')
-        ->where('cate_name', $cate)
-        ->where('is_del', false)
-        ->get();
+            ->where('cate_name', $cate)
+            ->where('is_del', false)
+            ->get();
 
         return response()->json([
             'status' => 'success',
@@ -32,7 +38,7 @@ class MiscController extends Controller
     public function getspecificpbdata($id)
     {
         $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')
-        ->findorFail($id);
+            ->findorFail($id);
 
         return response()->json([
             'status' => 'success',
@@ -76,7 +82,7 @@ class MiscController extends Controller
         $desc = $request->input('item_desc');
         // dd($cate,$code,$desc);
 
-        if($code == null || $code == '' ){
+        if ($code == null || $code == '') {
             $getcode = PublicCode::where('cate_name', $cate)->max('cate_code');
             $code = $getcode + 1;
         }
@@ -102,9 +108,9 @@ class MiscController extends Controller
     public function permitaddcondition()
     {
         $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')
-        ->where('cate_name', 'condition_category')
-        ->where('is_del', false)
-        ->get();
+            ->where('cate_name', 'condition_category')
+            ->where('is_del', false)
+            ->get();
 
         return view('pages.internal.misc.permit_add', compact('pbdata'));
     }
@@ -130,7 +136,7 @@ class MiscController extends Controller
         $save = IpCondition::create([
             'category'          => $request->itemCategory,
             'item_name'         => $request->itemName,
-            'addional_condition'=> $request->permit_condition,
+            'addional_condition' => $request->permit_condition,
             'quantity_limit'    => $request->quanLimit ?: null,
             'date_limit'        => $request->spedate ?: null,
             'country'           => json_encode($countryValues),
@@ -148,9 +154,9 @@ class MiscController extends Controller
         $condition = IpCondition::with(['code'])->findOrFail($id);
 
         $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')
-        ->where('cate_name', 'consignment_purpose')
-        ->where('is_del', false)
-        ->get();
+            ->where('cate_name', 'consignment_purpose')
+            ->where('is_del', false)
+            ->get();
 
         return view('pages.internal.misc.permit_edit', compact('condition', 'pbdata'));
     }
@@ -158,8 +164,8 @@ class MiscController extends Controller
     public function getpermitconditiondata()
     {
         $conditions = IpCondition::with(['code', 'condcategory'])
-                ->select('id', 'item_name', 'category', 'usage', 'country')
-                ->get();
+            ->select('id', 'item_name', 'category', 'usage', 'country')
+            ->get();
 
         return response()->json([
             'status' => 'success',
@@ -170,8 +176,8 @@ class MiscController extends Controller
     public function getpermitconditionbyid($id)
     {
         $conditions = IpCondition::with(['code', 'condcategory'])
-                ->select('id', 'item_name', 'category', 'usage', 'addional_condition', 'quantity_limit', 'date_limit', 'country')
-                ->findOrFail($id);
+            ->select('id', 'item_name', 'category', 'usage', 'addional_condition', 'quantity_limit', 'date_limit', 'country')
+            ->findOrFail($id);
 
         return response()->json([
             'status' => 'success',
@@ -182,15 +188,38 @@ class MiscController extends Controller
     function accept_permit($id, Request $request)
     {
         $accepted = $request->input('accepted');
-
+        $status = '';
 
         $permit = IpConsignmentPermit::findOrFail($id);
-        if($accepted == 1) {
+        if ($accepted == 1) {
             $permit->status = 'completed';
+            $status = 'Approved';
         } else {
             $permit->status = 'rejected';
+            $status = 'Rejected';
         }
         $permit->save();
+
+        // Events & notifications
+        event(new ApplicationDeleted('Permit in '. $permit->application->uuid . ' is ' . $status  ));
+
+        $users = InternalUser::all();
+        Notification::send($users, new ApplicationNotification(
+            'Import Application with ID ' . $id . ' has been deleted.',
+            authUser()['user']->fullname
+        ));
+
+        $user = PublicUser::where('uuid', $permit->application->user_id)->first();
+
+        event(new PublicUserEvent(
+            'A permit with application ID ' . $permit->application->uuid . ' has been ' . $status,
+            $user->uuid
+        ));
+
+        Notification::send($user, new ApplicationNotification(
+            'A permit with application ID ' . $permit->application->uuid . ' has been ' . $status,
+            authUser()['user']->fullname
+        ));
 
         return response()->json([
             'status' => 'success',

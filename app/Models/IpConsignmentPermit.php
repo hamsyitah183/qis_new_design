@@ -19,6 +19,7 @@ class IpConsignmentPermit extends Model
         'unit_measurement',
         'value',
         'purpose',
+        'status',
     ];
 
     protected $casts = [
