@@ -75,9 +75,9 @@
                                 <div class="fw-medium fs-14 text-default mb-3">Import Permit for:</div>
                                 <div class="d-flex justify-content-center flex-nowrap gap-3" id="customeCheckbox">
                                     <!-- Option 1 -->
-                                    <div class="xintra-radio-box text-center">
-                                        <input type="radio" name="regType" value="Individu" id="planBasic"
-                                            class="xintra-radio-input">
+                                    <a href = "{{ route('public.permitApplication') }}" class="xintra-radio-box text-center">
+                                        {{-- <input type="radio" name="regType" value="Individu" id="planBasic"
+                                            class="xintra-radio-input"> --}}
                                         <label for="planBasic" class="xintra-radio-label">
                                             <div class="xintra-radio-content">
                                                 <i class="bx bx-user fs-2 mb-2 text-primary"></i>
@@ -87,10 +87,10 @@
                                                     yourself.</p>
                                             </div>
                                         </label>
-                                    </div>
+                                    </a>
 
                                     <!-- Option 2 -->
-                                    <div class="xintra-radio-box text-center">
+                                    <a href = "{{ route('public.permitAssignApplication') }}" class="xintra-radio-box text-center">
                                         <input type="radio" name="regType" value="Company" id="planStandard"
                                             class="xintra-radio-input">
                                         <label for="planStandard" class="xintra-radio-label">
@@ -101,7 +101,7 @@
                                                 </p>
                                             </div>
                                         </label>
-                                    </div>
+                                    </a>
                                 </div>
                             </div>
                             <!-- <span class="badge bg-primary-transparent">32 Views</span> -->
