@@ -152,7 +152,7 @@ export function three() {
             theme: "snow",
         });
     });
-
+ 
     document.addEventListener("DOMContentLoaded", function () {
         document
             .getElementById("submitConditionBtn")

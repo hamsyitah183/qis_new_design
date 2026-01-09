@@ -17,7 +17,7 @@
                                     <table id="tabletab1" class="table table-striped text-nowrap table-bordered">
                                         <thead>
                                             <tr>
-                                                <th scope="col">#</th>
+                                                {{-- <th scope="col">#</th> --}}
                                                 <th scope="col">Code</th>
                                                 <th scope="col">Description</th>
                                                 <th scope="col">Action</th>

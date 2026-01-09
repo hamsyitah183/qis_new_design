@@ -52,7 +52,7 @@ $(document).ready(function() {
                 break;
         }
         $.ajax({
-            url: `${window.baseUrl}/internal/get_pbdata/${cate}`,   
+            url: `/internal/get_pbdata/${cate}`,   
             type: 'GET',
             success: function(response) {   
                 let tbody  = $(tableId).find("tbody");
@@ -117,7 +117,7 @@ $(document).ready(function() {
         modal.show();
         
         $.ajax({
-            url: `${window.baseUrl}/internal/getspecificpbdata/${id}`,   
+            url: `/internal/getspecificpbdata/${id}`,   
             type: 'GET',
             success: function(response) {   
                 if (response.status === 'success' && response.data) {     
@@ -144,7 +144,7 @@ $(document).ready(function() {
             fd.append("item_desc", desc);
 
         $.ajax({
-            url: `${window.baseUrl}/internal/updatepbdata`,   
+            url: `/internal/updatepbdata`,   
             type: 'POST',
             data: fd,
             processData: false,
@@ -199,7 +199,7 @@ $(document).ready(function() {
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: `${window.baseUrl}/internal/deletepbdata/${id}`,
+                    url: `/internal/deletepbdata/${id}`,
                     type: 'DELETE',
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -291,7 +291,7 @@ $(document).ready(function() {
             fd.append("item_desc", desc);
 
         $.ajax({
-            url: `${window.baseUrl}/internal/addpbdata`,   
+            url: `/internal/addpbdata`,   
             type: 'POST',
             data: fd,
             processData: false,
