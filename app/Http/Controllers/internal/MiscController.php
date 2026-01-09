@@ -128,9 +128,11 @@ class MiscController extends Controller
         $countryArr = json_decode($request->countryTag, true) ?? [];
         $usageArr   = json_decode($request->usageTags, true) ?? [];
 
-        // Convert Tagify structure [{"value":"XYZ"}] → ["XYZ"]
+        
         $countryValues = array_map(fn($i) => $i['value'] ?? $i['name'] ?? null, $countryArr);
         $usageValues   = array_map(fn($i) => $i['value'] ?? $i['name'] ?? null, $usageArr);
+
+        // dd($countryValues, json_encode($countryValues));
 
         // Save record
         $save = IpCondition::create([
@@ -139,8 +141,8 @@ class MiscController extends Controller
             'addional_condition' => $request->permit_condition,
             'quantity_limit'    => $request->quanLimit ?: null,
             'date_limit'        => $request->spedate ?: null,
-            'country'           => json_encode($countryValues),
-            'usage'             => json_encode($usageValues),
+            'country'           => $countryValues,
+            'usage'             => $usageValues,
         ]);
 
         return response()->json([
