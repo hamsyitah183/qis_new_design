@@ -70,7 +70,7 @@
     </div>
 
     <!-- edit modal -->
-    <div class="modal fade" id="editItemModal" tabindex="-1" aria-hidden="true">
+    {{-- <div class="modal fade" id="editItemModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-md modal-dialog-centered">
             <div class="modal-content">
 
@@ -109,10 +109,10 @@
 
             </div>
         </div>
-    </div>
+    </div> --}}
 
     <!-- add modal -->
-    <div class="modal fade" id="addGenericModal" tabindex="-1" aria-hidden="true">
+    {{-- <div class="modal fade" id="addGenericModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-md modal-dialog-centered">
             <div class="modal-content">
 
@@ -143,7 +143,57 @@
 
             </div>
         </div>
-    </div>
+    </div> --}}
+
+    <x-modal id="editItemModal" title="Edit Item" size="modal-md">
+        <form id="edititemmdl">
+            @csrf
+
+            <input type="hidden" id="editItemId">
+
+            <div class="mb-3 d-none">
+                <label for="editICOde" class="form-label">Item Code</label>
+                <input type="text" id="editICOde" class="form-control">
+            </div>
+
+            <div class="mb-3">
+                <label for="editDesc" class="form-label">Item Description</label>
+                <input type="text" id="editDesc" class="form-control">
+            </div>
+
+            @slot('footer')
+                <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+                <button type="button" id="saveEditBtn" class="btn btn-primary">
+                    Save Changes
+                </button>
+            @endslot
+        </form>
+    </x-modal>
+
+
+    <x-modal id="addGenericModal" title="Add Item" size="modal-md">
+        <form id="addGenericForm">
+            @csrf
+
+            <input type="hidden" id="addItemType">
+            <div class="mb-3 d-none">
+                <label for="addCodev" class="form-label">Item Code</label>
+                <input type="text" id="addCodev" class="form-control">
+            </div>
+
+            <div class="mb-3">
+                <label for="addDescv" class="form-label">Item Description</label>
+                <input type="text" id="addDescv" class="form-control">
+            </div>
+
+            @slot('footer')
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="saveGenericBtn">Save</button>
+            @endslot
+        </form>
+    </x-modal>
 
 @endsection
 

@@ -61,11 +61,11 @@ $(document).ready(function() {
                 if (response.status === 'success' && response.data.length > 0) {     
 
                     response.data.forEach((item, index) => {
-
+                        // <td>${item.cate_code ?? '-'}</td>
                         let row = `
                             <tr>
-                                <td>${index + 1}</td>
-                                <td>${item.cate_code ?? '-'}</td>
+                            
+                                
                                 <td>${item.description ?? '-'}</td>
                                 <td>
                                     <div class="hstack gap-2 flex-wrap">
