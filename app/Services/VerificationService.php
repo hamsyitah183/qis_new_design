@@ -12,9 +12,7 @@ class VerificationService
 {
     public function uploadVerificationAttachment($userId, $file)
     {
-        DB::beginTransaction();
         try {
-            // Get existing record or create new
             $verification = ApprovedPublic::firstOrNew(['user_id' => $userId]);
 
             if ($file) {
@@ -45,38 +43,10 @@ class VerificationService
             $verification->status = 'waiting for approval';
             $verification->save();
 
-            DB::commit();
-            
-            if(authUser()['type'] === 'internal') {
-                $url = url('/internal/approved_publics');
-            } else {
-                $url = url('/profile');
-            }
-
-            $internalUser = PublicUser::where('uuid', $userId)->first();
-            $actor = authUser()['user'];
-            if ($internalUser->uuid !== $actor->uuid) {
-                $internalUser->notify(new InternalUserEditedNotification(
-                    'Your account was updated',
-                    'Your account details were updated by ' . $actor->fullname,
-                    $url // pass URL
-                ));
-            }
-
-            return [
-                'success' => true,
-                'file_url' => $verification->verification_attachment,
-                'message' => 'File uploaded successfully.',
-            ];
+            return true;
         } catch (\Exception $e) {
-            DB::rollBack();
             Log::error('Verification upload failed: ' . $e->getMessage());
-
-            return [
-                'success' => false,
-                'message' => 'An error occurred while uploading the file.',
-                'error' => $e->getMessage(),
-            ];
+            throw $e;
         }
     }
 }

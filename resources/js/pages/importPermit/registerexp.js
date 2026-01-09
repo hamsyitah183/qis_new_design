@@ -204,6 +204,7 @@ function loadUses(itemId) {
 
 // ------------------------- Add Exporter Modal -------------------------
 function initAddExporterModal() {
+    console.log('this is the exporter modal')
     const modalEl = document.getElementById("addExporterModal");
     const modal = new bootstrap.Modal(modalEl);
 

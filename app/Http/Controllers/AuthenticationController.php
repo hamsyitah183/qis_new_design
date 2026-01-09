@@ -97,6 +97,7 @@ class AuthenticationController extends Controller
     public function registerPublic(Request $request,  VerificationService $verificationService)
     {
         // dd($request->all(), $request->hasFile('attachment'));
+        
         $validated = $request->validate([
             'fullname' => 'required|string|max:255',
             'email' => 'required|email|unique:public_users,email',

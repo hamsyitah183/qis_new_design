@@ -43,7 +43,7 @@ class VerifyEmailNotification extends Notification
 
         return (new MailMessage)
             ->subject('Verify Your Email Address')
-            ->greeting('Welcome to QIS, please verify your account' . $notifiable->fullname)
+            ->greeting('Welcome to QIS, please verify your account ' . $notifiable->fullname)
             ->line('Please click the button below to verify your email address.')
             ->action('Verify Email', $url)
             ->line('If you did not create an account, no further action is required.');
