@@ -198,11 +198,7 @@ export function notificationContent(hours = null) {
             });
         })
         .catch(() => {
-            Swal.fire({
-                icon: 'error',
-                title: 'Failed to load notifications',
-                text: 'Please try again later.'
-            });
+            console.log('error fetch notification');
         })
         .finally(() => Swal.close());
 }

@@ -157,7 +157,7 @@
             </div>
 
             <div class="mb-3">
-                <label for="editDesc" class="form-label">Item Description</label>
+                <label for="editDesc" class="form-label">Name</label>
                 <input type="text" id="editDesc" class="form-control">
             </div>
 
@@ -184,7 +184,7 @@
             </div>
 
             <div class="mb-3">
-                <label for="addDescv" class="form-label">Item Description</label>
+                <label for="addDescv" class="form-label">Name</label>
                 <input type="text" id="addDescv" class="form-control">
             </div>
 

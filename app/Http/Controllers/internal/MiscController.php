@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\InternalUser;
 use App\Models\IpCondition;
 use App\Models\IpConsignmentPermit;
+use App\Models\IpEntryPoint;
 use App\Models\PublicCode;
 use App\Models\PublicUser;
 use App\Notifications\ApplicationNotification;
@@ -24,16 +25,34 @@ class MiscController extends Controller
 
     public function getpbdata($cate)
     {
-        $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')
-            ->where('cate_name', $cate)
-            ->where('is_del', false)
-            ->get();
+        if ($cate === 'district_entry') {
+
+            $pbdata = PublicCode::where('cate_name', $cate)
+                ->where('is_del', false)
+                ->get()
+                ->map(function ($district) {
+                    $district->places = IpEntryPoint::where('district', $district->cate_code)
+                        ->where('is_del', false)
+                        ->get();
+
+                    return $district;
+                });
+
+                // dd('district', $pbdata);
+        } else {
+
+            $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')
+                ->where('cate_name', $cate)
+                ->where('is_del', false)
+                ->get();
+        }
 
         return response()->json([
             'status' => 'success',
             'data'   => $pbdata
         ]);
     }
+
 
     public function getspecificpbdata($id)
     {
@@ -128,7 +147,7 @@ class MiscController extends Controller
         $countryArr = json_decode($request->countryTag, true) ?? [];
         $usageArr   = json_decode($request->usageTags, true) ?? [];
 
-        
+
         $countryValues = array_map(fn($i) => $i['value'] ?? $i['name'] ?? null, $countryArr);
         $usageValues   = array_map(fn($i) => $i['value'] ?? $i['name'] ?? null, $usageArr);
 
@@ -203,7 +222,7 @@ class MiscController extends Controller
         $permit->save();
 
         // Events & notifications
-        event(new ApplicationDeleted('Permit in '. $permit->application->uuid . ' is ' . $status  ));
+        event(new ApplicationDeleted('Permit in ' . $permit->application->uuid . ' is ' . $status));
 
         $users = InternalUser::all();
         Notification::send($users, new ApplicationNotification(
