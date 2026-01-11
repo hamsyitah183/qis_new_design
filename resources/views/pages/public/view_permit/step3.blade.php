@@ -164,8 +164,7 @@
                                                  <div class="mb-3">
                                                      <label class="form-label">Transport
                                                          Type</label>
-                                                     <input type="text" class="form-control"
-                                                         id="edit_transporttype">
+                                                     <input type="text" class="form-control" id="edit_transporttype">
                                                  </div>
 
                                                  <!-- Email Address -->
@@ -213,6 +212,12 @@
                                                          <th scope="col" style="">
                                                              Purpose</th>
                                                          <th scope="col">Value</th>
+
+
+                                                         <th scope="col">Permit Status</th>
+
+
+
                                                          <th scope="col">Action</th>
 
                                                      </tr>

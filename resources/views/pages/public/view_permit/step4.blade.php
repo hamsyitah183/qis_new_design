@@ -23,16 +23,17 @@
 
             <div class="text-center p-4">
 
+                {{-- @dd($status) --}}
 
                 {{-- Category 0 - Pending --}}
-                @if ($application->category_application == 0 && str_contains($status, 'pending'))
+                @if ($application->category_application == 0 && str_contains($status, 'clerk review in-progress'))
                     {!! $statusIcon !!}
                     <h3 class="mt-2">Pending</h3>
                     @if (authUser()['type'] == 'public')
-                        <p>This permit application is currently pending verification by admin.</p>
+                        <p>This permit application is currently pending verification by Clerk.</p>
                     @else
-                        <p>Waiting for admin approval.</p>
-                        @if (authUser() && authUser()['user']->hasRole('admin'))
+                        <p>Waiting for approval.</p>
+                        @if (authUser() && (authUser()['user']->hasRole('clerk') || authUser()['user']->hasRole('admin')) )
                             <div class="d-flex justify-content-center gap-3 mt-3">
                                 <button id="acceptAppl" class="btn btn-sm btn-success">Accept Application</button>
                                 <button id="rejectAdminAppl" class="btn btn-sm btn-danger">Reject Application</button>

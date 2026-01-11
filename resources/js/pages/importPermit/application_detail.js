@@ -47,6 +47,7 @@ async function attachmentTable() {
     tableBody.empty();
 
     const permits = application.consignment_permits;
+    const applicationStatus = application.status;
 
     if (!permits || permits.length === 0) {
         tableBody.append(`
@@ -63,16 +64,41 @@ async function attachmentTable() {
         let detail = permit.consignment_detail || {};
         let attachmentCount = permit.attachments?.length || 0;
 
+        console.log("user role?", window.authUser);
+
+        let roles = window.authUser.roles.map((role) => role.name);
+        console.log("is it", roles);
+
         let permitAction = "";
-        if (permit.status === "processing") {
-            permitAction = `
+        if (applicationStatus === "Clerk Verified") {
+            if (
+                permit.status === "processing" &&
+                (roles.includes("admin") || roles.includes("officer"))
+            ) {
+                permitAction = `
                 <div class="btn btn-sm btn-primary-light btn-wave accept" data-permit="${permit.id}">
                     Approved
                 </div>
                 <div class="btn btn-sm btn-danger-light btn-wave reject" data-permit="${permit.id}">
                     Rejected
                 </div>`;
+            }
         }
+
+        let permitStatus = "";
+
+        let statuses = permit.status;
+        let text = "";
+
+        if (statuses.includes("completed")) {
+            text = '<span class="badge bg-success fs-11 p-1">Completed</span>';
+        } else if (statuses.includes("processing")) {
+            text = '<span class="badge bg-info fs-11 p-1">Processing</span>';
+        } else if (statuses.includes("rejected")) {
+            text = '<span class="badge bg-danger fs-11 p-1">Rejected</span>';
+        }
+
+        permitStatus = `<td>${text}</td>`;
 
         tableBody.append(`
             <tr>
@@ -80,6 +106,7 @@ async function attachmentTable() {
                 <td>${detail.quantity ?? "—"} ${detail.measure ?? ""}</td>
                 <td class="text-wrap">${detail.purpose ?? "—"}</td>
                 <td>RM ${detail.value ?? "—"}</td>
+                ${permitStatus}
                 <td>
                     <div class="d-flex gap-2 align-items-center">
                         <div class="btn btn-sm btn-success-light btn-wave view-attachment" data-permit="${
@@ -541,6 +568,7 @@ function acceptApplication() {
                             // timerProgressBar: true,
                             position: "center",
                         });
+                        initApplicationDetails();
                     },
                     error: function (err) {
                         Swal.fire({

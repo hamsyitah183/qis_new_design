@@ -1,0 +1,7 @@
+#,Your Description,Recommended Status Label,UI Color (Badge)
+1,Pending for clerk approval,   Clerk Review In-Progress    ,Yellow / Warning
+2,Clerk approve,    Clerk Verified  ,Light Blue / Info
+3,Clerk rejected,   Clerk Rejected  , Red / Danger
+4,Pending for officer permits approval, Awaiting Final Approval ,Orange / Secondary
+5,Officer approve permits,  Approved / Permit Issued    ,Green / Success
+6,Officer reject permits,   Final Rejection ,Dark Red / Danger

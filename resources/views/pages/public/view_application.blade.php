@@ -32,7 +32,8 @@
 
                     <div class="ms-auto">
                         @if ($application->status == 'Draft' && $application->user_id == authUser()['user']->uuid)
-                            <a class="btn btn-primary2 btn-wave btn-sm me-2" id="editButton" href="/edit_application/{{ $application->application_id }}">
+                            <a class="btn btn-primary2 btn-wave btn-sm me-2" id="editButton"
+                                href="/edit_application/{{ $application->application_id }}">
                                 Edit
                             </a>
                         @endif
@@ -77,8 +78,21 @@
                             @include('pages.public.view_permit.step2')
                             <!-- step3 -->
                             @include('pages.public.view_permit.step3')
-                            <!-- step4 -->
-                            @include('pages.public.view_permit.step4')
+
+                            @if ($application->status == 'Clerk Review In-Progress' && auth()->guard('internal')->check() &&
+                                    auth()->guard('internal')->user()->hasAnyRole(['admin', 'clerk']))
+                                <!-- step4 -->
+                                @include('pages.public.view_permit.step4')
+                            @endif
+
+
+
+
+
+
+
+
+
                         </aside>
 
                     </form>

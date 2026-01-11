@@ -6,6 +6,7 @@ use App\Events\ApplicationDeleted;
 use App\Events\PublicUserEvent;
 use App\Http\Controllers\Controller;
 use App\Models\InternalUser;
+use App\Models\IpApplication;
 use App\Models\IpCondition;
 use App\Models\IpConsignmentPermit;
 use App\Models\IpEntryPoint;
@@ -38,7 +39,7 @@ class MiscController extends Controller
                     return $district;
                 });
 
-                // dd('district', $pbdata);
+            // dd('district', $pbdata);
         } else {
 
             $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')
@@ -212,6 +213,14 @@ class MiscController extends Controller
         $status = '';
 
         $permit = IpConsignmentPermit::findOrFail($id);
+
+
+
+
+        $application = $permit->application;
+
+
+
         if ($accepted == 1) {
             $permit->status = 'completed';
             $status = 'Approved';
@@ -221,26 +230,47 @@ class MiscController extends Controller
         }
         $permit->save();
 
-        // Events & notifications
-        event(new ApplicationDeleted('Permit in ' . $permit->application->uuid . ' is ' . $status));
+        $allStatuses = IpConsignmentPermit::where('application_id', $permit->application->id)
+            ->pluck('status'); // gets a collection of all statuses
 
-        $users = InternalUser::all();
+        // Events & notifications
+        event(new ApplicationDeleted('Permit in ' . $permit->application->application_id . ' is ' . $status));
+
+        $users = InternalUser::role(['admin', 'officer'])->get();
         Notification::send($users, new ApplicationNotification(
-            'A permit with application ID ' . $permit->application->uuid . ' has been ' . $status,
+            'A permit with application ID ' . $permit->application->application_id . ' has been ' . $status,
             authUser()['user']->fullname
         ));
 
         $user = PublicUser::where('uuid', $permit->application->user_id)->first();
 
         event(new PublicUserEvent(
-            'A permit with application ID ' . $permit->application->uuid . ' has been ' . $status,
+            'A permit in application with ID ' . $permit->application->application_id . ' has been ' . $status,
             $user->uuid
         ));
 
         Notification::send($user, new ApplicationNotification(
-            'A permit with application ID ' . $permit->application->uuid . ' has been ' . $status,
+            'A permit in application with ID ' . $permit->application->application_id . ' has been ' . $status,
             authUser()['user']->fullname
         ));
+
+
+
+        // Check if no status is 'processing'
+        if (!$allStatuses->contains('processing')) {
+            // dd($allStatuses);
+            $application->logActivity(
+                action: 'Fully Processed',
+                remark: 'Fully Processed',
+                status: 'Fully Processed'
+            );
+
+            // dd($application);
+
+            $application->status = 'Fully Processed';
+            $application->save();
+        }
+
 
         return response()->json([
             'status' => 'success',

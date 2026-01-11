@@ -6,6 +6,7 @@ use App\Events\ApplicationCreatedInternalUser;
 use App\Events\ApplicationCreatedPublicUser;
 use App\Events\InternalUserAdminEvent;
 use App\Events\InternalUserClerkEvent;
+use App\Events\PublicUserEvent;
 use App\Http\Controllers\Controller;
 use App\Models\country;
 use App\Models\ImportPermitLog;
@@ -212,7 +213,7 @@ class PermitApplicationController extends Controller
             $importer_verify = null;
             if (!$isDraft && isset($permit['applCate'])) {
                 $importer_verify = $permit['applCate'] == 0
-                    ? 'pending'
+                    ? 'Clerk Review In-Progress'
                     : 'wait for company approval';
             }
 
@@ -232,7 +233,7 @@ class PermitApplicationController extends Controller
                     'exporter_id'          => $exporter['id'] ?? null,
                     'importer_id'          => $importer['uuid'] ?? null,
                     'importer_detail'      => $importer,
-                    'status'               => $isDraft ? 'Draft' : 'Pending',
+                    'status'               => $isDraft ? 'Draft' : 'Clerk Review In-Progress',
                     'importer_verify'      => $importer_verify,
                 ]);
 
@@ -248,11 +249,18 @@ class PermitApplicationController extends Controller
                 ));
 
 
-                event(new ApplicationCreatedPublicUser(
+                // event(new ApplicationCreatedPublicUser(
+                //     $isDraft
+                //         ? 'Import permit application saved as DRAFT by ' . ($importer['fullname'] ?? 'Unknown Importer')
+                //         : 'Import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer'),
+                //     Auth::user()->uuid
+                // ));
+
+                event(new PublicUserEvent(
                     $isDraft
-                        ? 'Import permit application saved as DRAFT by ' . ($importer['fullname'] ?? 'Unknown Importer')
-                        : 'Import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer'),
-                    Auth::user()->uuid
+                        ? 'Your Application with id ' . $application->uuid . ' is saved as draft'
+                        : 'Your Application with id ' . $application->uuid . ' is submitted',
+                    $application->user_id
                 ));
             } else {
                 // Create new application
@@ -267,7 +275,7 @@ class PermitApplicationController extends Controller
                     'exporter_id'          => $exporter['id'] ?? null,
                     'importer_id'          => $importer['uuid'] ?? null,
                     'importer_detail'      => $importer,
-                    'status'               => $isDraft ? 'Draft' : 'Pending',
+                    'status'               => $isDraft ? 'Draft' : 'Clerk Review In-Progress',
                     'importer_verify'      => $importer_verify,
                 ]);
 
@@ -285,6 +293,12 @@ class PermitApplicationController extends Controller
                     $isDraft
                         ? 'New import permit application DRAFT created by ' . ($importer['fullname'] ?? 'Unknown Importer')
                         : 'New import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')
+                ));
+                event(new PublicUserEvent(
+                    $isDraft
+                        ? 'Your Application with id ' . $application->uuid . ' is saved as draft'
+                        : 'Your Application with id ' . $application->uuid . ' is submitted',
+                    $application->user_id
                 ));
             }
 
@@ -377,7 +391,7 @@ class PermitApplicationController extends Controller
             } else {
                 $application->logActivity('Submitted', 'Application submitted', 'Submitted');
                 $permit['applCate'] == 0
-                    ? $application->logActivity('Pending', 'Application pending', 'Pending')
+                    ? $application->logActivity('Clerk Review In-Progress', 'Application pending', 'Clerk Review In-Progress')
                     : $application->logActivity('Awaiting Approval', 'Company approval required', 'Awaiting Company Approval');
             }
 

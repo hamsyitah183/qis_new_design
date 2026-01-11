@@ -415,9 +415,9 @@ class ApplicationController extends Controller
             );
 
             $application->logActivity(
-                action: 'Pending',
-                remark: 'Application Pending',
-                status: 'Pending'
+                action: 'Clerk Review In-Progress',
+                remark: 'Pending for clerk approval',
+                status: 'Clerk Review In-Progress'
             );
 
             $application->status = 'Pending';
@@ -425,7 +425,10 @@ class ApplicationController extends Controller
 
             $status = 'Pending';
             $message = 'Application is verified and pending admin approval';
-        } else if ($request->input('not_verified')) {
+
+        } 
+        
+        else if ($request->input('not_verified')) {
 
             $application->logActivity(
                 action: 'Not Approved',
@@ -438,35 +441,47 @@ class ApplicationController extends Controller
 
             $status = 'Not Approved';
             $message = 'Application is not verified by importer';
-        } else if ($request->accepted) {
+
+        } 
+        
+        else if ($request->accepted) {
             $application->logActivity(
-                action: 'Accepted',
-                remark: 'Application Accepted By Admin',
-                status: 'Approved'
+                action: 'Clerk Verified',
+                remark: 'Application Verified by Clerk',
+                status: 'Clerk Verified'
             );
 
-            $application->status = 'Accepted';
+            // $application->status = 'Clerk Verified';
             $application->importer_verify = "Accepted";
 
-            $status = 'Accepted';
-            $message = 'Application is accepted';
-        } else if ($request->rejected) {
+
+
+            $application->status = 'Clerk Verified';
+
+            $status = 'Clerk Verified';
+            $message = 'Clerk Verified';
+
+        } 
+        
+        else if ($request->rejected) {
             $application->logActivity(
-                action: 'Rejected',
+                action: 'Clerk Rejected',
                 remark: $request['reason'],
-                status: 'Rejected'
+                status: 'Clerk Rejected'
             );
 
-            $application->status = 'Rejected';
-            $status = 'Rejected';
-            $message = 'Application is rejected';
+            $application->status = 'Clerk Rejected';
+            $status = 'Clerk Rejected';
+            $message = 'Application is rejected by Clerk';
         }
+
+
         $application->save();
 
 
         $notificationUrl = route('viewApplication', $application->application_id);
 
-        event(new ApplicationCreatedInternalUser('Application with ID ' . $id . ' has been ' . $status . '.'));
+        event(new ApplicationCreatedInternalUser('Application with ID ' . $id . ' status now ' . $status . '.'));
         $users = InternalUser::all(); // or filter by role/guard
         Notification::send($users, new ApplicationNotification(
             'Import Application with ID ' . $id . ' has been ' . $status . '.',
@@ -479,8 +494,12 @@ class ApplicationController extends Controller
             'Your Application with ID ' . $id . ' has been ' . $status . '.',
             $user->uuid
         ));
+        event(new PublicUserEvent(
+            'Your Application with ID ' . $id . ' has been verified by Clerk.',
+            $application->user_id
+        ));
         Notification::send($user, new ApplicationNotification(
-            'Import Application with ID ' . $id . ' has been ' . $status . '.',
+            'Import Application with ID ' . $id . ' has been verified by Clerk.',
             authUser()['user']->fullname,
             $notificationUrl
         ));

@@ -100,9 +100,9 @@
             <div id="editToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
                 <div class="toast-header">
                     <img class="bd-placeholder-img rounded me-2"
-                        src="https://laravelui.spruko.com/xintra/build/assets/images/brand-logos/toggle-logo.png"
+                        src="/asset/image.png"
                         alt="logo" width="20">
-                    <strong class="me-auto">System Notification</strong>
+                    <strong class="me-auto">QIS</strong>
                     <small id="toastTime">just now</small>
                     <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
                 </div>
