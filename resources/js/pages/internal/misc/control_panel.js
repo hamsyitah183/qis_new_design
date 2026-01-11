@@ -80,8 +80,18 @@ $(document).ready(function () {
                         }
                         const countTd =
                             cate === "district_entry"
-                                ? `<td>${item.places.length}</td>`
+                                ? `
+                            <td>
+                                <button class="btn btn-sm btn-outline-info open-entry-modal"
+                                    data-id="${item.id}"
+                                    data-places='${JSON.stringify(
+                                        item.places ?? []
+                                    )}'>
+                                    ${item.places.length} Places
+                                </button>
+                            </td>`
                                 : "";
+
                         let row = `
                         <tr>
                             <td>${item.description ?? "-"}  </td>
@@ -125,9 +135,109 @@ $(document).ready(function () {
                 });
             },
         });
-
-
     }
+
+    function openEntryPointModal() {
+        $(document).on("click", ".open-entry-modal", function () {
+            const districtId = $(this).data("id");
+            const places = $(this).data("places");
+
+            $("#districtId").val(districtId);
+            $("#placeList").empty();
+
+            if (places.length) {
+                places.forEach((p) => {
+                    // console.log('the item', p)
+                    appendPlaceRow(p.entry_name ?? p, p.transport_type);
+                });
+            } else {
+                appendPlaceRow("");
+            }
+
+            $("#entryPointModal").modal("show");
+        });
+    }
+
+    openEntryPointModal();
+
+    function appendPlaceRow(value = "", transportType = "") {
+        const transportOptions = ["Air", "Land", "Sea"];
+        let optionsHtml = transportOptions
+            .map(
+                (type) =>
+                    `<option value="${type.toLowerCase()}" ${
+                        transportType.toLowerCase() === type.toLowerCase()
+                            ? "selected"
+                            : ""
+                    }>${type}</option>`
+            )
+            .join("");
+
+        $("#placeList").append(`
+        <div class="d-flex gap-2 place-row mb-2">
+            <input type="text"
+                   name="places[]"
+                   class="form-control"
+                   placeholder="Enter place name"
+                   value="${value}">
+            <select name="transport_types[]" class="form-select w-auto">
+                ${optionsHtml}
+            </select>
+            <button type="button"
+                    class="btn btn-outline-danger remove-place">
+                ✕
+            </button>
+        </div>
+    `);
+    }
+
+    $(document).on("click", "#addPlaceBtn", function () {
+        appendPlaceRow();
+    });
+
+    $(document).on("click", ".remove-place", function () {
+        $(this).closest(".place-row").remove();
+    });
+
+    $(document).on("click", "#submitEntryPoint", function (e) {
+        e.preventDefault();
+
+        // 1️⃣ Show loading Swal
+        Swal.fire({
+            title: "Saving...",
+            text: "Please wait",
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            },
+        });
+
+        $.ajax({
+            url: "/internal/district/entry-point/update",
+            type: "POST",
+            data: $("#entryPointForm").serialize(),
+            success: function () {
+                // Close loading Swal first
+                Swal.close();
+
+                // Then show success
+                Swal.fire("Saved!", "Entry points updated.", "success");
+
+                $("#entryPointModal").modal("hide");
+                loadPBData("district_entry");
+            },
+            error: function (xhr) {
+                // Close loading Swal first
+                Swal.close();
+
+                Swal.fire(
+                    "Error",
+                    xhr.responseJSON?.message ?? "Failed to save entry points.",
+                    "error"
+                );
+            },
+        });
+    });
 
     function entryPlaces(district) {
         console.log(district);

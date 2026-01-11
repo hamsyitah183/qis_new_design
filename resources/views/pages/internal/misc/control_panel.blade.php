@@ -195,6 +195,36 @@
         </form>
     </x-modal>
 
+    <x-modal id="entryPointModal" title="Entry Point" size="modal-md">
+        <form id="entryPointForm">
+            @csrf
+
+            <input type="hidden" id="districtId" name="district_id">
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Entry Points</label>
+
+                <div id="placeList" class="vstack gap-2">
+                    <!-- dynamic rows -->
+                </div>
+
+                <button type="button" class="btn btn-sm btn-outline-primary mt-3" id="addPlaceBtn">
+                    + Add Place
+                </button>
+            </div>
+
+            @slot('footer')
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+                <button type="button" id = "submitEntryPoint" class="btn btn-primary">
+                    Save
+                </button>
+            @endslot
+        </form>
+    </x-modal>
+
+
 @endsection
 
 @push('scripts')

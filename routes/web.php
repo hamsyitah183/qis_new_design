@@ -152,6 +152,8 @@ Route::prefix('internal')
 
         // Route::get('/application/exporter/get', [ApplicationController::class, 'get_exporter'])->name('application.exporter.get');
 
+        
+
 
         //MISC
 
@@ -175,6 +177,7 @@ Route::prefix('internal')
         Route::post('/save_condition', [MiscController::class, 'saveCondition'])->name('saveCondition');
         // Route::get('/permit_edit_condition/{id}', [MiscController::class, 'editCondition']);
         // Route::get('/control_panel', [MiscController::class, 'showcontrolpanel'])->name('controlpanel');
+        Route::post('/district/entry-point/update', [MiscController::class, 'updateEntry']);
 
         // ======================= notifications ===========================
         Route::post('/permit/{id}', [MiscController::class, 'accept_permit']);

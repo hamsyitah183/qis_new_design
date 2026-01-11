@@ -14,6 +14,7 @@ use App\Models\PublicCode;
 use App\Models\PublicUser;
 use App\Notifications\ApplicationNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
 class MiscController extends Controller
@@ -275,6 +276,57 @@ class MiscController extends Controller
         return response()->json([
             'status' => 'success',
             'message'   => 'Permit condition updated successfully.'
+        ]);
+    }
+    public function updateEntry(Request $request)
+    {
+        $districtId = $request->input('district_id');
+        $places = $request->input('places', []);
+        $transportTypes = $request->input('transport_types', []);
+
+        if (!$districtId) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'District ID is required.'
+            ], 422);
+        }
+
+        DB::transaction(function () use ($districtId, $places, $transportTypes) {
+            // 1️⃣ Soft delete all existing entry points for this district
+            IpEntryPoint::where('district', $districtId)->update(['is_del' => true]);
+
+            // 2️⃣ Insert/update the new list of places with transport type
+            foreach ($places as $index => $place) {
+                $place = trim($place);
+                $type = $transportTypes[$index] ?? 'land'; // default to land if empty
+
+                if (empty($place)) continue;
+
+                // Check if the place already exists (soft-deleted)
+                $entry = IpEntryPoint::where('district', $districtId)
+                    ->where('entry_name', $place)
+                    ->first();
+
+                if ($entry) {
+                    // Restore if it was soft-deleted and update transport type
+                    $entry->is_del = false;
+                    $entry->transport_type = $type;
+                    $entry->save();
+                } else {
+                    // Create new entry
+                    IpEntryPoint::create([
+                        'district' => $districtId,
+                        'entry_name' => $place,
+                        'transport_type' => $type,
+                        'is_del' => false,
+                    ]);
+                }
+            }
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Entry points updated successfully.'
         ]);
     }
 }
