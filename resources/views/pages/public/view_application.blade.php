@@ -7,6 +7,8 @@
 @endpush
 
 
+
+
 @section('breadcrumb')
     <x-breadcrumb :items="[
         ['label' => 'Dashboard', 'url' => '/'],
@@ -19,6 +21,11 @@
 
 @section('content')
 
+    @php
+        $authUuid = authUser()['user']->uuid ?? null;
+        $status = strtolower($application->status ?? '');
+        $importerVerify = strtolower($application->importer_verify ?? '');
+    @endphp
 
     <!-- terssttt  -->
     <div class="row">
@@ -79,12 +86,27 @@
                             <!-- step3 -->
                             @include('pages.public.view_permit.step3')
 
-                            @if ($application->status == 'Clerk Review In-Progress' && auth()->guard('internal')->check() &&
-                                    auth()->guard('internal')->user()->hasAnyRole(['admin', 'clerk']))
-                                <!-- step4 -->
+                            @php
+                                $isInternal = auth()->guard('internal')->check();
+                                $isAdminOrClerk =
+                                    $isInternal &&
+                                    auth()
+                                        ->guard('internal')
+                                        ->user()
+                                        ->hasAnyRole(['admin', 'clerk']);
+
+                                $isPublic = auth()->guard('public')->check();
+                                $isOwner =
+                                    $isPublic && $application->importer->uuid === auth()->guard('public')->user()->uuid;
+                             
+                            @endphp
+
+                            @if (
+                                ($application->status === 'Clerk Review In-Progress' && $isAdminOrClerk) ||
+                                    ($application->category_application == 1 && ($isOwner || $isAdminOrClerk)))
+                                {{-- Step 4 --}}
                                 @include('pages.public.view_permit.step4')
                             @endif
-
 
 
 

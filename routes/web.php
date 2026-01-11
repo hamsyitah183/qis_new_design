@@ -7,6 +7,7 @@ use App\Http\Controllers\internal\MiscController;
 use App\Http\Controllers\public\importPermit\PermitApplicationController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\PermitGenerateController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\RoleAndPermissionController;
 use App\Http\Controllers\TempFileController;
@@ -148,7 +149,7 @@ Route::prefix('internal')
         // ======================= application ========================
         Route::get('/view_all_application', [ApplicationController::class, 'showallapplicationlist'])->name('application.list');
         Route::delete('/application/delete/{id}', [ApplicationController::class, 'deleteApplication'])->name('application.delete');
-       
+
         // Route::get('/application/exporter/get', [ApplicationController::class, 'get_exporter'])->name('application.exporter.get');
 
 
@@ -177,9 +178,6 @@ Route::prefix('internal')
 
         // ======================= notifications ===========================
         Route::post('/permit/{id}', [MiscController::class, 'accept_permit']);
-
-    
-
     });
 
 Route::middleware(['auth.any'])
@@ -235,7 +233,10 @@ Route::middleware(['auth.any'])
             return response()->json(['status' => 'success']);
         })->name('notifications.mark-read');
         Route::get('/notifications', [DashboardController::class, 'notifications_page'])->name('notifications.page');
-         Route::get('/application/exporter', [ApplicationController::class, 'show_exporter'])->name('application.exporter');
+        Route::get('/application/exporter', [ApplicationController::class, 'show_exporter'])->name('application.exporter');
+
+
+        Route::get('/permit/generate', [PermitGenerateController::class, 'generatePermitWord']);
     });
 
 // broadcast --dont kacau---

@@ -80,6 +80,12 @@ class ApplicationController extends Controller
                     '<span class="badge bg-danger fs-12 p-1">Not Approved</span>',
                     str_contains($status, 'accepted') =>
                     '<span class="badge bg-success fs-12 p-1">Accepted</span>',
+
+
+                    str_contains($status, 'fully processed') =>
+                    '<span class="badge bg-success fs-12 p-1">Fully Processed</span>',
+                    str_contains($status, 'clerk verified') =>
+                    '<span class="badge bg-info fs-12 p-1">Clerk Verified</span>',
                     default =>
                     '<span class="badge bg-secondary fs-12 p-1">' . ucfirst($status) . '</span>',
                 };

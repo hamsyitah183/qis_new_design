@@ -391,7 +391,7 @@ class PermitApplicationController extends Controller
             } else {
                 $application->logActivity('Submitted', 'Application submitted', 'Submitted');
                 $permit['applCate'] == 0
-                    ? $application->logActivity('Clerk Review In-Progress', 'Application pending', 'Clerk Review In-Progress')
+                    ? $application->logActivity('Clerk Review In-Progress', 'Pending for clerk approval', 'Clerk Review In-Progress')
                     : $application->logActivity('Awaiting Approval', 'Company approval required', 'Awaiting Company Approval');
             }
 
