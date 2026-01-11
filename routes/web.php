@@ -236,7 +236,9 @@ Route::middleware(['auth.any'])
         Route::get('/application/exporter', [ApplicationController::class, 'show_exporter'])->name('application.exporter');
 
 
-        Route::get('/permit/generate', [PermitGenerateController::class, 'generatePermitWord']);
+        Route::get('/permit/generate/{id}', [PermitGenerateController::class, 'generatePermitWord']);
+
+        
     });
 
 // broadcast --dont kacau---

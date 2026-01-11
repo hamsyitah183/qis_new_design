@@ -30,9 +30,9 @@ class PermitGenerateController extends Controller
     //     exit;
     // }
 
-    public function generatePermitWord()
+    public function generatePermitWord($id)
     {
-        $permits = IpConsignmentPermit::where('id', 3)->first();
+        $permits = IpConsignmentPermit::where('id', $id)->first();
         $detail = $permits->consignment_detail;
         $application = $permits->application;
         $importer = $application->importer_detail;

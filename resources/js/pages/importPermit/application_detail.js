@@ -85,6 +85,16 @@ async function attachmentTable() {
             }
         }
 
+        if (applicationStatus === "Fully Processed") {
+            if (permit.status === "completed") {
+                permitAction = `
+                <div class="btn btn-sm btn btn-teal-light btn-wave generatePermit" data-permit="${permit.id}">
+                    Download Permit
+                </div>
+               `;
+            }
+        }
+
         let permitStatus = "";
 
         let statuses = permit.status;
@@ -239,6 +249,19 @@ function rejectPermit() {
                     });
                 }
             });
+        });
+}
+
+function generatePermit() {
+    $(document)
+        .off("click", ".generatePermit")
+        .on("click", ".generatePermit", function (e) {
+            e.preventDefault();
+
+            const id = $(this).data("permit");
+
+            // ✅ Trigger browser download
+            window.location.href = `/permit/generate/${id}`;
         });
 }
 
@@ -648,6 +671,7 @@ async function initApplicationDetails() {
 
     acceptPermit();
     rejectPermit();
+    generatePermit();
 
     Swal.close(); // Close after data is loaded
 }
