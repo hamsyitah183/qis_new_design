@@ -19,6 +19,33 @@ Broadcast::channel('internal-users', function ($user) {
     return true;
 }, ['guards' => ['internal']]);
 
+Broadcast::channel('internal-admins', function ($user) {
+    // Ensure internal guard
+    if (Auth::guard('internal')->check() && $user->hasRole('admin')) {
+        return true;
+    }
+
+    return false;
+}, ['guards' => ['internal']]);
+
+Broadcast::channel('internal-clerks', function ($user) {
+    // Ensure internal guard
+    if (Auth::guard('internal')->check() && $user->hasRole('clerk')) {
+        return true;
+    }
+
+    return false;
+}, ['guards' => ['internal']]);
+
+Broadcast::channel('internal-officer', function ($user) {
+    // Ensure internal guard
+    if (Auth::guard('internal')->check() && $user->hasRole('officer')) {
+        return true;
+    }
+
+    return false;
+}, ['guards' => ['internal']]);
+
 Broadcast::channel('internal-user-edited.{internalUserId}', function ($user, $internalUserId) {
     \Illuminate\Support\Facades\Log::info('Broadcast auth', [
         'guard' => Auth::getDefaultDriver(),

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\public\importPermit;
 
 use App\Events\ApplicationCreatedInternalUser;
 use App\Events\ApplicationCreatedPublicUser;
+use App\Events\InternalUserAdminEvent;
+use App\Events\InternalUserClerkEvent;
 use App\Http\Controllers\Controller;
 use App\Models\country;
 use App\Models\ImportPermitLog;
@@ -234,11 +236,18 @@ class PermitApplicationController extends Controller
                     'importer_verify'      => $importer_verify,
                 ]);
 
-                event(new ApplicationCreatedInternalUser(
+                event(new InternalUserAdminEvent(
                     $isDraft
                         ? 'Import permit application saved as DRAFT by ' . ($importer['fullname'] ?? 'Unknown Importer')
                         : 'Import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')
                 ));
+                event(new InternalUserClerkEvent(
+                    $isDraft
+                        ? 'Import permit application saved as DRAFT by ' . ($importer['fullname'] ?? 'Unknown Importer')
+                        : 'Import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')
+                ));
+
+
                 event(new ApplicationCreatedPublicUser(
                     $isDraft
                         ? 'Import permit application saved as DRAFT by ' . ($importer['fullname'] ?? 'Unknown Importer')
@@ -262,7 +271,17 @@ class PermitApplicationController extends Controller
                     'importer_verify'      => $importer_verify,
                 ]);
 
-                event(new ApplicationCreatedInternalUser(
+                // event(new ApplicationCreatedInternalUser(
+                //     $isDraft
+                //         ? 'New import permit application DRAFT created by ' . ($importer['fullname'] ?? 'Unknown Importer')
+                //         : 'New import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')
+                // ));
+                event(new InternalUserAdminEvent(
+                    $isDraft
+                        ? 'New import permit application DRAFT created by ' . ($importer['fullname'] ?? 'Unknown Importer')
+                        : 'New import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')
+                ));
+                event(new InternalUserClerkEvent(
                     $isDraft
                         ? 'New import permit application DRAFT created by ' . ($importer['fullname'] ?? 'Unknown Importer')
                         : 'New import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')
@@ -367,7 +386,7 @@ class PermitApplicationController extends Controller
             // -----------------------------
             // Send Notifications
             // -----------------------------
-            $users = InternalUser::all(); // Adjust roles/guards if needed
+            $users = InternalUser::role(['admin', 'clerk'])->get();
             $notificationUrl = route('viewApplication', $application->application_id);
             Notification::send($users, new ApplicationNotification(
                 $isDraft

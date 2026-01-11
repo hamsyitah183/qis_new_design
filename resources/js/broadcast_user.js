@@ -28,6 +28,33 @@ export function internalUserEcho() {
             }
         );
 
+        window.Echo.private("internal-admins").listen(
+            ".InternalAdmins",
+            (e) => {
+                console.log("Admin User:", e.message);
+
+                notifyUser(e.message, e.editor);
+            }
+        );
+
+        window.Echo.private("internal-clerks").listen(
+            ".InternalClerks",
+            (e) => {
+                console.log("Admin User:", e.message);
+
+                notifyUser(e.message, e.editor);
+            }
+        );
+
+        window.Echo.private("internal-officers").listen(
+            ".InternalOfficers",
+            (e) => {
+                console.log("Admin User:", e.message);
+
+                notifyUser(e.message, e.editor);
+            }
+        );
+
         window.Echo.private("internal-users").listen(
             ".PublicUserUpdated",
             (e) => {
