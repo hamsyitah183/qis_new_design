@@ -592,6 +592,7 @@ function acceptApplication() {
                             position: "center",
                         });
                         initApplicationDetails();
+                        window.location.reload();
                     },
                     error: function (err) {
                         Swal.fire({

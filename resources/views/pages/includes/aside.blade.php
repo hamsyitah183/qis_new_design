@@ -79,6 +79,15 @@
                             <span class="side-menu__label">Apply New</span>
                         </a>
                     </li>
+                    {{-- <li class="slide">
+                        <a href="/application/exporter" class="side-menu__item">Exporter</a>
+                    </li> --}}
+                    <li class="slide {{ $currentRoute === '/application/exporter' ? 'active open' : '' }}">
+                        <a href="/application/exporter" class="side-menu__item">
+                            <i class="bi bi-box side-menu__icon"></i>
+                            <span class="side-menu__label">Exporter</span>
+                        </a>
+                    </li>
 
                     <!-- Application List -->
                     <li class="slide has-sub {{ $isPublicAppActive ? 'open active' : '' }}">
@@ -93,9 +102,7 @@
                         </a>
 
                         <ul class="slide-menu child1">
-                            <li class="slide">
-                                <a href="/application/exporter" class="side-menu__item">Exporter</a>
-                            </li>
+
                             <li class="slide">
                                 <a href="{{ route('public.verifyapplication') }}" class="side-menu__item">To Review</a>
                             </li>
@@ -200,25 +207,26 @@
                             <i class="ri-arrow-down-s-line side-menu__angle"></i>
                             <i class="ti ti-user side-menu__icon"></i>
                             <span class="side-menu__label" style="line-height: 1.3rem">
-                                <span>System  <br> Configuration</span>
+                                <span>System <br> Configuration</span>
                             </span>
                         </a>
                         <ul class="slide-menu child1">
                             <li class="slide side-menu__label1"><a href="javascript:void(0)">Misc</a></li>
 
                             <li class="slide {{ $currentRoute === 'internal.controlpanel' ? 'active' : '' }}">
-                                <a href="{{ url('/internal/control_panel') }}" class="side-menu__item">Control Panel</a>
+                                <a href="{{ url('/internal/control_panel') }}" class="side-menu__item">Control
+                                    Panel</a>
                             </li>
 
                             <li class="slide {{ $currentRoute === 'internal.internal.list' ? 'active' : '' }}">
-                                <a href="{{ url('/internal/permit_condition') }}" class="side-menu__item">Permit Condition</a>
+                                <a href="{{ url('/internal/permit_condition') }}" class="side-menu__item">Permit
+                                    Condition</a>
                             </li>
 
                             <li style="display:none"
                                 class="slide {{ $currentRoute === 'internal.internal.activity_log' ? 'active' : '' }} ">
-                                <a href="{{ route('internal.internal.activity_log') }}"
-                                class="side-menu__item">
-                                Activity Log</a>
+                                <a href="{{ route('internal.internal.activity_log') }}" class="side-menu__item">
+                                    Activity Log</a>
                             </li>
                         </ul>
                     </li>

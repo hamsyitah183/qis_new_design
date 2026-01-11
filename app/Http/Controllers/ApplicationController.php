@@ -406,122 +406,162 @@ class ApplicationController extends Controller
         ], 400);
     }
 
-    function verify_application_permit($id, Request $request)
+    public function verify_application_permit($id, Request $request)
     {
+        $application = IpApplication::where('application_id', $id)->firstOrFail();
 
-        $application = IpApplication::where('application_id', $id)->first();
-        $notificationUrl = '';
-        $message = '';
-        $status = '';
+        // Centralized messages per status
+        $statusMessages = [
+            'Clerk Review In-Progress' => [
+                'public'   => 'Your application has been verified by the importer and is now pending clerk review.',
+                'internal' => 'Application verified by importer and awaiting clerk review.',
+                'notify'   => 'Import application is now awaiting clerk review.',
+            ],
+            'Not Approved' => [
+                'public'   => 'Your application was not approved by the importer.',
+                'internal' => 'Application was not approved by the importer.',
+                'notify'   => 'Import application was not approved by the importer.',
+            ],
+            'Clerk Verified' => [
+                'public'   => 'Your application has been approved by the clerk.',
+                'internal' => 'Application approved by clerk.',
+                'notify'   => 'Import application has been approved by clerk.',
+            ],
+            'Clerk Rejected' => [
+                'public'   => 'Your application has been rejected by the clerk.',
+                'internal' => 'Application rejected by clerk.',
+                'notify'   => 'Import application has been rejected by clerk.',
+            ],
+        ];
 
+        $status = null;
+
+        /**
+         * =====================
+         * STATUS HANDLING
+         * =====================
+         */
         if ($request->input('verified')) {
 
-
-
             $application->logActivity(
-                action: 'Approved',
-                remark: 'Application Approved By The Importer',
-                status: 'Approved'
-            );
-
-            $application->logActivity(
-                action: 'Clerk Review In-Progress',
-                remark: 'Pending for clerk approval',
+                action: 'Importer Verified',
+                remark: 'Application verified by importer',
                 status: 'Clerk Review In-Progress'
             );
 
-            $application->status = 'Pending';
-            $application->importer_verify = "Pending";
-
-            $status = 'Pending';
-            $message = 'Application is verified and pending admin approval';
-        } else if ($request->input('not_verified')) {
+            $application->status = 'Clerk Review In-Progress';
+            $application->importer_verify = 'Verified';
+            $status = 'Clerk Review In-Progress';
+        } elseif ($request->input('not_verified')) {
 
             $application->logActivity(
-                action: 'Not Approved',
-                remark: 'Not Application Not Approved By The Importer',
+                action: 'Importer Rejected',
+                remark: 'Application rejected by importer',
                 status: 'Not Approved'
             );
 
             $application->status = 'Not Approved';
-            $application->importer_verify = "Not Approved";
-
+            $application->importer_verify = 'Not Approved';
             $status = 'Not Approved';
-            $message = 'Application is not verified by importer';
-        } else if ($request->accepted) {
+        } elseif ($request->accepted) {
+
             $application->logActivity(
-                action: 'Clerk Verified',
-                remark: 'Application Verified by Clerk',
+                action: 'Clerk Approved',
+                remark: 'Application approved by clerk',
                 status: 'Clerk Verified'
             );
 
-            // $application->status = 'Clerk Verified';
-            $application->importer_verify = "Accepted";
-
-
-
             $application->status = 'Clerk Verified';
-
+            $application->importer_verify = 'Accepted';
             $status = 'Clerk Verified';
-            $message = 'Clerk Verified';
-        } else if ($request->rejected) {
+        } elseif ($request->rejected) {
+
             $application->logActivity(
                 action: 'Clerk Rejected',
-                remark: $request['reason'],
+                remark: $request->input('reason'),
                 status: 'Clerk Rejected'
             );
 
             $application->status = 'Clerk Rejected';
             $status = 'Clerk Rejected';
-            $message = 'Application is rejected by Clerk';
         }
 
-
+        // Save application state
         $application->save();
 
+        // Safety check
+        if (!$status || !isset($statusMessages[$status])) {
+            return response()->json([
+                'message' => 'Invalid application status.'
+            ], 400);
+        }
 
+        $messages = $statusMessages[$status];
         $notificationUrl = route('viewApplication', $application->application_id);
 
-        event(new ApplicationCreatedInternalUser('Application with ID ' . $id . ' status now ' . $status . '.'));
-        $users = InternalUser::all(); // or filter by role/guard
-        Notification::send($users, new ApplicationNotification(
-            'Import Application with ID ' . $id . ' has been ' . $status . '.',
+        /**
+         * =====================
+         * INTERNAL USER EVENT + NOTIFICATION
+         * =====================
+         */
+        event(new ApplicationCreatedInternalUser($messages['internal']));
+
+        $internalUsers = InternalUser::all();
+        Notification::send($internalUsers, new ApplicationNotification(
+            $messages['notify'],
             authUser()['user']->fullname,
             $notificationUrl
         ));
 
-        $user = PublicUser::where('uuid', $application->user_id)->first();
+        /**
+         * =====================
+         * PUBLIC USER (APPLICANT)
+         * =====================
+         */
+        $publicUser = PublicUser::where('uuid', $application->user_id)->first();
+
         event(new ApplicationCreatedPublicUser(
-            'Your Application with ID ' . $id . ' has been ' . $status . '.',
-            $user->uuid
+            $messages['public'],
+            $publicUser->uuid
         ));
-        event(new PublicUserEvent(
-            'Your Application with ID ' . $id . ' has been verified by Clerk.',
-            $application->user_id
-        ));
-        Notification::send($user, new ApplicationNotification(
-            'Import Application with ID ' . $id . ' has been verified by Clerk.',
+
+        Notification::send($publicUser, new ApplicationNotification(
+            $messages['public'],
             authUser()['user']->fullname,
             $notificationUrl
         ));
 
-        if ($application->importer_id != $application->user_id) {
+        /**
+         * =====================
+         * IMPORTER (IF DIFFERENT USER)
+         * =====================
+         */
+        if ($application->importer_id !== $application->user_id) {
             $importerUser = PublicUser::where('uuid', $application->importer_id)->first();
+
             event(new ApplicationCreatedPublicUser(
-                'Import Application with ID ' . $id . ' has been ' . $status . '.',
+                $messages['public'],
                 $importerUser->uuid
             ));
+
             Notification::send($importerUser, new ApplicationNotification(
-                'Import Application with ID ' . $id . ' has been ' . $status . '.',
+                $messages['public'],
                 authUser()['user']->fullname,
                 $notificationUrl
             ));
         }
 
+        /**
+         * =====================
+         * RESPONSE
+         * =====================
+         */
         return response()->json([
-            'message' => 'Application is verified'
+            'message' => 'Application status updated successfully.',
+            'status'  => $status
         ]);
     }
+
 
     function show_exporter()
     {

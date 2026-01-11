@@ -264,6 +264,11 @@ class PermitApplicationController extends Controller
                 ));
             } else {
                 // Create new application
+                $status = $isDraft
+                    ? 'Draft'
+                    : ((int) ($permit['applCate'] ?? 0) === 1
+                        ? 'Awaiting Approval'
+                        : 'Clerk Review In-Progress');
                 $isNewApplication = true;
                 $application = IpApplication::create([
                     'application_id'       => Str::uuid(),
@@ -275,7 +280,7 @@ class PermitApplicationController extends Controller
                     'exporter_id'          => $exporter['id'] ?? null,
                     'importer_id'          => $importer['uuid'] ?? null,
                     'importer_detail'      => $importer,
-                    'status'               => $isDraft ? 'Draft' : 'Clerk Review In-Progress',
+                    'status'               => $status,
                     'importer_verify'      => $importer_verify,
                 ]);
 

@@ -963,6 +963,7 @@ $(document).ready(async function () {
 
                     if (result.isDenied) {
                         saveapplication(true); // ✅ draft
+                        window.location.href = "/public/view_all_application";
                     }
 
                     // result.isDismissed → user clicked "Stay"

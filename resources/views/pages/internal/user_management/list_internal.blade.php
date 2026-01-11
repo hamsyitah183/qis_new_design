@@ -120,7 +120,7 @@
                             <div class="col-md-6">
                                 <label class="form-label">Role</label>
                                 <select class="form-select" id="role" name="role" required>
-                                    <option value="admin">Superadmin</option>
+                                    <option value="admin">Admin</option>
                                     <option value="officer">Officer</option>
                                     <option value="clerk">Clerk</option>
                                 </select>

@@ -100,10 +100,10 @@
                                     $isPublic && $application->importer->uuid === auth()->guard('public')->user()->uuid;
                              
                             @endphp
-
+                            {{-- @dd($application->status) --}}
                             @if (
                                 ($application->status === 'Clerk Review In-Progress' && $isAdminOrClerk) ||
-                                    ($application->category_application == 1 && ($isOwner || $isAdminOrClerk)))
+                                    ($application->category_application == 1 &&  ($isOwner || $isAdminOrClerk )))
                                 {{-- Step 4 --}}
                                 @include('pages.public.view_permit.step4')
                             @endif

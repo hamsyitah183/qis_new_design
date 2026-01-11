@@ -1090,7 +1090,8 @@ $(document).ready(async function () {
                     if (result.isDenied) {
                         console.log("draft is saved !");
                         saveapplication(true); // ✅ draft
-                        // window.location.href = "/public/view_all_application";
+                        window.location.href = "/public/view_all_application";
+                        
                     }
 
                     // result.isDismissed → user clicked "Stay"
