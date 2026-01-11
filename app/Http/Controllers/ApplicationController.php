@@ -27,7 +27,11 @@ class ApplicationController extends Controller
     //
     public function show()
     {
-        return view('pages.public.new_application');
+        if (auth()->user()->doa_verified) {
+            return view('pages.public.new_application');
+        } else {
+            return view('pages.public.wait_for_verified');
+        }
     }
 
     public function showthis()
@@ -425,10 +429,7 @@ class ApplicationController extends Controller
 
             $status = 'Pending';
             $message = 'Application is verified and pending admin approval';
-
-        } 
-        
-        else if ($request->input('not_verified')) {
+        } else if ($request->input('not_verified')) {
 
             $application->logActivity(
                 action: 'Not Approved',
@@ -441,10 +442,7 @@ class ApplicationController extends Controller
 
             $status = 'Not Approved';
             $message = 'Application is not verified by importer';
-
-        } 
-        
-        else if ($request->accepted) {
+        } else if ($request->accepted) {
             $application->logActivity(
                 action: 'Clerk Verified',
                 remark: 'Application Verified by Clerk',
@@ -460,10 +458,7 @@ class ApplicationController extends Controller
 
             $status = 'Clerk Verified';
             $message = 'Clerk Verified';
-
-        } 
-        
-        else if ($request->rejected) {
+        } else if ($request->rejected) {
             $application->logActivity(
                 action: 'Clerk Rejected',
                 remark: $request['reason'],

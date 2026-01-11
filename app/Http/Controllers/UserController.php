@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\InternalUserAdded;
+use App\Events\InternalUserAdminEvent;
 use App\Events\InternalUserDeleted;
 use App\Events\InternalUserEdited;
 use App\Events\PublicUser as EventsPublicUser;
@@ -18,7 +19,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Str;
-
+use App\Events\PublicUserEvent;
+use App\Notifications\ApplicationNotification;
 use App\Services\VerificationService;
 use Illuminate\Support\Facades\Notification;
 
@@ -638,10 +640,39 @@ class UserController extends Controller
 
     public function uploadVerificationAttachment(Request $request, VerificationService $verificationService)
     {
+        // dd('upload');
         $userId = $request->user_id;
         $file = $request->file('attachment');
 
         $result = $verificationService->uploadVerificationAttachment($userId, $file);
+
+        $user = PublicUser::where("uuid", $userId)->first();
+
+
+
+        event(new InternalUserAdminEvent(
+            $user->fullname . ' is uploaded a verification attachement.'
+        ));
+
+        event(new PublicUserEvent(
+            'You Upload a verification attachment',
+            $user->uuid
+        ));
+
+        $users = InternalUser::role(['admin'])->get();
+        $notificationUrl = route('internal.public.list');
+        Notification::send($users, new ApplicationNotification(
+            'A user upload a verification attachment',
+            $user->fullname,
+            $notificationUrl
+        ));
+
+
+        $user->notify(new ApplicationNotification(
+            'You Upload a verification attachment',
+            'System',
+            '/profile'
+        ));
 
         return response()->json($result, $result['success'] ? 200 : 500);
     }
@@ -675,6 +706,8 @@ class UserController extends Controller
 
             $user = PublicUser::where('uuid', $id)->firstOrFail();
 
+            $isApproved = 0;
+
             // 🔹 Update based on approval type
             if ($request->input('approved') === 'yes') {
                 $verification->doa_verified = 1;
@@ -683,6 +716,8 @@ class UserController extends Controller
                 $verification->approved_by = $internal->uuid;
                 $verification->status = 'Verified and approved';
                 $verification->reason = null;
+
+                $isApproved = 1;
             } else {
                 // dd('requesr', $request->all());
                 $verification->doa_verified = 0;
@@ -693,12 +728,47 @@ class UserController extends Controller
                 $verification->reason = $request->input('reason');
             }
 
+
             // 🔹 Save both models
             $verification->save();
             $user->save();
 
             // 🔹 Commit if all good
             DB::commit();
+
+            event(new InternalUserAdminEvent(
+                $isApproved ? $user->fullname . ' account is verified' :
+                    $user->fullname . ' account verification is rejected'
+            ));
+
+            event(new PublicUserEvent(
+                $isApproved ? 'Your Account is verified by DOA' :
+                    'Your Account is not verified by DOA',
+                $user->uuid
+            ));
+
+            $users = InternalUser::role(['admin'])->get();
+            $notificationUrl = route('internal.public.list');
+            Notification::send($users, new ApplicationNotification(
+                $isApproved ? $user->fullname . ' account is verified' : $user->fullname . ' account verification is rejected',
+                $user->fullname,
+                $notificationUrl
+            ));
+
+
+            $user->notify(new ApplicationNotification(
+                $isApproved ? 'Your account is verified' : 'Your account verification is rejected',
+                'QIS',
+                '/profile'
+            ));
+
+            if ($isApproved) {
+                $user->notify(new ApplicationNotification(
+                    'Start apply new application',
+                    'QIS',
+                    '/public/new_application'
+                ));
+            }
 
             return response()->json([
                 'success' => true,

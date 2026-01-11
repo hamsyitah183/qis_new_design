@@ -14,5 +14,5 @@
 @endsection
 
 @section('content')
-    <a href="{{ route('public.permitApplication') }}">Apply for self!</a>
+    {{-- <a href="{{ route('public.permitApplication') }}">Apply for self!</a> --}}
 @endsection

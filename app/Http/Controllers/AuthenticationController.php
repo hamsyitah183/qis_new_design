@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\InternalUserAdminEvent;
+use App\Events\PublicUserEvent;
 use App\Models\InternalUser;
 use App\Models\PublicUser;
+use App\Notifications\ApplicationNotification;
 use App\Notifications\VerifyEmailNotification;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -15,6 +18,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Spatie\Activitylog\Models\Activity;
 use App\Services\VerificationService;
+use Illuminate\Support\Facades\Notification;
 
 class AuthenticationController extends Controller
 {
@@ -97,7 +101,7 @@ class AuthenticationController extends Controller
     public function registerPublic(Request $request,  VerificationService $verificationService)
     {
         // dd($request->all(), $request->hasFile('attachment'));
-        
+
         $validated = $request->validate([
             'fullname' => 'required|string|max:255',
             'email' => 'required|email|unique:public_users,email',
@@ -129,13 +133,12 @@ class AuthenticationController extends Controller
             ]);
 
 
+            $result = '';
             if ($request->hasFile('attachment')) {
                 $userId = $user->uuid;
                 $file = $request->file('attachment');
 
                 $result = $verificationService->uploadVerificationAttachment($userId, $file);
-
-                
             }
 
 
@@ -146,6 +149,59 @@ class AuthenticationController extends Controller
             $user->notify(new VerifyEmailNotification());
 
 
+            event(new InternalUserAdminEvent(
+                'A new account is created'
+            ));
+
+
+
+            $users = InternalUser::role(['admin'])->get();
+            $notificationUrl = route('internal.public.list');
+            Notification::send($users, new ApplicationNotification(
+                'A new account is created',
+                $user->fullname,
+                $notificationUrl
+            ));
+
+
+            $user->notify(new ApplicationNotification(
+                'You created an account',
+                'QIS',
+                '/profile'
+            ));
+
+            if ($result) {
+
+                event(new InternalUserAdminEvent(
+                    $user->fullname . ' is uploaded a verification attachement.'
+                ));
+
+                event(new PublicUserEvent(
+                    'You Upload a verification attachment',
+                    $user->uuid
+                ));
+
+                $users = InternalUser::role(['admin'])->get();
+                $notificationUrl = route('internal.public.list');
+                Notification::send($users, new ApplicationNotification(
+                    'A user upload a verification attachment',
+                    $user->fullname,
+                    $notificationUrl
+                ));
+
+
+                $user->notify(new ApplicationNotification(
+                    'You Upload a verification attachment',
+                    'QIS',
+                    '/profile'
+                ));
+            } else {
+                $user->notify(new ApplicationNotification(
+                    'Upload a verification attachment, to get verified by DOA.',
+                    'QIS',
+                    '/profile'
+                ));
+            }
 
             DB::commit();
 
