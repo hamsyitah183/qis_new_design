@@ -8,7 +8,7 @@
                 </div>
             </div>
             <div class="col-xl-9">
-                <input type="text" class="form-control fullname" name="fullname" placeholder="Placeholder"
+                <input type="text" class="form-control fullname" name="fullname" placeholder="Fullname"
                     value="">
             </div>
             @if ($user['type'] == 'internal')
@@ -22,7 +22,7 @@
                     </div>
                 </div>
                 <div class="col-xl-9">
-                    <input type="text" name="position" class="form-control position" placeholder="Placeholder"
+                    <input type="text" name="position" class="form-control position" placeholder="Position"
                         value="">
                 </div>
 
@@ -32,7 +32,7 @@
                     </div>
                 </div>
                 <div class="col-xl-9">
-                    <input type="text" name="office" class="form-control address" placeholder="Placeholder"
+                    <input type="text" name="office" class="form-control address" placeholder="Office"
                         value="">
                 </div>
             @else
@@ -59,7 +59,7 @@
                 </div>
             </div>
             <div class="col-xl-9">
-                <input type="text" name="no_ic" class="form-control ic" placeholder="Placeholder" value="">
+                <input type="text" name="no_ic" class="form-control ic" placeholder="IC Number" value="">
             </div>
 
 
@@ -74,7 +74,7 @@
                 </div>
             </div>
             <div class="col-xl-9">
-                <input type="email" name="email" class="form-control email" placeholder="Placeholder"
+                <input type="email" name="email" class="form-control email" placeholder="Email"
                     value="">
             </div>
             <div class="col-xl-3">
@@ -83,7 +83,7 @@
                 </div>
             </div>
             <div class="col-xl-9">
-                <input type="text" name="phone_number" class="form-control phone_number" placeholder="Placeholder"
+                <input type="text" name="phone_number" class="form-control phone_number" placeholder="Phone Number"
                     value="">
             </div>
             @if ($user['type'] == 'public')
@@ -98,7 +98,7 @@
                 </div>
                 <div class="col-xl-9">
                     <input type="text" name="office_number" class="form-control office_number"
-                        placeholder="Placeholder" value="">
+                        placeholder="Office Phone Number" value="">
                 </div>
 
                 <div class="col-xl-3">
@@ -131,7 +131,7 @@
                     </div>
                 </div>
                 <div class="col-xl-9">
-                    <input type="text" name="postcode" class="form-control postcode" placeholder="Placeholder"
+                    <input type="text" name="postcode" class="form-control postcode" placeholder="Postcode"
                         value="">
                 </div>
 
@@ -145,7 +145,7 @@
                     </div>
                 </div>
                 <div class="col-xl-9">
-                    <input type="text" name="district" class="form-control district" placeholder="Placeholder"
+                    <input type="text" name="district" class="form-control district" placeholder="District"
                         value="">
                 </div>
 
@@ -159,7 +159,7 @@
                     </div>
                 </div>
                 <div class="col-xl-9">
-                    <input type="text" name="state" class="form-control state" placeholder="Placeholder"
+                    <input type="text" name="state" class="form-control state" placeholder="State"
                         value="">
                 </div>
             @endif

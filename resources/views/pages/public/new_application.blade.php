@@ -16,7 +16,7 @@
             position: relative;
             display: inline-block;
             /* Make them inline */
-            width: 200px;
+            width: 200px;  
             /* Adjust width as needed */
             border: 1px solid var(--bs-border-color);
             border-radius: 0.75rem;
