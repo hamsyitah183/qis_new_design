@@ -32,7 +32,13 @@ const startDateTimePicker = flatpickr("#startDateTime", {
             // Get time part from dateStr (12-hour format)
             startTime = dateStr.split(" ")[1] + " " + dateStr.split(" ")[2];
 
-            console.log("selected start", 'start', start, 'startTime', startTime);
+            console.log(
+                "selected start",
+                "start",
+                start,
+                "startTime",
+                startTime
+            );
 
             loadActivityTimeline(
                 start,
@@ -66,7 +72,7 @@ const endDateTimePicker = flatpickr("#endDateTime", {
             // Get time part from dateStr (12-hour format)
             endTime = dateStr.split(" ")[1] + " " + dateStr.split(" ")[2];
 
-            console.log("selected end", 'end', end, 'endTime', endTime);
+            console.log("selected end", "end", end, "endTime", endTime);
 
             loadActivityTimeline(
                 start,
@@ -79,7 +85,6 @@ const endDateTimePicker = flatpickr("#endDateTime", {
         }
     },
 });
-
 
 // ✅ Load all activity logs when page loads
 loadActivityTimeline();
@@ -114,14 +119,12 @@ async function loadActivityTimeline(
         if (endTime) params.end_time = endTime;
 
         if (userTypeVal === "public") {
-            params.causer_type = "App\\Models\\PublicUser";
+            params.causer_type = "public";
         } else if (userTypeVal === "internal") {
-            params.causer_type = "App\\Models\\InternalUser";
+            params.causer_type = "internal";
         }
 
-        if (userId && userId.length) {
-            params.causer_id = userId;
-        }
+        params.causer_id = userId;
 
         const { data: activities } = await axios.get(
             "/internal/activity_log/data",
@@ -163,6 +166,8 @@ function groupActivitiesByDate(activities) {
 function renderTimeline(groupedActivities) {
     const container = document.querySelector(".timeline-container");
     container.innerHTML = "";
+
+    console.log("grouped activities", groupedActivities);
 
     if (!Object.keys(groupedActivities).length) {
         container.innerHTML = `<div class="text-center text-muted p-4">No activities found.</div>`;
@@ -227,8 +232,6 @@ $("#userType").on("change", function (e) {
 
     userTypeVal = $(this).val();
     console.log("Selected user type:", userTypeVal);
-
-    window.selectedUserIds.clear();
 
     if (!userTypeVal || userTypeVal == 0) {
         Swal.fire("Error", "Choose User Type first!", "error");
@@ -352,7 +355,6 @@ function listUser(users) {
     $(".user-checkbox")
         .off("change")
         .on("change", function () {
-            // const userId = parseInt($(this).val());
             const userId = $(this).val();
             if ($(this).is(":checked")) {
                 window.selectedUserIds.add(userId);
