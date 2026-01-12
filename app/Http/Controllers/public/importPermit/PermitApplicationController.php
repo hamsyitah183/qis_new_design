@@ -301,8 +301,8 @@ class PermitApplicationController extends Controller
                 ));
                 event(new PublicUserEvent(
                     $isDraft
-                        ? 'Your Application with id ' . $application->uuid . ' is saved as draft'
-                        : 'Your Application with id ' . $application->uuid . ' is submitted',
+                        ? 'Your Application with id ' . $application->application_id . ' is saved as draft'
+                        : 'Your Application with id ' . $application->application_id . ' is submitted',
                     $application->user_id
                 ));
             }
@@ -420,8 +420,10 @@ class PermitApplicationController extends Controller
             ));
             $publicUser = auth()->guard('public')->user();
             $publicUser->notify(new ApplicationNotification(
-                'Your application has been submitted successfully',
-                'System',
+                $isDraft
+                    ? 'Your Application with id ' . $application->application_id . ' is saved as draft'
+                    : 'Your Application with id ' . $application->application_id . ' is submitted',
+                'QIS',
                 route('viewApplication', $application->application_id)
             ));
 

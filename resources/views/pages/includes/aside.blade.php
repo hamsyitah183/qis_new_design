@@ -84,7 +84,7 @@
                     </li> --}}
                     <li class="slide {{ $currentRoute === '/application/exporter' ? 'active open' : '' }}">
                         <a href="/application/exporter" class="side-menu__item">
-                            <i class="bi bi-box side-menu__icon"></i>
+                            <i class="bi bi-truck side-menu__icon"></i>
                             <span class="side-menu__label">Exporter</span>
                         </a>
                     </li>

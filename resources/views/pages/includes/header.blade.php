@@ -36,7 +36,7 @@
 
 
         <!-- Start::header-element -->
-        <li class="header-element header-theme-mode">
+        {{-- <li class="header-element header-theme-mode">
             <!-- Start::header-link|layout-setting -->
             <a href="javascript:void(0);" class="header-link layout-setting">
                 <span class="light-layout">
@@ -59,7 +59,7 @@
                 </span>
             </a>
             <!-- End::header-link|layout-setting -->
-        </li>
+        </li> --}}
         <!-- End::header-element -->
 
 

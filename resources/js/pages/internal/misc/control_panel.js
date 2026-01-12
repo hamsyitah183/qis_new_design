@@ -471,11 +471,11 @@ $(document).ready(function () {
 
     window.addmodal = addmodal;
 
-    // ✅ Delegated form submission (works even if form is dynamically added)
-    $(document).on("submit", "#addGenericForm", function (e) {
-        e.preventDefault();
+    // Trigger when the Save button is clicked
+    $(document).on("click", "#saveGenericBtn", function (e) {
+        e.preventDefault(); // prevent any default behavior
 
-        console.log("Add generic form submitted!");
+        console.log("Add generic button clicked!");
 
         const cate = $("#addItemType").val();
         const code = $("#addCodev").val();
@@ -498,6 +498,7 @@ $(document).ready(function () {
             success: function (response) {
                 $("#addGenericModal").modal("hide");
 
+                // Clear form inputs
                 $("#addItemType").val("");
                 $("#addCodev").val("");
                 $("#addDescv").val("");
