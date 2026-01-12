@@ -18,6 +18,7 @@
                 <div class="card-body d-flex flex-column align-items-center text-center">
 
                     <h3 class="mt-2 mb-3">Wait for DOA verification</h3>
+                    <small class="text-muted mb-2">Your account is still not verified</small>
 
                     <span class="avatar avatar-xl avatar-rounded bg-warning-transparent svg-warning mb-3">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">

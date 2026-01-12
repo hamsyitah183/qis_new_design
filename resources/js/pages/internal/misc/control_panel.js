@@ -427,109 +427,110 @@ $(document).ready(function () {
     }
     window.deletePBData = deletePBData;
 
+    // Show modal and set values
     function addmodal(cate) {
+        const modalEl = document.getElementById("addGenericModal");
+        const thismodal = new bootstrap.Modal(modalEl);
         thismodal.show();
 
-        var categoryTitle;
-        var cateName;
-        switch (
-            cate // addItemType
-        ) {
+        let categoryTitle, cateName;
+        switch (cate) {
             case "entry":
                 categoryTitle = "District Entry";
                 cateName = "district_entry";
-                document.getElementById("addCodev").disabled = true;
+                $("#addCodev").prop("disabled", true);
                 break;
             case "condition":
                 categoryTitle = "Condition Category";
                 cateName = "condition_category";
-                document.getElementById("addCodev").disabled = true;
+                $("#addCodev").prop("disabled", true);
                 break;
             case "purpose":
                 categoryTitle = "Consignment Purpose";
                 cateName = "consignment_purpose";
-                document.getElementById("addCodev").disabled = true;
+                $("#addCodev").prop("disabled", true);
                 break;
             case "measurement":
                 categoryTitle = "Unit Measurement";
                 cateName = "unit_measurement";
-                document.getElementById("addCodev").disabled = false;
+                $("#addCodev").prop("disabled", false);
                 break;
             case "reject":
                 categoryTitle = "Rejection Notes";
                 cateName = "reject_purpose";
-                document.getElementById("addCodev").disabled = true;
-                break;
-            default:
+                $("#addCodev").prop("disabled", true);
                 break;
         }
 
-        document.getElementById("addItemType").value = cateName;
-        document.getElementById(
-            "addModalTitle"
-        ).innerText = `Add ${categoryTitle}`;
+        $("#addItemType").val(cateName);
+
+        // Set modal title safely
+        const titleEl = modalEl.querySelector(".modal-title");
+        if (titleEl) titleEl.innerText = `Add ${categoryTitle}`;
     }
+
     window.addmodal = addmodal;
 
-    document
-        .getElementById("addGenericForm")
-        .addEventListener("submit", function () {
-            const cate = document.getElementById("addItemType").value;
-            const code = document.getElementById("addCodev").value;
-            const desc = document.getElementById("addDescv").value;
+    // ✅ Delegated form submission (works even if form is dynamically added)
+    $(document).on("submit", "#addGenericForm", function (e) {
+        e.preventDefault();
 
-            const fd = new FormData();
-            fd.append("category", cate);
-            fd.append("item_code", code);
-            fd.append("item_desc", desc);
+        console.log("Add generic form submitted!");
 
-            $.ajax({
-                url: `/internal/addpbdata`,
-                type: "POST",
-                data: fd,
-                processData: false,
-                contentType: false,
-                headers: {
-                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
-                        "content"
-                    ),
-                },
-                success: function (response) {
-                    thismodal.hide();
-                    document.getElementById("addItemType").value = "";
-                    document.getElementById("addCodev").value = "";
-                    document.getElementById("addDescv").value = "";
-                    if (response.status === "success") {
-                        Swal.fire({
-                            icon: "success",
-                            title: "Success",
-                            text: "Item added successfully.",
-                            timer: 2000,
-                            showConfirmButton: false,
-                        });
-                        loadPBDataForAllCategories();
-                    } else {
-                        Swal.fire({
-                            icon: "error",
-                            title: "Error",
-                            text: response.message || "Failed to add item.",
-                            timer: 3000,
-                            showConfirmButton: false,
-                        });
-                    }
-                },
-                error: function (xhr) {
-                    console.error("Error adding PB data:", xhr);
+        const cate = $("#addItemType").val();
+        const code = $("#addCodev").val();
+        const desc = $("#addDescv").val();
+
+        const fd = new FormData();
+        fd.append("category", cate);
+        fd.append("item_code", code);
+        fd.append("item_desc", desc);
+
+        $.ajax({
+            url: `/internal/addpbdata`,
+            type: "POST",
+            data: fd,
+            processData: false,
+            contentType: false,
+            headers: {
+                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+            },
+            success: function (response) {
+                $("#addGenericModal").modal("hide");
+
+                $("#addItemType").val("");
+                $("#addCodev").val("");
+                $("#addDescv").val("");
+
+                if (response.status === "success") {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Success",
+                        text: "Item added successfully.",
+                        timer: 2000,
+                        showConfirmButton: false,
+                    });
+                    loadPBDataForAllCategories();
+                } else {
                     Swal.fire({
                         icon: "error",
                         title: "Error",
-                        text: "An error occurred while adding the item.",
+                        text: response.message || "Failed to add item.",
                         timer: 3000,
                         showConfirmButton: false,
                     });
-                },
-            });
-            // Close modal
-            thismodal.hide();
+                }
+            },
+            error: function (xhr) {
+                console.error("Error adding PB data:", xhr);
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "An error occurred while adding the item.",
+                    timer: 3000,
+                    showConfirmButton: false,
+                });
+            },
         });
+    });
 });

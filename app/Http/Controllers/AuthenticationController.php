@@ -170,38 +170,39 @@ class AuthenticationController extends Controller
                 '/profile'
             ));
 
-            if ($result) {
+            if (!empty($result) && $result['success'] === true) {
 
                 event(new InternalUserAdminEvent(
-                    $user->fullname . ' is uploaded a verification attachement.'
+                    $user->fullname . ' uploaded a verification attachment.'
                 ));
 
                 event(new PublicUserEvent(
-                    'You Upload a verification attachment',
+                    'You uploaded a verification attachment',
                     $user->uuid
                 ));
 
-                $users = InternalUser::role(['admin'])->get();
+                $admins = InternalUser::role(['admin'])->get();
                 $notificationUrl = route('internal.public.list');
-                Notification::send($users, new ApplicationNotification(
-                    'A user upload a verification attachment',
+                Notification::send($admins, new ApplicationNotification(
+                    'A user uploaded a verification attachment',
                     $user->fullname,
                     $notificationUrl
                 ));
 
-
                 $user->notify(new ApplicationNotification(
-                    'You Upload a verification attachment',
+                    'You uploaded a verification attachment',
                     'QIS',
                     '/profile'
                 ));
             } else {
+                // Upload failed or no file uploaded
                 $user->notify(new ApplicationNotification(
-                    'Upload a verification attachment, to get verified by DOA.',
+                    'Upload a verification attachment to get verified by DOA.',
                     'QIS',
                     '/profile'
                 ));
             }
+
 
             DB::commit();
 
