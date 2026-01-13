@@ -1,3 +1,6 @@
+import { formatTime, initTooltips } from "../../app";
+import Swal from "sweetalert2";
+
 console.log("application list");
 let applicationListTable;
 let reviewApplicationListTable;
@@ -61,6 +64,10 @@ async function data_table_init() {
         pageLength: 10,
     });
 
+    applicationListTable.on("draw.dt", function () {
+        initTooltips();
+    });
+
     reviewApplicationListTable = new DataTable("#reviewApplicationListTable", {
         processing: true,
         serverSide: true,
@@ -76,7 +83,7 @@ async function data_table_init() {
             { data: "exporter", name: "exporter" },
             { data: "importer_type", name: "importer_type" },
             { data: "date", name: "date" },
-            { data: "status", name: "status" },  
+            { data: "status", name: "status" },
             { data: "submitted_by", name: "submitted_by" },
             { data: "action", name: "action" },
         ],
@@ -95,6 +102,10 @@ async function data_table_init() {
         autoWidth: false,
         responsive: true,
         pageLength: 10,
+    });
+
+    reviewApplicationListTable.on("draw.dt", function () {
+        initTooltips();
     });
 
     $(document).on("click", ".deleteApplication", async function () {
@@ -138,6 +149,69 @@ async function data_table_init() {
                 Swal.fire("Error!", "Failed to delete application.", "error");
             });
     });
+
+    initTooltips();
+}
+
+function activityLog() {
+    $(document).on("click", ".activityLog", async function (e) {
+        e.preventDefault();
+
+        const id = $(this).data("log");
+        Swal.fire({
+            title: "Loading...",
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => Swal.showLoading(),
+        });
+        try {
+            const res = await fetch(`/application/${id}/data`);
+
+            if (!res.ok) {
+                throw new Error("Failed to fetch activity log");
+            }
+
+            const json = await res.json();
+
+            console.log("id:", id);
+            console.log("response:", json.activity_log);
+
+            Swal.close();
+
+            const tableBody = $("#applicationLogTable tbody");
+            tableBody.empty(); // clear existing rows
+
+            // console.log("application", application.activity_log);
+            let activity_log =  json.activity_log
+
+            
+
+            const modalEl = document.getElementById("activityLogModal");
+            modalEl.querySelector(".modal-title").textContent =
+                " Activity Log" || "Activity Log";
+
+            activity_log.forEach((log, index) => {
+                tableBody.append(`
+                    <tr>
+                        <td>${log.action}</td>
+                        <td>${log.causer.fullname}</td>
+                        <td>${log.remark}</td>
+                        <td>${log.status}</td>
+                        <td>${formatTime(log.created_at)}</td>
+                    </tr>
+                `);
+            });
+
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        } catch (error) {
+            console.error("Activity log error:", error);
+            Swal.close();
+        }
+    });
 }
 
 document.addEventListener("DOMContentLoaded", data_table_init);
+
+initTooltips();
+activityLog();

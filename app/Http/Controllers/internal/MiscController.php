@@ -223,8 +223,8 @@ class MiscController extends Controller
 
 
         if ($accepted == 1) {
-            $permit->status = 'completed';
-            $status = 'Approved';
+            $permit->status = 'pending for payment';
+            $status = 'Pending for Payment';
         } else {
             $permit->status = 'rejected';
             $status = 'Rejected';

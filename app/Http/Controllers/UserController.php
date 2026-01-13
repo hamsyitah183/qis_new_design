@@ -674,6 +674,14 @@ class UserController extends Controller
             '/profile'
         ));
 
+        activity()
+            ->useLog('user_activity')
+            ->event('verified')
+            ->performedOn($user)
+            ->causedBy(authUser()['user'])
+            ->log("{$user->fullname} is uploading an attachment to get verification.");
+
+
         return response()->json($result, $result['success'] ? 200 : 500);
     }
 
@@ -755,7 +763,15 @@ class UserController extends Controller
                 $notificationUrl
             ));
 
-
+            activity()
+                ->useLog('user_activity')
+                ->event('verified')
+                ->performedOn($user)
+                ->causedBy(authUser()['user'])
+                ->log(
+                    $isApproved ? "{$user->fullname} was verified by "  . authUser()['user']['fullname'] :
+                        "{$user->fullname}'s verification is rejected by " . authUser()['user']['fullname']
+                );
             $user->notify(new ApplicationNotification(
                 $isApproved ? 'Your account is verified' : 'Your account verification is rejected',
                 'QIS',
