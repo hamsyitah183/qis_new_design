@@ -85,14 +85,22 @@ async function attachmentTable() {
             }
         }
 
-        if (applicationStatus === "Fully Processed") {
-            if (permit.status === "completed") {
-                permitAction = `
+        // if (applicationStatus === "Fully Processed") {
+        //     if (permit.status === "paid") {
+        //         permitAction = `
+        //         <div class="btn btn-sm btn btn-teal-light btn-wave generatePermit" data-permit="${permit.id}">
+        //             Download Permit
+        //         </div>
+        //        `;
+        //     }
+        // }
+
+        if (permit.status === "paid") {
+            permitAction = `
                 <div class="btn btn-sm btn btn-teal-light btn-wave generatePermit" data-permit="${permit.id}">
                     Download Permit
                 </div>
                `;
-            }
         }
 
         let permitStatus = "";
@@ -106,6 +114,11 @@ async function attachmentTable() {
             text = '<span class="badge bg-info fs-11 p-1">Processing</span>';
         } else if (statuses.includes("rejected")) {
             text = '<span class="badge bg-danger fs-11 p-1">Rejected</span>';
+        } else if (statuses.includes("paid")) {
+            text = '<span class="badge bg-success fs-11 p-1">Paid</span>';
+        } else if (statuses.includes("payment")) {
+            text =
+                '<span class="badge bg-warning fs-11 p-1">Pending For Payment</span>';
         }
 
         permitStatus = `<td>${text}</td>`;
@@ -130,6 +143,54 @@ async function attachmentTable() {
             </tr>
         `);
     });
+}
+async function pendingPaymentTable() {
+    console.log("Running attachment table...");
+    const tableBody = $("#summaryTable4 tbody");
+    tableBody.empty();
+
+    const permits = application.consignment_permits || [];
+
+    const pendingPaymentPermits = permits.filter(
+        (p) => p.status?.toLowerCase() === "pending for payment"
+    );
+
+    if (!pendingPaymentPermits || pendingPaymentPermits.length === 0) {
+        tableBody.append(`
+            <tr>
+                <td colspan="7" class="text-center text-muted">
+                    No consignment items found.
+                </td>
+            </tr>
+        `);
+        return;
+    }
+
+    pendingPaymentPermits.forEach((permit, index) => {
+        let detail = permit.consignment_detail || {};
+
+        console.log("user role?", window.authUser);
+
+        tableBody.append(`
+            <tr>
+                <td> 
+                    <div class="form-check">
+                       <input class="form-check-input permit-checkbox" 
+                        type="checkbox"
+                        value="${permit.id}">
+
+                       
+                    </div>
+                </td>
+                <td>${detail.item_name ?? "—"}</td>
+               
+                <td>RM ${detail.value ?? "—"}</td>
+              
+            </tr>
+        `);
+    });
+
+    $("#checkAllPermits").prop("checked", false);
 }
 
 function acceptPermit() {
@@ -197,57 +258,57 @@ function rejectPermit() {
         .off("click", ".reject")
         .on("click", ".reject", function (e) {
             e.preventDefault();
+
             const id = $(this).data("permit");
 
             Swal.fire({
-                title: "Are you sure?",
-                text: "Do you want to reject this permit?",
-                icon: "question",
+                title: "Reject Permit",
+                text: "Please provide a reason for rejecting this permit:",
+                icon: "warning",
+                input: "textarea",
+                inputPlaceholder: "Enter rejection reason...",
                 showCancelButton: true,
-                confirmButtonText: "Yes, proceed",
+                confirmButtonText: "Reject Permit",
                 cancelButtonText: "Cancel",
-            }).then((firstResult) => {
-                if (firstResult.isConfirmed) {
-                    Swal.fire({
-                        title: "Please Confirm Again",
-                        text: "This action cannot be undone. Reject the permit?",
-                        icon: "warning",
-                        showCancelButton: true,
-                        confirmButtonText: "Yes, reject it",
-                        cancelButtonText: "Cancel",
-                    }).then((secondResult) => {
-                        if (secondResult.isConfirmed) {
-                            $.ajax({
-                                url: `/internal/permit/${id}`,
-                                method: "POST",
-                                data: {
-                                    _token: $("meta[name='csrf-token']").attr(
-                                        "content"
-                                    ),
-                                    accepted: 0,
-                                },
-                                success: function () {
-                                    Swal.fire(
-                                        "Rejected!",
-                                        "The permit has been rejected.",
-                                        "success"
-                                    );
-                                    // Refresh table
-                                    initApplicationDetails();
-                                },
-                                error: function (err) {
-                                    Swal.fire({
-                                        icon: "error",
-                                        title: "Error!",
-                                        text:
-                                            err.responseJSON?.message ||
-                                            "Something went wrong.",
-                                    });
-                                },
-                            });
-                        }
-                    });
-                }
+                didOpen: () => {
+                    const textarea = Swal.getInput();
+                    textarea.style.fontSize = "12px";
+                    textarea.style.lineHeight = "1.5";
+                },
+                inputValidator: (value) => {
+                    if (!value || value.trim().length < 5) {
+                        return "Rejection reason is required (min 5 characters).";
+                    }
+                },
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+
+                $.ajax({
+                    url: `/internal/permit/${id}`,
+                    method: "POST",
+                    data: {
+                        _token: $('meta[name="csrf-token"]').attr("content"),
+                        rejected: 1,
+                        reason: result.value, // 👈 SEND REASON
+                    },
+                    success: function () {
+                        Swal.fire(
+                            "Rejected!",
+                            "The permit has been rejected successfully.",
+                            "success"
+                        );
+                        initApplicationDetails();
+                    },
+                    error: function (err) {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error!",
+                            text:
+                                err.responseJSON?.message ||
+                                "Something went wrong.",
+                        });
+                    },
+                });
             });
         });
 }
@@ -335,6 +396,11 @@ async function viewMore() {
 
         // Build modal body
         let modalContent = `
+            <div class="d-flex justify-content-start flex-wrap gap-1 mb-2">
+                ${renderPermitBadge(permit.status.toLowerCase(), permit.remark)}
+            </div>
+
+
             <div class="p-1 row">
                 <div class = "col-12 col-md-6"><p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-tag"></i></span> Item Name:</strong> ${
                     detail.item_name ?? "-"
@@ -437,6 +503,55 @@ function verifyApplication() {
             }
         });
     });
+}
+
+function renderPermitBadge(status, remark = "") {
+    let badgeClass = "";
+    let label = "";
+    let remarkHtml = "";
+
+    switch (status) {
+        case "processing":
+            badgeClass = "bg-info";
+            label = "Processing";
+            break;
+
+        case "pending for payment":
+            badgeClass = "bg-warning text-dark";
+            label = "Pending Payment";
+            break;
+
+        case "paid":
+            badgeClass = "bg-success";
+            label = "Paid";
+            break;
+
+        case "rejected":
+            badgeClass = "bg-danger";
+            label = "Rejected";
+
+            if (remark) {
+                remarkHtml = `
+                    <div class="mt-1">
+                        <strong class = "fs-12">Reason:</strong> <span class = "text-muted">${remark}</span>
+                    </div>
+                `;
+            }
+            break;
+
+        default:
+            badgeClass = "bg-secondary";
+            label = status ?? "Unknown";
+    }
+
+    return `
+        <div>
+            <span class="badge badge-md ${badgeClass}">
+                ${label}
+            </span>
+            ${remarkHtml}
+        </div>
+    `;
 }
 
 // reject application
@@ -673,8 +788,44 @@ async function initApplicationDetails() {
     acceptPermit();
     rejectPermit();
     generatePermit();
+    pendingPaymentTable();
 
     Swal.close(); // Close after data is loaded
+
+    $(document).on("change", "#checkAllPermits", function () {
+        const isChecked = $(this).is(":checked");
+
+        $(".permit-checkbox").prop("checked", isChecked);
+    });
+
+    // When "Check All" is toggled
+    $(document).on("change", "#checkAllPermits", function () {
+        const isChecked = $(this).is(":checked");
+
+        // Toggle all row checkboxes
+        $(".permit-checkbox").prop("checked", isChecked);
+
+        // Enable/disable the checkout button
+        $("#checkoutPage").prop("disabled", !isChecked);
+    });
+
+    // When individual checkboxes are toggled
+    $(document).on("change", ".permit-checkbox", function () {
+        const total = $(".permit-checkbox").length;
+        const checked = $(".permit-checkbox:checked").length;
+
+        // Enable the button if at least one checkbox is checked
+        $("#checkoutPage").prop("disabled", checked === 0);
+
+        // Update "Check All" status
+        $("#checkAllPermits").prop("checked", total > 0 && total === checked);
+    });
+
+    $(document).on("click", "#checkoutPage", function (e) {
+        e.preventDefault();
+
+        console.log("checkout page goo");
+    });
 }
 
 /* -------------------------------

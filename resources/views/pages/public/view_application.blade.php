@@ -72,6 +72,10 @@
                                 <span class="dot"></span>
                                 <span>Confirmation</span>
                             </div>
+                            <div class="wizard-step" data-step="5">
+                                <span class="dot"></span>
+                                <span>Confirmation</span>
+                            </div>
                         </aside>
                         <aside class="wizard-content container">
                             <!-- step0 -->
@@ -108,11 +112,7 @@
                                 @include('pages.public.view_permit.step4')
                             @endif
 
-
-
-
-
-
+                           @include('pages.public.view_permit.step5')
 
 
                         </aside>
