@@ -177,7 +177,7 @@ async function pendingPaymentTable() {
                     <div class="form-check">
                        <input class="form-check-input permit-checkbox" 
                         type="checkbox"
-                        value="${permit.id}">
+                        value="${permit.id}" data-permit-value = "${permit.value}">
 
                        
                     </div>
@@ -758,6 +758,25 @@ function applicationLog() {
         });
 }
 
+// Function to sum selected permit values
+function updateTotalValue() {
+    let total = 0;
+
+    $(".permit-checkbox:checked").each(function () {
+        const value = parseFloat($(this).data("permit-value")) || 0;
+        total += value;
+    });
+
+    // Update the totalValue element
+    $("#totalValue").text(
+        "RM " +
+            total.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            })
+    );
+}
+
 /* -------------------------------
    Initializer (shows Swal first)
 -------------------------------- */
@@ -792,12 +811,7 @@ async function initApplicationDetails() {
 
     Swal.close(); // Close after data is loaded
 
-    $(document).on("change", "#checkAllPermits", function () {
-        const isChecked = $(this).is(":checked");
-
-        $(".permit-checkbox").prop("checked", isChecked);
-    });
-
+    // When "Check All" is toggled
     // When "Check All" is toggled
     $(document).on("change", "#checkAllPermits", function () {
         const isChecked = $(this).is(":checked");
@@ -807,6 +821,9 @@ async function initApplicationDetails() {
 
         // Enable/disable the checkout button
         $("#checkoutPage").prop("disabled", !isChecked);
+
+        // Update total value
+        updateTotalValue();
     });
 
     // When individual checkboxes are toggled
@@ -814,17 +831,32 @@ async function initApplicationDetails() {
         const total = $(".permit-checkbox").length;
         const checked = $(".permit-checkbox:checked").length;
 
-        // Enable the button if at least one checkbox is checked
         $("#checkoutPage").prop("disabled", checked === 0);
-
-        // Update "Check All" status
         $("#checkAllPermits").prop("checked", total > 0 && total === checked);
+
+        // Update total value
+        updateTotalValue();
     });
 
+    // When checkout button is clicked
     $(document).on("click", "#checkoutPage", function (e) {
         e.preventDefault();
 
-        console.log("checkout page goo");
+        // Get all checked checkbox values
+        const selectedPermits = $(".permit-checkbox:checked")
+            .map(function () {
+                return $(this).val();
+            })
+            .get(); // convert jQuery object to array
+
+        console.log("Selected permit IDs:", selectedPermits);
+
+        if (selectedPermits.length === 0) {
+            Swal.fire("Error!", "Choose the permit to continue.", "error");
+            return;
+        }
+
+        window.location.href = `/payment/${application.application_id}/${selectedPermits}`;
     });
 }
 

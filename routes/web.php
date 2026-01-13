@@ -12,6 +12,7 @@ use App\Http\Controllers\PublicController;
 use App\Http\Controllers\RoleAndPermissionController;
 use App\Http\Controllers\TempFileController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\PaymentController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Broadcast;
@@ -240,6 +241,8 @@ Route::middleware(['auth.any'])
 
 
         Route::get('/permit/generate/{id}', [PermitGenerateController::class, 'generatePermitWord']);
+
+        Route::get('/payment/{id}/{permitId}', [PaymentController::class, 'checkout']);
 
         
     });

@@ -24,14 +24,14 @@
                                                             <div class="form-check">
                                                                 <input class="form-check-input" type="checkbox"
                                                                     value="" id="checkAllPermits">
-                                                                
+
                                                             </div>
                                                         </th>
                                                         <th scope="col">Item Name</th>
 
                                                         <th scope="col">Value</th>
 
-                                                      
+
 
                                                     </tr>
                                                 </thead>
@@ -40,10 +40,18 @@
                                                 </tbody>
                                             </table>
 
+
+
                                         </div>
                                     </td>
                                 </tr>
                             </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="2" class="text-end fw-bold">Total:</td>
+                                    <td class="fw-bold" id="totalValue">RM 0</td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
@@ -51,7 +59,7 @@
         </div>
 
         <div class="col-xl-12">
-            <div class="d-flex justify-content-end" >
+            <div class="d-flex justify-content-end">
                 <button class="btn btn-primary" id="checkoutPage" disabled>
                     Go To Checkout
                 </button>
