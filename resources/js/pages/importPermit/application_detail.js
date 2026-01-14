@@ -856,7 +856,7 @@ async function initApplicationDetails() {
             return;
         }
 
-        window.location.href = `/payment/${application.application_id}/${selectedPermits}`;
+        window.location.href = `/payment/${application.id}/${selectedPermits}`;
     });
 }
 
