@@ -7,7 +7,10 @@ use App\Http\Controllers\internal\MiscController;
 use App\Http\Controllers\public\importPermit\PermitApplicationController;
 use App\Http\Controllers\ApplicationController;
 
-use App\Http\Controllers\internController;
+use App\Http\Controllers\InternController;
+
+
+
 
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PermitGenerateController;
