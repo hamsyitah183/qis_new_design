@@ -25,6 +25,7 @@ export default defineConfig({
             input: [
                 "resources/js/app.js",
                 "resources/css/app.css",
+                "resources/css/errors.css",
 
                 // 🔹 Automatically include all JS under `resources/js/pages/**`
                 ...globSync(
