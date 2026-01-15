@@ -7,6 +7,38 @@ Dropzone.autoDiscover = false;
 
 let type = null;
 
+// Function to load states
+async function loadStates() {
+    try {
+        const response = await fetch('/api/states');
+        const states = await response.json();
+        const stateSelect = $('#state');
+        stateSelect.empty();
+        stateSelect.append('<option value="">Select State</option>');
+        states.forEach(state => {
+            stateSelect.append(`<option value="${state.id}">${state.name}</option>`);
+        });
+    } catch (error) {
+        console.error('Error loading states:', error);
+    }
+}
+
+// Function to load districts for a state
+async function loadDistricts(stateId) {
+    try {
+        const response = await fetch(`/api/districts/${stateId}`);
+        const districts = await response.json();
+        const districtSelect = $('#district');
+        districtSelect.empty();
+        districtSelect.append('<option value="">Select District</option>');
+        districts.forEach(district => {
+            districtSelect.append(`<option value="${district.name}">${district.name}</option>`);
+        });
+    } catch (error) {
+        console.error('Error loading districts:', error);
+    }
+}
+
 function fileUpload() {
     const fileDropArea = document.getElementById("fileDropArea");
     const fileInput = document.getElementById("fileInput");
@@ -74,6 +106,9 @@ function fileUpload() {
 }
 
 $(document).ready(function () {
+    // Load states on page load
+    loadStates();
+
     // ----------------------------
     // 1️⃣ Type selection styling
     // ----------------------------
@@ -128,6 +163,22 @@ $(document).ready(function () {
     $(document).on("change", 'input[name="type"]', function () {
         type_styling();
         inputEdit();
+    });
+
+    // State and District dropdown logic
+    $(document).on("change", '#state', function () {
+        const selectedStateId = $(this).val();
+        const districtSelect = $('#district');
+        
+        console.log('State selected with ID:', selectedStateId);
+        
+        if (selectedStateId) {
+            loadDistricts(selectedStateId);
+            districtSelect.prop('disabled', false);
+        } else {
+            districtSelect.empty().append('<option value="">Select District</option>');
+            districtSelect.prop('disabled', true);
+        }
     });
 
     // ----------------------------

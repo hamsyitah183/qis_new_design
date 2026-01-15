@@ -233,9 +233,8 @@ Route::middleware(['auth.any'])->group(function () {
 // broadcast --dont kacau---
 // Broadcast::routes();
 // Broadcast::routes(['middleware' => ['auth:internal']]);
+// Broadcast::routes(['middleware' => ['auth:internal']]);
 
-Route::get('/intern', [internController::class, 'getView']);
-Route::post('/intern', [internController::class, 'sendData']);
 
 //error page testing
 Route::get('/402', function () {abort(402); });
