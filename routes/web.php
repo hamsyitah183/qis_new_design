@@ -7,10 +7,7 @@ use App\Http\Controllers\internal\MiscController;
 use App\Http\Controllers\public\importPermit\PermitApplicationController;
 use App\Http\Controllers\ApplicationController;
 
-use App\Http\Controllers\InternController;
-
-
-
+use App\Http\Controllers\InspectionController;
 
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PermitGenerateController;
@@ -102,6 +99,8 @@ Route::prefix('public')
         // cart & checkout
         Route::get('/cart', [PublicController::class, 'showcart'])->name('cart');
         Route::get('/checkout', [PublicController::class, 'showcheckout'])->name('checkout');
+
+        Route::get('/inspection_certificates_application', [InspectionController::class, 'getInspection']);
     });
 
 Route::prefix('internal')
