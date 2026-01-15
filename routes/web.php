@@ -6,9 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\internal\MiscController;
 use App\Http\Controllers\public\importPermit\PermitApplicationController;
 use App\Http\Controllers\ApplicationController;
-
-use App\Http\Controllers\internController;
-
+use App\Http\Controllers\ConsignmentController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PermitGenerateController;
 use App\Http\Controllers\PublicController;
@@ -99,6 +97,8 @@ Route::prefix('public')
         // cart & checkout
         Route::get('/cart', [PublicController::class, 'showcart'])->name('cart');
         Route::get('/checkout', [PublicController::class, 'showcheckout'])->name('checkout');
+
+        Route::get('/consignment_certificate_application', [ConsignmentController::class, 'getView'])->name('consignment.app');
     });
 
 Route::prefix('internal')
@@ -229,6 +229,7 @@ Route::middleware(['auth.any'])->group(function () {
         session()->forget('payment_active');
         return response()->json(['status' => 'cancelled']);
     });
+
 });
 
 // broadcast --dont kacau---
