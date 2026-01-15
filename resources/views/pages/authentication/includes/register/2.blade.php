@@ -59,16 +59,20 @@
                 <input type="text" name="postcode" class="form-control" placeholder=" 89657">
             </div>
 
+            <!-- State -->
+            <div class="col-xl-6">
+                <label class="form-label text-default">State</label>
+                <select name="state" class="form-control" id="state">
+                    <option value="">Select State</option>
+                </select>
+            </div>
+
             <!-- District -->
             <div class="col-xl-6">
                 <label class="form-label text-default">District</label>
-                <input type="text" name="district" class="form-control" placeholder=" Kota Kinabalu">
-            </div>
-
-            <!-- State -->
-            <div class="col-xl-12">
-                <label class="form-label text-default">State</label>
-                <input type="text" name="state" class="form-control" placeholder=" Sabah">
+                <select name="district" class="form-control" id="district" disabled>
+                    <option value="">Select District</option>
+                </select>
             </div>
         </div>
     </div>
