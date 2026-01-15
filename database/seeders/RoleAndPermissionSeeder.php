@@ -77,6 +77,14 @@ class RoleAndPermissionSeeder extends Seeder
                 'guard_name' => 'internal',
                 'permissions' => ['view dashboard'],
             ],
+            'boundary officer' => [
+                'guard_name' => 'internal',
+                'permissions' => ['view dashboard'],
+            ],
+            'finance' => [
+                'guard_name' => 'internal',
+                'permissions' => ['view dashboard'],
+            ],
 
             // Public role
             'public' => [

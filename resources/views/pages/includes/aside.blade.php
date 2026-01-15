@@ -108,8 +108,7 @@
                             </li>
 
                             <li class="slide">
-                                <a href="{{ route('public.showallapplicationlist') }}" class="side-menu__item">All
-                                    Application</a>
+                                <a href="{{ route('public.showallapplicationlist') }}" class="side-menu__item">Import Permit List</a>
                             </li>
                         </ul>
                     </li>
@@ -138,7 +137,7 @@
 
                             <li class="slide {{ $currentRoute === 'internal.application.list' ? 'active' : '' }}">
                                 <a href="{{ route('internal.application.list') }}" class="side-menu__item">
-                                    All Applications
+                                    Import Permit
                                 </a>
                             </li>
                         </ul>

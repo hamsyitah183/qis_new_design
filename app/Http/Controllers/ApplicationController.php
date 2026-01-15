@@ -118,7 +118,8 @@ class ApplicationController extends Controller
 
                     'pending for payment'  => 'bg-warning', // green
                     'rejected'   => 'bg-danger',  // red
-                    'completed'  => 'bg-success', // green
+                    // 'completed'  => 'bg-success', // green
+                    'paid'  => 'bg-success', // green
 
                 ];
 
@@ -132,7 +133,7 @@ class ApplicationController extends Controller
                     'processing' => 0,
                     'rejected'   => 0,
                     'pending for payment'  => 0,
-                    'completed'  => 0,
+                    'paid'  => 0,
 
                 ];
 

@@ -11,19 +11,13 @@ class Exporter extends Model
 
     protected $table = 'exporter';
 
-    protected $fillable = [
-        'name',
-        'phone_no',
-        'address',
-        'country',
-        'registered_by',
-    ];
+    protected $fillable = ['name', 'phone_no', 'address', 'country', 'registered_by'];
 
     public function registeredBy()
     {
         return $this->belongsTo(PublicUser::class, 'registered_by');
     }
-    
+
     public function countryInfo()
     {
         return $this->belongsTo(Country::class, 'country', 'code');

@@ -15,15 +15,12 @@ use App\Http\Controllers\PublicController;
 use App\Http\Controllers\RoleAndPermissionController;
 use App\Http\Controllers\TempFileController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\PaymentController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
-
-
-
-
 
 // Logout route
 Route::get('/logout', [AuthenticationController::class, 'logout'])->name('logout');
@@ -36,15 +33,11 @@ Route::middleware(['multi.guest'])->group(function () {
     Route::post('/login', [AuthenticationController::class, 'loginAction'])->name('login.action');
     Route::post('/register', [AuthenticationController::class, 'registerPublic'])->name('register.public');
 
-
     Route::get('/forgot-password', [PasswordResetController::class, 'resetPage'])->name('password.request');
     Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
     Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
     Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.update');
 });
-
-
-
 
 // Root route '/'
 Route::get('/', function () {
@@ -68,7 +61,9 @@ Route::get('/email/verify/{id}/{hash}', [AuthenticationController::class, 'verif
     ->name('verification.verify');
 
 // Resend verification email
-Route::post('/email/verification-notification', [AuthenticationController::class, 'resend_verify_link'])->middleware(['auth:public,internal', 'throttle:6,1'])->name('verification.send');
+Route::post('/email/verification-notification', [AuthenticationController::class, 'resend_verify_link'])
+    ->middleware(['auth:public,internal', 'throttle:6,1'])
+    ->name('verification.send');
 
 // Dashboard routes
 Route::prefix('public')
@@ -96,14 +91,10 @@ Route::prefix('public')
 
         Route::get('/verify_application', [ApplicationController::class, 'verifyapplication'])->name('verifyapplication');
 
-
         // temporary file
         Route::post('/temp-upload', [TempFileController::class, 'upload']);
 
-
-        Route::post('/upload-verification', [UserController::class, 'uploadVerificationAttachment'])
-            ->name('user.uploadVerification');
-
+        Route::post('/upload-verification', [UserController::class, 'uploadVerificationAttachment'])->name('user.uploadVerification');
 
         // cart & checkout
         Route::get('/cart', [PublicController::class, 'showcart'])->name('cart');
@@ -132,13 +123,10 @@ Route::prefix('internal')
         Route::get('/activity_log', [ActivityLogController::class, 'log'])->name('internal.activity_log');
         Route::get('/activity_log/data', [ActivityLogController::class, 'data']);
 
-
         Route::get('/user_list/{type}', [UserController::class, 'user_list']);
-
 
         Route::get('/verification/{id}', [UserController::class, 'verification_attachment']);
         Route::post('/verification/{id}/save', [UserController::class, 'save_attachment']);
-
 
         Route::get('/roles', [RoleAndPermissionController::class, 'role'])->name('internal.role');
         Route::get('/roles/list/data', [RoleAndPermissionController::class, 'role_list_data']);
@@ -148,15 +136,11 @@ Route::prefix('internal')
         Route::post('/permission/update', [RoleAndPermissionController::class, 'update_permission']);
         // ==================== user managemet =================
 
-
         // ======================= application ========================
         Route::get('/view_all_application', [ApplicationController::class, 'showallapplicationlist'])->name('application.list');
         Route::delete('/application/delete/{id}', [ApplicationController::class, 'deleteApplication'])->name('application.delete');
 
         // Route::get('/application/exporter/get', [ApplicationController::class, 'get_exporter'])->name('application.exporter.get');
-
-        
-
 
         //MISC
 
@@ -186,66 +170,65 @@ Route::prefix('internal')
         Route::post('/permit/{id}', [MiscController::class, 'accept_permit']);
     });
 
-Route::middleware(['auth.any'])
-    ->group(function () {
-        Route::get('/profile', [UserController::class, 'profile'])->name('profile');
-        Route::get('/data', [UserController::class, 'userData']);
-        Route::post('/data', [UserController::class, 'updateData']);
-        Route::post('/password', [UserController::class, 'password']);
-        Route::get('/get_country', [PublicController::class, 'getCountry']);
+Route::middleware(['auth.any'])->group(function () {
+    Route::get('/profile', [UserController::class, 'profile'])->name('profile');
+    Route::get('/data', [UserController::class, 'userData']);
+    Route::post('/data', [UserController::class, 'updateData']);
+    Route::post('/password', [UserController::class, 'password']);
+    Route::get('/get_country', [PublicController::class, 'getCountry']);
 
-        Route::get('/api/auth-user', [UserController::class, 'userInfo']);
+    Route::get('/api/auth-user', [UserController::class, 'userInfo']);
 
+    Route::get('/country/{code}', [DashboardController::class, 'get_country']);
+    Route::get('/entry_point/{id}', [DashboardController::class, 'get_entry_point']);
 
+    //============================= application ======================
+    Route::get('/application/list/data', [ApplicationController::class, 'getallapplicationlist'])->name('application.data');
+    Route::get('/application/review/list/data', [ApplicationController::class, 'getAllReviewapplicationList'])->name('application.review.data');
 
-        Route::get('/country/{code}', [DashboardController::class, 'get_country']);
-        Route::get('/entry_point/{id}', [DashboardController::class, 'get_entry_point']);
+    Route::get('/application/{id}/data', [ApplicationController::class, 'getApplicationDetails']);
+    Route::get('/view_application/{uuid}', [ApplicationController::class, 'viewapplication'])->name('viewApplication');
+    Route::get('/edit_application/{uuid}', [ApplicationController::class, 'editApplication'])->name('editApplication');
 
-        //============================= application ======================
-        Route::get('/application/list/data', [ApplicationController::class, 'getallapplicationlist'])
-            ->name('application.data');
-        Route::get('/application/review/list/data', [ApplicationController::class, 'getAllReviewapplicationList'])
-            ->name('application.review.data');
+    Route::get('/application/permit/{id}/data', [ApplicationController::class, 'get_application_permit']);
+    Route::post('/application/verify/{id}/', [ApplicationController::class, 'verify_application_permit']);
 
-        Route::get('/application/{id}/data', [ApplicationController::class, 'getApplicationDetails']);
-        Route::get('/view_application/{uuid}', [ApplicationController::class, 'viewapplication'])
-            ->name('viewApplication');
-        Route::get('/edit_application/{uuid}', [ApplicationController::class, 'editApplication'])
-            ->name('editApplication');
+    Route::get('/notifications/data', [DashboardController::class, 'get_notifications'])->name('notifications');
+    Route::get('/notifications/data/get', [DashboardController::class, 'notifications_data']);
+    Route::post('/notifications/mark-read', function () {
+        $type = authUser()['type'];
+        $user = authUser()['user'];
 
-        Route::get('/application/permit/{id}/data', [ApplicationController::class, 'get_application_permit']);
-        Route::post('/application/verify/{id}/', [ApplicationController::class, 'verify_application_permit']);
+        // Get the latest 10 notifications (same as what you display in header)
+        $notifications = DatabaseNotification::where('notifiable_type', $type)->where('notifiable_id', $user->uuid)->latest()->take(10)->get();
 
-        Route::get('/notifications/data', [DashboardController::class, 'get_notifications'])->name('notifications');
-        Route::get('/notifications/data/get', [DashboardController::class, 'notifications_data']);
-        Route::post('/notifications/mark-read', function () {
-            $type = authUser()['type'];
-            $user = authUser()['user'];
-
-            // Get the latest 10 notifications (same as what you display in header)
-            $notifications = DatabaseNotification::where('notifiable_type', $type)
-                ->where('notifiable_id', $user->uuid)
-                ->latest()
-                ->take(10)
-                ->get();
-
-            // Mark only these notifications as read
-            foreach ($notifications as $notification) {
-                if (!$notification->read_at) {
-                    $notification->markAsRead();
-                }
+        // Mark only these notifications as read
+        foreach ($notifications as $notification) {
+            if (!$notification->read_at) {
+                $notification->markAsRead();
             }
+        }
 
-            return response()->json(['status' => 'success']);
-        })->name('notifications.mark-read');
-        Route::get('/notifications', [DashboardController::class, 'notifications_page'])->name('notifications.page');
-        Route::get('/application/exporter', [ApplicationController::class, 'show_exporter'])->name('application.exporter');
+        return response()->json(['status' => 'success']);
+    })->name('notifications.mark-read');
+    Route::get('/notifications', [DashboardController::class, 'notifications_page'])->name('notifications.page');
+    Route::get('/application/exporter', [ApplicationController::class, 'show_exporter'])->name('application.exporter');
 
+    Route::get('/permit/generate/{id}', [PermitGenerateController::class, 'generatePermitWord']);
 
-        Route::get('/permit/generate/{id}', [PermitGenerateController::class, 'generatePermitWord']);
+    Route::get('/payment/{id}/{orderNo}/{permitId}/{total}', [PaymentController::class, 'checkout'])
+        ->name('payment.checkout')
+        ->middleware('signed');
 
-        
+    Route::post('/payment/signed-url', [PaymentController::class, 'signedUrl'])->name('payment.signed.url');
+
+    Route::post('/payment/bayuPay/{amount}/{sid}/{rn}/{itn}', [PaymentController::class, 'bayuPayPayment']);
+
+    Route::post('/payment/cancel', function () {
+        session()->forget('payment_active');
+        return response()->json(['status' => 'cancelled']);
     });
+});
 
 // broadcast --dont kacau---
 // Broadcast::routes();

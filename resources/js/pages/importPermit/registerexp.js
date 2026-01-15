@@ -1023,6 +1023,7 @@ export function summarySubmit() {
     targetTable.innerHTML = ""; // clear existing rows
 
     tempItems.forEach((item, index) => {
+        console.log('item summary', item)
         // --- Build attachment list ---
         let attachmentHTML = "";
 
@@ -1039,10 +1040,10 @@ export function summarySubmit() {
                 <tr>
                     <td>${index + 1}</td>
                     <td>${item.item_name || ""}</td>
-                    <td>${item.quantity || ""}</td>
-                    <td>${item.purpose || ""}</td>
+                    <td>${item.quantity || ""}  ${item.measure || ""}</td>
+                    <td>${item.purpose || ""} </td>
                     <td>${item.uses || ""}</td>
-                    <td>${item.value || ""}</td>
+                    <td>RM ${item.value || ""}</td>
                     <td>${attachmentHTML}</td>
                 </tr>
             `
