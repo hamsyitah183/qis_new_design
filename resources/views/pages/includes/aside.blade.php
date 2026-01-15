@@ -108,7 +108,8 @@
                             </li>
 
                             <li class="slide">
-                                <a href="{{ route('public.showallapplicationlist') }}" class="side-menu__item">Import Permit List</a>
+                                <a href="{{ route('public.showallapplicationlist') }}" class="side-menu__item">All
+                                    Application</a>
                             </li>
                         </ul>
                     </li>
@@ -137,7 +138,7 @@
 
                             <li class="slide {{ $currentRoute === 'internal.application.list' ? 'active' : '' }}">
                                 <a href="{{ route('internal.application.list') }}" class="side-menu__item">
-                                    Import Permit
+                                    All Applications
                                 </a>
                             </li>
                         </ul>
@@ -220,6 +221,10 @@
                             <li class="slide {{ $currentRoute === 'internal.internal.list' ? 'active' : '' }}">
                                 <a href="{{ url('/internal/permit_condition') }}" class="side-menu__item">Permit
                                     Condition</a>
+                            </li>
+
+                            <li class="slide {{ $currentRoute === 'internal.state-district-management' ? 'active' : '' }}">
+                                <a href="{{ route('internal.state-district-management') }}" class="side-menu__item">State & District Management</a>
                             </li>
 
                             <li style="display:none"
