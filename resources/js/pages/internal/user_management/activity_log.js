@@ -175,9 +175,9 @@ function renderTimeline(groupedActivities) {
     }
 
     Object.entries(groupedActivities).forEach(([date, activities]) => {
-        activities.sort(
-            (a, b) => new Date(a.created_at) - new Date(b.created_at)
-        );
+        // activities.sort(
+        //     (a, b) => new Date(a.created_at) - new Date(b.created_at)
+        // );
         const dateSection = document.createElement("div");
         dateSection.classList.add("timeline-date-section");
         dateSection.innerHTML = `

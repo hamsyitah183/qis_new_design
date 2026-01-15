@@ -8,128 +8,211 @@
 
 @push('scripts')
     <!-- vite -->
+    @vite(['resources/js/pages/checkout.js'])
 @endpush
 
 @section('pageName', 'Cart')
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="My Cart">
+    <x-breadcrumb :items="[['label' => 'Application', 'url' => '#'], ['label' => 'Payment', 'url' => '#']]" title="">
 
     </x-breadcrumb>
 @endsection
 
 @section('content')
+
     <div class="row">
-        <div class="col-xl-9">
-            <div class="card custom-card overflow-hidden" id="cart-container-delete">
-                <div class="card-header">
-                    <div class="card-title">
-                        Ready Payment Application List
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table text-nowrap">
-                            <thead>
-                                <tr>
-                                    <th>
-                                        #
-                                    </th>
-                                    <th>
-                                        Application Details
-                                    </th>
-
-                                    <th>
-                                        Total Price (RM)
-                                    </th>
-
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($permits as $index => $permit)
-                      
-                                    <tr data-id="{{ $permit->id }}" data-type="permit">
-                                        <td style="text-align:center">
-                                            {{ $index + 1 }}
-                                        </td>
-
-                                        <td class="cart-items01">
-                                            <div class="d-flex align-items-center">
-                                                <div class="flex-fill">
-                                                    <div class="mb-1 fs-14 fw-semibold">
-                                                        <span class="me-1">Exporter :</span>
-                                                        <span class="fw-medium text-bold text-decoration-underline">
-                                                            {{ $application->exporter->name ?? '-' }}
-                                                        </span>
-                                                    </div>
-
-                                                    <div class="d-flex gap-4 flex-wrap mb-1 align-items-center">
-                                                        <div>
-                                                            <span class="me-1">ETA:</span>
-                                                            <span class="fw-medium text-muted">
-                                                                {{ optional($application->eta)->format('d-m-Y') ?? '-' }}
-                                                            </span>
-                                                        </div>
-
-                                                        <div>
-                                                            <span class="me-1">Entry Point:</span>
-                                                            <span class="fw-medium text-muted">
-                                                                {{ $application->entryPoint->entry_name ?? '-' }}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-
-                                                    <span class="me-1">Type:</span>
-                                                    <span class="badge bg-success-transparent">
-                                                        {{ $permit->type ?? 'Import Permit' }}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </td>
-
-                                        <td>
-                                            <div class="fw-semibold fs-14 text-center">
-                                                RM {{ $permit->value ?? '' }}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+        <div class="col-xl-12">
+            <div class="btn btn-primary mb-2" id= "returnToApplication" data-app-id = "{{ $application->application_id  }}">
+                Return to Application
             </div>
+            <div class="row">
+                <div class="col-xl-9">
+                    <div class="col-xl-12">
+                        <div class="d-flex justify-content-between gap-2">
+                            <div class="card border border-light custom-card">
+                                <div class="card-header">
+                                    <div class="card-title">
+                                        Importer Details
+                                    </div>
+                                </div>
 
-        </div>
-        <div class="col-xl-3">
-            <div class="card custom-card">
-                <div class="card-header">
-                    <div class="card-title">
-                        Order Summary
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <div class="p-3 border-bottom border-block-end-dashed ">
-                        <div class="tab-pane show active overflow-hidden p-0 border-0" id="freeshipping-pane"
-                            role="tabpanel" aria-labelledby="freeshipping" tabindex="0">
-                            <div class="fs-12 text-muted mb-3"><i class="ri-information-fill"></i> Make sure list is what
-                                you want to pay</div>
-                           
-                           
-                            <div class="d-flex align-items-center justify-content-between h5">
-                                <div class="fs-16">Total :</div>
-                                <div class="fw-semibold"> $2,254</div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-borderless table-sm mb-0">
+                                            <tbody>
+                                                <tr>
+                                                    <th class="fw-bold" style="width: 30%;">Name:</th>
+                                                    <td class="text-muted">{{ $application->importer->fullname }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th class="fw-bold">Address:</th>
+                                                    <td class="text-muted">
+                                                        {{ $application->importer->address_1 }},
+                                                        {{ $application->importer->address_2 ? $application->importer->address_2 . ',' : '' }}
+                                                        {{ $application->importer->postcode }},
+                                                        {{ $application->importer->state }}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <th class="fw-bold">No Phone:</th>
+                                                    <td class="text-muted">{{ $application->importer->phone_number }}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
                             </div>
-                            <div class="d-grid">
-                                <button class="btn btn-primary btn-wave mb-2 waves-effect waves-light">Pay Now</button>
+                            <div class="card border border-light custom-card">
+                                <div class="card-header">
+                                    <div class="card-title ">
+                                        Exporter Details
+                                    </div>
+                                </div>
+
+                                <div class="card-body">
+                                    <div class="table-responsive ">
+                                        <table class="table table-borderless table-sm mb-0 ">
+                                            <tbody>
+                                                <tr>
+                                                    <th class="fw-bold" style="width: 30%;">Name:</th>
+                                                    <td class="text-muted">{{ $application->exporter->name }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th class="fw-bold">Address:</th>
+                                                    <td class="text-muted">{{ $application->exporter->address }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th class="fw-bold">No Phone:</th>
+                                                    <td class="text-muted">{{ $application->exporter->phone_no }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th class="fw-bold">Country:</th>
+                                                    <td class="text-muted">{{ $application->exporter->countryInfo->name }}
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-12">
+                        <div class="card custom-card overflow-hidden border" id="cart-container-delete">
+                            <div class="card-header">
+                                <div class="card-title p-2">
+                                    Ready Payment Application List
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive table-bordered mb-4">
+                                    <table class="table text-nowrap">
+                                        <thead>
+                                            <tr>
+                                                <th class = "text-center">
+                                                    #
+                                                </th>
+                                                <th>
+                                                    Application Details
+                                                </th>
+
+                                                <th class = "text-center">
+                                                    Total Price (RM)
+                                                </th>
+
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($permits as $index => $permit)
+                                                <tr data-id="{{ $permit->id }}" data-type="permit">
+                                                    <td style="text-align:center">
+                                                        {{ $index + 1 }}
+                                                    </td>
+
+                                                    <td class="cart-items01">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="flex-fill">
+
+
+
+                                                                <div class="">
+                                                                    <div>
+
+                                                                        <span class="fw-medium text-muted">
+                                                                            {{ $permit->consignment_detail['item_name'] ?? '-' }}
+                                                                        </span>
+                                                                    </div>
+
+                                                                </div>
+
+                                                            </div>
+                                                        </div>
+                                                    </td>
+
+                                                    <td>
+                                                        <div class="fw-semibold fs-14 text-center">
+                                                            RM 30
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+
+                    </div>
+
+                    {{-- @dd($total) --}}
+
+                </div>
+                <div class="col-xl-3">
+                    <div class="card custom-card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                Order Summary
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="p-3 border-bottom border-block-end-dashed ">
+                                <div class="tab-pane show active overflow-hidden p-0 border-0" id="freeshipping-pane"
+                                    role="tabpanel" aria-labelledby="freeshipping" tabindex="0">
+                                    <div class="fs-12 text-muted mb-3"><i class="ri-information-fill"></i> Choose the
+                                        payment type</div>
+
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="payment"
+                                            id="bayuPay">
+                                        <label class="form-check-label" for="bayuPay">
+                                            Bayu Pay
+                                        </label>
+                                    </div>
+                                    
+
+                                    <div class="d-flex align-items-center justify-content-between h5">
+                                        <div class="fs-16">Total :</div>
+                                        <div class="fw-semibold">RM {{ $total }}</div>
+                                    </div>
+                                    <div class="d-grid">
+                                        <button class="btn btn-primary btn-wave mb-2 waves-effect waves-light">Pay
+                                            Now</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+
     </div>
 
 @endsection
