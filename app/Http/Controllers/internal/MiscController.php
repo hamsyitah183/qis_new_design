@@ -25,6 +25,11 @@ class MiscController extends Controller
         return view('pages.internal.misc.control_panel');
     }
 
+    public function showStateDistrictManagement()
+    {
+        return view('pages.internal.misc.state_district_management');
+    }
+
     public function getpbdata($cate)
     {
         if ($cate === 'district_entry') {
