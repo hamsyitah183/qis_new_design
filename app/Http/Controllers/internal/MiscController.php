@@ -223,16 +223,20 @@ class MiscController extends Controller
 
 
         if ($accepted == 1) {
-            $permit->status = 'completed';
-            $status = 'Approved';
+            $permit->status = 'pending for payment';
+            $status = 'Pending for Payment';
         } else {
             $permit->status = 'rejected';
             $status = 'Rejected';
+            $permit->remark = $request['reason'];
         }
         $permit->save();
 
         $allStatuses = IpConsignmentPermit::where('application_id', $permit->application->id)
             ->pluck('status'); // gets a collection of all statuses
+
+
+        $url = '/view_application' . $permit->application->application_id;
 
         // Events & notifications
         event(new ApplicationDeleted('Permit in ' . $permit->application->application_id . ' is ' . $status));
@@ -240,7 +244,8 @@ class MiscController extends Controller
         $users = InternalUser::role(['admin', 'officer'])->get();
         Notification::send($users, new ApplicationNotification(
             'A permit with application ID ' . $permit->application->application_id . ' has been ' . $status,
-            authUser()['user']->fullname
+            authUser()['user']->fullname,
+            $url
         ));
 
         $user = PublicUser::where('uuid', $permit->application->user_id)->first();
@@ -252,10 +257,16 @@ class MiscController extends Controller
 
         Notification::send($user, new ApplicationNotification(
             'A permit in application with ID ' . $permit->application->application_id . ' has been ' . $status,
-            authUser()['user']->fullname
+            authUser()['user']->fullname,
+            $url
         ));
 
 
+        $application->logActivity(
+            action: 'Officer Verification',
+            remark: $request['reason'] ?? 'Permit approved by officer',
+            status: 'Officer Verified'
+        );
 
         // Check if no status is 'processing'
         if (!$allStatuses->contains('processing')) {

@@ -2,9 +2,10 @@ import $ from "jquery";
 import Swal from "sweetalert2";
 import { formatTime, getCountry, getEntryPoint } from "../../app";
 let application = null;
+let value = null;
 
 /* -------------------------------
-   Get application ID from URL
+Get application ID from URL
 -------------------------------- */
 function getApplicationIdFromUrl() {
     const url = window.location.pathname;
@@ -13,7 +14,7 @@ function getApplicationIdFromUrl() {
 }
 
 /* -------------------------------
-   Load application data
+Load application data
 -------------------------------- */
 async function loadApplicationData() {
     const applicationId = getApplicationIdFromUrl();
@@ -51,12 +52,12 @@ async function attachmentTable() {
 
     if (!permits || permits.length === 0) {
         tableBody.append(`
-            <tr>
-                <td colspan="7" class="text-center text-muted">
-                    No consignment items found.
-                </td>
-            </tr>
-        `);
+<tr>
+    <td colspan="7" class="text-center text-muted">
+        No consignment items found.
+    </td>
+</tr>
+`);
         return;
     }
 
@@ -76,23 +77,31 @@ async function attachmentTable() {
                 (roles.includes("admin") || roles.includes("officer"))
             ) {
                 permitAction = `
-                <div class="btn btn-sm btn-primary-light btn-wave accept" data-permit="${permit.id}">
-                    Approved
-                </div>
-                <div class="btn btn-sm btn-danger-light btn-wave reject" data-permit="${permit.id}">
-                    Rejected
-                </div>`;
+<div class="btn btn-sm btn-primary-light btn-wave accept" data-permit="${permit.id}">
+    Approved
+</div>
+<div class="btn btn-sm btn-danger-light btn-wave reject" data-permit="${permit.id}">
+    Rejected
+</div>`;
             }
         }
 
-        if (applicationStatus === "Fully Processed") {
-            if (permit.status === "completed") {
-                permitAction = `
-                <div class="btn btn-sm btn btn-teal-light btn-wave generatePermit" data-permit="${permit.id}">
-                    Download Permit
-                </div>
-               `;
-            }
+        // if (applicationStatus === "Fully Processed") {
+        // if (permit.status === "paid") {
+        // permitAction = `
+        // <div class="btn btn-sm btn btn-teal-light btn-wave generatePermit" data-permit="${permit.id}">
+        // Download Permit
+        // </div>
+        // `;
+        // }
+        // }
+
+        if (permit.status === "paid") {
+            permitAction = `
+<div class="btn btn-sm btn btn-teal-light btn-wave generatePermit" data-permit="${permit.id}">
+    Download Permit
+</div>
+`;
         }
 
         let permitStatus = "";
@@ -106,30 +115,83 @@ async function attachmentTable() {
             text = '<span class="badge bg-info fs-11 p-1">Processing</span>';
         } else if (statuses.includes("rejected")) {
             text = '<span class="badge bg-danger fs-11 p-1">Rejected</span>';
+        } else if (statuses.includes("paid")) {
+            text = '<span class="badge bg-success fs-11 p-1">Paid</span>';
+        } else if (statuses.includes("payment")) {
+            text =
+                '<span class="badge bg-warning fs-11 p-1">Pending For Payment</span>';
         }
 
         permitStatus = `<td>${text}</td>`;
 
         tableBody.append(`
-            <tr>
-                <td>${detail.item_name ?? "—"}</td>
-                <td>${detail.quantity ?? "—"} ${detail.measure ?? ""}</td>
-                <td class="text-wrap">${detail.purpose ?? "—"}</td>
-                <td>RM ${detail.value ?? "—"}</td>
-                ${permitStatus}
-                <td>
-                    <div class="d-flex gap-2 align-items-center">
-                        <div class="btn btn-sm btn-success-light btn-wave view-attachment" data-permit="${
-                            permit.id
-                        }">
-                            <i class="ti ti-eye"></i>
-                        </div>
-                        ${permitAction}
-                    </div>
-                </td>
-            </tr>
-        `);
+<tr>
+    <td>${detail.item_name ?? "—"}</td>
+    <td>${detail.quantity ?? "—"} ${detail.measure ?? ""}</td>
+    <td class="text-wrap">${detail.purpose ?? "—"}</td>
+    <td>RM ${detail.value ?? "—"}</td>
+    ${permitStatus}
+    <td>
+        <div class="d-flex gap-2 align-items-center">
+            <div class="btn btn-sm btn-success-light btn-wave view-attachment"
+                data-permit="${permit.id}">
+                <i class="ti ti-eye"></i>
+            </div>
+            ${permitAction}
+        </div>
+    </td>
+</tr>
+`);
     });
+}
+async function pendingPaymentTable() {
+    console.log("Running attachment table...");
+    const tableBody = $("#summaryTable4 tbody");
+    tableBody.empty();
+
+    const permits = application.consignment_permits || [];
+
+    const pendingPaymentPermits = permits.filter(
+        (p) => p.status?.toLowerCase() === "pending for payment"
+    );
+
+    if (!pendingPaymentPermits || pendingPaymentPermits.length === 0) {
+        tableBody.append(`
+<tr>
+    <td colspan="7" class="text-center text-muted">
+        No consignment items found.
+    </td>
+</tr>
+`);
+        return;
+    }
+
+    pendingPaymentPermits.forEach((permit, index) => {
+        let detail = permit.consignment_detail || {};
+
+        console.log("user role?", window.authUser);
+
+        tableBody.append(`
+<tr>
+    <td>
+        <div class="form-check">
+            <input class="form-check-input permit-checkbox" type="checkbox" value="${
+                permit.id
+            }"
+                data-permit-value = "30">
+
+
+        </div>
+    </td>
+    <td>${detail.item_name ?? "—"}</td>
+
+    <td>RM 30</td>
+
+</tr>
+`);
+    });
+
+    $("#checkAllPermits").prop("checked", false);
 }
 
 function acceptPermit() {
@@ -197,57 +259,57 @@ function rejectPermit() {
         .off("click", ".reject")
         .on("click", ".reject", function (e) {
             e.preventDefault();
+
             const id = $(this).data("permit");
 
             Swal.fire({
-                title: "Are you sure?",
-                text: "Do you want to reject this permit?",
-                icon: "question",
+                title: "Reject Permit",
+                text: "Please provide a reason for rejecting this permit:",
+                icon: "warning",
+                input: "textarea",
+                inputPlaceholder: "Enter rejection reason...",
                 showCancelButton: true,
-                confirmButtonText: "Yes, proceed",
+                confirmButtonText: "Reject Permit",
                 cancelButtonText: "Cancel",
-            }).then((firstResult) => {
-                if (firstResult.isConfirmed) {
-                    Swal.fire({
-                        title: "Please Confirm Again",
-                        text: "This action cannot be undone. Reject the permit?",
-                        icon: "warning",
-                        showCancelButton: true,
-                        confirmButtonText: "Yes, reject it",
-                        cancelButtonText: "Cancel",
-                    }).then((secondResult) => {
-                        if (secondResult.isConfirmed) {
-                            $.ajax({
-                                url: `/internal/permit/${id}`,
-                                method: "POST",
-                                data: {
-                                    _token: $("meta[name='csrf-token']").attr(
-                                        "content"
-                                    ),
-                                    accepted: 0,
-                                },
-                                success: function () {
-                                    Swal.fire(
-                                        "Rejected!",
-                                        "The permit has been rejected.",
-                                        "success"
-                                    );
-                                    // Refresh table
-                                    initApplicationDetails();
-                                },
-                                error: function (err) {
-                                    Swal.fire({
-                                        icon: "error",
-                                        title: "Error!",
-                                        text:
-                                            err.responseJSON?.message ||
-                                            "Something went wrong.",
-                                    });
-                                },
-                            });
-                        }
-                    });
-                }
+                didOpen: () => {
+                    const textarea = Swal.getInput();
+                    textarea.style.fontSize = "12px";
+                    textarea.style.lineHeight = "1.5";
+                },
+                inputValidator: (value) => {
+                    if (!value || value.trim().length < 5) {
+                        return "Rejection reason is required (min 5 characters).";
+                    }
+                },
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+
+                $.ajax({
+                    url: `/internal/permit/${id}`,
+                    method: "POST",
+                    data: {
+                        _token: $('meta[name="csrf-token"]').attr("content"),
+                        rejected: 1,
+                        reason: result.value, // 👈 SEND REASON
+                    },
+                    success: function () {
+                        Swal.fire(
+                            "Rejected!",
+                            "The permit has been rejected successfully.",
+                            "success"
+                        );
+                        initApplicationDetails();
+                    },
+                    error: function (err) {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error!",
+                            text:
+                                err.responseJSON?.message ||
+                                "Something went wrong.",
+                        });
+                    },
+                });
             });
         });
 }
@@ -297,65 +359,85 @@ async function viewMore() {
 
         // Build attachment table
         let attachmentContent = `
-        <div class = "table-responsive">
-            <table class="table table-bordered table-responsive rounded">
-                <thead>
-                    <tr>
-                        <th>File Name</th>
-                        <th>Type</th>
-                    
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
+    <div class = "table-responsive">
+        <table class="table table-bordered table-responsive rounded">
+            <thead>
+                <tr>
+                    <th>File Name</th>
+                    <th>Type</th>
+
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                `;
 
         attachments.forEach((file) => {
             attachmentContent += `
                 <tr>
                     <td>${file.file_name ?? "-"}</td>
                     <td>${file.file_type ?? "-"}</td>
-                 
+
                     <td>
-                        <button class="btn btn-sm btn-primary view-file-btn" data-file="${
-                            file.file_path
-                        }">
+                        <button class="btn btn-sm btn-primary view-file-btn"
+                            data-file="${file.file_path}">
                             View
                         </button>
                     </td>
                 </tr>
-            `;
+                `;
         });
 
         attachmentContent += `
-                </tbody>
-            </table>
-            </div>
-        `;
+            </tbody>
+        </table>
+    </div>
+    `;
 
         // Build modal body
         let modalContent = `
-            <div class="p-1 row">
-                <div class = "col-12 col-md-6"><p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-tag"></i></span> Item Name:</strong> ${
-                    detail.item_name ?? "-"
-                }</p></div>
-                <div class = "col-12 col-md-6"><p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-scale-balanced"></i></span> Quantity:</strong> ${
-                    detail.quantity ?? "-"
-                } ${detail.measure ?? ""}</p></div>
-                <div class = "col-12 col-md-6"><p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-money-bill"></i></span> Value:</strong> RM ${
-                    detail.value ?? "-"
-                }</p></div>
-                <div class = "col-12 col-md-6"><p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-pen-fancy"></i></span> Purpose:</strong> ${
-                    detail.purpose ?? "-"
-                }</p></div>
-                <div class = "col-12 col-md-6"><p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-gear"></i></span> Uses:</strong> ${
-                    detail.uses ?? "-"
-                }</p></div>
+    <div class="d-flex justify-content-start flex-wrap gap-1 mb-2">
+        ${renderPermitBadge(permit.status.toLowerCase(), permit.remark)}
+    </div>
 
-                <p class="mt-3"><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-file"></i></span> Attachment(s)</strong></p>
-                ${attachmentContent}
-            </div>
-        `;
+
+    <div class="p-1 row">
+        <div class = "col-12 col-md-6">
+            <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
+                            class="fa-solid fa-tag"></i></span> Item Name:</strong> ${
+                                detail.item_name ?? "-"
+                            }</p>
+        </div>
+        <div class = "col-12 col-md-6">
+            <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
+                            class="fa-solid fa-scale-balanced"></i></span> Quantity:</strong> ${
+                                detail.quantity ?? "-"
+                            } ${detail.measure ?? ""}</p>
+        </div>
+        <div class = "col-12 col-md-6">
+            <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
+                            class="fa-solid fa-money-bill"></i></span> Value:</strong> RM ${
+                                detail.value ?? "-"
+                            }</p>
+        </div>
+        <div class = "col-12 col-md-6">
+            <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
+                            class="fa-solid fa-pen-fancy"></i></span> Purpose:</strong> ${
+                                detail.purpose ?? "-"
+                            }</p>
+        </div>
+        <div class = "col-12 col-md-6">
+            <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
+                            class="fa-solid fa-gear"></i></span> Uses:</strong> ${
+                                detail.uses ?? "-"
+                            }</p>
+        </div>
+
+        <p class="mt-3"><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
+                        class="fa-solid fa-file"></i></span> Attachment(s)</strong></p>
+        ${attachmentContent}
+    </div>
+    `;
 
         // Modal
         const modalEl = document.getElementById("consignmentModal");
@@ -439,6 +521,55 @@ function verifyApplication() {
     });
 }
 
+function renderPermitBadge(status, remark = "") {
+    let badgeClass = "";
+    let label = "";
+    let remarkHtml = "";
+
+    switch (status) {
+        case "processing":
+            badgeClass = "bg-info";
+            label = "Processing";
+            break;
+
+        case "pending for payment":
+            badgeClass = "bg-warning text-dark";
+            label = "Pending Payment";
+            break;
+
+        case "paid":
+            badgeClass = "bg-success";
+            label = "Paid";
+            break;
+
+        case "rejected":
+            badgeClass = "bg-danger";
+            label = "Rejected";
+
+            if (remark) {
+                remarkHtml = `
+    <div class="mt-1">
+        <strong class = "fs-12">Reason:</strong> <span class = "text-muted">${remark}</span>
+    </div>
+    `;
+            }
+            break;
+
+        default:
+            badgeClass = "bg-secondary";
+            label = status ?? "Unknown";
+    }
+
+    return `
+    <div>
+        <span class="badge badge-md ${badgeClass}">
+            ${label}
+        </span>
+        ${remarkHtml}
+    </div>
+    `;
+}
+
 // reject application
 function rejectApplication() {
     $("#rejectAppl").on("click", function (e) {
@@ -499,11 +630,9 @@ function adminRejectApplication() {
         Swal.fire({
             title: "Reject Application",
             html: `
-                <p class="mb-2">Please provide a reason for rejection:</p>
-                <textarea id="rejectReason"
-                    class="swal2-textarea"
-                    placeholder="Enter rejection reason..."></textarea>
-            `,
+    <p class="mb-2">Please provide a reason for rejection:</p>
+    <textarea id="rejectReason" class="swal2-textarea" placeholder="Enter rejection reason..."></textarea>
+    `,
             icon: "warning",
             showCancelButton: true,
             confirmButtonText: "Confirm",
@@ -628,24 +757,47 @@ function applicationLog() {
 
             activity_log.forEach((log, index) => {
                 tableBody.append(`
-                    <tr>
-                        <td>${log.action}</td>
-                        <td>${log.causer.fullname}</td>
-                        <td>${log.remark}</td>
-                        <td>${log.status}</td>
-                        <td>${formatTime(log.created_at)}</td>
-                    </tr>
-                `);
+    <tr>
+        <td>${log.action}</td>
+        <td>${log.causer.fullname}</td>
+        <td>${log.remark}</td>
+        <td>${log.status}</td>
+        <td>${formatTime(log.created_at)}</td>
+    </tr>
+    `);
             });
 
             const modal = new bootstrap.Modal(modalEl);
             modal.show();
         });
 }
+let totalPermit = 0;
+// Function to sum selected permit values
+function updateTotalValue() {
+    let total = 0;
+    $(".permit-checkbox:checked").each(function () {
+        const value = parseFloat($(this).data("permit-value")) || 0;
+        total += value;
+    });
+
+    // Update the totalValue element
+    $("#totalValue").text(
+        "RM " +
+            total.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            })
+    );
+
+    totalPermit = total;
+
+}
+
+
 
 /* -------------------------------
-   Initializer (shows Swal first)
--------------------------------- */
+    Initializer (shows Swal first)
+    -------------------------------- */
 async function initApplicationDetails() {
     Swal.fire({
         title: "Loading...",
@@ -673,11 +825,83 @@ async function initApplicationDetails() {
     acceptPermit();
     rejectPermit();
     generatePermit();
+    pendingPaymentTable();
+
 
     Swal.close(); // Close after data is loaded
+
+    // When "Check All" is toggled
+    $(document).on("change", "#checkAllPermits", function () {
+        const isChecked = $(this).is(":checked");
+
+        // Toggle all row checkboxes
+        $(".permit-checkbox").prop("checked", isChecked);
+
+        // Enable/disable the checkout button
+        $("#checkoutPage").prop("disabled", !isChecked);
+
+        // Update total value
+        updateTotalValue();
+    });
+
+    // When individual checkboxes are toggled
+    $(document).on("change", ".permit-checkbox", function () {
+        const total = $(".permit-checkbox").length;
+        const checked = $(".permit-checkbox:checked").length;
+
+        $("#checkoutPage").prop("disabled", checked === 0);
+        $("#checkAllPermits").prop("checked", total > 0 && total === checked);
+
+        // Update total value
+        updateTotalValue();
+    });
+
+    // When checkout button is clicked
+    $(document).on("click", "#checkoutPage", function (e) {
+        e.preventDefault();
+
+        const selectedPermits = $(".permit-checkbox:checked")
+            .map(function () {
+                return $(this).val();
+            })
+            .get();
+
+        if (selectedPermits.length === 0) {
+            Swal.fire("Error!", "Choose the permit to continue.", "error");
+            return;
+        }
+
+        Swal.fire({
+            title: "Loading...",
+
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            },
+        });
+
+        totalPermit = Number(totalPermit).toFixed(2);
+
+        $.ajax({
+            url: "/payment/signed-url",
+            method: "POST",
+            data: {
+                application_id: application.id,
+                permit_ids: selectedPermits,
+                total: totalPermit,
+                _token: $('meta[name="csrf-token"]').attr("content"),
+            },
+            success: function (res) {
+                window.location.href = res.url;
+            },
+            error: function () {
+                Swal.fire("Error!", "Unable to proceed to checkout.", "error");
+            },
+        });
+    });
 }
 
 /* -------------------------------
-   Run initializer
--------------------------------- */
+    Run initializer
+    -------------------------------- */
 initApplicationDetails();

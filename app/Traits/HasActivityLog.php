@@ -14,23 +14,62 @@ trait HasActivityLog
         return LogOptions::defaults()
             ->useLogName('user_activity')
             ->logOnly([
-                'name', 'email', 'phone', 'position', 'office',
-                'no_ic', 'fullname', 'account_type', 'state'
+                'fullname',
+                'email',
+                'phone_number',
+                'address_1',
+                'address_2',
+                'district',
+                'state',
+                'account_type',
             ])
-            ->logOnlyDirty() // only log changed fields
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
             ->setDescriptionForEvent(function (string $eventName) {
-                $name = $this->name ?? $this->fullname ?? 'Unknown user';
 
-                switch ($eventName) {
-                    case 'created':
-                        return "{$name} has been registered.";
-                    case 'updated':
-                        return "{$name}'s profile information was updated.";
-                    case 'deleted':
-                        return "{$name}'s account was deleted.";
-                    default:
-                        return "Action '{$eventName}' occurred for {$name}.";
-                }
+                // TARGET (the model being changed)
+                $targetType = $this instanceof \App\Models\InternalUser
+                    ? 'internal user'
+                    : 'public user';
+
+                $targetName = $this->name
+                    ?? $this->fullname
+                    ?? 'Unknown user';
+
+                // CAUSER (who performed the action)
+                $auth = authUser(); // your helper
+                $causerType = $auth['type'] ?? 'system';
+                $causer = $auth['user'] ?? null;
+
+                $causerName = match ($causerType) {
+                    'internal' => $causer?->fullname ?? 'Internal Admin',
+                    'public'   => $causer?->fullname ?? 'Public User',
+                    default    => 'System',
+                };
+
+                return match ($eventName) {
+
+                    'created' =>
+                    $causerType === 'internal'
+                        ? "{$causerName} created a {$targetType} account for {$targetName}."
+                        : "{$targetName} registered a new account.",
+
+                    'updated' =>
+                    $causerType === 'internal'
+                        ? "{$causerName} updated {$targetName}'s {$targetType} profile."
+                        : "{$targetName} updated their profile information.",
+
+                    'deleted' =>
+                    $causerType === 'internal'
+                        ? "{$causerName} deleted {$targetName}'s {$targetType} account."
+                        : "{$targetName} deleted their own account.",
+
+                    'restored' =>
+                    "{$causerName} restored {$targetName}'s {$targetType} account.",
+
+                    default =>
+                    "{$causerName} performed {$eventName} on {$targetName}.",
+                };
             });
     }
 }

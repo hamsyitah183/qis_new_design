@@ -1,0 +1,113 @@
+/* error page styles */
+
+.error-page {
+    background-color: var(--default-body-bg-color, #ffffff);
+    font-family: var(--font-sans, sans-serif);
+    overflow: hidden;
+}
+
+.error-container {
+    position: relative;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+/* dotted background */
+.halftone-bg {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background-image: radial-gradient(#e0e0e0 20%, transparent 20%);
+    background-position: 0 0;
+    background-size: 30px 30px;
+    border-radius: 50%;
+    z-index: 0;
+    opacity: 0.6;
+    /* fade edges */
+    -webkit-mask-image: radial-gradient(circle, rgba(0, 0, 0, 1) 40%, rgba(0, 0, 0, 0) 70%);
+    mask-image: radial-gradient(circle, rgba(0, 0, 0, 1) 40%, rgba(0, 0, 0, 0) 70%);
+}
+
+.error-code {
+    font-size: 18rem;
+    font-weight: 900;
+    line-height: 0.8;
+    position: relative;
+    z-index: 1;
+    color: #5c6bfa;
+    text-shadow: 6px 6px 0px #3442c5;
+    letter-spacing: -0.05em;
+    user-select: none;
+}
+
+/* error message */
+.error-message {
+    font-size: 4rem;
+    font-weight: 900;
+    color: #000;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-top: -4rem;
+    z-index: 2;
+    position: relative;
+    text-shadow: 2px 2px 0px rgba(255, 255, 255, 0.8);
+}
+
+.error-description {
+    font-size: 1rem;
+    color: #555;
+    margin-top: 1.5rem;
+    max-width: 500px;
+    z-index: 2;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.home-btn {
+    margin-top: 2.5rem;
+    padding: 15px 50px;
+    border: none;
+    color: #fff;
+    background-color: #6c76f9;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-decoration: none;
+    border-radius: 30px;
+    box-shadow: 0 4px 15px rgba(92, 107, 250, 0.4);
+    transition: all 0.3s ease;
+    z-index: 2;
+    font-size: 0.9rem;
+    display: inline-block;
+}
+
+.home-btn:hover {
+    background-color: #5c6bfa;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(92, 107, 250, 0.6);
+    color: #fff;
+}
+
+/* responsiveness */
+@media (max-width: 768px) {
+    .error-code {
+        font-size: 10rem;
+    }
+
+    .error-message {
+        font-size: 2rem;
+        margin-top: -2.5rem;
+    }
+
+    .halftone-bg {
+        width: 100%;
+        height: auto;
+        padding-bottom: 100%;
+        width: 350px;
+        height: 350px;
+    }
+}

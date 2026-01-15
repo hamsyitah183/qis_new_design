@@ -39,6 +39,8 @@ class VerificationService
             $verification->status = 'waiting for approval';
             $verification->save();
 
+            
+
             return [
                 'success' => true,
                 'message' => 'File uploaded successfully.',

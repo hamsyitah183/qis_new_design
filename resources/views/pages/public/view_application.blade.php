@@ -72,6 +72,10 @@
                                 <span class="dot"></span>
                                 <span>Confirmation</span>
                             </div>
+                            <div class="wizard-step" data-step="5">
+                                <span class="dot"></span>
+                                <span>Confirmation</span>
+                            </div>
                         </aside>
                         <aside class="wizard-content container">
                             <!-- step0 -->
@@ -98,21 +102,17 @@
                                 $isPublic = auth()->guard('public')->check();
                                 $isOwner =
                                     $isPublic && $application->importer->uuid === auth()->guard('public')->user()->uuid;
-                             
+
                             @endphp
                             {{-- @dd($application->status) --}}
                             @if (
                                 ($application->status === 'Clerk Review In-Progress' && $isAdminOrClerk) ||
-                                    ($application->category_application == 1 &&  ($isOwner || $isAdminOrClerk )))
+                                    ($application->category_application == 1 && ($isOwner || $isAdminOrClerk)))
                                 {{-- Step 4 --}}
                                 @include('pages.public.view_permit.step4')
                             @endif
 
-
-
-
-
-
+                            @include('pages.public.view_permit.step5')
 
 
                         </aside>
@@ -189,5 +189,23 @@
             };
             new Wizard1(secondWizardConfig).init();
         })();
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.location.hash === '#pending') {
+
+                
+                document.querySelectorAll('.wizard-step').forEach(el => {
+                    el.classList.remove('active');
+                });
+
+                
+                const pendingTab = document.getElementById('pendingTab');
+                if (pendingTab) {
+                    pendingTab.classList.add('active');
+                }
+
+            }
+        });
     </script>
 @endpush

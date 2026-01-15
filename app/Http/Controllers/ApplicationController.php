@@ -15,6 +15,7 @@ use App\Models\IpConsignmentPermit;
 use App\Models\PublicCode;
 use App\Models\PublicUser;
 use App\Notifications\ApplicationNotification;
+use App\Services\ApplicationActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -54,7 +55,9 @@ class ApplicationController extends Controller
             'importer',
             'exporter',
             'entryPoint.districtCode',
+            'latestLog.causer',
         ]);
+
 
         // Filter for public users
         if ($type === 'public') {
@@ -69,33 +72,55 @@ class ApplicationController extends Controller
             ->addColumn('importer', fn($row) => $row->importer->fullname ?? '-')
             ->addColumn('exporter', fn($row) => $row->exporter->name ?? '-')
             ->addColumn('status', function ($row) {
+
                 $status = strtolower($row->status ?? 'pending');
 
-                return match (true) {
-                    str_contains($status, 'pending') =>
-                    '<span class="badge bg-warning fs-12 p-1">Pending</span>',
-                    str_contains($status, 'rejected') =>
-                    '<span class="badge bg-danger fs-12 p-1">Rejected</span>',
-                    str_contains($status, 'not approved') =>
-                    '<span class="badge bg-danger fs-12 p-1">Not Approved</span>',
-                    str_contains($status, 'accepted') =>
-                    '<span class="badge bg-success fs-12 p-1">Accepted</span>',
+                $latestLog = $row->latestLog;
+                $id = $row->application_id;
 
+                $latestTime = $latestLog?->updated_at
+                    ?->format('d M Y, h:i A') ?? '-';
+
+                $causerName = $latestLog?->causer?->fullname ?? '-';
+
+                return match (true) {
+
+                    str_contains($status, 'pending') =>
+                    $this->badge('warning', 'Pending', $latestTime, $causerName, $id),
+
+                    str_contains($status, 'rejected') =>
+                    $this->badge('danger', 'Rejected', $latestTime, $causerName, $id),
+
+                    str_contains($status, 'not approved') =>
+                    $this->badge('danger', 'Not Approved', $latestTime, $causerName, $id),
+
+                    str_contains($status, 'accepted') =>
+                    $this->badge('success', 'Accepted', $latestTime, $causerName, $id),
 
                     str_contains($status, 'fully processed') =>
-                    '<span class="badge bg-success fs-12 p-1">Fully Processed</span>',
+                    $this->badge('success', 'Fully Processed', $latestTime, $causerName, $id),
+
                     str_contains($status, 'clerk verified') =>
-                    '<span class="badge bg-info fs-12 p-1">Clerk Verified</span>',
+                    $this->badge('info', 'Clerk Verified', $latestTime, $causerName, $id),
+
                     default =>
-                    '<span class="badge bg-secondary fs-12 p-1">' . ucfirst($status) . '</span>',
+                    '<span class="badge bg-secondary fs-12 p-1  activityLog"  data-log = "' . $id . '">'
+                        . ucfirst($status) .
+                        '</span>',
                 };
             })
+
+
             ->addColumn('permit_status', function ($row) {
                 // Map statuses to colors
                 $statusColors = [
                     'processing' => 'bg-info', // blue
+
+                    'pending for payment'  => 'bg-warning', // green
                     'rejected'   => 'bg-danger',  // red
-                    'completed'  => 'bg-success', // green
+                    // 'completed'  => 'bg-success', // green
+                    'paid'  => 'bg-success', // green
+
                 ];
 
                 // Get all permit statuses for this row, lowercase
@@ -107,7 +132,9 @@ class ApplicationController extends Controller
                 $statusCounts = [
                     'processing' => 0,
                     'rejected'   => 0,
-                    'completed'  => 0,
+                    'pending for payment'  => 0,
+                    'paid'  => 0,
+
                 ];
 
                 foreach ($permit_statuses as $status) {
@@ -120,7 +147,8 @@ class ApplicationController extends Controller
                 $boxesHtml = '';
                 foreach ($statusColors as $status => $color) {
                     $count = $statusCounts[$status] ?? 0;
-                    $boxesHtml .= '<div class="badge ' . $color . ' text-white text-center" 
+                    $boxesHtml .= '<div class="badge ' . $color . ' text-white text-center"  data-bs-toggle="tooltip"
+                            data-bs-placement="top" title="' .  $status  .  '"
                            style="height:20px; width:20px; display:inline-flex; align-items:center; justify-content:center; margin-right:5px;">
                            ' . $count . '
                        </div>';
@@ -159,6 +187,18 @@ class ApplicationController extends Controller
             ->rawColumns(['status', 'action', 'permit_status'])
             ->make(true);
     }
+
+    private function badge($color, $label, $time, $user, $id)
+    {
+        return '
+        <span class="badge bg-' . $color . ' fs-12 p-1 activityLog"  data-log = '  . $id . '
+         >' . $label . '</span>
+        <br class = "mt-1">
+        <small class="text-muted">at ' . $time . '</small><br>
+        <small class="text-muted">by ' . e($user) . '</small>
+    ';
+    }
+
 
 
     public function getAllReviewapplicationList()
@@ -452,6 +492,17 @@ class ApplicationController extends Controller
             $application->status = 'Clerk Review In-Progress';
             $application->importer_verify = 'Verified';
             $status = 'Clerk Review In-Progress';
+
+
+            ApplicationActivityLogger::log(
+                application: $application,
+                event: 'importer_verified',
+                description: authUser()['user']->fullname
+                    . " verified application with id {$application->application_id}",
+                properties: [
+                    'role' => 'importer',
+                ]
+            );
         } elseif ($request->input('not_verified')) {
 
             $application->logActivity(
@@ -463,6 +514,17 @@ class ApplicationController extends Controller
             $application->status = 'Not Approved';
             $application->importer_verify = 'Not Approved';
             $status = 'Not Approved';
+
+
+            ApplicationActivityLogger::log(
+                application: $application,
+                event: 'importer_verified',
+                description: authUser()['user']->fullname
+                    . " not verified application with id {$application->application_id}",
+                properties: [
+                    'role' => 'importer',
+                ]
+            );
         } elseif ($request->accepted) {
 
             $application->logActivity(
@@ -474,6 +536,17 @@ class ApplicationController extends Controller
             $application->status = 'Clerk Verified';
             $application->importer_verify = 'Accepted';
             $status = 'Clerk Verified';
+
+
+            ApplicationActivityLogger::log(
+                application: $application,
+                event: 'clerk_verified',
+                description: authUser()['user']->fullname
+                    . " verified application {$application->application_id}",
+                properties: [
+                    'role' => 'clerk',
+                ]
+            );
         } elseif ($request->rejected) {
 
             $application->logActivity(
@@ -484,6 +557,17 @@ class ApplicationController extends Controller
 
             $application->status = 'Clerk Rejected';
             $status = 'Clerk Rejected';
+
+
+            ApplicationActivityLogger::log(
+                application: $application,
+                event: 'clerk_verified',
+                description: authUser()['user']->fullname
+                    . " not verified application with id {$application->application_id} with reason "   . $request->input('reason') . " .",
+                properties: [
+                    'role' => 'clerk',
+                ]
+            );
         }
 
         // Save application state

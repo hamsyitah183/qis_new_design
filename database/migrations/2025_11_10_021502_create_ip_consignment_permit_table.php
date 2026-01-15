@@ -36,6 +36,8 @@ return new class extends Migration
             
             $table->string('status')->nullable();
 
+            $table->text('remark')->nullable();
+
             $table->timestamps();
         });
     }

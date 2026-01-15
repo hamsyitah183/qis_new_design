@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\HasActivityLog;
+use App\Traits\HasApplicationActivityLog;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Str;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class PublicUser extends Authenticatable implements MustVerifyEmail
 {
-    use Notifiable, HasRoles, HasFactory, HasActivityLog;
+    use Notifiable, HasRoles, HasFactory, HasActivityLog, HasApplicationActivityLog;
 
     protected $guard = 'public';
 

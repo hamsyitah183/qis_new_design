@@ -19,6 +19,7 @@ use App\Models\PublicCode;
 use App\Models\PublicUser;
 use App\Models\TempAttachment;
 use App\Notifications\ApplicationNotification;
+use App\Services\ApplicationActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -305,6 +306,18 @@ class PermitApplicationController extends Controller
                         : 'Your Application with id ' . $application->application_id . ' is submitted',
                     $application->user_id
                 ));
+
+                ApplicationActivityLogger::log(
+                    application: $application,
+                    event: 'create_application',
+                    description: authUser()['user']->fullname
+                        . " create application with id {$application->application_id}",
+                    properties: [
+                        'role' => 'public',
+                    ]
+                );
+
+              
             }
 
             $appId = $application->id;
