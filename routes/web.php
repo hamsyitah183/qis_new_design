@@ -213,11 +213,13 @@ Route::middleware(['auth.any'])->group(function () {
 
     Route::get('/permit/generate/{id}', [PermitGenerateController::class, 'generatePermitWord']);
 
-    Route::get('/payment/{id}/{permitId}/{total}', [PaymentController::class, 'checkout'])
+    Route::get('/payment/{id}/{orderNo}/{permitId}/{total}', [PaymentController::class, 'checkout'])
         ->name('payment.checkout')
         ->middleware('signed');
 
     Route::post('/payment/signed-url', [PaymentController::class, 'signedUrl'])->name('payment.signed.url');
+
+    Route::post('/payment/bayuPay/{amount}/{sid}/{rn}/{itn}', [PaymentController::class, 'bayuPayPayment']);
 
     Route::post('/payment/cancel', function () {
         session()->forget('payment_active');

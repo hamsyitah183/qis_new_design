@@ -21,7 +21,7 @@
 @endsection
 
 @section('content')
-
+    {{-- @dd($order) --}}
     <div class="row">
         <div class="col-xl-12">
             <div class="btn btn-primary mb-2" id= "returnToApplication" data-app-id = "{{ $application->application_id  }}">
@@ -105,7 +105,7 @@
                         <div class="card custom-card overflow-hidden border" id="cart-container-delete">
                             <div class="card-header">
                                 <div class="card-title p-2">
-                                    Ready Payment Application List
+                                    <span class="fw-bold">Order No: </span> <span class="ms-2 text-muted">{{ $order->order_number  }}</span>
                                 </div>
                             </div>
                             <div class="card-body p-0">
@@ -117,7 +117,7 @@
                                                     #
                                                 </th>
                                                 <th>
-                                                    Application Details
+                                                    Permits
                                                 </th>
 
                                                 <th class = "text-center">
