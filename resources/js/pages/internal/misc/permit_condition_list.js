@@ -67,7 +67,7 @@ import Swal from "sweetalert2";
             import("datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css"),
         ]);
 
-        internalListTable = new DataTable("#internalUsersTable", {
+        internalListTable = new DataTable("#conditionTable", {
             processing: true,
             serverSide: true,
             ajax: "/internal/permit_condition/data",

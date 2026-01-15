@@ -1,5 +1,5 @@
 <div class="wizard-step" data-title="PENDING FOR PAYMENT" data-id="dOM0iRAyJXsLTr9b3KZfQ2jNv4pgn6Gu" data-limit="5"
-    data-step="5">
+    data-step="5" id="pendingTab">
     <div class="row">
         <div class="col-xl-12">
             <div class="border border-bottom-0 rounded-1 mb-3 ">

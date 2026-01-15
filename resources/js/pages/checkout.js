@@ -29,7 +29,7 @@ function returnToApplication()
                             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
                         }
                     }).then(() => {
-                        window.location.href = '/view_application/' + applicationId;
+                        window.location.href = '/view_application/' + applicationId + '#pending';
                     });
                 }
             });
