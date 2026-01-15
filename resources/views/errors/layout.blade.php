@@ -1,53 +1,80 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="en" dir="ltr" data-nav-layout="vertical" data-theme-mode="light" data-header-styles="light"
+    data-menu-styles="dark" data-toggled="close">
 
-        <title>@yield('title')</title>
+<head>
 
-        <!-- Styles -->
-        <style>
-            html, body {
-                background-color: #fff;
-                color: #636b6f;
-                font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-                font-weight: 100;
-                height: 100vh;
-                margin: 0;
-            }
+    <!-- Meta Data -->
+    <meta charset="UTF-8">
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="Description" content="QIS System Error">
+    <meta name="Author" content="QIS System">
 
-            .full-height {
-                height: 100vh;
-            }
+    <!-- Title-->
+    <title>QIS SYSTEM | @yield('title', 'Error')</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
-            .flex-center {
-                align-items: center;
-                display: flex;
-                justify-content: center;
-            }
+    <!-- Main Theme JS -->
+    <script src="{{ asset('build2/assets/main.js') }}"></script>
 
-            .position-ref {
-                position: relative;
-            }
+    <!-- ICONS CSS -->
+    <link rel="stylesheet" href="{{ asset('build2/assets/icon-fonts/icons.css') }}">
 
-            .content {
-                text-align: center;
-            }
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{{ asset('build2/assets/libs/bootstrap/css/bootstrap.min.css') }}" id="style">
 
-            .title {
-                font-size: 36px;
-                padding: 20px;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="flex-center position-ref full-height">
-            <div class="content">
-                <div class="title">
-                    @yield('message')
-                </div>
-            </div>
-        </div>
-    </body>
+    <!-- Node Waves CSS -->
+    <link rel="stylesheet" href="{{ asset('build2/assets/libs/node-waves/waves.min.css') }}">
+
+    <!-- APP CSS & APP SCSS -->
+    <link rel="preload" as="style" href="{{ asset('build2/assets/app-BXaKe1N-.css') }}">
+    <link rel="stylesheet" href="{{ asset('build2/assets/app-BXaKe1N-.css') }}">
+
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/css/errors.css'])
+
+    @stack('style')
+
+    <style>
+        /*error page centering*/
+        .error-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--default-body-bg-color);
+        }
+    </style>
+
+</head>
+
+<body class="bg-white">
+
+    <!-- Loader -->
+    <div id="loader">
+        <img src="https://laravelui.spruko.com/xintra/build2/assets/images/media/loader.svg" alt="">
+    </div>
+    <!-- Loader -->
+
+    <div class="page error_page">
+        @yield('content')
+    </div>
+
+    <!-- Popper JS -->
+    <script src="{{ asset('build2/assets/libs/@popperjs/core/umd/popper.min.js') }}"></script>
+
+    <!-- Bootstrap JS -->
+    <script src="{{ asset('build2/assets/libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+    <!-- Node Waves JS -->
+    <script src="{{ asset('build2/assets/libs/node-waves/waves.min.js') }}"></script>
+
+    <!-- APP JS -->
+    <link rel="modulepreload" href="{{ asset('build2/assets/app-C4M4tSMb.js') }}" />
+    <script type="module" src="{{ asset('build2/assets/app-C4M4tSMb.js') }}"></script>
+
+    @stack('scripts')
+
+</body>
+
 </html>

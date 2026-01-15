@@ -6,6 +6,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\internal\MiscController;
 use App\Http\Controllers\public\importPermit\PermitApplicationController;
 use App\Http\Controllers\ApplicationController;
+
+use App\Http\Controllers\internController;
+
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PermitGenerateController;
 use App\Http\Controllers\PublicController;
@@ -230,3 +233,15 @@ Route::middleware(['auth.any'])->group(function () {
 // broadcast --dont kacau---
 // Broadcast::routes();
 // Broadcast::routes(['middleware' => ['auth:internal']]);
+
+Route::get('/intern', [internController::class, 'getView']);
+Route::post('/intern', [internController::class, 'sendData']);
+
+//error page testing
+Route::get('/402', function () {abort(402); });
+Route::get('/403', function () {abort(403); });
+Route::get('/404', function () {abort(404); });
+Route::get('/419', function () {abort(419); });
+Route::get('/429', function () {abort(429); });
+Route::get('/500', function () {abort(500); });
+Route::get('/503', function () {abort(503); });
