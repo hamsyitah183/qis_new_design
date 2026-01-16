@@ -30,11 +30,11 @@
                             </div>
                             <div class="wizard-step" data-step="1">
                                 <span class="dot"></span>
-                                <span>PERMIT DETAILS</span>
+                                <span>INSPECTION DETAILS</span>
                             </div>
                             <div class="wizard-step" data-step="2">
                                 <span class="dot"></span>
-                                <span>PERMIT ITEMS</span>
+                                <span>CONSIGNMENT ITEMS</span>
                             </div>
                             <div class="wizard-step" data-step="3">
                                 <span class="dot"></span>
