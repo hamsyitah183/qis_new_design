@@ -14,9 +14,14 @@ class PaymentSeeder extends Seeder
     public function run(): void
     {
         //
-        PaymentMethod::create([
-            'name' => 'bayuPay',
-            'pic' => '/'
-        ]);
+
+        $payments = [['name' => 'bayuPay', 'pic' => '/storage/payment/bayupay.png'], ['name' => 'yonoPay', 'pic' => '/storage/payment/yonoPay.png']];
+
+        foreach ($payments as $payment) {
+            PaymentMethod::create([
+                'name' => $payment['name'],
+                'pic' => $payment['pic'],
+            ]);
+        }
     }
 }
