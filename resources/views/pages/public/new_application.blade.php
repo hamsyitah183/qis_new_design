@@ -108,8 +108,34 @@
                         </li>
                         <li class="list-group-item d-sm-flex justify-content-between align-items-start">
                             <div class="ms-2 me-auto text-muted">
-                                <div class="fw-medium fs-14 text-default">Inspection Certificate</div>
+                                <div class="fw-medium fs-14 text-default mb-3">Inspection Certificate</div>
+                                <div class="d-flex justify-content-center flex-nowrap gap-3">
+                                    <!-- Option 1 -->
+                                    <a href = "{{ route('public.inspectionApplicationSelf') }}" class="xintra-radio-box text-center">
+                                        <label for="inspectionSelf" class="xintra-radio-label">
+                                            <div class="xintra-radio-content">
+                                                <i class="bx bx-user fs-2 mb-2 text-primary"></i>
+                                                <!-- <h6 class="mb-1">Yourself</h6> -->
+                                                <h6 class="mb-1">Self Import</h6>
+                                                <p class="text-muted small mb-0">You are applying this inspection certificate for
+                                                    yourself.</p>
+                                            </div>
+                                        </label>
+                                    </a>
 
+                                    <!-- Option 2 -->
+                                    <a href = "{{ route('public.inspectionApplicationOthers') }}" class="xintra-radio-box text-center">
+                                        <label for="inspectionOthers" class="xintra-radio-label">
+                                            <div class="xintra-radio-content">
+                                                <i class="bx bx-buildings fs-2 mb-2 text-primary"></i>
+                                                <!-- <h6 class="mb-1">For Someone Else</h6> -->
+                                                <h6 class="mb-1">For Someone Else</h6>
+                                                <p class="text-muted small mb-0">For companies or individuals you represent.
+                                                </p>
+                                            </div>
+                                        </label>
+                                    </a>
+                                </div>
                             </div>
                         </li>
                         <li class="list-group-item d-sm-flex justify-content-between align-items-start">
