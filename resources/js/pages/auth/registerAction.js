@@ -2,10 +2,17 @@ import Dropzone from "dropzone";
 import $ from "jquery";
 import Swal from "sweetalert2";
 import "dropzone/dist/dropzone.css";
+import select2 from "select2";
+select2(window.jQuery);
+
+import "select2/dist/css/select2.min.css";
+
 
 Dropzone.autoDiscover = false;
 
 let type = null;
+
+
 
 // Function to load states
 async function loadStates() {
@@ -26,18 +33,59 @@ async function loadStates() {
 // Function to load districts for a state
 async function loadDistricts(stateId) {
     try {
+        // Show loading Swal
+        Swal.fire({
+            title: 'Loading districts...',
+            text: 'Please wait',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
         const response = await fetch(`/api/districts/${stateId}`);
         const districts = await response.json();
+
         const districtSelect = $('#district');
+
+        // Destroy Select2 if already initialized
+        if (districtSelect.hasClass('select2-hidden-accessible')) {
+            districtSelect.select2('destroy');
+        }
+
+        // Reset dropdown
         districtSelect.empty();
         districtSelect.append('<option value="">Select District</option>');
+
         districts.forEach(district => {
-            districtSelect.append(`<option value="${district.name}">${district.name}</option>`);
+            districtSelect.append(
+                `<option value="${district.name}">${district.name}</option>`
+            );
         });
+
+        // Re-init Select2
+        districtSelect.select2({
+            placeholder: 'Select district',
+            width: '100%',
+            dropdownAutoWidth: true
+        });
+
+        // Close Swal after everything is ready
+        Swal.close();
+
     } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Failed to load districts',
+            text: 'Please try again'
+        });
+
         console.error('Error loading districts:', error);
     }
 }
+
+
 
 function fileUpload() {
     const fileDropArea = document.getElementById("fileDropArea");
@@ -149,7 +197,7 @@ $(document).ready(function () {
             "placeholder",
             type === "individual" ? "John Doe" : " ABC Sdn. Bhd."
         );
-        $("#phone_number").attr("placeholder", " +60111111111");
+        $("#phone_number").attr("placeholder", "123430072");
         $("#no_ic").attr(
             "placeholder",
             type === "individual" ? " 000000120000" : " 000000-X"
@@ -237,6 +285,18 @@ $(document).ready(function () {
             });
         }
     });
+
+    $('#phone_country').select2({
+        placeholder: 'Select country',
+        width: '100%',
+        dropdownAutoWidth: true
+    });
+    $('#state').select2({
+        placeholder: 'Select state',
+        width: '100%',
+        dropdownAutoWidth: true
+    });
+    
 
     // ----------------------------
     // 3️⃣ Dropzone initialization

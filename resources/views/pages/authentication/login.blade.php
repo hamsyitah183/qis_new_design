@@ -55,12 +55,12 @@
                                             class="form-label text-default d-block">Password</label>
                                         <div class="position-relative">
                                             <input type="password" name="password"
-                                                class="form-control create-password-input" id="signin-password"
+                                                class="form-control" id="signin-password"
                                                 placeholder="Password">
-                                            <a href="javascript:void(0);" class="show-password-button text-muted"
+                                            {{-- <a href="javascript:void(0);" class="show-password-button text-muted"
                                                 onclick="createpassword('signin-password', this)" id="button-addon2">
                                                 <i class="ri-eye-off-line align-middle"></i>
-                                            </a>
+                                            </a> --}}
                                         </div>
                                         <div class="mt-2 text-end">
                                             <a href="/forgot-password" class="fw-normal text-muted">Forgot

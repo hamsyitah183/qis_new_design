@@ -14,6 +14,7 @@ select2(window.jQuery);
 
 import "select2/dist/css/select2.min.css";
 
+
 Dropzone.autoDiscover = false;
 
 // Global state

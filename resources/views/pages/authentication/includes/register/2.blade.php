@@ -19,8 +19,23 @@
 
             <!-- Phone -->
             <div class="col-xl-6">
+
                 <label class="form-label text-default phoneLabel">Phone Number</label>
-                <input type="text" name="phone_number" class="form-control" id="phone_number">
+                <div class="d-flex justify-content-between">
+                    <div class="">
+                        <select name="phoneNumber" id="phone_country" class = "form-control">
+                            @foreach ($countryNo as $item)
+                                <option value="{{  $item->start_no  }}">{{ $item->country }} ({{ $item->start_no }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="w-100">
+
+                        <input type="text" name="phone_number" class="form-control" id="phone_number">
+                    </div>
+                </div>
+
             </div>
 
             <!-- Office number (optional) -->
@@ -32,7 +47,8 @@
             <!-- Email -->
             <div class="col-xl-6">
                 <label class="form-label text-default">Email</label>
-                <input type="email" name="email" class="form-control" placeholder="Johndoe@gmail.com" id="email">
+                <input type="email" name="email" class="form-control" placeholder="Johndoe@gmail.com"
+                    id="email">
             </div>
 
             <!-- Password -->
@@ -68,7 +84,7 @@
             </div>
 
             <!-- District -->
-            <div class="col-xl-6">
+            <div class="col-xl-12">
                 <label class="form-label text-default">District</label>
                 <select name="district" class="form-control" id="district" disabled>
                     <option value="">Select District</option>

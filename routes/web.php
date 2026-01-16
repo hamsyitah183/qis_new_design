@@ -30,7 +30,7 @@ Route::get('/logout', [AuthenticationController::class, 'logout'])->name('logout
 Route::middleware(['multi.guest'])->group(function () {
     Route::get('/login', [AuthenticationController::class, 'login'])->name('login');
     // Route::get('/register', [AuthenticationController::class, 'register'])->name('register');
-    Route::get('/register', [AuthenticationController::class, 'register_test'])->name('register');
+    Route::get('/register', [AuthenticationController::class, 'register'])->name('register');
     Route::post('/login', [AuthenticationController::class, 'loginAction'])->name('login.action');
     Route::post('/register', [AuthenticationController::class, 'registerPublic'])->name('register.public');
 

@@ -27,24 +27,24 @@
                                     <label class="form-label text-default" for="create-password">Password<sup
                                             class="fs-12 text-danger">*</sup></label>
                                     <div class="position-relative">
-                                        <input class="form-control create-password-input" name="password"
+                                        <input class="form-control" name="password"
                                             id="create-password" placeholder="password" type="password">
-                                        <a class="show-password-button text-muted" href="javascript:void(0);"
+                                        {{-- <a class="show-password-button text-muted" href="javascript:void(0);"
                                             onclick="createpassword('create-password',this)">
                                             <i class="ri-eye-off-line align-middle"></i>
-                                        </a>
+                                        </a> --}}
                                     </div>
                                 </div>
                                 <div class="col-xl-12 mb-2">
                                     <label class="form-label text-default" for="password_confirmation">Confirm Password<sup
                                             class="fs-12 text-danger">*</sup></label>
                                     <div class="position-relative">
-                                        <input class="form-control create-password-input" name="password_confirmation"
+                                        <input class="form-control" name="password_confirmation"
                                             id="password_confirmation" placeholder="password" type="password">
-                                        <a class="show-password-button text-muted" href="javascript:void(0);"
+                                        {{-- <a class="show-password-button text-muted" href="javascript:void(0);"
                                             onclick="createpassword('create-confirmpassword',this)">
                                             <i class="ri-eye-off-line align-middle"></i>
-                                        </a>
+                                        </a> --}}
                                     </div>
                                 </div>
                             </div>

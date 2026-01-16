@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\InternalUserAdminEvent;
 use App\Events\PublicUserEvent;
+use App\Models\CountryNoPhone;
 use App\Models\InternalUser;
 use App\Models\PublicUser;
 use App\Notifications\ApplicationNotification;
@@ -26,7 +27,7 @@ class AuthenticationController extends Controller
     public function login()
     {
         return view('pages.authentication.login', [
-            'title' => 'Login'
+            'title' => 'Login',
         ]);
     }
 
@@ -41,22 +42,25 @@ class AuthenticationController extends Controller
         $guard = $credentials['userType'];
 
         // Retrieve user first
-        $user = ($guard === 'public' ? PublicUser::class : InternalUser::class)
-            ::where('email', $credentials['email'])
-            ->first();
+        $user = ($guard === 'public' ? PublicUser::class : InternalUser::class)::where('email', $credentials['email'])->first();
 
         if (!$user) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'User not found.',
-            ], 422);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => 'User not found.',
+                ],
+                422,
+            );
         }
 
         // Attempt login first
-        if (Auth::guard($guard)->attempt([
-            'email' => $credentials['email'],
-            'password' => $credentials['password'],
-        ])) {
+        if (
+            Auth::guard($guard)->attempt([
+                'email' => $credentials['email'],
+                'password' => $credentials['password'],
+            ])
+        ) {
             $request->session()->regenerate();
 
             // After login, check if email not verified
@@ -72,9 +76,7 @@ class AuthenticationController extends Controller
             }
 
             // Normal redirect if verified
-            $redirect = $guard === 'public'
-                ? route('public.dashboard')
-                : route('internal.dashboard');
+            $redirect = $guard === 'public' ? route('public.dashboard') : route('internal.dashboard');
 
             return response()->json([
                 'status' => 'success',
@@ -83,24 +85,52 @@ class AuthenticationController extends Controller
             ]);
         }
 
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Invalid credentials or user type.',
-        ], 422);
+        return response()->json(
+            [
+                'status' => 'error',
+                'message' => 'Invalid credentials or user type.',
+            ],
+            422,
+        );
     }
 
+    // public function register()
+    // {
+    //     return view('pages.authentication.register', [
+    //         'title' => 'Register'
+    //     ]);
+    // }
 
-
-    public function register()
+    public function registerPublic(Request $request, VerificationService $verificationService)
     {
-        return view('pages.authentication.register', [
-            'title' => 'Register'
+        $countryCode = $request->phoneNumber ?? '+60';
+
+        // Keep only + and digits for country code
+        $countryCode = preg_replace('/[^0-9+]/', '', $countryCode);
+
+        // Ensure country code starts with +
+        if (!str_starts_with($countryCode, '+')) {
+            $countryCode = '+' . $countryCode;
+        }
+
+        // Clean user input (digits only)
+        $number = preg_replace('/\D/', '', $request->phone_number);
+
+        // Remove leading 0 (014xxxx → 14xxxx)
+        $number = ltrim($number, '0');
+
+        // Remove country code if user already typed it (60xxxx)
+        if (str_starts_with($number, '60')) {
+            $number = substr($number, 2);
+        }
+
+        // Final normalized phone number
+        $fullPhoneNumber = $countryCode . $number;
+
+        // Merge back into request for validation & saving
+        $request->merge([
+            'phone_number' => $fullPhoneNumber,
         ]);
-    }
-
-    public function registerPublic(Request $request,  VerificationService $verificationService)
-    {
-        // dd($request->all(), $request->hasFile('attachment'));
 
         $validated = $request->validate([
             'fullname' => 'required|string|max:255',
@@ -119,19 +149,18 @@ class AuthenticationController extends Controller
             DB::beginTransaction();
 
             $user = PublicUser::create([
-                'fullname'     => $validated['fullname'],
-                'email'        => $validated['email'],
-                'password'     => Hash::make($validated['password']),
-                'no_ic'        => $validated['no_ic'],
+                'fullname' => $validated['fullname'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'no_ic' => $validated['no_ic'],
                 'account_type' => $validated['account_type'],
                 'phone_number' => $validated['phone_number'],
-                'address_1'    => $validated['address_1'],
-                'address_2'    => $request->address_2,
-                'postcode'     => $validated['postcode'],
-                'district'     => $validated['district'],
-                'state'        => $validated['state'],
+                'address_1' => $validated['address_1'],
+                'address_2' => $request->address_2,
+                'postcode' => $validated['postcode'],
+                'district' => $validated['district'],
+                'state' => $validated['state'],
             ]);
-
 
             $result = '';
             if ($request->hasFile('attachment')) {
@@ -141,68 +170,34 @@ class AuthenticationController extends Controller
                 $result = $verificationService->uploadVerificationAttachment($userId, $file);
             }
 
-
             // Automatically log in the user
             Auth::guard('public')->login($user);
 
             //  Send verification email
             $user->notify(new VerifyEmailNotification());
 
-
-            event(new InternalUserAdminEvent(
-                'A new account is created'
-            ));
-
-
+            event(new InternalUserAdminEvent('A new account is created'));
 
             $users = InternalUser::role(['admin'])->get();
             $notificationUrl = route('internal.public.list');
-            Notification::send($users, new ApplicationNotification(
-                'A new account is created',
-                $user->fullname,
-                $notificationUrl
-            ));
+            Notification::send($users, new ApplicationNotification('A new account is created', $user->fullname, $notificationUrl));
 
-
-            $user->notify(new ApplicationNotification(
-                'You created an account',
-                'QIS',
-                '/profile'
-            ));
+            $user->notify(new ApplicationNotification('You created an account', 'QIS', '/profile'));
 
             if (!empty($result) && $result['success'] === true) {
+                event(new InternalUserAdminEvent($user->fullname . ' uploaded a verification attachment.'));
 
-                event(new InternalUserAdminEvent(
-                    $user->fullname . ' uploaded a verification attachment.'
-                ));
-
-                event(new PublicUserEvent(
-                    'You uploaded a verification attachment',
-                    $user->uuid
-                ));
+                event(new PublicUserEvent('You uploaded a verification attachment', $user->uuid));
 
                 $admins = InternalUser::role(['admin'])->get();
                 $notificationUrl = route('internal.public.list');
-                Notification::send($admins, new ApplicationNotification(
-                    'A user uploaded a verification attachment',
-                    $user->fullname,
-                    $notificationUrl
-                ));
+                Notification::send($admins, new ApplicationNotification('A user uploaded a verification attachment', $user->fullname, $notificationUrl));
 
-                $user->notify(new ApplicationNotification(
-                    'You uploaded a verification attachment',
-                    'QIS',
-                    '/profile'
-                ));
+                $user->notify(new ApplicationNotification('You uploaded a verification attachment', 'QIS', '/profile'));
             } else {
                 // Upload failed or no file uploaded
-                $user->notify(new ApplicationNotification(
-                    'Upload a verification attachment to get verified by DOA.',
-                    'QIS',
-                    '/profile'
-                ));
+                $user->notify(new ApplicationNotification('Upload a verification attachment to get verified by DOA.', 'QIS', '/profile'));
             }
-
 
             DB::commit();
 
@@ -213,13 +208,15 @@ class AuthenticationController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return response()->json([
-                'message' => 'Registration failed. Please try again.',
-                'error'   => $e->getMessage(),
-            ], 500);
+            return response()->json(
+                [
+                    'message' => 'Registration failed. Please try again.',
+                    'error' => $e->getMessage(),
+                ],
+                500,
+            );
         }
     }
-
 
     public function logout(Request $request)
     {
@@ -237,7 +234,7 @@ class AuthenticationController extends Controller
         }
 
         if ($user) {
-            $username = $user->name ?? $user->fullname ?? 'Unknown user';
+            $username = $user->name ?? ($user->fullname ?? 'Unknown user');
 
             activity()
                 ->tap(function (Activity $activity) {
@@ -259,14 +256,13 @@ class AuthenticationController extends Controller
         return redirect('/login');
     }
 
-
     // verify email
     public function verify_email()
     {
         $user = auth('public')->user() ?? auth('internal')->user();
         return view('pages.authentication.verify_email', [
             'title' => 'Verify Email',
-            'email' => $user->email
+            'email' => $user->email,
         ]);
     }
 
@@ -277,9 +273,7 @@ class AuthenticationController extends Controller
         $hash = $request->route('hash');
 
         // Determine which model to use
-        $user = $guard === 'internal'
-            ? InternalUser::findOrFail($id)
-            : PublicUser::findOrFail($id);
+        $user = $guard === 'internal' ? InternalUser::findOrFail($id) : PublicUser::findOrFail($id);
 
         // Validate hash
         if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
@@ -297,9 +291,9 @@ class AuthenticationController extends Controller
 
         auth()->guard($guard)->login($user);
 
-        return redirect()->route(
-            $guard === 'public' ? 'public.dashboard' : 'internal.dashboard'
-        )->with('message', 'Your email has been successfully verified!');
+        return redirect()
+            ->route($guard === 'public' ? 'public.dashboard' : 'internal.dashboard')
+            ->with('message', 'Your email has been successfully verified!');
     }
 
     public function resend_verify_link(Request $request)
@@ -315,11 +309,12 @@ class AuthenticationController extends Controller
         return back()->with('message', 'Verification link sent!');
     }
 
-
-    public function register_test()
+    public function register()
     {
+        $countryNo = CountryNoPhone::get();
         return view('pages.authentication.register_test', [
-            'title' => 'Register'
+            'title' => 'Register',
+            'countryNo' => $countryNo,
         ]);
     }
 }
