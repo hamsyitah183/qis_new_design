@@ -46,7 +46,7 @@
                             </div>
                         </aside>
                         <aside class="wizard-content container">
-                            @include('pages.public.consignment.step0')
+                            @include('pages.public.consignment.stepCompany')
                             @include('pages.public.consignment.step1')
                             @include('pages.public.consignment.step2')
                             @include('pages.public.consignment.step3')

@@ -1,8 +1,8 @@
-<div class="wizard-step" data-title="PERMIT DETAILS" data-id="2e8WqSV3slGIpTbnjcJzmDwBQaHrfh0Z" data-step="1">
+<div class="wizard-step" data-title="CERTIFICATE DETAILS" data-id="2e8WqSV3slGIpTbnjcJzmDwBQaHrfh0Z" data-step="1">
                                                 <div class="row justify-content-center">
                                                     <div class="col-xl-12">
                                                         <div class="register-page">
-                                                            <h6 class="mb-3">Permit Details :</h6>
+                                                            <h6 class="mb-3">Consignment Details :</h6>
                                                             <div class="row gy-3 mb-3">
                                                                 <div class="col-xl-6">
                                                                     <label for="eta" class="form-label">Estimated Time Arrival</label>

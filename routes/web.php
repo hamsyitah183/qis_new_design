@@ -101,6 +101,8 @@ Route::prefix('public')
         Route::get('/cart', [PublicController::class, 'showcart'])->name('cart');
         Route::get('/checkout', [PublicController::class, 'showcheckout'])->name('checkout');
 
+        Route::get('/consignment_certificate_application_self', [ConsignmentController::class, 'getView'])->name('consignment.app');
+        Route::get('/consignment_certificates_application_other', [ConsignmentController::class, 'getViewOther'])->name('consignmentOther.app');
         Route::get('/inspection_certificates_application_self', [InspectionController::class, 'getInspectionSelf'])->name('inspectionApplicationSelf');
         Route::get('/inspection_certificates_application_others', [InspectionController::class, 'getInspectionOthers'])->name('inspectionApplicationOthers');
         Route::get('/consignment_certificate_application', [ConsignmentController::class, 'getView'])->name('consignment.app');
