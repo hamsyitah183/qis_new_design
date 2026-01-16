@@ -136,3 +136,12 @@
     width: fit-content;
     margin-left: auto;
 }
+
+.payment-pic {
+    /* border: 1px solid rgb(173, 173, 173); */
+    padding: 3px !important;
+}
+
+.payment-pic.selected {
+    border: 1px solid #007bff !important; /* highlight border */
+}

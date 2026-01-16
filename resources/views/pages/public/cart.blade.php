@@ -24,15 +24,15 @@
     {{-- @dd($order) --}}
     <div class="row">
         <form class="col-xl-12" method="POST" action="{{ url('/payment') }}" id="paymentForm">
-                @csrf
+            @csrf
             <div class="btn btn-primary mb-2" id= "returnToApplication" data-app-id = "{{ $application->application_id }}">
                 Return to Application
             </div>
             {{-- <span id="applicationType" class="d-none"></span> --}}
             <input type="hidden" name="application_type" value = "import_permit" id="application_type">
             <input type="hidden" name="name" value="{{ authUser()['user']->fullname }}">
-            <input type="hidden" name="email" value="{{  authUser()['user']->email }}">
-            <input type="hidden" name="no_phone" value="{{  authUser()['user']->phone_number }}">
+            <input type="hidden" name="email" value="{{ authUser()['user']->email }}">
+            <input type="hidden" name="no_phone" value="{{ authUser()['user']->phone_number }}">
             <input type="hidden" name="orderNo" value="{{ $order->order_number }}">
             <input type="hidden" name="amount" value="{{ $total }}">
             <input type="hidden" name="application_type" value="import_permit">
@@ -204,18 +204,41 @@
                                     <div class="fs-12 text-muted mb-3"><i class="ri-information-fill"></i> Choose the
                                         payment type</div>
 
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="radio" name="paymentMethod" value = "bayuPay" checked>
+                                    @foreach ($paymentMethod as $item)
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input d-none" type="radio" name="paymentMethod"
+                                                id="{{ $item->name }}" value="{{ $item->name }}"
+                                                {{ $loop->first ? 'checked' : '' }}>
+
+                                            <label class="form-check-label" for="{{ $item->name }}"
+                                                style="cursor:pointer;">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <img src="{{ $item->pic }}" alt="{{ $item->name }}"
+                                                        style="width:70px; height:auto; border-radius:6px;"
+                                                        class="payment-pic">
+
+                                                    <div>{{ $item->name }}</div>
+                                                </div>
+                                                
+                                            </label>
+                                        </div>
+                                    @endforeach
+
+
+                                    {{-- <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="paymentMethod"
+                                            value = "bayuPay" checked>
                                         <label class="form-check-label" for="bayuPay">
                                             Bayu Pay
                                         </label>
                                     </div>
                                     <div class="form-check mb-2">
-                                        <input class="form-check-input" type="radio" name="paymentMethod" value = "YONO Pay">
+                                        <input class="form-check-input" type="radio" name="paymentMethod"
+                                            value = "YONO Pay">
                                         <label class="form-check-label" for="bayuPay">
                                             Yono Pay
                                         </label>
-                                    </div>
+                                    </div> --}}
 
 
                                     <div class="d-flex align-items-center justify-content-between h5">
