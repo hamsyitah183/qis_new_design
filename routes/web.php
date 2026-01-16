@@ -227,12 +227,19 @@ Route::middleware(['auth.any'])->group(function () {
 
     Route::post('/payment/signed-url', [PaymentController::class, 'signedUrl'])->name('payment.signed.url');
 
-    Route::post('/payment/bayuPay/{amount}/{sid}/{rn}/{itn}', [PaymentController::class, 'bayuPayPayment']);
+    Route::post('/payment', [PaymentController::class, 'payment']);
 
     Route::post('/payment/cancel', function () {
         session()->forget('payment_active');
         return response()->json(['status' => 'cancelled']);
     });
+
+    // Route::post('/')
+
+    // bounce url
+    // Route::get('/paymentUpdate/{kod_transaksi}', [PaymentController::class, 'bounce']);
+    Route::get('/paymentUpdate', [PaymentController::class, 'paymentUpdate']);
+    
 
 });
 
