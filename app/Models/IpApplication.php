@@ -11,25 +11,16 @@ class IpApplication extends Model
     use HasFactory, HasApplicationActivityLog;
     protected $table = 'ip_application';
 
-    protected $fillable = [
-        'application_id',
-        'eta',
-        'transport_type',
-        'entry_point',
-        'user_id',
-        'exporter_id',
-        'importer_id',
-        'importer_detail',
-        'category_application',
-        'importer_verify',
-        'date_importer_verify',
-        'status'
-    ];
+    protected $fillable = ['application_id', 'eta', 'transport_type', 'entry_point', 'user_id', 'exporter_id', 'importer_id', 'importer_detail', 'category_application', 'importer_verify', 'date_importer_verify', 'status'];
 
     protected $casts = [
         'eta' => 'date',
-        'importer_detail' => 'array',          // JSON stored importer info
+        'importer_detail' => 'array', // JSON stored importer info
         'date_importer_verify' => 'datetime',
+    ];
+
+    protected $attributes = [
+        'application_type' => 'permit', 
     ];
 
     /*
@@ -72,7 +63,6 @@ class IpApplication extends Model
 
     public function latestLog()
     {
-        return $this->hasOne(ImportPermitLog::class, 'application_id', 'application_id')
-            ->latestOfMany();
+        return $this->hasOne(ImportPermitLog::class, 'application_id', 'application_id')->latestOfMany();
     }
 }

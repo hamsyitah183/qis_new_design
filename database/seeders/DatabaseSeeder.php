@@ -32,6 +32,8 @@ class DatabaseSeeder extends Seeder
                 CountrySeeder::class,
                 IpConditionSeeder::class,
                 // ExporterSeeder::class,
+                StateDistrictSeeder::class,
+                PaymentSeeder::class
             ]);
 
             DB::commit();
