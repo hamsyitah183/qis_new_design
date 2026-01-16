@@ -23,10 +23,20 @@
 @section('content')
     {{-- @dd($order) --}}
     <div class="row">
-        <div class="col-xl-12">
-            <div class="btn btn-primary mb-2" id= "returnToApplication" data-app-id = "{{ $application->application_id  }}">
+        <form class="col-xl-12" method="POST" action="{{ url('/payment') }}" id="paymentForm">
+                @csrf
+            <div class="btn btn-primary mb-2" id= "returnToApplication" data-app-id = "{{ $application->application_id }}">
                 Return to Application
             </div>
+            {{-- <span id="applicationType" class="d-none"></span> --}}
+            <input type="hidden" name="application_type" value = "import_permit" id="application_type">
+            <input type="hidden" name="name" value="{{ authUser()['user']->fullname }}">
+            <input type="hidden" name="email" value="{{  authUser()['user']->email }}">
+            <input type="hidden" name="no_phone" value="{{  authUser()['user']->phone_number }}">
+            <input type="hidden" name="orderNo" value="{{ $order->order_number }}">
+            <input type="hidden" name="amount" value="{{ $total }}">
+            <input type="hidden" name="application_type" value="import_permit">
+
             <div class="row">
                 <div class="col-xl-9">
                     <div class="col-xl-12">
@@ -44,11 +54,12 @@
                                             <tbody>
                                                 <tr>
                                                     <th class="fw-bold" style="width: 30%;">Name:</th>
-                                                    <td class="text-muted">{{ $application->importer->fullname }}</td>
+                                                    <td class="text-muted" id="importerFullName">
+                                                        {{ $application->importer->fullname }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th class="fw-bold">Address:</th>
-                                                    <td class="text-muted">
+                                                    <td class="text-muted" id="importerAddress">
                                                         {{ $application->importer->address_1 }},
                                                         {{ $application->importer->address_2 ? $application->importer->address_2 . ',' : '' }}
                                                         {{ $application->importer->postcode }},
@@ -57,7 +68,8 @@
                                                 </tr>
                                                 <tr>
                                                     <th class="fw-bold">No Phone:</th>
-                                                    <td class="text-muted">{{ $application->importer->phone_number }}</td>
+                                                    <td class="text-muted" id="importerNoPhone">
+                                                        {{ $application->importer->phone_number }}</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -78,19 +90,23 @@
                                             <tbody>
                                                 <tr>
                                                     <th class="fw-bold" style="width: 30%;">Name:</th>
-                                                    <td class="text-muted">{{ $application->exporter->name }}</td>
+                                                    <td class="text-muted" id="exporterName">
+                                                        {{ $application->exporter->name }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th class="fw-bold">Address:</th>
-                                                    <td class="text-muted">{{ $application->exporter->address }}</td>
+                                                    <td class="text-muted" id="exporterAddress">
+                                                        {{ $application->exporter->address }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th class="fw-bold">No Phone:</th>
-                                                    <td class="text-muted">{{ $application->exporter->phone_no }}</td>
+                                                    <td class="text-muted" id= "exporterNoPhone">
+                                                        {{ $application->exporter->phone_no }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th class="fw-bold">Country:</th>
-                                                    <td class="text-muted">{{ $application->exporter->countryInfo->name }}
+                                                    <td class="text-muted" id="exporterCountry">
+                                                        {{ $application->exporter->countryInfo->name }}
                                                     </td>
                                                 </tr>
                                             </tbody>
@@ -105,7 +121,8 @@
                         <div class="card custom-card overflow-hidden border" id="cart-container-delete">
                             <div class="card-header">
                                 <div class="card-title p-2">
-                                    <span class="fw-bold">Order No: </span> <span class="ms-2 text-muted">{{ $order->order_number  }}</span>
+                                    <span class="fw-bold">Order No: </span> <span class="ms-2 text-muted"
+                                        id="orderNo">{{ $order->order_number }}</span>
                                 </div>
                             </div>
                             <div class="card-body p-0">
@@ -188,20 +205,26 @@
                                         payment type</div>
 
                                     <div class="form-check mb-2">
-                                        <input class="form-check-input" type="radio" name="payment"
-                                            id="bayuPay">
+                                        <input class="form-check-input" type="radio" name="paymentMethod" value = "bayuPay" checked>
                                         <label class="form-check-label" for="bayuPay">
                                             Bayu Pay
                                         </label>
                                     </div>
-                                    
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="paymentMethod" value = "YONO Pay">
+                                        <label class="form-check-label" for="bayuPay">
+                                            Yono Pay
+                                        </label>
+                                    </div>
+
 
                                     <div class="d-flex align-items-center justify-content-between h5">
                                         <div class="fs-16">Total :</div>
-                                        <div class="fw-semibold">RM {{ $total }}</div>
+                                        <div class="fw-semibold">RM <span id="amount">{{ $total }}</span></div>
                                     </div>
                                     <div class="d-grid">
-                                        <button class="btn btn-primary btn-wave mb-2 waves-effect waves-light">Pay
+                                        <button class="btn btn-primary btn-wave mb-2 waves-effect waves-light"
+                                            id = "payNow">Pay
                                             Now</button>
                                     </div>
                                 </div>
@@ -210,7 +233,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </form>
 
 
     </div>

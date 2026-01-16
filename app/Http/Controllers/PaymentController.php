@@ -134,8 +134,53 @@ class PaymentController extends Controller
         ]);
     }
 
-    public function bayuPayPayment(Request $request)
+    public function payment(Request $request)
     {
-        dd($request);
+        // dd($request->all());
+        // if ($request['paymentMethod'] == 'bayuPay') {
+        //     $this->bayuPay($request);
+        // }
+        // dd('sinika');
+        if ($request['paymentMethod'] == 'bayuPay') {
+            // dd($data);
+            $data = $this->bayuPay($request);
+            return view('bayuPayRedirect', compact('data'));
+        } else {
+            return 'no payment';
+        }
+    }
+
+    private function bayuPay(Request $request)
+    {
+        $data = [
+            'sid' => 'SIDTEST',
+            'itn' => 'IMPORT123',
+            'rn' => $request->orderNo,
+            'amount' => $request->amount,
+            'co_name' => $request->name,
+            'email' => $request->email,
+            'tel_no' => $request->no_phone,
+            'bounce' => url('/paymentUpdate'),
+        ];
+
+        return $data;
+    }
+
+    function bounce($kod_transaksi)
+    {
+        return $kod_transaksi;
+    }
+
+    public function paymentUpdate(Request $request)
+    {
+        // Get the parameter
+        $kodTransaksi = $request->query('kod_transaksi');
+
+        if (!$kodTransaksi) {
+            return 'Kod Transaksi not found!';
+        }
+
+        // Show it
+        return 'Kod Transaksi: ' . $kodTransaksi;
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\internal\MiscController;
 use App\Http\Controllers\public\importPermit\PermitApplicationController;
 use App\Http\Controllers\ApplicationController;
+use App\Http\Controllers\ConsignmentController;
 
 use App\Http\Controllers\InspectionController;
 
@@ -102,6 +103,8 @@ Route::prefix('public')
 
         Route::get('/inspection_certificates_application_self', [InspectionController::class, 'getInspectionSelf'])->name('inspectionApplicationSelf');
         Route::get('/inspection_certificates_application_others', [InspectionController::class, 'getInspectionOthers'])->name('inspectionApplicationOthers');
+        Route::get('/consignment_certificate_application', [ConsignmentController::class, 'getView'])->name('consignment.app');
+        Route::get('/inspection_certificates_application', [InspectionController::class, 'getInspection']);
     });
 
 Route::prefix('internal')
@@ -226,12 +229,20 @@ Route::middleware(['auth.any'])->group(function () {
 
     Route::post('/payment/signed-url', [PaymentController::class, 'signedUrl'])->name('payment.signed.url');
 
-    Route::post('/payment/bayuPay/{amount}/{sid}/{rn}/{itn}', [PaymentController::class, 'bayuPayPayment']);
+    Route::post('/payment', [PaymentController::class, 'payment']);
 
     Route::post('/payment/cancel', function () {
         session()->forget('payment_active');
         return response()->json(['status' => 'cancelled']);
     });
+
+    // Route::post('/')
+
+    // bounce url
+    // Route::get('/paymentUpdate/{kod_transaksi}', [PaymentController::class, 'bounce']);
+    Route::get('/paymentUpdate', [PaymentController::class, 'paymentUpdate']);
+    
+
 });
 
 // broadcast --dont kacau---
