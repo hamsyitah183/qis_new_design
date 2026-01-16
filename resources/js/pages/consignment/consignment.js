@@ -817,7 +817,7 @@ function saveapplication(isDraft = false) {
     });
 
     $.ajax({
-        url: "/public/save-application",
+        url: "/public/save_application_consignment",
         type: "POST",
         data: formData,
         headers: {

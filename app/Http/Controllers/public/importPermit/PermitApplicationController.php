@@ -8,6 +8,7 @@ use App\Events\InternalUserAdminEvent;
 use App\Events\InternalUserClerkEvent;
 use App\Events\PublicUserEvent;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\NotificationController;
 use App\Models\country;
 use App\Models\ImportPermitLog;
 use App\Models\InternalUser;
@@ -453,6 +454,22 @@ class PermitApplicationController extends Controller
                 ));
             }
 
+            if (!$isDraft) {
+                // instantiate the controller
+
+                // $notificationController = new NotificationController();
+
+                // // optionally, pass dynamic data instead of hardcoded
+                // $notificationController->sendStatusMessage(
+                //     $application->importer_detail['fullname'] ?? 'User',
+                //     'Import Permit',
+                //     $application->application_id,
+                //     'submitted',
+                //     'Your application is under review and will be processed shortly.',
+                //     $application->importer->phone_number ?? '60143290092' // recipient number
+                // );
+                
+            }
 
             return response()->json([
                 'status' => 'success',

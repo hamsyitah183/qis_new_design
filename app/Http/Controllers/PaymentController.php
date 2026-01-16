@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\IpApplication;
 use App\Models\IpConsignmentPermit;
 use App\Models\Order;
+use App\Models\PaymentMethod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 
@@ -32,7 +33,10 @@ class PaymentController extends Controller
 
         $order = Order::where('order_number', $orderNo)->first();
 
-        return response()->view('pages.public.cart', compact('permits', 'application', 'total', 'order'))->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')->header('Pragma', 'no-cache');
+        $paymentMethod = PaymentMethod::get();
+
+        return response()->view('pages.public.cart', compact('permits', 'application', 'total', 'order', 'paymentMethod'))
+        ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')->header('Pragma', 'no-cache');
     }
 
     public function signedUrl(Request $request)
@@ -174,6 +178,7 @@ class PaymentController extends Controller
     public function paymentUpdate(Request $request)
     {
         // Get the parameter
+        $title = 'Payment Status';
         $kodTransaksi = $request->query('kod_transaksi');
 
         if (!$kodTransaksi) {
@@ -181,6 +186,7 @@ class PaymentController extends Controller
         }
 
         // Show it
-        return 'Kod Transaksi: ' . $kodTransaksi;
+        // return 'Kod Transaksi: ' . $kodTransaksi;
+        return view('pages.paymentStatus', compact('kodTransaksi', 'title'));
     }
 }

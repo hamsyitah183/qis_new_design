@@ -131,6 +131,15 @@ function payMent() {
 
 }
 
+$(document).on('change', 'input[name="paymentMethod"]', function() {
+    $('input[name="paymentMethod"]').each(function() {
+        $(this).next('label').find('img').removeClass('selected');
+    });
+    
+    $(this).next('label').find('img').addClass('selected');
+});
+
+
 
 
 

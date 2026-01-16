@@ -7,7 +7,7 @@ use App\Http\Controllers\internal\MiscController;
 use App\Http\Controllers\public\importPermit\PermitApplicationController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\ConsignmentController;
-
+use App\Http\Controllers\ConsignmentApplicationController;
 use App\Http\Controllers\InspectionController;
 
 use App\Http\Controllers\PasswordResetController;
@@ -88,6 +88,7 @@ Route::prefix('public')
         Route::post('/temp_upload', [PermitApplicationController::class, 'tempUpload'])->name('tempUpload');
         Route::post('/save_application_inspection', [InspectionController::class, 'saveApplication'])->name('saveApplicationInspection');
 
+        Route::post('/save_application_consignment', [ConsignmentController::class, 'saveApplicationConsignment'])->name('saveApplicationConsignment');
         // view application
         Route::get('/view_all_application', [ApplicationController::class, 'showallapplicationlist'])->name('showallapplicationlist');
 
@@ -102,11 +103,12 @@ Route::prefix('public')
         Route::get('/cart', [PublicController::class, 'showcart'])->name('cart');
         Route::get('/checkout', [PublicController::class, 'showcheckout'])->name('checkout');
 
-        Route::get('/consignment_certificate_application_self', [ConsignmentController::class, 'getView'])->name('consignment.app');
-        Route::get('/consignment_certificates_application_other', [ConsignmentController::class, 'getViewOther'])->name('consignmentOther.app');
+        Route::get('/consignment_certificate_application_self', [ConsignmentApplicationController::class, 'getView'])->name('consignment.app');
+        Route::get('/consignment_certificates_application_other', [ConsignmentApplicationController::class, 'getViewOther'])->name('consignmentOther.app');
+        Route::post('/save-consignment', [ConsignmentApplicationController::class, 'saveApplication'])->name('savConsignment');
         Route::get('/inspection_certificates_application_self', [InspectionController::class, 'getInspectionSelf'])->name('inspectionApplicationSelf');
         Route::get('/inspection_certificates_application_others', [InspectionController::class, 'getInspectionOthers'])->name('inspectionApplicationOthers');
-        Route::get('/consignment_certificate_application', [ConsignmentController::class, 'getView'])->name('consignment.app');
+        Route::get('/consignment_certificate_application', [ConsignmentApplicationController::class, 'getView'])->name('consignment.app');
         Route::get('/inspection_certificates_application', [InspectionController::class, 'getInspection']);
     });
 
