@@ -92,7 +92,7 @@
                         <table id="summaryTable" class="table text-nowrap">
                             <thead>
                                 <tr class="bg-light">
-                                    <th scope="col">Permit Details</th>
+                                    <th scope="col">Inspection Details</th>
                                     <th scope="col"></th>
                                     <th scope="col"></th>
                                 </tr>
@@ -100,7 +100,7 @@
                             <tbody>
                                 <tr>
                                     <td class="w-25">
-                                        <span class="d-block fw-semibold">Estimated Time Arrival</span>
+                                        <span class="d-block fw-semibold">Expected Inspection Date</span>
                                     </td>
                                     <td class="w-10">:</td>
                                     <td class="text-start  text-muted" id="seta">

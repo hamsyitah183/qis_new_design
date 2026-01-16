@@ -1,4 +1,4 @@
-<div class="wizard-step" data-title="PERMIT ITEM DETAILS" data-id="H53WJiv9blN17MYTztq4g8U6eSVkaZDx" data-step="2">
+<div class="wizard-step" data-title="CONSIGNMENT ITEM DETAILS" data-id="H53WJiv9blN17MYTztq4g8U6eSVkaZDx" data-step="2">
     <div class="row justify-content-center summary-view">
         <div class="table-responsive">
             <table id="itemListTbl" class="table text-nowrap fs-12">

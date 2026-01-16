@@ -100,7 +100,8 @@ Route::prefix('public')
         Route::get('/cart', [PublicController::class, 'showcart'])->name('cart');
         Route::get('/checkout', [PublicController::class, 'showcheckout'])->name('checkout');
 
-        Route::get('/inspection_certificates_application', [InspectionController::class, 'getInspection']);
+        Route::get('/inspection_certificates_application_self', [InspectionController::class, 'getInspectionSelf'])->name('inspectionApplicationSelf');
+        Route::get('/inspection_certificates_application_others', [InspectionController::class, 'getInspectionOthers'])->name('inspectionApplicationOthers');
     });
 
 Route::prefix('internal')
