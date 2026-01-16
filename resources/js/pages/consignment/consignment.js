@@ -33,7 +33,7 @@ let temporaryItemsAttachment = [];
 
 // --------if self apply -----------
 async function selfImport() {
-    if (window.location.pathname.includes("public/import_permit_application")) {
+    if (window.location.pathname.includes("public/consignment_certificate_application")) {
         importer = await getAuthUser();
         console.log("importer", importer);
     }

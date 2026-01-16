@@ -16,4 +16,15 @@ class ConsignmentController extends Controller
         $country = Country::where('is_del', false)->get();
         return view('pages.public.consignmentapp', compact('pubmeasure', 'pubpurpose', 'country'));
     }
+
+
+    function getViewOther()
+    {
+        $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
+        $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
+        $country = Country::where('is_del', false)->get();
+        return view('pages.public.consignmentappOther', compact('pubmeasure', 'pubpurpose', 'country'));
+    }
+
+
 }
