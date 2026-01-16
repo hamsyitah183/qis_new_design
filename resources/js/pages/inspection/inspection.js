@@ -33,7 +33,7 @@ let temporaryItemsAttachment = [];
 
 // --------if self apply -----------
 async function selfImport() {
-    if (window.location.pathname.includes("public/import_permit_application")) {
+    if (window.location.pathname.includes("public/inspection_certificates_application_self")) {
         importer = await getAuthUser();
         console.log("importer", importer);
     }
@@ -105,6 +105,7 @@ function handleExporterChange() {
         $("#expcountry").val(exporter.country || "");
 
         change = 1;
+        summarySubmit();
     });
 }
 
@@ -324,10 +325,20 @@ function handleImporterResponse(data) {
     $("#impaddress2").val(data.data.address_2);
     $("#imp_id").val(data.data.id);
     $("#impemail").val(data.data.email);
+
+    summarySubmit();
 }
 
 // -------------------------Permit details ------------------------
 function permitDetails() {
+    // Call summarySubmit on these changes
+    const inputs = ["#eta", "#trnptType"];
+    inputs.forEach(id => {
+        $(document).on("change blur", id, function () {
+            summarySubmit();
+        });
+    });
+
     const trnptType = document.getElementById("trnptType");
     const detailsSelect = document.getElementById("transportDetails");
 
@@ -786,7 +797,7 @@ function deleteItem() {
 // ============= attachment =====================
 
 function saveapplication(isDraft = false) {
-    const form = document.querySelector("#wizardForm");
+    const form = document.querySelector("#wizardForm") || document.querySelector("#wizardFormOthers");
     if (!form) return console.error("Form not found");
 
     const formData = new FormData(form);
@@ -817,7 +828,7 @@ function saveapplication(isDraft = false) {
     });
 
     $.ajax({
-        url: "/public/save-application",
+        url: "/public/save_application_inspection",
         type: "POST",
         data: formData,
         headers: {
@@ -1003,21 +1014,24 @@ export function summarySubmit() {
     };
 
     // Insert importer details
-    document.getElementById("importerName").textContent = importer.fullname;
-    document.getElementById("importerPhoneno").textContent =
-        importer.phone_number;
-    document.getElementById("simpAdd").textContent = impAddrs;
+    if (importer) {
+        document.getElementById("importerName").textContent = importer.fullname || "";
+        document.getElementById("importerPhoneno").textContent = importer.phone_number || "";
+        document.getElementById("simpAdd").textContent = impAddrs;
+    }
 
     // Exporter details
-    document.getElementById("sexpName").textContent = exporter.name;
-    document.getElementById("sexpfonno").textContent = exporter.phone_no;
-    document.getElementById("sexpAddress").textContent = exporter.address;
-    document.getElementById("sexpCountry").textContent = exporter.country;
+    if (exporter) {
+        document.getElementById("sexpName").textContent = exporter.name || "";
+        document.getElementById("sexpfonno").textContent = exporter.phone_no || "";
+        document.getElementById("sexpAddress").textContent = exporter.address || "";
+        document.getElementById("sexpCountry").textContent = exporter.country || "";
+    }
 
     // Permit details
-    document.getElementById("seta").textContent = permitDetails.eta;
-    document.getElementById("strty").textContent = permitDetails.tranType;
-    document.getElementById("sentryp").textContent = entryName;
+    document.getElementById("seta").textContent = permitDetails.eta || "";
+    document.getElementById("strty").textContent = permitDetails.tranType || "";
+    document.getElementById("sentryp").textContent = entryName || "";
 
     // --- CONSIGNMENT DETAILS ---
     targetTable.innerHTML = ""; // clear existing rows

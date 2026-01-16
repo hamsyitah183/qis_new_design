@@ -86,6 +86,7 @@ Route::prefix('public')
         Route::post('/save-application', [PermitApplicationController::class, 'saveApplication'])->name('saveApplication');
         Route::post('/upload_attachment', [PermitApplicationController::class, 'uploadAttachment'])->name('uploadAttachment');
         Route::post('/temp_upload', [PermitApplicationController::class, 'tempUpload'])->name('tempUpload');
+        Route::post('/save_application_inspection', [InspectionController::class, 'saveApplication'])->name('saveApplicationInspection');
 
         // view application
         Route::get('/view_all_application', [ApplicationController::class, 'showallapplicationlist'])->name('showallapplicationlist');

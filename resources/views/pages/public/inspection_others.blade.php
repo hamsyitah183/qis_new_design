@@ -22,7 +22,7 @@
                     </div>
                 </div>
                 <div class="card-body p-0"> <!-- method="POST"  data-wizard="active" style="display: block;"-->
-                    <form id="wizardForm" class="wizard wizard-tab horizontal" accept="multipart/form-data">
+                    <form id="wizardFormOthers" class="wizard wizard-tab horizontal" accept="multipart/form-data">
                         <aside class="wizard-nav dots">
                             <div class="wizard-step active" data-step="0">
                                 <span class="dot"></span>
@@ -38,11 +38,7 @@
                             </div>
                             <div class="wizard-step" data-step="3">
                                 <span class="dot"></span>
-                                <span>Payment</span>
-                            </div>
-                            <div class="wizard-step" data-step="4">
-                                <span class="dot"></span>
-                                <span>Confirmation</span>
+                                <span>Summary</span>
                             </div>
                         </aside>
                         <aside class="wizard-content container">
