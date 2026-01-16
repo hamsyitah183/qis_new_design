@@ -7,6 +7,9 @@ use App\Http\Controllers\internal\MiscController;
 use App\Http\Controllers\public\importPermit\PermitApplicationController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\ConsignmentController;
+
+use App\Http\Controllers\InspectionController;
+
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PermitGenerateController;
 use App\Http\Controllers\PublicController;
@@ -99,6 +102,7 @@ Route::prefix('public')
         Route::get('/checkout', [PublicController::class, 'showcheckout'])->name('checkout');
 
         Route::get('/consignment_certificate_application', [ConsignmentController::class, 'getView'])->name('consignment.app');
+        Route::get('/inspection_certificates_application', [InspectionController::class, 'getInspection']);
     });
 
 Route::prefix('internal')
