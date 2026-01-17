@@ -4,7 +4,7 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]">
+    <x-breadcrumb :items="[['label' => ' ', 'url' => '#']]">
 
     </x-breadcrumb>
 @endsection
@@ -31,12 +31,16 @@
                         </svg>
                     </span>
 
+
                     <div class="d-flex gap-3 mt-3">
                         <a href="/" class="btn btn-sm btn-primary">
                             Return to Home
                         </a>
+
                         <a href="/profile" class="btn btn-sm btn-info">
-                           Go To Verification Page
+                            {{ authUser()['user']->approved->verification_attachment
+                                ? 'Go To Verification Page'
+                                : 'Upload Your Verification Attachment' }}
                         </a>
                     </div>
 

@@ -13,14 +13,20 @@
                     aria-controls="edit-profile-tab-pane" aria-selected="false" tabindex="-1">Edit Profile</button>
             </li>
 
-            @if ($user['type'] == 'public')
+            @if ($user['type'] === 'public')
                 <li class="nav-item" role="presentation">
                     <button class="nav-link w-100 text-start" id="edit-verification-tab" data-bs-toggle="tab"
                         data-bs-target="#edit-verification-tab-pane" type="button" role="tab"
-                        aria-controls="edit-verification-tab-pane" aria-selected="false"
-                        tabindex="-1">Verification</button>
+                        aria-controls="edit-verification-tab-pane" aria-selected="false" tabindex="-1">
+                        Verification
+                       
+                        @if (authUser()['user']->approved->verification_attachment == null)
+                            <i class="ri-alert-line text-warning ms-1"></i>
+                        @endif
+                    </button>
                 </li>
             @endif
+
 
             <li class="nav-item" role="presentation">
                 <button class="nav-link w-100 text-start" id="edit-password-tab" data-bs-toggle="tab"

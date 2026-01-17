@@ -24,29 +24,9 @@ class PublicUser extends Authenticatable implements MustVerifyEmail
     public $incrementing = false; // important for UUID
     protected $keyType = 'string';
 
-    protected $fillable = [
-        'uuid',
-        'fullname',
-        'no_ic',
-        'email',
-        'account_type',
-        'phone_number',
-        'office_number',
-        'address_1',
-        'address_2',
-        'postcode',
-        'district',
-        'state',
-        'password',
-        'doa_verified',
-        'verification_attachment',
-        'email_verified_at',
-    ];
+    protected $fillable = ['uuid', 'fullname', 'no_ic', 'email', 'account_type', 'phone_number', 'office_number', 'address_1', 'address_2', 'postcode', 'district', 'state', 'password', 'doa_verified', 'verification_attachment', 'email_verified_at'];
 
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    protected $hidden = ['password', 'remember_token'];
 
     protected $casts = [
         'email_verified_at' => 'datetime',
@@ -55,10 +35,23 @@ class PublicUser extends Authenticatable implements MustVerifyEmail
 
     protected static function booted()
     {
+        // Generate UUID before creating
         static::creating(function ($user) {
             if (empty($user->uuid)) {
                 $user->uuid = (string) Str::uuid();
             }
+        });
+
+        // Create approved_publics row AFTER user is created
+        static::created(function ($user) {
+            ApprovedPublic::create([
+                'user_id' => $user->uuid,
+                'doa_verified' => false,
+                'verification_attachment' => null,
+                'status' => 'pending', // or default status you want
+                'approved_by' => null,
+                'reason' => null,
+            ]);
         });
     }
 

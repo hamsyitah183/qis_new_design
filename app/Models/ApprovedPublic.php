@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class ApprovedPublic extends Model
 {
     //
+    
 
     protected $table = 'approved_publics';
 
@@ -26,4 +27,6 @@ class ApprovedPublic extends Model
     {
         return $this->belongsTo(InternalUser::class, 'approved_by', 'uuid');
     }
+
+    
 }

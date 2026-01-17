@@ -533,7 +533,7 @@ function renderPermitBadge(status, remark = "") {
             break;
 
         case "pending for payment":
-            badgeClass = "bg-warning text-dark";
+            badgeClass = "bg-warning";
             label = "Pending Payment";
             break;
 

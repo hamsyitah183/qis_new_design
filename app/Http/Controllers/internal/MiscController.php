@@ -19,7 +19,6 @@ use Illuminate\Support\Facades\Notification;
 
 class MiscController extends Controller
 {
-
     public function showcontrolpanel()
     {
         return view('pages.internal.misc.control_panel');
@@ -33,42 +32,33 @@ class MiscController extends Controller
     public function getpbdata($cate)
     {
         if ($cate === 'district_entry') {
-
             $pbdata = PublicCode::where('cate_name', $cate)
                 ->where('is_del', false)
                 ->get()
                 ->map(function ($district) {
-                    $district->places = IpEntryPoint::where('district', $district->cate_code)
-                        ->where('is_del', false)
-                        ->get();
+                    $district->places = IpEntryPoint::where('district', $district->cate_code)->where('is_del', false)->get();
 
                     return $district;
                 });
 
             // dd('district', $pbdata);
         } else {
-
-            $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')
-                ->where('cate_name', $cate)
-                ->where('is_del', false)
-                ->get();
+            $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->where('cate_name', $cate)->where('is_del', false)->get();
         }
 
         return response()->json([
             'status' => 'success',
-            'data'   => $pbdata
+            'data' => $pbdata,
         ]);
     }
 
-
     public function getspecificpbdata($id)
     {
-        $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')
-            ->findorFail($id);
+        $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->findorFail($id);
 
         return response()->json([
             'status' => 'success',
-            'data'   => $pbdata
+            'data' => $pbdata,
         ]);
     }
 
@@ -85,7 +75,7 @@ class MiscController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message'   => 'Public code updated successfully.'
+            'message' => 'Public code updated successfully.',
         ]);
     }
 
@@ -97,7 +87,7 @@ class MiscController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message'   => 'Public code deleted successfully.'
+            'message' => 'Public code deleted successfully.',
         ]);
     }
 
@@ -122,7 +112,7 @@ class MiscController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message'   => 'Public code added successfully.'
+            'message' => 'Public code added successfully.',
         ]);
     }
 
@@ -133,10 +123,7 @@ class MiscController extends Controller
 
     public function permitaddcondition()
     {
-        $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')
-            ->where('cate_name', 'condition_category')
-            ->where('is_del', false)
-            ->get();
+        $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->where('cate_name', 'condition_category')->where('is_del', false)->get();
 
         return view('pages.internal.misc.permit_add', compact('pbdata'));
     }
@@ -145,35 +132,34 @@ class MiscController extends Controller
     {
         // Validate
         $request->validate([
-            'itemName'   => 'required|string',
+            'itemName' => 'required|string',
             'itemCategory' => 'required|integer',
             'permit_condition' => 'required|string',
         ]);
 
         // Decode Tagify arrays
         $countryArr = json_decode($request->countryTag, true) ?? [];
-        $usageArr   = json_decode($request->usageTags, true) ?? [];
+        $usageArr = json_decode($request->usageTags, true) ?? [];
 
-
-        $countryValues = array_map(fn($i) => $i['value'] ?? $i['name'] ?? null, $countryArr);
-        $usageValues   = array_map(fn($i) => $i['value'] ?? $i['name'] ?? null, $usageArr);
+        $countryValues = array_map(fn($i) => $i['value'] ?? ($i['name'] ?? null), $countryArr);
+        $usageValues = array_map(fn($i) => $i['value'] ?? ($i['name'] ?? null), $usageArr);
 
         // dd($countryValues, json_encode($countryValues));
 
         // Save record
         $save = IpCondition::create([
-            'category'          => $request->itemCategory,
-            'item_name'         => $request->itemName,
+            'category' => $request->itemCategory,
+            'item_name' => $request->itemName,
             'addional_condition' => $request->permit_condition,
-            'quantity_limit'    => $request->quanLimit ?: null,
-            'date_limit'        => $request->spedate ?: null,
-            'country'           => $countryValues,
-            'usage'             => $usageValues,
+            'quantity_limit' => $request->quanLimit ?: null,
+            'date_limit' => $request->spedate ?: null,
+            'country' => $countryValues,
+            'usage' => $usageValues,
         ]);
 
         return response()->json([
             'status' => 'success',
-            'data'   => $save
+            'data' => $save,
         ]);
     }
 
@@ -181,10 +167,7 @@ class MiscController extends Controller
     {
         $condition = IpCondition::with(['code'])->findOrFail($id);
 
-        $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')
-            ->where('cate_name', 'consignment_purpose')
-            ->where('is_del', false)
-            ->get();
+        $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->where('cate_name', 'consignment_purpose')->where('is_del', false)->get();
 
         return view('pages.internal.misc.permit_edit', compact('condition', 'pbdata'));
     }
@@ -197,7 +180,7 @@ class MiscController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data'   => $conditions
+            'data' => $conditions,
         ]);
     }
 
@@ -209,7 +192,7 @@ class MiscController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data'   => $conditions
+            'data' => $conditions,
         ]);
     }
 
@@ -220,12 +203,9 @@ class MiscController extends Controller
 
         $permit = IpConsignmentPermit::findOrFail($id);
 
-
-
+        $permit->permit_number = 'IP' . now()->format('YmdHis');
 
         $application = $permit->application;
-
-
 
         if ($accepted == 1) {
             $permit->status = 'pending for payment';
@@ -237,50 +217,28 @@ class MiscController extends Controller
         }
         $permit->save();
 
-        $allStatuses = IpConsignmentPermit::where('application_id', $permit->application->id)
-            ->pluck('status'); // gets a collection of all statuses
+        $allStatuses = IpConsignmentPermit::where('application_id', $permit->application->id)->pluck('status'); // gets a collection of all statuses
 
-
-        $url = '/view_application' . $permit->application->application_id;
+        $url = '/view_application' . '/' . $permit->application->application_id;
 
         // Events & notifications
         event(new ApplicationDeleted('Permit in ' . $permit->application->application_id . ' is ' . $status));
 
         $users = InternalUser::role(['admin', 'officer'])->get();
-        Notification::send($users, new ApplicationNotification(
-            'A permit with application ID ' . $permit->application->application_id . ' has been ' . $status,
-            authUser()['user']->fullname,
-            $url
-        ));
+        Notification::send($users, new ApplicationNotification('A permit with application ID ' . $permit->application->application_id . ' has been ' . $status, authUser()['user']->fullname, $url));
 
         $user = PublicUser::where('uuid', $permit->application->user_id)->first();
 
-        event(new PublicUserEvent(
-            'A permit in application with ID ' . $permit->application->application_id . ' has been ' . $status,
-            $user->uuid
-        ));
+        event(new PublicUserEvent('A permit in application with ID ' . $permit->application->application_id . ' has been ' . $status, $user->uuid));
 
-        Notification::send($user, new ApplicationNotification(
-            'A permit in application with ID ' . $permit->application->application_id . ' has been ' . $status,
-            authUser()['user']->fullname,
-            $url
-        ));
+        Notification::send($user, new ApplicationNotification('A permit in application with ID ' . $permit->application->application_id . ' has been ' . $status, authUser()['user']->fullname, $url));
 
-
-        $application->logActivity(
-            action: 'Officer Verification',
-            remark: $request['reason'] ?? 'Permit approved by officer',
-            status: 'Officer Verified'
-        );
+        $application->logActivity(action: 'Officer Verification', remark: $request['reason'] ?? 'Permit approved by officer', status: 'Officer Verified');
 
         // Check if no status is 'processing'
         if (!$allStatuses->contains('processing')) {
             // dd($allStatuses);
-            $application->logActivity(
-                action: 'Fully Processed',
-                remark: 'Fully Processed',
-                status: 'Fully Processed'
-            );
+            $application->logActivity(action: 'Fully Processed', remark: 'Fully Processed', status: 'Fully Processed');
 
             // dd($application);
 
@@ -288,10 +246,11 @@ class MiscController extends Controller
             $application->save();
         }
 
+        $permit->save();
 
         return response()->json([
             'status' => 'success',
-            'message'   => 'Permit condition updated successfully.'
+            'message' => 'Permit condition updated successfully.',
         ]);
     }
     public function updateEntry(Request $request)
@@ -301,10 +260,13 @@ class MiscController extends Controller
         $transportTypes = $request->input('transport_types', []);
 
         if (!$districtId) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'District ID is required.'
-            ], 422);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => 'District ID is required.',
+                ],
+                422,
+            );
         }
 
         DB::transaction(function () use ($districtId, $places, $transportTypes) {
@@ -316,12 +278,12 @@ class MiscController extends Controller
                 $place = trim($place);
                 $type = $transportTypes[$index] ?? 'land'; // default to land if empty
 
-                if (empty($place)) continue;
+                if (empty($place)) {
+                    continue;
+                }
 
                 // Check if the place already exists (soft-deleted)
-                $entry = IpEntryPoint::where('district', $districtId)
-                    ->where('entry_name', $place)
-                    ->first();
+                $entry = IpEntryPoint::where('district', $districtId)->where('entry_name', $place)->first();
 
                 if ($entry) {
                     // Restore if it was soft-deleted and update transport type
@@ -342,7 +304,7 @@ class MiscController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Entry points updated successfully.'
+            'message' => 'Entry points updated successfully.',
         ]);
     }
 }

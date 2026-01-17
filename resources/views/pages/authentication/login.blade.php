@@ -55,7 +55,7 @@
                                             class="form-label text-default d-block">Password</label>
                                         <div class="position-relative">
                                             <input type="password" name="password"
-                                                class="form-control" id="signin-password"
+                                                class="form-control" 
                                                 placeholder="Password">
                                             {{-- <a href="javascript:void(0);" class="show-password-button text-muted"
                                                 onclick="createpassword('signin-password', this)" id="button-addon2">

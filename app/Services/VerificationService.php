@@ -37,6 +37,8 @@ class VerificationService
             }
 
             $verification->status = 'waiting for approval';
+
+            // authUser()['user']->verification_attachment = 'storage/app/public/verifications/' . $filename;
             $verification->save();
 
             
