@@ -4,7 +4,11 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="Inspection Certificate">
+    <x-breadcrumb :items="[
+        ['label' => 'Home', 'url' => '/'],
+        ['label' => 'New Application', 'url' => '/public/new_application'],
+        ['label' => 'Self Apply Inspection Application', 'url' => '#'],
+    ]" title="Inspection Certificate">
 
     </x-breadcrumb>
 @endsection
@@ -16,11 +20,7 @@
     <div class="row">
         <div class="col-xl-12">
             <div class="card custom-card">
-                <div class="card-header">
-                    <div class="card-title">
-                        NEW INSPECTION APPLICATION
-                    </div>
-                </div>
+               
                 <div class="card-body p-0"> <!-- method="POST"  data-wizard="active" style="display: block;"-->
                     <form id="wizardForm" class="wizard wizard-tab horizontal" accept="multipart/form-data">
                         <aside class="wizard-nav dots">
@@ -90,7 +90,7 @@
         })();
     </script>
 
- 
+
 
     @vite(['resources/js/pages/inspection/inspection.js'])
 @endpush

@@ -1,12 +1,8 @@
 <div class="tab-pane fade border-0 p-0 active show" id="order-tab-pane" role="tabpanel" aria-labelledby="order-tab-pane"
     tabindex="0">
     <div class="p-3">
-        <p class="mb-1 fw-semibold text-muted op-5 fs-20">01</p>
-        <div class="fs-15 fw-semibold d-sm-flex d-block align-items-center justify-content-between mb-3">
-            <div>Choose application type</div>
-        </div>
-
-        <div class="row">
+       
+        <div class="row p-2 pt-3">
 
             {{-- Import Permit --}}
             <div class="col-xl-4 cursor-pointer mb-3">

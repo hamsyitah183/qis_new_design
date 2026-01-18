@@ -4,23 +4,21 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="Consignment Certificate">
+    <x-breadcrumb :items="[
+        ['label' => 'Home', 'url' => '/'],
+        ['label' => 'New Application', 'url' => '/public/new_application'],
+        ['label' => 'Apply for Others Consignment Certificates Application', 'url' => '#'],
+    ]" title="Consignment Certificate">
 
     </x-breadcrumb>
 @endsection
 
 @section('content')
 
-
-    <!-- terssttt  -->
     <div class="row">
         <div class="col-xl-12">
             <div class="card custom-card">
-                <div class="card-header">
-                    <div class="card-title">
-                        NEW CONSIGNMENT CERTIFICATE APPLICATION
-                    </div>
-                </div>
+                
                 <div class="card-body p-0"> <!-- method="POST"  data-wizard="active" style="display: block;"-->
                     <form id="wizardForm" class="wizard wizard-tab horizontal" accept="multipart/form-data">
                         <aside class="wizard-nav dots">
@@ -51,11 +49,7 @@
                             @include('pages.public.consignment.step2')
                             @include('pages.public.consignment.step3')
                         </aside>
-                        <!-- <aside class="wizard-buttons">
-                                                                    <button class="wizard-btn btn prev" disabled="true">Prev</button>
-                                                                    <button class="wizard-btn btn next">Next</button>
-                                                                    <button class="wizard-btn btn finish" style="display: none;">Submit</button>
-                                                                </aside> -->
+                   
                     </form>
                     @include('pages.public.consignment.step2modal')
                 </div>

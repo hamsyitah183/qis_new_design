@@ -76,8 +76,8 @@
                                     data-bs-target="#shipped-tab-pane" type="button" role="tab"
                                     aria-controls="shipped-tab" aria-selected="false" tabindex="-1">
                                     <span class="d-flex flex-column gap-1 align-items-center d-md-inline">
-                                        <i class="ti ti-download me-2 align-middle"></i>
-                                        <span class="text-type text-wrap"> Verification Attachment </span>
+                                        
+                                        <span class="text-type text-wrap"> Category </span>
                                     </span>
                                 </button>
                             </li>
@@ -86,11 +86,7 @@
                         <div class="tab-content " id="myTabContent">
                             @include('pages.public.application.type')
 
-
-
-
-
-                            @include('pages.authentication.includes.register.3')
+                            @include('pages.public.application.category')
 
                         </div>
                     </div>

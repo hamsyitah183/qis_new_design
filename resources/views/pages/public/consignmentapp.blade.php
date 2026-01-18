@@ -4,7 +4,11 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="Consignment Certificate">
+    <x-breadcrumb :items="[
+        ['label' => 'Home', 'url' => '/'],
+        ['label' => 'New Application', 'url' => '/public/new_application'],
+        ['label' => 'Self Apply Consignment Certificate Application', 'url' => '#'],
+    ]" title="Consignment Certificate">
 
     </x-breadcrumb>
 @endsection
@@ -16,11 +20,7 @@
     <div class="row">
         <div class="col-xl-12">
             <div class="card custom-card">
-                <div class="card-header">
-                    <div class="card-title">
-                        NEW CONSIGNMENT CERTIFICATE APPLICATION
-                    </div>
-                </div>
+                
                 <div class="card-body p-0"> <!-- method="POST"  data-wizard="active" style="display: block;"-->
                     <form id="wizardForm" class="wizard wizard-tab horizontal" accept="multipart/form-data">
                         <aside class="wizard-nav dots">
