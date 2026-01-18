@@ -29,7 +29,8 @@ class ApplicationController extends Controller
     public function show()
     {
         if (auth()->user()->doa_verified) {
-            return view('pages.public.new_application');
+            // return view('pages.public.new_application');
+            return view('pages.public.apply_new');
         } else {
             return view('pages.public.wait_for_verified');
         }

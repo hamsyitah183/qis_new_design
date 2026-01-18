@@ -109,17 +109,25 @@ async function attachmentTable() {
         let statuses = permit.status;
         let text = "";
 
-        if (statuses.includes("completed")) {
+        const s = statuses.toLowerCase();
+
+        if (s.includes("completed")) {
             text = '<span class="badge bg-success fs-11 p-1">Completed</span>';
-        } else if (statuses.includes("processing")) {
-            text = '<span class="badge bg-info fs-11 p-1">Processing</span>';
-        } else if (statuses.includes("rejected")) {
-            text = '<span class="badge bg-danger fs-11 p-1">Rejected</span>';
-        } else if (statuses.includes("paid")) {
+
+        } else if (s.includes("payment processing")) {
+            text = '<span class="badge bg-info fs-11 p-1">Payment Processing</span>';
+
+        } else if (s.includes("paid")) {
             text = '<span class="badge bg-success fs-11 p-1">Paid</span>';
-        } else if (statuses.includes("payment")) {
-            text =
-                '<span class="badge bg-warning fs-11 p-1">Pending For Payment</span>';
+
+        } else if (s.includes("processing")) {
+            text = '<span class="badge bg-info fs-11 p-1">Processing</span>';
+
+        } else if (s.includes("rejected")) {
+            text = '<span class="badge bg-danger fs-11 p-1">Rejected</span>';
+
+        } else if (s.includes("payment")) {
+            text = '<span class="badge bg-warning fs-11 p-1">Pending For Payment</span>';
         }
 
         permitStatus = `<td>${text}</td>`;
@@ -169,26 +177,27 @@ async function pendingPaymentTable() {
     pendingPaymentPermits.forEach((permit, index) => {
         let detail = permit.consignment_detail || {};
 
-        console.log("user role?", window.authUser);
+   
 
         tableBody.append(`
-<tr>
-    <td>
-        <div class="form-check">
-            <input class="form-check-input permit-checkbox" type="checkbox" value="${
-                permit.id
-            }"
-                data-permit-value = "30">
+        <tr>
+            <td>
+                <div class="form-check">
+                    <input
+                        class="form-check-input permit-checkbox"
+                        type="checkbox"
+                        value="${permit.id}"
+                        data-permit-value="30"
+                        ${permit.status?.includes('payment processing') ? 'disabled' : ''}
+                    >
+                </div>
+            </td>
+            <td>${permit.permit_number ?? '—'}</td>
+            <td>${detail.item_name ?? '—'}</td>
+            <td>RM 30</td>
+        </tr>
+        `);
 
-
-        </div>
-    </td>
-    <td>${detail.item_name ?? "—"}</td>
-
-    <td>RM 30</td>
-
-</tr>
-`);
     });
 
     $("#checkAllPermits").prop("checked", false);

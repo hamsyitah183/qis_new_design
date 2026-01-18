@@ -27,6 +27,7 @@
 
                                                             </div>
                                                         </th>
+                                                        <th scope="col">Permit Number</th>
                                                         <th scope="col">Item Name</th>
 
                                                         <th scope="col">Value</th>

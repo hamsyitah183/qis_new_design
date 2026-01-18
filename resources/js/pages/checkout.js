@@ -2,43 +2,46 @@ import $ from "jquery";
 import Swal from "sweetalert2";
 
 
-function returnToApplication()
-{
+function returnToApplication() {
 
-    $(document).ready(function() {
-        $(document).on('click', '#returnToApplication', function(e) {
-            e.preventDefault();
+    $(document).on('click', '#returnToApplication', function (e) {
+        e.preventDefault();
 
-            // Get application ID from button attribute
-            const applicationId = $(this).data('app-id');
+        const applicationId = $(this).data('app-id');
 
-            console.log('Return to application', applicationId);
+        // Extract ONLY permit IDs
+        const permitIds = window.PERMITS.map(p => p.id);
 
-            Swal.fire({
-                title: "Are you sure?",
-                text: "The payment will be cancelled!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonText: "Yes, go back!",
-                cancelButtonText: "Cancel",
-            }).then((result) => {
-                 if (result.isConfirmed) {
-                    fetch('/payment/cancel', {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
-                        }
-                    }).then(() => {
-                        window.location.href = '/view_application/' + applicationId + '#pending';
-                    });
-                }
-            });
+        Swal.fire({
+            title: "Are you sure?",
+            text: "The payment will be cancelled!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, go back!",
+            cancelButtonText: "Cancel",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('/payment/cancel', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        application_id: applicationId,
+                        permit_ids: permitIds
+                    })
+                })
+                .then(res => res.json())
+                .then(() => {
+                    window.location.href =
+                        '/view_application/' + applicationId + '#pending';
+                });
+            }
         });
-    
     });
-
-
 }
+
 
 // function payMent() {
 //     $(document).on('click', '#payNow', function (e) {

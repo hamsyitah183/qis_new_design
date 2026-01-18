@@ -17,6 +17,7 @@ use App\Http\Controllers\RoleAndPermissionController;
 use App\Http\Controllers\TempFileController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PermitConsignmentController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Broadcast;
@@ -179,7 +180,7 @@ Route::prefix('internal')
         Route::post('/district/entry-point/update', [MiscController::class, 'updateEntry']);
 
         // ======================= notifications ===========================
-        Route::post('/permit/{id}', [MiscController::class, 'accept_permit']);
+        Route::post('/permit/{id}', [PermitConsignmentController::class, 'accept_permit']);
     });
 
 Route::middleware(['auth.any'])->group(function () {
@@ -236,10 +237,7 @@ Route::middleware(['auth.any'])->group(function () {
 
     Route::post('/payment', [PaymentController::class, 'payment']);
 
-    Route::post('/payment/cancel', function () {
-        session()->forget('payment_active');
-        return response()->json(['status' => 'cancelled']);
-    });
+    Route::post('/payment/cancel', [PaymentController::class, 'cancelPayment']);
 
     // Route::post('/')
 

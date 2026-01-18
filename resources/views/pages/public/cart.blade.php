@@ -8,6 +8,9 @@
 
 @push('scripts')
     <!-- vite -->
+    <script>
+        window.PERMITS = @json($permits);
+    </script>
     @vite(['resources/js/pages/checkout.js'])
 @endpush
 

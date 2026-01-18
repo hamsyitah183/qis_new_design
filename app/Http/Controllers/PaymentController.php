@@ -22,6 +22,12 @@ class PaymentController extends Controller
 
         $permits = IpConsignmentPermit::where('application_id', $id)->whereIn('id', $permitIds)->where('status', 'pending for payment')->get();
 
+        foreach ($permits as $permit) {
+            $permit->update([
+                'status' => 'payment processing',
+            ]);
+        }
+
         if ($permits->isEmpty()) {
             abort(404, 'No permits found');
         }
@@ -35,8 +41,7 @@ class PaymentController extends Controller
 
         $paymentMethod = PaymentMethod::get();
 
-        return response()->view('pages.public.cart', compact('permits', 'application', 'total', 'order', 'paymentMethod'))
-        ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')->header('Pragma', 'no-cache');
+        return response()->view('pages.public.cart', compact('permits', 'application', 'total', 'order', 'paymentMethod'))->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')->header('Pragma', 'no-cache');
     }
 
     public function signedUrl(Request $request)
@@ -188,5 +193,20 @@ class PaymentController extends Controller
         // Show it
         // return 'Kod Transaksi: ' . $kodTransaksi;
         return view('pages.paymentStatus', compact('kodTransaksi', 'title'));
+    }
+
+    public function cancelPayment(Request $request)
+    {
+        $permitIds = $request->permit_ids;
+
+    
+        IpConsignmentPermit::whereIn('id', $permitIds)->update(['status' => 'pending for payment']);
+
+        session()->forget('payment_active');
+
+        return response()->json([
+            'status' => 'cancelled',
+            'permits' => $permitIds,
+        ]);
     }
 }
