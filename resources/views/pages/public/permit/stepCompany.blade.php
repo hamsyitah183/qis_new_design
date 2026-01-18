@@ -13,7 +13,7 @@
                             <option value="">-- Select  --</option>
                             <option value="">-- SelectImporter --</option>
                         </select> -->
-                        <input type="text" class="form-control mb-3" id="findImporter" name="findImporter" placeholder="Isert Company/Individu identiry number">
+                        <input type="text" class="form-control mb-3" id="findImporter" name="findImporter" placeholder="Company Number / Identification Number">
                         <button type="button" class="btn btn-md btn-info mb-3" id="btnFindImp"><i class="bx bx-search"></i> Find Importer</button>
 
                         <div class="alert alert-danger" id="searchresult" role="alert" style="display:none">

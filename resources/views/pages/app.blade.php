@@ -82,6 +82,16 @@
 
 <body class="">
 
+    @php
+        $authUser = authUser();
+        $user = $authUser['user'];
+        $user->type = $authUser['type'];
+    @endphp
+
+    <script>
+        window.authUser = @json($user);
+    </script>
+
 
     <!-- Loader -->
     <div id="loader">
@@ -99,9 +109,7 @@
         <div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer">
             <div id="editToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
                 <div class="toast-header">
-                    <img class="bd-placeholder-img rounded me-2"
-                        src="/asset/image.png"
-                        alt="logo" width="20">
+                    <img class="bd-placeholder-img rounded me-2" src="/asset/image.png" alt="logo" width="20">
                     <strong class="me-auto">QIS</strong>
                     <small id="toastTime">just now</small>
                     <button type="button" class="btn-close" data-bs-dismiss="toast"></button>

@@ -28,39 +28,21 @@ $("#redirectProfile").on("click", function (e) {
     window.location.href = "/profile";
 });
 
-export async function getAuthUser() {
-    if (window.authUserPromise) return window.authUserPromise;
-
-    window.authUserPromise = fetch("/api/auth-user")
-        .then((res) => {
-            if (!res.ok) throw new Error("Failed to get auth user");
-            return res.json();
-        })
-        .then((user) => {
-            window.authUser = user; // store globally
-            return user;
-        })
-        .catch((err) => {
-            console.error(err);
-            return null;
-        });
-
-    return window.authUserPromise;
+export function getAuthUser() {
+    return window.authUser ?? null;
 }
 
-getAuthUser().then((user) => {
-    window.authUser = user;
 
-    if(window.authUser) {
-        if(window.authUser.type === 'internal') {
-            internalUserEcho();
+const user = getAuthUser();
+console.log('user', user);
 
-        } else {
-            publicUserEcho(window.authUser.uuid);
-        }
+if (user) {
+    if (user.type === "internal") {
+        internalUserEcho();
+    } else {
+        publicUserEcho(user.uuid);
     }
-
-});
+}
 
 export function formatTime(timestamp) {
     const utcDate = new Date(timestamp);

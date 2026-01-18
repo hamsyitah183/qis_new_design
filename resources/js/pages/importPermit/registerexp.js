@@ -934,7 +934,10 @@ $(document).ready(async function () {
         $(document).on(
             "click",
             `#logoutButton, 
-            .app-sidebar.sticky button, .app-sidebar.sticky a`,
+            .app-sidebar.sticky button, .app-sidebar.sticky a,
+            .breadcrumb .breadcrumb-item a
+            `,
+            
             function (e) {
                 if (!change) return;
 

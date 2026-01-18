@@ -55,18 +55,20 @@ class PermitApplicationController extends Controller
             'country' => 'required|string|max:50',
         ]);
 
-        \DB::table('exporter')->insert([
+        $exporterId = \DB::table('exporter')->insertGetId([
             'name' => $validated['name'],
             'phone_no' => $validated['phone_no'],
             'address' => $validated['address'],
             'country' => $validated['country'],
-            // 'registered_by' => auth()->id() ?? 2, // fallback if not logged in
             'registered_by' => authUser()['user']['uuid'],
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        return response()->json(['success' => true]);
+        // fetch newly created exporter
+        $exporter = \DB::table('exporter')->where('id', $exporterId)->first();
+
+        return response()->json($exporter, 201);
     }
 
     public function deleteExporter($id)
@@ -78,57 +80,60 @@ class PermitApplicationController extends Controller
             ->first();
 
         if (!$exporter) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Exporter not found or unauthorized.'
-            ], 404);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Exporter not found or unauthorized.',
+                ],
+                404,
+            );
         }
 
         \DB::table('exporter')->where('id', $id)->delete();
 
         return response()->json([
             'success' => true,
-            'message' => 'Exporter deleted successfully.'
+            'message' => 'Exporter deleted successfully.',
         ]);
     }
 
-
     public function getImporters($idno)
     {
-        $importers = \DB::table('public_users')
-            ->where('no_ic', $idno)
-            ->first();
+        $importers = \DB::table('public_users')->where('no_ic', $idno)->first();
 
         // If no data found
         if (!$importers) {
-            return response()->json([
-                'status'  => 'not_found',
-                'message' => 'No importer found for this Identity number.',
-                'data'    => []
-            ], 404);
+            return response()->json(
+                [
+                    'status' => 'not_found',
+                    'message' => 'No importer found for this Identity number.',
+                    'data' => [],
+                ],
+                404,
+            );
         }
 
         // If email not verified
         if (is_null($importers->email_verified_at)) {
             return response()->json([
-                'status'  => 'not_verified_email',
+                'status' => 'not_verified_email',
                 'message' => 'User exists but email verification is not completed.',
-                'data'    => $importers
+                'data' => $importers,
             ]);
         }
 
         // If DOA verified is false
         if ($importers->doa_verified != 1) {
             return response()->json([
-                'status'  => 'not_verified_doa',
+                'status' => 'not_verified_doa',
                 'message' => 'User exists but DOA verification is not completed.',
-                'data'    => $importers
+                'data' => $importers,
             ]);
         }
 
         return response()->json([
             'status' => 'success',
-            'data'   => $importers
+            'data' => $importers,
         ]);
     }
 
@@ -148,30 +153,16 @@ class PermitApplicationController extends Controller
     {
         $type = $request->query('type');
 
-        $entryp = \DB::table('ip_entry_point')
-            ->leftJoin('public_code', 'ip_entry_point.district', '=', 'public_code.cate_code')
-            ->where('public_code.cate_name', 'district_entry')
-            ->where('ip_entry_point.transport_type', $type)
-            ->select('ip_entry_point.id', \DB::raw('CONCAT(public_code.description, " - ", ip_entry_point.entry_name) AS entry_display'))
-            ->get();
+        $entryp = \DB::table('ip_entry_point')->leftJoin('public_code', 'ip_entry_point.district', '=', 'public_code.cate_code')->where('public_code.cate_name', 'district_entry')->where('ip_entry_point.transport_type', $type)->select('ip_entry_point.id', \DB::raw('CONCAT(public_code.description, " - ", ip_entry_point.entry_name) AS entry_display'))->get();
 
         return response()->json($entryp);
     }
 
     public function getConsignmentFromCountry($countryCode)
     {
-
         $countryCode = strtoupper(trim($countryCode));
         //dd($countryCode);
-        $data = IpCondition::whereJsonContains('country', $countryCode)
-            ->leftJoin('public_code', 'ip_condition.category', '=', 'public_code.cate_code')
-            ->where('public_code.cate_name', 'condition_category')
-            ->select(
-                'ip_condition.id',
-                \DB::raw('CONCAT(public_code.description, " - ", ip_condition.item_name) AS entry_display'),
-                'ip_condition.usage'
-            )
-            ->get();
+        $data = IpCondition::whereJsonContains('country', $countryCode)->leftJoin('public_code', 'ip_condition.category', '=', 'public_code.cate_code')->where('public_code.cate_name', 'condition_category')->select('ip_condition.id', \DB::raw('CONCAT(public_code.description, " - ", ip_condition.item_name) AS entry_display'), 'ip_condition.usage')->get();
 
         return response()->json($data);
     }
@@ -181,7 +172,7 @@ class PermitApplicationController extends Controller
         $data = IpCondition::findOrFail($id);
         return response()->json([
             'success' => true,
-            'data' => $data->usage
+            'data' => $data->usage,
         ]);
     }
 
@@ -191,32 +182,22 @@ class PermitApplicationController extends Controller
         $movedFiles = [];
         $isNewApplication = false;
 
-
-
         try {
             $applicationUuid = $request->input('applicationId');
             $isDraft = $request->boolean('is_draft');
 
-            $exporter = $request->exporterData
-                ? json_decode($request->exporterData, true)
-                : null;
+            $exporter = $request->exporterData ? json_decode($request->exporterData, true) : null;
 
-            $importer = $request->importerData
-                ? json_decode($request->importerData, true)
-                : null;
+            $importer = $request->importerData ? json_decode($request->importerData, true) : null;
 
-            $permit = $request->permitDetails
-                ? json_decode($request->permitDetails, true)
-                : [];
+            $permit = $request->permitDetails ? json_decode($request->permitDetails, true) : [];
 
             // -----------------------------
             // Importer verify logic
             // -----------------------------
             $importer_verify = null;
             if (!$isDraft && isset($permit['applCate'])) {
-                $importer_verify = $permit['applCate'] == 0
-                    ? 'Clerk Review In-Progress'
-                    : 'wait for company approval';
+                $importer_verify = $permit['applCate'] == 0 ? 'Clerk Review In-Progress' : 'wait for company approval';
             }
 
             // -----------------------------
@@ -227,29 +208,20 @@ class PermitApplicationController extends Controller
                 $application = IpApplication::where('application_id', $applicationUuid)->firstOrFail();
 
                 $application->update([
-                    'eta'                  => $permit['eta'] ?? null,
-                    'transport_type'       => $permit['tranType'] ?? null,
-                    'entry_point'          => $permit['entrypoint'] ?? null,
+                    'eta' => $permit['eta'] ?? null,
+                    'transport_type' => $permit['tranType'] ?? null,
+                    'entry_point' => $permit['entrypoint'] ?? null,
                     'category_application' => $permit['applCate'] ?? null,
-                    'user_id'              => Auth::user()->uuid,
-                    'exporter_id'          => $exporter['id'] ?? null,
-                    'importer_id'          => $importer['uuid'] ?? null,
-                    'importer_detail'      => $importer,
-                    'status'               => $isDraft ? 'Draft' : 'Clerk Review In-Progress',
-                    'importer_verify'      => $importer_verify,
+                    'user_id' => Auth::user()->uuid,
+                    'exporter_id' => $exporter['id'] ?? null,
+                    'importer_id' => $importer['uuid'] ?? null,
+                    'importer_detail' => $importer,
+                    'status' => $isDraft ? 'Draft' : 'Clerk Review In-Progress',
+                    'importer_verify' => $importer_verify,
                 ]);
 
-                event(new InternalUserAdminEvent(
-                    $isDraft
-                        ? 'Import permit application saved as DRAFT by ' . ($importer['fullname'] ?? 'Unknown Importer')
-                        : 'Import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')
-                ));
-                event(new InternalUserClerkEvent(
-                    $isDraft
-                        ? 'Import permit application saved as DRAFT by ' . ($importer['fullname'] ?? 'Unknown Importer')
-                        : 'Import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')
-                ));
-
+                event(new InternalUserAdminEvent($isDraft ? 'Import permit application saved as DRAFT by ' . ($importer['fullname'] ?? 'Unknown Importer') : 'Import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')));
+                event(new InternalUserClerkEvent($isDraft ? 'Import permit application saved as DRAFT by ' . ($importer['fullname'] ?? 'Unknown Importer') : 'Import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')));
 
                 // event(new ApplicationCreatedPublicUser(
                 //     $isDraft
@@ -258,32 +230,23 @@ class PermitApplicationController extends Controller
                 //     Auth::user()->uuid
                 // ));
 
-                event(new PublicUserEvent(
-                    $isDraft
-                        ? 'Your Application with id ' . $application->uuid . ' is saved as draft'
-                        : 'Your Application with id ' . $application->uuid . ' is submitted',
-                    $application->user_id
-                ));
+                event(new PublicUserEvent($isDraft ? 'Your Application with id ' . $application->uuid . ' is saved as draft' : 'Your Application with id ' . $application->uuid . ' is submitted', $application->user_id));
             } else {
                 // Create new application
-                $status = $isDraft
-                    ? 'Draft'
-                    : ((int) ($permit['applCate'] ?? 0) === 1
-                        ? 'Awaiting Approval'
-                        : 'Clerk Review In-Progress');
+                $status = $isDraft ? 'Draft' : ((int) ($permit['applCate'] ?? 0) === 1 ? 'Awaiting Approval' : 'Clerk Review In-Progress');
                 $isNewApplication = true;
                 $application = IpApplication::create([
-                    'application_id'       => Str::uuid(),
-                    'eta'                  => $permit['eta'] ?? null,
-                    'transport_type'       => $permit['tranType'] ?? null,
-                    'entry_point'          => $permit['entrypoint'] ?? null,
+                    'application_id' => Str::uuid(),
+                    'eta' => $permit['eta'] ?? null,
+                    'transport_type' => $permit['tranType'] ?? null,
+                    'entry_point' => $permit['entrypoint'] ?? null,
                     'category_application' => $permit['applCate'] ?? null,
-                    'user_id'              => Auth::user()->uuid,
-                    'exporter_id'          => $exporter['id'] ?? null,
-                    'importer_id'          => $importer['uuid'] ?? null,
-                    'importer_detail'      => $importer,
-                    'status'               => $status,
-                    'importer_verify'      => $importer_verify,
+                    'user_id' => Auth::user()->uuid,
+                    'exporter_id' => $exporter['id'] ?? null,
+                    'importer_id' => $importer['uuid'] ?? null,
+                    'importer_detail' => $importer,
+                    'status' => $status,
+                    'importer_verify' => $importer_verify,
                 ]);
 
                 // event(new ApplicationCreatedInternalUser(
@@ -291,34 +254,18 @@ class PermitApplicationController extends Controller
                 //         ? 'New import permit application DRAFT created by ' . ($importer['fullname'] ?? 'Unknown Importer')
                 //         : 'New import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')
                 // ));
-                event(new InternalUserAdminEvent(
-                    $isDraft
-                        ? 'New import permit application DRAFT created by ' . ($importer['fullname'] ?? 'Unknown Importer')
-                        : 'New import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')
-                ));
-                event(new InternalUserClerkEvent(
-                    $isDraft
-                        ? 'New import permit application DRAFT created by ' . ($importer['fullname'] ?? 'Unknown Importer')
-                        : 'New import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')
-                ));
-                event(new PublicUserEvent(
-                    $isDraft
-                        ? 'Your Application with id ' . $application->application_id . ' is saved as draft'
-                        : 'Your Application with id ' . $application->application_id . ' is submitted',
-                    $application->user_id
-                ));
+                event(new InternalUserAdminEvent($isDraft ? 'New import permit application DRAFT created by ' . ($importer['fullname'] ?? 'Unknown Importer') : 'New import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')));
+                event(new InternalUserClerkEvent($isDraft ? 'New import permit application DRAFT created by ' . ($importer['fullname'] ?? 'Unknown Importer') : 'New import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')));
+                event(new PublicUserEvent($isDraft ? 'Your Application with id ' . $application->application_id . ' is saved as draft' : 'Your Application with id ' . $application->application_id . ' is submitted', $application->user_id));
 
                 ApplicationActivityLogger::log(
                     application: $application,
                     event: 'create_application',
-                    description: authUser()['user']->fullname
-                        . " create application with id {$application->application_id}",
+                    description: authUser()['user']->fullname . " create application with id {$application->application_id}",
                     properties: [
                         'role' => 'public',
-                    ]
+                    ],
                 );
-
-              
             }
 
             $appId = $application->id;
@@ -326,9 +273,7 @@ class PermitApplicationController extends Controller
             // -----------------------------
             // Sync Consignments
             // -----------------------------
-            $existingIds = IpConsignmentPermit::where('application_id', $appId)
-                ->pluck('id')
-                ->toArray();
+            $existingIds = IpConsignmentPermit::where('application_id', $appId)->pluck('id')->toArray();
             $deletedPermits = $request->input('deleted_item_ids', []);
 
             if (is_string($deletedPermits)) {
@@ -338,7 +283,9 @@ class PermitApplicationController extends Controller
             if ($deletedPermits) {
                 foreach ($deletedPermits as $permitId) {
                     $permitItem = IpConsignmentPermit::with('attachments')->find($permitId);
-                    if (!$permitItem) continue;
+                    if (!$permitItem) {
+                        continue;
+                    }
 
                     foreach ($permitItem->attachments as $attachment) {
                         if ($attachment->file_path) {
@@ -364,17 +311,19 @@ class PermitApplicationController extends Controller
                     $data = json_decode($item['data'], true);
                     $permit_id = $data['permit_id'] ?? null;
 
-                    if ($permit_id && in_array($permit_id, $existingIds)) continue;
+                    if ($permit_id && in_array($permit_id, $existingIds)) {
+                        continue;
+                    }
 
                     $consignment = IpConsignmentPermit::create([
-                        'application_id'     => $appId,
-                        'permit_number'      => null,
+                        'application_id' => $appId,
+                        'permit_number' => null,
                         'consignment_detail' => $data,
-                        'quantity'           => $data['quantity'] ?? 0,
-                        'unit_measurement'   => $data['measure'] ?? null,
-                        'value'              => $data['value'] ?? 0,
-                        'purpose'            => $data['purpose'] ?? null,
-                        'status'             => 'processing',
+                        'quantity' => $data['quantity'] ?? 0,
+                        'unit_measurement' => $data['measure'] ?? null,
+                        'value' => $data['value'] ?? 0,
+                        'purpose' => $data['purpose'] ?? null,
+                        'status' => 'processing',
                     ]);
 
                     $consignmentArray[$index] = $consignment->id;
@@ -387,7 +336,9 @@ class PermitApplicationController extends Controller
             if ($request->hasFile('files')) {
                 foreach ($request->file('files') as $i => $file) {
                     $itemIndex = $request->input('file_item_index')[$i] ?? null;
-                    if (!isset($consignmentArray[$itemIndex])) continue;
+                    if (!isset($consignmentArray[$itemIndex])) {
+                        continue;
+                    }
 
                     $name = uniqid() . '_' . $file->getClientOriginalName();
                     $path = $file->storeAs('import', $name, 'public');
@@ -409,9 +360,7 @@ class PermitApplicationController extends Controller
                 $application->logActivity('Draft', 'Application saved as draft', 'Draft');
             } else {
                 $application->logActivity('Submitted', 'Application submitted', 'Submitted');
-                $permit['applCate'] == 0
-                    ? $application->logActivity('Clerk Review In-Progress', 'Pending for clerk approval', 'Clerk Review In-Progress')
-                    : $application->logActivity('Awaiting Approval', 'Company approval required', 'Awaiting Company Approval');
+                $permit['applCate'] == 0 ? $application->logActivity('Clerk Review In-Progress', 'Pending for clerk approval', 'Clerk Review In-Progress') : $application->logActivity('Awaiting Approval', 'Company approval required', 'Awaiting Company Approval');
             }
 
             DB::commit();
@@ -421,37 +370,15 @@ class PermitApplicationController extends Controller
             // -----------------------------
             $users = InternalUser::role(['admin', 'clerk'])->get();
             $notificationUrl = route('viewApplication', $application->application_id);
-            Notification::send($users, new ApplicationNotification(
-                $isDraft
-                    ? ($isNewApplication
-                        ? 'New import permit draft created'
-                        : 'Import permit draft updated')
-                    : ($isNewApplication
-                        ? 'New import permit application submitted'
-                        : 'Import permit application updated'),
-                Auth::user()->fullname,
-                $notificationUrl
-            ));
+            Notification::send($users, new ApplicationNotification($isDraft ? ($isNewApplication ? 'New import permit draft created' : 'Import permit draft updated') : ($isNewApplication ? 'New import permit application submitted' : 'Import permit application updated'), Auth::user()->fullname, $notificationUrl));
             $publicUser = auth()->guard('public')->user();
-            $publicUser->notify(new ApplicationNotification(
-                $isDraft
-                    ? 'Your Application with id ' . $application->application_id . ' is saved as draft'
-                    : 'Your Application with id ' . $application->application_id . ' is submitted',
-                'QIS',
-                route('viewApplication', $application->application_id)
-            ));
+            $publicUser->notify(new ApplicationNotification($isDraft ? 'Your Application with id ' . $application->application_id . ' is saved as draft' : 'Your Application with id ' . $application->application_id . ' is submitted', 'QIS', route('viewApplication', $application->application_id)));
 
             if ($application->category_application == 1 && !$isDraft) {
                 $company = PublicUser::where('uuid', $application['importer_id'])->first();
-                event(new ApplicationCreatedInternalUser(
-                    'Import permit application requires company approval for ' . ($company['fullname'] ?? 'Unknown Importer')
-                ));
+                event(new ApplicationCreatedInternalUser('Import permit application requires company approval for ' . ($company['fullname'] ?? 'Unknown Importer')));
 
-                $company->notify(new ApplicationNotification(
-                    'An import permit application requires your approval',
-                    'System',
-                    route('viewApplication', $application->application_id)
-                ));
+                $company->notify(new ApplicationNotification('An import permit application requires your approval', 'System', route('viewApplication', $application->application_id)));
             }
 
             if (!$isDraft) {
@@ -468,7 +395,6 @@ class PermitApplicationController extends Controller
                 //     'Your application is under review and will be processed shortly.',
                 //     $application->importer->phone_number ?? '60143290092' // recipient number
                 // );
-                
             }
 
             return response()->json([
@@ -482,14 +408,15 @@ class PermitApplicationController extends Controller
                 Storage::disk('public')->delete($file);
             }
 
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage(),
-            ], 500);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => $e->getMessage(),
+                ],
+                500,
+            );
         }
     }
-
-
 
     /**
      * Optional: Move old files from private/public/import to public/import
@@ -510,21 +437,21 @@ class PermitApplicationController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Old private files moved to public successfully'
+            'message' => 'Old private files moved to public successfully',
         ]);
     }
 
-
-
-
     public function uploadAttachment(Request $request)
     {
-        \Log::info("UPLOAD HIT");
+        \Log::info('UPLOAD HIT');
         if (!$request->hasFile('file')) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'No file uploaded'
-            ], 400);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => 'No file uploaded',
+                ],
+                400,
+            );
         }
 
         $file = $request->file('file');
@@ -536,8 +463,8 @@ class PermitApplicationController extends Controller
         $attachment = IpConsignmentAttachment::create([
             'file_name' => $filename,
             'permit_id' => 1,
-            'file_path' => "/storage/" . $path,
-            'file_type' => $file->getClientMimeType()
+            'file_path' => '/storage/' . $path,
+            'file_type' => $file->getClientMimeType(),
         ]);
 
         return response()->json([
@@ -561,20 +488,20 @@ class PermitApplicationController extends Controller
         $path = $file->storeAs('temp', $filename, 'public'); // temp folder
 
         $record = TempAttachment::create([
-            'temp_name'     => $filename,
+            'temp_name' => $filename,
             'original_name' => $file->getClientOriginalName(),
-            'mime_type'     => $file->getClientMimeType(),
-            'size'          => $file->getSize(),
-            'temp_path'     => $path
+            'mime_type' => $file->getClientMimeType(),
+            'size' => $file->getSize(),
+            'temp_path' => $path,
         ]);
 
         return response()->json([
-            'id'            => $record->id,
+            'id' => $record->id,
             'original_name' => $record->original_name,
-            'temp_name'     => $record->temp_name,
-            'temp_path'     => $record->temp_path,
-            'mime_type'     => $record->mime_type,
-            'size'          => $record->size,
+            'temp_name' => $record->temp_name,
+            'temp_path' => $record->temp_path,
+            'mime_type' => $record->mime_type,
+            'size' => $record->size,
         ]);
     }
 }
