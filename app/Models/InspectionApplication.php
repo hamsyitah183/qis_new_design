@@ -44,4 +44,9 @@ class InspectionApplication extends Model
     {
         return $this->belongsTo(IpEntryPoint::class, 'entry_point', 'id');
     }
+
+    public function inspectionItems()
+    {
+        return $this->hasMany(InspectionItem::class, 'application_id', 'id');
+    }
 }

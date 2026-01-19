@@ -1,6 +1,8 @@
 <!-- MODAL ADD ITEM -->
-<div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-fullscreen">
+<div class="modal fade" id="addItemModal" tabindex="-1" data-bs-focus="false">
+
+    <form class="modal-dialog modal-fullscreen">
+        <input type="hidden" name="permit_id" value = "permit_id">
         <div class="modal-content">
             <!-- Header -->
             <div class="modal-header ">
@@ -17,11 +19,14 @@
                 <div class="row gy-4 mb-3 p-4">
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
                         <label for="itemSelect" class="form-label">Item </label>
-                        <input type="text" class="form-control" id="itemSelect" name="itemSelect">
+                        <select class="form-select" id="itemSelect" name="itemSelect">
+                            <!-- <option value="aa" >-- Select Item</option>
+                                                                                    <option value="aasda" >aaadwd</option> -->
+                        </select>
                         <small style="color:red">Item refering to the exporter's Country</small>
                     </div>
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                        
+
                         <label for="itemValue" class="form-label">Value (RM)</label>
                         <input type="number" class="form-control" id="itemValue" name="itemValue" placeholder="RM ...">
                     </div>
@@ -44,7 +49,8 @@
                         <select class="form-select" id="itemPurpose" name="itemPurpose">
                             <option value="">-- Select Purpose --</option>
                             @foreach ($pubpurpose as $purpose)
-                                <option value="{{ $purpose->cate_code }}" data-description="{{ $purpose->description }}">{{ $purpose->description }}</option>
+                                <option value="{{ $purpose->cate_code }}"
+                                    data-description="{{ $purpose->description }}">{{ $purpose->description }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -63,8 +69,8 @@
                                 </div>
                             </div>
                             <div class="card-body">
-                                <form id="itemDropzone" method="post"
-                                    class="dz-clickable" enctype="multipart/form-data"><!--data-single="true"  -->
+                                <form id="itemDropzone" method="post" class="dz-clickable"
+                                    enctype="multipart/form-data"><!--data-single="true"  -->
                                     @csrf
                                     <div class="dz-default dz-message">
                                         <button class="dz-button p-5 border w-100 border-radius" type="button">
@@ -90,7 +96,7 @@
             </div>
             <!-- </form> -->
         </div> <!-- end class:modal-content -->
-    </div>
+    </form>
 </div> <!-- end modal -->
 
 

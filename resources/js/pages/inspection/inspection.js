@@ -117,7 +117,7 @@ function clearExporterFields() {
 // ------------------------- Consignment / Uses -------------------------
 function loadConsignmentSelection() {
     const countryCode = $("#expcountryCode").val();
-    const $select = $("#itemSelect");
+    /* const $select = $("#itemSelect");
 
     if (!countryCode) return;
 
@@ -138,7 +138,7 @@ function loadConsignmentSelection() {
         // html: "Please wait while items are loaded.",
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading(),
-    });
+    }); */
 
     fetch(`${window.baseUrl}/public/get_consignment/${countryCode}`)
         .then((res) => res.json())
@@ -700,31 +700,54 @@ function viewMore() {
         const filesTableBody = document.querySelector("#itemFilesTable tbody");
         filesTableBody.innerHTML = ""; // clear old rows
 
-        item.files.forEach((file) => {
-            const reader = new FileReader();
-
-            reader.onload = function (e) {
-                const fileUrl = e.target.result;
-
+        // Existing files (from database)
+        if (item.existingFiles && item.existingFiles.length > 0) {
+            item.existingFiles.forEach((file) => {
                 filesTableBody.insertAdjacentHTML(
                     "beforeend",
                     `
                     <tr>
                         <td>${file.name}</td>
-                        <td>${file.type}</td>
+                        <td>${file.type || 'N/A'}</td>
                         <td>
-                            <button class="btn btn-sm btn-primary view-file-btn" 
-                                data-url="${fileUrl}" type = "button">
+                            <a href="${file.url}" target="_blank" class="btn btn-sm btn-info">
                                 View
-                            </button>
+                            </a>
                         </td>
                     </tr>
-                `
+                    `
                 );
-            };
+            });
+        }
 
-            reader.readAsDataURL(file);
-        });
+        // New files (from current session)
+        if (item.files && item.files.length > 0) {
+            item.files.forEach((file) => {
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    const fileUrl = e.target.result;
+
+                    filesTableBody.insertAdjacentHTML(
+                        "beforeend",
+                        `
+                        <tr>
+                            <td>${file.name}</td>
+                            <td>${file.type}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary view-file-btn" 
+                                    data-url="${fileUrl}" type = "button">
+                                    View
+                                </button>
+                            </td>
+                        </tr>
+                    `
+                    );
+                };
+
+                reader.readAsDataURL(file);
+            });
+        }
 
         // Show modal
         const modalEl = document.getElementById("ItemDetailsModal");
@@ -796,6 +819,69 @@ function deleteItem() {
 
 // ============= attachment =====================
 
+async function loadApplicationData(id) {
+    if (!id) return;
+
+    try {
+        const response = await fetch(`${window.baseUrl}/public/inspection_application_data/${id}`);
+        const result = await response.json();
+
+        if (result.status === "success") {
+            const app = result.data;
+
+            // 1. Importer
+            if (app.importer_detail) {
+                handleImporterResponse({ status: "success", data: app.importer_detail });
+            } else if (app.importer) {
+                handleImporterResponse({ status: "success", data: app.importer });
+            }
+
+            // 2. Exporter
+            if (app.exporter_id) {
+                $("#selectexp").val(app.exporter_id).trigger("change");
+            }
+
+            // 3. Permit Details
+            $("#eta").val(app.eta ? app.eta.split("T")[0] : "");
+            $("#trnptType").val(app.transport_type).trigger("change");
+
+            // wait slightly for transport options to load
+            setTimeout(() => {
+                $("#entryPoint").val(app.entry_point).trigger("change");
+            }, 1000);
+
+            // 4. Items
+            if (app.inspection_items && app.inspection_items.length > 0) {
+                tempItems = app.inspection_items.map((item) => {
+                    const data = item.consignment_detail || {};
+                    return {
+                        id: item.id || crypto.randomUUID(),
+                        item_id: data.item_id || data.id,
+                        item_name: data.item_name || data.entry_display,
+                        value: item.value,
+                        quantity: item.quantity,
+                        measure: item.unit_measurement,
+                        purpose: item.purpose,
+                        uses: data.uses,
+                        existingFiles: (item.attachments || []).map(a => ({
+                            name: a.file_name,
+                            url: a.file_path,
+                            type: a.file_type
+                        })),
+                        files: [] // New files to be uploaded
+                    };
+                });
+                renderAllItems();
+                summarySubmit();
+            }
+
+            change = false; // Reset change flag after loading
+        }
+    } catch (error) {
+        console.error("Error loading application data:", error);
+    }
+}
+
 function saveapplication(isDraft = false) {
     const form = document.querySelector("#wizardForm") || document.querySelector("#wizardFormOthers");
     if (!form) return console.error("Form not found");
@@ -805,12 +891,17 @@ function saveapplication(isDraft = false) {
     // 🔑 tell backend this is draft or submit
     formData.append("is_draft", isDraft ? 1 : 0);
 
+    const appId = $("#applicationId").val();
+    if (appId) {
+        formData.append("applicationId", appId);
+    }
+
     formData.append("exporterData", JSON.stringify(exporter));
     formData.append("importerData", JSON.stringify(importer));
     formData.append("permitDetails", JSON.stringify(permitDetails));
 
     tempItems.forEach((item, index) => {
-        const { files, ...otherData } = item;
+        const { files, existingFiles, ...otherData } = item;
         formData.append(`items[${index}][data]`, JSON.stringify(otherData));
 
         if (files && files.length > 0) {
@@ -846,14 +937,14 @@ function saveapplication(isDraft = false) {
 
             if (!isDraft) {
                 setTimeout(() => {
-                    window.location.href = "/public/view_all_application";
+                    window.location.href = "/public/inspection_certificates_list";
                 }, 1500);
+            } else {
+                window.location.reload();
             }
-
-            window.location.reload();
         },
         error: function (xhr) {
-            Swal.fire("Error", "Failed to save application", "error");
+            Swal.fire("Error", "Failed to save application: " + (xhr.responseJSON?.message || "Unknown error"), "error");
         },
     });
 }
@@ -915,24 +1006,30 @@ $(document).ready(async function () {
         });
 
         // ------------------- Item Select (Consignment) -------------------
-        $("#itemSelect").on("change", function () {
-            const itemId = $(this).val();
-            const $itemUses = $("#itemUses");
-
-            // Reset uses dropdown
-            $itemUses
-                .empty()
-                .append('<option value="">-- Select Uses --</option>');
-
-            if (!itemId) return;
-
-            // Load uses for the selected item
-            loadUses(itemId);
-        });
+        /* $("#itemSelect").on("change", function () {
+             const itemId = $(this).val();
+             const $itemUses = $("#itemUses");
+ 
+             // Reset uses dropdown
+             $itemUses
+                 .empty()
+                 .append('<option value="">-- Select Uses --</option>');
+ 
+             if (!itemId) return;
+ 
+             // Load uses for the selected item
+             loadUses(itemId);
+         }); */
 
         // Expose loadConsignmentSelection globally if needed
         // loadConsignmentSelection();
         $("#mdlAddItemBtn").on("click", loadConsignmentSelection);
+
+        // Check for edit mode
+        const appId = $("#applicationId").val();
+        if (appId) {
+            await loadApplicationData(appId);
+        }
 
         // Submit button handler
         $(document).on("click", "#submitApps", function (e) {
@@ -976,8 +1073,8 @@ $(document).ready(async function () {
                     }
 
                     if (result.isDenied) {
-                        saveapplication(true); 
-                        window.location.href = "/public/view_all_application";
+                        saveapplication(true);
+                        // window.location.href = "/public/inspection_certificates_list";
                     }
 
                     // result.isDismissed → user clicked "Stay"

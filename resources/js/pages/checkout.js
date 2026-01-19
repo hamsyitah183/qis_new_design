@@ -11,6 +11,7 @@ function returnToApplication() {
 
         // Extract ONLY permit IDs
         const permitIds = window.PERMITS.map(p => p.id);
+        const order = window.ORDER;
 
         Swal.fire({
             title: "Are you sure?",
@@ -29,7 +30,8 @@ function returnToApplication() {
                     },
                     body: JSON.stringify({
                         application_id: applicationId,
-                        permit_ids: permitIds
+                        permit_ids: permitIds,
+                        order: order
                     })
                 })
                 .then(res => res.json())

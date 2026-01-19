@@ -113,6 +113,9 @@
                             
                             <li class="slide">
                                 <a href="{{ route('public.showallconsignmentlist') }}" class="side-menu__item">Consignment Certificate List</a>
+
+                            <li class="slide">
+                                <a href="{{ route('public.showallinspectionlist') }}" class="side-menu__item">Inspection Certificate List</a>
                             </li>
                         </ul>
                     </li>

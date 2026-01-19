@@ -46,7 +46,7 @@ class PaymentController extends Controller
 
     public function signedUrl(Request $request)
     {
-        // dd($request['total']);
+        // dd($request->all());
         $request->validate([
             'application_id' => 'required|integer',
             'permit_ids' => 'required|array|min:1',
@@ -197,11 +197,21 @@ class PaymentController extends Controller
 
     public function cancelPayment(Request $request)
     {
-        $permitIds = $request->permit_ids;
+        $request->validate([
+            'permit_ids' => 'required|array',
+            'order.order_number' => 'required|string',
+        ]);
 
-    
+        $permitIds = $request->permit_ids;
+        $orderNumber = $request->input('order.order_number');
+
+        // Delete order (single record)
+        Order::where('order_number', $orderNumber)->delete();
+
+        // Revert permit statuses
         IpConsignmentPermit::whereIn('id', $permitIds)->update(['status' => 'pending for payment']);
 
+        // Clear session flag
         session()->forget('payment_active');
 
         return response()->json([

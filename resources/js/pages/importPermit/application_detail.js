@@ -1,6 +1,7 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
 import { formatTime, getCountry, getEntryPoint } from "../../app";
+import { application_reapply } from "./application_reapply";
 let application = null;
 let value = null;
 
@@ -68,6 +69,7 @@ async function attachmentTable() {
         console.log("user role?", window.authUser);
 
         let roles = window.authUser.roles.map((role) => role.name);
+        let type = window.authUser.type;
         console.log("is it", roles);
 
         let permitAction = "";
@@ -77,13 +79,19 @@ async function attachmentTable() {
                 (roles.includes("admin") || roles.includes("officer"))
             ) {
                 permitAction = `
-<div class="btn btn-sm btn-primary-light btn-wave accept" data-permit="${permit.id}">
-    Approved
-</div>
-<div class="btn btn-sm btn-danger-light btn-wave reject" data-permit="${permit.id}">
-    Rejected
-</div>`;
-            }
+                <div class="btn btn-sm btn-primary-light btn-wave accept" data-permit="${permit.id}">
+                    Approved
+                </div>
+                <div class="btn btn-sm btn-danger-light btn-wave reject" data-permit="${permit.id}">
+                    Rejected
+                </div>`;
+            } 
+           
+        }
+
+        if( permit.status === "rejected" &&
+            (type.includes('public'))) {
+            permitAction = `<div class = "btn btn-sm btn-danger-light btn-wave reapply"  data-permit = "${permit.id}" >Reapply</div>`
         }
 
         // if (applicationStatus === "Fully Processed") {
@@ -134,7 +142,7 @@ async function attachmentTable() {
 
         tableBody.append(`
 <tr>
-    <td>${detail.item_name ?? "—"}</td>
+    <td class = "text-wrap">${detail.item_name ?? "—"}</td>
     <td>${detail.quantity ?? "—"} ${detail.measure ?? ""}</td>
     <td class="text-wrap">${detail.purpose ?? "—"}</td>
     <td>RM ${detail.value ?? "—"}</td>
@@ -530,7 +538,7 @@ function verifyApplication() {
     });
 }
 
-function renderPermitBadge(status, remark = "") {
+export function renderPermitBadge(status, remark = "") {
     let badgeClass = "";
     let label = "";
     let remarkHtml = "";
@@ -804,6 +812,9 @@ function updateTotalValue() {
 
 
 
+
+
+
 /* -------------------------------
     Initializer (shows Swal first)
     -------------------------------- */
@@ -835,6 +846,8 @@ async function initApplicationDetails() {
     rejectPermit();
     generatePermit();
     pendingPaymentTable();
+
+    application_reapply(application)
 
 
     Swal.close(); // Close after data is loaded
