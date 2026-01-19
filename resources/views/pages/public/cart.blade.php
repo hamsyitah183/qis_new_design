@@ -10,6 +10,7 @@
     <!-- vite -->
     <script>
         window.PERMITS = @json($permits);
+        window.ORDER = @json($order);
     </script>
     @vite(['resources/js/pages/checkout.js'])
 @endpush
@@ -39,6 +40,7 @@
             <input type="hidden" name="orderNo" value="{{ $order->order_number }}">
             <input type="hidden" name="amount" value="{{ $total }}">
             <input type="hidden" name="application_type" value="import_permit">
+ 
 
             <div class="row">
                 <div class="col-xl-9">

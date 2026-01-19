@@ -4,6 +4,7 @@
 
 @push('scripts')
     @vite(['resources/js/pages/importPermit/application_detail.js'])
+    @vite(['resources/js/pages/importPermit/application_reapply.js'])
 @endpush
 
 
@@ -159,6 +160,7 @@
 
     </x-modal>
 
+    @include('pages.public.view_permit.step2modal')
 
 @endsection
 
@@ -194,12 +196,12 @@
         document.addEventListener('DOMContentLoaded', function() {
             if (window.location.hash === '#pending') {
 
-                
+
                 document.querySelectorAll('.wizard-step').forEach(el => {
                     el.classList.remove('active');
                 });
 
-                
+
                 const pendingTab = document.getElementById('pendingTab');
                 if (pendingTab) {
                     pendingTab.classList.add('active');

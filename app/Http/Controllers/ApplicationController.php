@@ -354,9 +354,16 @@ class ApplicationController extends Controller
 
         // dd($consignment);
 
+        $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
+        $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
+        $country = country::where('is_del', false)->get();
+
         return view('pages.public.view_application', [
             'application'        => $application,
             'consignment'        => $consignment,
+            'pubmeasure' => $pubmeasure,
+            'pubpurpose' => $pubpurpose,
+            'country' => $country
             // 'consignmentDetails' => $consignment[0]->attachments
         ]); //, 'consignment', 'attachment'
     }
