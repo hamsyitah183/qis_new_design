@@ -110,6 +110,10 @@
                             <li class="slide">
                                 <a href="{{ route('public.showallapplicationlist') }}" class="side-menu__item">Import Permit List</a>
                             </li>
+
+                            <li class="slide">
+                                <a href="{{ route('public.showallinspectionlist') }}" class="side-menu__item">Inspection Certificate List</a>
+                            </li>
                         </ul>
                     </li>
                 @endif

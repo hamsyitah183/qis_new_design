@@ -17,10 +17,7 @@
                 <div class="row gy-4 mb-3 p-4">
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
                         <label for="itemSelect" class="form-label">Item </label>
-                        <select class="form-select" id="itemSelect" name="itemSelect">
-                            <!-- <option value="aa" >-- Select Item</option>
-                                                                                    <option value="aasda" >aaadwd</option> -->
-                        </select>
+                        <input type="text" class="form-control" id="itemSelect" name="itemSelect">
                         <small style="color:red">Item refering to the exporter's Country</small>
                     </div>
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
