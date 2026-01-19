@@ -97,6 +97,10 @@ Route::prefix('public')
 
         Route::get('/verify_application', [ApplicationController::class, 'verifyapplication'])->name('verifyapplication');
 
+        // get importer
+        Route::get('/get_consignment_importers', [ConsignmentApplicationController::class, 'getConsignmentImporters'])->name('getConsignmentImporters');
+        Route::post('/store_consignment_importer', [ConsignmentApplicationController::class, 'storeConsignmentImporter'])->name('storeImporter');
+
         // temporary file
         Route::post('/temp-upload', [TempFileController::class, 'upload']);
 
@@ -252,8 +256,6 @@ Route::middleware(['auth.any'])->group(function () {
     // bounce url
     // Route::get('/paymentUpdate/{kod_transaksi}', [PaymentController::class, 'bounce']);
     Route::get('/paymentUpdate', [PaymentController::class, 'paymentUpdate']);
-    
-
 });
 
 // broadcast --dont kacau---
@@ -261,12 +263,25 @@ Route::middleware(['auth.any'])->group(function () {
 // Broadcast::routes(['middleware' => ['auth:internal']]);
 // Broadcast::routes(['middleware' => ['auth:internal']]);
 
-
 //error page testing
-Route::get('/402', function () {abort(402); });
-Route::get('/403', function () {abort(403); });
-Route::get('/404', function () {abort(404); });
-Route::get('/419', function () {abort(419); });
-Route::get('/429', function () {abort(429); });
-Route::get('/500', function () {abort(500); });
-Route::get('/503', function () {abort(503); });
+Route::get('/402', function () {
+    abort(402);
+});
+Route::get('/403', function () {
+    abort(403);
+});
+Route::get('/404', function () {
+    abort(404);
+});
+Route::get('/419', function () {
+    abort(419);
+});
+Route::get('/429', function () {
+    abort(429);
+});
+Route::get('/500', function () {
+    abort(500);
+});
+Route::get('/503', function () {
+    abort(503);
+});

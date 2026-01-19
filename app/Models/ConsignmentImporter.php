@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Importer extends Model
+class ConsignmentImporter extends Model
 {
     use HasFactory;
 
-    protected $table = 'exporter';
+    protected $table = 'consignment_importers';
 
     protected $fillable = ['name', 'phone_no', 'address', 'country', 'registered_by'];
 

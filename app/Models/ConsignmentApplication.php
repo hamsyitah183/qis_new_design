@@ -66,14 +66,14 @@ class ConsignmentApplication extends Model
         return $this->hasMany(ConsignmentPermit::class, 'application_id', 'id');
     }
 
-    public function activity_log()
-    {
-        return $this->hasMany(ConsignmentApplicationLog::class, 'application_id', 'application_id');
-    }
+    // public function activity_log()
+    // {
+    //     return $this->hasMany(ConsignmentApplicationLog::class, 'application_id', 'application_id');
+    // }
 
-    public function latestLog()
-    {
-        return $this->hasOne(ConsignmentApplicationLog::class, 'application_id', 'application_id')
-            ->latestOfMany();
-    }
+    // public function latestLog()
+    // {
+    //     return $this->hasOne(ConsignmentApplicationLog::class, 'application_id', 'application_id')
+    //         ->latestOfMany();
+    // }
 }

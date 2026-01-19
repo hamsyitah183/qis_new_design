@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ConsignmentApplication;
+use App\Models\ConsignmentImporter;
 use Illuminate\Http\Request;
 use App\Models\PublicCode;
 use App\Models\Country;
@@ -21,7 +22,6 @@ class ConsignmentController extends Controller
         return view('pages.public.consignmentapp', compact('pubmeasure', 'pubpurpose', 'country'));
     }
 
-
     function getViewOther()
     {
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
@@ -32,17 +32,11 @@ class ConsignmentController extends Controller
 
     function saveApplicationConsignment(Request $request)
     {
-        $exporter = $request->exporterData
-            ? json_decode($request->exporterData, true)
-            : null;
+        $exporter = $request->exporterData ? json_decode($request->exporterData, true) : null;
 
-        $importer = $request->importerData
-            ? json_decode($request->importerData, true)
-            : null;
+        $importer = $request->importerData ? json_decode($request->importerData, true) : null;
 
-        $permit = $request->permitDetails
-            ? json_decode($request->permitDetails, true)
-            : [];
+        $permit = $request->permitDetails ? json_decode($request->permitDetails, true) : [];
         $application = ConsignmentApplication::create([
             'application_id' => Str::uuid(),
             'eta' => $permit['eta'] ?? null,
@@ -67,18 +61,12 @@ class ConsignmentController extends Controller
         $userUuid = authUser()['user']->uuid;
         $type = authUser()['type'];
 
-        $query = ConsignmentApplication::with([
-            'user',
-            'importer',
-            'exporter',
-            'entryPoint.districtCode',
-        ]);
+        $query = ConsignmentApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode']);
 
         // Filter for public users
         if ($type === 'public') {
             $query->where(function ($q) use ($userUuid) {
-                $q->where('user_id', $userUuid)
-                    ->orWhere('importer_id', $userUuid);
+                $q->where('user_id', $userUuid)->orWhere('importer_id', $userUuid);
             });
         }
 
@@ -125,9 +113,7 @@ class ConsignmentController extends Controller
                 ];
 
                 // Get all permit statuses for this row, lowercase
-                $permit_statuses = $row->consignmentPermits->pluck('status')
-                    ->map(fn($status) => strtolower($status))
-                    ->toArray();
+                $permit_statuses = $row->consignmentPermits->pluck('status')->map(fn($status) => strtolower($status))->toArray();
 
                 // Count how many of each status
                 $statusCounts = array_fill_keys(array_keys($statusColors), 0);
@@ -146,10 +132,17 @@ class ConsignmentController extends Controller
                 foreach ($statusColors as $status => $color) {
                     $count = $statusCounts[$status] ?? 0;
                     if ($count > 0) {
-                        $boxesHtml .= '<div class="badge ' . $color . ' text-white text-center" data-bs-toggle="tooltip"
-                            data-bs-placement="top" title="' . ucfirst($status) . '"
+                        $boxesHtml .=
+                            '<div class="badge ' .
+                            $color .
+                            ' text-white text-center" data-bs-toggle="tooltip"
+                            data-bs-placement="top" title="' .
+                            ucfirst($status) .
+                            '"
                            style="height:20px; width:20px; display:inline-flex; align-items:center; justify-content:center; margin-right:5px;">
-                           ' . $count . '
+                           ' .
+                            $count .
+                            '
                        </div>';
                     }
                 }
@@ -160,7 +153,10 @@ class ConsignmentController extends Controller
             ->addColumn('action', function ($row) {
                 $url = '/view_consignment/' . $row->application_id;
 
-                $view = '<a class="btn btn-sm btn-primary viewConsignment" href="' . $url . '">
+                $view =
+                    '<a class="btn btn-sm btn-primary viewConsignment" href="' .
+                    $url .
+                    '">
                         <i class="ti ti-eye"></i>
                      </a>';
 
@@ -171,8 +167,8 @@ class ConsignmentController extends Controller
             $datatable->addColumn('submitted_by', fn($row) => $row->user->fullname ?? '-');
         }
 
-        return $datatable
-            ->rawColumns(['action', 'permit_status', 'category_application', 'importer_verify'])
-            ->make(true);
+        return $datatable->rawColumns(['action', 'permit_status', 'category_application', 'importer_verify'])->make(true);
     }
+
+  
 }

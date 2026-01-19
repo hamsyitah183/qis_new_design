@@ -2,7 +2,7 @@
     <div class="row justify-content-center">
         <div class="col-xl-6">
             <div class="register-page">
-                <h6 class="mb-3">Importer :</h6>
+                <h6 class="mb-3">Exporter :</h6>
                 <div class="row gy-3">
                     <input type="hidden" id="app_cate" value="0">
                     <input type="hidden" id="impemail">
@@ -29,19 +29,19 @@
         </div>
         <div class="col-xl-6">
             <div class="register-page">
-                <h6 class="mb-3">Exporter :</h6>
+                <h6 class="mb-3">Importer :</h6>
                 <div class="row gy-3">
                     <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
-                        <label for="selectexp" class="form-label">Select Exporter</label>
-                        <select id="selectexp" data-route="{{ route('public.getExporters') }}"
+                        <label for="selectexp" class="form-label">Select Importer</label>
+                        <select id="selectexp" data-route="{{ route('public.getConsignmentImporters') }}"
                             class="form-select xintra-select2" name="selectexp" style="width:100%;" required>
-                            <option value="">-- Select Exporter --</option>
+                            <option value="">-- Select Importer --</option>
                         </select>
                     </div>
                     <div class="col-xl-12" class="">
                         <button type="button" class="btn btn-primary"
                           id="openExporterModalBtn">
-                            <i class="bx bx-plus me-1"></i> Add Exporter
+                            <i class="bx bx-plus me-1"></i> Add Importer
                         </button>
                         <a style="color:red"> *If exporter is not in the selection list above</a>
                     </div>
@@ -70,7 +70,7 @@
         </div>
 
         {{-- exporter modal --}}
-        <x-modal id="addExporterModal" title="Add Exporter">
+        <x-modal id="addExporterModal" title="Add Importer">
             <form id="addExporterForm">
                 @csrf
 
@@ -98,9 +98,11 @@
                     <label for="addexpcountry" class="form-label">Country</label>
                     <select class="form-select" id="addexpcountry" name="addexpcountry">
                         <option value="">-- Select Country --</option>
-                        @foreach ($country as $coun)
+                        {{-- @foreach ($country as $coun)
                             <option value="{{ $coun->code }}">{{ $coun->name }}</option>
-                        @endforeach
+                        @endforeach --}}
+                        <option value="SWK">Sarawak, Malaysia</option>
+                        <option value="BN">Brunei Darussalam</option>
                     </select>
                 </div>
 
@@ -108,8 +110,8 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
 
                     <button type="button" id="addExporterbtn" class="btn btn-primary"
-                        data-route="{{ route('public.storeExp') }}">
-                        Save Exporter
+                        data-route="{{ route('public.storeImporter') }}">
+                        Save Importer
                     </button>
                 @endslot
             </form>

@@ -50,12 +50,12 @@ function fetchExporterList() {
         dataType: "json",
         cache: false,
         success: (data) => {
-            exporterListArray = data || [];
+            exporterListArray = data.data || [];
 
             $select
                 .empty()
                 .append('<option value="">-- Select Exporter --</option>');
-            data.forEach((exp) =>
+            exporterListArray.forEach((exp) =>
                 $select.append(`<option value="${exp.id}">${exp.name}</option>`)
             );
 
@@ -102,7 +102,7 @@ function handleExporterChange() {
         $("#expfonno").val(exporter.phone_no || "");
         $("#expaddress1").val(exporter.address1 || exporter.address || "");
         $("#expcountryCode").val(exporter.ccode || "");
-        $("#expcountry").val(exporter.country || "");
+        $("#expcountry").val(exporter.country_info.name || "");
 
         change = 1;
     });
@@ -239,7 +239,7 @@ function initAddExporterModal() {
                 fetchExporterList();
                 Swal.fire({
                     icon: "success",
-                    title: "Exporter Saved!",
+                    title: "Importer Saved!",
                     text: "The exporter has been successfully added to the list.",
                     timer: 1800,
                     showConfirmButton: false,
