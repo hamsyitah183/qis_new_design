@@ -560,6 +560,7 @@ function saveConsignmentAttachment() {
         const itemMeasure = $("#itemMeasure").val();
         const itemPurpose = $("#itemPurpose").val();
         const itemUsesValue = $("#itemUses").val();
+        const certificateNo = $("#certificateNo").val();
 
         // ✅ Validation
         if (
@@ -593,6 +594,7 @@ function saveConsignmentAttachment() {
             purpose: itemPurposeDescription,
             uses: itemUsesValue,
             files: files,
+            certificateNo: certificateNo,
         };
 
         // ✅ Add to temporary array

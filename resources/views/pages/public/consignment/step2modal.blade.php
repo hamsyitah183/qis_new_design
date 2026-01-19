@@ -24,7 +24,7 @@
                         <small style="color:red">Item refering to the exporter's Country</small>
                     </div>
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                        
+
                         <label for="itemValue" class="form-label">Value (RM)</label>
                         <input type="number" class="form-control" id="itemValue" name="itemValue" placeholder="RM ...">
                     </div>
@@ -47,7 +47,8 @@
                         <select class="form-select" id="itemPurpose" name="itemPurpose">
                             <option value="">-- Select Purpose --</option>
                             @foreach ($pubpurpose as $purpose)
-                                <option value="{{ $purpose->cate_code }}" data-description="{{ $purpose->description }}">{{ $purpose->description }}</option>
+                                <option value="{{ $purpose->cate_code }}"
+                                    data-description="{{ $purpose->description }}">{{ $purpose->description }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -56,6 +57,12 @@
                         <select class="form-select" id="itemUses" name="itemUses">
 
                         </select>
+                    </div>
+                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
+                        <label for="certificateNo" class="form-label">Certificate No (MyGAP or myOrganic)</label>
+                        <input class="form-control" id="certificateNo" name="certificateNo" />
+
+
                     </div>
                     <div class="row gy-4">
                         <div class="col-xl-12">
@@ -66,8 +73,8 @@
                                 </div>
                             </div>
                             <div class="card-body">
-                                <form id="itemDropzone" method="post"
-                                    class="dz-clickable" enctype="multipart/form-data"><!--data-single="true"  -->
+                                <form id="itemDropzone" method="post" class="dz-clickable"
+                                    enctype="multipart/form-data"><!--data-single="true"  -->
                                     @csrf
                                     <div class="dz-default dz-message">
                                         <button class="dz-button p-5 border w-100 border-radius" type="button">

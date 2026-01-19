@@ -37,6 +37,7 @@ return new class extends Migration
             $table->string('status')->nullable();
 
             $table->text('remark')->nullable();
+            $table->string('mygap_myorganic_no')->nullable();
 
             $table->timestamps();
         });

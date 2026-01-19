@@ -29,6 +29,17 @@ class ConsignmentSeeder extends Seeder
                 'country' => json_encode(['SMY', 'SWK']),
                 'usage' => json_encode(['Consumption', 'Retail']),
             ],
+            [
+                'category' => 1,
+                'item_name' => 'DURIAN (FRESH/CHILLED)',
+                'addional_condition' => '<pre>1) Must be free from soil and organic debris.
+2) Consignment is subject to physical inspection at the point of entry in Sarawak.
+3) The Phytosanitary Certificate must state the fruit is free from Durian Seed Borer (Mudaria luteileprosa).</pre>',
+                'quantity_limit' => 500.0,
+                'date_limit' => null,
+                'country' => json_encode(['SMY', 'SWK']),
+                'usage' => json_encode(['Consumption', 'Retail']),
+            ],
             // Category 3: Fresh Vegetables
             [
                 'category' => 3,

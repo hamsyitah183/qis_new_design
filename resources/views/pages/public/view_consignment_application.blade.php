@@ -3,8 +3,8 @@
 @section('pageName', 'View Application')
 
 @push('scripts')
-    @vite(['resources/js/pages/importPermit/application_detail.js'])
-    @vite(['resources/js/pages/importPermit/application_reapply.js'])
+    @vite(['resources/js/pages/consignment/consignment_detail.js'])
+
 @endpush
 
 

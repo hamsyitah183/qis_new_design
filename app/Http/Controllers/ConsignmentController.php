@@ -72,8 +72,8 @@ class ConsignmentController extends Controller
 
         $datatable = DataTables::eloquent($query)
             ->addIndexColumn()
-            ->addColumn('importer', fn($row) => $row->importer->fullname ?? '-')
-            ->addColumn('exporter', fn($row) => $row->exporter->name ?? '-')
+            ->addColumn('importer', fn($row) => $row->importer->name ?? '-')
+            ->addColumn('exporter', fn($row) => $row->exporter->fullname ?? '-')
             ->addColumn('eta', fn($row) => $row->eta ? $row->eta->format('Y-m-d') : '-')
             ->addColumn('transport_type', fn($row) => $row->transport_type ?? '-')
             ->addColumn('entry_point', function ($row) {
@@ -170,5 +170,41 @@ class ConsignmentController extends Controller
         return $datatable->rawColumns(['action', 'permit_status', 'category_application', 'importer_verify'])->make(true);
     }
 
-  
+    public function getApplicationDetails($id)
+    {
+        $type = authUser()['type']; // 'public' or 'internal'
+        $user = authUser()['user']; // authenticated user object
+
+        // Fetch application and eager load relationships
+        $application = ConsignmentApplication::where('application_id', $id)
+            ->with(['user', 'importer', 'exporter', 
+            'entryPoint.districtCode', 'consignmentPermits.attachments',])
+            ->firstOrFail();
+
+        if ($type === 'internal') {
+            return response()->json($application);
+        }
+
+        if ($type === 'public') {
+            // Check if user is either the submitter or the importer
+            if ($application->user_id !== $user->uuid && $application->importer_id !== $user->uuid) {
+                return response()->json(
+                    [
+                        'message' => 'You do not have authority to view this application',
+                    ],
+                    403,
+                );
+            }
+
+            return response()->json($application);
+        }
+
+        // Default fallback
+        return response()->json(
+            [
+                'message' => 'User type not recognized',
+            ],
+            400,
+        );
+    }
 }

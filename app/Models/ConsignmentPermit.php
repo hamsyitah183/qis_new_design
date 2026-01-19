@@ -21,6 +21,7 @@ class ConsignmentPermit extends Model
         'purpose',
         'status',
         'remark',
+        'mygap_myorganic_no'
     ];
 
     protected $casts = [

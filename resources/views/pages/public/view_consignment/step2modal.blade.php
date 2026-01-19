@@ -60,6 +60,12 @@
 
                         </select>
                     </div>
+                    <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                        <label for="certificateNo" class="form-label">Certificate No (MyGAP or myOrganic)</label>
+                        <input class="form-control" id="certificateNo" name="certificateNo"/>
+
+                        
+                    </div>
                     <div class="row gy-4">
                         <div class="col-xl-12">
 

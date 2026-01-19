@@ -15,6 +15,7 @@ use App\Models\Country;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ConsignmentApplicationController extends Controller
@@ -134,51 +135,88 @@ class ConsignmentApplicationController extends Controller
                 event(new PublicUserEvent($isDraft ? 'Your consignment application with id ' . $application->application_id . ' is saved as draft' : 'Your consignment application with id ' . $application->application_id . ' is submitted', $application->user_id));
             }
 
-            // Handle items (consignment permits)
-            $items = $request->input('items');
+            $appId = $application->id;
 
-          
+            // -----------------------------
+            // Sync Consignments
+            // -----------------------------
+            $existingIds = ConsignmentPermit::where('application_id', $appId)->pluck('id')->toArray();
+            $deletedPermits = $request->input('deleted_item_ids', []);
 
-            if ($items && is_array($items)) {
-                foreach ($items as $index => $itemData) {
-                    $data = isset($itemData['data']) ? json_decode($itemData['data'], true) : $itemData;
+            if (is_string($deletedPermits)) {
+                $deletedPermits = array_filter(explode(',', $deletedPermits));
+            }
 
-                    //   dd($data);
+            if ($deletedPermits) {
+                foreach ($deletedPermits as $permitId) {
+                    $permitItem = ConsignmentPermit::with('attachments')->find($permitId);
+                    if (!$permitItem) {
+                        continue;
+                    }
 
-                    $permit = ConsignmentPermit::updateOrCreate(
-                        [
-                            'application_id' => $application->id,
-                            'consignment_detail' => json_encode($data),
-                        ],
-                        [
-                            'quantity' => $data['quantity'] ?? 0,
-                            'unit_measurement' => $data['measure'] ?? null,
-                            'value' => $data['value'] ?? 0,
-                            'purpose' => $data['purpose'] ?? null,
-                            'status' => 'submitted',
-                        ],
-                    );
-
-                    // Handle file attachments
-                    if ($request->hasFile('files')) {
-                        $fileIndices = $request->input('file_item_index', []);
-                        foreach ($fileIndices as $fileIndex => $itemIndex) {
-                            if ((int) $itemIndex === $index) {
-                                $file = $request->file('files')[$fileIndex];
-                                $path = $file->store('consignment_attachments');
-
-                                ConsignmentAttachment::create([
-                                    'permit_id' => $permit->id,
-                                    'file_name' => $file->getClientOriginalName(),
-                                    'file_path' => $path,
-                                    'file_type' => $file->extension(),
-                                    'description' => $data['description'] ?? null,
-                                ]);
-
-                                $movedFiles[] = $path;
+                    foreach ($permitItem->attachments as $attachment) {
+                        if ($attachment->file_path) {
+                            $path = str_replace('/storage/', '', $attachment->file_path);
+                            if (Storage::disk('public')->exists($path)) {
+                                Storage::disk('public')->delete($path);
                             }
                         }
+                        $attachment->delete();
                     }
+
+                    $permitItem->delete();
+                }
+            }
+
+            // Handle items (consignment permits)
+            $consignmentArray = [];
+            $items = $request->input('items');
+
+            // dd($items);
+
+            if ($request->has('items')) {
+                foreach ($request->items as $index => $item) {
+                    $data = json_decode($item['data'], true);
+                    $permit_id = $data['permit_id'] ?? null;
+
+                    if ($permit_id && in_array($permit_id, $existingIds)) {
+                        continue;
+                    }
+
+                    $consignment = ConsignmentPermit::create([
+                        'application_id' => $appId,
+                        'permit_number' => null,
+                        'consignment_detail' => $data,
+                        'quantity' => $data['quantity'] ?? 0,
+                        'unit_measurement' => $data['measure'] ?? null,
+                        'value' => $data['value'] ?? 0,
+                        'purpose' => $data['purpose'] ?? null,
+                        'status' => 'processing',
+                        'mygap_myorganic_no' => $data['certificateNo']
+                    ]);
+
+                    $consignmentArray[$index] = $consignment->id;
+                }
+            }
+
+            if ($request->hasFile('files')) {
+                foreach ($request->file('files') as $i => $file) {
+                    $itemIndex = $request->input('file_item_index')[$i] ?? null;
+                    if (!isset($consignmentArray[$itemIndex])) {
+                        continue;
+                    }
+                    $name = uniqid() . '_' . $file->getClientOriginalName();
+                    $path = $file->storeAs('import', $name, 'public');
+                    $movedFiles[] = $path;
+
+                    ConsignmentAttachment::create([
+                        'permit_id' => $consignmentArray[$itemIndex],
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_path' => "/storage/{$path}",
+                        'file_type' => $file->getClientOriginalExtension(),
+                        'description' => '',
+
+                    ]);
                 }
             }
 

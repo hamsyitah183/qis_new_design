@@ -218,6 +218,7 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/edit_application/{uuid}', [ApplicationController::class, 'editApplication'])->name('editApplication');
 
     Route::get('/view_consignment/{uuid}', [ConsignmentApplicationController::class, 'viewapplication'])->name('viewApplication');
+    Route::get('/consignment_application/{id}/data', [ConsignmentController::class, 'getApplicationDetails']);
 
     Route::get('/application/permit/{id}/data', [ApplicationController::class, 'get_application_permit']);
     Route::post('/application/verify/{id}/', [ApplicationController::class, 'verify_application_permit']);
