@@ -38,7 +38,7 @@
                         </a>
 
                         <a href="/profile" class="btn btn-sm btn-info">
-                            {{ authUser()['user']->approved->verification_attachment
+                            {{ authUser()['user']->approved?->verification_attachment
                                 ? 'Go To Verification Page'
                                 : 'Upload Your Verification Attachment' }}
                         </a>

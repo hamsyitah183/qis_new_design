@@ -93,6 +93,8 @@ Route::prefix('public')
         // view application
         Route::get('/view_all_application', [ApplicationController::class, 'showallapplicationlist'])->name('showallapplicationlist');
 
+        Route::get('/view_all_consignment', [ConsignmentController::class, 'showallconsignmentlist'])->name('showallconsignmentlist');
+
         Route::get('/verify_application', [ApplicationController::class, 'verifyapplication'])->name('verifyapplication');
 
         // temporary file
@@ -198,6 +200,8 @@ Route::middleware(['auth.any'])->group(function () {
     //============================= application ======================
     Route::get('/application/list/data', [ApplicationController::class, 'getallapplicationlist'])->name('application.data');
     Route::get('/application/review/list/data', [ApplicationController::class, 'getAllReviewapplicationList'])->name('application.review.data');
+
+    Route::get('/consignment/list/data', [ConsignmentController::class, 'getallconsignmentlist'])->name('consignment.data');
 
     Route::get('/application/{id}/data', [ApplicationController::class, 'getApplicationDetails']);
     Route::get('/view_application/{uuid}', [ApplicationController::class, 'viewapplication'])->name('viewApplication');

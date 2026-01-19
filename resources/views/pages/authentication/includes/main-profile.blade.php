@@ -20,7 +20,7 @@
                         aria-controls="edit-verification-tab-pane" aria-selected="false" tabindex="-1">
                         Verification
                        
-                        @if (authUser()['user']->approved->verification_attachment == null)
+                        @if (authUser()['user']->approved?->verification_attachment == null)
                             <i class="ri-alert-line text-warning ms-1"></i>
                         @endif
                     </button>
