@@ -155,7 +155,7 @@ function reapply(application)
     console.log("FOUND PERMIT:", permit);
     console.log("attachments", attachments);
 
-   
+    let permitIDinput = $('#permit_id').val(permit.id)
 
     // Modal
     const modalEl = document.getElementById("addItemModal");
@@ -167,6 +167,160 @@ function reapply(application)
    
 
 });
+}
+
+function itemConsigment() {
+    itemDropzone = new Dropzone("#itemDropzone", {
+        url: "/",
+        autoProcessQueue: false,
+        paramName: "file",
+        maxFilesize: 10, // MB
+        acceptedFiles: ".jpg,.jpeg,.png,.pdf",
+        addRemoveLinks: true,
+        headers: {
+            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
+                .content,
+        },
+        // --- 1. SWAL LOADING BEFORE LOAD (Processing) ---
+        processing: function (file) {
+            Swal.fire({
+                title: "Uploading...",
+                html: "Please wait while your file is being uploaded.",
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+            });
+            groupPreview();
+        },
+        // --- 2. SWAL SUCCESS AFTER LOAD ---
+        success: (file, response) => {
+            Swal.close();
+
+            tempAttachments.push({
+                id: response.id,
+                original_name: response.original_name,
+                temp_name: response.temp_name,
+                temp_path: response.temp_path,
+                mime_type: response.mime_type,
+                size: response.size,
+                type: response.type,
+            });
+
+            file.temp_id = response.id;
+
+            // ✅ Call groupPreview here too
+            groupPreview();
+
+            console.log("temp", tempAttachments);
+            console.log(
+                "Latest uploaded file:",
+                tempAttachments[tempAttachments.length - 1]
+            );
+            console.log("All attachments:", tempAttachments);
+
+            Swal.fire({
+                icon: "success",
+                title: "Upload Successful!",
+                text: `${response.original_name} has been uploaded.`,
+                timer: 3000,
+                showConfirmButton: false,
+            });
+        },
+        // --- 3. SWAL ERROR AFTER LOAD ---
+        error: (file, message, xhr) => {
+            Swal.close();
+            itemDropzone.removeFile(file);
+            Swal.fire({
+                icon: "error",
+                title: "Upload Failed",
+                text:
+                    message.error || "An unknown error occurred during upload.",
+                footer: "Please try again.",
+            });
+            console.error("Dropzone Error:", message);
+        },
+        // --- 4. HANDLE FILE REMOVAL ---
+        removedfile: function (file) {
+            if (file.temp_id) {
+                const indexToRemove = tempAttachments.findIndex(
+                    (a) => a.id === file.temp_id
+                );
+                if (indexToRemove > -1)
+                    tempAttachments.splice(indexToRemove, 1);
+            }
+            const _ref = file.previewElement;
+            if (_ref) _ref.parentNode.removeChild(_ref);
+
+            groupPreview();
+        },
+    });
+
+    // ✅ Run groupPreview every time a file is added (before upload)
+    itemDropzone.on("addedfile", function (file) {
+        groupPreview();
+    });
+}
+
+function groupPreview() {
+    $(document).ready(function () {
+        Swal.fire({
+            title: "Loading...",
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading(),
+        });
+
+        setTimeout(function () {
+            const $dropzone = $("#itemDropzone");
+            const $previews = $dropzone.find(".dz-preview");
+            const $deleteBtns = $previews.find(".dz-remove");
+
+            // Create group if it doesn't exist
+            let $group = $dropzone.find(".dz-preview-group");
+            if ($group.length === 0) {
+                $group = $('<div class="dz-preview-group"></div>');
+                $dropzone.find(".dz-message").after($group);
+            }
+
+            // Move all previews into the group
+            $previews.appendTo($group);
+
+            // Replace PDF previews with PDF logo
+            for (const file of itemDropzone.getAcceptedFiles()) {
+                if (file.type === "application/pdf") {
+                    const $preview = $(file.previewElement);
+                    const $img = $preview.find(
+                        ".dz-image img[data-dz-thumbnail]"
+                    );
+
+                    // Set your PDF logo path
+                    $img.attr(
+                        "src",
+                        "/images/pdf-logo.png" // <-- replace with your actual PDF logo path
+                    );
+                    $img.css({
+                        "object-fit": "contain",
+                        width: "100%",
+                        height: "100%",
+                    });
+                }
+            }
+
+            // Update delete buttons
+            $deleteBtns.html('<i class="ti ti-trash"></i>');
+
+            Swal.close();
+        }, 100);
+    });
+}
+
+function reapply_consignment()
+{
+    $(document).on('click', function(e) {
+        e.preventDefault();
+
+        
+    })
 }
 
 
@@ -200,4 +354,5 @@ export async function application_reapply(application)
     console.log('from js application reapply', application)
     await loadConsignmentSelection()
     reapply(application)
+    itemConsigment()
 }

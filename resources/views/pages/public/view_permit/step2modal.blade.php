@@ -1,6 +1,8 @@
 <!-- MODAL ADD ITEM -->
 <div class="modal fade" id="addItemModal" tabindex="-1" data-bs-focus="false">
-    <div class="modal-dialog modal-fullscreen">
+
+    <form class="modal-dialog modal-fullscreen">
+        <input type="hidden" name="permit_id" value = "permit_id">
         <div class="modal-content">
             <!-- Header -->
             <div class="modal-header ">
@@ -94,7 +96,7 @@
             </div>
             <!-- </form> -->
         </div> <!-- end class:modal-content -->
-    </div>
+    </form>
 </div> <!-- end modal -->
 
 
