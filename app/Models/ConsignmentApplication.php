@@ -47,13 +47,13 @@ class ConsignmentApplication extends Model
 
     public function importer()
     {
-        return $this->belongsTo(PublicUser::class, 'importer_id', 'uuid');
+        return $this->belongsTo(ConsignmentImporter::class, 'importer_id', 'id');
     }
 
     // Exporter information
     public function exporter()
     {
-        return $this->belongsTo(Exporter::class, 'exporter_id', 'id');
+        return $this->belongsTo(PublicUser::class, 'exporter_id', 'uuid');
     }
 
     public function entryPoint()

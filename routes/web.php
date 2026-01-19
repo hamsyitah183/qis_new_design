@@ -89,7 +89,7 @@ Route::prefix('public')
         Route::post('/temp_upload', [PermitApplicationController::class, 'tempUpload'])->name('tempUpload');
         Route::post('/save_application_inspection', [InspectionController::class, 'saveApplication'])->name('saveApplicationInspection');
 
-        Route::post('/save_application_consignment', [ConsignmentController::class, 'saveApplicationConsignment'])->name('saveApplicationConsignment');
+        Route::post('/save_application_consignment', [ConsignmentApplicationController::class, 'saveApplication'])->name('saveApplicationConsignment');
         // view application
         Route::get('/view_all_application', [ApplicationController::class, 'showallapplicationlist'])->name('showallapplicationlist');
 
@@ -100,6 +100,8 @@ Route::prefix('public')
         // get importer
         Route::get('/get_consignment_importers', [ConsignmentApplicationController::class, 'getConsignmentImporters'])->name('getConsignmentImporters');
         Route::post('/store_consignment_importer', [ConsignmentApplicationController::class, 'storeConsignmentImporter'])->name('storeImporter');
+        Route::get('/get_consignment_certificate/{countryCode}', [ConsignmentApplicationController::class, 'getConsignmentFromCountry']);
+        // itemSelect
 
         // temporary file
         Route::post('/temp-upload', [TempFileController::class, 'upload']);
@@ -214,6 +216,8 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/application/{id}/data', [ApplicationController::class, 'getApplicationDetails']);
     Route::get('/view_application/{uuid}', [ApplicationController::class, 'viewapplication'])->name('viewApplication');
     Route::get('/edit_application/{uuid}', [ApplicationController::class, 'editApplication'])->name('editApplication');
+
+    Route::get('/view_consignment/{uuid}', [ConsignmentApplicationController::class, 'viewapplication'])->name('viewApplication');
 
     Route::get('/application/permit/{id}/data', [ApplicationController::class, 'get_application_permit']);
     Route::post('/application/verify/{id}/', [ApplicationController::class, 'verify_application_permit']);

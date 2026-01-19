@@ -101,7 +101,7 @@ function handleExporterChange() {
         $("#expname").val(exporter.name || "");
         $("#expfonno").val(exporter.phone_no || "");
         $("#expaddress1").val(exporter.address1 || exporter.address || "");
-        $("#expcountryCode").val(exporter.ccode || "");
+        $("#expcountryCode").val(exporter.country_info.code || "");
         $("#expcountry").val(exporter.country_info.name || "");
 
         change = 1;
@@ -118,7 +118,11 @@ function loadConsignmentSelection() {
     const countryCode = $("#expcountryCode").val();
     const $select = $("#itemSelect");
 
+    console.log('the country code', countryCode);
+
     if (!countryCode) return;
+
+
 
     // Reset select options
     $select.empty().append('<option value="">-- Select Item --</option>');
@@ -139,14 +143,16 @@ function loadConsignmentSelection() {
         didOpen: () => Swal.showLoading(),
     });
 
-    fetch(`${window.baseUrl}/public/get_consignment/${countryCode}`)
+    fetch(`/public/get_consignment_certificate/${countryCode}`)
         .then((res) => res.json())
         .then((data) => {
             $select.prop("disabled", false);
 
-            data.forEach((row) => {
+            console.log('data', data)
+
+            data.data.forEach((row) => {
                 $select.append(
-                    `<option value="${row.id}">${row.entry_display}</option>`
+                    `<option value="${row.id}">${row.item_name}</option>`
                 );
             });
 
@@ -175,7 +181,6 @@ function loadUses(itemId) {
 
     Swal.fire({
         title: "Loading...",
-        // html: "Please wait while items are loaded.",
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading(),
     });
@@ -919,9 +924,12 @@ $(document).ready(async function () {
             loadUses(itemId);
         });
 
-        // Expose loadConsignmentSelection globally if needed
-        // loadConsignmentSelection();
-        $("#mdlAddItemBtn").on("click", loadConsignmentSelection);
+     
+        $("#mdlAddItemBtn").on("click", function(e) {
+            e.preventDefault();
+            console.log('hellooo ml item is cliked');
+            loadConsignmentSelection()
+        });
 
         // Submit button handler
         $(document).on("click", "#submitApps", function (e) {

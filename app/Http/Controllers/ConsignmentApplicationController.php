@@ -8,6 +8,7 @@ use App\Events\PublicUserEvent;
 use App\Models\ConsignmentApplication;
 use App\Models\ConsignmentPermit;
 use App\Models\ConsignmentAttachment;
+use App\Models\ConsignmentCondition;
 use App\Models\ConsignmentImporter;
 use App\Models\PublicCode;
 use App\Models\Country;
@@ -55,8 +56,19 @@ class ConsignmentApplicationController extends Controller
         ]);
     }
 
+    public function getConsignmentFromCountry($countryCode)
+    {
+        $data = ConsignmentCondition::whereJsonContains('country', $countryCode)->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ]);
+    }
+
     public function saveApplication(Request $request)
     {
+        // dd($request->all());
         DB::beginTransaction();
         $movedFiles = [];
         $isNewApplication = false;
@@ -65,11 +77,13 @@ class ConsignmentApplicationController extends Controller
             $applicationUuid = $request->input('applicationId');
             $isDraft = $request->boolean('is_draft');
 
-            $exporter = $request->exporterData ? json_decode($request->exporterData, true) : null;
+            $importer = $request->exporterData ? json_decode($request->exporterData, true) : null;
 
-            $importer = $request->importerData ? json_decode($request->importerData, true) : null;
+            $exporter = $request->importerData ? json_decode($request->importerData, true) : null;
 
             $permit = $request->permitDetails ? json_decode($request->permitDetails, true) : [];
+
+            // dd('exporter', $exporter,  'importer', $importer, 'permit', $permit);
 
             // Importer verify logic
             $importer_verify = null;
@@ -88,8 +102,8 @@ class ConsignmentApplicationController extends Controller
                     'entry_point' => $permit['entrypoint'] ?? null,
                     'category_application' => $permit['applCate'] ?? null,
                     'user_id' => Auth::user()->uuid,
-                    'exporter_id' => $exporter['id'] ?? null,
-                    'importer_id' => $importer['uuid'] ?? null,
+                    'exporter_id' => $exporter['uuid'] ?? null,
+                    'importer_id' => $importer['id'] ?? null,
                     'importer_detail' => $importer,
                     'status' => $isDraft ? 'Draft' : 'Submitted',
                     'importer_verify' => $importer_verify,
@@ -109,8 +123,8 @@ class ConsignmentApplicationController extends Controller
                     'entry_point' => $permit['entrypoint'] ?? null,
                     'category_application' => $permit['applCate'] ?? null,
                     'user_id' => Auth::user()->uuid,
-                    'exporter_id' => $exporter['id'] ?? null,
-                    'importer_id' => $importer['uuid'] ?? null,
+                    'exporter_id' => $exporter['uuid'] ?? null,
+                    'importer_id' => $importer['id'] ?? null,
                     'importer_detail' => $importer,
                     'status' => $status,
                     'importer_verify' => $importer_verify,
@@ -122,9 +136,14 @@ class ConsignmentApplicationController extends Controller
 
             // Handle items (consignment permits)
             $items = $request->input('items');
+
+          
+
             if ($items && is_array($items)) {
                 foreach ($items as $index => $itemData) {
                     $data = isset($itemData['data']) ? json_decode($itemData['data'], true) : $itemData;
+
+                    //   dd($data);
 
                     $permit = ConsignmentPermit::updateOrCreate(
                         [
@@ -133,9 +152,9 @@ class ConsignmentApplicationController extends Controller
                         ],
                         [
                             'quantity' => $data['quantity'] ?? 0,
-                            'unit_measurement' => $data['itemMeasure'] ?? null,
-                            'value' => $data['itemValue'] ?? 0,
-                            'purpose' => $data['itemPurpose'] ?? null,
+                            'unit_measurement' => $data['measure'] ?? null,
+                            'value' => $data['value'] ?? 0,
+                            'purpose' => $data['purpose'] ?? null,
                             'status' => 'submitted',
                         ],
                     );
@@ -211,5 +230,43 @@ class ConsignmentApplicationController extends Controller
         $exporter = \DB::table('consignment_importers')->where('id', $exporterId)->first();
 
         return response()->json($exporter, 201);
+    }
+
+    public function viewapplication($uuid)
+    {
+        $application = ConsignmentApplication::with([
+            'user', // submitted by
+            'importer', // importer user
+            'exporter', // exporter record
+            'entryPoint.districtCode',
+        ])
+            ->where('application_id', $uuid)
+            ->orderBy('created_at', 'desc')
+            ->firstOrFail();
+
+        $itemId = $application->id;
+
+        // dd($application->consignmentPermits);
+
+        // $consignment = IpConsignmentPermit::with(['unit', 'purposeCode'])
+        //     ->where('application_id', $itemId)
+        //     ->get();
+        $consignment = [];
+
+        // dd($consignment);
+        // dd($application->exporter);
+
+        $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
+        $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
+        $country = country::where('is_del', false)->get();
+
+        return view('pages.public.view_consignment_application', [
+            'application' => $application,
+            'consignment' => $consignment,
+            'pubmeasure' => $pubmeasure,
+            'pubpurpose' => $pubpurpose,
+            'country' => $country,
+            // 'consignmentDetails' => $consignment[0]->attachments
+        ]); //, 'consignment', 'attachment'
     }
 }

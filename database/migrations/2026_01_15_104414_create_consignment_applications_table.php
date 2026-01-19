@@ -20,8 +20,8 @@ return new class extends Migration
             $table->integer('entry_point')->nullable();
 
             $table->uuid('user_id')->comment('Submitted by');        // matches public_users.uuid
-            $table->uuid('importer_id');                             // matches public_users.uuid
-            $table->unsignedBigInteger('exporter_id');              // references exporter.id
+            $table->unsignedBigInteger('importer_id');                             // matches public_users.uuid
+            $table->uuid('exporter_id');              // references exporter.id
 
             $table->text('importer_detail')->comment('JSON with importer info')->nullable();
             $table->tinyInteger('category_application')->default(0)->nullable();
@@ -31,8 +31,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('user_id')->references('uuid')->on('public_users')->onDelete('cascade');
-            $table->foreign('importer_id')->references('uuid')->on('public_users')->onDelete('cascade');
-            $table->foreign('exporter_id')->references('id')->on('exporter')->onDelete('cascade');
+            $table->foreign('importer_id')->references('id')->on('consignment_importers')->onDelete('cascade');
+            $table->foreign('exporter_id')->references('uuid')->on('public_users')->onDelete('cascade');
         });
     }
 
