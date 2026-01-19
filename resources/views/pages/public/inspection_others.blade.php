@@ -23,6 +23,7 @@
                
                 <div class="card-body p-0"> <!-- method="POST"  data-wizard="active" style="display: block;"-->
                     <form id="wizardFormOthers" class="wizard wizard-tab horizontal" accept="multipart/form-data">
+                        <input type="hidden" id="applicationId" value="{{ $id }}">
                         <aside class="wizard-nav dots">
                             <div class="wizard-step active" data-step="0">
                                 <span class="dot"></span>
