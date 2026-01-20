@@ -11,6 +11,7 @@ import select2 from "select2";
 select2(window.jQuery);
 
 import "select2/dist/css/select2.min.css";
+import { initApplicationDetails } from "./application_detail";
 
 Dropzone.autoDiscover = false;
 
@@ -21,6 +22,7 @@ let exporter = null;
 let importer = null;
 let impAddrs = null;
 let itemDropzone = null;
+let saveBtn = null;
 
 let change = null;
 
@@ -34,58 +36,61 @@ let temporaryItemsAttachment = [];
 Get application ID from URL
 -------------------------------- */
 
-async function loadConsignmentSelection() {
+async function loadConsignmentSelection(selectedItemId = null) {
     const countryCode = $("#expcountryCode").val();
     const $select = $("#itemSelect");
 
     if (!countryCode) return;
 
-    // Reset select options
+    // Reset select
     $select.empty().append('<option value="">-- Select Item --</option>');
 
-    // Destroy existing Select2 (if already initiated)
+    // Destroy Select2 if exists
     if ($select.hasClass("select2-hidden-accessible")) {
         $select.select2("destroy");
     }
 
-    // Disable select while loading
     $select.prop("disabled", true);
 
-    // Show loading Swal
     Swal.fire({
         title: "Loading...",
-        // html: "Please wait while items are loaded.",
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading(),
     });
 
-    fetch(`${window.baseUrl}/public/get_consignment/${countryCode}`)
-        .then((res) => res.json())
-        .then((data) => {
-            $select.prop("disabled", false);
+    try {
+        const res = await fetch(`${window.baseUrl}/public/get_consignment/${countryCode}`);
+        const data = await res.json();
 
-            data.forEach((row) => {
-                $select.append(
-                    `<option value="${row.id}">${row.entry_display}</option>`
-                );
-            });
+        $select.prop("disabled", false);
 
-            // Initialize Select2
-            $select.select2({
-                width: "100%",
-                placeholder: "-- Select Item --",
-                allowClear: true,
-                dropdownParent: $("#addItemModal"), // Important: for modal
-            });
-
-            Swal.close(); // Close loading
-        })
-        .catch((e) => {
-            console.error("Error loading items:", e);
-            $select.prop("disabled", false);
-            // Swal.fire("Error", "Failed to load consignment items.", "error");
+        data.forEach(row => {
+            $select.append(
+                `<option value="${row.id}">${row.entry_display}</option>`
+            );
         });
+
+        // Init Select2
+        $select.select2({
+            width: "100%",
+            placeholder: "-- Select Item --",
+            allowClear: true,
+            dropdownParent: $("#addItemModal"),
+        });
+
+
+        if (selectedItemId) {
+            $select.val(String(selectedItemId)).trigger("change");
+        }
+
+        Swal.close();
+    } catch (e) {
+        console.error("Error loading items:", e);
+        $select.prop("disabled", false);
+        Swal.close();
+    }
 }
+
 
 function loadUses(itemId) {
     const $select = $("#itemUses");
@@ -124,50 +129,38 @@ function loadUses(itemId) {
 
 
 
-function reapply(application)
-{
-    $(document).on("click", ".reapply", function (e) {
-    e.preventDefault();
+function reapply(application) {
+    $(document).on("click", ".reapply", async function (e) {
+        e.preventDefault();
 
-    let id = $(this).data("permit");
-    let permits = application.consignment_permits;
+        const id = $(this).data("permit");
+        const permits = application.consignment_permits;
+        const permit = permits.find(p => p.id == id);
 
-    let permit = permits.find((p) => p.id == id);
+        if (!permit) {
+            console.warn("Permit not found!");
+            return;
+        }
 
-    if (!permit) {
-        console.warn("Permit not found!");
-        return;
-    }
+        $('#saveBtn')
+            .data('id', id)
+            .attr('data-id', id);
 
-    let attachments = permit.attachments || [];
+        let detail = permit.consignment_detail;
 
-    let detail;
-    try {
-        // detail = JSON.parse(permit.consignment_detail);
-        detail = permit.consignment_detail;
-    } catch (err) {
-        console.error(
-            "Invalid JSON in consignment_detail:",
-            permit.consignment_detail
-        );
-    }
+        const selectedItemId = detail.item_id;
 
-    console.log("FOUND PERMIT:", permit);
-    console.log("attachments", attachments);
+        await loadConsignmentSelection(selectedItemId);
+        $('#itemValue').val(detail.value)
+        $('#itemQuantity').val(detail.quantity)
 
-    let permitIDinput = $('#permit_id').val(permit.id)
-
-    // Modal
-    const modalEl = document.getElementById("addItemModal");
- 
-
-    const modal = new bootstrap.Modal(modalEl);
-    modal.show();
-
-   
-
-});
+        // Show modal AFTER select is ready
+        const modalEl = document.getElementById("addItemModal");
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    });
 }
+
 
 function itemConsigment() {
     itemDropzone = new Dropzone("#itemDropzone", {
@@ -323,6 +316,86 @@ function reapply_consignment()
     })
 }
 
+function saveConsignmentAttachment() {
+    document.getElementById("saveBtn").addEventListener("click", function (e) {
+        e.preventDefault();
+
+        console.log("Saving consignment item...");
+
+        // ✅ Get values (Select2 fields via jQuery)
+        const itemSelectValue = $("#itemSelect").val();
+        const itemSelectText = $("#itemSelect option:selected").text();
+        const itemValue = $("#itemValue").val().trim();
+        const itemQuantity = $("#itemQuantity").val().trim();
+        const itemMeasure = $("#itemMeasure").val();
+        const itemPurpose = $("#itemPurpose").val();
+        const itemUsesValue = $("#itemUses").val();
+
+        // ✅ Validation
+        if (
+            !itemSelectValue ||
+            !itemValue ||
+            !itemQuantity ||
+            !itemMeasure ||
+            !itemPurpose ||
+            !itemUsesValue
+        ) {
+            Swal.fire({
+                icon: "error",
+                title: "Incomplete Data",
+                text: "Please fill in all required fields before saving.",
+            });
+            return;
+        }
+
+        // ✅ Get files from Dropzone
+        const files = itemDropzone.getAcceptedFiles();
+        const itemPurposeDescription = $("#itemPurpose option:selected").data("description") || $("#itemPurpose").val();
+
+        // ✅ Build new item
+        const newItem = {
+            id: crypto.randomUUID(),
+            item_id: itemSelectValue,
+            item_name: itemSelectText,
+            value: itemValue,
+            quantity: itemQuantity,
+            measure: itemMeasure,
+            purpose: itemPurposeDescription,
+            uses: itemUsesValue,
+            files: files,
+        };
+
+        // ✅ Add to temporary array
+        tempItems.push(newItem);
+
+        initApplicationDetails()
+
+        resetAddItemModal();
+
+        // ✅ Hide modal
+        const modalEl = document.getElementById("addItemModal");
+        bootstrap.Modal.getInstance(modalEl).hide();
+
+        // ✅ Trigger summary / submit update if needed
+        summarySubmit();
+    });
+}
+
+function resetAddItemModal() {
+    // Reset plain input fields
+    $("#itemValue").val("");
+    $("#itemQuantity").val("");
+
+    // Reset Select2 fields
+    $("#itemSelect").val(null).trigger("change");
+    $("#itemMeasure").val("").trigger("change");
+    $("#itemPurpose").val("").trigger("change");
+    $("#itemUses").val(null).trigger("change");
+
+    // Clear Dropzone files
+    if (itemDropzone) itemDropzone.removeAllFiles(true);
+}
+
 
 export async function application_reapply(application)
 {
@@ -349,6 +422,7 @@ export async function application_reapply(application)
     // loadConsignmentSelection();
     $("#mdlAddItemBtn").on("click", async function () {
     await loadConsignmentSelection();
+    saveConsignmentAttachment();
 });
 
     console.log('from js application reapply', application)

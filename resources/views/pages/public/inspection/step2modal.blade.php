@@ -21,7 +21,7 @@
                         <small style="color:red">Item refering to the exporter's Country</small>
                     </div>
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                        
+
                         <label for="itemValue" class="form-label">Value (RM)</label>
                         <input type="number" class="form-control" id="itemValue" name="itemValue" placeholder="RM ...">
                     </div>
@@ -44,14 +44,17 @@
                         <select class="form-select" id="itemPurpose" name="itemPurpose">
                             <option value="">-- Select Purpose --</option>
                             @foreach ($pubpurpose as $purpose)
-                                <option value="{{ $purpose->cate_code }}" data-description="{{ $purpose->description }}">{{ $purpose->description }}</option>
+                                <option value="{{ $purpose->cate_code }}"
+                                    data-description="{{ $purpose->description }}">{{ $purpose->description }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
                         <label for="itemUses" class="form-label">Uses</label>
                         <select class="form-select" id="itemUses" name="itemUses">
-
+                            <option value="fresh produce">Fresh Produce</option>
+                            <option value="for animal consumption">For Animal Consumption</option>
+                            <option value="planting material">Planting Material</option>
                         </select>
                     </div>
                     <div class="row gy-4">
@@ -63,8 +66,8 @@
                                 </div>
                             </div>
                             <div class="card-body">
-                                <form id="itemDropzone" method="post"
-                                    class="dz-clickable" enctype="multipart/form-data"><!--data-single="true"  -->
+                                <form id="itemDropzone" method="post" class="dz-clickable"
+                                    enctype="multipart/form-data"><!--data-single="true"  -->
                                     @csrf
                                     <div class="dz-default dz-message">
                                         <button class="dz-button p-5 border w-100 border-radius" type="button">
@@ -85,7 +88,7 @@
                     <i class="bx bx-x me-1"></i> Cancel
                 </button>
                 <button id="saveBtn" type="submit" class="btn btn-primary">
-                    <i class="bx bx-save me-1"></i> Add Item
+                    <i class="bx bx-save me-1"></i> Save
                 </button>
             </div>
             <!-- </form> -->

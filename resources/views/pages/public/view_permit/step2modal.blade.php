@@ -7,7 +7,7 @@
             <!-- Header -->
             <div class="modal-header ">
                 <h5 class="modal-title" id="addExporterModalLabel">
-                    Add Consignment
+                    Reapply
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                     aria-label="Close"></button>
@@ -91,7 +91,7 @@
                     <i class="bx bx-x me-1"></i> Cancel
                 </button>
                 <button id="saveBtn" type="submit" class="btn btn-primary">
-                    <i class="bx bx-save me-1"></i> Add Item
+                    <i class="bx bx-save me-1"></i> Reapply
                 </button>
             </div>
             <!-- </form> -->

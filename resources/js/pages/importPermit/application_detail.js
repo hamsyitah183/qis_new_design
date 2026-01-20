@@ -818,7 +818,7 @@ function updateTotalValue() {
 /* -------------------------------
     Initializer (shows Swal first)
     -------------------------------- */
-async function initApplicationDetails() {
+export async function initApplicationDetails() {
     Swal.fire({
         title: "Loading...",
         text: "Please wait while we fetch the application details.",

@@ -555,6 +555,17 @@ class ApplicationController extends Controller
                     'role' => 'clerk',
                 ]
             );
+
+            $notificationController = new NotificationController();
+
+            $notificationController->sendStatusMessage(
+                $application->importer_detail['fullname'] ?? 'User',
+                'Import Permit',
+                $application->application_id,
+                'accepted by DOA',
+                'Your application is under review and will be processed shortly',
+                $application->importer->phone_number ?? '+60143290092' // recipient number
+            );
         } elseif ($request->rejected) {
 
             $application->logActivity(

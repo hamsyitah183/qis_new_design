@@ -175,6 +175,14 @@ class PermitApplicationController extends Controller
             'data' => $data->usage,
         ]);
     }
+    public function getAllConsignmentUses()
+    {
+        $data = IpCondition::get();
+        return response()->json([
+            'success' => true,
+            'data' => $data->usage,
+        ]);
+    }
 
     public function saveApplication(Request $request)
     {
@@ -249,6 +257,8 @@ class PermitApplicationController extends Controller
                     'importer_verify' => $importer_verify,
                 ]);
 
+                // dd($application->importer_detail);
+
                 // event(new ApplicationCreatedInternalUser(
                 //     $isDraft
                 //         ? 'New import permit application DRAFT created by ' . ($importer['fullname'] ?? 'Unknown Importer')
@@ -266,6 +276,19 @@ class PermitApplicationController extends Controller
                         'role' => 'public',
                     ],
                 );
+
+                if (!$isDraft) {
+                    $notificationController = new NotificationController();
+
+                    $notificationController->sendStatusMessage(
+                        $application->importer_detail['fullname'] ?? 'User',
+                        'Import Permit',
+                        $application->application_id,
+                        'will be check by DOA',
+                        `Your application has been successfully submitted.`,
+                        $application->importer->phone_number ?? '60143290092', // recipient number
+                    );
+                }
             }
 
             $appId = $application->id;
