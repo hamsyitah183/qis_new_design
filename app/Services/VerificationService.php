@@ -24,7 +24,7 @@ class VerificationService
                     unlink(public_path($verification->verification_attachment));
                 }
 
-                $destinationPath = public_path('storage/app/public/verifications');
+                $destinationPath = public_path('storage/verifications');
 
                 if (!file_exists($destinationPath)) {
                     mkdir($destinationPath, 0755, true);
@@ -33,7 +33,7 @@ class VerificationService
                 $filename = time() . '_' . $file->getClientOriginalName();
                 $file->move($destinationPath, $filename);
 
-                $verification->verification_attachment = 'storage/app/public/verifications/' . $filename;
+                $verification->verification_attachment = 'storage/verifications/' . $filename;
             }
 
             $verification->status = 'waiting for approval';

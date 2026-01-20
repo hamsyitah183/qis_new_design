@@ -151,6 +151,7 @@ function reapply(application) {
         const selectedItemId = detail.item_id;
 
         await loadConsignmentSelection(selectedItemId);
+        console.log('permit detal', detail);
         $('#itemValue').val(detail.value)
         $('#itemQuantity').val(detail.quantity)
 
