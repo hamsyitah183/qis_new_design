@@ -24,6 +24,7 @@ use App\Services\ApplicationActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -220,17 +221,13 @@ class PermitApplicationController extends Controller
                     'importer_verify' => $importer_verify,
                 ]);
 
-                event(new InternalUserAdminEvent($isDraft ? 'Import permit application saved as DRAFT by ' . ($importer['fullname'] ?? 'Unknown Importer') : 'Import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')));
-                event(new InternalUserClerkEvent($isDraft ? 'Import permit application saved as DRAFT by ' . ($importer['fullname'] ?? 'Unknown Importer') : 'Import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')));
-
-                // event(new ApplicationCreatedPublicUser(
-                //     $isDraft
-                //         ? 'Import permit application saved as DRAFT by ' . ($importer['fullname'] ?? 'Unknown Importer')
-                //         : 'Import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer'),
-                //     Auth::user()->uuid
-                // ));
-
-                event(new PublicUserEvent($isDraft ? 'Your Application with id ' . $application->uuid . ' is saved as draft' : 'Your Application with id ' . $application->uuid . ' is submitted', $application->user_id));
+                try {
+                    event(new InternalUserAdminEvent($isDraft ? 'Import permit application saved as DRAFT by ' . ($importer['fullname'] ?? 'Unknown Importer') : 'Import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')));
+                    event(new InternalUserClerkEvent($isDraft ? 'Import permit application saved as DRAFT by ' . ($importer['fullname'] ?? 'Unknown Importer') : 'Import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')));
+                    event(new PublicUserEvent($isDraft ? 'Your Application with id ' . $application->uuid . ' is saved as draft' : 'Your Application with id ' . $application->uuid . ' is submitted', $application->user_id));
+                } catch (\Exception $e) {
+                    Log::warning('Pusher connection failed but continuing application save: ' . $e->getMessage());
+                }
             } else {
                 // Create new application
                 $status = $isDraft ? 'Draft' : ((int) ($permit['applCate'] ?? 0) === 1 ? 'Awaiting Approval' : 'Clerk Review In-Progress');
@@ -254,9 +251,13 @@ class PermitApplicationController extends Controller
                 //         ? 'New import permit application DRAFT created by ' . ($importer['fullname'] ?? 'Unknown Importer')
                 //         : 'New import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')
                 // ));
-                event(new InternalUserAdminEvent($isDraft ? 'New import permit application DRAFT created by ' . ($importer['fullname'] ?? 'Unknown Importer') : 'New import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')));
-                event(new InternalUserClerkEvent($isDraft ? 'New import permit application DRAFT created by ' . ($importer['fullname'] ?? 'Unknown Importer') : 'New import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')));
-                event(new PublicUserEvent($isDraft ? 'Your Application with id ' . $application->application_id . ' is saved as draft' : 'Your Application with id ' . $application->application_id . ' is submitted', $application->user_id));
+                try {
+                    event(new InternalUserAdminEvent($isDraft ? 'New import permit application DRAFT created by ' . ($importer['fullname'] ?? 'Unknown Importer') : 'New import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')));
+                    event(new InternalUserClerkEvent($isDraft ? 'New import permit application DRAFT created by ' . ($importer['fullname'] ?? 'Unknown Importer') : 'New import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')));
+                    event(new PublicUserEvent($isDraft ? 'Your Application with id ' . $application->application_id . ' is saved as draft' : 'Your Application with id ' . $application->application_id . ' is submitted', $application->user_id));
+                } catch (\Exception $e) {
+                    Log::warning('Pusher connection failed but continuing application creation: ' . $e->getMessage());
+                }
 
                 ApplicationActivityLogger::log(
                     application: $application,
@@ -376,7 +377,11 @@ class PermitApplicationController extends Controller
 
             if ($application->category_application == 1 && !$isDraft) {
                 $company = PublicUser::where('uuid', $application['importer_id'])->first();
-                event(new ApplicationCreatedInternalUser('Import permit application requires company approval for ' . ($company['fullname'] ?? 'Unknown Importer')));
+                try {
+                    event(new ApplicationCreatedInternalUser('Import permit application requires company approval for ' . ($company['fullname'] ?? 'Unknown Importer')));
+                } catch (\Exception $e) {
+                    Log::warning('Pusher connection failed but continuing company approval notification: ' . $e->getMessage());
+                }
 
                 $company->notify(new ApplicationNotification('An import permit application requires your approval', 'System', route('viewApplication', $application->application_id)));
             }

@@ -15,6 +15,7 @@ use App\Models\Country;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -78,9 +79,11 @@ class ConsignmentApplicationController extends Controller
             $applicationUuid = $request->input('applicationId');
             $isDraft = $request->boolean('is_draft');
 
-            $importer = $request->exporterData ? json_decode($request->exporterData, true) : null;
+            // exporterData = User (because we swapped UI labels, but frontend logic uses 'exporter' for 'Me')
+            // importerData = Partner (selected from list)
+            $exporterUser = $request->exporterData ? json_decode($request->exporterData, true) : null;
+            $importerPartner = $request->importerData ? json_decode($request->importerData, true) : null;
 
-            $exporter = $request->importerData ? json_decode($request->importerData, true) : null;
 
             $permit = $request->permitDetails ? json_decode($request->permitDetails, true) : [];
 
@@ -102,16 +105,23 @@ class ConsignmentApplicationController extends Controller
                     'transport_type' => $permit['tranType'] ?? null,
                     'entry_point' => $permit['entrypoint'] ?? null,
                     'category_application' => $permit['applCate'] ?? null,
-                    'user_id' => Auth::user()->uuid,
-                    'exporter_id' => $exporter['uuid'] ?? null,
-                    'importer_id' => $importer['id'] ?? null,
-                    'importer_detail' => $importer,
+                    'user_id' => authUser()['user']->uuid,
+                    // exporter = User (uuid)
+                    'exporter_id' => $exporterUser['uuid'] ?? null,
+                    // importer = Partner (id)
+                    'importer_id' => $importerPartner['id'] ?? null,
+                    'importer_detail' => $importerPartner,
                     'status' => $isDraft ? 'Draft' : 'Submitted',
                     'importer_verify' => $importer_verify,
                 ]);
 
-                event(new InternalUserAdminEvent($isDraft ? 'Consignment certificate application saved as DRAFT by ' . ($importer['fullname'] ?? 'Unknown Importer') : 'Consignment certificate application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')));
-                event(new PublicUserEvent($isDraft ? 'Your consignment application with id ' . $application->application_id . ' is saved as draft' : 'Your consignment application with id ' . $application->application_id . ' is submitted', $application->user_id));
+                try {
+                    event(new InternalUserAdminEvent($isDraft ? 'Consignment certificate application saved as DRAFT by ' . ($exporterUser['fullname'] ?? 'Unknown Exporter') : 'Consignment certificate application submitted by ' . ($exporterUser['fullname'] ?? 'Unknown Exporter')));
+                    event(new PublicUserEvent($isDraft ? 'Your consignment application with id ' . $application->application_id . ' is saved as draft' : 'Your consignment application with id ' . $application->application_id . ' is submitted', $application->user_id));
+                } catch (\Exception $e) {
+                    Log::warning('Pusher connection failed but continuing save: ' . $e->getMessage());
+                }
+
             } else {
                 // Create new application
                 $status = $isDraft ? 'Draft' : ((int) ($permit['applCate'] ?? 0) === 1 ? 'Awaiting Approval' : 'Submitted');
@@ -123,16 +133,23 @@ class ConsignmentApplicationController extends Controller
                     'transport_type' => $permit['tranType'] ?? null,
                     'entry_point' => $permit['entrypoint'] ?? null,
                     'category_application' => $permit['applCate'] ?? null,
-                    'user_id' => Auth::user()->uuid,
-                    'exporter_id' => $exporter['uuid'] ?? null,
-                    'importer_id' => $importer['id'] ?? null,
-                    'importer_detail' => $importer,
+                    'user_id' => authUser()['user']->uuid,
+                    // exporter = User (uuid)
+                    'exporter_id' => $exporterUser['uuid'] ?? null,
+                    // importer = Partner (id)
+                    'importer_id' => $importerPartner['id'] ?? null,
+                    'importer_detail' => $importerPartner,
                     'status' => $status,
                     'importer_verify' => $importer_verify,
                 ]);
 
-                event(new InternalUserAdminEvent($isDraft ? 'Consignment certificate application saved as DRAFT by ' . ($importer['fullname'] ?? 'Unknown Importer') : 'Consignment certificate application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')));
-                event(new PublicUserEvent($isDraft ? 'Your consignment application with id ' . $application->application_id . ' is saved as draft' : 'Your consignment application with id ' . $application->application_id . ' is submitted', $application->user_id));
+                try {
+                    event(new InternalUserAdminEvent($isDraft ? 'Consignment certificate application saved as DRAFT by ' . ($exporterUser['fullname'] ?? 'Unknown Exporter') : 'Consignment certificate application submitted by ' . ($exporterUser['fullname'] ?? 'Unknown Exporter')));
+                    event(new PublicUserEvent($isDraft ? 'Your consignment application with id ' . $application->application_id . ' is saved as draft' : 'Your consignment application with id ' . $application->application_id . ' is submitted', $application->user_id));
+                } catch (\Exception $e) {
+                    Log::warning('Pusher connection failed but continuing save: ' . $e->getMessage());
+                }
+
             }
 
             $appId = $application->id;
@@ -192,7 +209,7 @@ class ConsignmentApplicationController extends Controller
                         'value' => $data['value'] ?? 0,
                         'purpose' => $data['purpose'] ?? null,
                         'status' => 'processing',
-                        'mygap_myorganic_no' => $data['certificateNo']
+                        'mygap_myorganic_no' => $data['certificateNo'] ?? null
                     ]);
 
                     $consignmentArray[$index] = $consignment->id;
@@ -247,6 +264,8 @@ class ConsignmentApplicationController extends Controller
 
     function storeConsignmentImporter(Request $request)
     {
+        \Log::info('Storing Consignment Importer', $request->all());
+
         $validated = $request->validate([
             'name' => 'required|string|max:150',
             'phone_no' => 'required|string|max:25',
@@ -254,21 +273,23 @@ class ConsignmentApplicationController extends Controller
             'country' => 'required|string|max:50',
         ]);
 
-        $exporterId = \DB::table('consignment_importers')->insertGetId([
+        $user = authUser()['user'];
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $exporter = ConsignmentImporter::create([
             'name' => $validated['name'],
             'phone_no' => $validated['phone_no'],
             'address' => $validated['address'],
             'country' => $validated['country'],
-            'registered_by' => authUser()['user']['uuid'],
-            'created_at' => now(),
-            'updated_at' => now(),
+            'registered_by' => $user->uuid,
         ]);
-
-        // fetch newly created exporter
-        $exporter = \DB::table('consignment_importers')->where('id', $exporterId)->first();
 
         return response()->json($exporter, 201);
     }
+
 
     public function viewapplication($uuid)
     {
@@ -307,4 +328,60 @@ class ConsignmentApplicationController extends Controller
             // 'consignmentDetails' => $consignment[0]->attachments
         ]); //, 'consignment', 'attachment'
     }
+    public function deleteApplication($id)
+    {
+        $user = auth()->user();
+
+        try {
+            // Find application
+            $application = ConsignmentApplication::where('application_id', $id)->firstOrFail();
+
+            // Security Check
+            if ($application->user_id !== $user->uuid && $application->importer_id !== $user->uuid) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Unauthorized action. You do not own this application.'
+                ], 403);
+            }
+
+            DB::beginTransaction();
+
+            // 1. Delete Attachments from Storage
+            // Get all permits
+            $permits = $application->consignmentPermits()->with('attachments')->get();
+
+            foreach ($permits as $permit) {
+                foreach ($permit->attachments as $attachment) {
+                    // Try to delete file from storage
+                    if ($attachment->file_path) {
+                        $path = str_replace('/storage/', '', $attachment->file_path);
+                        if (Storage::disk('public')->exists($path)) {
+                            Storage::disk('public')->delete($path);
+                        }
+                    }
+                    // Delete attachment record
+                    $attachment->delete();
+                }
+                // Delete permit record
+                $permit->delete();
+            }
+
+            // 2. Delete Application Record
+            $application->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Application deleted successfully.'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to delete application: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
+

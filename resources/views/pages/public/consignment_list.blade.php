@@ -44,19 +44,16 @@
                                     <thead class="mt-3">
                                         <tr class="even">
                                             <th>#</th>
+                                            <th>Category</th>
                                             <th>Importer</th>
                                             <th>Exporter</th>
                                             <th>ETA</th>
                                             <th>Transport Type</th>
                                             <th>Entry Point</th>
-                                            <th>Category</th>
-                                            <th>Application Status</th>
-                                            <th>Permit Status</th>
-                                            <th>Created Date</th>
+                                            <th>Status</th>
                                             @if (authUser()['type'] == 'internal')
                                                 <th>Submitted By</th>
                                             @endif
-
                                             <th>Action</th>
                                         </tr>
                                     </thead>

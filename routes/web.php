@@ -96,13 +96,14 @@ Route::prefix('public')
         Route::get('/view_all_consignment', [ConsignmentController::class, 'showallconsignmentlist'])->name('showallconsignmentlist');
 
         Route::get('/verify_application', [ApplicationController::class, 'verifyapplication'])->name('verifyapplication');
+        Route::get('/view_application/{uuid}', [ConsignmentApplicationController::class, 'viewapplication'])->name('viewApplication');
 
         // get importer
         Route::get('/get_consignment_importers', [ConsignmentApplicationController::class, 'getConsignmentImporters'])->name('getConsignmentImporters');
         Route::post('/store_consignment_importer', [ConsignmentApplicationController::class, 'storeConsignmentImporter'])->name('storeImporter');
         Route::get('/get_consignment_certificate/{countryCode}', [ConsignmentApplicationController::class, 'getConsignmentFromCountry']);
         // itemSelect
-
+    
         // temporary file
         Route::post('/temp-upload', [TempFileController::class, 'upload']);
 
@@ -115,9 +116,10 @@ Route::prefix('public')
         Route::get('/consignment_certificate_application_self', [ConsignmentApplicationController::class, 'getView'])->name('consignment.app');
         Route::get('/consignment_certificates_application_other', [ConsignmentApplicationController::class, 'getViewOther'])->name('consignmentOther.app');
         Route::post('/save-consignment', [ConsignmentApplicationController::class, 'saveApplication'])->name('savConsignment');
+        Route::delete('/consignment_application/delete/{id}', [ConsignmentApplicationController::class, 'deleteApplication'])->name('consignment.delete');
+
         Route::get('/inspection_certificates_application_self/{id?}', [InspectionController::class, 'getInspectionSelf'])->name('inspectionApplicationSelf');
-        Route::get('/inspection_certificates_application_others/{id?}', [InspectionController::class, 'getInspectionOthers'])->name('inspectionApplicationOthers');
-        Route::get('/consignment_certificate_application', [ConsignmentApplicationController::class, 'getView'])->name('consignment.app');
+
         Route::get('/inspection_certificates_application', [InspectionController::class, 'getInspection']);
         Route::get('/inspection_certificates_list', [InspectionController::class, 'showAllInspectionList'])->name('showallinspectionlist');
         Route::get('/view_inspection_certificate/{id}', [InspectionController::class, 'viewApplication'])->name('viewInspectionApplication');
@@ -158,15 +160,15 @@ Route::prefix('internal')
         Route::get('/permission/data', [RoleAndPermissionController::class, 'get_permission']);
         Route::post('/permission/update', [RoleAndPermissionController::class, 'update_permission']);
         // ==================== user managemet =================
-
+    
         // ======================= application ========================
         Route::get('/view_all_application', [ApplicationController::class, 'showallapplicationlist'])->name('application.list');
         Route::delete('/application/delete/{id}', [ApplicationController::class, 'deleteApplication'])->name('application.delete');
 
         // Route::get('/application/exporter/get', [ApplicationController::class, 'get_exporter'])->name('application.exporter.get');
-
+    
         //MISC
-
+    
         Route::get('/control_panel', [MiscController::class, 'showcontrolpanel']);
         Route::get('/state-district-management', [MiscController::class, 'showStateDistrictManagement'])->name('state-district-management');
         Route::get('/get_pbdata/{cate}', [MiscController::class, 'getpbdata']);
@@ -217,7 +219,7 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/view_application/{uuid}', [ApplicationController::class, 'viewapplication'])->name('viewApplication');
     Route::get('/edit_application/{uuid}', [ApplicationController::class, 'editApplication'])->name('editApplication');
 
-    Route::get('/view_consignment/{uuid}', [ConsignmentApplicationController::class, 'viewapplication'])->name('viewApplication');
+    Route::get('/view_consignment/{uuid}', [ConsignmentApplicationController::class, 'viewapplication']); // Removed name to avoid confusion, it's now in the group
     Route::get('/consignment_application/{id}/data', [ConsignmentController::class, 'getApplicationDetails']);
 
     Route::get('/application/permit/{id}/data', [ApplicationController::class, 'get_application_permit']);

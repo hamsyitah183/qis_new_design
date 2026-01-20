@@ -18,6 +18,7 @@ use App\Notifications\ApplicationNotification;
 use App\Services\ApplicationActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
@@ -80,7 +81,7 @@ class ApplicationController extends Controller
                 $id = $row->application_id;
 
                 $latestTime = $latestLog?->updated_at
-                    ?->format('d M Y, h:i A') ?? '-';
+                        ?->format('d M Y, h:i A') ?? '-';
 
                 $causerName = $latestLog?->causer?->fullname ?? '-';
 
@@ -106,8 +107,8 @@ class ApplicationController extends Controller
 
                     default =>
                     '<span class="badge bg-secondary fs-12 p-1  activityLog"  data-log = "' . $id . '">'
-                        . ucfirst($status) .
-                        '</span>',
+                    . ucfirst($status) .
+                    '</span>',
                 };
             })
 
@@ -116,12 +117,12 @@ class ApplicationController extends Controller
                 // Map statuses to colors
                 $statusColors = [
                     'processing' => 'bg-info', // blue
-
-                    'pending for payment'  => 'bg-warning', // green
-                    'rejected'   => 'bg-danger',  // red
+    
+                    'pending for payment' => 'bg-warning', // green
+                    'rejected' => 'bg-danger',  // red
                     // 'completed'  => 'bg-success', // green
-                    'paid'  => 'bg-success', // green
-
+                    'paid' => 'bg-success', // green
+    
                 ];
 
                 // Get all permit statuses for this row, lowercase
@@ -132,9 +133,9 @@ class ApplicationController extends Controller
                 // Count how many of each status
                 $statusCounts = [
                     'processing' => 0,
-                    'rejected'   => 0,
-                    'pending for payment'  => 0,
-                    'paid'  => 0,
+                    'rejected' => 0,
+                    'pending for payment' => 0,
+                    'paid' => 0,
 
                 ];
 
@@ -149,7 +150,7 @@ class ApplicationController extends Controller
                 foreach ($statusColors as $status => $color) {
                     $count = $statusCounts[$status] ?? 0;
                     $boxesHtml .= '<div class="badge ' . $color . ' text-white text-center"  data-bs-toggle="tooltip"
-                            data-bs-placement="top" title="' .  $status  .  '"
+                            data-bs-placement="top" title="' . $status . '"
                            style="height:20px; width:20px; display:inline-flex; align-items:center; justify-content:center; margin-right:5px;">
                            ' . $count . '
                        </div>';
@@ -192,7 +193,7 @@ class ApplicationController extends Controller
     private function badge($color, $label, $time, $user, $id)
     {
         return '
-        <span class="badge bg-' . $color . ' fs-12 p-1 activityLog"  data-log = '  . $id . '
+        <span class="badge bg-' . $color . ' fs-12 p-1 activityLog"  data-log = ' . $id . '
          >' . $label . '</span>
         <br class = "mt-1">
         <small class="text-muted">at ' . $time . '</small><br>
@@ -216,7 +217,7 @@ class ApplicationController extends Controller
 
         if ($type === 'public') {
             $query->where(function ($q) use ($userUuid) {
-                $q->where('category_application',  1)
+                $q->where('category_application', 1)
                     ->where('importer_id', $userUuid);
             });
         }
@@ -285,19 +286,17 @@ class ApplicationController extends Controller
             // Delete application
             $application->delete();
 
-            // Events & notifications
-            event(new ApplicationDeleted('Application with ID ' . $id . ' has been deleted.'));
+            try {
+                // Events & notifications
+                event(new ApplicationDeleted('Application with ID ' . $id . ' has been deleted.'));
 
-            $users = InternalUser::all();
-            Notification::send($users, new ApplicationNotification(
-                'Import Application with ID ' . $id . ' has been deleted.',
-                authUser()['user']->fullname
-            ));
-
-            event(new PublicUserEvent(
-                'Your Application with ID ' . $id . ' has been deleted.',
-                $user->uuid
-            ));
+                event(new PublicUserEvent(
+                    'Your Application with ID ' . $id . ' has been deleted.',
+                    $user->uuid
+                ));
+            } catch (\Exception $e) {
+                Log::warning('Pusher connection failed but continuing application deletion: ' . $e->getMessage());
+            }
 
             Notification::send($user, new ApplicationNotification(
                 'Import Application with ID ' . $id . ' has been deleted.',
@@ -359,8 +358,8 @@ class ApplicationController extends Controller
         $country = country::where('is_del', false)->get();
 
         return view('pages.public.view_application', [
-            'application'        => $application,
-            'consignment'        => $consignment,
+            'application' => $application,
+            'consignment' => $consignment,
             'pubmeasure' => $pubmeasure,
             'pubpurpose' => $pubpurpose,
             'country' => $country
@@ -411,7 +410,7 @@ class ApplicationController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data'   => $cons
+            'data' => $cons
         ]);
     }
 
@@ -461,24 +460,24 @@ class ApplicationController extends Controller
         // Centralized messages per status
         $statusMessages = [
             'Clerk Review In-Progress' => [
-                'public'   => 'Your application has been verified by the importer and is now pending clerk review.',
+                'public' => 'Your application has been verified by the importer and is now pending clerk review.',
                 'internal' => 'Application verified by importer and awaiting clerk review.',
-                'notify'   => 'Import application is now awaiting clerk review.',
+                'notify' => 'Import application is now awaiting clerk review.',
             ],
             'Not Approved' => [
-                'public'   => 'Your application was not approved by the importer.',
+                'public' => 'Your application was not approved by the importer.',
                 'internal' => 'Application was not approved by the importer.',
-                'notify'   => 'Import application was not approved by the importer.',
+                'notify' => 'Import application was not approved by the importer.',
             ],
             'Clerk Verified' => [
-                'public'   => 'Your application has been approved by the clerk.',
+                'public' => 'Your application has been approved by the clerk.',
                 'internal' => 'Application approved by clerk.',
-                'notify'   => 'Import application has been approved by clerk.',
+                'notify' => 'Import application has been approved by clerk.',
             ],
             'Clerk Rejected' => [
-                'public'   => 'Your application has been rejected by the clerk.',
+                'public' => 'Your application has been rejected by the clerk.',
                 'internal' => 'Application rejected by clerk.',
-                'notify'   => 'Import application has been rejected by clerk.',
+                'notify' => 'Import application has been rejected by clerk.',
             ],
         ];
 
@@ -506,7 +505,7 @@ class ApplicationController extends Controller
                 application: $application,
                 event: 'importer_verified',
                 description: authUser()['user']->fullname
-                    . " verified application with id {$application->application_id}",
+                . " verified application with id {$application->application_id}",
                 properties: [
                     'role' => 'importer',
                 ]
@@ -528,7 +527,7 @@ class ApplicationController extends Controller
                 application: $application,
                 event: 'importer_verified',
                 description: authUser()['user']->fullname
-                    . " not verified application with id {$application->application_id}",
+                . " not verified application with id {$application->application_id}",
                 properties: [
                     'role' => 'importer',
                 ]
@@ -550,7 +549,7 @@ class ApplicationController extends Controller
                 application: $application,
                 event: 'clerk_verified',
                 description: authUser()['user']->fullname
-                    . " verified application {$application->application_id}",
+                . " verified application {$application->application_id}",
                 properties: [
                     'role' => 'clerk',
                 ]
@@ -571,7 +570,7 @@ class ApplicationController extends Controller
                 application: $application,
                 event: 'clerk_verified',
                 description: authUser()['user']->fullname
-                    . " not verified application with id {$application->application_id} with reason "   . $request->input('reason') . " .",
+                . " not verified application with id {$application->application_id} with reason " . $request->input('reason') . " .",
                 properties: [
                     'role' => 'clerk',
                 ]
@@ -596,7 +595,11 @@ class ApplicationController extends Controller
          * INTERNAL USER EVENT + NOTIFICATION
          * =====================
          */
-        event(new ApplicationCreatedInternalUser($messages['internal']));
+        try {
+            event(new ApplicationCreatedInternalUser($messages['internal']));
+        } catch (\Exception $e) {
+            Log::warning('Pusher connection failed but continuing internal notification: ' . $e->getMessage());
+        }
 
         $internalUsers = InternalUser::all();
         Notification::send($internalUsers, new ApplicationNotification(
@@ -612,10 +615,14 @@ class ApplicationController extends Controller
          */
         $publicUser = PublicUser::where('uuid', $application->user_id)->first();
 
-        event(new ApplicationCreatedPublicUser(
-            $messages['public'],
-            $publicUser->uuid
-        ));
+        try {
+            event(new ApplicationCreatedPublicUser(
+                $messages['public'],
+                $publicUser->uuid
+            ));
+        } catch (\Exception $e) {
+            Log::warning('Pusher connection failed but continuing public notification: ' . $e->getMessage());
+        }
 
         Notification::send($publicUser, new ApplicationNotification(
             $messages['public'],
@@ -631,10 +638,14 @@ class ApplicationController extends Controller
         if ($application->importer_id !== $application->user_id) {
             $importerUser = PublicUser::where('uuid', $application->importer_id)->first();
 
-            event(new ApplicationCreatedPublicUser(
-                $messages['public'],
-                $importerUser->uuid
-            ));
+            try {
+                event(new ApplicationCreatedPublicUser(
+                    $messages['public'],
+                    $importerUser->uuid
+                ));
+            } catch (\Exception $e) {
+                Log::warning('Pusher connection failed but continuing importer notification: ' . $e->getMessage());
+            }
 
             Notification::send($importerUser, new ApplicationNotification(
                 $messages['public'],
@@ -650,7 +661,7 @@ class ApplicationController extends Controller
          */
         return response()->json([
             'message' => 'Application status updated successfully.',
-            'status'  => $status
+            'status' => $status
         ]);
     }
 
@@ -660,6 +671,6 @@ class ApplicationController extends Controller
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = country::where('is_del', false)->get();
-        return view('pages.public.exporter_list',  compact('pubmeasure', 'pubpurpose', 'country'));
+        return view('pages.public.exporter_list', compact('pubmeasure', 'pubpurpose', 'country'));
     }
 }

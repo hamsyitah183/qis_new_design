@@ -5,52 +5,32 @@ namespace App\Http\Controllers;
 use App\Models\ConsignmentApplication;
 use App\Models\ConsignmentImporter;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use App\Models\PublicCode;
 use App\Models\Country;
+use App\Events\ApplicationCreatedInternalUser;
+use App\Events\ApplicationCreatedPublicUser;
+use App\Events\InternalUserAdminEvent;
+use App\Events\InternalUserClerkEvent;
+use App\Events\PublicUserEvent;
+use App\Models\ImportPermitLog;
+use App\Models\IpCondition;
+use App\Models\IpConsignmentAttachment;
+use App\Models\IpConsignmentPermit;
+use App\Models\PublicUser;
+use App\Models\TempAttachment;
+use App\Notifications\ApplicationNotification;
+use App\Services\ApplicationActivityLogger;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 use Str;
 
 class ConsignmentController extends Controller
 {
     //
-    function getView()
-    {
-        $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
-        $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
-        $country = Country::where('is_del', false)->get();
-        return view('pages.public.consignmentapp', compact('pubmeasure', 'pubpurpose', 'country'));
-    }
-
-    function getViewOther()
-    {
-        $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
-        $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
-        $country = Country::where('is_del', false)->get();
-        return view('pages.public.consignmentappOther', compact('pubmeasure', 'pubpurpose', 'country'));
-    }
-
-    function saveApplicationConsignment(Request $request)
-    {
-        $exporter = $request->exporterData ? json_decode($request->exporterData, true) : null;
-
-        $importer = $request->importerData ? json_decode($request->importerData, true) : null;
-
-        $permit = $request->permitDetails ? json_decode($request->permitDetails, true) : [];
-        $application = ConsignmentApplication::create([
-            'application_id' => Str::uuid(),
-            'eta' => $permit['eta'] ?? null,
-            'transport_type' => $permit['tranType'] ?? null,
-            'entry_point' => $permit['entrypoint'] ?? null,
-            'category_application' => $permit['applCate'] ?? null,
-            'user_id' => Auth::user()->uuid,
-            'exporter_id' => $exporter['id'] ?? null,
-            'importer_id' => $importer['uuid'] ?? null,
-            'importer_detail' => $importer,
-            'status' => '',
-            'importer_verify' => '',
-        ]);
-    }
     public function showallconsignmentlist()
     {
         return view('pages.public.consignment_list');
@@ -58,10 +38,12 @@ class ConsignmentController extends Controller
 
     public function getallconsignmentlist()
     {
-        $userUuid = authUser()['user']->uuid;
-        $type = authUser()['type'];
+        $userData = authUser();
+        $user = $userData['user'];
+        $userUuid = $user->uuid;
+        $type = $userData['type'];
 
-        $query = ConsignmentApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode']);
+        $query = ConsignmentApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode', 'consignmentPermits']);
 
         // Filter for public users
         if ($type === 'public') {
@@ -70,12 +52,26 @@ class ConsignmentController extends Controller
             });
         }
 
-        $datatable = DataTables::eloquent($query)
+        return DataTables::eloquent($query)
             ->addIndexColumn()
-            ->addColumn('importer', fn($row) => $row->importer->name ?? '-')
-            ->addColumn('exporter', fn($row) => $row->exporter->fullname ?? '-')
-            ->addColumn('eta', fn($row) => $row->eta ? $row->eta->format('Y-m-d') : '-')
-            ->addColumn('transport_type', fn($row) => $row->transport_type ?? '-')
+            ->addColumn('category_application', function ($row) {
+                $cat = (int) $row->category_application;
+                return $cat === 1 ? 'Apply For Others' : 'Self Apply';
+            })
+            ->addColumn('importer', fn($row) => $row->importer->name ?? '-') // Swap: Importer = Partner (Wait, User-requested Importer = Me, Exporter = Guest?)
+            // RE-READING: "add a feature where when its pending or draft the public user can still be edited by them and once rejected or approved public user can only view"
+            // Screenshot shows: Importer (Aaron Chin - likely User), Exporter (yong - likely Partner)
+            // My code previously: importer = Partner, exporter = User
+            // So: Importer column should show $row->exporter->fullname?
+            // No, User = Exporter in my current logic.
+            // Let's check my previously viewed code learnings: "exporter_id: Refers to User (PublicUser, UUID). importer_id: Refers to Partner (ConsignmentImporter, int ID)."
+            // So in the UI:
+            // "Importer" column should show User (PublicUser) -> $row->exporter->fullname
+            // "Exporter" column should show Partner (ConsignmentImporter) -> $row->importer->name
+            ->addColumn('importer', fn($row) => $row->exporter->fullname ?? '-')
+            ->addColumn('exporter', fn($row) => $row->importer->name ?? '-')
+            ->addColumn('eta', fn($row) => $row->eta ? $row->eta->format('d M Y') : '-')
+            ->addColumn('transport_type', fn($row) => ucfirst($row->transport_type) ?? '-')
             ->addColumn('entry_point', function ($row) {
                 if ($row->entryPoint) {
                     $district = $row->entryPoint->districtCode->name ?? '';
@@ -85,19 +81,30 @@ class ConsignmentController extends Controller
                 return '-';
             })
             ->addColumn('category_application', function ($row) {
-                $category = $row->category_application == 1 ? 'Others' : 'Self';
-                return '<span class="badge bg-primary-transparent fs-12 p-1">' . $category . '</span>';
+                return $category = $row->category_application == 1 ? 'Others' : 'Self';
+
             })
             ->addColumn('importer_verify', function ($row) {
-                $verify = $row->importer_verify ?? 'pending';
-                $status = strtolower($verify);
+                $status = ucfirst($row->status);
+                $badgeClass = 'bg-secondary';
+                $style = '';
 
-                return match (true) {
-                    str_contains($status, 'verified') => '<span class="badge bg-success fs-12 p-1">Verified</span>',
-                    str_contains($status, 'not approved') => '<span class="badge bg-danger fs-12 p-1">Not Approved</span>',
-                    str_contains($status, 'accepted') => '<span class="badge bg-success fs-12 p-1">Accepted</span>',
-                    default => '<span class="badge bg-warning fs-12 p-1">Pending</span>',
-                };
+                // Match InspectionController colors
+                if ($status === 'Draft') {
+                    $badgeClass = 'bg-purple';
+                    $style = 'style="background-color: #9e5cf7 !important;"';
+                } elseif ($status === 'Pending' || $status === 'Submitted') { // Consignment uses 'Submitted' typically
+                    $badgeClass = 'bg-warning';
+                    $style = 'style="background-color: #ffc658 !important;"';
+                } elseif ($status === 'Approved') {
+                    $badgeClass = 'bg-success';
+                    $style = 'style="background-color: #5cf79e !important;"';
+                } elseif ($status === 'Rejected') {
+                    $badgeClass = 'bg-danger';
+                    $style = 'style="background-color: #f75c5c !important;"';
+                }
+
+                return '<span class="badge ' . $badgeClass . '" ' . $style . '>' . $status . '</span>';
             })
             ->addColumn('permit_status', function ($row) {
                 // Map statuses to colors
@@ -121,9 +128,6 @@ class ConsignmentController extends Controller
                 foreach ($permit_statuses as $status) {
                     if (isset($statusCounts[$status])) {
                         $statusCounts[$status]++;
-                    } else {
-                        // Handle unknown statuses by adding them dynamically or ignoring
-                        // allocating a default color if not found
                     }
                 }
 
@@ -133,16 +137,10 @@ class ConsignmentController extends Controller
                     $count = $statusCounts[$status] ?? 0;
                     if ($count > 0) {
                         $boxesHtml .=
-                            '<div class="badge ' .
-                            $color .
-                            ' text-white text-center" data-bs-toggle="tooltip"
-                            data-bs-placement="top" title="' .
-                            ucfirst($status) .
-                            '"
+                            '<div class="badge ' . $color . ' text-white text-center" data-bs-toggle="tooltip"
+                            data-bs-placement="top" title="' . ucfirst($status) . '"
                            style="height:20px; width:20px; display:inline-flex; align-items:center; justify-content:center; margin-right:5px;">
-                           ' .
-                            $count .
-                            '
+                           ' . $count . '
                        </div>';
                     }
                 }
@@ -151,24 +149,32 @@ class ConsignmentController extends Controller
             })
             ->addColumn('created_at', fn($row) => $row->created_at ? $row->created_at->format('Y-m-d H:i') : '-')
             ->addColumn('action', function ($row) {
-                $url = '/view_consignment/' . $row->application_id;
+                $status = strtolower($row->status);
+                // Draft/Pending -> Edit (Yellow Pencil)
+                // Approved/Rejected -> View (Blue Eye)
+    
+                $isEditable = ($status === 'draft' || $status === 'pending' || $status === 'submitted');
+                $url = $isEditable
+                    ? route('editApplication', ['uuid' => $row->application_id])
+                    : route('public.viewApplication', ['uuid' => $row->application_id]);
 
-                $view =
-                    '<a class="btn btn-sm btn-primary viewConsignment" href="' .
-                    $url .
-                    '">
-                        <i class="ti ti-eye"></i>
-                     </a>';
-
+                $icon = $isEditable ? 'ti ti-edit' : 'ti ti-eye';
+                $btnClass = $isEditable ? 'btn-info' : 'btn-primary'; // Pencil usually info/warning, Eye usually primary/success
+    
+                $view = '<div class="d-flex align-items-center gap-2">
+                            <a class="btn btn-sm ' . $btnClass . ' viewConsignment" href="' . $url . '">
+                                <i class="' . $icon . '"></i>
+                            </a>
+                            <button class="btn btn-sm btn-danger delete-consignment" data-id="' . $row->application_id . '">
+                                <i class="ti ti-trash"></i>
+                            </button>
+                         </div>';
                 return $view;
-            });
-
-        if ($type === 'internal') {
-            $datatable->addColumn('submitted_by', fn($row) => $row->user->fullname ?? '-');
-        }
-
-        return $datatable->rawColumns(['action', 'permit_status', 'category_application', 'importer_verify'])->make(true);
+            })
+            ->rawColumns(['action', 'permit_status', 'category_application', 'status'])
+            ->make(true);
     }
+
 
     public function getApplicationDetails($id)
     {
@@ -177,8 +183,13 @@ class ConsignmentController extends Controller
 
         // Fetch application and eager load relationships
         $application = ConsignmentApplication::where('application_id', $id)
-            ->with(['user', 'importer', 'exporter', 
-            'entryPoint.districtCode', 'consignmentPermits.attachments',])
+            ->with([
+                'user',
+                'importer',
+                'exporter',
+                'entryPoint.districtCode',
+                'consignmentPermits.attachments',
+            ])
             ->firstOrFail();
 
         if ($type === 'internal') {
@@ -208,3 +219,4 @@ class ConsignmentController extends Controller
         );
     }
 }
+
