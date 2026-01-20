@@ -55,7 +55,7 @@
                 <div class="row gy-3">
                     <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                         <label for="selectexp" class="form-label">Select Exporter</label>
-                        <select id="selectexp" data-route="{{ route('public.getExporters') }}"
+                        <select id="selectexp" data-route="/public/get_exporters"
                             class="form-select xintra-select2" name="selectexp" style="width:100%;">
                             <option value="">-- Select Exporter --</option>
                         </select>
