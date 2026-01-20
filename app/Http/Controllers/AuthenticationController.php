@@ -312,7 +312,7 @@ class AuthenticationController extends Controller
     public function register()
     {
         $countryNo = CountryNoPhone::get();
-        dd($countryNo);
+        // dd($countryNo);
         return view('pages.authentication.register_test', [
             'title' => 'Register',
             'countryNo' => $countryNo,
