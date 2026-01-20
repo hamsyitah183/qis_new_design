@@ -34,6 +34,9 @@ RUN mkdir -p /var/www/html/vendor /var/www/html/node_modules /var/www/html/stora
     && chown -R www-data:www-data /var/www/html /var/run \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
+# Run storage link
+RUN php artisan storage:link
+
 # Copy .env if needed
 # COPY .env.example .env
 RUN chown www-data:www-data /var/www/html/.env
