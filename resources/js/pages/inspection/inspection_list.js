@@ -67,6 +67,95 @@ async function data_table_init() {
         initTooltips();
     });
 
+    // Admin actions (internal users): approve, reject, delete
+    if (isInternal) {
+        const csrfToken = document
+            .querySelector('meta[name="csrf-token"]')
+            .getAttribute("content");
+
+        // Approve / Reject
+        $(document).on("click", ".inspection-approve, .inspection-reject", async function () {
+            const id = $(this).data("id");
+            const isApprove = $(this).hasClass("inspection-approve");
+            const targetStatus = isApprove ? "Approved" : "Rejected";
+
+            const result = await Swal.fire({
+                title: `Confirm ${targetStatus}?`,
+                text: `This inspection application will be marked as ${targetStatus}.`,
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#4c5359ff",
+                cancelButtonColor: "#d33",
+                confirmButtonText: `Yes, ${targetStatus.toLowerCase()} it!`,
+            });
+
+            if (!result.isConfirmed) return;
+
+            try {
+                const res = await fetch(`/internal/inspection/${id}/status`, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": csrfToken,
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                    },
+                    body: JSON.stringify({ status: targetStatus }),
+                });
+
+                if (!res.ok) throw new Error("Status update failed");
+
+                const json = await res.json();
+                Swal.fire("Updated!", json.message, "success");
+                inspectionListTable.ajax.reload(null, false);
+            } catch (error) {
+                console.error(error);
+                Swal.fire("Error", "Failed to update status.", "error");
+            }
+        });
+    }
+
+    // Delete - Available for both internal and public
+    $(document).on("click", ".deleteInspection", async function () {
+        const id = $(this).data("id");
+        const csrfToken = document
+            .querySelector('meta[name="csrf-token"]')
+            .getAttribute("content");
+
+        const result = await Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#4c5359ff",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, delete it!",
+        });
+
+        if (!result.isConfirmed) return;
+
+        try {
+            const res = await fetch(`/inspection/delete/${id}`, {
+                method: "DELETE",
+                headers: {
+                    "X-CSRF-TOKEN": csrfToken,
+                    Accept: "application/json",
+                },
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || "Delete failed");
+            }
+
+            const json = await res.json();
+            Swal.fire("Deleted!", json.message, "success");
+            inspectionListTable.ajax.reload(null, false);
+        } catch (error) {
+            console.error(error);
+            Swal.fire("Error", error.message || "Failed to delete inspection application.", "error");
+        }
+    });
+
     initTooltips();
 }
 

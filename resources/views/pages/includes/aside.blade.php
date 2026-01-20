@@ -110,12 +110,13 @@
                             <li class="slide">
                                 <a href="{{ route('public.showallapplicationlist') }}" class="side-menu__item">Import Permit List</a>
                             </li>
-                            
-                            <li class="slide">
-                                <a href="{{ route('public.showallconsignmentlist') }}" class="side-menu__item">Consignment Certificate List</a>
 
                             <li class="slide">
                                 <a href="{{ route('public.showallinspectionlist') }}" class="side-menu__item">Inspection Certificate List</a>
+                            </li>
+                            
+                            <li class="slide">
+                                <a href="{{ route('public.showallconsignmentlist') }}" class="side-menu__item">Consignment Certificate List</a>
                             </li>
                         </ul>
                     </li>
@@ -128,8 +129,8 @@
                     <li class="slide__category"><span class="category-name">Application</span></li>
 
                     @php
-                        // Check if the route name contains "application"
-                        $isApplicationActive = Str::contains($currentRoute, 'application');
+                        // Check if the route name contains "application" or "inspection"
+                        $isApplicationActive = Str::contains($currentRoute, ['application', 'inspection']);
                     @endphp
 
                     <li class="slide has-sub {{ $isApplicationActive ? 'open active' : '' }}">
@@ -147,6 +148,13 @@
                                     Import Permit List
                                 </a>
                             </li>
+
+                            <li class="slide {{ $currentRoute === 'internal.inspection.list' ? 'active' : '' }}">
+                                <a href="{{ route('internal.inspection.list') }}" class="side-menu__item">
+                                    Inspection Certificate List
+                                </a>
+                            </li>
+
                         </ul>
                     </li>
 

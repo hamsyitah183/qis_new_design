@@ -164,6 +164,12 @@ Route::prefix('internal')
         Route::get('/view_all_application', [ApplicationController::class, 'showallapplicationlist'])->name('application.list');
         Route::delete('/application/delete/{id}', [ApplicationController::class, 'deleteApplication'])->name('application.delete');
 
+        // ======================= inspection certificates ========================
+        Route::get('/inspection_certificates_list', [InspectionController::class, 'showAllInspectionList'])->name('inspection.list');
+        Route::post('/inspection/{id}/status', [InspectionController::class, 'updateStatus'])->name('inspection.status');
+        Route::get('/view_inspection_certificate/{id}', [InspectionController::class, 'viewApplication'])->name('viewInspectionApplication');
+        // Route::delete('/inspection/delete/{id}', [InspectionController::class, 'deleteApplication'])->name('inspection.delete');
+
         // Route::get('/application/exporter/get', [ApplicationController::class, 'get_exporter'])->name('application.exporter.get');
 
         //MISC
@@ -243,6 +249,7 @@ Route::middleware(['auth.any'])->group(function () {
         return response()->json(['status' => 'success']);
     })->name('notifications.mark-read');
     Route::get('/notifications', [DashboardController::class, 'notifications_page'])->name('notifications.page');
+    Route::delete('/inspection/delete/{id}', [InspectionController::class, 'deleteApplication'])->name('inspection.delete');
     Route::get('/application/exporter', [ApplicationController::class, 'show_exporter'])->name('application.exporter');
 
     Route::get('/permit/generate/{id}', [PermitGenerateController::class, 'generatePermitWord']);
