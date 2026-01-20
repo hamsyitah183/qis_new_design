@@ -10,24 +10,35 @@ class NotificationController extends Controller
     //
     public function sendStatusMessage($fullname, $type, $applicationId, $status, $messageText, $phoneNumber)
     {
+        
+        $phoneNumber = preg_replace('/^\+/', '', $phoneNumber);
+        // dd($fullname, $type, $applicationId, $status, $messageText, $phoneNumber);
+
         $url = 'https://rest.moceanapi.com/rest/2/send-message/whatsapp';
         $bearerToken = 'apit-0NYiktzyYJO9bdPHcs7OQ3P9Rfl4tDJh-gxopQ'; 
 
         $payload = [
             'mocean-from' => '60128083901',
-            'mocean-to' => '60143290092',
+            'mocean-to' => $phoneNumber,
             'mocean-event-url' => '',
             'mocean-content' => [
                 'type' => 'template',
                 'wa_template' => [
                     'name' => 'qisapplicationstatus',
                     'language' => 'en',
-                    'body_params' => [['type' => 'text', 'text' => 'Nurhamsyitah'], ['type' => 'text', 'text' => 'Import Permit'], ['type' => 'text', 'text' => 'App123456789'], ['type' => 'text', 'text' => 'submitted'], ['type' => 'text', 'text' => 'Your application is under review and will be processed shortly.']],
+                    'body_params' => [
+
+                        ['type' => 'text', 'text' => $fullname], 
+                        ['type' => 'text', 'text' => $type], 
+                        ['type' => 'text', 'text' => $applicationId], 
+                        ['type' => 'text', 'text' => $status], 
+                        ['type' => 'text', 'text' => $messageText]],
+
                     'wa_buttons' => [
                         [
                             'type' => 'url',
                             'index' => 0,
-                            'url_parameter' => 'APP123456789',
+                            'url_parameter' => $applicationId,
                         ],
                     ],
                 ],

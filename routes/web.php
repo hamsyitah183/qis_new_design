@@ -84,6 +84,7 @@ Route::prefix('public')
         Route::get('/get_entry_point', [PermitApplicationController::class, 'getEntryPoint'])->name('getEntryPoint');
         Route::get('/get_consignment/{countryCode}', [PermitApplicationController::class, 'getConsignmentFromCountry'])->name('getItemFromCountry');
         Route::get('/consignment_uses/{id}', [PermitApplicationController::class, 'getConsignmentUses'])->name('consignmentUses');
+        Route::get('/all_consignment_uses/{id}', [PermitApplicationController::class, 'getAllConsignmentUses'])->name('allConsignmentUses');
         Route::post('/save-application', [PermitApplicationController::class, 'saveApplication'])->name('saveApplication');
         Route::post('/upload_attachment', [PermitApplicationController::class, 'uploadAttachment'])->name('uploadAttachment');
         Route::post('/temp_upload', [PermitApplicationController::class, 'tempUpload'])->name('tempUpload');

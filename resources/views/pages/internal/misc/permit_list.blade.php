@@ -37,7 +37,7 @@
                 </div>
 
                 <div class="card-body">
-                    <table id="internalUsersTable" class="table table-bordered text-nowrap w-100">
+                    <table id="conditionTable" class="table table-bordered text-nowrap w-100">
                         <thead>
                             <tr>
                                 <th>#</th>

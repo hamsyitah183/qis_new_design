@@ -181,7 +181,7 @@ function loadUses(itemId) {
         didOpen: () => Swal.showLoading(),
     });
 
-    fetch(`/public/consignment_uses/${itemId}`)
+    fetch(`/public/all_consignment_uses/`)
         .then((res) => res.json())
         .then((data) => {
             if (!data.data) return;
@@ -560,7 +560,7 @@ function saveConsignmentAttachment() {
 
         // ✅ Get values (Select2 fields via jQuery)
         const itemSelectValue = $("#itemSelect").val();
-        const itemSelectText = $("#itemSelect option:selected").text();
+        const itemSelectText = $("#itemSelect").val().trim();
         const itemValue = $("#itemValue").val().trim();
         const itemQuantity = $("#itemQuantity").val().trim();
         const itemMeasure = $("#itemMeasure").val();
@@ -1023,6 +1023,7 @@ $(document).ready(async function () {
 
         // Expose loadConsignmentSelection globally if needed
         // loadConsignmentSelection();
+        // loadUses();
         $("#mdlAddItemBtn").on("click", loadConsignmentSelection);
 
         // Check for edit mode
