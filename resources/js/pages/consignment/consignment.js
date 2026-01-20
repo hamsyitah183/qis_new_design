@@ -54,7 +54,7 @@ function fetchExporterList() {
 
             $select
                 .empty()
-                .append('<option value="">-- Select Exporter --</option>');
+                .append('<option value="">-- Select Importer --</option>');
             exporterListArray.forEach((exp) =>
                 $select.append(`<option value="${exp.id}">${exp.name}</option>`)
             );
@@ -65,7 +65,7 @@ function fetchExporterList() {
 
             $select.select2({
                 width: "100%",
-                placeholder: "-- Select Exporter --",
+                placeholder: "-- Select Importer --",
                 allowClear: true,
                 // templateResult: formatExporterOption,
                 // escapeMarkup: (m) => m,
@@ -240,19 +240,28 @@ function initAddExporterModal() {
             headers: {
                 "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
             },
-            success: () => {
-                fetchExporterList();
-                Swal.fire({
-                    icon: "success",
-                    title: "Importer Saved!",
-                    text: "The exporter has been successfully added to the list.",
-                    timer: 1800,
-                    showConfirmButton: false,
-                    timerProgressBar: true,
-                    position: "center",
+            success: (response) => {
+                // response is the new importer object
+                fetchExporterList().then(() => {
+                    // Auto-select the new importer
+                    const newImporterId = response.id;
+                    const $select = $("#selectexp");
+                    
+                    // Set the value and trigger change
+                    $select.val(newImporterId).trigger('change');
+                    
+                    Swal.fire({
+                        icon: "success",
+                        title: "Importer Saved!",
+                        text: "The exporter has been successfully added to the list.",
+                        timer: 1800,
+                        showConfirmButton: false,
+                        timerProgressBar: true,
+                        position: "center",
+                    });
+                    $(modalEl).modal("hide");
+                    $("#addExporterForm")[0].reset();
                 });
-                $(modalEl).modal("hide");
-                $("#addExporterForm")[0].reset();
             },
             error: (xhr) => {
                 console.error(xhr.responseText);
@@ -801,9 +810,17 @@ function saveapplication(isDraft = false) {
     // 🔑 tell backend this is draft or submit
     formData.append("is_draft", isDraft ? 1 : 0);
 
-    formData.append("exporterData", JSON.stringify(exporter));
-    formData.append("importerData", JSON.stringify(importer));
-    formData.append("permitDetails", JSON.stringify(permitDetails));
+    // Collect Step 1 details manually since permitDetails is a function name clash
+    const currentPermitDetails = {
+        eta: $("#eta").val(),
+        tranType: $("#trnptType").val(),
+        entrypoint: $("#entryPoint").val(),
+        applCate: $("#app_cate").val()
+    };
+
+    formData.append("exporterData", JSON.stringify(importer));
+    formData.append("importerData", JSON.stringify(exporter));
+    formData.append("permitDetails", JSON.stringify(currentPermitDetails));
 
     tempItems.forEach((item, index) => {
         const { files, ...otherData } = item;
@@ -842,14 +859,15 @@ function saveapplication(isDraft = false) {
 
             if (!isDraft) {
                 setTimeout(() => {
-                    window.location.href = "/public/view_all_application";
+                    window.location.href = "/public/view_all_consignment";
                 }, 1500);
+            } else {
+                 window.location.reload();
             }
-
-            window.location.reload();
         },
         error: function (xhr) {
-            Swal.fire("Error", "Failed to save application", "error");
+            const errorMessage = xhr.responseJSON?.message || "Failed to save application. Please check your connection and try again.";
+            Swal.fire("Error", errorMessage, "error");
         },
     });
 }
@@ -975,8 +993,7 @@ $(document).ready(async function () {
                     }
 
                     if (result.isDenied) {
-                        saveapplication(true); // ✅ draft
-                        window.location.href = "/public/view_all_application";
+                        saveapplication(true);
                     }
 
                     // result.isDismissed → user clicked "Stay"

@@ -9,6 +9,7 @@ use App\Models\IpConsignmentPermit;
 use App\Models\PublicUser;
 use App\Notifications\ApplicationNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
 class PermitConsignmentController extends Controller
@@ -39,15 +40,19 @@ class PermitConsignmentController extends Controller
 
         $url = '/view_application' . '/' . $permit->application->application_id;
 
-        // Events & notifications
-        event(new ApplicationDeleted('Permit in ' . $permit->application->application_id . ' is ' . $status));
-
         $users = InternalUser::role(['admin', 'officer'])->get();
         Notification::send($users, new ApplicationNotification('A permit with application ID ' . $permit->application->application_id . ' has been ' . $status, authUser()['user']->fullname, $url));
 
         $user = PublicUser::where('uuid', $permit->application->user_id)->first();
 
-        event(new PublicUserEvent('A permit in application with ID ' . $permit->application->application_id . ' has been ' . $status, $user->uuid));
+        try {
+            // Events & notifications
+            event(new ApplicationDeleted('Permit in ' . $permit->application->application_id . ' is ' . $status));
+
+            event(new PublicUserEvent('A permit in application with ID ' . $permit->application->application_id . ' has been ' . $status, $user->uuid));
+        } catch (\Exception $e) {
+            Log::warning('Pusher connection failed but continuing permit acceptance: ' . $e->getMessage());
+        }
 
         Notification::send($user, new ApplicationNotification('A permit in application with ID ' . $permit->application->application_id . ' has been ' . $status, authUser()['user']->fullname, $url));
 
