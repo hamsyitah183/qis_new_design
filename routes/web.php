@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
 
-// Logout route
+// Logout route hello temadigital
 Route::get('/logout', [AuthenticationController::class, 'logout'])->name('logout');
 
 // Guest routes
