@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
 
-// Logout route
+// Logout route hello temadigital
 Route::get('/logout', [AuthenticationController::class, 'logout'])->name('logout');
 
 // Guest routes
@@ -74,7 +74,7 @@ Route::prefix('public')
     ->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
         Route::get('/import_permit_application', [PermitApplicationController::class, 'show'])->name('permitApplication');
-        Route::get('/import_assign_application', action: [PermitApplicationController::class, 'showassign'])->name('permitAssignApplication');
+        Route::get('/import_assign_application', [PermitApplicationController::class, 'showassign'])->name('permitAssignApplication');
         Route::get('/new_application', [ApplicationController::class, 'show'])->name('newApplication');
         Route::get('/newtest', [ApplicationController::class, 'showthis'])->name('newApplicatasdion');
         Route::post('/store_exporter', [PermitApplicationController::class, 'storeExporter'])->name('storeExp');

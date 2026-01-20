@@ -9,7 +9,7 @@ use App\Events\InternalUserClerkEvent;
 use App\Events\PublicUserEvent;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\NotificationController;
-use App\Models\country;
+use App\Models\Country;
 use App\Models\ImportPermitLog;
 use App\Models\InternalUser;
 use App\Models\IpApplication;
