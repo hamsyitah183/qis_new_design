@@ -146,15 +146,12 @@ function reapply(application) {
             .data('id', id)
             .attr('data-id', id);
 
-        let detail = permit.consignment_detail;
+  
 
         const selectedItemId = detail.item_id;
 
         await loadConsignmentSelection(selectedItemId);
-        console.log('permit detal', detail);
-        $('#itemValue').val(detail.value)
-        $('#itemQuantity').val(detail.quantity)
-
+       
         // Show modal AFTER select is ready
         const modalEl = document.getElementById("addItemModal");
         const modal = new bootstrap.Modal(modalEl);
@@ -403,7 +400,7 @@ export async function application_reapply(application)
    
 
     // ------------------- Item Select (Consignment) -------------------
-     $("#itemSelect").on("change", function () {
+    $("#itemSelect").on("change", function () {
         const itemId = $(this).val();
         const $itemUses = $("#itemUses");
 
@@ -422,9 +419,18 @@ export async function application_reapply(application)
     // Expose loadConsignmentSelection globally if needed
     // loadConsignmentSelection();
     $("#mdlAddItemBtn").on("click", async function () {
-    await loadConsignmentSelection();
-    saveConsignmentAttachment();
-});
+        await loadConsignmentSelection();
+        saveConsignmentAttachment();
+
+        
+        let detail = application.detail
+        if (typeof detail === 'string') {
+            detail = JSON.parse(detail);
+        }
+
+        $('#itemValue').val(detail?.value ?? '');
+        $('#itemQuantity').val(detail?.quantity ?? '');
+    });
 
     console.log('from js application reapply', application)
     await loadConsignmentSelection()

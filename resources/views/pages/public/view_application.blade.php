@@ -4,7 +4,7 @@
 
 @push('scripts')
     @vite(['resources/js/pages/importPermit/application_detail.js'])
-    @vite(['resources/js/pages/importPermit/application_reapply.js'])
+    {{-- @vite(['resources/js/pages/importPermit/application_reapply.js']) --}}
 @endpush
 
 
@@ -113,7 +113,19 @@
                                 @include('pages.public.view_permit.step4')
                             @endif
 
-                            @include('pages.public.view_permit.step5')
+                            @php
+                                $allPending = $application->consignmentPermits->every(
+                                    fn($permit) => $permit->status === 'pending for payment',
+                                );
+
+                                $value = $allPending ? 1 : 0;
+
+                            @endphp
+
+                            @if (authUser()['type'] == 'public' && $value )
+                                @include('pages.public.view_permit.step5')
+                            @endif
+
 
 
                         </aside>

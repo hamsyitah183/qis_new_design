@@ -223,7 +223,7 @@ class ConsignmentApplicationController extends Controller
                         continue;
                     }
                     $name = uniqid() . '_' . $file->getClientOriginalName();
-                    $path = $file->storeAs('import', $name, 'public');
+                    $path = $file->storeAs('consignment', $name, 'public');
                     $movedFiles[] = $path;
 
                     ConsignmentAttachment::create([
