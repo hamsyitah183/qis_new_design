@@ -7,48 +7,69 @@ use App\Models\IpConsignmentPermit;
 use App\Models\Order;
 use App\Models\PaymentMethod;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\URL;
 
 class PaymentController extends Controller
 {
     //
-    public function checkout($id, $orderNo, $permitId, $total)
+    public function checkout($id, $permitId, $total)
     {
         if (!session()->has('payment_active')) {
             abort(403, 'Payment session expired');
         }
 
+        $application = IpApplication::findOrFail($id);
         $permitIds = explode(',', $permitId);
 
         $permits = IpConsignmentPermit::where('application_id', $id)->whereIn('id', $permitIds)->where('status', 'pending for payment')->get();
-
-        foreach ($permits as $permit) {
-            $permit->update([
-                'status' => 'payment processing',
-            ]);
-        }
 
         if ($permits->isEmpty()) {
             abort(404, 'No permits found');
         }
 
-        $application = IpApplication::with(['user', 'importer', 'exporter', 'entryPoint', 'consignmentPermits', 'latestLog', 'activity_log'])->findOrFail($id);
+        $jsonData = [
+            'application' => [
+                'id' => $application->id,
+                'application_id' => $application->application_id,
+                'status' => $application->status,
+            ],
+            'user' => [
+                'uuid' => $application->user->uuid,
+                'fullname' => $application->user->fullname,
+                'email' => $application->user->email,
+                'phone_number' => $application->user->phone_number,
+            ],
+            'permits' => $permits
+                ->map(
+                    fn($permit) => [
+                        'permit_id' => $permit->id,
+                        'permit_no' => $permit->permit_no,
+                        'item_name' => $permit->item_name,
+                        'status' => $permit->status,
+                        'amount' => number_format($permit->amount, 2, '.', ''),
+                    ],
+                )
+                ->values()
+                ->toArray(),
+            'total' => number_format($permits->sum('amount'), 2, '.', ''),
+        ];
 
-        // Calculate total safely here
+        // ✅ STORE IN SESSION HERE
+        session(['application_details' => $jsonData]);
+
         $total = (float) $total;
-
-        $order = Order::where('order_number', $orderNo)->first();
-
         $paymentMethod = PaymentMethod::get();
 
-        return response()->view('pages.public.cart', compact('permits', 'application', 'total', 'order', 'paymentMethod'))->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')->header('Pragma', 'no-cache');
+        return view('pages.public.cart', compact('permits', 'application', 'total', 'paymentMethod'));
     }
 
     public function signedUrl(Request $request)
     {
         // dd($request->all());
+
         $request->validate([
-            'application_id' => 'required|integer',
+            'application_id' => 'required',
             'permit_ids' => 'required|array|min:1',
         ]);
 
@@ -71,40 +92,46 @@ class PaymentController extends Controller
 
         // order number
 
-        $jsonData = [
-            'application' => [
-                'id' => $application->id,
-                'application_id' => $application->application_id,
-                'status' => $application->status,
-            ],
+        $total = number_format($request['total'], 2, '.', ''); // ensures '50.00' instead of 50
 
-            'user' => [
-                'uuid' => $application->user->uuid,
-                'fullname' => $application->user->fullname,
-                'email' => $application->user->email,
-                'phone_number' => $application->user->phone_number,
-            ],
+        // dd( $application->id, $request->permit_ids, $total);
 
-            'permits' => $permits
-                ->map(function ($permit) {
-                    return [
-                        'permit_id' => $permit->id,
-                        'permit_no' => $permit->permit_no,
-                        'item_name' => $permit->item_name,
-                        'status' => $permit->status,
-                        'amount' => number_format($permit->amount, 2, '.', ''),
-                    ];
-                })
-                ->values()
-                ->toArray(),
+        session(['payment_active' => true]);
 
-            'total' => number_format($permits->sum('amount'), 2, '.', ''),
-        ];
+        $signedUrl = URL::signedRoute('payment.checkout', [
+            'id' => $application->id,
+            'permitId' => implode(',', $request->permit_ids),
+            'total' => $total,
+            // 'details' => $jsonData
+        ]);
 
-        $applicationId = $application->application_id;
+        return response()->json([
+            'url' => $signedUrl,
+        ]);
+    }
 
-        // Count existing orders for this application
-        $lastOrder = Order::where('order_details->application->application_id', $applicationId)->latest('id')->first();
+    public function payment(Request $request)
+    {
+        $applicationDetails = session('application_details');
+
+        if (!$applicationDetails) {
+            abort(403, 'Application details expired');
+        }
+        if ($request['paymentMethod'] == 'bayuPay') {
+            // dd($data);
+            $data = $this->bayuPay($request, $applicationDetails);
+            return view('bayuPayRedirect', compact('data'));
+        } else {
+            return 'no payment';
+        }
+    }
+
+    private function bayuPay(Request $request, $applicationDetails)
+    {
+        // dd($request->all(), $applicationDetails);
+       
+
+        $lastOrder = Order::where('order_details->application->application_id', $request->application_id)->latest('id')->first();
 
         $runningNumber = 1;
 
@@ -119,49 +146,15 @@ class PaymentController extends Controller
         $runningNumber = str_pad($runningNumber, 3, '0', STR_PAD_LEFT);
 
         // Build order number
-        $orderNumber = 'ORD-' . $applicationId . '-' . $runningNumber;
+        $orderNumber = 'ORD-' . $request->application_id . '-' . $runningNumber;
 
         $order = Order::create([
             'order_number' => $orderNumber,
             'status' => 'payment pending',
-            'order_details' => $jsonData,
+            'order_details' => $applicationDetails,
         ]);
 
-        $total = number_format($request['total'], 2, '.', ''); // ensures '50.00' instead of 50
-
-        session(['payment_active' => true]);
-
-        $signedUrl = URL::signedRoute('payment.checkout', [
-            'id' => $application->id,
-            'orderNo' => $orderNumber,
-            'permitId' => implode(',', $request->permit_ids),
-            'total' => $total,
-        ]);
-
-        return response()->json([
-            'url' => $signedUrl,
-        ]);
-    }
-
-    public function payment(Request $request)
-    {
-        // dd($request->all());
-        // if ($request['paymentMethod'] == 'bayuPay') {
-        //     $this->bayuPay($request);
-        // }
-        // dd('sinika');
-        if ($request['paymentMethod'] == 'bayuPay') {
-            // dd($data);
-            $data = $this->bayuPay($request);
-            return view('bayuPayRedirect', compact('data'));
-        } else {
-            return 'no payment';
-        }
-    }
-
-    private function bayuPay(Request $request)
-    {
-        $data = [
+         $data = [
             'sid' => 'SIDTEST',
             'itn' => 'IMPORT123',
             'rn' => $request->orderNo,
@@ -169,7 +162,8 @@ class PaymentController extends Controller
             'co_name' => $request->name,
             'email' => $request->email,
             'tel_no' => $request->no_phone,
-            'bounce' => url('/paymentUpdate'),
+            'application_id' => $request->application_id,
+            'bounce' => url('/paymentUpdate' . '/' . $order->order_number),
         ];
 
         return $data;
@@ -180,19 +174,54 @@ class PaymentController extends Controller
         return $kod_transaksi;
     }
 
-    public function paymentUpdate(Request $request)
+    public function paymentUpdate($rn, Request $request)
     {
-        // Get the parameter
         $title = 'Payment Status';
         $kodTransaksi = $request->query('kod_transaksi');
 
         if (!$kodTransaksi) {
-            return 'Kod Transaksi not found!';
+            abort(404, 'Kod Transaksi not found');
         }
 
-        // Show it
-        // return 'Kod Transaksi: ' . $kodTransaksi;
-        return view('pages.paymentStatus', compact('kodTransaksi', 'title'));
+        // Call BayuPay API with Bearer token
+        $response = Http::withToken('test-api')->get('https://bayupay-dummy.geovidia.my/readdata.php', [
+            'kod_transaksi' => $kodTransaksi,
+        ]);
+
+        if (!$response->successful()) {
+            abort(500, 'Failed to retrieve payment data');
+        }
+
+        // Convert response to array
+        $paymentData = $response->json();
+
+        $order = Order::where('order_number', $rn)->first();
+
+        $permits = $order->order_details['permits'];
+
+        if ($paymentData['transaction_status'] == 'SUCCESSFUL') {
+            $order->status = 'payment success';
+            $order->seller_ref = $paymentData['seller_ref'];
+            $order->fpx_seller_reference = $paymentData['fpx_seller_reference'];
+            $order->name = $paymentData['name'];
+            $order->email = $paymentData['email'];
+            $order->phone = $paymentData['phone'];
+            $order->payment_amount = $paymentData['payment_amount'];
+            $order->transaction_data = $paymentData['transaction_data'];
+            $order->transaction_status = $paymentData['transaction_status'];
+
+            foreach ($permits as $permit) {
+                $permitData = IpConsignmentPermit::where('id', $permit['permit_id'])->first();
+
+                // dd($permitData);
+                $permitData->status = 'paid';
+                $permitData->save();
+            }
+
+            $order->save();
+        }
+
+        return view('pages.paymentStatus', compact('title', 'kodTransaksi', 'paymentData'));
     }
 
     public function cancelPayment(Request $request)

@@ -3,17 +3,17 @@
     <!-- Start::main-sidebar-header -->
     <div class="main-sidebar-header">
         <a href="{{ url('/') }}" class="header-logo">
-            <img src="{{ asset('/asset/image.png') }}" alt="logo" class="desktop-logo">
+            <img src="{{ asset('/asset/doa-logo.png') }}" alt="logo" class="desktop-logo">
 
-            <img src="{{ asset('/asset/image.png') }}" alt="logo" class="toggle-dark">
+            <img src="{{ asset('/asset/doa-logo.png') }}" alt="logo" class="toggle-dark">
 
-            <img src="{{ asset('/asset/image.png') }}" alt="logo" class="desktop-dark">
+            <img src="{{ asset('/asset/doa-logo.png') }}" alt="logo" class="desktop-dark">
 
-            <img src="{{ asset('/asset/image.png') }}" alt="logo" class="toggle-logo">
+            <img src="{{ asset('/asset/doa-logo.png') }}" alt="logo" class="toggle-logo">
 
-            <img src="{{ asset('/asset/image.png') }}" alt="logo" class="toggle-white">
+            <img src="{{ asset('/asset/doa-logo.png') }}" alt="logo" class="toggle-white">
 
-            <img src="{{ asset('/asset/image.png') }}" alt="logo" class="desktop-white">
+            <img src="{{ asset('/asset/doa-logo.png') }}" alt="logo" class="desktop-white">
         </a>
     </div>
 

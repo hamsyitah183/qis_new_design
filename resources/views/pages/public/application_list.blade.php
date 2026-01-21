@@ -19,11 +19,11 @@
     @vite(['resources/js/pages/importPermit/application_list.js'])
 @endpush
 
-@section('pageName', 'List All Application')
+@section('pageName', 'List Import Permit Application')
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="All Application List">
+    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="Import Permit Application List">
 
     </x-breadcrumb>
 @endsection

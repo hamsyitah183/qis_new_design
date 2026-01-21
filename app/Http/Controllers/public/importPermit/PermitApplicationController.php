@@ -532,4 +532,15 @@ class PermitApplicationController extends Controller
             'size' => $record->size,
         ]);
     }
+
+    public function reapply($id, Request $request)
+    {
+        $item = $request->items[0]; // array with key "data"
+
+        $data = json_decode($item['data'], true); // ✅ decode JSON string
+
+        $permit = IpConsignmentPermit::where('id', $id)->first();
+
+        dd($id, $permit, $data);
+    }
 }

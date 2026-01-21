@@ -10,7 +10,6 @@
     <!-- vite -->
     <script>
         window.PERMITS = @json($permits);
-        window.ORDER = @json($order);
     </script>
     @vite(['resources/js/pages/checkout.js'])
 @endpush
@@ -37,10 +36,12 @@
             <input type="hidden" name="name" value="{{ authUser()['user']->fullname }}">
             <input type="hidden" name="email" value="{{ authUser()['user']->email }}">
             <input type="hidden" name="no_phone" value="{{ authUser()['user']->phone_number }}">
-            <input type="hidden" name="orderNo" value="{{ $order->order_number }}">
+   
             <input type="hidden" name="amount" value="{{ $total }}">
             <input type="hidden" name="application_type" value="import_permit">
- 
+            <input type="hidden" name="application_id" value = "{{ $application->application_id }}">
+      
+
 
             <div class="row">
                 <div class="col-xl-9">
@@ -125,10 +126,10 @@
                     <div class="col-xl-12">
                         <div class="card custom-card overflow-hidden border" id="cart-container-delete">
                             <div class="card-header">
-                                <div class="card-title p-2">
+                                {{-- <div class="card-title p-2">
                                     <span class="fw-bold">Order No: </span> <span class="ms-2 text-muted"
                                         id="orderNo">{{ $order->order_number }}</span>
-                                </div>
+                                </div> --}}
                             </div>
                             <div class="card-body p-0">
                                 <div class="table-responsive table-bordered mb-4">
@@ -155,7 +156,7 @@
                                                         {{ $index + 1 }}
                                                     </td>
 
-                                                    <td class="cart-items01">
+                                                    <td class="cart-items01 text-wrap">
                                                         <div class="d-flex align-items-center">
                                                             <div class="flex-fill">
 

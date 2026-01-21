@@ -1,7 +1,7 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
 import { formatTime, getCountry, getEntryPoint } from "../../app";
-// import { application_reapply } from "./application_reapply";
+
 let application = null;
 let value = null;
 

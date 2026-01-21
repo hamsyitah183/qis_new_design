@@ -104,6 +104,7 @@ Route::prefix('public')
         Route::post('/store_consignment_importer', [ConsignmentApplicationController::class, 'storeConsignmentImporter'])->name('storeImporter');
         Route::get('/get_consignment_certificate/{countryCode}', [ConsignmentApplicationController::class, 'getConsignmentFromCountry']);
         // itemSelect
+        Route::post('/save-permit/{id}', [PermitApplicationController::class, 'reapply']);
 
         // temporary file
         Route::post('/temp-upload', [TempFileController::class, 'upload']);
@@ -199,6 +200,8 @@ Route::prefix('internal')
         // Route::get('/control_panel', [MiscController::class, 'showcontrolpanel'])->name('controlpanel');
         Route::post('/district/entry-point/update', [MiscController::class, 'updateEntry']);
 
+     
+
         // ======================= notifications ===========================
         Route::post('/permit/{id}', [PermitConsignmentController::class, 'accept_permit']);
     });
@@ -258,7 +261,7 @@ Route::middleware(['auth.any'])->group(function () {
 
     Route::get('/permit/generate/{id}', [PermitGenerateController::class, 'generatePermitWord']);
 
-    Route::get('/payment/{id}/{orderNo}/{permitId}/{total}', [PaymentController::class, 'checkout'])
+    Route::get('/payment/{id}/{permitId}/{total}', [PaymentController::class, 'checkout'])
         ->name('payment.checkout')
         ->middleware('signed');
 
@@ -272,10 +275,15 @@ Route::middleware(['auth.any'])->group(function () {
 
     // bounce url
     // Route::get('/paymentUpdate/{kod_transaksi}', [PaymentController::class, 'bounce']);
-    Route::get('/paymentUpdate', [PaymentController::class, 'paymentUpdate']);
+    Route::get('/paymentUpdate/{rn}', [PaymentController::class, 'paymentUpdate']);
 });
 
 // broadcast --dont kacau---
 // Broadcast::routes();
 // Broadcast::routes(['middleware' => ['auth:internal']]);
 // Broadcast::routes(['middleware' => ['auth:internal']]);
+Route::get('/email', function() {
+    return view('email.notify_email', [
+        'title' => 'Test Email'
+    ]);
+});

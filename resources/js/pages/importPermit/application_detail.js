@@ -1,9 +1,9 @@
+import Dropzone from "dropzone";
 import $ from "jquery";
 import Swal from "sweetalert2";
 import { formatTime, getCountry, getEntryPoint } from "../../app";
-import { application_reapply } from "./application_reapply";
-let application = null;
-let value = null;
+
+
 import "dropzone/dist/dropzone.css";
 // Import Select2 module
 import select2 from "select2";
@@ -16,22 +16,16 @@ import "select2/dist/css/select2.min.css";
 
 Dropzone.autoDiscover = false;
 
-// Global state
-let exporterListArray = [];
-let entryName = null;
-let exporter = null;
-let importer = null;
-let impAddrs = null;
-let itemDropzone = null;
-let saveBtn = null;
-let detail = null;
 
-let change = null;
+let itemDropzone = null;
+
 
 let tempItems = [];
 let tempAttachments = [];
 let itemPurpose = null;
 let temporaryItemsAttachment = [];
+let application = null;
+let value = null;
 
 /* -------------------------------
 Get application ID from URL
@@ -867,7 +861,9 @@ function reapply() {
             modalEl.addEventListener(
                 "shown.bs.modal",
                 async () => {
+                    
                     const $modal = $(modalEl);
+                    itemConsigment($modal);
 
                     // Fill inputs
                     $modal.find('#itemValue').val(detail.value);
@@ -938,6 +934,8 @@ function reapply() {
                             Swal.close();
                         }
                     }
+
+                    saveConsignmentAttachment();
                 },
                 { once: true }
             );
@@ -947,100 +945,31 @@ function reapply() {
 }
 
 
+function itemConsigment($modal) {
+    const dropzoneEl = $modal.find("#itemDropzone")[0];
 
+    if (!dropzoneEl) {
+        console.warn("itemDropzone not found");
+        return;
+    }
 
-function itemConsigment() {
-    itemDropzone = new Dropzone("#itemDropzone", {
+    if (dropzoneEl.dropzone) {
+        dropzoneEl.dropzone.destroy();
+    }
+
+    itemDropzone = new Dropzone(dropzoneEl, {
         url: "/",
         autoProcessQueue: false,
-        paramName: "file",
-        maxFilesize: 10, // MB
+        maxFilesize: 10,
         acceptedFiles: ".jpg,.jpeg,.png,.pdf",
         addRemoveLinks: true,
         headers: {
-            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
-                .content,
+            "X-CSRF-TOKEN": document
+                .querySelector('meta[name="csrf-token"]').content,
         },
-        // --- 1. SWAL LOADING BEFORE LOAD (Processing) ---
-        processing: function (file) {
-            Swal.fire({
-                title: "Uploading...",
-                html: "Please wait while your file is being uploaded.",
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                },
-            });
-            groupPreview();
-        },
-        // --- 2. SWAL SUCCESS AFTER LOAD ---
-        success: (file, response) => {
-            Swal.close();
-
-            tempAttachments.push({
-                id: response.id,
-                original_name: response.original_name,
-                temp_name: response.temp_name,
-                temp_path: response.temp_path,
-                mime_type: response.mime_type,
-                size: response.size,
-                type: response.type,
-            });
-
-            file.temp_id = response.id;
-
-            // ✅ Call groupPreview here too
-            groupPreview();
-
-            console.log("temp", tempAttachments);
-            console.log(
-                "Latest uploaded file:",
-                tempAttachments[tempAttachments.length - 1]
-            );
-            console.log("All attachments:", tempAttachments);
-
-            Swal.fire({
-                icon: "success",
-                title: "Upload Successful!",
-                text: `${response.original_name} has been uploaded.`,
-                timer: 3000,
-                showConfirmButton: false,
-            });
-        },
-        // --- 3. SWAL ERROR AFTER LOAD ---
-        error: (file, message, xhr) => {
-            Swal.close();
-            itemDropzone.removeFile(file);
-            Swal.fire({
-                icon: "error",
-                title: "Upload Failed",
-                text:
-                    message.error || "An unknown error occurred during upload.",
-                footer: "Please try again.",
-            });
-            console.error("Dropzone Error:", message);
-        },
-        // --- 4. HANDLE FILE REMOVAL ---
-        removedfile: function (file) {
-            if (file.temp_id) {
-                const indexToRemove = tempAttachments.findIndex(
-                    (a) => a.id === file.temp_id
-                );
-                if (indexToRemove > -1)
-                    tempAttachments.splice(indexToRemove, 1);
-            }
-            const _ref = file.previewElement;
-            if (_ref) _ref.parentNode.removeChild(_ref);
-
-            groupPreview();
-        },
-    });
-
-    // ✅ Run groupPreview every time a file is added (before upload)
-    itemDropzone.on("addedfile", function (file) {
-        groupPreview();
     });
 }
+
 
 function groupPreview() {
     $(document).ready(function () {
@@ -1095,69 +1024,65 @@ function groupPreview() {
 }
 
 function saveConsignmentAttachment() {
-    document.getElementById("saveBtn").addEventListener("click", function (e) {
-        e.preventDefault();
+    $(document)
+        .off("click", "#saveBtn")
+        .on("click", "#saveBtn", function (e) {
+            e.preventDefault();
 
-        console.log("Saving consignment item...");
+            const $modal = $("#addItemModal");
+            const id = $(this).data("id");
 
-        // ✅ Get values (Select2 fields via jQuery)
-        const itemSelectValue = $("#itemSelect").val();
-        const itemSelectText = $("#itemSelect option:selected").text();
-        const itemValue = $("#itemValue").val().trim();
-        const itemQuantity = $("#itemQuantity").val().trim();
-        const itemMeasure = $("#itemMeasure").val();
-        const itemPurpose = $("#itemPurpose").val();
-        const itemUsesValue = $("#itemUses").val();
+            const itemSelectValue = $modal.find("#itemSelect").val();
+            const itemSelectText  = $modal.find("#itemSelect option:selected").text();
+            const itemValue       = $modal.find("#itemValue").val().trim();
+            const itemQuantity    = $modal.find("#itemQuantity").val().trim();
+            const itemMeasure     = $modal.find("#itemMeasure").val();
+            const itemPurpose     = $modal.find("#itemPurpose").val();
+            const itemUsesValue   = $modal.find("#itemUses").val();
 
-        // ✅ Validation
-        if (
-            !itemSelectValue ||
-            !itemValue ||
-            !itemQuantity ||
-            !itemMeasure ||
-            !itemPurpose ||
-            !itemUsesValue
-        ) {
-            Swal.fire({
-                icon: "error",
-                title: "Incomplete Data",
-                text: "Please fill in all required fields before saving.",
+            console.log(
+                id,
+                itemSelectValue,
+                itemSelectText,
+                itemValue,
+                itemQuantity,
+                itemMeasure,
+                itemPurpose,
+                itemUsesValue
+            );
+
+            if (
+                !itemSelectValue ||
+                !itemValue ||
+                !itemQuantity ||
+                !itemMeasure ||
+                !itemPurpose ||
+                !itemUsesValue
+            ) {
+                Swal.fire("Error", "Please fill all required fields", "error");
+                return;
+            }
+
+            const files = itemDropzone?.getAcceptedFiles() || [];
+
+            tempItems.push({
+                id: crypto.randomUUID(),
+                item_id: itemSelectValue,
+                item_name: itemSelectText,
+                value: itemValue,
+                quantity: itemQuantity,
+                measure: itemMeasure,
+                purpose: itemPurpose,
+                uses: itemUsesValue,
+                files,
             });
-            return;
-        }
-
-        // ✅ Get files from Dropzone
-        const files = itemDropzone.getAcceptedFiles();
-        const itemPurposeDescription = $("#itemPurpose option:selected").data("description") || $("#itemPurpose").val();
-
-        // ✅ Build new item
-        const newItem = {
-            id: crypto.randomUUID(),
-            item_id: itemSelectValue,
-            item_name: itemSelectText,
-            value: itemValue,
-            quantity: itemQuantity,
-            measure: itemMeasure,
-            purpose: itemPurposeDescription,
-            uses: itemUsesValue,
-            files: files,
-        };
-
-        // ✅ Add to temporary array
-        tempItems.push(newItem);
-
-        initApplicationDetails()
-
-        resetAddItemModal();
-
-        // ✅ Hide modal
-        const modalEl = document.getElementById("addItemModal");
-        bootstrap.Modal.getInstance(modalEl).hide();
-
-        // ✅ Trigger summary / submit update if needed
-        summarySubmit();
-    });
+            saveapplication(id);
+            resetAddItemModal();
+            bootstrap.Modal.getInstance($modal[0]).hide();
+           
+        });
 }
+
 
 function resetAddItemModal() {
     // Reset plain input fields
@@ -1231,7 +1156,7 @@ function loadUses(itemId, selectedUse = null) {
 /* -------------------------------
     Initializer (shows Swal first)
     -------------------------------- */
-export async function initApplicationDetails() {
+async function initApplicationDetails() {
     Swal.fire({
         title: "Loading...",
         text: "Please wait while we fetch the application details.",
@@ -1259,10 +1184,11 @@ export async function initApplicationDetails() {
     rejectPermit();
     generatePermit();
     pendingPaymentTable();
+    saveConsignmentAttachment();
 
     // application_reapply(application)
     reapply()
-    itemConsigment()
+  
     // reapplyInput()
 
 
@@ -1294,9 +1220,16 @@ export async function initApplicationDetails() {
         updateTotalValue();
     });
 
-    // When checkout button is clicked
+    let checkoutLocked = false;
+
     $(document).on("click", "#checkoutPage", function (e) {
         e.preventDefault();
+
+        if (checkoutLocked) return; // 🚫 stop repeated click
+        checkoutLocked = true;
+
+        const $btn = $(this);
+        $btn.prop("disabled", true).text("Processing...");
 
         const selectedPermits = $(".permit-checkbox:checked")
             .map(function () {
@@ -1306,16 +1239,15 @@ export async function initApplicationDetails() {
 
         if (selectedPermits.length === 0) {
             Swal.fire("Error!", "Choose the permit to continue.", "error");
+            checkoutLocked = false;
+            $btn.prop("disabled", false).text("Checkout");
             return;
         }
 
         Swal.fire({
             title: "Loading...",
-
             allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            },
+            didOpen: () => Swal.showLoading(),
         });
 
         totalPermit = Number(totalPermit).toFixed(2);
@@ -1330,15 +1262,71 @@ export async function initApplicationDetails() {
                 _token: $('meta[name="csrf-token"]').attr("content"),
             },
             success: function (res) {
-                window.location.href = res.url;
+                window.location.href = res.url; // 🔀 redirect
             },
             error: function () {
                 Swal.fire("Error!", "Unable to proceed to checkout.", "error");
+
+                // 🔓 unlock if failed
+                checkoutLocked = false;
+                $btn.prop("disabled", false).text("Checkout");
             },
         });
     });
 
+
 }
+
+function saveapplication(permitId) {
+    const form = document.querySelector("#wizardForm");
+    if (!form) return console.error("Form not found");
+
+    const formData = new FormData(form);
+
+    tempItems.forEach((item, index) => {
+        const { files, ...otherData } = item;
+        formData.append(`items[${index}][data]`, JSON.stringify(otherData));
+
+        if (files && files.length > 0) {
+            files.forEach((file) => {
+                formData.append("files[]", file);
+                formData.append("file_item_index[]", index);
+            });
+        }
+    });
+
+    Swal.fire({
+        title: "Submitting...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+    });
+
+    $.ajax({
+        url: "/public/save-permit/" + permitId,
+        type: "POST",
+        data: formData,
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        processData: false,
+        contentType: false,
+        success: function (response) {
+            Swal.fire({
+                icon: "success",
+                title: "Application Submitted!",
+                timer: 1500,
+                showConfirmButton: false,
+            });
+
+           
+            window.location.reload();
+        },
+        error: function (xhr) {
+            Swal.fire("Error", "Failed to save application", "error");
+        },
+    });
+}
+
 
 /* -------------------------------
     Run initializer

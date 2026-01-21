@@ -113,16 +113,16 @@
                                 @include('pages.public.view_permit.step4')
                             @endif
 
-                            @php
+                            {{-- @php
                                 $allPending = $application->consignmentPermits->every(
                                     fn($permit) => $permit->status === 'pending for payment',
                                 );
 
                                 $value = $allPending ? 1 : 0;
 
-                            @endphp
+                            @endphp --}}
 
-                            @if (authUser()['type'] == 'public' && $value )
+                            @if (authUser()['type'] == 'public' )
                                 @include('pages.public.view_permit.step5')
                             @endif
 
