@@ -12,10 +12,14 @@ use App\Models\ConsignmentCondition;
 use App\Models\ConsignmentImporter;
 use App\Models\PublicCode;
 use App\Models\Country;
+use App\Models\InternalUser;
+use App\Models\PublicUser;
+use App\Notifications\ApplicationNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -111,7 +115,8 @@ class ConsignmentApplicationController extends Controller
                     // importer = Partner (id)
                     'importer_id' => $importerPartner['id'] ?? null,
                     'importer_detail' => $importerPartner,
-                    'status' => $isDraft ? 'Draft' : 'Submitted',
+                    // Status flow: Draft or Application Submitted
+                    'status' => $isDraft ? 'Draft' : 'Application Submitted',
                     'importer_verify' => $importer_verify,
                 ]);
 
@@ -124,7 +129,8 @@ class ConsignmentApplicationController extends Controller
 
             } else {
                 // Create new application
-                $status = $isDraft ? 'Draft' : ((int) ($permit['applCate'] ?? 0) === 1 ? 'Awaiting Approval' : 'Submitted');
+                // Status flow: Draft or Application Submitted
+                $status = $isDraft ? 'Draft' : 'Application Submitted';
 
                 $isNewApplication = true;
                 $application = ConsignmentApplication::create([
@@ -239,6 +245,35 @@ class ConsignmentApplicationController extends Controller
 
             DB::commit();
 
+            // -----------------------------
+            // Send Notifications
+            // -----------------------------
+            $users = InternalUser::role(['admin', 'clerk'])->get();
+            $notificationUrl = url('/view_consignment/' . $application->application_id);
+            Notification::send($users, new ApplicationNotification($isDraft ? ($isNewApplication ? 'New consignment certificate draft created' : 'Consignment certificate draft updated') : ($isNewApplication ? 'New consignment certificate application submitted' : 'Consignment certificate application updated'), Auth::user()->fullname ?? 'System', $notificationUrl));
+            
+            $publicUser = auth()->guard('public')->user();
+            if ($publicUser) {
+                $publicUser->notify(new ApplicationNotification($isDraft ? 'Your consignment application with id ' . $application->application_id . ' is saved as draft' : 'Your consignment application with id ' . $application->application_id . ' is submitted', 'QIS', $notificationUrl));
+            }
+
+            if ($application->category_application == 1 && !$isDraft) {
+                // Get the ConsignmentImporter and then the PublicUser who registered it
+                $importer = ConsignmentImporter::find($application->importer_id);
+                if ($importer && $importer->registered_by) {
+                    $company = PublicUser::where('uuid', $importer->registered_by)->first();
+                    if ($company) {
+                        try {
+                            event(new InternalUserAdminEvent('Consignment certificate application requires company approval for ' . ($importer->name ?? 'Unknown Importer')));
+                        } catch (\Exception $e) {
+                            Log::warning('Pusher connection failed but continuing company approval notification: ' . $e->getMessage());
+                        }
+
+                        $company->notify(new ApplicationNotification('A consignment certificate application requires your approval', 'System', $notificationUrl));
+                    }
+                }
+            }
+
             return response()->json([
                 'status' => 'success',
                 'message' => $isDraft ? 'Draft saved successfully' : 'Application submitted successfully',
@@ -330,13 +365,28 @@ class ConsignmentApplicationController extends Controller
     }
     public function deleteApplication($id)
     {
-        $user = auth()->user();
+        // Check both internal and public user
+        $internalUser = auth()->user();
+        $publicUser = auth()->guard('public')->user();
+        $user = $internalUser ?? $publicUser;
 
         try {
+            // Security Check - user must be authenticated
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Unauthorized action. Please log in.'
+                ], 401);
+            }
+
             // Find application
             $application = ConsignmentApplication::where('application_id', $id)->firstOrFail();
+            
+            // Store values before deletion
+            $applicationId = $application->application_id;
+            $userName = $user->fullname ?? 'Unknown User';
 
-            // Security Check
+            // Security Check - user must own the application
             if ($application->user_id !== $user->uuid && $application->importer_id !== $user->uuid) {
                 return response()->json([
                     'status' => 'error',
@@ -370,6 +420,26 @@ class ConsignmentApplicationController extends Controller
             $application->delete();
 
             DB::commit();
+
+            // Sends Notifications for deletion
+            $notificationUrl = url('/view_consignment/' . $applicationId);
+            
+            // Notify internal users (admins/clerks)
+            try {
+                $users = InternalUser::role(['admin', 'clerk'])->get();
+                Notification::send($users, new ApplicationNotification('Consignment certificate application deleted by ' . $userName, $userName, $notificationUrl));
+            } catch (\Exception $e) {
+                Log::warning('Failed to send notification to internal users: ' . $e->getMessage());
+            }
+            
+            // Notify the public user who deleted the application
+            if ($publicUser) {
+                try {
+                    $publicUser->notify(new ApplicationNotification('Your consignment application with id ' . $applicationId . ' has been successfully deleted', 'QIS', $notificationUrl));
+                } catch (\Exception $e) {
+                    Log::warning('Failed to send notification to public user: ' . $e->getMessage());
+                }
+            }
 
             return response()->json([
                 'status' => 'success',

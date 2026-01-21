@@ -129,8 +129,8 @@
                     <li class="slide__category"><span class="category-name">Application</span></li>
 
                     @php
-                        // Check if the route name contains "application" or "inspection"
-                        $isApplicationActive = Str::contains($currentRoute, ['application', 'inspection']);
+                        // Check if the route name contains "application", "inspection", or "consignment"
+                        $isApplicationActive = Str::contains($currentRoute, ['application', 'inspection', 'consignment']);
                     @endphp
 
                     <li class="slide has-sub {{ $isApplicationActive ? 'open active' : '' }}">
@@ -152,6 +152,12 @@
                             <li class="slide {{ $currentRoute === 'internal.inspection.list' ? 'active' : '' }}">
                                 <a href="{{ route('internal.inspection.list') }}" class="side-menu__item">
                                     Inspection Certificate List
+                                </a>
+                            </li>
+
+                            <li class="slide {{ $currentRoute === 'internal.consignment.list' ? 'active' : '' }}">
+                                <a href="{{ route('internal.consignment.list') }}" class="side-menu__item">
+                                    Consignment Certificate List
                                 </a>
                             </li>
 
