@@ -201,14 +201,7 @@ class PaymentController extends Controller
 
         if ($paymentData['transaction_status'] == 'SUCCESSFUL') {
             $order->status = 'payment success';
-            $order->seller_ref = $paymentData['seller_ref'];
-            $order->fpx_seller_reference = $paymentData['fpx_seller_reference'];
-            $order->name = $paymentData['name'];
-            $order->email = $paymentData['email'];
-            $order->phone = $paymentData['phone'];
-            $order->payment_amount = $paymentData['payment_amount'];
-            $order->transaction_data = $paymentData['transaction_data'];
-            $order->transaction_status = $paymentData['transaction_status'];
+          
 
             foreach ($permits as $permit) {
                 $permitData = IpConsignmentPermit::where('id', $permit['permit_id'])->first();
@@ -218,8 +211,18 @@ class PaymentController extends Controller
                 $permitData->save();
             }
 
-            $order->save();
+            
         }
+
+        $order->seller_ref = $paymentData['seller_ref'];
+        $order->fpx_seller_reference = $paymentData['fpx_seller_reference'];
+        $order->name = $paymentData['name'];
+        $order->email = $paymentData['email'];
+        $order->phone = $paymentData['phone'];
+        $order->payment_amount = $paymentData['payment_amount'];
+        $order->transaction_data = $paymentData['transaction_data'];
+        $order->transaction_status = $paymentData['transaction_status'];
+        $order->save();
 
         return view('pages.paymentStatus', compact('title', 'kodTransaksi', 'paymentData'));
     }
