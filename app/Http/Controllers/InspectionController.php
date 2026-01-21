@@ -38,7 +38,7 @@ class InspectionController extends Controller
         $user = authUser()['user']; // authenticated user object
 
         // Fetch application and eager load relationships
-        $application =InspectionApplication::where('application_id', $id)
+        $application = InspectionApplication::where('application_id', $id)
             ->with(['user', 'importer', 'exporter', 'entryPoint.districtCode', 'inspectionItems.attachments'])
             ->firstOrFail();
 
@@ -69,15 +69,6 @@ class InspectionController extends Controller
         );
     }
 
-    function getInspectionSelf($id = null)
-    {
-        $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
-        $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
-        $country = Country::where('is_del', false)->get();
-
-        // $application = InspectionApplication::where('application_id', $id)->first();
-        return view('pages.public.inspection_self', compact('pubmeasure', 'pubpurpose', 'country', 'id'));
-    }
     function viewInspection($id = null)
     {
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
@@ -86,6 +77,16 @@ class InspectionController extends Controller
 
         $application = InspectionApplication::where('application_id', $id)->first();
         return view('pages.public.view_inspection', compact('pubmeasure', 'pubpurpose', 'country', 'id', 'application'));
+    }
+
+    function getInspectionSelf($id = null)
+    {
+        $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
+        $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
+        $country = Country::where('is_del', false)->get();
+
+        // $application = InspectionApplication::where('application_id', $id)->first();
+        return view('pages.public.inspection_self', compact('pubmeasure', 'pubpurpose', 'country', 'id'));
     }
 
     function getInspectionOthers($id = null)
@@ -306,7 +307,7 @@ class InspectionController extends Controller
                 } else {
                     // Use internal route for internal users, public route for public users
                     if ($type === 'internal') {
-                        $url = route('internal.viewInspectionApplication', ['id' => $row->application_id]);
+                        $url = route('viewInspectionApplication', ['id' => $row->application_id]);
                     } else {
                         $url = route('public.viewInspectionApplication', ['id' => $row->application_id]);
                     }
@@ -454,3 +455,4 @@ class InspectionController extends Controller
         ]);
     }
 }
+

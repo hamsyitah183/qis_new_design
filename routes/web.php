@@ -228,7 +228,7 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/consignment_application/{id}/data', [ConsignmentController::class, 'getApplicationDetails']);
     Route::get('/consignment/list/data', [ConsignmentController::class, 'getallconsignmentlist'])->name('consignment.data');
 
-    Route::get('/view_inspection_certificates_application_self/{id?}', [InspectionController::class, 'viewInspection']);
+    Route::get('/view_inspection_certificates/{id}', [InspectionController::class, 'viewInspection'])->name('viewInspectionApplication');
     Route::get('/inspection_application/{id}/data', [InspectionController::class, 'getApplicationDetails']);
 
     Route::get('/application/permit/{id}/data', [ApplicationController::class, 'get_application_permit']);
