@@ -78,6 +78,15 @@ class InspectionController extends Controller
         // $application = InspectionApplication::where('application_id', $id)->first();
         return view('pages.public.inspection_self', compact('pubmeasure', 'pubpurpose', 'country', 'id'));
     }
+    function viewInspection($id = null)
+    {
+        $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
+        $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
+        $country = Country::where('is_del', false)->get();
+
+        $application = InspectionApplication::where('application_id', $id)->first();
+        return view('pages.public.view_inspection', compact('pubmeasure', 'pubpurpose', 'country', 'id', 'application'));
+    }
 
     function getInspectionOthers($id = null)
     {
