@@ -3,9 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\InspectionLog;
+use App\Traits\HasInspectionActivityLog;
 
 class InspectionApplication extends Model
 {
+    use HasInspectionActivityLog;
+
     protected $table = 'inspection_applications';
     protected $fillable = [
         'application_id',
@@ -24,6 +28,7 @@ class InspectionApplication extends Model
         'eta' => 'date',
         'importer_detail' => 'array',
     ];
+
 
     public function user()
     {
@@ -48,5 +53,15 @@ class InspectionApplication extends Model
     public function inspectionItems()
     {
         return $this->hasMany(InspectionItem::class, 'application_id', 'id');
+    }
+
+    public function activity_log()
+    {
+        return $this->hasMany(InspectionLog::class, 'application_id', 'application_id');
+    }
+
+    public function latestLog()
+    {
+        return $this->hasOne(InspectionLog::class, 'application_id', 'application_id')->latestOfMany();
     }
 }
