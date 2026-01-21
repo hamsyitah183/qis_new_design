@@ -119,12 +119,12 @@ Route::prefix('public')
         Route::post('/save-consignment', [ConsignmentApplicationController::class, 'saveApplication'])->name('savConsignment');
         Route::delete('/consignment_application/delete/{id}', [ConsignmentApplicationController::class, 'deleteApplication'])->name('consignment.delete');
 
-       
-
         Route::get('/inspection_certificates_application', [InspectionController::class, 'getInspection']);
         Route::get('/inspection_certificates_list', [InspectionController::class, 'showAllInspectionList'])->name('showallinspectionlist');
         Route::get('/view_inspection_certificate/{id}', [InspectionController::class, 'viewApplication'])->name('viewInspectionApplication');
         Route::get('/inspection_application_data/{id}', [InspectionController::class, 'getApplicationData'])->name('inspection.app.data');
+        Route::get('/inspection_certificates_application_self/{id?}', [InspectionController::class, 'getInspectionSelf'])->name('inspectionApplicationSelf');
+        Route::get('/inspection_certificates_application_others/{id?}', [InspectionController::class, 'getInspectionOthers'])->name('inspectionApplicationOthers');
     });
 
 Route::prefix('internal')
@@ -220,17 +220,15 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/application/review/list/data', [ApplicationController::class, 'getAllReviewapplicationList'])->name('application.review.data');
     Route::get('/inspection_certificates_list/data', [InspectionController::class, 'getAllInspectionList'])->name('inspection.list.data');
 
-   
-
     Route::get('/application/{id}/data', [ApplicationController::class, 'getApplicationDetails']);
     Route::get('/view_application/{uuid}', [ApplicationController::class, 'viewapplication'])->name('viewApplication');
     Route::get('/edit_application/{uuid}', [ApplicationController::class, 'editApplication'])->name('editApplication');
 
     Route::get('/view_consignment/{uuid}', [ConsignmentApplicationController::class, 'viewapplication']); // Removed name to avoid confusion, it's now in the group
     Route::get('/consignment_application/{id}/data', [ConsignmentController::class, 'getApplicationDetails']);
-     Route::get('/consignment/list/data', [ConsignmentController::class, 'getallconsignmentlist'])->name('consignment.data');
-    
-    Route::get('/inspection_certificates_application_self/{id?}', [InspectionController::class, 'getInspectionSelf'])->name('inspectionApplicationSelf');
+    Route::get('/consignment/list/data', [ConsignmentController::class, 'getallconsignmentlist'])->name('consignment.data');
+
+    Route::get('/view_inspection_certificates_application_self/{id?}', [InspectionController::class, 'getInspectionSelf'])->name('inspectionApplicationSelf');
     Route::get('/inspection_application/{id}/data', [InspectionController::class, 'getApplicationDetails']);
 
     Route::get('/application/permit/{id}/data', [ApplicationController::class, 'get_application_permit']);

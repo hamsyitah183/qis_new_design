@@ -75,8 +75,8 @@ class InspectionController extends Controller
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();
 
-        $application = InspectionApplication::where('application_id', $id)->first();
-        return view('pages.public.inspection_self', compact('pubmeasure', 'pubpurpose', 'country', 'id', 'application'));
+        // $application = InspectionApplication::where('application_id', $id)->first();
+        return view('pages.public.inspection_self', compact('pubmeasure', 'pubpurpose', 'country', 'id'));
     }
 
     function getInspectionOthers($id = null)
