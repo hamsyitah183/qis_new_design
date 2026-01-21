@@ -17,6 +17,7 @@ use App\Models\ImportPermitLog;
 use App\Models\IpCondition;
 use App\Models\IpConsignmentAttachment;
 use App\Models\IpConsignmentPermit;
+use App\Models\InternalUser;
 use App\Models\PublicUser;
 use App\Models\TempAttachment;
 use App\Notifications\ApplicationNotification;
@@ -36,6 +37,14 @@ class ConsignmentController extends Controller
         return view('pages.public.consignment_list');
     }
 
+    /**
+     * Show consignment certificate list for internal users (admin)
+     */
+    public function showInternalConsignmentList()
+    {
+        return view('pages.internal.consignment_list');
+    }
+
     public function getallconsignmentlist()
     {
         $userData = authUser();
@@ -52,7 +61,7 @@ class ConsignmentController extends Controller
             });
         }
 
-        return DataTables::eloquent($query)
+        $datatable = DataTables::eloquent($query)
             ->addIndexColumn()
             ->addColumn('category_application', function ($row) {
                 $cat = (int) $row->category_application;
@@ -83,6 +92,59 @@ class ConsignmentController extends Controller
             ->addColumn('category_application', function ($row) {
                 return $category = $row->category_application == 1 ? 'Others' : 'Self';
 
+            })
+            ->addColumn('status', function ($row) {
+                $status = strtolower($row->status ?? '');
+                $originalStatus = $row->status ?? '';
+                $statusLabel = '';
+                $badgeClass = 'bg-secondary';
+                $style = '';
+
+                // Application status flow based on flowchart:
+                // 1. Application Submitted → application submitted
+                // 2. Clerk Accept → clerk review in progress
+                // 3. Officer Review → clerk verified / clerk rejected
+                // 4. After payment → officer verified / officer rejected
+                // 5. Final → Fully Processed
+    
+                if (str_contains($status, 'draft')) {
+                    $badgeClass = 'bg-purple';
+                    $style = 'style="background-color:rgb(0, 102, 255) !important;"';
+                    $statusLabel = 'Draft';
+                } elseif (str_contains($status, 'application submitted') || (str_contains($status, 'submitted') && !str_contains($status, 'clerk') && !str_contains($status, 'officer'))) {
+                    $badgeClass = 'bg-warning';
+                    $style = 'style="background-color: #ffc658 !important;"';
+                    $statusLabel = 'Application Submitted';
+                } elseif (str_contains($status, 'clerk review in progress') || str_contains($status, 'clerk review in-progress')) {
+                    $badgeClass = 'bg-warning';
+                    $style = 'style="background-color: #9e5cf7 !important;"';
+                    $statusLabel = 'Clerk Review In-Progress';
+                } elseif (str_contains($status, 'clerk verified')) {
+                    $badgeClass = 'bg-info';
+                    $style = 'style="background-color: #5cf79e !important;"';
+                    $statusLabel = 'Clerk Verified';
+                } elseif (str_contains($status, 'clerk rejected')) {
+                    $badgeClass = 'bg-danger';
+                    $style = 'style="background-color: #dc3545 !important;"';
+                    $statusLabel = 'Clerk Rejected';
+                } elseif (str_contains($status, 'officer verified')) {
+                    $badgeClass = 'bg-success';
+                    $style = 'style="background-color: #5cf79e !important;"';
+                    $statusLabel = 'Officer Verified';
+                } elseif (str_contains($status, 'officer rejected')) {
+                    $badgeClass = 'bg-danger';
+                    $style = 'style="background-color: #dc3545 !important;"';
+                    $statusLabel = 'Officer Rejected';
+                } elseif (str_contains($status, 'fully processed')) {
+                    $badgeClass = 'bg-success';
+                    $style = 'style="background-color: #5cf79e !important;"';
+                    $statusLabel = 'Fully Processed';
+                } else {
+                    // Fallback for any other statuses
+                    $statusLabel = ucfirst($originalStatus);
+                }
+
+                return '<span class="badge ' . $badgeClass . '" ' . $style . '>' . $statusLabel . '</span>';
             })
             ->addColumn('importer_verify', function ($row) {
                 $status = ucfirst($row->status);
@@ -147,30 +209,61 @@ class ConsignmentController extends Controller
 
                 return $boxesHtml;
             })
-            ->addColumn('created_at', fn($row) => $row->created_at ? $row->created_at->format('Y-m-d H:i') : '-')
-            ->addColumn('action', function ($row) {
-                $status = strtolower($row->status);
-                // Draft/Pending -> Edit (Yellow Pencil)
-                // Approved/Rejected -> View (Blue Eye)
-    
-                $isEditable = ($status === 'draft' || $status === 'pending' || $status === 'submitted');
-                $url = $isEditable
-                    ? route('editApplication', ['uuid' => $row->application_id])
-                    : route('public.viewApplication', ['uuid' => $row->application_id]);
+            ->addColumn('created_at', fn($row) => $row->created_at ? $row->created_at->format('Y-m-d H:i') : '-');
 
-                $icon = $isEditable ? 'ti ti-edit' : 'ti ti-eye';
-                $btnClass = $isEditable ? 'btn-info' : 'btn-primary'; // Pencil usually info/warning, Eye usually primary/success
-    
-                $view = '<div class="d-flex align-items-center gap-2">
-                            <a class="btn btn-sm ' . $btnClass . ' viewConsignment" href="' . $url . '">
-                                <i class="' . $icon . '"></i>
-                            </a>
-                            <button class="btn btn-sm btn-danger delete-consignment" data-id="' . $row->application_id . '">
+        // Add submitted_by column for internal users
+        if ($type === 'internal') {
+            $datatable->addColumn('submitted_by', fn($row) => $row->user->fullname ?? '-');
+        }
+
+        return $datatable->addColumn('action', function ($row) use ($type) {
+            $status = strtolower($row->status ?? '');
+            $url = url('/view_consignment/' . $row->application_id);
+
+            $buttons = '<div class="d-flex align-items-center gap-2">
+                            <a class="btn btn-sm btn-primary me-1 viewConsignment" href="' . $url . '" title="View" data-bs-toggle="tooltip" data-bs-placement="top">
+                                <i class="ti ti-eye"></i>
+                            </a>';
+
+            // Extra admin controls for internal users
+            if ($type === 'internal') {
+                // Show approve/reject buttons based on status flow:
+                // - Application Submitted → Clerk can accept (moves to Clerk Review In-Progress)
+                // - Clerk Review In-Progress → Clerk can verify/reject (moves to Clerk Verified/Rejected)
+                // - Clerk Verified → Officer can verify/reject (moves to Officer Verified/Rejected)
+                if (str_contains($status, 'application submitted') || (str_contains($status, 'submitted') && !str_contains($status, 'clerk') && !str_contains($status, 'officer'))) {
+                    // Clerk can accept application
+                    $buttons .= '<button class="btn btn-sm btn-success me-1 consignment-approve" data-id="' . $row->application_id . '" title="Accept (Clerk Review)" data-bs-toggle="tooltip" data-bs-placement="top">
+                                        <i class="ti ti-check"></i>
+                                     </button>';
+                    $buttons .= '<button class="btn btn-sm btn-warning me-1 consignment-reject" data-id="' . $row->application_id . '" title="Reject" data-bs-toggle="tooltip" data-bs-placement="top">
+                                        <i class="ti ti-x"></i>
+                                     </button>';
+                } elseif (str_contains($status, 'clerk review in progress') || str_contains($status, 'clerk review in-progress')) {
+                    // Clerk can verify/reject
+                    $buttons .= '<button class="btn btn-sm btn-success me-1 consignment-approve" data-id="' . $row->application_id . '" title="Verify (Clerk)" data-bs-toggle="tooltip" data-bs-placement="top">
+                                        <i class="ti ti-check"></i>
+                                     </button>';
+                    $buttons .= '<button class="btn btn-sm btn-warning me-1 consignment-reject" data-id="' . $row->application_id . '" title="Reject (Clerk)" data-bs-toggle="tooltip" data-bs-placement="top">
+                                        <i class="ti ti-x"></i>
+                                     </button>';
+                } elseif (str_contains($status, 'clerk verified')) {
+                    // Officer can verify/reject
+                    $buttons .= '<button class="btn btn-sm btn-success me-1 consignment-approve" data-id="' . $row->application_id . '" title="Verify (Officer)" data-bs-toggle="tooltip" data-bs-placement="top">
+                                        <i class="ti ti-check"></i>
+                                     </button>';
+                    $buttons .= '<button class="btn btn-sm btn-warning me-1 consignment-reject" data-id="' . $row->application_id . '" title="Reject (Officer)" data-bs-toggle="tooltip" data-bs-placement="top">
+                                        <i class="ti ti-x"></i>
+                                     </button>';
+                }
+            }
+
+            $buttons .= '<button class="btn btn-sm btn-danger delete-consignment" data-id="' . $row->application_id . '" title="Delete" data-bs-toggle="tooltip" data-bs-placement="top">
                                 <i class="ti ti-trash"></i>
-                            </button>
+                             </button>
                          </div>';
-                return $view;
-            })
+            return $buttons;
+        })
             ->rawColumns(['action', 'permit_status', 'category_application', 'status'])
             ->make(true);
     }
@@ -217,6 +310,194 @@ class ConsignmentController extends Controller
             ],
             400,
         );
+    }
+
+    /**
+     * Update consignment application status following the status flow:
+     * 1. Application Submitted → Clerk accepts → Clerk Review In-Progress
+     * 2. Clerk Review In-Progress → Clerk verifies → Clerk Verified / Clerk Rejected
+     * 3. Clerk Verified → Officer verifies → Officer Verified / Officer Rejected
+     * 4. Officer Verified → Fully Processed (handled separately)
+     */
+    public function updateStatus($id, Request $request)
+    {
+        try {
+            $action = $request->input('status'); // 'Approved' or 'Rejected'
+
+            if (!in_array($action, ['Approved', 'Rejected'], true)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid status value.',
+                ], 422);
+            }
+
+            $application = ConsignmentApplication::where('application_id', $id)->firstOrFail();
+            $currentStatus = strtolower($application->status ?? '');
+            $isApproved = $action === 'Approved';
+            $newStatus = '';
+            $actionLabel = '';
+
+            // Determine new status based on current status and action
+            if (str_contains($currentStatus, 'application submitted') || (str_contains($currentStatus, 'submitted') && !str_contains($currentStatus, 'clerk') && !str_contains($currentStatus, 'officer'))) {
+                // Step 1: Application Submitted → Clerk accepts → Clerk Review In-Progress
+                if ($isApproved) {
+                    $newStatus = 'Clerk Review In-Progress';
+                    $actionLabel = 'Application accepted by clerk';
+                } else {
+                    $newStatus = 'Clerk Rejected';
+                    $actionLabel = 'Application rejected by clerk';
+                }
+            } elseif (str_contains($currentStatus, 'clerk review in progress') || str_contains($currentStatus, 'clerk review in-progress')) {
+                // Step 2: Clerk Review In-Progress → Clerk verifies → Clerk Verified / Clerk Rejected
+                if ($isApproved) {
+                    $newStatus = 'Clerk Verified';
+                    $actionLabel = 'Application verified by clerk';
+                } else {
+                    $newStatus = 'Clerk Rejected';
+                    $actionLabel = 'Application rejected by clerk';
+                }
+            } elseif (str_contains($currentStatus, 'clerk verified')) {
+                // Step 3: Clerk Verified → Officer verifies → Officer Verified / Officer Rejected
+                if ($isApproved) {
+                    $newStatus = 'Officer Verified';
+                    $actionLabel = 'Application verified by officer';
+                } else {
+                    $newStatus = 'Officer Rejected';
+                    $actionLabel = 'Application rejected by officer';
+                }
+            } else {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Cannot update status from current state: ' . $application->status,
+                ], 422);
+            }
+
+            $application->status = $newStatus;
+            $application->save();
+
+            // Log activity (wrap in try-catch to prevent breaking the response)
+            try {
+                $application->logActivity(
+                    action: $newStatus,
+                    remark: $actionLabel . ' by ' . authUser()['user']->fullname . ($request->input('reason') ? ' - ' . $request->input('reason') : ''),
+                    status: $newStatus
+                );
+            } catch (\Exception $e) {
+                \Log::warning('Failed to log activity for consignment application: ' . $e->getMessage());
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => $actionLabel . ' successfully.',
+            ], 200);
+        } catch (\Exception $e) {
+            \Log::error('Error updating consignment status: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to update status: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete a consignment application and its related data (internal only).
+     */
+    public function deleteApplication($id)
+    {
+        try {
+            $userData = authUser();
+            $type = $userData['type'];
+            $user = $userData['user'];
+
+            // Only internal users can delete through this controller
+            if ($type !== 'internal') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Unauthorized to delete this application.',
+                ], 403);
+            }
+
+            $application = ConsignmentApplication::where('application_id', $id)->firstOrFail();
+            $applicationId = $application->application_id;
+            $userName = $user->fullname ?? 'Unknown User';
+
+            DB::beginTransaction();
+
+            // 1. Log activity before deletion (if supported by the model/trait)
+            try {
+                if (method_exists($application, 'logActivity')) {
+                    $application->logActivity(
+                        action: 'Deleted',
+                        remark: 'Consignment application deleted by ' . $userName,
+                        status: 'Deleted'
+                    );
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Failed to log deletion activity: ' . $e->getMessage());
+            }
+
+            // 2. Delete attachments from storage
+            $permits = $application->consignmentPermits()->with('attachments')->get();
+            foreach ($permits as $permit) {
+                foreach ($permit->attachments as $attachment) {
+                    try {
+                        if ($attachment->file_path) {
+                            $path = str_replace('/storage/', '', $attachment->file_path);
+                            if (Storage::disk('public')->exists($path)) {
+                                Storage::disk('public')->delete($path);
+                            }
+                        }
+                        $attachment->delete();
+                    } catch (\Exception $e) {
+                        \Log::warning('Failed to delete attachment: ' . $e->getMessage());
+                    }
+                }
+                $permit->delete();
+            }
+
+            // 3. Delete application
+            $application->delete();
+
+            DB::commit();
+
+            // 4. Send Notifications for deletion
+            $notificationUrl = url('/view_consignment/' . $applicationId);
+
+            // Notify internal users (admins/clerks)
+            try {
+                $users = InternalUser::role(['admin', 'clerk'])->get();
+                Notification::send($users, new ApplicationNotification('Consignment certificate application deleted by ' . $userName, $userName, $notificationUrl));
+            } catch (\Exception $e) {
+                \Log::warning('Failed to send notification to internal users: ' . $e->getMessage());
+            }
+
+            // Notify the public user who owned the application
+            try {
+                // Fetch owner before sending (we still have application properties in memory even if deleted from DB)
+                $ownerUuid = $application->user_id;
+                $owner = PublicUser::where('uuid', $ownerUuid)->first();
+                if ($owner) {
+                    $owner->notify(new ApplicationNotification('Your consignment application with id ' . $applicationId . ' has been deleted by an administrator', 'QIS', $notificationUrl));
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Failed to send notification to owner: ' . $e->getMessage());
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Consignment application deleted successfully.',
+            ], 200);
+
+        } catch (\Exception $e) {
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+            \Log::error('Error deleting consignment application: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to delete application: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }
 
