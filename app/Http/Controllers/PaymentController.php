@@ -51,7 +51,7 @@ class PaymentController extends Controller
                 ->map(function ($permit) use ($amount) {
                     return [
                         'permit_id' => $permit->id,
-                        'permit_no' => $permit->permit_no,
+                        'permit_number' => $permit->permit_number,
                         'item_name' => $permit->consignment_detail['item_name'] ?? null,
                         'status' => $permit->status,
                         'amount' => number_format($amount, 2, '.', ''),

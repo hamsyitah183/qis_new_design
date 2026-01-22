@@ -9,6 +9,7 @@ use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\ConsignmentController;
 use App\Http\Controllers\ConsignmentApplicationController;
 use App\Http\Controllers\InspectionController;
+use App\Http\Controllers\ApplicationPaymentController;
 
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PermitGenerateController;
@@ -275,6 +276,12 @@ Route::middleware(['auth.any'])->group(function () {
     Route::post('/payment', [PaymentController::class, 'payment']);
 
     Route::post('/payment/cancel', [PaymentController::class, 'cancelPayment']);
+
+
+    // VIEW PAYMENT
+    Route::get('/order/list', [ApplicationPaymentController::class, 'getView']);
+    Route::get('/order/list/data', [ApplicationPaymentController::class, 'getAllOrderList']);
+    Route::get('/order/{order_number}', [ApplicationPaymentController::class, 'orderDetails']);
 
     // Route::post('/')
 
