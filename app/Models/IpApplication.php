@@ -19,9 +19,16 @@ class IpApplication extends Model
         'date_importer_verify' => 'datetime',
     ];
 
-    protected $attributes = [
-        'application_type' => 'permit', 
-    ];
+    // protected $attributes = [
+    //     'application_type' => 'permit',
+    // ];
+
+    protected static function booted()
+    {
+        static::creating(function ($application) {
+            $application->application_type = 'Import Permit';
+        });
+    }
 
     /*
      |--------------------------------------------------------------------------
@@ -64,5 +71,14 @@ class IpApplication extends Model
     public function latestLog()
     {
         return $this->hasOne(ImportPermitLog::class, 'application_id', 'application_id')->latestOfMany();
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(
+            Order::class,
+            'application_id', // orders.application_id
+            'application_id', // ip_application.application_id
+        )->where('application_type', 'Import Permit');
     }
 }

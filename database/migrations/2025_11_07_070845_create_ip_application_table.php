@@ -33,7 +33,8 @@ return new class extends Migration
             $table->foreign('importer_id')->references('uuid')->on('public_users')->onDelete('cascade');
             $table->foreign('exporter_id')->references('id')->on('exporter')->onDelete('cascade');
 
-            $table->string('application_type')->nullable();
+            $table->string('application_type')->default('Import Permit');
+
         });
     }
 

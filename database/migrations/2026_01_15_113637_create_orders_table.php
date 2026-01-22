@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,9 +12,16 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
+
+            $table->string('application_id')->index();
+            $table->string('application_type')->index();
+            $table->uuid('public_user_uuid')->index();
+
+
             $table->string('order_number')->nullable();
             $table->string('status')->nullable();
             $table->json('order_details')->nullable();
+            
             $table->string('seller_ref')->nullable();
             $table->string('fpx_seller_reference')->nullable();
             $table->string('name')->nullable();
@@ -24,6 +30,7 @@ return new class extends Migration
             $table->string('payment_amount')->nullable();
             $table->string('transaction_data')->nullable();
             $table->string('transaction_status')->nullable();
+            $table->string('kod_transaksi')->nullable();
             $table->timestamps();
         });
     }

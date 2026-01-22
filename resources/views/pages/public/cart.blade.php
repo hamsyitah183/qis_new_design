@@ -38,9 +38,9 @@
             <input type="hidden" name="no_phone" value="{{ authUser()['user']->phone_number }}">
    
             <input type="hidden" name="amount" value="{{ $total }}">
-            <input type="hidden" name="application_type" value="import_permit">
+            <input type="hidden" name="application_type" value="{{ $application->application_type }}">
             <input type="hidden" name="application_id" value = "{{ $application->application_id }}">
-      
+            <input type="hidden" name ="user_id" value = "{{ authUser()['user']->uuid }}">
 
 
             <div class="row">

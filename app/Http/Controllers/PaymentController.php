@@ -6,6 +6,7 @@ use App\Models\IpApplication;
 use App\Models\IpConsignmentPermit;
 use App\Models\Order;
 use App\Models\PaymentMethod;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\URL;
@@ -24,39 +25,47 @@ class PaymentController extends Controller
 
         $permits = IpConsignmentPermit::where('application_id', $id)->whereIn('id', $permitIds)->where('status', 'pending for payment')->get();
 
+        // dd($permits);
         if ($permits->isEmpty()) {
             abort(404, 'No permits found');
         }
+
+        $amount = 30;
 
         $jsonData = [
             'application' => [
                 'id' => $application->id,
                 'application_id' => $application->application_id,
                 'status' => $application->status,
+                'application_type' => $application->application_type
             ],
+
             'user' => [
                 'uuid' => $application->user->uuid,
                 'fullname' => $application->user->fullname,
                 'email' => $application->user->email,
                 'phone_number' => $application->user->phone_number,
             ],
+
             'permits' => $permits
-                ->map(
-                    fn($permit) => [
+                ->map(function ($permit) use ($amount) {
+                    return [
                         'permit_id' => $permit->id,
                         'permit_no' => $permit->permit_no,
-                        'item_name' => $permit->item_name,
+                        'item_name' => $permit->consignment_detail['item_name'] ?? null,
                         'status' => $permit->status,
-                        'amount' => number_format($permit->amount, 2, '.', ''),
-                    ],
-                )
+                        'amount' => number_format($amount, 2, '.', ''),
+                    ];
+                })
                 ->values()
                 ->toArray(),
-            'total' => number_format($permits->sum('amount'), 2, '.', ''),
+
+            'total' => number_format($amount * $permits->count(), 2, '.', ''),
         ];
 
         // ✅ STORE IN SESSION HERE
         session(['application_details' => $jsonData]);
+
 
         $total = (float) $total;
         $paymentMethod = PaymentMethod::get();
@@ -105,6 +114,8 @@ class PaymentController extends Controller
             // 'details' => $jsonData
         ]);
 
+        $application->logActivity(action: 'User Payment', remark: 'Application is ready to be paid', status: 'User Payment');
+
         return response()->json([
             'url' => $signedUrl,
         ]);
@@ -128,8 +139,9 @@ class PaymentController extends Controller
 
     private function bayuPay(Request $request, $applicationDetails)
     {
-        // dd($request->all(), $applicationDetails);
-       
+        $application = $applicationDetails['application'];
+        $user = $applicationDetails['user'];
+        // dd($request->all(), $applicationDetails, $application, $user);
 
         $lastOrder = Order::where('order_details->application->application_id', $request->application_id)->latest('id')->first();
 
@@ -152,12 +164,15 @@ class PaymentController extends Controller
             'order_number' => $orderNumber,
             'status' => 'payment pending',
             'order_details' => $applicationDetails,
+            'application_id' => $application['application_id'],
+            'public_user_uuid' => $user['uuid'],
+            'application_type' => $application['application_type'],
         ]);
 
-         $data = [
+        $data = [
             'sid' => 'SIDTEST',
             'itn' => 'IMPORT123',
-            'rn' => $request->orderNo,
+            'rn' => $order->order_number,
             'amount' => $request->amount,
             'co_name' => $request->name,
             'email' => $request->email,
@@ -201,7 +216,6 @@ class PaymentController extends Controller
 
         if ($paymentData['transaction_status'] == 'SUCCESSFUL') {
             $order->status = 'payment success';
-          
 
             foreach ($permits as $permit) {
                 $permitData = IpConsignmentPermit::where('id', $permit['permit_id'])->first();
@@ -210,8 +224,18 @@ class PaymentController extends Controller
                 $permitData->status = 'paid';
                 $permitData->save();
             }
+        } elseif ($paymentData['transaction_status'] == 'UNSUCCESSFUL') {
+            $order->status = 'payment failed';
+        } elseif ($paymentData['transaction_status'] == 'PENDING FOR AUTHORIZER TO APPROVE') {
+            $order->status = 'pending authorization';
 
-            
+            foreach ($permits as $permit) {
+                $permitData = IpConsignmentPermit::where('id', $permit['permit_id'])->first();
+
+                // dd($permitData);
+                $permitData->status = 'payment processing';
+                $permitData->save();
+            }
         }
 
         $order->seller_ref = $paymentData['seller_ref'];
@@ -222,9 +246,10 @@ class PaymentController extends Controller
         $order->payment_amount = $paymentData['payment_amount'];
         $order->transaction_data = $paymentData['transaction_data'];
         $order->transaction_status = $paymentData['transaction_status'];
+        $order->kod_transaksi = $kodTransaksi;
         $order->save();
 
-        return view('pages.paymentStatus', compact('title', 'kodTransaksi', 'paymentData'));
+        return view('pages.paymentStatus', compact('title', 'kodTransaksi', 'paymentData', 'order'));
     }
 
     public function cancelPayment(Request $request)
