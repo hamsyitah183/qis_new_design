@@ -28,6 +28,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\Models\Activity;
+
 // use App\Notifications\ApplicationNotification;
 class PermitApplicationController extends Controller
 {
@@ -68,6 +70,18 @@ class PermitApplicationController extends Controller
 
         // fetch newly created exporter
         $exporter = \DB::table('exporter')->where('id', $exporterId)->first();
+
+        activity()
+            ->tap(function (Activity $activity) {
+                $activity->log_name = 'user_activity';
+            })
+            ->event('add exporter')
+            ->causedBy(authUser()['user'])
+            ->performedOn(authUser()['user'])
+            ->withProperties([
+                'exporter' => $exporter
+            ])
+            ->log(authUser()['user']['fullname'] . ' is added an exporter');
 
         return response()->json($exporter, 201);
     }

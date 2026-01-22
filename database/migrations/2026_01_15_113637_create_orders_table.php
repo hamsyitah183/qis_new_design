@@ -31,6 +31,9 @@ return new class extends Migration {
             $table->string('transaction_data')->nullable();
             $table->string('transaction_status')->nullable();
             $table->string('kod_transaksi')->nullable();
+
+            $table->string('sid')->nullable();
+            $table->string('itn')->nullable();
             $table->timestamps();
         });
     }

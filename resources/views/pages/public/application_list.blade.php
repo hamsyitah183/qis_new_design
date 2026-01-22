@@ -76,7 +76,7 @@
 
         <!-- Your table goes here -->
         <div class="table-responsive">
-            <table class="table text-nowrap table-hover" id="applicationLogTable">
+            <table class="table text-wrap table-hover" id="applicationLogTable">
                 <thead class="table-primary">
                     <tr>
                         <th scope="col">Action</th>

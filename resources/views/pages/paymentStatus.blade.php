@@ -49,7 +49,7 @@
             </div>
 
             <div class="mt-4 text-center">
-                <a href="/" class="btn btn-primary btn-sm fw-medium">Back to main page</a>
+                <a href="/order/list" class="btn btn-primary btn-sm fw-medium">Back to main page</a>
             </div>
 
         </div>
@@ -58,3 +58,6 @@
 
    
 @endsection
+
+{{-- payment processing --}}
+{{-- 1. bayupay klau close page, pemit masih payment processing 7 minutes, 'processing payment' --}}

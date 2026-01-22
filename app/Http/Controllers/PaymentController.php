@@ -37,7 +37,7 @@ class PaymentController extends Controller
                 'id' => $application->id,
                 'application_id' => $application->application_id,
                 'status' => $application->status,
-                'application_type' => $application->application_type
+                'application_type' => $application->application_type,
             ],
 
             'user' => [
@@ -65,7 +65,6 @@ class PaymentController extends Controller
 
         // ✅ STORE IN SESSION HERE
         session(['application_details' => $jsonData]);
-
 
         $total = (float) $total;
         $paymentMethod = PaymentMethod::get();
@@ -141,6 +140,21 @@ class PaymentController extends Controller
     {
         $application = $applicationDetails['application'];
         $user = $applicationDetails['user'];
+        $permitsArray = $applicationDetails['permits'];
+
+        // dd($application);
+        if ($application['application_type'] == 'Import Permit') {
+            $permitIds = collect($permitsArray)->pluck('permit_id')->toArray();
+
+            $permits = IpConsignmentPermit::whereIn('id', $permitIds)->get();
+        } else {
+            $permits = [];
+        }
+        // dd($permits);
+        foreach ($permits as $permit) {
+            $permit->status = 'payment processing';
+            $permit->save();
+        }
         // dd($request->all(), $applicationDetails, $application, $user);
 
         $lastOrder = Order::where('order_details->application->application_id', $request->application_id)->latest('id')->first();
@@ -160,6 +174,15 @@ class PaymentController extends Controller
         // Build order number
         $orderNumber = 'ORD-' . $request->application_id . '-' . $runningNumber;
 
+        // dd($application['application_type']);
+        if ($application['application_type'] == 'Import Permit') {
+            $itn = 'ITN10001';
+        } else {
+            $itn = 'ITN';
+        }
+
+        $sid = 'QIS123';
+
         $order = Order::create([
             'order_number' => $orderNumber,
             'status' => 'payment pending',
@@ -167,11 +190,14 @@ class PaymentController extends Controller
             'application_id' => $application['application_id'],
             'public_user_uuid' => $user['uuid'],
             'application_type' => $application['application_type'],
+            'transaction_status' => 'PAYMENT PROCESSING',
+            'itn' => $itn,
+            'sid' => $sid
         ]);
-
+        // dd($order);
         $data = [
-            'sid' => 'SIDTEST',
-            'itn' => 'IMPORT123',
+            'sid' => $sid,
+            'itn' => $itn,
             'rn' => $order->order_number,
             'amount' => $request->amount,
             'co_name' => $request->name,
@@ -192,7 +218,7 @@ class PaymentController extends Controller
     public function paymentUpdate($rn, Request $request)
     {
         $title = 'Payment Status';
-        $kodTransaksi = $request->query('kod_transaksi');
+        $kodTransaksi = $request->query('ref');
 
         if (!$kodTransaksi) {
             abort(404, 'Kod Transaksi not found');
@@ -210,7 +236,11 @@ class PaymentController extends Controller
         // Convert response to array
         $paymentData = $response->json();
 
-        $order = Order::where('order_number', $rn)->first();
+        $order = Order::with('ipApplication')->where('order_number', $rn)->first();
+
+        if ($order->application_type == 'Import Permit') {
+            $application = $order->ipApplication;
+        }
 
         $permits = $order->order_details['permits'];
 
@@ -224,8 +254,11 @@ class PaymentController extends Controller
                 $permitData->status = 'paid';
                 $permitData->save();
             }
+
+            $application->logActivity(action: 'User Payment', remark: 'The order is successfully paid', status: 'User Payment');
         } elseif ($paymentData['transaction_status'] == 'UNSUCCESSFUL') {
             $order->status = 'payment failed';
+            $application->logActivity(action: 'User Payment', remark: 'The order is unsuccessfully paid', status: 'User Payment');
         } elseif ($paymentData['transaction_status'] == 'PENDING FOR AUTHORIZER TO APPROVE') {
             $order->status = 'pending authorization';
 
@@ -236,6 +269,8 @@ class PaymentController extends Controller
                 $permitData->status = 'payment processing';
                 $permitData->save();
             }
+
+            $application->logActivity(action: 'User Payment', remark: 'The order is pending for authorization', status: 'User Payment');
         }
 
         $order->seller_ref = $paymentData['seller_ref'];

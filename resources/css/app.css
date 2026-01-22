@@ -145,3 +145,25 @@
 .payment-pic.selected {
     border: 1px solid #007bff !important; /* highlight border */
 }
+
+/* Webkit browsers (Chrome, Edge, Safari) */
+.scroll-div::-webkit-scrollbar {
+    width: 8px; /* width of the scrollbar */
+}
+
+.scroll-div::-webkit-scrollbar-track {
+    background: #e0e0e0; /* light grey track */
+    border-radius: 5px;
+}
+
+.scroll-div::-webkit-scrollbar-thumb {
+    background-color: #b0b0b0; /* darker grey thumb */
+    border-radius: 5px;
+    border: 2px solid #e0e0e0; /* adds some space around thumb */
+}
+
+/* Firefox */
+.scroll-div {
+    scrollbar-width: thin;
+    scrollbar-color: #b0b0b0 #e0e0e0; /* thumb color, track color */
+}

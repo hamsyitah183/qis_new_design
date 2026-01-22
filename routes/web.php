@@ -283,6 +283,11 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/order/list/data', [ApplicationPaymentController::class, 'getAllOrderList']);
     Route::get('/order/{order_number}', [ApplicationPaymentController::class, 'orderDetails']);
 
+    // PERMIT
+    Route::get('/permit/list', [PermitConsignmentController::class, 'getView']);
+    Route::get('/permit/list/data', [PermitConsignmentController::class, 'getAllpermitList']);
+    Route::get('/permit/{permit_number}', [PermitConsignmentController::class, 'permitDetails']);
+
     // Route::post('/')
 
     // bounce url

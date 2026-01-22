@@ -223,7 +223,7 @@ async function pendingPaymentTable() {
                 </div>
             </td>
             <td>${permit.permit_number ?? '—'}</td>
-            <td>${detail.item_name ?? '—'}</td>
+            <td class = "text-wrap">${detail.item_name ?? '—'}</td>
             <td>RM 30</td>
         </tr>
         `);

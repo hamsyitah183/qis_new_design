@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 class CheckPendingPayments extends Command
 {
     protected $signature = 'bayupay:check-pending';
-    protected $description = 'Check all pending authorization orders and update their payment status';
+    protected $description = 'Check pending and processing payments and update their status';
 
     protected BayuPayService $bayuPay;
 
@@ -22,31 +22,65 @@ class CheckPendingPayments extends Command
 
     public function handle(): int
     {
-        $orders = Order::where('status', 'pending authorization')->get();
+        /**
+         * 1️⃣ Check: PENDING FOR AUTHORIZER TO APPROVE
+         */
+        $pendingOrders = Order::where('transaction_status', 'PENDING FOR AUTHORIZER TO APPROVE')->get();
 
-        if ($orders->isEmpty()) {
+        if ($pendingOrders->isEmpty()) {
             $this->info('No pending authorization orders found.');
-            return 0;
-        }
+        } else {
+            foreach ($pendingOrders as $order) {
+                try {
+                    if (empty($order->kod_transaksi)) {
+                        Log::warning('Order missing kod_transaksi, skipping.', [
+                            'order_number' => $order->order_number,
+                        ]);
+                        continue;
+                    }
 
-        foreach ($orders as $order) {
-            try {
-                $kodTransaksi = $order->kod_transaksi;
+                    $this->bayuPay->checkAndUpdatePayment($order, $order->kod_transaksi);
 
-                if (!$kodTransaksi) {
-                    Log::warning("Order {$order->order_number} missing kod_transaksi, skipping.");
-                    continue;
+                    Log::info('Pending authorization order checked.', [
+                        'order_number' => $order->order_number,
+                        'status' => $order->status,
+                    ]);
+                } catch (\Throwable $e) {
+                    Log::error('Error checking pending authorization order.', [
+                        'order_number' => $order->order_number,
+                        'error' => $e->getMessage(),
+                    ]);
                 }
-
-                $paymentData = $this->bayuPay->checkAndUpdatePayment($order, $kodTransaksi);
-
-                Log::info("Order {$order->order_number} checked. Status: {$order->status}");
-
-            } catch (\Exception $e) {
-                Log::error("Error checking order {$order->order_number}: " . $e->getMessage());
             }
         }
 
-        return 0;
+        /**
+         * 2️⃣ Check: PAYMENT PROCESSING (no transaction code)
+         */
+        $processingOrders = Order::where('transaction_status', 'PAYMENT PROCESSING')->get();
+
+        if ($processingOrders->isEmpty()) {
+            $this->info('No processing orders without transaction code found.');
+        } else {
+            foreach ($processingOrders as $order) {
+                try {
+                    $this->bayuPay->checkAndUpdatePaymentWithoutTransactionCode($order);
+
+                    Log::info('Processing order checked.', [
+                        'order_number' => $order->order_number,
+                        'status' => $order->status,
+                    ]);
+                } catch (\Throwable $e) {
+                    Log::error('Error checking processing order.', [
+                        'order_number' => $order->order_number,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+        }
+
+        $this->info('BayuPay payment check completed.');
+
+        return Command::SUCCESS;
     }
 }

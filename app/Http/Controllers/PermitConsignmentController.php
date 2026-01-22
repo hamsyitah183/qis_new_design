@@ -72,7 +72,6 @@ class PermitConsignmentController extends Controller
 
             $notificationController = new NotificationController();
 
-
             $notificationController->sendStatusMessage(
                 $application->importer_detail['fullname'] ?? 'User',
                 'Import Permit',
@@ -88,6 +87,13 @@ class PermitConsignmentController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Permit condition updated successfully.',
+        ]);
+    }
+
+    public function getView()
+    {
+        return view('pages..public.permit.permit_list', [
+            'title' => 'Permit List',
         ]);
     }
 }

@@ -16,14 +16,14 @@
     <script>
         window.AUTH_TYPE = @json($type);
     </script>
-    @vite(['resources/js/pages/order/order_list.js'])
+    @vite(['resources/js/pages/permit/permit_list.js'])
 @endpush
 
-@section('pageName', 'List Order')
+@section('pageName', 'List Permit')
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="Order List">
+    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="Permit List">
 
     </x-breadcrumb>
 @endsection
@@ -39,7 +39,7 @@
 
                         <div class="row">
                             <div class="col-sm-12">
-                                <table id="orderListTable"
+                                <table id="permitListTable"
                                     class="table table-bordered text-nowrap w-100 dataTable no-footer dtr-inline"
                                     aria-describedby="responsiveDataTable_info" style="width: 1588px;">
                                     <thead class="mt-3">

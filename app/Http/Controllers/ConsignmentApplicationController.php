@@ -274,6 +274,8 @@ class ConsignmentApplicationController extends Controller
                 }
             }
 
+            
+
             return response()->json([
                 'status' => 'success',
                 'message' => $isDraft ? 'Draft saved successfully' : 'Application submitted successfully',

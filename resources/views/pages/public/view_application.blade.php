@@ -149,8 +149,8 @@
     <x-modal id="activityLogModal" title="Activity Log">
 
         <!-- Your table goes here -->
-        <div class="table-responsive">
-            <table class="table text-nowrap table-hover" id="applicationLogTable">
+        <div class="table-responsive scroll-div" style = "max-height: 400px;">
+            <table class="table text-wrap table-hover" id="applicationLogTable">
                 <thead class="table-primary">
                     <tr>
                         <th scope="col">Action</th>
