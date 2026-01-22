@@ -258,11 +258,15 @@ class ConsignmentController extends Controller
                 }
             }
 
-            $buttons .= '<button class="btn btn-sm btn-danger delete-consignment" data-id="' . $row->application_id . '" title="Delete" data-bs-toggle="tooltip" data-bs-placement="top">
+            if ($type === 'internal') {
+                $buttons .= '<button class="btn btn-sm btn-danger delete-consignment" data-id="' . $row->application_id . '" title="Delete" data-bs-toggle="tooltip" data-bs-placement="top">
                                 <i class="ti ti-trash"></i>
-                             </button>
-                         </div>';
+                             </button>';
+            }
+
+            $buttons .= '</div>';
             return $buttons;
+
         })
             ->rawColumns(['action', 'permit_status', 'category_application', 'status'])
             ->make(true);

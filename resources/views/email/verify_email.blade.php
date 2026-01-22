@@ -1,4 +1,4 @@
-@extends('pages.front', ['title' => 'reset_password'])
+@extends('pages.front', ['title' => 'verify_email'])
 
 @section('content')
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8f9fa; min-height: 100vh;">
@@ -8,7 +8,7 @@
                     <!-- Logo -->
                     <tr>
                         <td align="center" style="padding-bottom: 30px;">
-                            <img src="https://qis-dashboard.sabah.gov.my/assets/logo-small-2e441c05.png" alt="Logo"
+                            <img src="https://qis-dashboard.sabah.gov.my/assets/logo-small-2e441c05.png" alt= "Logo"
                                 style="height: 50px; display: block;">
                         </td>
                     </tr>
@@ -22,28 +22,26 @@
                                     <td style="padding: 50px;">
                                         <!-- Title -->
                                         <h1 style="margin: 0 0 15px 0; font-size: 24px; font-weight: 600; color: #333333;">
-                                            Reset Password Request</h1>
+                                            Welcome to QIS, please verify your account {{ $name ?? '' }}</h1>
 
                                         <!-- Message -->
                                         <p style="margin: 0 0 20px 0; font-size: 14px; line-height: 1.6; color: #6c757d;">
-                                            Hello, you recently requested to reset your password for your QIS account.
-                                            Please click the button below to proceed.</p>
+                                            Please click the button below to verify your email address.</p>
 
                                         <!-- Button -->
                                         <table width="100%" cellpadding="0" cellspacing="0" border="0">
                                             <tr>
                                                 <td align="center" style="padding: 20px 0 30px 0;">
-                                                    <a href="{{ $resetUrl }}"
-                                                        style="display: inline-block; padding: 12px 35px; background-color: #212529; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: 600; font-size: 14px;">Reset
-                                                        Password</a>
+                                                    <a href="{{ $url ?? '#' }}"
+                                                        style="display: inline-block; padding: 12px 35px; background-color: #212529; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: 600; font-size: 14px;">Verify
+                                                        Email</a>
                                                 </td>
                                             </tr>
                                         </table>
 
                                         <!-- Warning message -->
                                         <p style="margin: 0 0 30px 0; font-size: 14px; line-height: 1.6; color: #6c757d;">If
-                                            you did not request a password reset, no further action is required. This link
-                                            will expire in 60 minutes.</p>
+                                            you did not create an account, no further action is required.</p>
 
                                         <!-- Signature -->
                                         <div style="margin-bottom: 40px;">
@@ -56,11 +54,11 @@
                                         <!-- Divider -->
                                         <div style="border-top: 1px solid #e9ecef; padding-top: 25px;">
                                             <p style="margin: 0; font-size: 12px; line-height: 1.6; color: #6c757d;">
-                                                If you're having trouble clicking the "Reset Password" button, copy and
-                                                paste the URL below into your web browser:
+                                                If you're having trouble clicking the "Verify Email" button, copy and paste
+                                                the URL below into your web browser:
                                                 <br><br>
-                                                <a href="{{ $resetUrl }}"
-                                                    style="color: #0d6efd; word-break: break-all;">{{ $resetUrl }}</a>
+                                                <a href="{{ $url ?? '#' }}"
+                                                    style="color: #0d6efd; word-break: break-all;">{{ $url ?? '#' }}</a>
                                             </p>
                                         </div>
                                     </td>
