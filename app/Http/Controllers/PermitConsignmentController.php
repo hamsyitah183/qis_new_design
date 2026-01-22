@@ -11,6 +11,7 @@ use App\Notifications\ApplicationNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
+use Spatie\Activitylog\Models\Activity;
 
 class PermitConsignmentController extends Controller
 {
@@ -55,6 +56,19 @@ class PermitConsignmentController extends Controller
         }
 
         Notification::send($user, new ApplicationNotification('A permit in application with ID ' . $permit->application->application_id . ' has been ' . $status, authUser()['user']->fullname, $url));
+
+        activity()
+            ->tap(function (Activity $activity) {
+                $activity->log_name = 'user_activity';
+            })
+            ->event(strtolower($status) . ' consignment permit conditions')
+            ->causedBy(authUser()['user'])
+            ->performedOn(authUser()['user'])
+            ->withProperties([
+                'permit' => $permit,
+                'application_id' => $permit->application->application_id
+            ])
+            ->log(authUser()['user']['fullname'] . ' has ' . strtolower($status) . ' permit conditions for application ' . $permit->application->application_id);
 
         $application->logActivity(action: 'Officer Verification', remark: $request['reason'] ?? 'Permit approved by officer', status: 'Officer Verified');
 

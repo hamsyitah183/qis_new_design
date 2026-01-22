@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 use Str;
+use Spatie\Activitylog\Models\Activity;
 
 class ConsignmentController extends Controller
 {
@@ -71,11 +72,7 @@ class ConsignmentController extends Controller
             // RE-READING: "add a feature where when its pending or draft the public user can still be edited by them and once rejected or approved public user can only view"
             // Screenshot shows: Importer (Aaron Chin - likely User), Exporter (yong - likely Partner)
             // My code previously: importer = Partner, exporter = User
-            // So: Importer column should show $row->exporter->fullname?
-            // No, User = Exporter in my current logic.
-            // Let's check my previously viewed code learnings: "exporter_id: Refers to User (PublicUser, UUID). importer_id: Refers to Partner (ConsignmentImporter, int ID)."
-            // So in the UI:
-            // "Importer" column should show User (PublicUser) -> $row->exporter->fullname
+            // So: Importer column should show User (PublicUser) -> $row->exporter->fullname
             // "Exporter" column should show Partner (ConsignmentImporter) -> $row->importer->name
             ->addColumn('importer', fn($row) => $row->exporter->fullname ?? '-')
             ->addColumn('exporter', fn($row) => $row->importer->name ?? '-')
@@ -379,6 +376,20 @@ class ConsignmentController extends Controller
             $application->status = $newStatus;
             $application->save();
 
+            activity()
+                ->tap(function (Activity $activity) {
+                    $activity->log_name = 'user_activity';
+                })
+                ->event(strtolower($isApproved ? 'approve' : 'reject') . ' consignment application')
+                ->causedBy(authUser()['user'])
+                ->performedOn(authUser()['user'])
+                ->withProperties([
+                    'status' => $newStatus,
+                    'action_label' => $actionLabel,
+                    'reason' => $request->input('reason')
+                ])
+                ->log(authUser()['user']['fullname'] . ' has ' . ($isApproved ? 'approved' : 'rejected') . ' a consignment application (ID: ' . $application->application_id . ') as ' . $newStatus);
+
             // Log activity (wrap in try-catch to prevent breaking the response)
             try {
                 $application->logActivity(
@@ -427,18 +438,18 @@ class ConsignmentController extends Controller
 
             DB::beginTransaction();
 
-            // 1. Log activity before deletion (if supported by the model/trait)
-            try {
-                if (method_exists($application, 'logActivity')) {
-                    $application->logActivity(
-                        action: 'Deleted',
-                        remark: 'Consignment application deleted by ' . $userName,
-                        status: 'Deleted'
-                    );
-                }
-            } catch (\Exception $e) {
-                \Log::warning('Failed to log deletion activity: ' . $e->getMessage());
-            }
+            // 1. Log activity before deletion
+            activity()
+                ->tap(function (Activity $activity) {
+                    $activity->log_name = 'user_activity';
+                })
+                ->event('delete consignment application')
+                ->causedBy(authUser()['user'])
+                ->performedOn(authUser()['user'])
+                ->withProperties([
+                    'application_id' => $applicationId
+                ])
+                ->log($userName . ' has deleted a consignment application (ID: ' . $applicationId . ')');
 
             // 2. Delete attachments from storage
             $permits = $application->consignmentPermits()->with('attachments')->get();

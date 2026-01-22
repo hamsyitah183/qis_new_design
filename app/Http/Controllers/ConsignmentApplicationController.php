@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\Models\Activity;
 
 class ConsignmentApplicationController extends Controller
 {
@@ -127,6 +128,18 @@ class ConsignmentApplicationController extends Controller
                     Log::warning('Pusher connection failed but continuing save: ' . $e->getMessage());
                 }
 
+                activity()
+                    ->tap(function (Activity $activity) {
+                        $activity->log_name = 'user_activity';
+                    })
+                    ->event($isDraft ? 'update draft application' : 'update consignment application')
+                    ->causedBy(authUser()['user'])
+                    ->performedOn($application)
+                    ->withProperties([
+                        'application' => $application
+                    ])
+                    ->log(authUser()['user']['fullname'] . ($isDraft ? ' has updated a consignment application draft (ID: ' : ' has updated a consignment application (ID: ') . $application->application_id . ')');
+
             } else {
                 // Create new application
                 // Status flow: Draft or Application Submitted
@@ -155,6 +168,18 @@ class ConsignmentApplicationController extends Controller
                 } catch (\Exception $e) {
                     Log::warning('Pusher connection failed but continuing save: ' . $e->getMessage());
                 }
+
+                activity()
+                    ->tap(function (Activity $activity) {
+                        $activity->log_name = 'user_activity';
+                    })
+                    ->event($isDraft ? 'create draft application' : 'create consignment application')
+                    ->causedBy(authUser()['user'])
+                    ->performedOn($application)
+                    ->withProperties([
+                        'application' => $application
+                    ])
+                    ->log(authUser()['user']['fullname'] . ($isDraft ? ' has created a new consignment application draft (ID: ' : ' has created a new consignment application (ID: ') . $application->application_id . ')');
 
             }
 
@@ -321,7 +346,17 @@ class ConsignmentApplicationController extends Controller
             'country' => $validated['country'],
             'registered_by' => $user->uuid,
         ]);
-
+        activity()
+            ->tap(function (Activity $activity) {
+                $activity->log_name = 'user_activity';
+            })
+            ->event('add importer')
+            ->causedBy(authUser()['user'])
+            ->performedOn(authUser()['user'])
+            ->withProperties([
+                'importer' => $exporter
+            ])
+            ->log(authUser()['user']['fullname'] . ' has added an importer');
         return response()->json($exporter, 201);
     }
 
@@ -417,6 +452,18 @@ class ConsignmentApplicationController extends Controller
 
             // 2. Delete Application Record
             $application->delete();
+
+            activity()
+                ->tap(function (Activity $activity) {
+                    $activity->log_name = 'user_activity';
+                })
+                ->event('delete consignment application')
+                ->causedBy(authUser()['user'])
+                ->performedOn(authUser()['user'])
+                ->withProperties([
+                    'application_id' => $applicationId
+                ])
+                ->log($userName . ' has deleted a consignment application (ID: ' . $applicationId . ')');
 
             DB::commit();
 
