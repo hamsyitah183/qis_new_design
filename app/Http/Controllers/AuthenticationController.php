@@ -68,7 +68,6 @@ class AuthenticationController extends Controller
             if (method_exists($user, 'hasVerifiedEmail') && !$user->hasVerifiedEmail()) {
                 // Send verification email
                 $user->notify(new VerifyEmailNotification());
-
                 return response()->json([
                     'status' => 'unverified',
                     'message' => 'Your email is not verified. A verification email has been sent.',
@@ -78,7 +77,6 @@ class AuthenticationController extends Controller
 
             // Normal redirect if verified
             $redirect = $guard === 'public' ? route('public.dashboard') : route('internal.dashboard');
-
             return response()->json([
                 'status' => 'success',
                 'message' => 'Login successful!',

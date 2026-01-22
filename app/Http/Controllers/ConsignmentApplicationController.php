@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\Models\Activity;
 
 class ConsignmentApplicationController extends Controller
 {
@@ -127,6 +128,18 @@ class ConsignmentApplicationController extends Controller
                     Log::warning('Pusher connection failed but continuing save: ' . $e->getMessage());
                 }
 
+                activity()
+                    ->tap(function (Activity $activity) {
+                        $activity->log_name = 'user_activity';
+                    })
+                    ->event($isDraft ? 'update draft application' : 'update consignment application')
+                    ->causedBy(authUser()['user'])
+                    ->performedOn($application)
+                    ->withProperties([
+                        'application' => $application
+                    ])
+                    ->log(authUser()['user']['fullname'] . ($isDraft ? ' has updated a consignment application draft (ID: ' : ' has updated a consignment application (ID: ') . $application->application_id . ')');
+
             } else {
                 // Create new application
                 // Status flow: Draft or Application Submitted
@@ -155,6 +168,18 @@ class ConsignmentApplicationController extends Controller
                 } catch (\Exception $e) {
                     Log::warning('Pusher connection failed but continuing save: ' . $e->getMessage());
                 }
+
+                activity()
+                    ->tap(function (Activity $activity) {
+                        $activity->log_name = 'user_activity';
+                    })
+                    ->event($isDraft ? 'create draft application' : 'create consignment application')
+                    ->causedBy(authUser()['user'])
+                    ->performedOn($application)
+                    ->withProperties([
+                        'application' => $application
+                    ])
+                    ->log(authUser()['user']['fullname'] . ($isDraft ? ' has created a new consignment application draft (ID: ' : ' has created a new consignment application (ID: ') . $application->application_id . ')');
 
             }
 
@@ -251,7 +276,7 @@ class ConsignmentApplicationController extends Controller
             $users = InternalUser::role(['admin', 'clerk'])->get();
             $notificationUrl = url('/view_consignment/' . $application->application_id);
             Notification::send($users, new ApplicationNotification($isDraft ? ($isNewApplication ? 'New consignment certificate draft created' : 'Consignment certificate draft updated') : ($isNewApplication ? 'New consignment certificate application submitted' : 'Consignment certificate application updated'), Auth::user()->fullname ?? 'System', $notificationUrl));
-            
+
             $publicUser = auth()->guard('public')->user();
             if ($publicUser) {
                 $publicUser->notify(new ApplicationNotification($isDraft ? 'Your consignment application with id ' . $application->application_id . ' is saved as draft' : 'Your consignment application with id ' . $application->application_id . ' is submitted', 'QIS', $notificationUrl));
@@ -323,7 +348,17 @@ class ConsignmentApplicationController extends Controller
             'country' => $validated['country'],
             'registered_by' => $user->uuid,
         ]);
-
+        activity()
+            ->tap(function (Activity $activity) {
+                $activity->log_name = 'user_activity';
+            })
+            ->event('add importer')
+            ->causedBy(authUser()['user'])
+            ->performedOn(authUser()['user'])
+            ->withProperties([
+                'importer' => $exporter
+            ])
+            ->log(authUser()['user']['fullname'] . ' has added an importer');
         return response()->json($exporter, 201);
     }
 
@@ -383,19 +418,18 @@ class ConsignmentApplicationController extends Controller
 
             // Find application
             $application = ConsignmentApplication::where('application_id', $id)->firstOrFail();
-            
+
             // Store values before deletion
             $applicationId = $application->application_id;
             $userName = $user->fullname ?? 'Unknown User';
 
-            // Security Check - user must own the application
-            if ($application->user_id !== $user->uuid && $application->importer_id !== $user->uuid) {
+            // Security Check - Only internal users can delete applications
+            if (!$internalUser) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Unauthorized action. You do not own this application.'
+                    'message' => 'Unauthorized action. Public users are no longer allowed to delete applications.'
                 ], 403);
             }
-
             DB::beginTransaction();
 
             // 1. Delete Attachments from Storage
@@ -421,11 +455,23 @@ class ConsignmentApplicationController extends Controller
             // 2. Delete Application Record
             $application->delete();
 
+            activity()
+                ->tap(function (Activity $activity) {
+                    $activity->log_name = 'user_activity';
+                })
+                ->event('delete consignment application')
+                ->causedBy(authUser()['user'])
+                ->performedOn(authUser()['user'])
+                ->withProperties([
+                    'application_id' => $applicationId
+                ])
+                ->log($userName . ' has deleted a consignment application (ID: ' . $applicationId . ')');
+
             DB::commit();
 
             // Sends Notifications for deletion
             $notificationUrl = url('/view_consignment/' . $applicationId);
-            
+
             // Notify internal users (admins/clerks)
             try {
                 $users = InternalUser::role(['admin', 'clerk'])->get();
@@ -433,7 +479,7 @@ class ConsignmentApplicationController extends Controller
             } catch (\Exception $e) {
                 Log::warning('Failed to send notification to internal users: ' . $e->getMessage());
             }
-            
+
             // Notify the public user who deleted the application
             if ($publicUser) {
                 try {
