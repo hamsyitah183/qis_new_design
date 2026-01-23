@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('permit_number', 25)->nullable();
 
             $table->text('consignment_detail')
-                ->comment('JSON form: item details (id, category, item_name, usage)');
+                ->comment('JSON form: item details (id, category, item_name, usage, myorganic)');
 
             $table->float('quantity');
 
@@ -37,7 +37,7 @@ return new class extends Migration
             $table->string('status')->nullable();
 
             $table->text('remark')->nullable();
-            $table->string('mygap_myorganic_no')->nullable();
+            // $table->string('mygap_myorganic_no')->nullable();
 
             $table->timestamps();
         });

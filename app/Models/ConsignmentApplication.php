@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
-use App\Traits\HasApplicationActivityLog;
+
+use App\Traits\HasConsignmentActivityLog;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ConsignmentApplication extends Model
 {
-    use HasFactory, HasApplicationActivityLog;
+    use HasFactory, HasConsignmentActivityLog;
     protected $table = 'consignment_applications';
 
     protected $fillable = ['application_id', 'reference_no', 'eta', 'transport_type', 'entry_point', 'user_id', 'exporter_id', 'importer_id', 'importer_detail', 'category_application', 'importer_verify', 'date_importer_verify', 'status'];

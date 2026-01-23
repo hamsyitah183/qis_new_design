@@ -89,7 +89,6 @@ class ConsignmentApplicationController extends Controller
             $exporterUser = $request->exporterData ? json_decode($request->exporterData, true) : null;
             $importerPartner = $request->importerData ? json_decode($request->importerData, true) : null;
 
-
             $permit = $request->permitDetails ? json_decode($request->permitDetails, true) : [];
 
             // dd('exporter', $exporter,  'importer', $importer, 'permit', $permit);
@@ -121,6 +120,9 @@ class ConsignmentApplicationController extends Controller
                     'importer_verify' => $importer_verify,
                 ]);
 
+                $application->status = 'Clerk Review In-Progress';
+                $application->save();
+
                 try {
                     event(new InternalUserAdminEvent($isDraft ? 'Consignment certificate application saved as DRAFT by ' . ($exporterUser['fullname'] ?? 'Unknown Exporter') : 'Consignment certificate application submitted by ' . ($exporterUser['fullname'] ?? 'Unknown Exporter')));
                     event(new PublicUserEvent($isDraft ? 'Your consignment application with id ' . $application->application_id . ' is saved as draft' : 'Your consignment application with id ' . $application->application_id . ' is submitted', $application->user_id));
@@ -136,10 +138,9 @@ class ConsignmentApplicationController extends Controller
                     ->causedBy(authUser()['user'])
                     ->performedOn($application)
                     ->withProperties([
-                        'application' => $application
+                        'application' => $application,
                     ])
                     ->log(authUser()['user']['fullname'] . ($isDraft ? ' has updated a consignment application draft (ID: ' : ' has updated a consignment application (ID: ') . $application->application_id . ')');
-
             } else {
                 // Create new application
                 // Status flow: Draft or Application Submitted
@@ -177,10 +178,14 @@ class ConsignmentApplicationController extends Controller
                     ->causedBy(authUser()['user'])
                     ->performedOn($application)
                     ->withProperties([
-                        'application' => $application
+                        'application' => $application,
                     ])
                     ->log(authUser()['user']['fullname'] . ($isDraft ? ' has created a new consignment application draft (ID: ' : ' has created a new consignment application (ID: ') . $application->application_id . ')');
 
+                if (!$isDraft) {
+                    $application->logActivity('Submiited', 'Application submitted', 'Submitted');
+                    $application->logActivity('Clerk Review In-Progress', 'Pending for clerk approval', 'Clerk Review In-Progress');
+                }
             }
 
             $appId = $application->id;
@@ -240,7 +245,7 @@ class ConsignmentApplicationController extends Controller
                         'value' => $data['value'] ?? 0,
                         'purpose' => $data['purpose'] ?? null,
                         'status' => 'processing',
-                        'mygap_myorganic_no' => $data['certificateNo'] ?? null
+                        // 'mygap_myorganic_no' => $data['certificateNo'] ?? null
                     ]);
 
                     $consignmentArray[$index] = $consignment->id;
@@ -263,7 +268,6 @@ class ConsignmentApplicationController extends Controller
                         'file_path' => "/storage/{$path}",
                         'file_type' => $file->getClientOriginalExtension(),
                         'description' => '',
-
                     ]);
                 }
             }
@@ -298,8 +302,6 @@ class ConsignmentApplicationController extends Controller
                     }
                 }
             }
-
-            
 
             return response()->json([
                 'status' => 'success',
@@ -356,12 +358,11 @@ class ConsignmentApplicationController extends Controller
             ->causedBy(authUser()['user'])
             ->performedOn(authUser()['user'])
             ->withProperties([
-                'importer' => $exporter
+                'importer' => $exporter,
             ])
             ->log(authUser()['user']['fullname'] . ' has added an importer');
         return response()->json($exporter, 201);
     }
-
 
     public function viewapplication($uuid)
     {
@@ -410,10 +411,13 @@ class ConsignmentApplicationController extends Controller
         try {
             // Security Check - user must be authenticated
             if (!$user) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Unauthorized action. Please log in.'
-                ], 401);
+                return response()->json(
+                    [
+                        'status' => 'error',
+                        'message' => 'Unauthorized action. Please log in.',
+                    ],
+                    401,
+                );
             }
 
             // Find application
@@ -425,10 +429,13 @@ class ConsignmentApplicationController extends Controller
 
             // Security Check - Only internal users can delete applications
             if (!$internalUser) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Unauthorized action. Public users are no longer allowed to delete applications.'
-                ], 403);
+                return response()->json(
+                    [
+                        'status' => 'error',
+                        'message' => 'Unauthorized action. Public users are no longer allowed to delete applications.',
+                    ],
+                    403,
+                );
             }
             DB::beginTransaction();
 
@@ -463,7 +470,7 @@ class ConsignmentApplicationController extends Controller
                 ->causedBy(authUser()['user'])
                 ->performedOn(authUser()['user'])
                 ->withProperties([
-                    'application_id' => $applicationId
+                    'application_id' => $applicationId,
                 ])
                 ->log($userName . ' has deleted a consignment application (ID: ' . $applicationId . ')');
 
@@ -491,15 +498,17 @@ class ConsignmentApplicationController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Application deleted successfully.'
+                'message' => 'Application deleted successfully.',
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to delete application: ' . $e->getMessage()
-            ], 500);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => 'Failed to delete application: ' . $e->getMessage(),
+                ],
+                500,
+            );
         }
     }
 }
-
