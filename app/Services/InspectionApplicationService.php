@@ -2,28 +2,28 @@
 
 namespace App\Services;
 
-use App\Models\ImportPermitLog;
-use Illuminate\Database\Eloquent\Model;
+use App\Models\InspectionApplication;
+use App\Models\InspectionLog;
 
-class ApplicationService
+class InspectionApplicationService
 {
     public static function log(
-        Model $application,
+        InspectionApplication $application,
         string $action,
         ?string $remark = null,
         ?string $status = null,
         $causer = null
-    ): ImportPermitLog {
-
+    ): InspectionLog {
+        
         // Use provided causer OR fall back to authUser()
         $auth = authUser(); // your helper
 
         $causer_id = $causer?->uuid ?? $auth['user']->uuid ?? null;
         $causer_type = $causer
             ? (class_basename($causer) === 'InternalUser' ? 'internal' : 'public')
-            : $auth['type']; // fallback to authUser()['type']
+            : ($auth['type'] ?? 'system');
 
-        return ImportPermitLog::create([
+        return InspectionLog::create([
             'application_id' => $application->application_id,
             'causer_id'      => $causer_id,
             'causer_type'    => $causer_type,

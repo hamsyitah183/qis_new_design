@@ -75,6 +75,7 @@ class InternalUserSeeder extends Seeder
                 'no_ic' => '900101010003',
                 'password' => 'password123',
                 'role' => 'clerk',
+                'email_verified_at' => Carbon::now(),
             ],[
                 'email' => 'aarondalejchin@gmail.com',
                 'fullname' => 'Aaron Internal',

@@ -36,13 +36,14 @@ async function data_table_init() {
                 orderable: false,
                 searchable: false,
             },
-            { data: "category" },
             { data: "importer" },
             { data: "exporter" },
-            { data: "eta" },
-            { data: "transport_type" },
-            { data: "entry_point" },
             { data: "status" },
+            { data: "inspection_status" },
+
+            // 🔐 Only internal users see this
+            ...(isInternal ? [{ data: "submitted_by" }] : []),
+
             { data: "action" },
         ],
 
@@ -50,12 +51,11 @@ async function data_table_init() {
             { width: "50px", targets: 0 },
             { width: "150px", targets: 1 },
             { width: "150px", targets: 2 },
-            { width: "150px", targets: 3 },
-            { width: "100px", targets: 4 },
-            { width: "100px", targets: 5 },
-            { width: "100px", targets: 6 },
-            { width: "100px", targets: 7 },
-            { width: "120px", targets: 8 },
+            { width: "100px", targets: 3 },
+
+            ...(isInternal ? [{ width: "150px", targets: 4 }] : []),
+
+            { width: "120px", targets: isInternal ? 5 : 4 },
         ],
 
         autoWidth: false,
@@ -115,7 +115,7 @@ async function data_table_init() {
     }
 
     // Delete - Available for both internal and public
-    $(document).on("click", ".deleteInspection", async function () {
+    $(document).on("click", ".deleteApplication", async function () {
         const id = $(this).data("id");
         const csrfToken = document
             .querySelector('meta[name="csrf-token"]')
@@ -157,6 +157,58 @@ async function data_table_init() {
     });
 
     initTooltips();
+    activityLog();
+}
+
+function activityLog() {
+    $(document).on("click", ".activityLog", async function (e) {
+        e.preventDefault();
+
+        const id = $(this).data("log");
+        Swal.fire({
+            title: "Loading...",
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => Swal.showLoading(),
+        });
+        try {
+            const res = await fetch(`/inspection_application/${id}/data`);
+
+            if (!res.ok) {
+                throw new Error("Failed to fetch activity log");
+            }
+
+            const json = await res.json();
+
+            Swal.close();
+
+            const tableBody = $("#inspectionLogTable tbody");
+            tableBody.empty(); // clear existing rows
+
+            let activity_log = json.activity_log;
+
+            const modalEl = document.getElementById("activityLogModal");
+            modalEl.querySelector(".modal-title").textContent = " Inspection Activity Log";
+
+            activity_log.forEach((log) => {
+                tableBody.append(`
+                    <tr>
+                        <td>${log.action}</td>
+                        <td>${log.causer ? log.causer.fullname : 'System'}</td>
+                        <td>${log.remark || '-'}</td>
+                        <td>${log.status || '-'}</td>
+                        <td>${formatTime(log.created_at)}</td>
+                    </tr>
+                `);
+            });
+
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        } catch (error) {
+            console.error("Activity log error:", error);
+            Swal.close();
+        }
+    });
 }
 
 document.addEventListener("DOMContentLoaded", data_table_init);
