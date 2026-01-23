@@ -36,28 +36,22 @@ async function data_table_init() {
                 orderable: false,
                 searchable: false,
             },
-            { data: "category_application" },
             { data: "importer" },
             { data: "exporter" },
-            { data: "eta" },
-            { data: "transport_type" },
-            { data: "entry_point" },
             { data: "status" },
+            { data: "permit_status" },
             { data: "submitted_by" },
             { data: "action" },
         ],
 
         columnDefs: [
             { width: "50px", targets: 0 },
-            { width: "120px", targets: 1 },      // Category
-            { width: "150px", targets: 2 },      // Importer
-            { width: "150px", targets: 3 },      // Exporter
-            { width: "100px", targets: 4 },      // ETA
-            { width: "100px", targets: 5 },      // Transport Type
-            { width: "200px", targets: 6 },      // Entry Point
-            { width: "100px", targets: 7 },      // Status
-            { width: "150px", targets: 8 },      // Submitted By
-            { width: "150px", targets: 9 },      // Action
+            { width: "250px", targets: 1 },      // Importer
+            { width: "250px", targets: 2 },      // Exporter
+            { width: "200px", targets: 3 },      // Application Status
+            { width: "150px", targets: 4 },      // Permit Status
+            { width: "150px", targets: 5 },      // Submitted By
+            { width: "100px", targets: 6 },      // Action
         ],
 
         autoWidth: false,

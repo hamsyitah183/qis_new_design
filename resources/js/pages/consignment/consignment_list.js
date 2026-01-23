@@ -36,13 +36,10 @@ async function data_table_init() {
                 orderable: false,
                 searchable: false,
             },
-            { data: "category_application" },
             { data: "importer" },
             { data: "exporter" },
-            { data: "eta" },
-            { data: "transport_type" },
-            { data: "entry_point" },
             { data: "status" },
+            { data: "permit_status" },
 
             // 🔐 Only internal users see this
             ...(isInternal ? [{ data: "submitted_by" }] : []),
@@ -51,18 +48,15 @@ async function data_table_init() {
         ],
 
         columnDefs: [
-            { width: "50px", targets: 0 },       // #
-            { width: "120px", targets: 1 },      // Category
-            { width: "150px", targets: 2 },      // Importer
-            { width: "150px", targets: 3 },      // Exporter
-            { width: "100px", targets: 4 },      // ETA
-            { width: "100px", targets: 5 },      // Transport Type
-            { width: "200px", targets: 6 },      // Entry Point
-            { width: "100px", targets: 7 },      // Status
+            { width: "30px", targets: 0 },       // #
+            { width: "50px", targets: 1 },      // Importer
+            { width: "50px", targets: 2 },      // Exporter
+            { width: "90px", targets: 3 },      // App Status
+            { width: "90px", targets: 4 },      // Permit Status
 
-            ...(isInternal ? [{ width: "150px", targets: 8 }] : []),  // Submitted By
+            ...(isInternal ? [{ width: "90px", targets: 5 }] : []),  // Submitted By
 
-            { width: "100px", targets: isInternal ? 9 : 8 },  // Action
+            { width: "90px", targets: isInternal ? 6 : 5 },  // Action
         ],
 
         autoWidth: false,
