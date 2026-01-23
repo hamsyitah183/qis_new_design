@@ -144,7 +144,12 @@ async function attachmentTable() {
         if (s.includes("completed")) {
             text = '<span class="badge bg-success fs-11 p-1">Completed</span>';
 
-        } else if (s.includes("payment processing")) {
+        }else if (s.includes("payment failed")) {
+            text = '<span class="badge bg-danger fs-11 p-1">Payment Failed</span>';
+
+        } 
+        
+        else if (s.includes("payment processing")) {
             text = '<span class="badge bg-info fs-11 p-1">Payment Processing</span>';
 
         } else if (s.includes("paid")) {
@@ -189,9 +194,12 @@ async function pendingPaymentTable() {
 
     const permits = application.consignment_permits || [];
 
-    const pendingPaymentPermits = permits.filter(
-        (p) => p.status?.toLowerCase() === "pending for payment"
+    const pendingPaymentPermits = permits.filter((p) =>
+        ["pending for payment", "payment failed"].includes(
+            p.status?.toLowerCase()
+        )
     );
+
 
     if (!pendingPaymentPermits || pendingPaymentPermits.length === 0) {
         tableBody.append(`

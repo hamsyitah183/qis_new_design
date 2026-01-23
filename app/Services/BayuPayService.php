@@ -43,7 +43,7 @@ class BayuPayService
             case 'UNSUCCESSFUL':
                 $order->status = 'payment failed';
                 foreach ($permits as $permit) {
-                    IpConsignmentPermit::where('id', $permit['permit_id'])->update(['status' => 'pending for payment']);
+                    IpConsignmentPermit::where('id', $permit['permit_id'])->update(['status' => 'payment failed']);
                 }
                 // $application->logActivity(action: 'User Payment', remark: 'The order is unsuccessfully paid', status: 'User Payment');
                 break;

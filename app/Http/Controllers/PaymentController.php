@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\PaymentMethod;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\URL;
 
@@ -87,8 +88,10 @@ class PaymentController extends Controller
         if ($application->user_id !== authUser()['user']->uuid) {
             abort(403);
         }
-
-        $permits = IpConsignmentPermit::where('application_id', $application->id)->whereIn('id', $request->permit_ids)->where('status', 'pending for payment')->get();
+        $permits = IpConsignmentPermit::where('application_id', $application->id)
+            ->whereIn('id', $request->permit_ids)
+            ->whereIn('status', ['pending for payment', 'payment failed'])
+            ->get();
 
         if ($permits->count() !== count($request->permit_ids)) {
             abort(403, 'Invalid permit selection');
@@ -192,7 +195,7 @@ class PaymentController extends Controller
             'application_type' => $application['application_type'],
             'transaction_status' => 'PAYMENT PROCESSING',
             'itn' => $itn,
-            'sid' => $sid
+            'sid' => $sid,
         ]);
         // dd($order);
         $data = [
@@ -224,65 +227,68 @@ class PaymentController extends Controller
             abort(404, 'Kod Transaksi not found');
         }
 
-        // Call BayuPay API with Bearer token
-        $response = Http::withToken('test-api')->get('https://bayupay-dummy.geovidia.my/readdata.php', [
-            'kod_transaksi' => $kodTransaksi,
-        ]);
+        // Call BayuPay API
+        $response = Http::withToken('test-api')->get('https://bayupay-dummy.geovidia.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
 
         if (!$response->successful()) {
             abort(500, 'Failed to retrieve payment data');
         }
 
-        // Convert response to array
         $paymentData = $response->json();
 
-        $order = Order::with('ipApplication')->where('order_number', $rn)->first();
+        $order = Order::with('ipApplication')->where('order_number', $rn)->firstOrFail();
 
-        if ($order->application_type == 'Import Permit') {
+        $application = null;
+
+        if ($order->application_type === 'Import Permit') {
             $application = $order->ipApplication;
         }
 
-        $permits = $order->order_details['permits'];
+        $permits = $order->order_details['permits'] ?? [];
 
-        if ($paymentData['transaction_status'] == 'SUCCESSFUL') {
-            $order->status = 'payment success';
+        DB::transaction(function () use ($paymentData, $order, $application, $permits, $kodTransaksi) {
+            // ✅ Determine order + permit status
+            if ($paymentData['transaction_status'] === 'SUCCESSFUL') {
+                $order->status = 'payment success';
 
-            foreach ($permits as $permit) {
-                $permitData = IpConsignmentPermit::where('id', $permit['permit_id'])->first();
+                foreach ($permits as $permit) {
+                    IpConsignmentPermit::where('id', $permit['permit_id'])->update(['status' => 'paid']);
+                }
 
-                // dd($permitData);
-                $permitData->status = 'paid';
-                $permitData->save();
+                $application?->logActivity(action: 'User Payment', remark: 'The order is successfully paid', status: 'User Payment');
+            } elseif ($paymentData['transaction_status'] === 'UNSUCCESSFUL') {
+                $order->status = 'payment failed';
+
+                foreach ($permits as $permit) {
+                    IpConsignmentPermit::where('id', $permit['permit_id'])->update(['status' => 'payment failed']);
+                }
+
+                dd('hello payment failder');
+
+                $application?->logActivity(action: 'User Payment', remark: 'The order is unsuccessfully paid', status: 'User Payment');
+            } elseif ($paymentData['transaction_status'] === 'PENDING FOR AUTHORIZER TO APPROVE') {
+                $order->status = 'pending authorization';
+
+                foreach ($permits as $permit) {
+                    IpConsignmentPermit::where('id', $permit['permit_id'])->update(['status' => 'payment processing']);
+                }
+
+                $application?->logActivity(action: 'User Payment', remark: 'The order is pending for authorization', status: 'User Payment');
             }
 
-            $application->logActivity(action: 'User Payment', remark: 'The order is successfully paid', status: 'User Payment');
-        } elseif ($paymentData['transaction_status'] == 'UNSUCCESSFUL') {
-            $order->status = 'payment failed';
-            $application->logActivity(action: 'User Payment', remark: 'The order is unsuccessfully paid', status: 'User Payment');
-        } elseif ($paymentData['transaction_status'] == 'PENDING FOR AUTHORIZER TO APPROVE') {
-            $order->status = 'pending authorization';
-
-            foreach ($permits as $permit) {
-                $permitData = IpConsignmentPermit::where('id', $permit['permit_id'])->first();
-
-                // dd($permitData);
-                $permitData->status = 'payment processing';
-                $permitData->save();
-            }
-
-            $application->logActivity(action: 'User Payment', remark: 'The order is pending for authorization', status: 'User Payment');
-        }
-
-        $order->seller_ref = $paymentData['seller_ref'];
-        $order->fpx_seller_reference = $paymentData['fpx_seller_reference'];
-        $order->name = $paymentData['name'];
-        $order->email = $paymentData['email'];
-        $order->phone = $paymentData['phone'];
-        $order->payment_amount = $paymentData['payment_amount'];
-        $order->transaction_data = $paymentData['transaction_data'];
-        $order->transaction_status = $paymentData['transaction_status'];
-        $order->kod_transaksi = $kodTransaksi;
-        $order->save();
+            // ✅ Update order payment fields
+            $order->update([
+                'seller_ref' => $paymentData['seller_ref'] ?? null,
+                'fpx_seller_reference' => $paymentData['fpx_seller_reference'] ?? null,
+                'name' => $paymentData['name'] ?? null,
+                'email' => $paymentData['email'] ?? null,
+                'phone' => $paymentData['phone'] ?? null,
+                'payment_amount' => $paymentData['payment_amount'] ?? null,
+                'transaction_data' => $paymentData['transaction_data'] ?? null,
+                'transaction_status' => $paymentData['transaction_status'] ?? null,
+                'kod_transaksi' => $kodTransaksi,
+            ]);
+        });
 
         return view('pages.paymentStatus', compact('title', 'kodTransaksi', 'paymentData', 'order'));
     }

@@ -9,6 +9,11 @@ import "select2";
 import { internalUserEcho, publicUserEcho } from "./broadcast_user";
 import { notification, notificationContent } from "./notification";
 
+import "datatables.net-bs5/css/dataTables.bootstrap5.min.css";
+import "datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css";
+import "datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css";
+
+
 $("#redirectProfile").on("click", function (e) {
     e.preventDefault();
 

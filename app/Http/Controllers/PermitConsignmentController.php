@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Spatie\Activitylog\Models\Activity;
+use Yajra\DataTables\Facades\DataTables;
 
 class PermitConsignmentController extends Controller
 {
@@ -66,7 +67,7 @@ class PermitConsignmentController extends Controller
             ->performedOn(authUser()['user'])
             ->withProperties([
                 'permit' => $permit,
-                'application_id' => $permit->application->application_id
+                'application_id' => $permit->application->application_id,
             ])
             ->log(authUser()['user']['fullname'] . ' has ' . strtolower($status) . ' permit conditions for application ' . $permit->application->application_id);
 
@@ -106,8 +107,70 @@ class PermitConsignmentController extends Controller
 
     public function getView()
     {
-        return view('pages..public.permit.permit_list', [
+        return view('pages.public.permit.permit_list', [
             'title' => 'Permit List',
         ]);
+    }
+
+    public function getAllPermitList()
+    {
+        $userUuid = authUser()['user']->uuid;
+        $type = authUser()['type'];
+
+        $query = IpConsignmentPermit::query()->with('application'); // eager load application if needed
+
+        // Apply filter for public users
+        if ($type !== 'internal') {
+            $query->where('public_user_uuid', $userUuid);
+        }
+
+        return DataTables::eloquent($query)
+            ->addIndexColumn()
+
+            ->editColumn('item_name', fn($row) => $row->item_name)
+            ->filterColumn('item_name', function ($query, $keyword) {
+                $query->whereRaw("LOWER(JSON_UNQUOTE(JSON_EXTRACT(consignment_detail, '$.item_name'))) LIKE ?", ['%' . strtolower($keyword) . '%']);
+            })
+
+            ->addColumn('importer', fn($row) => $row->application->importer->fullname)
+
+            ->addColumn('action', function ($row) use ($type) {
+                // Use application_id (correct)
+                $viewUrl = '/permit/' . $row->permit_number;
+
+                $view =
+                    '
+                <a href="' .
+                    $viewUrl .
+                    '" class="btn btn-sm btn-primary">
+                    <i class="ti ti-eye"></i>
+                </a>
+            ';
+
+                $downloadPermit = '';
+
+                if ($type === 'internal') {
+                    $downloadPermit =
+                        '
+                    <button 
+                        class="btn btn-sm btn-success btn-wave generatePermit ms-2"
+                        data-permit="' .
+                        $row->id .
+                        '">
+                        Download Permit
+                    </button>
+                ';
+                }
+
+                return $view . $downloadPermit;
+            })
+
+            ->rawColumns(['action'])
+            ->make(true);
+    }
+
+    function permitDetails($permitNumber)
+    {
+        return $permitNumber;
     }
 }

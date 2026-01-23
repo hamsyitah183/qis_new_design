@@ -1,10 +1,10 @@
 @extends('pages.app')
 
-@push('style')
+{{-- @push('style')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.12.1/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.3.0/css/responsive.bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.bootstrap5.min.css">
-@endpush
+@endpush --}}
 
 
 @php
@@ -35,36 +35,20 @@
             <div class="card custom-card">
 
                 <div class="card-body">
-                    <div id="" class="dataTables_wrapper dt-bootstrap5 no-footer">
-
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <table id="permitListTable"
-                                    class="table table-bordered text-nowrap w-100 dataTable no-footer dtr-inline"
-                                    aria-describedby="responsiveDataTable_info" style="width: 1588px;">
-                                    <thead class="mt-3">
-                                        <tr class="even">
-                                            <th>#</th>
-                                            <th>Order Number</th>
-                                            <th>Order Status</th>
-                                            <th>Application Type</th>
-                                            <th>Transaction Data</th>
-                                            <th>Payment Amount</th>
-                                           
-
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-
-
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                    </div>
+                    <table id="permitListTable" class="table table-bordered text-nowrap w-100">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Permit Number</th>
+                                <th>Item Name</th>
+                                <th>Importer</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
+
             </div>
         </div>
     </div>
@@ -96,4 +80,3 @@
     </x-modal>
 
 @endsection
-
