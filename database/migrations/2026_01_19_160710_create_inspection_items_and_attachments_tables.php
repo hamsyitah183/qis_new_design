@@ -25,6 +25,7 @@ return new class extends Migration
             $table->float('value')->default(0);
             $table->string('purpose')->nullable();
             $table->string('status')->default('submitted');
+            $table->text('remark')->nullable();
             $table->timestamps();
         });
 

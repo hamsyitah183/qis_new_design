@@ -123,7 +123,7 @@ Route::prefix('public')
 
         Route::get('/inspection_certificates_application', [InspectionController::class, 'getInspection']);
         Route::get('/inspection_certificates_list', [InspectionController::class, 'showAllInspectionList'])->name('showallinspectionlist');
-        Route::get('/view_inspection_certificate/{id}', [InspectionController::class, 'viewApplication'])->name('viewInspectionApplication');
+        Route::get('/view_inspection_certificate/{id}', [InspectionController::class, 'viewInspection'])->name('viewInspectionApplication');
         Route::get('/inspection_application_data/{id}', [InspectionController::class, 'getApplicationData'])->name('inspection.app.data');
         Route::get('/inspection_certificates_application_self/{id?}', [InspectionController::class, 'getInspectionSelf'])->name('inspectionApplicationSelf');
         Route::get('/inspection_certificates_application_others/{id?}', [InspectionController::class, 'getInspectionOthers'])->name('inspectionApplicationOthers');
@@ -178,6 +178,8 @@ Route::prefix('internal')
         Route::get('/consignment_certificates_list', [ConsignmentController::class, 'showInternalConsignmentList'])->name('consignment.list');
         Route::post('/consignment/{id}/status', [ConsignmentController::class, 'updateStatus'])->name('consignment.status');
         Route::delete('/consignment/delete/{id}', [ConsignmentController::class, 'deleteApplication'])->name('internal.consignment.delete');
+        Route::delete('/inspection/delete/{id}', [InspectionController::class, 'deleteApplication'])->name('inspection.delete');
+        Route::get('/inspection_application/{id}/data', [InspectionController::class, 'getApplicationDetails']);
 
         // Route::get('/application/exporter/get', [ApplicationController::class, 'get_exporter'])->name('application.exporter.get');
 
@@ -210,6 +212,10 @@ Route::prefix('internal')
 
         // ======================= notifications ===========================
         Route::post('/permit/{id}', [PermitConsignmentController::class, 'accept_permit']);
+        
+        // Inspection item accept/reject endpoints
+        Route::post('/inspection_item/{id}/accept', [InspectionController::class, 'acceptInspectionItem']);
+        Route::post('/inspection_item/{id}/reject', [InspectionController::class, 'rejectInspectionItem']);
     });
 
 Route::middleware(['auth.any'])->group(function () {
@@ -237,7 +243,7 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/consignment_application/{id}/data', [ConsignmentController::class, 'getApplicationDetails']);
     Route::get('/consignment/list/data', [ConsignmentController::class, 'getallconsignmentlist'])->name('consignment.data');
 
-    Route::get('/view_inspection_certificates/{id}', [InspectionController::class, 'viewInspection'])->name('viewInspectionApplication');
+    Route::get('/view_inspection_certificates/{id}', [InspectionController::class, 'viewInspection'])->name('inspection.view_details');
     Route::get('/inspection_application/{id}/data', [InspectionController::class, 'getApplicationDetails']);
 
     Route::get('/application/permit/{id}/data', [ApplicationController::class, 'get_application_permit']);
