@@ -73,23 +73,24 @@ async function attachmentTable() {
         console.log("is it", roles);
 
         let permitAction = "";
+        // Only Officer can accept/reject item details, Admin can do both
         if (applicationStatus === "Clerk Verified") {
             if (
-                permit.status === "processing" &&
+                (permit.status === "processing" || permit.status === "submitted") &&
                 (roles.includes("admin") || roles.includes("officer"))
             ) {
                 permitAction = `
                 <div class="btn btn-sm btn-primary-light btn-wave accept" data-permit="${permit.id}">
-                    Approved
+                    Accept Item
                 </div>
                 <div class="btn btn-sm btn-danger-light btn-wave reject" data-permit="${permit.id}">
-                    Rejected
+                    Reject Item
                 </div>`;
-            } 
-           
+            }
+
         }
 
-        if( permit.status === "rejected" &&
+        if (permit.status === "rejected" &&
             (type.includes('public'))) {
             permitAction = `<div class = "btn btn-sm btn-danger-light btn-wave reapply"  data-permit = "${permit.id}" >Reapply</div>`
         }
@@ -104,13 +105,7 @@ async function attachmentTable() {
         // }
         // }
 
-        if (permit.status === "paid") {
-            permitAction = `
-<div class="btn btn-sm btn btn-teal-light btn-wave generatePermit" data-permit="${permit.id}">
-    Download Permit
-</div>
-`;
-        }
+        // Download functionality is not applicable for inspection certificates
 
         let permitStatus = "";
 
@@ -128,16 +123,15 @@ async function attachmentTable() {
         } else if (s.includes("paid")) {
             text = '<span class="badge bg-success fs-11 p-1">Paid</span>';
 
-        } else if (s.includes("processing")) {
+        } else if (s.includes("processing") || s.includes("submitted")) {
             text = '<span class="badge bg-info fs-11 p-1">Processing</span>';
 
         } else if (s.includes("rejected")) {
             text = '<span class="badge bg-danger fs-11 p-1">Rejected</span>';
 
-        } else if (s.includes("payment")) {
+        } else if (s.includes("pending")) {
             text = '<span class="badge bg-warning fs-11 p-1">Pending For Payment</span>';
         }
-
         permitStatus = `<td>${text}</td>`;
 
         tableBody.append(`
@@ -209,6 +203,9 @@ async function pendingPaymentTable() {
     });
 
     $("#checkAllPermits").prop("checked", false);
+    // This function is not applicable for inspection certificates as they don't have payment processing
+    // Hide the payment table for inspection certificates
+    $("#summaryTable4").closest('.col-xl-12').hide();
 }
 
 function acceptPermit() {
@@ -220,7 +217,7 @@ function acceptPermit() {
 
             Swal.fire({
                 title: "Are you sure?",
-                text: "Do you want to accept this permit?",
+                text: "Do you want to accept this inspection item?",
                 icon: "question",
                 showCancelButton: true,
                 confirmButtonText: "Yes, proceed",
@@ -229,7 +226,7 @@ function acceptPermit() {
                 if (firstResult.isConfirmed) {
                     Swal.fire({
                         title: "Please Confirm Again",
-                        text: "This action cannot be undone. Accept the permit?",
+                        text: "This action cannot be undone. Accept the inspection item?",
                         icon: "warning",
                         showCancelButton: true,
                         confirmButtonText: "Yes, accept it",
@@ -237,18 +234,17 @@ function acceptPermit() {
                     }).then((secondResult) => {
                         if (secondResult.isConfirmed) {
                             $.ajax({
-                                url: `/internal/permit/${id}`,
+                                url: `/internal/inspection_item/${id}/accept`,
                                 method: "POST",
                                 data: {
                                     _token: $("meta[name='csrf-token']").attr(
                                         "content"
                                     ),
-                                    accepted: 1,
                                 },
                                 success: function () {
                                     Swal.fire(
                                         "Accepted!",
-                                        "The permit has been accepted.",
+                                        "The inspection item has been accepted.",
                                         "success"
                                     );
                                     // Refresh table
@@ -280,13 +276,13 @@ function rejectPermit() {
             const id = $(this).data("permit");
 
             Swal.fire({
-                title: "Reject Permit",
-                text: "Please provide a reason for rejecting this permit:",
+                title: "Reject Inspection Item",
+                text: "Please provide a reason for rejecting this inspection item:",
                 icon: "warning",
                 input: "textarea",
                 inputPlaceholder: "Enter rejection reason...",
                 showCancelButton: true,
-                confirmButtonText: "Reject Permit",
+                confirmButtonText: "Reject Item",
                 cancelButtonText: "Cancel",
                 didOpen: () => {
                     const textarea = Swal.getInput();
@@ -302,17 +298,16 @@ function rejectPermit() {
                 if (!result.isConfirmed) return;
 
                 $.ajax({
-                    url: `/internal/permit/${id}`,
+                    url: `/internal/inspection_item/${id}/reject`,
                     method: "POST",
                     data: {
                         _token: $('meta[name="csrf-token"]').attr("content"),
-                        rejected: 1,
                         reason: result.value, // 👈 SEND REASON
                     },
                     success: function () {
                         Swal.fire(
                             "Rejected!",
-                            "The permit has been rejected successfully.",
+                            "The inspection item has been rejected successfully.",
                             "success"
                         );
                         initApplicationDetails();
@@ -331,18 +326,7 @@ function rejectPermit() {
         });
 }
 
-function generatePermit() {
-    $(document)
-        .off("click", ".generatePermit")
-        .on("click", ".generatePermit", function (e) {
-            e.preventDefault();
 
-            const id = $(this).data("permit");
-
-            // ✅ Trigger browser download
-            window.location.href = `/permit/generate/${id}`;
-        });
-}
 
 async function viewMore() {
     $(document).on("click", ".view-attachment", function (e) {
@@ -423,33 +407,28 @@ async function viewMore() {
     <div class="p-1 row">
         <div class = "col-12 col-md-6">
             <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
-                            class="fa-solid fa-tag"></i></span> Item Name:</strong> ${
-                                detail.item_name ?? "-"
-                            }</p>
+                            class="fa-solid fa-tag"></i></span> Item Name:</strong> ${detail.item_name ?? "-"
+            }</p>
         </div>
         <div class = "col-12 col-md-6">
             <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
-                            class="fa-solid fa-scale-balanced"></i></span> Quantity:</strong> ${
-                                detail.quantity ?? "-"
-                            } ${detail.measure ?? ""}</p>
+                            class="fa-solid fa-scale-balanced"></i></span> Quantity:</strong> ${detail.quantity ?? "-"
+            } ${detail.measure ?? ""}</p>
         </div>
         <div class = "col-12 col-md-6">
             <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
-                            class="fa-solid fa-money-bill"></i></span> Value:</strong> RM ${
-                                detail.value ?? "-"
-                            }</p>
+                            class="fa-solid fa-money-bill"></i></span> Value:</strong> RM ${detail.value ?? "-"
+            }</p>
         </div>
         <div class = "col-12 col-md-6">
             <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
-                            class="fa-solid fa-pen-fancy"></i></span> Purpose:</strong> ${
-                                detail.purpose ?? "-"
-                            }</p>
+                            class="fa-solid fa-pen-fancy"></i></span> Purpose:</strong> ${detail.purpose ?? "-"
+            }</p>
         </div>
         <div class = "col-12 col-md-6">
             <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
-                            class="fa-solid fa-gear"></i></span> Uses:</strong> ${
-                                detail.uses ?? "-"
-                            }</p>
+                            class="fa-solid fa-gear"></i></span> Uses:</strong> ${detail.uses ?? "-"
+            }</p>
         </div>
         
         <p class="mt-3"><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
@@ -505,11 +484,11 @@ function verifyApplication() {
             if (result.isConfirmed) {
                 // Send AJAX request to verify application
                 $.ajax({
-                    url: `/application/verify/${applicationId}`, // your route
+                    url: `/internal/inspection/${applicationId}/status`,
                     method: "POST",
                     data: {
-                        _token: $("meta[name='csrf-token']").attr("content"), // CSRF token
-                        verified: 1,
+                        _token: $("meta[name='csrf-token']").attr("content"),
+                        status: 'Clerk review in-progress',
                     },
                     success: function (res) {
                         Swal.fire({
@@ -547,13 +526,15 @@ export function renderPermitBadge(status, remark = "") {
 
     switch (status) {
         case "processing":
+        case "submitted":
             badgeClass = "bg-info";
             label = "Processing";
             break;
 
+        case "pending":
         case "pending for payment":
             badgeClass = "bg-warning";
-            label = "Pending Payment";
+            label = "Pending For Payment";
             break;
 
         case "paid":
@@ -607,11 +588,11 @@ function rejectApplication() {
             if (result.isConfirmed) {
                 // Send AJAX request to verify application
                 $.ajax({
-                    url: `/application/verify/${applicationId}`, // your route
+                    url: `/internal/inspection/${applicationId}/status`,
                     method: "POST",
                     data: {
-                        _token: $("meta[name='csrf-token']").attr("content"), // CSRF token
-                        not_verified: 1,
+                        _token: $("meta[name='csrf-token']").attr("content"),
+                        status: 'Rejected',
                     },
                     success: function (res) {
                         Swal.fire({
@@ -671,12 +652,12 @@ function adminRejectApplication() {
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: `/application/verify/${applicationId}`,
+                    url: `/internal/inspection/${applicationId}/status`,
                     method: "POST",
                     data: {
                         _token: $("meta[name='csrf-token']").attr("content"),
-                        rejected: 1,
-                        reason: result.value, // 🔥 send reason
+                        status: 'Rejected',
+                        reason: result.value,
                     },
                     success: function (res) {
                         Swal.fire({
@@ -721,11 +702,11 @@ function acceptApplication() {
             if (result.isConfirmed) {
                 // Send AJAX request to verify application
                 $.ajax({
-                    url: `/application/verify/${applicationId}`, // your route
+                    url: `/internal/inspection/${applicationId}/status`,
                     method: "POST",
                     data: {
-                        _token: $("meta[name='csrf-token']").attr("content"), // CSRF token
-                        accepted: accepted,
+                        _token: $("meta[name='csrf-token']").attr("content"),
+                        status: 'Clerk Verified',
                     },
                     success: function (res) {
                         Swal.fire({
@@ -790,27 +771,6 @@ function applicationLog() {
             modal.show();
         });
 }
-let totalPermit = 0;
-// Function to sum selected permit values
-function updateTotalValue() {
-    let total = 0;
-    $(".permit-checkbox:checked").each(function () {
-        const value = parseFloat($(this).data("permit-value")) || 0;
-        total += value;
-    });
-
-    // Update the totalValue element
-    $("#totalValue").text(
-        "RM " +
-            total.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-            })
-    );
-
-    totalPermit = total;
-
-}
 
 
 
@@ -846,83 +806,16 @@ async function initApplicationDetails() {
 
     acceptPermit();
     rejectPermit();
-    generatePermit();
-    pendingPaymentTable();
 
     // application_reapply(application)
 
 
     Swal.close(); // Close after data is loaded
 
-    // When "Check All" is toggled
-    $(document).on("change", "#checkAllPermits", function () {
-        const isChecked = $(this).is(":checked");
-
-        // Toggle all row checkboxes
-        $(".permit-checkbox").prop("checked", isChecked);
-
-        // Enable/disable the checkout button
-        $("#checkoutPage").prop("disabled", !isChecked);
-
-        // Update total value
-        updateTotalValue();
-    });
-
-    // When individual checkboxes are toggled
-    $(document).on("change", ".permit-checkbox", function () {
-        const total = $(".permit-checkbox").length;
-        const checked = $(".permit-checkbox:checked").length;
-
-        $("#checkoutPage").prop("disabled", checked === 0);
-        $("#checkAllPermits").prop("checked", total > 0 && total === checked);
-
-        // Update total value
-        updateTotalValue();
-    });
-
-    // When checkout button is clicked
-    $(document).on("click", "#checkoutPage", function (e) {
-        e.preventDefault();
-
-        const selectedPermits = $(".permit-checkbox:checked")
-            .map(function () {
-                return $(this).val();
-            })
-            .get();
-
-        if (selectedPermits.length === 0) {
-            Swal.fire("Error!", "Choose the permit to continue.", "error");
-            return;
-        }
-
-        Swal.fire({
-            title: "Loading...",
-
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            },
-        });
-
-        totalPermit = Number(totalPermit).toFixed(2);
-
-        $.ajax({
-            url: "/payment/signed-url",
-            method: "POST",
-            data: {
-                application_id: application.id,
-                permit_ids: selectedPermits,
-                total: totalPermit,
-                _token: $('meta[name="csrf-token"]').attr("content"),
-            },
-            success: function (res) {
-                window.location.href = res.url;
-            },
-            error: function () {
-                Swal.fire("Error!", "Unable to proceed to checkout.", "error");
-            },
-        });
-    });
+    // Checkout functionality is not applicable for inspection certificates
+    // Hide payment-related elements
+    $("#checkAllPermits").closest('.col-xl-12').hide();
+    $("#checkoutPage").hide();
 }
 
 /* -------------------------------
