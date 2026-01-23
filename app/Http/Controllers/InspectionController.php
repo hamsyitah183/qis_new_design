@@ -18,10 +18,10 @@ use App\Models\ImportPermitLog;
 use App\Models\IpCondition;
 use App\Models\IpConsignmentAttachment;
 use App\Models\IpConsignmentPermit;
+use App\Models\InternalUser;
 use App\Models\PublicUser;
 use App\Models\TempAttachment;
 use App\Notifications\ApplicationNotification;
-use App\Services\ApplicationActivityLogger;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -105,6 +105,8 @@ class InspectionController extends Controller
         try {
             $applicationUuid = $request->input('applicationId');
             $isDraft = $request->boolean('is_draft');
+            $isNewApplication = false;
+            
 
             // Decode JSON data from frontend
             $exporter = $request->exporterData ? json_decode($request->exporterData, true) : null;
@@ -132,6 +134,7 @@ class InspectionController extends Controller
                     'status' => $status,
                 ]);
             } else {
+                $isNewApplication = true;
                 $application = InspectionApplication::create([
                     'application_id' => Str::uuid(),
                     'eta' => $permit['eta'] ?? null,
@@ -190,16 +193,56 @@ class InspectionController extends Controller
                 }
             }
 
+            // inspection activity log
+            if ($isDraft) {
+                $application->logActivity(
+                    action: $isNewApplication ? 'Draft Created' : 'Draft Updated',
+                    remark: $isNewApplication ? 'Inspection application saved as draft' : 'Inspection application draft updated',
+                    status: 'Draft'
+                );
+            } else {
+                $application->logActivity(
+                    action: $isNewApplication ? 'Submitted' : 'Updated',
+                    remark: $isNewApplication ? 'Inspection application submitted' : 'Inspection application updated and submitted',
+                    status: 'Pending'
+                );
+            }
+
             DB::commit();
 
-            return response()->json(
-                [
-                    'status' => 'success',
-                    'message' => $isDraft ? 'Draft saved successfully' : 'Application submitted successfully',
-                    'application_id' => $application->application_id,
-                ],
-                200,
+            // inspection send notifications
+            $notificationUrl = route('public.viewInspectionApplication', ['id' => $application->application_id]);
+
+            $internalUsers = InternalUser::role(['admin', 'clerk'])->get();
+            $internalMsg = $isDraft
+                ? ($isNewApplication ? 'New Inspection Certificate draft created' : 'Inspection Certificate draft updated')
+                : ($isNewApplication ? 'New Inspection Certificate application submitted' : 'Inspection Certificate application updated');
+
+            Notification::send(
+                $internalUsers,
+                new ApplicationNotification($internalMsg, Auth::user()->fullname, $notificationUrl)
             );
+
+            event(new InternalUserAdminEvent($internalMsg . ' by ' . (Auth::user()->fullname ?? 'Unknown User')));
+            event(new InternalUserClerkEvent($internalMsg . ' by ' . (Auth::user()->fullname ?? 'Unknown User')));
+
+            $applicant = PublicUser::where('uuid', $application->user_id)->first();
+            if ($applicant) {
+                $applicantMsg = $isDraft
+                    ? 'Your Inspection Certificate Application with id ' . $application->application_id . ' is saved as draft'
+                    : 'Your Inspection Certificate Application with id ' . $application->application_id . ' is submitted';
+
+                $applicant->notify(new ApplicationNotification($applicantMsg, 'QIS', $notificationUrl));
+                event(new PublicUserEvent($applicantMsg, $applicant->uuid));
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => $isDraft ? 'Draft saved successfully' : 'Application submitted successfully',
+                'application_id' => $application->application_id
+            ], 200);
+
+          
         } catch (\Exception $e) {
             DB::rollBack();
             foreach ($movedFiles as $file) {
@@ -377,6 +420,26 @@ class InspectionController extends Controller
         $application->status = $status;
         $application->save();
 
+        // activity log
+        $application->logActivity(
+            action: $status,
+            remark: "Inspection application {$status} by internal user",
+            status: $status
+        );
+
+        // notifications
+        $notificationUrl = route('public.viewInspectionApplication', ['id' => $application->application_id]);
+        $internalUsers = InternalUser::role(['admin', 'clerk'])->get();
+        $internalMsg = "Inspection application {$application->application_id} has been {$status}";
+        Notification::send($internalUsers, new ApplicationNotification($internalMsg, authUser()['user']->fullname, $notificationUrl));
+
+        $applicant = PublicUser::where('uuid', $application->user_id)->first();
+        if ($applicant) {
+            $applicantMsg = "Your inspection application with id {$application->application_id} has been {$status}";
+            $applicant->notify(new ApplicationNotification($applicantMsg, 'QIS', $notificationUrl));
+            event(new PublicUserEvent($applicantMsg, $applicant->uuid));
+        }
+
         return response()->json([
             'message' => "Inspection application {$status} successfully.",
         ]);
@@ -393,6 +456,8 @@ class InspectionController extends Controller
 
         return DB::transaction(function () use ($id, $user, $type) {
             $application = InspectionApplication::where('application_id', $id)->firstOrFail();
+            $applicationId = $application->application_id;
+            $applicantUuid = $application->user_id;
 
             // Authorization: public users can only delete their own
             if ($type === 'public' && $application->user_id !== $user->uuid && $application->importer_id !== $user->uuid) {
@@ -427,6 +492,27 @@ class InspectionController extends Controller
             }
 
             $application->delete();
+
+            // activity log and notifications
+            $application->logActivity(
+                action: 'Deleted',
+                remark: 'Inspection application deleted',
+                status: 'Deleted'
+            );
+
+            $notificationUrl = route('public.showallinspectionlist');
+            $internalUsers = InternalUser::role(['admin', 'clerk'])->get();
+            Notification::send(
+                $internalUsers,
+                new ApplicationNotification("Inspection application {$applicationId} has been deleted", authUser()['user']->fullname, $notificationUrl)
+            );
+
+            $applicant = PublicUser::where('uuid', $applicantUuid)->first();
+            if ($applicant) {
+                $applicantMsg = "Your inspection application with id {$applicationId} has been deleted";
+                $applicant->notify(new ApplicationNotification($applicantMsg, 'QIS', $notificationUrl));
+                event(new PublicUserEvent($applicantMsg, $applicant->uuid));
+            }
 
             return response()->json([
                 'message' => 'Inspection application and all attachments deleted successfully.',
