@@ -6,7 +6,12 @@
 @section('breadcrumb')
     <x-breadcrumb :items="[
         ['label' => 'Dashboard', 'url' => '/'],
-        ['label' => 'Application List', 'url' => auth('internal')->check() ? '/internal/inspection_certificates_list' : '/public/inspection_certificates_list'],
+        [
+            'label' => 'Application List',
+            'url' => auth('internal')->check()
+                ? '/internal/inspection_certificates_list'
+                : '/public/inspection_certificates_list',
+        ],
         ['label' => 'Application: ' . ($application->application_id ?? ''), 'url' => '#'],
     ]" title="View Application">
 
@@ -38,19 +43,19 @@
                     {{-- @dd($application->user_id, authUser()['user']->uuid) --}}
 
                     <div class="ms-auto">
-                         @if ($application->status == 'Draft' && $application->user_id == authUser()['user']->uuid)
-                            @if($application->category_application == '0')
+                        @if ($application->status == 'Draft' && $application->user_id == authUser()['user']->uuid)
+                            @if ($application->category_application == '0')
                                 <a class="btn btn-primary2 btn-wave btn-sm me-2" id="editButton"
-                                   href="{{ route('public.inspectionApplicationSelf', ['id' => $application->application_id]) }}">
+                                    href="{{ route('public.inspectionApplicationSelf', ['id' => $application->application_id]) }}">
                                     Edit
                                 </a>
                             @else
                                 <a class="btn btn-primary2 btn-wave btn-sm me-2" id="editButton"
-                                   href="{{ route('public.inspectionApplicationOthers', ['id' => $application->application_id]) }}">
+                                    href="{{ route('public.inspectionApplicationOthers', ['id' => $application->application_id]) }}">
                                     Edit
                                 </a>
                             @endif
-                         @endif
+                        @endif
                         <button class="btn btn-primary btn-wave btn-sm " id="applicationModal"><i
                                 class="ti ti-file-time fs-18"></i> Application Log</button>
                     </div>
@@ -69,11 +74,19 @@
                             </div>
                             <div class="wizard-step" data-step="2">
                                 <span class="dot"></span>
-                                <span>OVERVIEW</span>
+                                <span>PERMIT ITEMS</span>
                             </div>
                             <div class="wizard-step" data-step="3">
                                 <span class="dot"></span>
-                                <span>APPLICATION STATUS</span>
+                                <span>Payment</span>
+                            </div>
+                            <div class="wizard-step" data-step="4">
+                                <span class="dot"></span>
+                                <span>Confirmation</span>
+                            </div>
+                            <div class="wizard-step" data-step="5">
+                                <span class="dot"></span>
+                                <span>Confirmation</span>
                             </div>
                         </aside>
                         <aside class="wizard-content container">
@@ -111,8 +124,8 @@
                             @endif
 
                             @php
-                                if ($application->consignmentPermits) {
-                                    $allPending = $application->consignmentPermits->every(
+                                if ($application->inspectionItems) {
+                                    $allPending = $application->inspectionItems->every(
                                         fn($permit) => $permit->status === 'pending for payment',
                                     );
                                 } else {
@@ -120,6 +133,9 @@
                                 }
 
                                 $value = $allPending ? 1 : 0;
+
+                                // dd($application->inspectionItems, $value);
+
                             @endphp
 
 

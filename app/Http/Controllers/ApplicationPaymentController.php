@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\InspectionItem;
 use App\Models\IpConsignmentPermit;
 use App\Models\Order;
 use Illuminate\Http\Request;
@@ -92,26 +93,26 @@ class ApplicationPaymentController extends Controller
 
     public function orderDetails($order_number)
     {
-        // dd($order_number);
-        $order = Order::with(['publicUser', 'ipApplication.importer', 'ipApplication.exporter', 'ipApplication.entryPoint'])
+        $order = Order::with(['publicUser', 'ipApplication.importer', 'ipApplication.exporter', 'ipApplication.entryPoint', 'inspectionApplication.importer', 'inspectionApplication.exporter', 'inspectionApplication.entryPoint'])
             ->where('order_number', $order_number)
-            ->first();
+            ->firstOrFail();
 
-        // dd($order);
-        $permitsArray = $order->order_details['permits'];
+        $permitsArray = $order->order_details['permits'] ?? [];
+        $permitIds = collect($permitsArray)->pluck('permit_id')->toArray();
 
-        if ($order->application_type == 'Import Permit') {
-            $permitIds = collect($permitsArray)->pluck('permit_id')->toArray();
+        $application = $order->application; 
 
-            $permits = IpConsignmentPermit::whereIn('id', $permitIds)->get();
-        } else {
-            $permits = [];
-        }
-        // dd($permits);
+        $permits = match ($order->application_type) {
+            'Import Permit' => IpConsignmentPermit::whereIn('id', $permitIds)->get(),
+            'Inspection Certificate' => InspectionItem::whereIn('id', $permitIds)->get(),
+            default => collect(),
+        };
+
         return view('pages.order.order_details', [
             'title' => $order_number . ' order details',
             'order' => $order,
             'permits' => $permits,
+            'application' => $application,
         ]);
     }
 }

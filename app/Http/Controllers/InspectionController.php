@@ -208,7 +208,7 @@ class InspectionController extends Controller
         
         // Fetch application and eager load relationships
         $application = InspectionApplication::where('application_id', $id)
-            ->with(['user', 'importer', 'exporter', 'entryPoint.districtCode', 'inspectionItems.attachments', 'activity_log.causer'])
+            ->with(['user', 'importer', 'exporter.countryInfo', 'entryPoint.districtCode', 'inspectionItems.attachments', 'activity_log.causer', ])
             ->firstOrFail();
 
         if ($type === 'internal') {

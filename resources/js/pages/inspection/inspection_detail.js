@@ -36,7 +36,7 @@ async function fillInInput() {
     console.log("entry", entryPoint.entry_name);
 
     // Example: if returned JSON is { name: "Malaysia" }
-    $("#expcountry").val(country.name);
+    $("#expcountry").val(application.exporter.country_info.name);
     $("#sexpCountry").text(country.name);
 
     $("#entryPoint").val(entryPoint.entry_name);
@@ -159,11 +159,14 @@ async function pendingPaymentTable() {
     const tableBody = $("#summaryTable4 tbody");
     tableBody.empty();
 
-    const permits = application.consignment_permits || [];
+    const permits = application.inspection_items || [];
 
-    const pendingPaymentPermits = permits.filter(
-        (p) => p.status?.toLowerCase() === "pending for payment"
+    const pendingPaymentPermits = permits.filter((p) =>
+        ["pending for payment", "payment failed"].includes(
+            p.status?.toLowerCase()
+        )
     );
+
 
     if (!pendingPaymentPermits || pendingPaymentPermits.length === 0) {
         tableBody.append(`
@@ -203,9 +206,6 @@ async function pendingPaymentTable() {
     });
 
     $("#checkAllPermits").prop("checked", false);
-    // This function is not applicable for inspection certificates as they don't have payment processing
-    // Hide the payment table for inspection certificates
-    $("#summaryTable4").closest('.col-xl-12').hide();
 }
 
 function acceptPermit() {
@@ -772,6 +772,27 @@ function applicationLog() {
         });
 }
 
+let totalPermit = 0;
+// Function to sum selected permit values
+function updateTotalValue() {
+    let total = 0;
+    $(".permit-checkbox:checked").each(function () {
+        const value = parseFloat($(this).data("permit-value")) || 0;
+        total += value;
+    });
+
+    // Update the totalValue element
+    $("#totalValue").text(
+        "RM " +
+            total.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            })
+    );
+
+    totalPermit = total;
+
+}
 
 
 
@@ -807,15 +828,94 @@ async function initApplicationDetails() {
     acceptPermit();
     rejectPermit();
 
+
+    pendingPaymentTable();
+
     // application_reapply(application)
 
 
     Swal.close(); // Close after data is loaded
 
-    // Checkout functionality is not applicable for inspection certificates
-    // Hide payment-related elements
-    $("#checkAllPermits").closest('.col-xl-12').hide();
-    $("#checkoutPage").hide();
+      // When "Check All" is toggled
+    $(document).on("change", "#checkAllPermits", function () {
+        const isChecked = $(this).is(":checked");
+
+        // Toggle all row checkboxes
+        $(".permit-checkbox").prop("checked", isChecked);
+
+        // Enable/disable the checkout button
+        $("#checkoutPage").prop("disabled", !isChecked);
+
+        // Update total value
+        updateTotalValue();
+    });
+
+    // When individual checkboxes are toggled
+    $(document).on("change", ".permit-checkbox", function () {
+        const total = $(".permit-checkbox").length;
+        const checked = $(".permit-checkbox:checked").length;
+
+        $("#checkoutPage").prop("disabled", checked === 0);
+        $("#checkAllPermits").prop("checked", total > 0 && total === checked);
+
+        // Update total value
+        updateTotalValue();
+    });
+
+    let checkoutLocked = false;
+
+    $(document).on("click", "#checkoutPage", function (e) {
+        e.preventDefault();
+
+        if (checkoutLocked) return; // 🚫 stop repeated click
+        checkoutLocked = true;
+
+        const $btn = $(this);
+        $btn.prop("disabled", true).text("Processing...");
+
+        const selectedPermits = $(".permit-checkbox:checked")
+            .map(function () {
+                return $(this).val();
+            })
+            .get();
+
+        if (selectedPermits.length === 0) {
+            Swal.fire("Error!", "Choose the permit to continue.", "error");
+            checkoutLocked = false;
+            $btn.prop("disabled", false).text("Checkout");
+            return;
+        }
+
+        Swal.fire({
+            title: "Loading...",
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading(),
+        });
+
+        totalPermit = Number(totalPermit).toFixed(2);
+
+        $.ajax({
+            url: "/payment/signed-url",
+            method: "POST",
+            data: {
+                application_id: application.id,
+                permit_ids: selectedPermits,
+                total: totalPermit,
+                type: "inspection",
+                _token: $('meta[name="csrf-token"]').attr("content"),
+            },
+            success: function (res) {
+                window.location.href = res.url; // 🔀 redirect
+            },
+            error: function () {
+                Swal.fire("Error!", "Unable to proceed to checkout.", "error");
+
+                // 🔓 unlock if failed
+                checkoutLocked = false;
+                $btn.prop("disabled", false).text("Checkout");
+            },
+        });
+    });
 }
 
 /* -------------------------------

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\InspectionApplication;
+use App\Models\InspectionItem;
 use App\Models\IpApplication;
 use App\Models\IpConsignmentPermit;
 use App\Models\Order;
@@ -15,16 +17,23 @@ use Illuminate\Support\Facades\URL;
 class PaymentController extends Controller
 {
     //
-    public function checkout($id, $permitId, $total)
+    public function checkout($id, $permitId, $total, $type)
     {
         if (!session()->has('payment_active')) {
             abort(403, 'Payment session expired');
         }
+        // dd($type);
+        if ($type == 'import_permit') {
+            $application = IpApplication::findOrFail($id);
+            $permitIds = explode(',', $permitId);
 
-        $application = IpApplication::findOrFail($id);
-        $permitIds = explode(',', $permitId);
+            $permits = IpConsignmentPermit::where('application_id', $id)->whereIn('id', $permitIds)->where('status', 'pending for payment')->get();
+        } elseif ($type == 'inspection') {
+            $application = InspectionApplication::findOrFail($id);
+            $permitIds = explode(',', $permitId);
 
-        $permits = IpConsignmentPermit::where('application_id', $id)->whereIn('id', $permitIds)->where('status', 'pending for payment')->get();
+            $permits = InspectionItem::where('application_id', $id)->whereIn('id', $permitIds)->where('status', 'pending for payment')->get();
+        }
 
         // dd($permits);
         if ($permits->isEmpty()) {
@@ -52,7 +61,7 @@ class PaymentController extends Controller
                 ->map(function ($permit) use ($amount) {
                     return [
                         'permit_id' => $permit->id,
-                        'permit_number' => $permit->permit_number,
+                        'permit_number' => $permit->permit_number ?? '-',
                         'item_name' => $permit->consignment_detail['item_name'] ?? null,
                         'status' => $permit->status,
                         'amount' => number_format($amount, 2, '.', ''),
@@ -77,21 +86,38 @@ class PaymentController extends Controller
     {
         // dd($request->all());
 
+        $type = $request['type'];
+        $id = $request['application_id'];
+        $permitIds = $request['permit_ids'] ;
+
         $request->validate([
             'application_id' => 'required',
             'permit_ids' => 'required|array|min:1',
         ]);
 
-        $application = IpApplication::findOrFail($request->application_id);
+        if ($type == 'import_permit') {
+            $application = IpApplication::findOrFail($id);
+            // $permitIds = explode(',', $permitId);
 
-        // 🔒 Ownership check
+            $permits = IpConsignmentPermit::where('application_id', $id)->whereIn('id', $permitIds)->where('status', 'pending for payment')->get();
+        } elseif ($type == 'inspection') {
+            $application = InspectionApplication::findOrFail($id);
+            // $permitIds = explode(',', $permitId);
+
+            $permits = InspectionItem::where('application_id', $id)->whereIn('id', $permitIds)->where('status', 'pending for payment')->get();
+            // dd($permits);
+        }
+
+        // $application = IpApplication::findOrFail($request->application_id);
+
+        // // 🔒 Ownership check
         if ($application->user_id !== authUser()['user']->uuid) {
             abort(403);
         }
-        $permits = IpConsignmentPermit::where('application_id', $application->id)
-            ->whereIn('id', $request->permit_ids)
-            ->whereIn('status', ['pending for payment', 'payment failed'])
-            ->get();
+        // $permits = IpConsignmentPermit::where('application_id', $application->id)
+        //     ->whereIn('id', $request->permit_ids)
+        //     ->whereIn('status', ['pending for payment', 'payment failed'])
+        //     ->get();
 
         if ($permits->count() !== count($request->permit_ids)) {
             abort(403, 'Invalid permit selection');
@@ -113,6 +139,7 @@ class PaymentController extends Controller
             'id' => $application->id,
             'permitId' => implode(',', $request->permit_ids),
             'total' => $total,
+            'type' => $type
             // 'details' => $jsonData
         ]);
 
@@ -144,13 +171,18 @@ class PaymentController extends Controller
         $application = $applicationDetails['application'];
         $user = $applicationDetails['user'];
         $permitsArray = $applicationDetails['permits'];
+        $permitIds = collect($permitsArray)->pluck('permit_id')->toArray();
 
         // dd($application);
         if ($application['application_type'] == 'Import Permit') {
-            $permitIds = collect($permitsArray)->pluck('permit_id')->toArray();
+           
 
             $permits = IpConsignmentPermit::whereIn('id', $permitIds)->get();
-        } else {
+        } elseif($application['application_type'] == 'Inspection') {
+            $permits = InspectionItem::whereIn('id', $permitIds)->get();
+        }
+        
+        else {
             $permits = [];
         }
         // dd($permits);
@@ -180,7 +212,11 @@ class PaymentController extends Controller
         // dd($application['application_type']);
         if ($application['application_type'] == 'Import Permit') {
             $itn = 'ITN10001';
-        } else {
+        } 
+        else if ($application['application_type'] == 'Inspection Certificate') {
+            $itn = 'ITN10002';
+        } 
+        else {
             $itn = 'ITN';
         }
 

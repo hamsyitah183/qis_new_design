@@ -1267,6 +1267,7 @@ async function initApplicationDetails() {
                 application_id: application.id,
                 permit_ids: selectedPermits,
                 total: totalPermit,
+                type: "import_permit",
                 _token: $('meta[name="csrf-token"]').attr("content"),
             },
             success: function (res) {

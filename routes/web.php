@@ -273,7 +273,7 @@ Route::middleware(['auth.any'])->group(function () {
 
     Route::get('/permit/generate/{id}', [PermitGenerateController::class, 'generatePermitWord']);
 
-    Route::get('/payment/{id}/{permitId}/{total}', [PaymentController::class, 'checkout'])
+    Route::get('/payment/{id}/{permitId}/{total}/{type}', [PaymentController::class, 'checkout'])
         ->name('payment.checkout')
         ->middleware('signed');
 
