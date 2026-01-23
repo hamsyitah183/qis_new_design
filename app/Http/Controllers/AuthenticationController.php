@@ -254,7 +254,7 @@ class AuthenticationController extends Controller
                     'ip' => $request->ip(),
                     'guard' => $guard,
                 ])
-                ->log("{$username} logged out from the system ({$guard} guard).");
+                ->log("{$username} logged out from the system ({$guard} user ).");
         }
 
         $request->session()->invalidate();

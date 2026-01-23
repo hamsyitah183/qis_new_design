@@ -14,12 +14,7 @@ class InspectionApplication extends Model
         'importer_detail' => 'array',
     ];
 
-    protected static function booted()
-    {
-        static::creating(function ($application) {
-            $application->application_type = 'Inspection Certificate';
-        });
-    }
+
 
     public function user()
     {

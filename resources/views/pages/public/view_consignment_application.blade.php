@@ -12,10 +12,10 @@
 
 @section('breadcrumb')
     <x-breadcrumb :items="[
-        ['label' => 'Dashboard', 'url' => '/'],
-        ['label' => 'Application List', 'url' => '/internal/view_all_application'],
-        ['label' => 'Application: ' . $application->application_id, 'url' => '#'],
-    ]" title="View Application">
+            ['label' => 'Dashboard', 'url' => '/'],
+            ['label' => 'Consignment Certificate List', 'url' => '/internal/view_all_application'],
+            ['label' => 'Application: ' . $application->application_id, 'url' => '#'],
+        ]" title="View Application">
 
     </x-breadcrumb>
 @endsection
@@ -107,8 +107,9 @@
                             @endphp
                             {{-- @dd($application->status) --}}
                             @if (
-                                ($application->status === 'Clerk Review In-Progress' && $isAdminOrClerk) ||
-                                    ($application->category_application == 1 && ($isOwner || $isAdminOrClerk)))
+                                    ($application->status === 'Clerk Review In-Progress' && $isAdminOrClerk) ||
+                                    ($application->category_application == 1 && ($isOwner || $isAdminOrClerk))
+                                )
                                 {{-- Step 4 --}}
                                 @include('pages.public.view_consignment.step4')
                             @endif
@@ -129,7 +130,7 @@
 
 
         @slot('footer')
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         @endslot
 
     </x-modal>
@@ -155,7 +156,7 @@
         </div>
 
         @slot('footer')
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         @endslot
 
     </x-modal>
@@ -170,7 +171,7 @@
     </script>
     <script>
         // for form wizard next and prev button
-        (function() {
+        (function () {
             // 🟢 First wizard
             let firstWizardConfig = {
                 wz_class: ".wizard-tab",
@@ -193,7 +194,7 @@
         })();
     </script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             if (window.location.hash === '#pending') {
 
 

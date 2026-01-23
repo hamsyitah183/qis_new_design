@@ -81,7 +81,7 @@ class PermitApplicationController extends Controller
             ->withProperties([
                 'exporter' => $exporter
             ])
-            ->log(authUser()['user']['fullname'] . ' is added an exporter');
+            ->log(authUser()['user']['fullname'] . ' has added an exporter');
 
         return response()->json($exporter, 201);
     }
@@ -105,6 +105,18 @@ class PermitApplicationController extends Controller
         }
 
         \DB::table('exporter')->where('id', $id)->delete();
+
+        activity()
+            ->tap(function (Activity $activity) {
+                $activity->log_name = 'user_activity';
+            })
+            ->event('delete exporter')
+            ->causedBy(authUser()['user'])
+            ->performedOn(authUser()['user'])
+            ->withProperties([
+                'exporter_id' => $id
+            ])
+            ->log(authUser()['user']['fullname'] . ' has deleted an exporter');
 
         return response()->json([
             'success' => true,
@@ -243,6 +255,18 @@ class PermitApplicationController extends Controller
                     'importer_verify' => $importer_verify,
                 ]);
 
+                activity()
+                    ->tap(function (Activity $activity) {
+                        $activity->log_name = 'user_activity';
+                    })
+                    ->event($isDraft ? 'update draft application' : 'update import permit application')
+                    ->causedBy(authUser()['user'])
+                    ->performedOn($application)
+                    ->withProperties([
+                        'application' => $application
+                    ])
+                    ->log(authUser()['user']['fullname'] . ($isDraft ? ' has updated a draft application (ID: ' : ' has updated an import permit application (ID: ') . $application->application_id . ')');
+
                 try {
                     event(new InternalUserAdminEvent($isDraft ? 'Import permit application saved as DRAFT by ' . ($importer['fullname'] ?? 'Unknown Importer') : 'Import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')));
                     event(new InternalUserClerkEvent($isDraft ? 'Import permit application saved as DRAFT by ' . ($importer['fullname'] ?? 'Unknown Importer') : 'Import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')));
@@ -268,6 +292,18 @@ class PermitApplicationController extends Controller
                     'importer_verify' => $importer_verify,
                 ]);
 
+                activity()
+                    ->tap(function (Activity $activity) {
+                        $activity->log_name = 'user_activity';
+                    })
+                    ->event($isDraft ? 'create draft application' : 'create import permit application')
+                    ->causedBy(authUser()['user'])
+                    ->performedOn($application)
+                    ->withProperties([
+                        'application' => $application
+                    ])
+                    ->log(authUser()['user']['fullname'] . ($isDraft ? ' has created a new draft application (ID: ' : ' has created a new import permit application (ID: ') . $application->application_id . ')');
+
                 // dd($application->importer_detail);
 
                 // event(new ApplicationCreatedInternalUser(
@@ -283,14 +319,17 @@ class PermitApplicationController extends Controller
                     Log::warning('Pusher connection failed but continuing application creation: ' . $e->getMessage());
                 }
 
-                ApplicationActivityLogger::log(
-                    application: $application,
-                    event: 'create_application',
-                    description: authUser()['user']->fullname . " create application with id {$application->application_id}",
-                    properties: [
-                        'role' => 'public',
-                    ],
-                );
+                activity()
+                    ->tap(function (Activity $activity) {
+                        $activity->log_name = 'user_activity';
+                    })
+                    ->event('create application')
+                    ->causedBy(authUser()['user'])
+                    ->performedOn(authUser()['user'])
+                    ->withProperties([
+                        'application' => $application
+                    ])
+                    ->log(authUser()['user']['fullname'] . ' has created an application (ID: ' . $application->application_id . ')');
 
                 if (!$isDraft) {
                     $notificationController = new NotificationController();

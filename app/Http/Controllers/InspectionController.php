@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Yajra\DataTables\Facades\DataTables;
+use Spatie\Activitylog\Models\Activity;
 
 class InspectionController extends Controller
 {
@@ -131,6 +132,19 @@ class InspectionController extends Controller
                     'importer_detail' => $importer ?? [],
                     'status' => $status,
                 ]);
+
+                activity()
+                    ->tap(function (Activity $activity) {
+                        $activity->log_name = 'user_activity';
+                    })
+                    ->event($isDraft ? 'update draft inspection' : 'update inspection application')
+                    ->causedBy(authUser()['user'])
+                    ->performedOn($application)
+                    ->withProperties([
+                        'application' => $application
+                    ])
+                    ->log(authUser()['user']['fullname'] . ($isDraft ? ' has updated a draft inspection (ID: ' : ' has updated an inspection application (ID: ') . $application->application_id . ')');
+
             } else {
                 $application = InspectionApplication::create([
                     'application_id' => Str::uuid(),
@@ -144,6 +158,18 @@ class InspectionController extends Controller
                     'importer_detail' => $importer ?? [],
                     'status' => $status,
                 ]);
+
+                activity()
+                    ->tap(function (Activity $activity) {
+                        $activity->log_name = 'user_activity';
+                    })
+                    ->event($isDraft ? 'create draft inspection' : 'create inspection application')
+                    ->causedBy(authUser()['user'])
+                    ->performedOn($application)
+                    ->withProperties([
+                        'application' => $application
+                    ])
+                    ->log(authUser()['user']['fullname'] . ($isDraft ? ' has created a new draft inspection (ID: ' : ' has created a new inspection application (ID: ') . $application->application_id . ')');
             }
 
             $appId = $application->id;
@@ -377,6 +403,18 @@ class InspectionController extends Controller
         $application->status = $status;
         $application->save();
 
+        activity()
+            ->tap(function (Activity $activity) {
+                $activity->log_name = 'user_activity';
+            })
+            ->event(strtolower($status) . ' inspection application')
+            ->causedBy(authUser()['user'])
+            ->performedOn($application)
+            ->withProperties([
+                'status' => $status,
+            ])
+            ->log(authUser()['user']['fullname'] . ' has ' . strtolower($status) . ' an inspection application (ID: ' . $application->application_id . ')');
+
         return response()->json([
             'message' => "Inspection application {$status} successfully.",
         ]);
@@ -427,6 +465,18 @@ class InspectionController extends Controller
             }
 
             $application->delete();
+
+            activity()
+                ->tap(function (Activity $activity) {
+                    $activity->log_name = 'user_activity';
+                })
+                ->event('delete inspection application')
+                ->causedBy(authUser()['user'])
+                ->performedOn(authUser()['user'])
+                ->withProperties([
+                    'application_id' => $application->application_id
+                ])
+                ->log(authUser()['user']['fullname'] . ' has deleted an inspection application (ID: ' . $application->application_id . ')');
 
             return response()->json([
                 'message' => 'Inspection application and all attachments deleted successfully.',
