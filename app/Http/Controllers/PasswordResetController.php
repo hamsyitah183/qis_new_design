@@ -11,20 +11,21 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use App\Notifications\ResetPassNotification;
 
 class PasswordResetController extends Controller
 {
     //
-    function resetPage() 
+    function resetPage()
     {
         return view('pages.authentication.forgot_password', [
             'title' => 'Forgot Password'
         ]);
     }
+    
     // Send reset email
     public function sendResetLink(Request $request)
     {
-        // dd($request->all());
         $request->validate([
             'email' => 'required|email',
             'type' => 'required|in:public,internal',
@@ -43,9 +44,9 @@ class PasswordResetController extends Controller
             ['token' => $token, 'created_at' => Carbon::now()]
         );
 
-        Mail::to($request->email)->send(new ResetPasswordMail($token, $request->email, $request->type));
+        // Use notification instead of Mail::send()
+        $user->notify(new ResetPassNotification($token, $request->email, $request->type));
 
-        // return back()->with('status', 'Password reset link has been sent to your email!',);
         return response()->json([
             'message' => 'Password reset link has been sent to your email!'
         ]);

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class ApplicationService
 {
     public static function log(
-        Model $application,
+        $application,
         string $action,
         ?string $remark = null,
         ?string $status = null,
@@ -25,11 +25,11 @@ class ApplicationService
 
         return ImportPermitLog::create([
             'application_id' => $application->application_id,
-            'causer_id'      => $causer_id,
-            'causer_type'    => $causer_type,
-            'action'         => $action,
-            'remark'         => $remark,
-            'status'         => $status,
+            'causer_id' => $causer_id,
+            'causer_type' => $causer_type,
+            'action' => $action,
+            'remark' => $remark,
+            'status' => $status,
         ]);
     }
 }

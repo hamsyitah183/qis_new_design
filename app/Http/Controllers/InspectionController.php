@@ -32,11 +32,60 @@ use Yajra\DataTables\Facades\DataTables;
 class InspectionController extends Controller
 {
     //
+    public function getApplicationDetails($id)
+    {
+        $type = authUser()['type']; // 'public' or 'internal'
+        $user = authUser()['user']; // authenticated user object
+
+        // Fetch application and eager load relationships
+        $application = InspectionApplication::where('application_id', $id)
+            ->with(['user', 'importer', 'exporter', 'entryPoint.districtCode', 'inspectionItems.attachments'])
+            ->firstOrFail();
+
+        if ($type === 'internal') {
+            return response()->json($application);
+        }
+
+        if ($type === 'public') {
+            // Check if user is either the submitter or the importer
+            if ($application->user_id !== $user->uuid && $application->importer_id !== $user->uuid) {
+                return response()->json(
+                    [
+                        'message' => 'You do not have authority to view this application',
+                    ],
+                    403,
+                );
+            }
+
+            return response()->json($application);
+        }
+
+        // Default fallback
+        return response()->json(
+            [
+                'message' => 'User type not recognized',
+            ],
+            400,
+        );
+    }
+
+    function viewInspection($id = null)
+    {
+        $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
+        $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
+        $country = Country::where('is_del', false)->get();
+
+        $application = InspectionApplication::where('application_id', $id)->first();
+        return view('pages.public.view_inspection', compact('pubmeasure', 'pubpurpose', 'country', 'id', 'application'));
+    }
+
     function getInspectionSelf($id = null)
     {
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();
+
+        // $application = InspectionApplication::where('application_id', $id)->first();
         return view('pages.public.inspection_self', compact('pubmeasure', 'pubpurpose', 'country', 'id'));
     }
 
@@ -58,10 +107,11 @@ class InspectionController extends Controller
             $isDraft = $request->boolean('is_draft');
             $isNewApplication = false;
             
+
             // Decode JSON data from frontend
             $exporter = $request->exporterData ? json_decode($request->exporterData, true) : null;
             $importer = $request->importerData ? json_decode($request->importerData, true) : null;
-            $permit   = $request->permitDetails ? json_decode($request->permitDetails, true) : [];
+            $permit = $request->permitDetails ? json_decode($request->permitDetails, true) : [];
 
             // Determine status
             if ($isDraft) {
@@ -73,29 +123,29 @@ class InspectionController extends Controller
             if ($applicationUuid) {
                 $application = InspectionApplication::where('application_id', $applicationUuid)->firstOrFail();
                 $application->update([
-                    'eta'                  => $permit['eta'] ?? null,
-                    'transport_type'       => $permit['tranType'] ?? null,
-                    'entry_point'          => $permit['entrypoint'] ?? null,
+                    'eta' => $permit['eta'] ?? null,
+                    'transport_type' => $permit['tranType'] ?? null,
+                    'entry_point' => $permit['entrypoint'] ?? null,
                     'category_application' => $permit['applCate'] ?? null,
-                    'user_id'              => Auth::user()->uuid,
-                    'exporter_id'          => $exporter['id'] ?? null,
-                    'importer_id'          => $importer['uuid'] ?? null,
-                    'importer_detail'      => $importer ?? [],
-                    'status'               => $status,
+                    'user_id' => Auth::user()->uuid,
+                    'exporter_id' => $exporter['id'] ?? null,
+                    'importer_id' => $importer['uuid'] ?? null,
+                    'importer_detail' => $importer ?? [],
+                    'status' => $status,
                 ]);
             } else {
                 $isNewApplication = true;
                 $application = InspectionApplication::create([
-                    'application_id'       => Str::uuid(),
-                    'eta'                  => $permit['eta'] ?? null,
-                    'transport_type'       => $permit['tranType'] ?? null,
-                    'entry_point'          => $permit['entrypoint'] ?? null,
+                    'application_id' => Str::uuid(),
+                    'eta' => $permit['eta'] ?? null,
+                    'transport_type' => $permit['tranType'] ?? null,
+                    'entry_point' => $permit['entrypoint'] ?? null,
                     'category_application' => $permit['applCate'] ?? null,
-                    'user_id'              => Auth::user()->uuid,
-                    'exporter_id'          => $exporter['id'] ?? null,
-                    'importer_id'          => $importer['uuid'] ?? null,
-                    'importer_detail'      => $importer ?? [],
-                    'status'               => $status,
+                    'user_id' => Auth::user()->uuid,
+                    'exporter_id' => $exporter['id'] ?? null,
+                    'importer_id' => $importer['uuid'] ?? null,
+                    'importer_detail' => $importer ?? [],
+                    'status' => $status,
                 ]);
             }
 
@@ -110,15 +160,15 @@ class InspectionController extends Controller
                 $itemArray = [];
                 foreach ($request->items as $index => $item) {
                     $itemData = json_decode($item['data'], true);
-                    
+
                     $inspectionItem = \App\Models\InspectionItem::create([
-                        'application_id'     => $appId,
+                        'application_id' => $appId,
                         'consignment_detail' => $itemData,
-                        'quantity'           => $itemData['quantity'] ?? 0,
-                        'unit_measurement'   => $itemData['measure'] ?? null,
-                        'value'              => $itemData['value'] ?? 0,
-                        'purpose'            => $itemData['purpose'] ?? null,
-                        'status'             => 'submitted',
+                        'quantity' => $itemData['quantity'] ?? 0,
+                        'unit_measurement' => $itemData['measure'] ?? null,
+                        'value' => $itemData['value'] ?? 0,
+                        'purpose' => $itemData['purpose'] ?? null,
+                        'status' => 'submitted',
                     ]);
                     $itemArray[$index] = $inspectionItem->id;
                 }
@@ -133,7 +183,7 @@ class InspectionController extends Controller
                             $movedFiles[] = $path;
 
                             \App\Models\InspectionAttachment::create([
-                                'item_id'   => $itemArray[$itemIndex],
+                                'item_id' => $itemArray[$itemIndex],
                                 'file_name' => $file->getClientOriginalName(),
                                 'file_path' => "/storage/{$path}",
                                 'file_type' => $file->getClientOriginalExtension(),
@@ -192,17 +242,21 @@ class InspectionController extends Controller
                 'application_id' => $application->application_id
             ], 200);
 
+          
         } catch (\Exception $e) {
             DB::rollBack();
             foreach ($movedFiles as $file) {
                 Storage::disk('public')->delete($file);
             }
-            \Log::error("Error saving inspection application: " . $e->getMessage());
-            
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to save application: ' . $e->getMessage()
-            ], 500);
+            \Log::error('Error saving inspection application: ' . $e->getMessage());
+
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => 'Failed to save application: ' . $e->getMessage(),
+                ],
+                500,
+            );
         }
     }
 
@@ -223,8 +277,7 @@ class InspectionController extends Controller
         // Filter for public users
         if ($type === 'public') {
             $query->where(function ($q) use ($userUuid) {
-                $q->where('user_id', $userUuid)
-                ->orWhere('importer_id', $userUuid);
+                $q->where('user_id', $userUuid)->orWhere('importer_id', $userUuid);
             });
         }
 
@@ -235,25 +288,30 @@ class InspectionController extends Controller
             })
             ->addColumn('importer', function ($row) {
                 if (!empty($row->importer_detail) && is_array($row->importer_detail)) {
-                    return $row->importer_detail['fullname'] ?? $row->importer_detail['name'] ?? '-';
+                    return $row->importer_detail['fullname'] ?? ($row->importer_detail['name'] ?? '-');
                 }
                 if ($row->importer) {
                     return $row->importer->fullname ?? '-';
                 }
                 return '-';
             })
-            ->addColumn('exporter', fn ($row) => $row->exporter->name ?? '-')
-            ->addColumn('eta', fn ($row) => $row->eta ? $row->eta->format('d M Y') : '-')
-            ->addColumn('transport_type', fn ($row) => ucfirst($row->transport_type) ?? '-')
-            ->addColumn('entry_point', fn ($row) => $row->entryPoint->entry_name ?? '-')
+            ->addColumn('exporter', fn($row) => $row->exporter->name ?? '-')
+            ->addColumn('eta', fn($row) => $row->eta ? $row->eta->format('d M Y') : '-')
+            ->addColumn('transport_type', fn($row) => ucfirst($row->transport_type) ?? '-')
+            ->addColumn('entry_point', fn($row) => $row->entryPoint->entry_name ?? '-')
             ->addColumn('status', function ($row) {
                 $status = ucfirst($row->status);
                 $badgeClass = 'bg-secondary';
-                
-                if ($status === 'Draft') $badgeClass = 'bg-purple';
-                elseif ($status === 'Pending') $badgeClass = 'bg-warning';
-                elseif ($status === 'Approved') $badgeClass = 'bg-success';
-                elseif ($status === 'Rejected') $badgeClass = 'bg-danger';
+
+                if ($status === 'Draft') {
+                    $badgeClass = 'bg-purple';
+                } elseif ($status === 'Pending') {
+                    $badgeClass = 'bg-warning';
+                } elseif ($status === 'Approved') {
+                    $badgeClass = 'bg-success';
+                } elseif ($status === 'Rejected') {
+                    $badgeClass = 'bg-danger';
+                }
 
                 $style = '';
                 if ($status === 'Draft') {
@@ -279,7 +337,7 @@ class InspectionController extends Controller
 
                 // Determine if we should show Edit or View
                 // Internal users ALWAYS view. Public users view unless Draft/Pending.
-                $showEdit = ($type === 'public' && ($status === 'Draft' || $status === 'Pending'));
+                $showEdit = $type === 'public' && ($status === 'Draft' || $status === 'Pending');
 
                 if ($showEdit) {
                     if ($row->category_application == 1) {
@@ -292,7 +350,7 @@ class InspectionController extends Controller
                 } else {
                     // Use internal route for internal users, public route for public users
                     if ($type === 'internal') {
-                        $url = route('internal.viewInspectionApplication', ['id' => $row->application_id]);
+                        $url = route('viewInspectionApplication', ['id' => $row->application_id]);
                     } else {
                         $url = route('public.viewInspectionApplication', ['id' => $row->application_id]);
                     }
@@ -300,23 +358,39 @@ class InspectionController extends Controller
                     $viewEditTitle = 'View';
                 }
 
-                $buttons = '<a class="btn btn-sm btn-primary me-1" href="' . $url . '" title="' . $viewEditTitle . '" data-bs-toggle="tooltip" data-bs-placement="top">
-                                <i class="' . $icon . '"></i>
+                $buttons =
+                    '<a class="btn btn-sm btn-primary me-1" href="' .
+                    $url .
+                    '" title="' .
+                    $viewEditTitle .
+                    '" data-bs-toggle="tooltip" data-bs-placement="top">
+                                <i class="' .
+                    $icon .
+                    '"></i>
                             </a>';
 
                 // Extra admin controls for internal users
                 if ($type === 'internal') {
                     if ($status === 'Pending') {
-                        $buttons .= '<button class="btn btn-sm btn-success me-1 inspection-approve" data-id="' . $row->application_id . '" title="Approve" data-bs-toggle="tooltip" data-bs-placement="top">
+                        $buttons .=
+                            '<button class="btn btn-sm btn-success me-1 inspection-approve" data-id="' .
+                            $row->application_id .
+                            '" title="Approve" data-bs-toggle="tooltip" data-bs-placement="top">
                                         <i class="ti ti-check"></i>
                                      </button>';
-                        $buttons .= '<button class="btn btn-sm btn-warning me-1 inspection-reject" data-id="' . $row->application_id . '" title="Reject" data-bs-toggle="tooltip" data-bs-placement="top">
+                        $buttons .=
+                            '<button class="btn btn-sm btn-warning me-1 inspection-reject" data-id="' .
+                            $row->application_id .
+                            '" title="Reject" data-bs-toggle="tooltip" data-bs-placement="top">
                                         <i class="ti ti-x"></i>
                                      </button>';
                     }
                 }
 
-                $buttons .= '<button class="btn btn-sm btn-danger deleteInspection" data-id="' . $row->application_id . '" title="Delete" data-bs-toggle="tooltip" data-bs-placement="top">
+                $buttons .=
+                    '<button class="btn btn-sm btn-danger deleteInspection" data-id="' .
+                    $row->application_id .
+                    '" title="Delete" data-bs-toggle="tooltip" data-bs-placement="top">
                                 <i class="ti ti-trash"></i>
                              </button>';
 
@@ -326,7 +400,7 @@ class InspectionController extends Controller
             ->make(true);
     }
 
-        /**
+    /**
      * Update inspection application status (Approved / Rejected) for internal users.
      */
     public function updateStatus($id, Request $request)
@@ -334,9 +408,12 @@ class InspectionController extends Controller
         $status = $request->input('status');
 
         if (!in_array($status, ['Approved', 'Rejected'], true)) {
-            return response()->json([
-                'message' => 'Invalid status value.',
-            ], 422);
+            return response()->json(
+                [
+                    'message' => 'Invalid status value.',
+                ],
+                422,
+            );
         }
 
         $application = InspectionApplication::where('application_id', $id)->firstOrFail();
@@ -384,9 +461,12 @@ class InspectionController extends Controller
 
             // Authorization: public users can only delete their own
             if ($type === 'public' && $application->user_id !== $user->uuid && $application->importer_id !== $user->uuid) {
-                return response()->json([
-                    'message' => 'Unauthorized to delete this application.',
-                ], 403);
+                return response()->json(
+                    [
+                        'message' => 'Unauthorized to delete this application.',
+                    ],
+                    403,
+                );
             }
 
             $items = \App\Models\InspectionItem::where('application_id', $application->id)->get();
@@ -457,7 +537,8 @@ class InspectionController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data' => $application
+            'data' => $application,
         ]);
     }
 }
+

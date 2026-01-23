@@ -9,6 +9,7 @@ use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\ConsignmentController;
 use App\Http\Controllers\ConsignmentApplicationController;
 use App\Http\Controllers\InspectionController;
+use App\Http\Controllers\ApplicationPaymentController;
 
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PermitGenerateController;
@@ -24,7 +25,7 @@ use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
 
-// Logout route
+// Logout route hello temadigital
 Route::get('/logout', [AuthenticationController::class, 'logout'])->name('logout');
 
 // Guest routes
@@ -74,7 +75,7 @@ Route::prefix('public')
     ->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
         Route::get('/import_permit_application', [PermitApplicationController::class, 'show'])->name('permitApplication');
-        Route::get('/import_assign_application', action: [PermitApplicationController::class, 'showassign'])->name('permitAssignApplication');
+        Route::get('/import_assign_application', [PermitApplicationController::class, 'showassign'])->name('permitAssignApplication');
         Route::get('/new_application', [ApplicationController::class, 'show'])->name('newApplication');
         Route::get('/newtest', [ApplicationController::class, 'showthis'])->name('newApplicatasdion');
         Route::post('/store_exporter', [PermitApplicationController::class, 'storeExporter'])->name('storeExp');
@@ -97,12 +98,14 @@ Route::prefix('public')
         Route::get('/view_all_consignment', [ConsignmentController::class, 'showallconsignmentlist'])->name('showallconsignmentlist');
 
         Route::get('/verify_application', [ApplicationController::class, 'verifyapplication'])->name('verifyapplication');
+        Route::get('/view_application/{uuid}', [ConsignmentApplicationController::class, 'viewapplication'])->name('viewApplication');
 
         // get importer
         Route::get('/get_consignment_importers', [ConsignmentApplicationController::class, 'getConsignmentImporters'])->name('getConsignmentImporters');
         Route::post('/store_consignment_importer', [ConsignmentApplicationController::class, 'storeConsignmentImporter'])->name('storeImporter');
         Route::get('/get_consignment_certificate/{countryCode}', [ConsignmentApplicationController::class, 'getConsignmentFromCountry']);
         // itemSelect
+        Route::post('/save-permit/{id}', [PermitApplicationController::class, 'reapply']);
 
         // temporary file
         Route::post('/temp-upload', [TempFileController::class, 'upload']);
@@ -116,13 +119,14 @@ Route::prefix('public')
         Route::get('/consignment_certificate_application_self', [ConsignmentApplicationController::class, 'getView'])->name('consignment.app');
         Route::get('/consignment_certificates_application_other', [ConsignmentApplicationController::class, 'getViewOther'])->name('consignmentOther.app');
         Route::post('/save-consignment', [ConsignmentApplicationController::class, 'saveApplication'])->name('savConsignment');
-        Route::get('/inspection_certificates_application_self/{id?}', [InspectionController::class, 'getInspectionSelf'])->name('inspectionApplicationSelf');
-        Route::get('/inspection_certificates_application_others/{id?}', [InspectionController::class, 'getInspectionOthers'])->name('inspectionApplicationOthers');
-        Route::get('/consignment_certificate_application', [ConsignmentApplicationController::class, 'getView'])->name('consignment.app');
+        Route::delete('/consignment_application/delete/{id}', [ConsignmentApplicationController::class, 'deleteApplication'])->name('consignment.delete');
+
         Route::get('/inspection_certificates_application', [InspectionController::class, 'getInspection']);
         Route::get('/inspection_certificates_list', [InspectionController::class, 'showAllInspectionList'])->name('showallinspectionlist');
         Route::get('/view_inspection_certificate/{id}', [InspectionController::class, 'viewApplication'])->name('viewInspectionApplication');
         Route::get('/inspection_application_data/{id}', [InspectionController::class, 'getApplicationData'])->name('inspection.app.data');
+        Route::get('/inspection_certificates_application_self/{id?}', [InspectionController::class, 'getInspectionSelf'])->name('inspectionApplicationSelf');
+        Route::get('/inspection_certificates_application_others/{id?}', [InspectionController::class, 'getInspectionOthers'])->name('inspectionApplicationOthers');
     });
 
 Route::prefix('internal')
@@ -169,6 +173,11 @@ Route::prefix('internal')
         Route::post('/inspection/{id}/status', [InspectionController::class, 'updateStatus'])->name('inspection.status');
         Route::get('/view_inspection_certificate/{id}', [InspectionController::class, 'viewApplication'])->name('viewInspectionApplication');
         // Route::delete('/inspection/delete/{id}', [InspectionController::class, 'deleteApplication'])->name('inspection.delete');
+    
+        // ======================= consignment certificates ========================
+        Route::get('/consignment_certificates_list', [ConsignmentController::class, 'showInternalConsignmentList'])->name('consignment.list');
+        Route::post('/consignment/{id}/status', [ConsignmentController::class, 'updateStatus'])->name('consignment.status');
+        Route::delete('/consignment/delete/{id}', [ConsignmentController::class, 'deleteApplication'])->name('internal.consignment.delete');
 
         // Route::get('/application/exporter/get', [ApplicationController::class, 'get_exporter'])->name('application.exporter.get');
 
@@ -197,6 +206,8 @@ Route::prefix('internal')
         // Route::get('/control_panel', [MiscController::class, 'showcontrolpanel'])->name('controlpanel');
         Route::post('/district/entry-point/update', [MiscController::class, 'updateEntry']);
 
+     
+
         // ======================= notifications ===========================
         Route::post('/permit/{id}', [PermitConsignmentController::class, 'accept_permit']);
     });
@@ -218,14 +229,16 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/application/review/list/data', [ApplicationController::class, 'getAllReviewapplicationList'])->name('application.review.data');
     Route::get('/inspection_certificates_list/data', [InspectionController::class, 'getAllInspectionList'])->name('inspection.list.data');
 
-    Route::get('/consignment/list/data', [ConsignmentController::class, 'getallconsignmentlist'])->name('consignment.data');
-
     Route::get('/application/{id}/data', [ApplicationController::class, 'getApplicationDetails']);
     Route::get('/view_application/{uuid}', [ApplicationController::class, 'viewapplication'])->name('viewApplication');
     Route::get('/edit_application/{uuid}', [ApplicationController::class, 'editApplication'])->name('editApplication');
 
-    Route::get('/view_consignment/{uuid}', [ConsignmentApplicationController::class, 'viewapplication'])->name('viewApplication');
+    Route::get('/view_consignment/{uuid}', [ConsignmentApplicationController::class, 'viewapplication']); // Removed name to avoid confusion, it's now in the group
     Route::get('/consignment_application/{id}/data', [ConsignmentController::class, 'getApplicationDetails']);
+    Route::get('/consignment/list/data', [ConsignmentController::class, 'getallconsignmentlist'])->name('consignment.data');
+
+    Route::get('/view_inspection_certificates/{id}', [InspectionController::class, 'viewInspection'])->name('viewInspectionApplication');
+    Route::get('/inspection_application/{id}/data', [InspectionController::class, 'getApplicationDetails']);
 
     Route::get('/application/permit/{id}/data', [ApplicationController::class, 'get_application_permit']);
     Route::post('/application/verify/{id}/', [ApplicationController::class, 'verify_application_permit']);
@@ -254,7 +267,7 @@ Route::middleware(['auth.any'])->group(function () {
 
     Route::get('/permit/generate/{id}', [PermitGenerateController::class, 'generatePermitWord']);
 
-    Route::get('/payment/{id}/{orderNo}/{permitId}/{total}', [PaymentController::class, 'checkout'])
+    Route::get('/payment/{id}/{permitId}/{total}', [PaymentController::class, 'checkout'])
         ->name('payment.checkout')
         ->middleware('signed');
 
@@ -264,37 +277,30 @@ Route::middleware(['auth.any'])->group(function () {
 
     Route::post('/payment/cancel', [PaymentController::class, 'cancelPayment']);
 
+
+    // VIEW PAYMENT
+    Route::get('/order/list', [ApplicationPaymentController::class, 'getView']);
+    Route::get('/order/list/data', [ApplicationPaymentController::class, 'getAllOrderList']);
+    Route::get('/order/{order_number}', [ApplicationPaymentController::class, 'orderDetails']);
+
+    // PERMIT
+    Route::get('/permit/list', [PermitConsignmentController::class, 'getView']);
+    Route::get('/permit/list/data', [PermitConsignmentController::class, 'getAllpermitList']);
+    Route::get('/permit/{permit_number}', [PermitConsignmentController::class, 'permitDetails']);
+
     // Route::post('/')
 
     // bounce url
     // Route::get('/paymentUpdate/{kod_transaksi}', [PaymentController::class, 'bounce']);
-    Route::get('/paymentUpdate', [PaymentController::class, 'paymentUpdate']);
+    Route::get('/paymentUpdate/{rn}', [PaymentController::class, 'paymentUpdate']);
 });
 
 // broadcast --dont kacau---
 // Broadcast::routes();
 // Broadcast::routes(['middleware' => ['auth:internal']]);
 // Broadcast::routes(['middleware' => ['auth:internal']]);
-
-//error page testing
-Route::get('/402', function () {
-    abort(402);
-});
-Route::get('/403', function () {
-    abort(403);
-});
-Route::get('/404', function () {
-    abort(404);
-});
-Route::get('/419', function () {
-    abort(419);
-});
-Route::get('/429', function () {
-    abort(429);
-});
-Route::get('/500', function () {
-    abort(500);
-});
-Route::get('/503', function () {
-    abort(503);
+Route::get('/email', function() {
+    return view('email.notify_email', [
+        'title' => 'Test Email'
+    ]);
 });

@@ -3,17 +3,17 @@
     <!-- Start::main-sidebar-header -->
     <div class="main-sidebar-header">
         <a href="{{ url('/') }}" class="header-logo">
-            <img src="{{ asset('/asset/image.png') }}" alt="logo" class="desktop-logo">
+            <img src="{{ asset('/asset/doa-logo.png') }}" alt="logo" class="desktop-logo">
 
-            <img src="{{ asset('/asset/image.png') }}" alt="logo" class="toggle-dark">
+            <img src="{{ asset('/asset/doa-logo.png') }}" alt="logo" class="toggle-dark">
 
-            <img src="{{ asset('/asset/image.png') }}" alt="logo" class="desktop-dark">
+            <img src="{{ asset('/asset/doa-logo.png') }}" alt="logo" class="desktop-dark">
 
-            <img src="{{ asset('/asset/image.png') }}" alt="logo" class="toggle-logo">
+            <img src="{{ asset('/asset/doa-logo.png') }}" alt="logo" class="toggle-logo">
 
-            <img src="{{ asset('/asset/image.png') }}" alt="logo" class="toggle-white">
+            <img src="{{ asset('/asset/doa-logo.png') }}" alt="logo" class="toggle-white">
 
-            <img src="{{ asset('/asset/image.png') }}" alt="logo" class="desktop-white">
+            <img src="{{ asset('/asset/doa-logo.png') }}" alt="logo" class="desktop-white">
         </a>
     </div>
 
@@ -108,15 +108,18 @@
                             </li>
 
                             <li class="slide">
-                                <a href="{{ route('public.showallapplicationlist') }}" class="side-menu__item">Import Permit List</a>
+                                <a href="{{ route('public.showallapplicationlist') }}" class="side-menu__item">Import
+                                    Permit List</a>
                             </li>
 
                             <li class="slide">
-                                <a href="{{ route('public.showallinspectionlist') }}" class="side-menu__item">Inspection Certificate List</a>
+                                <a href="{{ route('public.showallinspectionlist') }}"
+                                    class="side-menu__item">Inspection Certificate List</a>
                             </li>
-                            
+
                             <li class="slide">
-                                <a href="{{ route('public.showallconsignmentlist') }}" class="side-menu__item">Consignment Certificate List</a>
+                                <a href="{{ route('public.showallconsignmentlist') }}"
+                                    class="side-menu__item">Consignment Certificate List</a>
                             </li>
                         </ul>
                     </li>
@@ -129,8 +132,12 @@
                     <li class="slide__category"><span class="category-name">Application</span></li>
 
                     @php
-                        // Check if the route name contains "application" or "inspection"
-                        $isApplicationActive = Str::contains($currentRoute, ['application', 'inspection']);
+                        // Check if the route name contains "application", "inspection", or "consignment"
+                        $isApplicationActive = Str::contains($currentRoute, [
+                            'application',
+                            'inspection',
+                            'consignment',
+                        ]);
                     @endphp
 
                     <li class="slide has-sub {{ $isApplicationActive ? 'open active' : '' }}">
@@ -152,6 +159,12 @@
                             <li class="slide {{ $currentRoute === 'internal.inspection.list' ? 'active' : '' }}">
                                 <a href="{{ route('internal.inspection.list') }}" class="side-menu__item">
                                     Inspection Certificate List
+                                </a>
+                            </li>
+
+                            <li class="slide {{ $currentRoute === 'internal.consignment.list' ? 'active' : '' }}">
+                                <a href="{{ route('internal.consignment.list') }}" class="side-menu__item">
+                                    Consignment Certificate List
                                 </a>
                             </li>
 
@@ -237,8 +250,10 @@
                                     Condition</a>
                             </li>
 
-                            <li class="slide {{ $currentRoute === 'internal.state-district-management' ? 'active' : '' }}">
-                                <a href="{{ route('internal.state-district-management') }}" class="side-menu__item">State & District Management</a>
+                            <li
+                                class="slide {{ $currentRoute === 'internal.state-district-management' ? 'active' : '' }}">
+                                <a href="{{ route('internal.state-district-management') }}"
+                                    class="side-menu__item">State & District Management</a>
                             </li>
 
                             <li style="display:none"
@@ -250,6 +265,20 @@
                     </li>
                 @endif
 
+
+                <li class="slide__category"><span class="category-name">Order</span></li>
+
+                
+                <li class="slide {{ Str::contains($currentRoute, 'order') ? 'open active' : '' }}">
+                    <a href="/order/list"
+                        class="side-menu__item">
+
+                        {{-- --}}
+                        <i class="ti ti-user side-menu__icon side-menu__icon"></i>
+
+                        <span class="side-menu__label">Order</span>
+                    </a>
+                </li>
 
 
             </ul>

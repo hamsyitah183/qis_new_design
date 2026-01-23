@@ -168,16 +168,22 @@
         <!-- Start::header-element -->
         <li class="header-element dropdown">
             <!-- Start::header-link|dropdown-toggle -->
+            @php
+                $name = authUser()['user']['fullname'] ?? '';
+                $parts = explode(' ', trim($name));
+                $initials = strtoupper(($parts[0][0] ?? '') . ($parts[1][0] ?? ''));
+            @endphp
+
             <a href="javascript:void(0);" class="header-link dropdown-toggle" id="mainHeaderProfile"
                 data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                 <div class="d-flex align-items-center">
-                    <div>
-                        <img src="{{ asset('build2/assets/images/faces/15.jpg') }}" alt="img"
-                            class="avatar avatar-sm">
-
+                    <div
+                        class="avatar avatar-sm bg-primary text-white fw-bold d-flex align-items-center justify-content-center rounded-circle">
+                        {{ $initials }}
                     </div>
                 </div>
             </a>
+
             <!-- End::header-link|dropdown-toggle -->
             <ul class="main-header-dropdown dropdown-menu pt-0 overflow-hidden header-profile-dropdown dropdown-menu-end"
                 aria-labelledby="mainHeaderProfile">

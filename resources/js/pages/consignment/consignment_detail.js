@@ -1,7 +1,7 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
 import { formatTime, getCountry, getEntryPoint } from "../../app";
-// import { application_reapply } from "./application_reapply";
+
 let application = null;
 let value = null;
 
@@ -201,7 +201,7 @@ async function pendingPaymentTable() {
                 </div>
             </td>
             <td>${permit.permit_number ?? '—'}</td>
-            <td>${detail.item_name ?? '—'}</td>
+            <td class = "text-wrap">${detail.item_name ?? '—'}</td>
             <td>RM 30</td>
         </tr>
         `);

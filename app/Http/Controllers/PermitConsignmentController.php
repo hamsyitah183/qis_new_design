@@ -9,7 +9,10 @@ use App\Models\IpConsignmentPermit;
 use App\Models\PublicUser;
 use App\Notifications\ApplicationNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
+use Spatie\Activitylog\Models\Activity;
+use Yajra\DataTables\Facades\DataTables;
 
 class PermitConsignmentController extends Controller
 {
@@ -39,17 +42,34 @@ class PermitConsignmentController extends Controller
 
         $url = '/view_application' . '/' . $permit->application->application_id;
 
-        // Events & notifications
-        event(new ApplicationDeleted('Permit in ' . $permit->application->application_id . ' is ' . $status));
-
         $users = InternalUser::role(['admin', 'officer'])->get();
         Notification::send($users, new ApplicationNotification('A permit with application ID ' . $permit->application->application_id . ' has been ' . $status, authUser()['user']->fullname, $url));
 
         $user = PublicUser::where('uuid', $permit->application->user_id)->first();
 
-        event(new PublicUserEvent('A permit in application with ID ' . $permit->application->application_id . ' has been ' . $status, $user->uuid));
+        try {
+            // Events & notifications
+            event(new ApplicationDeleted('Permit in ' . $permit->application->application_id . ' is ' . $status));
+
+            event(new PublicUserEvent('A permit in application with ID ' . $permit->application->application_id . ' has been ' . $status, $user->uuid));
+        } catch (\Exception $e) {
+            Log::warning('Pusher connection failed but continuing permit acceptance: ' . $e->getMessage());
+        }
 
         Notification::send($user, new ApplicationNotification('A permit in application with ID ' . $permit->application->application_id . ' has been ' . $status, authUser()['user']->fullname, $url));
+
+        activity()
+            ->tap(function (Activity $activity) {
+                $activity->log_name = 'user_activity';
+            })
+            ->event(strtolower($status) . ' consignment permit conditions')
+            ->causedBy(authUser()['user'])
+            ->performedOn(authUser()['user'])
+            ->withProperties([
+                'permit' => $permit,
+                'application_id' => $permit->application->application_id,
+            ])
+            ->log(authUser()['user']['fullname'] . ' has ' . strtolower($status) . ' permit conditions for application ' . $permit->application->application_id);
 
         $application->logActivity(action: 'Officer Verification', remark: $request['reason'] ?? 'Permit approved by officer', status: 'Officer Verified');
 
@@ -67,7 +87,6 @@ class PermitConsignmentController extends Controller
 
             $notificationController = new NotificationController();
 
-
             $notificationController->sendStatusMessage(
                 $application->importer_detail['fullname'] ?? 'User',
                 'Import Permit',
@@ -84,5 +103,74 @@ class PermitConsignmentController extends Controller
             'status' => 'success',
             'message' => 'Permit condition updated successfully.',
         ]);
+    }
+
+    public function getView()
+    {
+        return view('pages.public.permit.permit_list', [
+            'title' => 'Permit List',
+        ]);
+    }
+
+    public function getAllPermitList()
+    {
+        $userUuid = authUser()['user']->uuid;
+        $type = authUser()['type'];
+
+        $query = IpConsignmentPermit::query()->with('application'); // eager load application if needed
+
+        // Apply filter for public users
+        if ($type !== 'internal') {
+            $query->where('public_user_uuid', $userUuid);
+        }
+
+        return DataTables::eloquent($query)
+            ->addIndexColumn()
+
+            ->editColumn('item_name', fn($row) => $row->item_name)
+            ->filterColumn('item_name', function ($query, $keyword) {
+                $query->whereRaw("LOWER(JSON_UNQUOTE(JSON_EXTRACT(consignment_detail, '$.item_name'))) LIKE ?", ['%' . strtolower($keyword) . '%']);
+            })
+
+            ->addColumn('importer', fn($row) => $row->application->importer->fullname)
+
+            ->addColumn('action', function ($row) use ($type) {
+                // Use application_id (correct)
+                $viewUrl = '/permit/' . $row->permit_number;
+
+                $view =
+                    '
+                <a href="' .
+                    $viewUrl .
+                    '" class="btn btn-sm btn-primary">
+                    <i class="ti ti-eye"></i>
+                </a>
+            ';
+
+                $downloadPermit = '';
+
+                if ($type === 'internal') {
+                    $downloadPermit =
+                        '
+                    <button 
+                        class="btn btn-sm btn-success btn-wave generatePermit ms-2"
+                        data-permit="' .
+                        $row->id .
+                        '">
+                        Download Permit
+                    </button>
+                ';
+                }
+
+                return $view . $downloadPermit;
+            })
+
+            ->rawColumns(['action'])
+            ->make(true);
+    }
+
+    function permitDetails($permitNumber)
+    {
+        return $permitNumber;
     }
 }

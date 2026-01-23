@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Spatie\Activitylog\Models\Activity;
@@ -67,7 +68,6 @@ class AuthenticationController extends Controller
             if (method_exists($user, 'hasVerifiedEmail') && !$user->hasVerifiedEmail()) {
                 // Send verification email
                 $user->notify(new VerifyEmailNotification());
-
                 return response()->json([
                     'status' => 'unverified',
                     'message' => 'Your email is not verified. A verification email has been sent.',
@@ -77,7 +77,6 @@ class AuthenticationController extends Controller
 
             // Normal redirect if verified
             $redirect = $guard === 'public' ? route('public.dashboard') : route('internal.dashboard');
-
             return response()->json([
                 'status' => 'success',
                 'message' => 'Login successful!',
@@ -176,7 +175,11 @@ class AuthenticationController extends Controller
             //  Send verification email
             $user->notify(new VerifyEmailNotification());
 
-            event(new InternalUserAdminEvent('A new account is created'));
+            try {
+                event(new InternalUserAdminEvent('A new account is created'));
+            } catch (\Exception $e) {
+                Log::warning('Pusher connection failed but continuing registration: ' . $e->getMessage());
+            }
 
             $users = InternalUser::role(['admin'])->get();
             $notificationUrl = route('internal.public.list');
@@ -185,9 +188,13 @@ class AuthenticationController extends Controller
             $user->notify(new ApplicationNotification('You created an account', 'QIS', '/profile'));
 
             if (!empty($result) && $result['success'] === true) {
-                event(new InternalUserAdminEvent($user->fullname . ' uploaded a verification attachment.'));
+                try {
+                    event(new InternalUserAdminEvent($user->fullname . ' uploaded a verification attachment.'));
 
-                event(new PublicUserEvent('You uploaded a verification attachment', $user->uuid));
+                    event(new PublicUserEvent('You uploaded a verification attachment', $user->uuid));
+                } catch (\Exception $e) {
+                    Log::warning('Pusher connection failed but continuing registration upload: ' . $e->getMessage());
+                }
 
                 $admins = InternalUser::role(['admin'])->get();
                 $notificationUrl = route('internal.public.list');

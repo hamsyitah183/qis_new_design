@@ -124,14 +124,6 @@
         Dropzone.autoDiscover = false;
     </script>
 
-    @vite(['resources/js/pages/importPermit/summarysubmit.js'])
-    @vite(['resources/js/pages/importPermit/itemmodal.js'])
-    <!-- auto fill in Importer $ Exporter -->
-    @vite(['resources/js/pages/importPermit/autofill.js'])
-    <!-- auto fill entry point -->
-    @vite(['resources/js/pages/importPermit/entrypoint.js'])
-    <!-- modal functions -->
-    @vite(['resources/js/pages/importPermit/step2modal.js'])
     <!-- // add new exporter and rebuild exporter selection -->
     @vite(['resources/js/pages/importPermit/registerexp.js'])
 @endpush

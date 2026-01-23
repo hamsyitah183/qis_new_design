@@ -11,24 +11,19 @@ class InspectionApplication extends Model
     use HasInspectionActivityLog;
 
     protected $table = 'inspection_applications';
-    protected $fillable = [
-        'application_id',
-        'user_id',
-        'importer_id',
-        'exporter_id',
-        'importer_detail',
-        'eta',
-        'transport_type',
-        'entry_point',
-        'category_application',
-        'status',
-    ];
+    protected $fillable = ['application_id', 'user_id', 'importer_id', 'exporter_id', 'importer_detail', 'eta', 'transport_type', 'entry_point', 'category_application', 'status'];
 
     protected $casts = [
         'eta' => 'date',
         'importer_detail' => 'array',
     ];
 
+    protected static function booted()
+    {
+        static::creating(function ($application) {
+            $application->application_type = 'Inspection Certificate';
+        });
+    }
 
     public function user()
     {

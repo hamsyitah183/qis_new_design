@@ -1,24 +1,18 @@
 import "./bootstrap";
 import { IconHome, IconUser } from "tabler-icons";
 import "@fortawesome/fontawesome-free/css/all.min.css";
-// import './feather-icons';
 
-// If you are using JavaScript/ECMAScript modules:
-
-// // If you are using an older version than Dropzone 6.0.0,
-// // then you need to disabled the autoDiscover behaviour here:
-// Dropzone.autoDiscover = false;
-
-// let myDropzone = new Dropzone("#my-form");
-// myDropzone.on("addedfile", file => {
-//   console.log(`File added: ${file.name}`);
-// });
 
 import $ from "jquery";
 window.$ = window.jQuery = $; // make it global
 import "select2";
 import { internalUserEcho, publicUserEcho } from "./broadcast_user";
 import { notification, notificationContent } from "./notification";
+
+import "datatables.net-bs5/css/dataTables.bootstrap5.min.css";
+import "datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css";
+import "datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css";
+
 
 $("#redirectProfile").on("click", function (e) {
     e.preventDefault();

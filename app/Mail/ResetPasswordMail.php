@@ -26,10 +26,10 @@ class ResetPasswordMail extends Mailable
         $resetUrl = url("/reset-password/{$this->token}?email={$this->email}&type={$this->type}");
 
         return $this->subject('Reset Your SYSTEM Password')
-                    ->view('email.reset_password')
-                    ->with([
-                        'resetUrl' => $resetUrl,
-                    ]);
+            ->view('email.reset_password')
+            ->with([
+                'resetUrl' => $resetUrl,
+            ]);
     }
 }
 

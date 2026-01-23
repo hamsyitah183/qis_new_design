@@ -12,11 +12,17 @@ use App\Models\ConsignmentCondition;
 use App\Models\ConsignmentImporter;
 use App\Models\PublicCode;
 use App\Models\Country;
+use App\Models\InternalUser;
+use App\Models\PublicUser;
+use App\Notifications\ApplicationNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\Models\Activity;
 
 class ConsignmentApplicationController extends Controller
 {
@@ -78,9 +84,11 @@ class ConsignmentApplicationController extends Controller
             $applicationUuid = $request->input('applicationId');
             $isDraft = $request->boolean('is_draft');
 
-            $importer = $request->exporterData ? json_decode($request->exporterData, true) : null;
+            // exporterData = User (because we swapped UI labels, but frontend logic uses 'exporter' for 'Me')
+            // importerData = Partner (selected from list)
+            $exporterUser = $request->exporterData ? json_decode($request->exporterData, true) : null;
+            $importerPartner = $request->importerData ? json_decode($request->importerData, true) : null;
 
-            $exporter = $request->importerData ? json_decode($request->importerData, true) : null;
 
             $permit = $request->permitDetails ? json_decode($request->permitDetails, true) : [];
 
@@ -102,19 +110,40 @@ class ConsignmentApplicationController extends Controller
                     'transport_type' => $permit['tranType'] ?? null,
                     'entry_point' => $permit['entrypoint'] ?? null,
                     'category_application' => $permit['applCate'] ?? null,
-                    'user_id' => Auth::user()->uuid,
-                    'exporter_id' => $exporter['uuid'] ?? null,
-                    'importer_id' => $importer['id'] ?? null,
-                    'importer_detail' => $importer,
-                    'status' => $isDraft ? 'Draft' : 'Submitted',
+                    'user_id' => authUser()['user']->uuid,
+                    // exporter = User (uuid)
+                    'exporter_id' => $exporterUser['uuid'] ?? null,
+                    // importer = Partner (id)
+                    'importer_id' => $importerPartner['id'] ?? null,
+                    'importer_detail' => $importerPartner,
+                    // Status flow: Draft or Application Submitted
+                    'status' => $isDraft ? 'Draft' : 'Application Submitted',
                     'importer_verify' => $importer_verify,
                 ]);
 
-                event(new InternalUserAdminEvent($isDraft ? 'Consignment certificate application saved as DRAFT by ' . ($importer['fullname'] ?? 'Unknown Importer') : 'Consignment certificate application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')));
-                event(new PublicUserEvent($isDraft ? 'Your consignment application with id ' . $application->application_id . ' is saved as draft' : 'Your consignment application with id ' . $application->application_id . ' is submitted', $application->user_id));
+                try {
+                    event(new InternalUserAdminEvent($isDraft ? 'Consignment certificate application saved as DRAFT by ' . ($exporterUser['fullname'] ?? 'Unknown Exporter') : 'Consignment certificate application submitted by ' . ($exporterUser['fullname'] ?? 'Unknown Exporter')));
+                    event(new PublicUserEvent($isDraft ? 'Your consignment application with id ' . $application->application_id . ' is saved as draft' : 'Your consignment application with id ' . $application->application_id . ' is submitted', $application->user_id));
+                } catch (\Exception $e) {
+                    Log::warning('Pusher connection failed but continuing save: ' . $e->getMessage());
+                }
+
+                activity()
+                    ->tap(function (Activity $activity) {
+                        $activity->log_name = 'user_activity';
+                    })
+                    ->event($isDraft ? 'update draft application' : 'update consignment application')
+                    ->causedBy(authUser()['user'])
+                    ->performedOn($application)
+                    ->withProperties([
+                        'application' => $application
+                    ])
+                    ->log(authUser()['user']['fullname'] . ($isDraft ? ' has updated a consignment application draft (ID: ' : ' has updated a consignment application (ID: ') . $application->application_id . ')');
+
             } else {
                 // Create new application
-                $status = $isDraft ? 'Draft' : ((int) ($permit['applCate'] ?? 0) === 1 ? 'Awaiting Approval' : 'Submitted');
+                // Status flow: Draft or Application Submitted
+                $status = $isDraft ? 'Draft' : 'Application Submitted';
 
                 $isNewApplication = true;
                 $application = ConsignmentApplication::create([
@@ -123,16 +152,35 @@ class ConsignmentApplicationController extends Controller
                     'transport_type' => $permit['tranType'] ?? null,
                     'entry_point' => $permit['entrypoint'] ?? null,
                     'category_application' => $permit['applCate'] ?? null,
-                    'user_id' => Auth::user()->uuid,
-                    'exporter_id' => $exporter['uuid'] ?? null,
-                    'importer_id' => $importer['id'] ?? null,
-                    'importer_detail' => $importer,
+                    'user_id' => authUser()['user']->uuid,
+                    // exporter = User (uuid)
+                    'exporter_id' => $exporterUser['uuid'] ?? null,
+                    // importer = Partner (id)
+                    'importer_id' => $importerPartner['id'] ?? null,
+                    'importer_detail' => $importerPartner,
                     'status' => $status,
                     'importer_verify' => $importer_verify,
                 ]);
 
-                event(new InternalUserAdminEvent($isDraft ? 'Consignment certificate application saved as DRAFT by ' . ($importer['fullname'] ?? 'Unknown Importer') : 'Consignment certificate application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')));
-                event(new PublicUserEvent($isDraft ? 'Your consignment application with id ' . $application->application_id . ' is saved as draft' : 'Your consignment application with id ' . $application->application_id . ' is submitted', $application->user_id));
+                try {
+                    event(new InternalUserAdminEvent($isDraft ? 'Consignment certificate application saved as DRAFT by ' . ($exporterUser['fullname'] ?? 'Unknown Exporter') : 'Consignment certificate application submitted by ' . ($exporterUser['fullname'] ?? 'Unknown Exporter')));
+                    event(new PublicUserEvent($isDraft ? 'Your consignment application with id ' . $application->application_id . ' is saved as draft' : 'Your consignment application with id ' . $application->application_id . ' is submitted', $application->user_id));
+                } catch (\Exception $e) {
+                    Log::warning('Pusher connection failed but continuing save: ' . $e->getMessage());
+                }
+
+                activity()
+                    ->tap(function (Activity $activity) {
+                        $activity->log_name = 'user_activity';
+                    })
+                    ->event($isDraft ? 'create draft application' : 'create consignment application')
+                    ->causedBy(authUser()['user'])
+                    ->performedOn($application)
+                    ->withProperties([
+                        'application' => $application
+                    ])
+                    ->log(authUser()['user']['fullname'] . ($isDraft ? ' has created a new consignment application draft (ID: ' : ' has created a new consignment application (ID: ') . $application->application_id . ')');
+
             }
 
             $appId = $application->id;
@@ -192,7 +240,7 @@ class ConsignmentApplicationController extends Controller
                         'value' => $data['value'] ?? 0,
                         'purpose' => $data['purpose'] ?? null,
                         'status' => 'processing',
-                        'mygap_myorganic_no' => $data['certificateNo']
+                        'mygap_myorganic_no' => $data['certificateNo'] ?? null
                     ]);
 
                     $consignmentArray[$index] = $consignment->id;
@@ -206,7 +254,7 @@ class ConsignmentApplicationController extends Controller
                         continue;
                     }
                     $name = uniqid() . '_' . $file->getClientOriginalName();
-                    $path = $file->storeAs('import', $name, 'public');
+                    $path = $file->storeAs('consignment', $name, 'public');
                     $movedFiles[] = $path;
 
                     ConsignmentAttachment::create([
@@ -221,6 +269,37 @@ class ConsignmentApplicationController extends Controller
             }
 
             DB::commit();
+
+            // -----------------------------
+            // Send Notifications
+            // -----------------------------
+            $users = InternalUser::role(['admin', 'clerk'])->get();
+            $notificationUrl = url('/view_consignment/' . $application->application_id);
+            Notification::send($users, new ApplicationNotification($isDraft ? ($isNewApplication ? 'New consignment certificate draft created' : 'Consignment certificate draft updated') : ($isNewApplication ? 'New consignment certificate application submitted' : 'Consignment certificate application updated'), Auth::user()->fullname ?? 'System', $notificationUrl));
+
+            $publicUser = auth()->guard('public')->user();
+            if ($publicUser) {
+                $publicUser->notify(new ApplicationNotification($isDraft ? 'Your consignment application with id ' . $application->application_id . ' is saved as draft' : 'Your consignment application with id ' . $application->application_id . ' is submitted', 'QIS', $notificationUrl));
+            }
+
+            if ($application->category_application == 1 && !$isDraft) {
+                // Get the ConsignmentImporter and then the PublicUser who registered it
+                $importer = ConsignmentImporter::find($application->importer_id);
+                if ($importer && $importer->registered_by) {
+                    $company = PublicUser::where('uuid', $importer->registered_by)->first();
+                    if ($company) {
+                        try {
+                            event(new InternalUserAdminEvent('Consignment certificate application requires company approval for ' . ($importer->name ?? 'Unknown Importer')));
+                        } catch (\Exception $e) {
+                            Log::warning('Pusher connection failed but continuing company approval notification: ' . $e->getMessage());
+                        }
+
+                        $company->notify(new ApplicationNotification('A consignment certificate application requires your approval', 'System', $notificationUrl));
+                    }
+                }
+            }
+
+            
 
             return response()->json([
                 'status' => 'success',
@@ -247,6 +326,8 @@ class ConsignmentApplicationController extends Controller
 
     function storeConsignmentImporter(Request $request)
     {
+        \Log::info('Storing Consignment Importer', $request->all());
+
         $validated = $request->validate([
             'name' => 'required|string|max:150',
             'phone_no' => 'required|string|max:25',
@@ -254,21 +335,33 @@ class ConsignmentApplicationController extends Controller
             'country' => 'required|string|max:50',
         ]);
 
-        $exporterId = \DB::table('consignment_importers')->insertGetId([
+        $user = authUser()['user'];
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $exporter = ConsignmentImporter::create([
             'name' => $validated['name'],
             'phone_no' => $validated['phone_no'],
             'address' => $validated['address'],
             'country' => $validated['country'],
-            'registered_by' => authUser()['user']['uuid'],
-            'created_at' => now(),
-            'updated_at' => now(),
+            'registered_by' => $user->uuid,
         ]);
-
-        // fetch newly created exporter
-        $exporter = \DB::table('consignment_importers')->where('id', $exporterId)->first();
-
+        activity()
+            ->tap(function (Activity $activity) {
+                $activity->log_name = 'user_activity';
+            })
+            ->event('add importer')
+            ->causedBy(authUser()['user'])
+            ->performedOn(authUser()['user'])
+            ->withProperties([
+                'importer' => $exporter
+            ])
+            ->log(authUser()['user']['fullname'] . ' has added an importer');
         return response()->json($exporter, 201);
     }
+
 
     public function viewapplication($uuid)
     {
@@ -307,4 +400,106 @@ class ConsignmentApplicationController extends Controller
             // 'consignmentDetails' => $consignment[0]->attachments
         ]); //, 'consignment', 'attachment'
     }
+    public function deleteApplication($id)
+    {
+        // Check both internal and public user
+        $internalUser = auth()->user();
+        $publicUser = auth()->guard('public')->user();
+        $user = $internalUser ?? $publicUser;
+
+        try {
+            // Security Check - user must be authenticated
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Unauthorized action. Please log in.'
+                ], 401);
+            }
+
+            // Find application
+            $application = ConsignmentApplication::where('application_id', $id)->firstOrFail();
+
+            // Store values before deletion
+            $applicationId = $application->application_id;
+            $userName = $user->fullname ?? 'Unknown User';
+
+            // Security Check - Only internal users can delete applications
+            if (!$internalUser) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Unauthorized action. Public users are no longer allowed to delete applications.'
+                ], 403);
+            }
+            DB::beginTransaction();
+
+            // 1. Delete Attachments from Storage
+            // Get all permits
+            $permits = $application->consignmentPermits()->with('attachments')->get();
+
+            foreach ($permits as $permit) {
+                foreach ($permit->attachments as $attachment) {
+                    // Try to delete file from storage
+                    if ($attachment->file_path) {
+                        $path = str_replace('/storage/', '', $attachment->file_path);
+                        if (Storage::disk('public')->exists($path)) {
+                            Storage::disk('public')->delete($path);
+                        }
+                    }
+                    // Delete attachment record
+                    $attachment->delete();
+                }
+                // Delete permit record
+                $permit->delete();
+            }
+
+            // 2. Delete Application Record
+            $application->delete();
+
+            activity()
+                ->tap(function (Activity $activity) {
+                    $activity->log_name = 'user_activity';
+                })
+                ->event('delete consignment application')
+                ->causedBy(authUser()['user'])
+                ->performedOn(authUser()['user'])
+                ->withProperties([
+                    'application_id' => $applicationId
+                ])
+                ->log($userName . ' has deleted a consignment application (ID: ' . $applicationId . ')');
+
+            DB::commit();
+
+            // Sends Notifications for deletion
+            $notificationUrl = url('/view_consignment/' . $applicationId);
+
+            // Notify internal users (admins/clerks)
+            try {
+                $users = InternalUser::role(['admin', 'clerk'])->get();
+                Notification::send($users, new ApplicationNotification('Consignment certificate application deleted by ' . $userName, $userName, $notificationUrl));
+            } catch (\Exception $e) {
+                Log::warning('Failed to send notification to internal users: ' . $e->getMessage());
+            }
+
+            // Notify the public user who deleted the application
+            if ($publicUser) {
+                try {
+                    $publicUser->notify(new ApplicationNotification('Your consignment application with id ' . $applicationId . ' has been successfully deleted', 'QIS', $notificationUrl));
+                } catch (\Exception $e) {
+                    Log::warning('Failed to send notification to public user: ' . $e->getMessage());
+                }
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Application deleted successfully.'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to delete application: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
+

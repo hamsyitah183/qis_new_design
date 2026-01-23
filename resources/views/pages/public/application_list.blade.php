@@ -19,11 +19,11 @@
     @vite(['resources/js/pages/importPermit/application_list.js'])
 @endpush
 
-@section('pageName', 'List All Application')
+@section('pageName', 'List Import Permit Application')
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="All Application List">
+    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="Import Permit Application List">
 
     </x-breadcrumb>
 @endsection
@@ -76,7 +76,7 @@
 
         <!-- Your table goes here -->
         <div class="table-responsive">
-            <table class="table text-nowrap table-hover" id="applicationLogTable">
+            <table class="table text-wrap table-hover" id="applicationLogTable">
                 <thead class="table-primary">
                     <tr>
                         <th scope="col">Action</th>

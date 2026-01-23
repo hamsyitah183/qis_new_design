@@ -4,7 +4,7 @@
 
 @push('scripts')
     @vite(['resources/js/pages/importPermit/application_detail.js'])
-    @vite(['resources/js/pages/importPermit/application_reapply.js'])
+    {{-- @vite(['resources/js/pages/importPermit/application_reapply.js']) --}}
 @endpush
 
 
@@ -113,7 +113,19 @@
                                 @include('pages.public.view_permit.step4')
                             @endif
 
-                            @include('pages.public.view_permit.step5')
+                            {{-- @php
+                                $allPending = $application->consignmentPermits->every(
+                                    fn($permit) => $permit->status === 'pending for payment',
+                                );
+
+                                $value = $allPending ? 1 : 0;
+
+                            @endphp --}}
+
+                            @if (authUser()['type'] == 'public' )
+                                @include('pages.public.view_permit.step5')
+                            @endif
+
 
 
                         </aside>
@@ -137,8 +149,8 @@
     <x-modal id="activityLogModal" title="Activity Log">
 
         <!-- Your table goes here -->
-        <div class="table-responsive">
-            <table class="table text-nowrap table-hover" id="applicationLogTable">
+        <div class="table-responsive scroll-div" style = "max-height: 400px;">
+            <table class="table text-wrap table-hover" id="applicationLogTable">
                 <thead class="table-primary">
                     <tr>
                         <th scope="col">Action</th>
