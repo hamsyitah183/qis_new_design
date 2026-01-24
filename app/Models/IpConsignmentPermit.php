@@ -11,21 +11,12 @@ class IpConsignmentPermit extends Model
 
     protected $table = 'ip_consignment_permit';
 
-    protected $fillable = [
-        'application_id',
-        'permit_number',
-        'consignment_detail',
-        'quantity',
-        'unit_measurement',
-        'value',
-        'purpose',
-        'status',
-    ];
+    protected $fillable = ['application_id', 'permit_number', 'consignment_detail', 'quantity', 'unit_measurement', 'value', 'purpose', 'status'];
 
     protected $casts = [
-        'consignment_detail' => 'array',  // JSON (id, category, item_name, usage)
+        'consignment_detail' => 'array', // JSON (id, category, item_name, usage)
         'quantity' => 'float',
-        'value'    => 'float',
+        'value' => 'float',
     ];
 
     /*
@@ -43,19 +34,22 @@ class IpConsignmentPermit extends Model
     // Unit measurement (from public_code)
     public function unit()
     {
-        return $this->belongsTo(PublicCode::class, 'unit_measurement', 'cate_code')
-        ->where('cate_name', 'unit_measurement');
+        return $this->belongsTo(PublicCode::class, 'unit_measurement', 'cate_code')->where('cate_name', 'unit_measurement');
     }
 
     // Purpose (from public_code)
     public function purposeCode()
     {
-        return $this->belongsTo(PublicCode::class, 'unit_measurement', 'cate_code')
-        ->where('cate_name', 'consignment_purpose');
+        return $this->belongsTo(PublicCode::class, 'unit_measurement', 'cate_code')->where('cate_name', 'consignment_purpose');
     }
 
     public function attachments()
     {
         return $this->hasMany(IpConsignmentAttachment::class, 'permit_id', 'id');
+    }
+
+    public function getItemNameAttribute()
+    {
+        return data_get($this->consignment_detail, 'item_name', '-');
     }
 }

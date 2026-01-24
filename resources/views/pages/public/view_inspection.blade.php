@@ -5,10 +5,15 @@
 
 @section('breadcrumb')
     <x-breadcrumb :items="[
-        ['label' => 'Home', 'url' => '/'],
-        ['label' => 'New Application', 'url' => '/public/new_application'],
-        ['label' => 'Self Apply Inspection Application', 'url' => '#'],
-    ]" title="Inspection Certificate">
+        ['label' => 'Dashboard', 'url' => '/'],
+        [
+            'label' => 'Application List',
+            'url' => auth('internal')->check()
+                ? '/internal/inspection_certificates_list'
+                : '/public/inspection_certificates_list',
+        ],
+        ['label' => 'Application: ' . ($application->application_id ?? ''), 'url' => '#'],
+    ]" title="View Application">
 
     </x-breadcrumb>
 @endsection
@@ -39,10 +44,17 @@
 
                     <div class="ms-auto">
                         @if ($application->status == 'Draft' && $application->user_id == authUser()['user']->uuid)
-                            <a class="btn btn-primary2 btn-wave btn-sm me-2" id="editButton"
-                                href="/edit_application/{{ $application->application_id }}">
-                                Edit
-                            </a>
+                            @if ($application->category_application == '0')
+                                <a class="btn btn-primary2 btn-wave btn-sm me-2" id="editButton"
+                                    href="{{ route('public.inspectionApplicationSelf', ['id' => $application->application_id]) }}">
+                                    Edit
+                                </a>
+                            @else
+                                <a class="btn btn-primary2 btn-wave btn-sm me-2" id="editButton"
+                                    href="{{ route('public.inspectionApplicationOthers', ['id' => $application->application_id]) }}">
+                                    Edit
+                                </a>
+                            @endif
                         @endif
                         <button class="btn btn-primary btn-wave btn-sm " id="applicationModal"><i
                                 class="ti ti-file-time fs-18"></i> Application Log</button>
@@ -84,8 +96,6 @@
                             @include('pages.public.view_inspection.step1')
 
                             <!-- step2 -->
-
-
                             @include('pages.public.view_inspection.step2')
                             <!-- step3 -->
                             @include('pages.public.view_inspection.step3')
@@ -106,23 +116,23 @@
                             @endphp
                             {{-- @dd($application->status) --}}
                             @if (
-                                ($application->status === 'Clerk Review In-Progress' && $isAdminOrClerk) ||
-                                    ($application->category_application == 1 && ($isOwner || $isAdminOrClerk)))
-                                {{-- Step 4 --}}
+                                (str_contains(strtolower($application->status), 'clerk review in-progress') && $isAdminOrClerk) ||
+                                    ($application->category_application == 1 && ($isOwner || $isAdminOrClerk)) ||
+                                    $isAdminOrClerk)
+                                {{-- Step 3 --}}
                                 @include('pages.public.view_inspection.step4')
                             @endif
 
                             @php
-                                if ($application->consignmentPermits) {
-                                    $allPending = $application->consignmentPermits->every(
-                                        fn($permit) => $permit->status === 'pending for payment',
-                                    );
-                                } else {
-                                    $allPending = false;
-                                }
+                                $hasPending = $application->inspectionItems
+                                    ? $application->inspectionItems->contains(
+                                        fn ($permit) => $permit->status === 'pending for payment'
+                                    )
+                                    : false;
 
-                                $value = $allPending ? 1 : 0;
+                                $value = $hasPending ? 1 : 0;
                             @endphp
+
 
 
                             @if (authUser()['type'] == 'public' && $value)
@@ -148,6 +158,34 @@
         @endslot
 
     </x-modal>
+
+    <x-modal id="activityLogModal" title="Activity Log">
+
+        <!-- Your table goes here -->
+        <div class="table-responsive">
+            <table class="table text-nowrap table-hover" id="applicationLogTable">
+                <thead class="table-primary">
+                    <tr>
+                        <th scope="col">Action</th>
+                        <th scope="col">User</th>
+                        <th scope="col">Remark</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Time and Date</th>
+                    </tr>
+                </thead>
+                <tbody class="table-group-divider">
+
+                </tbody>
+            </table>
+        </div>
+
+        @slot('footer')
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        @endslot
+
+    </x-modal>
+
+    @include('pages.public.view_inspection.step2modal')
 @endsection
 
 @push('scripts')

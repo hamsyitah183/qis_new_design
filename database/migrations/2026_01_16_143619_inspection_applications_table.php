@@ -24,6 +24,9 @@ return new class extends Migration {
             $table->string('transport_type')->nullable();
             $table->unsignedBigInteger('entry_point')->nullable();
             $table->string('category_application')->nullable();
+            
+            $table->string('importer_verify')->default('pending')->nullable();
+            $table->dateTime('date_importer_verify')->nullable();
 
             $table->string('status')->default('draft');
 

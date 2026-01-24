@@ -19,12 +19,14 @@ return new class extends Migration
             $table->foreignId('application_id')
                 ->constrained('inspection_applications')
                 ->onDelete('cascade');
+            $table->string('permit_number', 25)->nullable();
             $table->text('consignment_detail')->nullable();
             $table->float('quantity')->default(0);
             $table->string('unit_measurement')->nullable();
             $table->float('value')->default(0);
             $table->string('purpose')->nullable();
             $table->string('status')->default('submitted');
+            $table->text('remark')->nullable();
             $table->timestamps();
         });
 

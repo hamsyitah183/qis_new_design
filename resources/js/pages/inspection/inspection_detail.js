@@ -1,10 +1,24 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
 import { formatTime, getCountry, getEntryPoint } from "../../app";
+import "dropzone/dist/dropzone.css";
+// Import Select2 module
+import select2 from "select2";
+
+// Force Select2 to attach to THIS jQuery:
+select2(window.jQuery);
+
+import "select2/dist/css/select2.min.css";
 // import { application_reapply } from "./application_reapply";
 let application = null;
 let value = null;
 
+
+
+Dropzone.autoDiscover = false;
+
+
+let itemDropzone = null;
 /* -------------------------------
 Get application ID from URL
 -------------------------------- */
@@ -36,7 +50,7 @@ async function fillInInput() {
     console.log("entry", entryPoint.entry_name);
 
     // Example: if returned JSON is { name: "Malaysia" }
-    $("#expcountry").val(country.name);
+    $("#expcountry").val(application.exporter.country_info.name);
     $("#sexpCountry").text(country.name);
 
     $("#entryPoint").val(entryPoint.entry_name);
@@ -73,9 +87,10 @@ async function attachmentTable() {
         console.log("is it", roles);
 
         let permitAction = "";
+        // Only Officer can accept/reject item details, Admin can do both
         if (applicationStatus === "Clerk Verified") {
             if (
-                permit.status === "processing" &&
+                (permit.status === "processing" || permit.status === "submitted") &&
                 (roles.includes("admin") || roles.includes("officer"))
             ) {
                 permitAction = `
@@ -85,31 +100,13 @@ async function attachmentTable() {
                 <div class="btn btn-sm btn-danger-light btn-wave reject" data-permit="${permit.id}">
                     Rejected
                 </div>`;
-            } 
-           
+            }
+
         }
 
-        if( permit.status === "rejected" &&
+        if (permit.status === "rejected" &&
             (type.includes('public'))) {
             permitAction = `<div class = "btn btn-sm btn-danger-light btn-wave reapply"  data-permit = "${permit.id}" >Reapply</div>`
-        }
-
-        // if (applicationStatus === "Fully Processed") {
-        // if (permit.status === "paid") {
-        // permitAction = `
-        // <div class="btn btn-sm btn btn-teal-light btn-wave generatePermit" data-permit="${permit.id}">
-        // Download Permit
-        // </div>
-        // `;
-        // }
-        // }
-
-        if (permit.status === "paid") {
-            permitAction = `
-<div class="btn btn-sm btn btn-teal-light btn-wave generatePermit" data-permit="${permit.id}">
-    Download Permit
-</div>
-`;
         }
 
         let permitStatus = "";
@@ -122,7 +119,12 @@ async function attachmentTable() {
         if (s.includes("completed")) {
             text = '<span class="badge bg-success fs-11 p-1">Completed</span>';
 
-        } else if (s.includes("payment processing")) {
+        }else if (s.includes("payment failed")) {
+            text = '<span class="badge bg-danger fs-11 p-1">Payment Failed</span>';
+
+        } 
+        
+        else if (s.includes("payment processing")) {
             text = '<span class="badge bg-info fs-11 p-1">Payment Processing</span>';
 
         } else if (s.includes("paid")) {
@@ -136,6 +138,10 @@ async function attachmentTable() {
 
         } else if (s.includes("payment")) {
             text = '<span class="badge bg-warning fs-11 p-1">Pending For Payment</span>';
+
+        } else if (s.includes("reapplied")) {
+            text = '<span class="badge bg-info fs-11 p-1">Reapply</span>';
+
         }
 
         permitStatus = `<td>${text}</td>`;
@@ -165,11 +171,14 @@ async function pendingPaymentTable() {
     const tableBody = $("#summaryTable4 tbody");
     tableBody.empty();
 
-    const permits = application.consignment_permits || [];
+    const permits = application.inspection_items || [];
 
-    const pendingPaymentPermits = permits.filter(
-        (p) => p.status?.toLowerCase() === "pending for payment"
+    const pendingPaymentPermits = permits.filter((p) =>
+        ["pending for payment", "payment failed"].includes(
+            p.status?.toLowerCase()
+        )
     );
+
 
     if (!pendingPaymentPermits || pendingPaymentPermits.length === 0) {
         tableBody.append(`
@@ -220,7 +229,7 @@ function acceptPermit() {
 
             Swal.fire({
                 title: "Are you sure?",
-                text: "Do you want to accept this permit?",
+                text: "Do you want to accept this inspection item?",
                 icon: "question",
                 showCancelButton: true,
                 confirmButtonText: "Yes, proceed",
@@ -229,7 +238,7 @@ function acceptPermit() {
                 if (firstResult.isConfirmed) {
                     Swal.fire({
                         title: "Please Confirm Again",
-                        text: "This action cannot be undone. Accept the permit?",
+                        text: "This action cannot be undone. Accept the inspection item?",
                         icon: "warning",
                         showCancelButton: true,
                         confirmButtonText: "Yes, accept it",
@@ -237,18 +246,17 @@ function acceptPermit() {
                     }).then((secondResult) => {
                         if (secondResult.isConfirmed) {
                             $.ajax({
-                                url: `/internal/permit/${id}`,
+                                url: `/internal/inspection_item/${id}/accept`,
                                 method: "POST",
                                 data: {
                                     _token: $("meta[name='csrf-token']").attr(
                                         "content"
                                     ),
-                                    accepted: 1,
                                 },
                                 success: function () {
                                     Swal.fire(
                                         "Accepted!",
-                                        "The permit has been accepted.",
+                                        "The inspection item has been accepted.",
                                         "success"
                                     );
                                     // Refresh table
@@ -280,13 +288,13 @@ function rejectPermit() {
             const id = $(this).data("permit");
 
             Swal.fire({
-                title: "Reject Permit",
-                text: "Please provide a reason for rejecting this permit:",
+                title: "Reject Inspection Item",
+                text: "Please provide a reason for rejecting this inspection item:",
                 icon: "warning",
                 input: "textarea",
                 inputPlaceholder: "Enter rejection reason...",
                 showCancelButton: true,
-                confirmButtonText: "Reject Permit",
+                confirmButtonText: "Reject Item",
                 cancelButtonText: "Cancel",
                 didOpen: () => {
                     const textarea = Swal.getInput();
@@ -302,17 +310,16 @@ function rejectPermit() {
                 if (!result.isConfirmed) return;
 
                 $.ajax({
-                    url: `/internal/permit/${id}`,
+                    url: `/internal/inspection_item/${id}/reject`,
                     method: "POST",
                     data: {
                         _token: $('meta[name="csrf-token"]').attr("content"),
-                        rejected: 1,
                         reason: result.value, // 👈 SEND REASON
                     },
                     success: function () {
                         Swal.fire(
                             "Rejected!",
-                            "The permit has been rejected successfully.",
+                            "The inspection item has been rejected successfully.",
                             "success"
                         );
                         initApplicationDetails();
@@ -331,18 +338,7 @@ function rejectPermit() {
         });
 }
 
-function generatePermit() {
-    $(document)
-        .off("click", ".generatePermit")
-        .on("click", ".generatePermit", function (e) {
-            e.preventDefault();
 
-            const id = $(this).data("permit");
-
-            // ✅ Trigger browser download
-            window.location.href = `/permit/generate/${id}`;
-        });
-}
 
 async function viewMore() {
     $(document).on("click", ".view-attachment", function (e) {
@@ -423,33 +419,28 @@ async function viewMore() {
     <div class="p-1 row">
         <div class = "col-12 col-md-6">
             <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
-                            class="fa-solid fa-tag"></i></span> Item Name:</strong> ${
-                                detail.item_name ?? "-"
-                            }</p>
+                            class="fa-solid fa-tag"></i></span> Item Name:</strong> ${detail.item_name ?? "-"
+            }</p>
         </div>
         <div class = "col-12 col-md-6">
             <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
-                            class="fa-solid fa-scale-balanced"></i></span> Quantity:</strong> ${
-                                detail.quantity ?? "-"
-                            } ${detail.measure ?? ""}</p>
+                            class="fa-solid fa-scale-balanced"></i></span> Quantity:</strong> ${detail.quantity ?? "-"
+            } ${detail.measure ?? ""}</p>
         </div>
         <div class = "col-12 col-md-6">
             <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
-                            class="fa-solid fa-money-bill"></i></span> Value:</strong> RM ${
-                                detail.value ?? "-"
-                            }</p>
+                            class="fa-solid fa-money-bill"></i></span> Value:</strong> RM ${detail.value ?? "-"
+            }</p>
         </div>
         <div class = "col-12 col-md-6">
             <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
-                            class="fa-solid fa-pen-fancy"></i></span> Purpose:</strong> ${
-                                detail.purpose ?? "-"
-                            }</p>
+                            class="fa-solid fa-pen-fancy"></i></span> Purpose:</strong> ${detail.purpose ?? "-"
+            }</p>
         </div>
         <div class = "col-12 col-md-6">
             <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
-                            class="fa-solid fa-gear"></i></span> Uses:</strong> ${
-                                detail.uses ?? "-"
-                            }</p>
+                            class="fa-solid fa-gear"></i></span> Uses:</strong> ${detail.uses ?? "-"
+            }</p>
         </div>
         
         <p class="mt-3"><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
@@ -505,11 +496,11 @@ function verifyApplication() {
             if (result.isConfirmed) {
                 // Send AJAX request to verify application
                 $.ajax({
-                    url: `/application/verify/${applicationId}`, // your route
+                    url: `/internal/inspection/${applicationId}/status`,
                     method: "POST",
                     data: {
-                        _token: $("meta[name='csrf-token']").attr("content"), // CSRF token
-                        verified: 1,
+                        _token: $("meta[name='csrf-token']").attr("content"),
+                        status: 'Clerk review in-progress',
                     },
                     success: function (res) {
                         Swal.fire({
@@ -547,13 +538,15 @@ export function renderPermitBadge(status, remark = "") {
 
     switch (status) {
         case "processing":
+        case "submitted":
             badgeClass = "bg-info";
             label = "Processing";
             break;
 
+        case "pending":
         case "pending for payment":
             badgeClass = "bg-warning";
-            label = "Pending Payment";
+            label = "Pending For Payment";
             break;
 
         case "paid":
@@ -607,11 +600,11 @@ function rejectApplication() {
             if (result.isConfirmed) {
                 // Send AJAX request to verify application
                 $.ajax({
-                    url: `/application/verify/${applicationId}`, // your route
+                    url: `/internal/inspection/${applicationId}/status`,
                     method: "POST",
                     data: {
-                        _token: $("meta[name='csrf-token']").attr("content"), // CSRF token
-                        not_verified: 1,
+                        _token: $("meta[name='csrf-token']").attr("content"),
+                        status: 'Rejected',
                     },
                     success: function (res) {
                         Swal.fire({
@@ -671,12 +664,12 @@ function adminRejectApplication() {
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: `/application/verify/${applicationId}`,
+                    url: `/internal/inspection/${applicationId}/status`,
                     method: "POST",
                     data: {
                         _token: $("meta[name='csrf-token']").attr("content"),
-                        rejected: 1,
-                        reason: result.value, // 🔥 send reason
+                        status: 'Rejected',
+                        reason: result.value,
                     },
                     success: function (res) {
                         Swal.fire({
@@ -721,11 +714,11 @@ function acceptApplication() {
             if (result.isConfirmed) {
                 // Send AJAX request to verify application
                 $.ajax({
-                    url: `/application/verify/${applicationId}`, // your route
+                    url: `/internal/inspection/${applicationId}/status`,
                     method: "POST",
                     data: {
-                        _token: $("meta[name='csrf-token']").attr("content"), // CSRF token
-                        accepted: accepted,
+                        _token: $("meta[name='csrf-token']").attr("content"),
+                        status: 'Clerk Verified',
                     },
                     success: function (res) {
                         Swal.fire({
@@ -790,6 +783,7 @@ function applicationLog() {
             modal.show();
         });
 }
+
 let totalPermit = 0;
 // Function to sum selected permit values
 function updateTotalValue() {
@@ -813,9 +807,214 @@ function updateTotalValue() {
 }
 
 
+function reapply() {
+    $(document)
+        .off("click", ".reapply")
+        .on("click", ".reapply", async function (e) {
+            e.preventDefault();
+
+            const id = $(this).data("permit");
+            const permits = application.inspection_items;
+            const permit = permits.find(p => p.id == id);
+
+            if (!permit) {
+                console.warn("Permit not found!");
+                return;
+            }
+
+            $('#saveBtn').data('id', id).attr('data-id', id);
+
+            const detail = permit.consignment_detail;
 
 
+            // Show modal
+            const modalEl = document.getElementById("addItemModal");
+            const modal = new bootstrap.Modal(modalEl);
 
+            modalEl.addEventListener(
+                "shown.bs.modal",
+                async () => {
+                    
+                    const $modal = $(modalEl);
+                    itemConsigment($modal);
+
+                    // Fill inputs
+                    $modal.find('#itemValue').val(detail.value);
+                    $modal.find('#itemQuantity').val(detail.quantity);
+                    $modal.find('#itemSelect').val(detail.item_name);
+
+                    // PURPOSE (by data-description)
+                    $modal.find('#itemPurpose option').each(function () {
+                        if ($(this).data('description') === detail.purpose) {
+                            $(this).prop('selected', true);
+                        }
+                    });
+                    $modal.find('#itemPurpose').trigger('change');
+
+                    // MEASUREMENT (by value)
+                    $modal.find('#itemMeasure')
+                        .val(detail.measure)
+                        .trigger('change');
+
+                    console.log('measure selected:', detail.measure);
+
+                   
+
+                    saveConsignmentAttachment();
+                },
+                { once: true }
+            );
+
+            modal.show();
+        });
+}
+
+function itemConsigment($modal) {
+    const dropzoneEl = $modal.find("#itemDropzone")[0];
+
+    if (!dropzoneEl) {
+        console.warn("itemDropzone not found");
+        return;
+    }
+
+    if (dropzoneEl.dropzone) {
+        dropzoneEl.dropzone.destroy();
+    }
+
+    itemDropzone = new Dropzone(dropzoneEl, {
+        url: "/",
+        autoProcessQueue: false,
+        maxFilesize: 10,
+        acceptedFiles: ".jpg,.jpeg,.png,.pdf",
+        addRemoveLinks: true,
+        headers: {
+            "X-CSRF-TOKEN": document
+                .querySelector('meta[name="csrf-token"]').content,
+        },
+    });
+}
+
+let updateItem;
+function saveConsignmentAttachment() {
+    $(document)
+        .off("click", "#saveBtn")
+        .on("click", "#saveBtn", function (e) {
+            e.preventDefault();
+
+            const $modal = $("#addItemModal");
+            const id = $(this).data("id");
+
+            const itemSelectValue = $modal.find("#itemSelect").val();
+            const itemSelectText  = $modal.find("#itemSelect option:selected").text();
+            const itemValue       = $modal.find("#itemValue").val().trim();
+            const itemQuantity    = $modal.find("#itemQuantity").val().trim();
+            const itemMeasure     = $modal.find("#itemMeasure").val();
+            const itemPurpose     = $modal.find("#itemPurpose  option:selected").text();
+            const itemUsesValue   = $modal.find("#itemUses").val();
+
+            if (
+                !itemSelectValue ||
+                !itemValue ||
+                !itemQuantity ||
+                !itemMeasure ||
+                !itemPurpose ||
+                !itemUsesValue
+            ) {
+                Swal.fire("Error", "Please fill all required fields", "error");
+                return;
+            }
+
+            const files = itemDropzone?.getAcceptedFiles() || [];
+
+      
+            updateItem = {
+                item_id: itemSelectValue,
+                item_name: itemSelectText,
+                value: itemValue,
+                quantity: itemQuantity,
+                measure: itemMeasure,
+                purpose: itemPurpose,
+                uses: itemUsesValue,
+                files,
+            };
+
+            console.log("updateItem", updateItem);
+
+            saveapplication(id);
+            resetAddItemModal();
+            bootstrap.Modal.getInstance($modal[0]).hide();
+        });
+}
+
+
+function resetAddItemModal() {
+    // Reset plain input fields
+    $("#itemValue").val("");
+    $("#itemQuantity").val("");
+
+    // Reset Select2 fields
+    $("#itemSelect").val(null).trigger("change");
+    $("#itemMeasure").val("").trigger("change");
+    $("#itemPurpose").val("").trigger("change");
+    $("#itemUses").val(null).trigger("change");
+
+    // Clear Dropzone files
+    if (itemDropzone) itemDropzone.removeAllFiles(true);
+}
+
+function saveapplication(permitId) {
+    if (!updateItem) {
+        Swal.fire("Error", "No item to save", "error");
+        return;
+    }
+
+    const form = document.querySelector("#wizardForm");
+    if (!form) return console.error("Form not found");
+
+    const formData = new FormData(form);
+
+    const { files, ...otherData } = updateItem;
+
+    // ✅ single item (index 0)
+    formData.append("items[0][data]", JSON.stringify(otherData));
+
+    if (files && files.length > 0) {
+        files.forEach((file) => {
+            formData.append("files[]", file);
+            formData.append("file_item_index[]", 0);
+        });
+    }
+
+    Swal.fire({
+        title: "Submitting...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+    });
+
+    $.ajax({
+        url: "/public/save-inspection/" + permitId,
+        type: "POST",
+        data: formData,
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        processData: false,
+        contentType: false,
+        success: function () {
+            Swal.fire({
+                icon: "success",
+                title: "Permit Reapply!",
+                timer: 1500,
+                showConfirmButton: false,
+            });
+
+            initApplicationDetails();
+        },
+        error: function () {
+            Swal.fire("Error", "Failed to save permit", "error");
+        },
+    });
+}
 
 /* -------------------------------
     Initializer (shows Swal first)
@@ -846,7 +1045,10 @@ async function initApplicationDetails() {
 
     acceptPermit();
     rejectPermit();
-    generatePermit();
+
+    reapply();
+
+
     pendingPaymentTable();
 
     // application_reapply(application)
@@ -854,7 +1056,7 @@ async function initApplicationDetails() {
 
     Swal.close(); // Close after data is loaded
 
-    // When "Check All" is toggled
+      // When "Check All" is toggled
     $(document).on("change", "#checkAllPermits", function () {
         const isChecked = $(this).is(":checked");
 
@@ -880,9 +1082,16 @@ async function initApplicationDetails() {
         updateTotalValue();
     });
 
-    // When checkout button is clicked
+    let checkoutLocked = false;
+
     $(document).on("click", "#checkoutPage", function (e) {
         e.preventDefault();
+
+        if (checkoutLocked) return; // 🚫 stop repeated click
+        checkoutLocked = true;
+
+        const $btn = $(this);
+        $btn.prop("disabled", true).text("Processing...");
 
         const selectedPermits = $(".permit-checkbox:checked")
             .map(function () {
@@ -892,16 +1101,15 @@ async function initApplicationDetails() {
 
         if (selectedPermits.length === 0) {
             Swal.fire("Error!", "Choose the permit to continue.", "error");
+            checkoutLocked = false;
+            $btn.prop("disabled", false).text("Checkout");
             return;
         }
 
         Swal.fire({
             title: "Loading...",
-
             allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            },
+            didOpen: () => Swal.showLoading(),
         });
 
         totalPermit = Number(totalPermit).toFixed(2);
@@ -913,13 +1121,18 @@ async function initApplicationDetails() {
                 application_id: application.id,
                 permit_ids: selectedPermits,
                 total: totalPermit,
+                type: "inspection",
                 _token: $('meta[name="csrf-token"]').attr("content"),
             },
             success: function (res) {
-                window.location.href = res.url;
+                window.location.href = res.url; // 🔀 redirect
             },
             error: function () {
                 Swal.fire("Error!", "Unable to proceed to checkout.", "error");
+
+                // 🔓 unlock if failed
+                checkoutLocked = false;
+                $btn.prop("disabled", false).text("Checkout");
             },
         });
     });

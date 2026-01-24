@@ -1,3 +1,6 @@
+
+
+
 <div class="wizard-step" data-title="PENDING FOR PAYMENT" data-id="dOM0iRAyJXsLTr9b3KZfQ2jNv4pgn6Gu" data-limit="5"
     data-step="5" id="pendingTab">
     <div class="row">

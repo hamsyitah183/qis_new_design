@@ -139,55 +139,55 @@
                                 <tbody>
                                     <tr>
                                         <th class="fs-14 p-2" style="width: 160px;">Application ID</th>
-                                        <td class="fs-14 p-2 text-muted text-wrap">{{ $order->ipApplication->application_id ?? '-' }}
+                                        <td class="fs-14 p-2 text-muted text-wrap">{{ $application->application_id ?? '-' }}
                                         </td>
 
                                     </tr>
                                     <tr>
                                         <th class="fs-14 p-2" style="width: 160px;">Exporter Name</th>
-                                        <td class="fs-14 p-2 text-muted text-wrap">{{ $order->ipApplication->exporter->name ?? '-' }}
+                                        <td class="fs-14 p-2 text-muted text-wrap">{{ $application->exporter->name ?? '-' }}
                                         </td>
 
                                     </tr>
                                     <tr>
                                         <th class="fs-14 p-2" style="width: 160px;">Exporter Number Phone</th>
                                         <td class="fs-14 p-2 text-muted text-wrap">
-                                            {{ $order->ipApplication->exporter->phone_no ?? '-' }}</td>
+                                            {{ $application->exporter->phone_no ?? '-' }}</td>
 
                                     </tr>
                                     <tr>
                                         <th class="fs-14 p-2" style="width: 160px;">Exporter Address</th>
                                         <td class="fs-14 p-2 text-muted text-wrap">
-                                            {{ $order->ipApplication->exporter->address ?? '-' }}</td>
+                                            {{ $application->exporter->address ?? '-' }}</td>
 
                                     </tr>
                                     <tr>
                                         <th class="fs-14 p-2" style="width: 160px;">Exporter Country</th>
                                         <td class="fs-14 p-2 text-muted text-wrap">
-                                            {{ $order->ipApplication->exporter->countryInfo->name ?? '-' }}</td>
+                                            {{ $application->exporter->countryInfo->name ?? '-' }}</td>
 
                                     </tr>
                                     <tr>
                                         <th class="fs-14 p-2" style="width: 160px;">Importer Name</th>
                                         <td class="fs-14 p-2 text-muted text-wrap">
-                                            {{ $order->ipApplication->importer->fullname ?? '-' }}</td>
+                                            {{ $application->importer->fullname ?? '-' }}</td>
 
                                     </tr>
                                     <tr>
                                         <th class="fs-14 p-2" style="width: 160px;">Importer Address</th>
                                         <td class="fs-14 p-2 text-muted text-wrap">
-                                            {{ $order->ipApplication->importer->address_1 ?? '-' }}
-                                            @if (!empty($order->ipApplication->importer->address_2))
-                                                , {{ $order->ipApplication->importer->address_2 }}
+                                            {{ $application->importer->address_1 ?? '-' }}
+                                            @if (!empty($application->importer->address_2))
+                                                , {{ $application->importer->address_2 }}
                                             @endif
-                                            @if (!empty($order->ipApplication->importer->postcode))
-                                                , {{ $order->ipApplication->importer->postcode }}
+                                            @if (!empty($application->importer->postcode))
+                                                , {{ $application->importer->postcode }}
                                             @endif
-                                            @if (!empty($order->ipApplication->importer->district))
-                                                , {{ $order->ipApplication->importer->district }}
+                                            @if (!empty($application->importer->district))
+                                                , {{ $application->importer->district }}
                                             @endif
-                                            @if (!empty($order->ipApplication->importer->state))
-                                                , {{ $order->ipApplication->importer->state }}
+                                            @if (!empty($application->importer->state))
+                                                , {{ $application->importer->state }}
                                             @endif
                                         </td>
                                     </tr>

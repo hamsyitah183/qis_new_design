@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\InspectionItem;
 use Illuminate\Support\Facades\Http;
 use App\Models\Order;
 use App\Models\IpConsignmentPermit;
@@ -43,7 +44,7 @@ class BayuPayService
             case 'UNSUCCESSFUL':
                 $order->status = 'payment failed';
                 foreach ($permits as $permit) {
-                    IpConsignmentPermit::where('id', $permit['permit_id'])->update(['status' => 'pending for payment']);
+                    IpConsignmentPermit::where('id', $permit['permit_id'])->update(['status' => 'payment failed']);
                 }
                 // $application->logActivity(action: 'User Payment', remark: 'The order is unsuccessfully paid', status: 'User Payment');
                 break;
@@ -77,50 +78,80 @@ class BayuPayService
 
     public function checkAndUpdatePaymentWithoutTransactionCode(Order $order): array
     {
-        $response = Http::withToken('test-api')->get('https://bayupay-dummy.geovidia.my/readtransaction.php', ['sid' => $order->sid, 'itn' => $order->itn, 'rn' => $order->order_number]);
+        $response = Http::withToken('test-api')->get('https://bayupay-dummy.geovidia.my/readtransaction.php', [
+            'sid' => $order->sid,
+            'itn' => $order->itn,
+            'rn' => $order->order_number,
+        ]);
 
         if (!$response->successful()) {
             throw new \Exception('Failed to retrieve payment data');
         }
 
         $paymentData = $response->json();
-        // Log::info('lepas 1', $paymentData);
 
         $permits = $order->order_details['permits'] ?? [];
-        // Log::info('lepas 2', $permits);
-        if ($order->application_type == 'Import Permit') {
-            $application = $order->ipApplication;
-        }
+        $application = $order->application;
+        $applicationType = $application->application_type;
 
-        Log::info('lepas 2', [
-            'transaction_status' => $paymentData['transaction_status'],
+        Log::info('Payment check', [
+            'order' => $order->order_number,
+            'status' => $paymentData['transaction_status'],
+            'application_type' => $applicationType,
         ]);
 
+        /**
+         * Decide permit model
+         */
+        $permitModel = match ($applicationType) {
+            'Import Permit' => IpConsignmentPermit::class,
+            'Inspection Certificate' => InspectionItem::class,
+            default => null,
+        };
+
+        if (!$permitModel) {
+            throw new \Exception('Unsupported application type');
+        }
+
+        /**
+         * Handle payment status
+         */
         switch ($paymentData['transaction_status']) {
             case 'SUCCESSFUL':
                 $order->status = 'payment success';
+                $permitStatus = 'paid';
 
-                foreach ($permits as $permit) {
-                    IpConsignmentPermit::where('id', $permit['permit_id'])->update(['status' => 'paid']);
-                }
-                // $application->logActivity(action: 'User Payment', remark: 'The order is successfully paid', status: 'User Payment');
+                $application->logActivity(action: 'User Payment', remark: 'The order is successfully paid', status: 'User Payment');
                 break;
 
             case 'UNSUCCESSFUL':
                 $order->status = 'payment failed';
-                // $application->logActivity(action: 'User Payment', remark: 'The order is unsuccessfully paid', status: 'User Payment');
+                $permitStatus = 'payment failed';
+
+                $application->logActivity(action: 'User Payment', remark: 'The order payment failed', status: 'User Payment');
                 break;
 
             case 'PENDING FOR AUTHORIZER TO APPROVE':
                 $order->status = 'pending authorization';
+                $permitStatus = 'payment processing';
 
-                foreach ($permits as $permit) {
-                    IpConsignmentPermit::where('id', $permit['permit_id'])->update(['status' => 'payment processing']);
-                }
-                // $application->logActivity(action: 'User Payment', remark: 'The order is pending for authorization', status: 'User Payment');
+                $application->logActivity(action: 'User Payment', remark: 'The order is pending for authorization', status: 'User Payment');
                 break;
+
+            default:
+                return $paymentData;
         }
 
+        /**
+         * Update permits (ONCE)
+         */
+        foreach ($permits as $permit) {
+            $permitModel::where('id', $permit['permit_id'])->update(['status' => $permitStatus]);
+        }
+
+        /**
+         * Save payment metadata
+         */
         $order->fill([
             'seller_ref' => $paymentData['seller_ref'] ?? null,
             'fpx_seller_reference' => $paymentData['fpx_seller_reference'] ?? null,

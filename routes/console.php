@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('bayupay:check-pending')->everyFiveMinutes()->withoutOverlapping()->runInBackground();
+ 

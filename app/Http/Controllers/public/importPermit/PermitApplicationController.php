@@ -79,7 +79,7 @@ class PermitApplicationController extends Controller
             ->causedBy(authUser()['user'])
             ->performedOn(authUser()['user'])
             ->withProperties([
-                'exporter' => $exporter
+                'exporter' => $exporter,
             ])
             ->log(authUser()['user']['fullname'] . ' has added an exporter');
 
@@ -588,12 +588,53 @@ class PermitApplicationController extends Controller
 
     public function reapply($id, Request $request)
     {
-        $item = $request->items[0]; // array with key "data"
+        $permit = IpConsignmentPermit::with(['application'])->findOrFail($id);
 
-        $data = json_decode($item['data'], true); // ✅ decode JSON string
+        // 1️⃣ Get item data
+        $item = $request->items[0] ?? null;
+        if (!$item || !isset($item['data'])) {
+            return response()->json(['message' => 'Invalid item data'], 422);
+        }
 
-        $permit = IpConsignmentPermit::where('id', $id)->first();
+        $data = json_decode($item['data'], true);
 
-        dd($id, $permit, $data);
+        // dd($data);
+
+        // 2️⃣ Update permit fields
+        $permit->update([
+            'consignment_detail' => $data,
+            'quantity' => $data['quantity'] ?? $permit->quantity,
+            'unit_measurement' => $data['measure'] ?? $permit->unit_measurement,
+            'value' => $data['value'] ?? $permit->value,
+            'purpose' => $data['purpose'] ?? $permit->purpose,
+            'status' => 'reapplied',
+        ]);
+
+        // 3️⃣ Save attachments (single permit)
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
+                $name = uniqid() . '_' . $file->getClientOriginalName();
+                $path = $file->storeAs('import', $name, 'public');
+
+                IpConsignmentAttachment::create([
+                    'permit_id' => $permit->id,
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => "/storage/{$path}",
+                    'file_type' => $file->getClientOriginalExtension(),
+                ]);
+            }
+        }
+
+        $application = $permit->application;
+
+        $application->logActivity(action: 'Consignment Reapply', remark: 'User reapply the consignment', status: 'User Reapply Consignment');
+
+        $application->status = 'Clerk Verified';
+        $application->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Permit updated and files uploaded successfully',
+        ]);
     }
 }

@@ -17,6 +17,7 @@ use App\Models\PublicUser;
 use App\Notifications\ApplicationNotification;
 use App\Services\ApplicationActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
@@ -328,6 +329,7 @@ class ApplicationController extends Controller
 
     public function viewapplication($uuid)
     {
+        Artisan::call('bayupay:check-pending');
 
         $application = IpApplication::with([
             'user',         // submitted by

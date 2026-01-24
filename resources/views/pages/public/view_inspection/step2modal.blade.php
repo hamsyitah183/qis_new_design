@@ -1,8 +1,6 @@
 <!-- MODAL ADD ITEM -->
-<div class="modal fade" id="addItemModal" tabindex="-1" data-bs-focus="false">
-
-    <form class="modal-dialog modal-fullscreen">
-        <input type="hidden" name="permit_id" value = "permit_id">
+<div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
         <div class="modal-content">
             <!-- Header -->
             <div class="modal-header ">
@@ -19,10 +17,7 @@
                 <div class="row gy-4 mb-3 p-4">
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
                         <label for="itemSelect" class="form-label">Item </label>
-                        <select class="form-select" id="itemSelect" name="itemSelect">
-                            <!-- <option value="aa" >-- Select Item</option>
-                                                                                    <option value="aasda" >aaadwd</option> -->
-                        </select>
+                        <input type="text" class="form-control" id="itemSelect" name="itemSelect">
                         <small style="color:red">Item refering to the exporter's Country</small>
                     </div>
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
@@ -57,7 +52,9 @@
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
                         <label for="itemUses" class="form-label">Uses</label>
                         <select class="form-select" id="itemUses" name="itemUses">
-
+                            <option value="fresh produce">Fresh Produce</option>
+                            <option value="for animal consumption">For Animal Consumption</option>
+                            <option value="planting material">Planting Material</option>
                         </select>
                     </div>
                     <div class="row gy-4">
@@ -91,12 +88,12 @@
                     <i class="bx bx-x me-1"></i> Cancel
                 </button>
                 <button id="saveBtn" type="submit" class="btn btn-primary">
-                    <i class="bx bx-save me-1"></i> Reapply
+                    <i class="bx bx-save me-1"></i> Save
                 </button>
             </div>
             <!-- </form> -->
         </div> <!-- end class:modal-content -->
-    </form>
+    </div>
 </div> <!-- end modal -->
 
 
