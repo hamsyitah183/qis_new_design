@@ -71,12 +71,17 @@ class PermitConsignmentController extends Controller
             ])
             ->log(authUser()['user']['fullname'] . ' has ' . strtolower($status) . ' permit conditions for application ' . $permit->application->application_id);
 
-        $application->logActivity(action: 'Officer Verification', remark: $request['reason'] ?? 'Permit approved by officer', status: 'Officer Verified');
+            $application->logActivity(
+                'Officer Verification',
+                $request['reason'] ?? 'Permit approved by officer and pending for payment',
+                $accepted ? 'Officer Verified' : 'Officer Rejected'
+            );
+
 
         // dd($application->importer_detail);
 
         // Check if no status is 'processing'
-        if (!$allStatuses->contains('processing')) {
+        if (!$allStatuses->contains('processing') || !$allStatuses->contains('reapplied')) {
             // dd($allStatuses);
             $application->logActivity(action: 'Fully Processed', remark: 'Fully Processed', status: 'Fully Processed');
 

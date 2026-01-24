@@ -12,6 +12,7 @@ import select2 from "select2";
 select2(window.jQuery);
 
 import "select2/dist/css/select2.min.css";
+import { activityLogDesign } from "../../appLog";
 
 
 Dropzone.autoDiscover = false;
@@ -94,10 +95,11 @@ async function attachmentTable() {
         let type = window.authUser.type;
         console.log("is it", roles);
 
+        console.log('permit status', permit.status)
         let permitAction = "";
         if (applicationStatus === "Clerk Verified") {
             if (
-                permit.status === "processing" &&
+                (permit.status === "processing" || permit.status === "reapplied" ) &&
                 (roles.includes("admin") || roles.includes("officer"))
             ) {
                 permitAction = `
@@ -163,7 +165,12 @@ async function attachmentTable() {
 
         } else if (s.includes("payment")) {
             text = '<span class="badge bg-warning fs-11 p-1">Pending For Payment</span>';
+
+        } else if (s.includes("reapplied")) {
+            text = '<span class="badge bg-info fs-11 p-1">Reapply</span>';
+
         }
+
 
         permitStatus = `<td>${text}</td>`;
 
@@ -800,20 +807,16 @@ function applicationLog() {
 
             const modalEl = document.getElementById("activityLogModal");
             modalEl.querySelector(".modal-title").textContent =
-                " Activity Log" || "Activity Log";
+                "Import Permit Application Log" || "Activity Log";
 
-            activity_log.forEach((log, index) => {
-                tableBody.append(`
-    <tr>
-        <td>${log.action}</td>
-        <td>${log.causer.fullname}</td>
-        <td>${log.remark}</td>
-        <td>${log.status}</td>
-        <td>${formatTime(log.created_at)}</td>
-    </tr>
-    `);
-            });
+            const cardBody = $('#activityLogModal .modal-body');
+            cardBody.empty();
+            cardBody.addClass('scroll-div');
 
+            const html = activityLogDesign(activity_log);
+            
+            cardBody.html(html);
+           
             const modal = new bootstrap.Modal(modalEl);
             modal.show();
         });
@@ -1030,7 +1033,7 @@ function groupPreview() {
         }, 100);
     });
 }
-
+let updateItem;
 function saveConsignmentAttachment() {
     $(document)
         .off("click", "#saveBtn")
@@ -1045,19 +1048,8 @@ function saveConsignmentAttachment() {
             const itemValue       = $modal.find("#itemValue").val().trim();
             const itemQuantity    = $modal.find("#itemQuantity").val().trim();
             const itemMeasure     = $modal.find("#itemMeasure").val();
-            const itemPurpose     = $modal.find("#itemPurpose").val();
+            const itemPurpose     = $modal.find("#itemPurpose  option:selected").text();
             const itemUsesValue   = $modal.find("#itemUses").val();
-
-            console.log(
-                id,
-                itemSelectValue,
-                itemSelectText,
-                itemValue,
-                itemQuantity,
-                itemMeasure,
-                itemPurpose,
-                itemUsesValue
-            );
 
             if (
                 !itemSelectValue ||
@@ -1073,8 +1065,8 @@ function saveConsignmentAttachment() {
 
             const files = itemDropzone?.getAcceptedFiles() || [];
 
-            tempItems.push({
-                id: crypto.randomUUID(),
+      
+            updateItem = {
                 item_id: itemSelectValue,
                 item_name: itemSelectText,
                 value: itemValue,
@@ -1083,11 +1075,13 @@ function saveConsignmentAttachment() {
                 purpose: itemPurpose,
                 uses: itemUsesValue,
                 files,
-            });
+            };
+
+            console.log("updateItem", updateItem);
+
             saveapplication(id);
             resetAddItemModal();
             bootstrap.Modal.getInstance($modal[0]).hide();
-           
         });
 }
 
@@ -1287,22 +1281,27 @@ async function initApplicationDetails() {
 }
 
 function saveapplication(permitId) {
+    if (!updateItem) {
+        Swal.fire("Error", "No item to save", "error");
+        return;
+    }
+
     const form = document.querySelector("#wizardForm");
     if (!form) return console.error("Form not found");
 
     const formData = new FormData(form);
 
-    tempItems.forEach((item, index) => {
-        const { files, ...otherData } = item;
-        formData.append(`items[${index}][data]`, JSON.stringify(otherData));
+    const { files, ...otherData } = updateItem;
 
-        if (files && files.length > 0) {
-            files.forEach((file) => {
-                formData.append("files[]", file);
-                formData.append("file_item_index[]", index);
-            });
-        }
-    });
+    // ✅ single item (index 0)
+    formData.append("items[0][data]", JSON.stringify(otherData));
+
+    if (files && files.length > 0) {
+        files.forEach((file) => {
+            formData.append("files[]", file);
+            formData.append("file_item_index[]", 0);
+        });
+    }
 
     Swal.fire({
         title: "Submitting...",
@@ -1319,22 +1318,22 @@ function saveapplication(permitId) {
         },
         processData: false,
         contentType: false,
-        success: function (response) {
+        success: function () {
             Swal.fire({
                 icon: "success",
-                title: "Application Submitted!",
+                title: "Permit Reapply!",
                 timer: 1500,
                 showConfirmButton: false,
             });
 
-           
-            window.location.reload();
+            initApplicationDetails();
         },
-        error: function (xhr) {
-            Swal.fire("Error", "Failed to save application", "error");
+        error: function () {
+            Swal.fire("Error", "Failed to save permit", "error");
         },
     });
 }
+
 
 
 /* -------------------------------

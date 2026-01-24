@@ -167,3 +167,26 @@
     scrollbar-width: thin;
     scrollbar-color: #b0b0b0 #e0e0e0; /* thumb color, track color */
 }
+
+
+#activityLogModal .collapse {
+    visibility: visible !important;
+}
+
+#activityLogModal .modal-body {
+    max-height: 350px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+/* 
+#activityLogModal .order-track .accordion::before {
+    height: 100% !important;
+}
+
+#activityLogModal .order-track .long .accordion::before {
+    height: 90px !important;
+}
+
+#activityLogModal .order-track .mid .accordion::before {
+    height: 50px !important;
+} */

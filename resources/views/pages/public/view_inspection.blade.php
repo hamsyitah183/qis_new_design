@@ -124,19 +124,15 @@
                             @endif
 
                             @php
-                                if ($application->inspectionItems) {
-                                    $allPending = $application->inspectionItems->every(
-                                        fn($permit) => $permit->status === 'pending for payment',
-                                    );
-                                } else {
-                                    $allPending = false;
-                                }
+                                $hasPending = $application->inspectionItems
+                                    ? $application->inspectionItems->contains(
+                                        fn ($permit) => $permit->status === 'pending for payment'
+                                    )
+                                    : false;
 
-                                $value = $allPending ? 1 : 0;
-
-                                // dd($application->inspectionItems, $value);
-
+                                $value = $hasPending ? 1 : 0;
                             @endphp
+
 
 
                             @if (authUser()['type'] == 'public' && $value)

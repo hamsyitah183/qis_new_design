@@ -1,5 +1,6 @@
 import { formatTime, initTooltips } from "../../app";
 import Swal from "sweetalert2";
+import { activityLogDesign } from "../../appLog";
 
 console.log("application list");
 let applicationListTable;
@@ -188,19 +189,14 @@ function activityLog() {
 
             const modalEl = document.getElementById("activityLogModal");
             modalEl.querySelector(".modal-title").textContent =
-                " Activity Log" || "Activity Log";
+                "Import Permit Application Log" || "Activity Log";
 
-            activity_log.forEach((log, index) => {
-                tableBody.append(`
-                    <tr>
-                        <td>${log.action}</td>
-                        <td>${log.causer.fullname}</td>
-                        <td>${log.remark}</td>
-                        <td>${log.status}</td>
-                        <td>${formatTime(log.created_at)}</td>
-                    </tr>
-                `);
-            });
+            const cardBody = $('#activityLogModal .modal-body');
+            cardBody.empty();
+            cardBody.addClass('scroll-div');
+
+            const html = activityLogDesign(activity_log);
+            cardBody.html(html);
 
             const modal = new bootstrap.Modal(modalEl);
             modal.show();

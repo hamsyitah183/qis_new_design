@@ -1,5 +1,6 @@
 import { formatTime, initTooltips } from "../../app";
 import Swal from "sweetalert2";
+import { activityLogDesign } from "../../appLog";
 
 console.log("inspection list");
 let inspectionListTable;
@@ -201,6 +202,16 @@ function activityLog() {
                     </tr>
                 `);
             });
+
+            const cardBody = $('#activityLogModal .modal-body');
+            cardBody.empty();
+            cardBody.addClass('scroll-div');
+
+            const html = activityLogDesign(activity_log);
+            cardBody.html(html);
+
+
+
 
             const modal = new bootstrap.Modal(modalEl);
             modal.show();
