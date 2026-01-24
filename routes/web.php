@@ -127,6 +127,7 @@ Route::prefix('public')
         Route::get('/inspection_application_data/{id}', [InspectionController::class, 'getApplicationData'])->name('inspection.app.data');
         Route::get('/inspection_certificates_application_self/{id?}', [InspectionController::class, 'getInspectionSelf'])->name('inspectionApplicationSelf');
         Route::get('/inspection_certificates_application_others/{id?}', [InspectionController::class, 'getInspectionOthers'])->name('inspectionApplicationOthers');
+        Route::post('/save-inspection/{id}', [InspectionController::class, 'reapply']);
     });
 
 Route::prefix('internal')

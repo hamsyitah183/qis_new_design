@@ -15,6 +15,8 @@ use App\Events\InternalUserAdminEvent;
 use App\Events\InternalUserClerkEvent;
 use App\Events\PublicUserEvent;
 use App\Models\ImportPermitLog;
+use App\Models\InspectionAttachment;
+use App\Models\InspectionItem;
 use App\Models\IpCondition;
 use App\Models\IpConsignmentAttachment;
 use App\Models\IpConsignmentPermit;
@@ -370,7 +372,7 @@ class InspectionController extends Controller
                         'unit_measurement' => $itemData['measure'] ?? null,
                         'value' => $itemData['value'] ?? 0,
                         'purpose' => $itemData['purpose'] ?? null,
-                        'status' => 'submitted',
+                        'status' => 'processing',
                     ]);
                     $itemArray[$index] = $inspectionItem->id;
                 }
@@ -1016,6 +1018,58 @@ class InspectionController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Inspection item rejected successfully.',
+        ]);
+    }
+
+    public function reapply($id, Request $request)
+    {
+        $permit = InspectionItem::with(['application'])->findOrFail($id);
+
+        // 1️⃣ Get item data
+        $item = $request->items[0] ?? null;
+        if (!$item || !isset($item['data'])) {
+            return response()->json(['message' => 'Invalid item data'], 422);
+        }
+
+        $data = json_decode($item['data'], true);
+
+        // dd($data);
+
+        // 2️⃣ Update permit fields
+        $permit->update([
+            'consignment_detail' => $data,
+            'quantity' => $data['quantity'] ?? $permit->quantity,
+            'unit_measurement' => $data['measure'] ?? $permit->unit_measurement,
+            'value' => $data['value'] ?? $permit->value,
+            'purpose' => $data['purpose'] ?? $permit->purpose,
+            'status' => 'reapplied',
+        ]);
+
+        // 3️⃣ Save attachments (single permit)
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
+                $name = uniqid() . '_' . $file->getClientOriginalName();
+                $path = $file->storeAs('import', $name, 'public');
+
+                InspectionAttachment::create([
+                    'item_id' => $permit->id,
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => "/storage/{$path}",
+                    'file_type' => $file->getClientOriginalExtension(),
+                ]);
+            }
+        }
+
+        $application = $permit->application;
+
+        $application->logActivity(action: 'Consignment Reapply', remark: 'User reapply the consignment', status: 'User Reapply Consignment');
+
+        $application->status = 'Clerk Verified';
+        $application->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Permit updated and files uploaded successfully',
         ]);
     }
 }

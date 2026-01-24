@@ -26,13 +26,17 @@ class PaymentController extends Controller
         if ($type == 'import_permit') {
             $application = IpApplication::findOrFail($id);
             $permitIds = explode(',', $permitId);
-
-            $permits = IpConsignmentPermit::where('application_id', $id)->whereIn('id', $permitIds)->where('status', 'pending for payment')->get();
+            $permits = IpConsignmentPermit::where('application_id', $id)
+            ->whereIn('id', $permitIds)
+            ->whereIn('status', ['pending for payment', 'payment failed'])
+            ->get();
+        
         } elseif ($type == 'inspection') {
             $application = InspectionApplication::findOrFail($id);
             $permitIds = explode(',', $permitId);
 
-            $permits = InspectionItem::where('application_id', $id)->whereIn('id', $permitIds)->where('status', 'pending for payment')->get();
+            $permits = InspectionItem::where('application_id', $id)
+            ->whereIn('id', $permitIds)->where('status', ['pending for payment', 'payment failed'])->get();
         }
 
         // dd($permits);
@@ -99,12 +103,14 @@ class PaymentController extends Controller
             $application = IpApplication::findOrFail($id);
             // $permitIds = explode(',', $permitId);
 
-            $permits = IpConsignmentPermit::where('application_id', $id)->whereIn('id', $permitIds)->where('status', 'pending for payment')->get();
+            $permits = IpConsignmentPermit::where('application_id', $id)->whereIn('id', $permitIds)
+            ->whereIn('status', ['pending for payment', 'payment failed'])->get();
         } elseif ($type == 'inspection') {
             $application = InspectionApplication::findOrFail($id);
             // $permitIds = explode(',', $permitId);
 
-            $permits = InspectionItem::where('application_id', $id)->whereIn('id', $permitIds)->where('status', 'pending for payment')->get();
+            $permits = InspectionItem::where('application_id', $id)->whereIn('id', $permitIds)
+            ->whereIn('status', ['pending for payment', 'payment failed'])->get();
             // dd($permits);
         }
 

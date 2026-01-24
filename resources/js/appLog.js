@@ -36,7 +36,7 @@ export function activityLogDesign(activityLogs) {
                              
                             </div>
                             <div class="flex-fill d-flex align-items-center justify-content-between">
-                                <p class="fw-medium mb-0 fs-15">${log.status}</p>
+                                <p class="fw-medium mb-0 fs-14 text-wrap">${log.status}</p>
                                 <span class="fs-12">${time}</span>
                             </div>
                         </div>
@@ -94,7 +94,7 @@ function getIcon(status) {
                         <i class="bi bi-check2-all fs-14"></i>
                     </span>`;
     } else if (s === 'fully processed') {
-        iconHtml = `<span class="avatar avatar-sm avatar-rounded track-order-icon backdrop-blur border border-info border-opacity-10 bg-info-transparent">
+        iconHtml = `<span class="avatar avatar-sm avatar-rounded track-order-icon backdrop-blur border border-success border-opacity-10 bg-success-transparent">
                         <i class='bx bx-box fs-14'></i> 
                     </span>`;
     } else if (s === 'clerk review in-progress') {
@@ -110,6 +110,31 @@ function getIcon(status) {
 
         iconHtml = `<span class="avatar avatar-sm avatar-rounded track-order-icon backdrop-blur border border-danger border-opacity-10 bg-danger-transparent">
                        <i class="bi bi-file-earmark-excel fs-14"></i>
+                    </span>`;
+    }  else if (s === 'user reapply consignment') {
+
+        iconHtml = `<span class="avatar avatar-sm avatar-rounded track-order-icon backdrop-blur border border-info border-opacity-10 bg-info-transparent">
+                       <i class="bi bi-file-earmark-arrow-up fs-14"></i>
+                    </span>`;
+    } else if (s === 'user payment') {
+
+        iconHtml = `<span class="avatar avatar-sm avatar-rounded track-order-icon backdrop-blur border border-primary1 border-opacity-10 bg-primary1-transparent">
+                       <i class="bi bi-wallet2 fs-14"></i>
+                    </span>`;
+    }  else if (s === 'payment successful') {
+
+        iconHtml = `<span class="avatar avatar-sm avatar-rounded track-order-icon backdrop-blur border border-success border-opacity-10 bg-success-transparent">
+                       <i class="bi bi-cash fs-14"></i>
+                    </span>`;
+    } else if (s === 'payment unsuccessful') {
+
+        iconHtml = `<span class="avatar avatar-sm avatar-rounded track-order-icon backdrop-blur border border-danger border-opacity-10 bg-danger-transparent">
+                       <i class="bi bi-cash fs-14"></i>
+                    </span>`;
+    } else if (s === 'payment is pending for authorization') {
+
+        iconHtml = `<span class="avatar avatar-sm avatar-rounded track-order-icon backdrop-blur border border-warning border-opacity-10 bg-warning-transparent">
+                       <i class="bi bi-cash fs-14"></i>
                     </span>`;
     } 
     

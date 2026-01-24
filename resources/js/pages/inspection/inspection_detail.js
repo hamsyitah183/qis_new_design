@@ -1,10 +1,24 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
 import { formatTime, getCountry, getEntryPoint } from "../../app";
+import "dropzone/dist/dropzone.css";
+// Import Select2 module
+import select2 from "select2";
+
+// Force Select2 to attach to THIS jQuery:
+select2(window.jQuery);
+
+import "select2/dist/css/select2.min.css";
 // import { application_reapply } from "./application_reapply";
 let application = null;
 let value = null;
 
+
+
+Dropzone.autoDiscover = false;
+
+
+let itemDropzone = null;
 /* -------------------------------
 Get application ID from URL
 -------------------------------- */
@@ -81,10 +95,10 @@ async function attachmentTable() {
             ) {
                 permitAction = `
                 <div class="btn btn-sm btn-primary-light btn-wave accept" data-permit="${permit.id}">
-                    Accept Item
+                    Approved
                 </div>
                 <div class="btn btn-sm btn-danger-light btn-wave reject" data-permit="${permit.id}">
-                    Reject Item
+                    Rejected
                 </div>`;
             }
 
@@ -94,18 +108,6 @@ async function attachmentTable() {
             (type.includes('public'))) {
             permitAction = `<div class = "btn btn-sm btn-danger-light btn-wave reapply"  data-permit = "${permit.id}" >Reapply</div>`
         }
-
-        // if (applicationStatus === "Fully Processed") {
-        // if (permit.status === "paid") {
-        // permitAction = `
-        // <div class="btn btn-sm btn btn-teal-light btn-wave generatePermit" data-permit="${permit.id}">
-        // Download Permit
-        // </div>
-        // `;
-        // }
-        // }
-
-        // Download functionality is not applicable for inspection certificates
 
         let permitStatus = "";
 
@@ -117,21 +119,31 @@ async function attachmentTable() {
         if (s.includes("completed")) {
             text = '<span class="badge bg-success fs-11 p-1">Completed</span>';
 
-        } else if (s.includes("payment processing")) {
+        }else if (s.includes("payment failed")) {
+            text = '<span class="badge bg-danger fs-11 p-1">Payment Failed</span>';
+
+        } 
+        
+        else if (s.includes("payment processing")) {
             text = '<span class="badge bg-info fs-11 p-1">Payment Processing</span>';
 
         } else if (s.includes("paid")) {
             text = '<span class="badge bg-success fs-11 p-1">Paid</span>';
 
-        } else if (s.includes("processing") || s.includes("submitted")) {
+        } else if (s.includes("processing")) {
             text = '<span class="badge bg-info fs-11 p-1">Processing</span>';
 
         } else if (s.includes("rejected")) {
             text = '<span class="badge bg-danger fs-11 p-1">Rejected</span>';
 
-        } else if (s.includes("pending")) {
+        } else if (s.includes("payment")) {
             text = '<span class="badge bg-warning fs-11 p-1">Pending For Payment</span>';
+
+        } else if (s.includes("reapplied")) {
+            text = '<span class="badge bg-info fs-11 p-1">Reapply</span>';
+
         }
+
         permitStatus = `<td>${text}</td>`;
 
         tableBody.append(`
@@ -795,8 +807,214 @@ function updateTotalValue() {
 }
 
 
+function reapply() {
+    $(document)
+        .off("click", ".reapply")
+        .on("click", ".reapply", async function (e) {
+            e.preventDefault();
+
+            const id = $(this).data("permit");
+            const permits = application.inspection_items;
+            const permit = permits.find(p => p.id == id);
+
+            if (!permit) {
+                console.warn("Permit not found!");
+                return;
+            }
+
+            $('#saveBtn').data('id', id).attr('data-id', id);
+
+            const detail = permit.consignment_detail;
 
 
+            // Show modal
+            const modalEl = document.getElementById("addItemModal");
+            const modal = new bootstrap.Modal(modalEl);
+
+            modalEl.addEventListener(
+                "shown.bs.modal",
+                async () => {
+                    
+                    const $modal = $(modalEl);
+                    itemConsigment($modal);
+
+                    // Fill inputs
+                    $modal.find('#itemValue').val(detail.value);
+                    $modal.find('#itemQuantity').val(detail.quantity);
+                    $modal.find('#itemSelect').val(detail.item_name);
+
+                    // PURPOSE (by data-description)
+                    $modal.find('#itemPurpose option').each(function () {
+                        if ($(this).data('description') === detail.purpose) {
+                            $(this).prop('selected', true);
+                        }
+                    });
+                    $modal.find('#itemPurpose').trigger('change');
+
+                    // MEASUREMENT (by value)
+                    $modal.find('#itemMeasure')
+                        .val(detail.measure)
+                        .trigger('change');
+
+                    console.log('measure selected:', detail.measure);
+
+                   
+
+                    saveConsignmentAttachment();
+                },
+                { once: true }
+            );
+
+            modal.show();
+        });
+}
+
+function itemConsigment($modal) {
+    const dropzoneEl = $modal.find("#itemDropzone")[0];
+
+    if (!dropzoneEl) {
+        console.warn("itemDropzone not found");
+        return;
+    }
+
+    if (dropzoneEl.dropzone) {
+        dropzoneEl.dropzone.destroy();
+    }
+
+    itemDropzone = new Dropzone(dropzoneEl, {
+        url: "/",
+        autoProcessQueue: false,
+        maxFilesize: 10,
+        acceptedFiles: ".jpg,.jpeg,.png,.pdf",
+        addRemoveLinks: true,
+        headers: {
+            "X-CSRF-TOKEN": document
+                .querySelector('meta[name="csrf-token"]').content,
+        },
+    });
+}
+
+let updateItem;
+function saveConsignmentAttachment() {
+    $(document)
+        .off("click", "#saveBtn")
+        .on("click", "#saveBtn", function (e) {
+            e.preventDefault();
+
+            const $modal = $("#addItemModal");
+            const id = $(this).data("id");
+
+            const itemSelectValue = $modal.find("#itemSelect").val();
+            const itemSelectText  = $modal.find("#itemSelect option:selected").text();
+            const itemValue       = $modal.find("#itemValue").val().trim();
+            const itemQuantity    = $modal.find("#itemQuantity").val().trim();
+            const itemMeasure     = $modal.find("#itemMeasure").val();
+            const itemPurpose     = $modal.find("#itemPurpose  option:selected").text();
+            const itemUsesValue   = $modal.find("#itemUses").val();
+
+            if (
+                !itemSelectValue ||
+                !itemValue ||
+                !itemQuantity ||
+                !itemMeasure ||
+                !itemPurpose ||
+                !itemUsesValue
+            ) {
+                Swal.fire("Error", "Please fill all required fields", "error");
+                return;
+            }
+
+            const files = itemDropzone?.getAcceptedFiles() || [];
+
+      
+            updateItem = {
+                item_id: itemSelectValue,
+                item_name: itemSelectText,
+                value: itemValue,
+                quantity: itemQuantity,
+                measure: itemMeasure,
+                purpose: itemPurpose,
+                uses: itemUsesValue,
+                files,
+            };
+
+            console.log("updateItem", updateItem);
+
+            saveapplication(id);
+            resetAddItemModal();
+            bootstrap.Modal.getInstance($modal[0]).hide();
+        });
+}
+
+
+function resetAddItemModal() {
+    // Reset plain input fields
+    $("#itemValue").val("");
+    $("#itemQuantity").val("");
+
+    // Reset Select2 fields
+    $("#itemSelect").val(null).trigger("change");
+    $("#itemMeasure").val("").trigger("change");
+    $("#itemPurpose").val("").trigger("change");
+    $("#itemUses").val(null).trigger("change");
+
+    // Clear Dropzone files
+    if (itemDropzone) itemDropzone.removeAllFiles(true);
+}
+
+function saveapplication(permitId) {
+    if (!updateItem) {
+        Swal.fire("Error", "No item to save", "error");
+        return;
+    }
+
+    const form = document.querySelector("#wizardForm");
+    if (!form) return console.error("Form not found");
+
+    const formData = new FormData(form);
+
+    const { files, ...otherData } = updateItem;
+
+    // ✅ single item (index 0)
+    formData.append("items[0][data]", JSON.stringify(otherData));
+
+    if (files && files.length > 0) {
+        files.forEach((file) => {
+            formData.append("files[]", file);
+            formData.append("file_item_index[]", 0);
+        });
+    }
+
+    Swal.fire({
+        title: "Submitting...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+    });
+
+    $.ajax({
+        url: "/public/save-inspection/" + permitId,
+        type: "POST",
+        data: formData,
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        processData: false,
+        contentType: false,
+        success: function () {
+            Swal.fire({
+                icon: "success",
+                title: "Permit Reapply!",
+                timer: 1500,
+                showConfirmButton: false,
+            });
+
+            initApplicationDetails();
+        },
+        error: function () {
+            Swal.fire("Error", "Failed to save permit", "error");
+        },
+    });
+}
 
 /* -------------------------------
     Initializer (shows Swal first)
@@ -827,6 +1045,8 @@ async function initApplicationDetails() {
 
     acceptPermit();
     rejectPermit();
+
+    reapply();
 
 
     pendingPaymentTable();

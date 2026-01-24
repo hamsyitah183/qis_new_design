@@ -184,6 +184,8 @@
         @endslot
 
     </x-modal>
+
+    @include('pages.public.view_inspection.step2modal')
 @endsection
 
 @push('scripts')
