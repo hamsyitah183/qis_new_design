@@ -303,6 +303,8 @@ class ConsignmentApplicationController extends Controller
                 }
             }
 
+
+
             return response()->json([
                 'status' => 'success',
                 'message' => $isDraft ? 'Draft saved successfully' : 'Application submitted successfully',
@@ -510,5 +512,21 @@ class ConsignmentApplicationController extends Controller
                 500,
             );
         }
+    }
+    public function viewAttachment($id)
+    {
+        $attachment = ConsignmentAttachment::findOrFail($id);
+
+        // Remove '/storage/' prefix if present to get relative path
+        $relativePath = str_replace('/storage/', '', $attachment->file_path);
+
+        // Construct full path
+        $path = storage_path('app/public/' . $relativePath);
+
+        if (!file_exists($path)) {
+            abort(404);
+        }
+
+        return response()->file($path);
     }
 }

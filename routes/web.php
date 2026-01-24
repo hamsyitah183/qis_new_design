@@ -164,7 +164,7 @@ Route::prefix('internal')
         Route::get('/permission/data', [RoleAndPermissionController::class, 'get_permission']);
         Route::post('/permission/update', [RoleAndPermissionController::class, 'update_permission']);
         // ==================== user managemet =================
-
+    
         // ======================= application ========================
         Route::get('/view_all_application', [ApplicationController::class, 'showallapplicationlist'])->name('application.list');
         Route::delete('/application/delete/{id}', [ApplicationController::class, 'deleteApplication'])->name('application.delete');
@@ -183,9 +183,9 @@ Route::prefix('internal')
         Route::get('/inspection_application/{id}/data', [InspectionController::class, 'getApplicationDetails']);
 
         // Route::get('/application/exporter/get', [ApplicationController::class, 'get_exporter'])->name('application.exporter.get');
-
+    
         //MISC
-
+    
         Route::get('/control_panel', [MiscController::class, 'showcontrolpanel']);
         Route::get('/state-district-management', [MiscController::class, 'showStateDistrictManagement'])->name('state-district-management');
         Route::get('/get_pbdata/{cate}', [MiscController::class, 'getpbdata']);
@@ -209,7 +209,7 @@ Route::prefix('internal')
         // Route::get('/control_panel', [MiscController::class, 'showcontrolpanel'])->name('controlpanel');
         Route::post('/district/entry-point/update', [MiscController::class, 'updateEntry']);
 
-     
+
 
         // ======================= notifications ===========================
         Route::post('/permit/{id}', [PermitConsignmentController::class, 'accept_permit']);
@@ -242,6 +242,7 @@ Route::middleware(['auth.any'])->group(function () {
 
     Route::get('/view_consignment/{uuid}', [ConsignmentApplicationController::class, 'viewapplication']); // Removed name to avoid confusion, it's now in the group
     Route::get('/consignment_application/{id}/data', [ConsignmentController::class, 'getApplicationDetails']);
+    Route::get('/consignment/attachment/{id}', [ConsignmentApplicationController::class, 'viewAttachment'])->name('consignment.attachment.view');
     Route::get('/consignment/list/data', [ConsignmentController::class, 'getallconsignmentlist'])->name('consignment.data');
 
     Route::get('/view_inspection_certificates/{id}', [InspectionController::class, 'viewInspection'])->name('inspection.view_details');
@@ -306,7 +307,7 @@ Route::middleware(['auth.any'])->group(function () {
 // Broadcast::routes();
 // Broadcast::routes(['middleware' => ['auth:internal']]);
 // Broadcast::routes(['middleware' => ['auth:internal']]);
-Route::get('/email', function() {
+Route::get('/email', function () {
     return view('email.notify_email', [
         'title' => 'Test Email'
     ]);

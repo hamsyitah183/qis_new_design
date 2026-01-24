@@ -32,12 +32,7 @@ class InspectionApplication extends Model
         'date_importer_verify' => 'datetime',
     ];
 
-    protected static function booted()
-    {
-        static::creating(function ($application) {
-            $application->application_type = 'Inspection Certificate';
-        });
-    }
+
 
     public function user()
     {

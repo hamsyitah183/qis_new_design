@@ -397,7 +397,7 @@ async function viewMore() {
 
                     <td>
                         <button class="btn btn-sm btn-primary view-file-btn"
-                            data-file="${file.file_path}">
+                            data-file="/consignment/attachment/${file.id}">
                             View
                         </button>
                     </td>

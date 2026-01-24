@@ -45,13 +45,10 @@
                                     <thead class="mt-3">
                                         <tr class="even">
                                             <th>#</th>
-                                            <th>Category</th>
                                             <th>Importer</th>
                                             <th>Exporter</th>
-                                            <th>ETA</th>
-                                            <th>Transport</th>
-                                            <th>Entry Point</th>
-                                            <th>Status</th>
+                                            <th>Application Status</th>
+                                            <th>Permit Status</th>
                                             <th>Submitted By</th>
                                             <th>Action</th>
                                         </tr>
@@ -71,4 +68,3 @@
     </div>
 
 @endsection
-
