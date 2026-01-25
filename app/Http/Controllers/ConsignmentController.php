@@ -84,7 +84,7 @@ class ConsignmentController extends Controller
 
                     str_contains($status, 'accepted') => $this->badge('success', 'Accepted', $latestTime, $causerName, $id),
 
-                    str_contains($status, 'fully processed') => $this->badge('success', 'Fully Processed', $latestTime, $causerName, $id),
+                    str_contains($status, 'officer verification completed') => $this->badge('success', 'Officer Verification Completed', $latestTime, $causerName, $id),
 
                     str_contains($status, 'clerk verified') => $this->badge('info', 'Clerk Verified', $latestTime, $causerName, $id),
 
@@ -205,7 +205,7 @@ class ConsignmentController extends Controller
      * 1. Application Submitted → Clerk accepts → Clerk Review In-Progress
      * 2. Clerk Review In-Progress → Clerk verifies → Clerk Verified / Clerk Rejected
      * 3. Clerk Verified → Officer verifies → Officer Verified / Officer Rejected
-     * 4. Officer Verified → Fully Processed (handled separately)
+     * 4. Officer Verified → Officer Verification Completed (handled separately)
      */
     public function updateStatus($id, Request $request)
     {

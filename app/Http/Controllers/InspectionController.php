@@ -104,8 +104,8 @@ class InspectionController extends Controller
                     str_contains($status, 'accepted') =>
                     $this->badge('success', 'Accepted', $latestTime, $causerName, $id),
 
-                    str_contains($status, 'fully processed') =>
-                    $this->badge('success', 'Fully Processed', $latestTime, $causerName, $id),
+                    str_contains($status, 'officer verification completed') =>
+                    $this->badge('success', 'Officer Verification Completed', $latestTime, $causerName, $id),
 
                     str_contains($status, 'clerk verified') =>
                     $this->badge('info', 'Clerk Verified', $latestTime, $causerName, $id),
@@ -563,7 +563,7 @@ class InspectionController extends Controller
 
 
     /**
-     * Verify inspection application permit (Clerk Review In-Progress / Clerk Verified / Fully Processed) for internal users.
+     * Verify inspection application permit (Clerk Review In-Progress / Clerk Verified / Officer Verification Completed) for internal users.
      */
     public function updateStatus($id, Request $request)
     {
@@ -581,10 +581,10 @@ class InspectionController extends Controller
                 'internal' => 'Inspection application approved by clerk.',
                 'notify' => 'Inspection application has been approved by clerk.',
             ],
-            'Fully Processed' => [
-            'public' => 'Your inspection application has been fully processed.',
-            'internal' => 'Inspection application fully processed.',
-            'notify' => 'Inspection application has been fully processed.',
+            'Officer Verification Completed' => [
+            'public' => 'Your inspection application has been officer verification completed.',
+            'internal' => 'Inspection application officer verification completed.',
+            'notify' => 'Inspection application has been officer verification completed.',
         ],
         'Rejected' => [
             'public' => 'Your inspection application has been rejected.',
@@ -960,13 +960,13 @@ class InspectionController extends Controller
         });
 
         if ($allItemsProcessed) {
-            $application->status = 'Fully Processed';
+            $application->status = 'Officer Verification Completed';
             $application->save();
             
             $application->logActivity(
-                action: 'Fully Processed', 
+                action: 'Officer Verification Completed', 
                 remark: 'All inspection items processed', 
-                status: 'Fully Processed'
+                status: 'Officer Verification Completed'
             );
         }
 
@@ -1070,13 +1070,13 @@ class InspectionController extends Controller
         });
 
         if ($allItemsProcessed) {
-            $application->status = 'Fully Processed';
+            $application->status = 'Officer Verification Completed';
             $application->save();
             
             $application->logActivity(
-                action: 'Fully Processed', 
+                action: 'Officer Verification Completed', 
                 remark: 'All inspection items processed', 
-                status: 'Fully Processed'
+                status: 'Officer Verification Completed'
             );
         }
 

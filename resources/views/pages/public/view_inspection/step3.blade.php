@@ -204,7 +204,7 @@
                                     <td colspan="3">
                                         <div class="table-responsive">
                                             <table id="summaryTable3" class="table text-nowrap">
-                                                <thead class="table-success">
+                                                <thead class="table-primary">
                                                     <tr>
 
                                                         <th scope="col">Item Name</th>

@@ -622,13 +622,13 @@ class ConsignmentApplicationController extends Controller
             !$allStatuses->contains('processing') &&
             !$allStatuses->contains('reapplied')
         ) {
-            $application->status = 'Fully Processed';
+            $application->status = 'Officer Verification Completed';
             $application->save();
         
             $application->logActivity(
-                action: 'Fully Processed',
+                action: 'Officer Verification Completed',
                 remark: 'All permits have completed processing',
-                status: 'Fully Processed'
+                status: 'Officer Verification Completed'
             );
         }
         

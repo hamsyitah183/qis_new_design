@@ -36,7 +36,7 @@
             <input type="hidden" name="name" value="{{ authUser()['user']->fullname }}">
             <input type="hidden" name="email" value="{{ authUser()['user']->email }}">
             <input type="hidden" name="no_phone" value="{{ authUser()['user']->phone_number }}">
-   
+
             <input type="hidden" name="amount" value="{{ $total }}">
             <input type="hidden" name="application_type" value="{{ $application->application_type }}">
             <input type="hidden" name="application_id" value = "{{ $application->application_id }}">
@@ -44,85 +44,88 @@
 
 
             <div class="row">
+
                 <div class="col-xl-9">
-                    <div class="col-xl-12">
-                        <div class="d-flex justify-content-between gap-2">
-                            <div class="card border border-light custom-card">
-                                <div class="card-header">
-                                    <div class="card-title">
-                                        Exporter Details
+                    @if ($application->application_type == 'Import Permit' || $application->application_type == 'Inspection Certificate')
+                        <div class="col-xl-12">
+                            <div class="d-flex justify-content-between gap-2">
+                                <div class="card border border-light custom-card">
+                                    <div class="card-header">
+                                        <div class="card-title">
+                                            Importer Details
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="table table-borderless table-sm mb-0">
-                                            <tbody>
-                                                <tr>
-                                                    <th class="fw-bold" style="width: 30%;">Name:</th>
-                                                    <td class="text-muted" id="exporterFullName">
-                                                        {{ $application->exporter->fullname }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <th class="fw-bold">Address:</th>
-                                                    <td class="text-muted" id="exporterAddress">
-                                                        {{ $application->exporter->address_1 }},
-                                                        {{ $application->exporter->address_2 ? $application->exporter->address_2 . ',' : '' }}
-                                                        {{ $application->exporter->postcode }},
-                                                        {{ $application->exporter->state }}
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <th class="fw-bold">No Phone:</th>
-                                                    <td class="text-muted" id="exporterNoPhone">
-                                                        {{ $application->exporter->phone_number }}</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-borderless table-sm mb-0">
+                                                <tbody>
+                                                    <tr>
+                                                        <th class="fw-bold" style="width: 30%;">Name:</th>
+                                                        <td class="text-muted" id="importerFullName">
+                                                            {{ $application->importer->fullname }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="fw-bold">Address:</th>
+                                                        <td class="text-muted" id="importerAddress">
+                                                            {{ $application->importer->address_1 }},
+                                                            {{ $application->importer->address_2 ? $application->importer->address_2 . ',' : '' }}
+                                                            {{ $application->importer->postcode }},
+                                                            {{ $application->importer->state }}
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="fw-bold">No Phone:</th>
+                                                        <td class="text-muted" id="importerNoPhone">
+                                                            {{ $application->importer->phone_number }}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
-                                </div>
 
-                            </div>
-                            <div class="card border border-light custom-card">
-                                <div class="card-header">
-                                    <div class="card-title ">
-                                        Importer Details
+                                </div>
+                                <div class="card border border-light custom-card">
+                                    <div class="card-header">
+                                        <div class="card-title ">
+                                            Exporter Details
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div class="card-body">
-                                    <div class="table-responsive ">
-                                        <table class="table table-borderless table-sm mb-0 ">
-                                            <tbody>
-                                                <tr>
-                                                    <th class="fw-bold" style="width: 30%;">Name:</th>
-                                                    <td class="text-muted" id="importerName">
-                                                        {{ $application->importer->name }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <th class="fw-bold">Address:</th>
-                                                    <td class="text-muted" id="importerAddress">
-                                                        {{ $application->importer->address }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <th class="fw-bold">No Phone:</th>
-                                                    <td class="text-muted" id= "importerNoPhone">
-                                                        {{ $application->importer->phone_no }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <th class="fw-bold">Country:</th>
-                                                    <td class="text-muted" id="importerCountry">
-                                                        {{ $application->importer->countryInfo->name  }} 
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                    <div class="card-body">
+                                        <div class="table-responsive ">
+                                            <table class="table table-borderless table-sm mb-0 ">
+                                                <tbody>
+                                                    <tr>
+                                                        <th class="fw-bold" style="width: 30%;">Name:</th>
+                                                        <td class="text-muted" id="exporterName">
+                                                            {{ $application->exporter->name }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="fw-bold">Address:</th>
+                                                        <td class="text-muted" id="exporterAddress">
+                                                            {{ $application->exporter->address }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="fw-bold">No Phone:</th>
+                                                        <td class="text-muted" id= "exporterNoPhone">
+                                                            {{ $application->exporter->phone_no }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="fw-bold">Country:</th>
+                                                        <td class="text-muted" id="exporterCountry">
+                                                            {{ $application->exporter->countryInfo->name }}
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
-                                </div>
 
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    @endif
                     <div class="col-xl-12">
                         <div class="card custom-card overflow-hidden border" id="cart-container-delete">
                             <div class="card-header">
@@ -140,7 +143,10 @@
                                                     #
                                                 </th>
                                                 <th>
-                                                    Permits
+                                                    Permit Number
+                                                </th>
+                                                <th>
+                                                    Item Name
                                                 </th>
 
                                                 <th class = "text-center">
@@ -154,6 +160,25 @@
                                                 <tr data-id="{{ $permit->id }}" data-type="permit">
                                                     <td style="text-align:center">
                                                         {{ $index + 1 }}
+                                                    </td>
+                                                    <td class="cart-items01 text-wrap">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="flex-fill">
+
+
+
+                                                                <div class="">
+                                                                    <div>
+
+                                                                        <span class="fw-medium text-muted">
+                                                                            {{ $permit->permit_number ?? '-' }}
+                                                                        </span>
+                                                                    </div>
+
+                                                                </div>
+
+                                                            </div>
+                                                        </div>
                                                     </td>
 
                                                     <td class="cart-items01 text-wrap">
@@ -196,6 +221,7 @@
                     {{-- @dd($total) --}}
 
                 </div>
+
                 <div class="col-xl-3">
                     <div class="card custom-card">
                         <div class="card-header">
@@ -225,7 +251,7 @@
 
                                                     <div>{{ $item->name }}</div>
                                                 </div>
-                                                
+
                                             </label>
                                         </div>
                                     @endforeach

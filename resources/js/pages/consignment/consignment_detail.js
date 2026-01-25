@@ -95,7 +95,7 @@ async function attachmentTable() {
             permitAction = `<div class = "btn btn-sm btn-danger-light btn-wave reapply"  data-permit = "${permit.id}" >Reapply</div>`
         }
 
-        // if (applicationStatus === "Fully Processed") {
+        // if (applicationStatus === "Officer Verification Completed") {
         // if (permit.status === "paid") {
         // permitAction = `
         // <div class="btn btn-sm btn btn-teal-light btn-wave generatePermit" data-permit="${permit.id}">

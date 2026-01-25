@@ -189,7 +189,7 @@ class PermitApplicationController extends Controller
     {
         $countryCode = strtoupper(trim($countryCode));
         //dd($countryCode);
-        $data = IpCondition::whereJsonContains('country', $countryCode)->leftJoin('public_code', 'ip_condition.category', '=', 'public_code.cate_code')->where('public_code.cate_name', 'condition_category')->select('ip_condition.id', \DB::raw('CONCAT(public_code.description, " - ", ip_condition.item_name) AS entry_display'), 'ip_condition.usage')->get();
+        $data = IpCondition::whereJsonContains('country', $countryCode)->leftJoin('public_code', 'ip_condition.category', '=', 'public_code.cate_code')->where('public_code.cate_name', 'condition_category')->select('ip_condition.id', \DB::raw('CONCAT(ip_condition.item_name) AS entry_display'), 'ip_condition.usage')->get();
 
         return response()->json($data);
     }
@@ -588,7 +588,25 @@ class PermitApplicationController extends Controller
 
     public function reapply($id, Request $request)
     {
-        $permit = IpConsignmentPermit::with(['application'])->findOrFail($id);
+        $permit = IpConsignmentPermit::with(['application', 'attachments'])->findOrFail($id);
+
+        $attachments = $permit->attachments;
+
+        $permit = IpConsignmentPermit::with(['application', 'attachments'])->findOrFail($id);
+
+
+        foreach ($permit->attachments as $attachment) {
+            // Remove file from storage
+            if ($attachment->file_path) {
+                // file_path = "/storage/import/xxx.jpg"
+                $storagePath = str_replace('/storage/', '', $attachment->file_path);
+
+                Storage::disk('public')->delete($storagePath);
+            }
+
+            // Remove DB record
+            $attachment->delete();
+        }
 
         // 1️⃣ Get item data
         $item = $request->items[0] ?? null;
@@ -599,6 +617,7 @@ class PermitApplicationController extends Controller
         $data = json_decode($item['data'], true);
 
         // dd($data);
+        
 
         // 2️⃣ Update permit fields
         $permit->update([

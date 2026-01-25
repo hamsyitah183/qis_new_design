@@ -118,7 +118,7 @@ async function attachmentTable() {
             permitAction = `<div class = "btn btn-sm btn-danger-light btn-wave reapply"  data-permit = "${permit.id}" >Reapply</div>`
         }
 
-        // if (applicationStatus === "Fully Processed") {
+        // if (applicationStatus === "Officer Verification Completed") {
         // if (permit.status === "paid") {
         // permitAction = `
         // <div class="btn btn-sm btn btn-teal-light btn-wave generatePermit" data-permit="${permit.id}">
@@ -177,9 +177,9 @@ async function attachmentTable() {
         tableBody.append(`
 <tr>
     <td class = "text-wrap">${detail.item_name ?? "—"}</td>
-    <td>${detail.quantity ?? "—"} ${detail.measure ?? ""}</td>
+
     <td class="text-wrap">${detail.purpose ?? "—"}</td>
-    <td>RM ${detail.value ?? "—"}</td>
+ 
     ${permitStatus}
     <td>
         <div class="d-flex gap-2 align-items-center">

@@ -93,7 +93,7 @@ function getIcon(status) {
         iconHtml = `<span class="avatar avatar-sm avatar-rounded track-order-icon backdrop-blur border border-info border-opacity-10 bg-success-transparent">
                         <i class="bi bi-check2-all fs-14"></i>
                     </span>`;
-    } else if (s === 'fully processed') {
+    } else if (s === 'officer verification completed') {
         iconHtml = `<span class="avatar avatar-sm avatar-rounded track-order-icon backdrop-blur border border-success border-opacity-10 bg-success-transparent">
                         <i class='bx bx-box fs-14'></i> 
                     </span>`;

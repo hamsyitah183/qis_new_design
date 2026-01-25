@@ -204,14 +204,14 @@
                                     <td colspan="3">
                                         <div class="table-responsive">
                                             <table id="summaryTable3" class="table text-nowrap">
-                                                <thead class="table-success">
+                                                <thead class="table-primary">
                                                     <tr>
 
                                                         <th scope="col">Item Name</th>
-                                                        <th scope="col">Quantity</th>
+                                                       
                                                         <th scope="col" style="">
                                                             Purpose</th>
-                                                        <th scope="col">Value</th>
+                                                      
 
 
                                                         <th scope="col">Permit Status</th>

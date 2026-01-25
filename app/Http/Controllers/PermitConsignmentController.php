@@ -81,13 +81,13 @@ class PermitConsignmentController extends Controller
         // dd($application->importer_detail);
 
         // Check if no status is 'processing'
-        if (!$allStatuses->contains('processing') || !$allStatuses->contains('reapplied')) {
+        if (!$allStatuses->contains('processing') && !$allStatuses->contains('reapplied')) {
             // dd($allStatuses);
-            $application->logActivity(action: 'Fully Processed', remark: 'Fully Processed', status: 'Fully Processed');
+            $application->logActivity(action: 'Officer Verification Completed', remark: 'Officer Verification Completed', status: 'Officer Verification Completed');
 
             // dd($application);
 
-            $application->status = 'Fully Processed';
+            $application->status = 'Officer Verification Completed';
             $application->save();
 
             $notificationController = new NotificationController();
@@ -96,8 +96,8 @@ class PermitConsignmentController extends Controller
                 $application->importer_detail['fullname'] ?? 'User',
                 'Import Permit',
                 $application->application_id,
-                'fully processed by DOA',
-                "Your application's permit has been fully processed by DOA. Please reapply a permit that has been rejected if theres any",
+                'officer verification completed by DOA',
+                "Your application's permit has been officer verification completed by DOA. Please reapply a permit that has been rejected if theres any",
                 $application->importer->phone_number ?? '+60143290092', // recipient number
             );
         }

@@ -95,8 +95,8 @@
                     <p>Your inspection application has been verified by the clerk. It is now pending final processing.</p>
                 @endif
 
-                {{-- Fully Processed --}}
-                @if (str_contains($status, 'fully processed'))
+                {{-- Officer Verification Completed --}}
+                @if (str_contains($status, 'officer verification completed'))
                     <span class="avatar avatar-xl avatar-rounded bg-success-transparent svg-success">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
                             <circle cx="128" cy="128" r="96" opacity="0.2"></circle>
@@ -106,8 +106,8 @@
                                 stroke-width="16"></circle>
                         </svg>
                     </span>
-                    <h3 class="mt-2">Fully Processed</h3>
-                    <p>Your inspection application has been fully processed. You can now download your certificate.</p>
+                    <h3 class="mt-2">Officer Verification Completed</h3>
+                    <p>Your inspection application has been officer verification completed. You can now download your certificate.</p>
                 @endif
 
                 {{-- Rejected --}}

@@ -100,8 +100,8 @@ class ApplicationController extends Controller
                     str_contains($status, 'accepted') =>
                     $this->badge('success', 'Accepted', $latestTime, $causerName, $id),
 
-                    str_contains($status, 'fully processed') =>
-                    $this->badge('success', 'Fully Processed', $latestTime, $causerName, $id),
+                    str_contains($status, 'officer verification completed') =>
+                    $this->badge('success', 'Officer Verification Completed', $latestTime, $causerName, $id),
 
                     str_contains($status, 'clerk verified') =>
                     $this->badge('info', 'Clerk Verified', $latestTime, $causerName, $id),
@@ -343,7 +343,7 @@ class ApplicationController extends Controller
             ->firstOrFail();
 
         $itemId = $application->id;
-
+        
         // dd($application->consignmentPermits);
 
         $consignment = IpConsignmentPermit::with([
