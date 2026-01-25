@@ -155,8 +155,17 @@ function defaultIcon() {
 
 function formatTime(datetime) {
     const d = new Date(datetime);
-    return d.toLocaleString('en-GB', { hour12: true });
-}
 
+    const options = {
+        day: '2-digit',
+        month: 'long', // e.g., May
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+    };
+
+    return d.toLocaleString('en-GB', options);
+}
 
 

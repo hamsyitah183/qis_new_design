@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\ConsignmentPermit;
 use App\Models\InspectionItem;
 use Illuminate\Support\Facades\Http;
 use App\Models\Order;
@@ -19,46 +20,38 @@ class BayuPayService
         }
 
         $paymentData = $response->json();
-        // Log::info('lepas 1', $paymentData);
-
         $permits = $order->order_details['permits'] ?? [];
-        // Log::info('lepas 2', $permits);
-        if ($order->application_type == 'Import Permit') {
-            $application = $order->ipApplication;
-        }
 
-        Log::info('lepas 2', [
+        // Get the correct application model
+        $application = match ($order->application_type) {
+            'Import Permit' => $order->ipApplication,
+            'Inspection Certificate' => $order->inspectionApplication,
+            'Consignment Certificate' => $order->consignmentApplication,
+            default => null,
+        };
+
+        Log::info('Payment check', [
+            'order_number' => $order->order_number,
             'transaction_status' => $paymentData['transaction_status'],
         ]);
 
-        switch ($paymentData['transaction_status']) {
-            case 'SUCCESSFUL':
-                $order->status = 'payment success';
+        // Map transaction status to order & permit status
+        $statusMap = [
+            'SUCCESSFUL' => ['order' => 'payment success', 'permit' => 'paid', 'log' => 'Payment Successful'],
+            'UNSUCCESSFUL' => ['order' => 'payment failed', 'permit' => 'payment failed', 'log' => 'Payment Unsuccessful'],
+            'PENDING FOR AUTHORIZER TO APPROVE' => ['order' => 'pending authorization', 'permit' => 'payment processing', 'log' => 'Payment Pending Authorization'],
+        ];
 
-                foreach ($permits as $permit) {
-                    IpConsignmentPermit::where('id', $permit['permit_id'])->update(['status' => 'paid']);
-                }
-                // $application->logActivity(action: 'User Payment', remark: 'The order is successfully paid', status: 'User Payment');
-                break;
+        $transactionStatus = $paymentData['transaction_status'] ?? null;
 
-            case 'UNSUCCESSFUL':
-                $order->status = 'payment failed';
-                foreach ($permits as $permit) {
-                    IpConsignmentPermit::where('id', $permit['permit_id'])->update(['status' => 'payment failed']);
-                }
-                // $application->logActivity(action: 'User Payment', remark: 'The order is unsuccessfully paid', status: 'User Payment');
-                break;
-
-            case 'PENDING FOR AUTHORIZER TO APPROVE':
-                $order->status = 'pending authorization';
-
-                foreach ($permits as $permit) {
-                    IpConsignmentPermit::where('id', $permit['permit_id'])->update(['status' => 'payment processing']);
-                }
-                // $application->logActivity(action: 'User Payment', remark: 'The order is pending for authorization', status: 'User Payment');
-                break;
+        if (!isset($statusMap[$transactionStatus])) {
+            return $paymentData; // unknown status, skip
         }
 
+        $config = $statusMap[$transactionStatus];
+
+        // Update order status
+        $order->status = $config['order'];
         $order->fill([
             'seller_ref' => $paymentData['seller_ref'] ?? null,
             'fpx_seller_reference' => $paymentData['fpx_seller_reference'] ?? null,
@@ -67,11 +60,38 @@ class BayuPayService
             'phone' => $paymentData['phone'] ?? null,
             'payment_amount' => $paymentData['payment_amount'] ?? null,
             'transaction_data' => $paymentData['transaction_data'] ?? null,
-            'transaction_status' => $paymentData['transaction_status'] ?? null,
+            'transaction_status' => $transactionStatus,
             'kod_transaksi' => $kodTransaksi,
         ]);
-
         $order->save();
+
+        // Update permits
+        foreach ($permits as $permit) {
+            match ($order->application_type) {
+                'Import Permit' => IpConsignmentPermit::where('id', $permit['permit_id'])->update(['status' => $config['permit']]),
+                'Inspection Certificate' => InspectionItem::where('id', $permit['permit_id'])->update(['status' => $config['permit']]),
+                'Consignment Certificate' => ConsignmentPermit::where('id', $permit['permit_id'])->update(['status' => $config['permit']]),
+                default => null,
+            };
+        }
+
+        // Optional: Update application status if all permits are paid
+        if ($config['permit'] === 'paid' && $application) {
+            $allPaid = match ($order->application_type) {
+                'Import Permit' => IpConsignmentPermit::where('application_id', $application->application_id)->where('status', '!=', 'paid')->doesntExist(),
+                'Inspection Certificate' => InspectionItem::where('application_id', $application->application_id)->where('status', '!=', 'paid')->doesntExist(),
+                'Consignment Certificate' => ConsignmentPermit::where('application_id', $application->application_id)->where('status', '!=', 'paid')->doesntExist(),
+                default => false,
+            };
+
+            if ($allPaid) {
+                $application->update(['status' => 'Completed']);
+                $application->logActivity(action: 'Application Completed', remark: 'All permits under this application have been fully paid', status: 'Completed');
+            }
+        }
+
+        // Optional: Log activity
+        $application?->logActivity(action: 'User Payment', remark: "Payment status updated to {$config['order']}", status: $config['log']);
 
         return $paymentData;
     }
@@ -106,6 +126,7 @@ class BayuPayService
         $permitModel = match ($applicationType) {
             'Import Permit' => IpConsignmentPermit::class,
             'Inspection Certificate' => InspectionItem::class,
+            'Consignment Certificate' => ConsignmentPermit::class,
             default => null,
         };
 

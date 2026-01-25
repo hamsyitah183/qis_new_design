@@ -2,6 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Models\ConsignmentPermit;
+use App\Models\InspectionItem;
+use App\Models\IpConsignmentPermit;
 use Illuminate\Console\Command;
 use App\Models\Order;
 use App\Services\BayuPayService;
@@ -40,6 +43,7 @@ class CheckPendingPayments extends Command
                     }
 
                     $this->bayuPay->checkAndUpdatePayment($order, $order->kod_transaksi);
+                    $this->completeApplicationIfAllPermitsPaid($order);
 
                     Log::info('Pending authorization order checked.', [
                         'order_number' => $order->order_number,
@@ -65,6 +69,7 @@ class CheckPendingPayments extends Command
             foreach ($processingOrders as $order) {
                 try {
                     $this->bayuPay->checkAndUpdatePaymentWithoutTransactionCode($order);
+                    $this->completeApplicationIfAllPermitsPaid($order);
 
                     Log::info('Processing order checked.', [
                         'order_number' => $order->order_number,
@@ -82,5 +87,35 @@ class CheckPendingPayments extends Command
         $this->info('BayuPay payment check completed.');
 
         return Command::SUCCESS;
+    }
+
+    private function completeApplicationIfAllPermitsPaid(Order $order): void
+    {
+        $application = $order->application;
+
+        if (!$application) {
+            return;
+        }
+
+        $allPaid = match ($order->application_type) {
+            'Import Permit' => IpConsignmentPermit::where('application_id', $application->id)->where('status', '!=', 'paid')->doesntExist(),
+
+            'Inspection Certificate' => InspectionItem::where('application_id', $application->id)->where('status', '!=', 'paid')->doesntExist(),
+
+            'Consignment Certificate' => ConsignmentPermit::where('application_id', $application->id)->where('status', '!=', 'paid')->doesntExist(),
+
+            default => false,
+        };
+
+        if ($allPaid && $application->status !== 'Completed') {
+            $application->update(['status' => 'Completed']);
+
+            $application->logActivity(action: 'Application Completed', remark: 'All permits under this application have been fully paid', status: 'Completed');
+
+            Log::info('Application marked as completed.', [
+                'application_id' => $application->id,
+                'application_type' => $order->application_type,
+            ]);
+        }
     }
 }

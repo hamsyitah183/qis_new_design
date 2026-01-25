@@ -24,40 +24,39 @@ class PaymentController extends Controller
         if (!session()->has('payment_active')) {
             abort(403, 'Payment session expired');
         }
-      
+
         if ($type == 'import_permit') {
             $application = IpApplication::findOrFail($id);
             $permitIds = explode(',', $permitId);
             $permits = IpConsignmentPermit::where('application_id', $id)
-            ->whereIn('id', $permitIds)
-            ->whereIn('status', ['pending for payment', 'payment failed'])
-            ->get();
-        
+                ->whereIn('id', $permitIds)
+                ->whereIn('status', ['pending for payment', 'payment failed'])
+                ->get();
         } elseif ($type == 'inspection') {
             $application = InspectionApplication::findOrFail($id);
             $permitIds = explode(',', $permitId);
 
             $permits = InspectionItem::where('application_id', $id)
-            ->whereIn('id', $permitIds)->where('status', ['pending for payment', 'payment failed'])->get();
+                ->whereIn('id', $permitIds)
+                ->where('status', ['pending for payment', 'payment failed'])
+                ->get();
         } elseif ($type == 'consignment') {
-          
             $application = ConsignmentApplication::with(['consignmentPermits'])->findOrFail($id);
             $permitIds = explode(',', $permitId);
 
             $permits = ConsignmentPermit::where('application_id', $id)
-            ->whereIn('id', $permitIds)->whereIn('status', ['pending for payment', 'payment failed'])->get();
-           
+                ->whereIn('id', $permitIds)
+                ->whereIn('status', ['pending for payment', 'payment failed'])
+                ->get();
+
             // dd($permits);
         }
 
-        
         if ($permits->isEmpty()) {
             abort(404, 'No permits found');
         }
 
         $amount = 30;
-
-
 
         $jsonData = [
             'application' => [
@@ -116,21 +115,27 @@ class PaymentController extends Controller
             $application = IpApplication::findOrFail($id);
             // $permitIds = explode(',', $permitId);
 
-            $permits = IpConsignmentPermit::where('application_id', $id)->whereIn('id', $permitIds)
-            ->whereIn('status', ['pending for payment', 'payment failed'])->get();
+            $permits = IpConsignmentPermit::where('application_id', $id)
+                ->whereIn('id', $permitIds)
+                ->whereIn('status', ['pending for payment', 'payment failed'])
+                ->get();
         } elseif ($type == 'inspection') {
             $application = InspectionApplication::findOrFail($id);
             // $permitIds = explode(',', $permitId);
 
-            $permits = InspectionItem::where('application_id', $id)->whereIn('id', $permitIds)
-            ->whereIn('status', ['pending for payment', 'payment failed'])->get();
+            $permits = InspectionItem::where('application_id', $id)
+                ->whereIn('id', $permitIds)
+                ->whereIn('status', ['pending for payment', 'payment failed'])
+                ->get();
             // dd($permits);
         } elseif ($type == 'consignment') {
             $application = ConsignmentApplication::findOrFail($id);
             // $permitIds = explode(',', $permitId);
 
-            $permits = ConsignmentPermit::where('application_id', $id)->whereIn('id', $permitIds)
-            ->whereIn('status', ['pending for payment', 'payment failed'])->get();
+            $permits = ConsignmentPermit::where('application_id', $id)
+                ->whereIn('id', $permitIds)
+                ->whereIn('status', ['pending for payment', 'payment failed'])
+                ->get();
             // dd($permits);
         }
 
@@ -194,7 +199,6 @@ class PaymentController extends Controller
 
     private function bayuPay(Request $request, $applicationDetails)
     {
-      
         $application = $applicationDetails['application'];
         $user = $applicationDetails['user'];
         $permitsArray = $applicationDetails['permits'];
@@ -205,7 +209,7 @@ class PaymentController extends Controller
             $permits = IpConsignmentPermit::whereIn('id', $permitIds)->get();
         } elseif ($application['application_type'] == 'Inspection') {
             $permits = InspectionItem::whereIn('id', $permitIds)->get();
-        }  elseif ($application['application_type'] == 'Consignment Certificate') {
+        } elseif ($application['application_type'] == 'Consignment Certificate') {
             $permits = ConsignmentPermit::whereIn('id', $permitIds)->get();
         } else {
             $permits = [];
@@ -297,52 +301,39 @@ class PaymentController extends Controller
 
         $paymentData = $response->json();
 
-        $order = Order::with('ipApplication')->where('order_number', $rn)->firstOrFail();
-
-        $application = null;
-
+        $order = Order::where('order_number', $rn)->firstOrFail();
         $application = $order->application;
-
         $permits = $order->order_details['permits'] ?? [];
-
-        // dd($application);
 
         DB::transaction(function () use ($paymentData, $order, $application, $permits, $kodTransaksi) {
             $transactionStatus = strtolower($paymentData['transaction_status']);
 
             $statusMap = [
                 'successful' => [
-                    'order_status' => 'payment success',
                     'permit_status' => 'paid',
                     'remark' => 'The order is successfully paid',
-                    'log_status' => 'Payment Successful'
+                    'log_status' => 'Payment Successful',
                 ],
                 'unsuccessful' => [
-                    'order_status' => 'payment failed',
                     'permit_status' => 'payment failed',
                     'remark' => 'The order is unsuccessfully paid',
-                     'log_status' => 'Payment Unsuccessful'
+                    'log_status' => 'Payment Unsuccessful',
                 ],
                 'pending for authorizer to approve' => [
-                    'order_status' => 'pending authorization',
                     'permit_status' => 'payment processing',
                     'remark' => 'The order is pending for authorization',
-                    'log_status' => 'Payment is Pending for Authorization'
+                    'log_status' => 'Payment Pending Authorization',
                 ],
             ];
 
-            // Unknown status → skip safely
+            // Skip if unknown status
             if (!isset($statusMap[$transactionStatus])) {
                 return;
             }
 
             $config = $statusMap[$transactionStatus];
 
-            // Update order status
-            $order->status = $config['order_status'];
-            $order->save();
-
-            // Update permits (ONLY ONCE)
+            // Update permits first
             foreach ($permits as $permit) {
                 match ($application['application_type']) {
                     'Import Permit' => IpConsignmentPermit::where('id', $permit['permit_id'])->update(['status' => $config['permit_status']]),
@@ -355,8 +346,33 @@ class PaymentController extends Controller
                 };
             }
 
-            // Log activity
-            $application?->logActivity(action: 'User Payment', remark: $config['remark'], status: $config['log_status']);
+            // Check if all permits are paid
+            $allPaid = match ($application['application_type']) {
+                'Import Permit' => IpConsignmentPermit::where('application_id', $application->application_id)->where('status', '!=', 'paid')->doesntExist(),
+
+                'Inspection Certificate' => InspectionItem::where('application_id', $application->application_id)->where('status', '!=', 'paid')->doesntExist(),
+
+                'Consignment Certificate' => ConsignmentPermit::where('application_id', $application->application_id)->where('status', '!=', 'paid')->doesntExist(),
+
+                default => false,
+            };
+
+            // Update order status
+            if ($transactionStatus === 'successful') {
+                $order->status = $allPaid ? 'payment complete' : 'payment partial';
+            } else {
+                $order->status = $transactionStatus === 'unsuccessful' ? 'payment failed' : 'pending authorization';
+            }
+
+            $order->save();
+
+            // Update application if all permits paid
+            if ($allPaid) {
+                $application->update(['status' => 'Completed']);
+                $application->logActivity(action: 'Application Completed', remark: 'All permits under this application have been fully paid', status: 'Completed');
+            } else {
+                $application->logActivity(action: 'User Payment', remark: $config['remark'], status: $config['log_status']);
+            }
 
             // Update order payment fields
             $order->update([
