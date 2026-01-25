@@ -24,7 +24,7 @@ class PaymentController extends Controller
         if (!session()->has('payment_active')) {
             abort(403, 'Payment session expired');
         }
-        // dd($type);
+      
         if ($type == 'import_permit') {
             $application = IpApplication::findOrFail($id);
             $permitIds = explode(',', $permitId);
@@ -40,19 +40,24 @@ class PaymentController extends Controller
             $permits = InspectionItem::where('application_id', $id)
             ->whereIn('id', $permitIds)->where('status', ['pending for payment', 'payment failed'])->get();
         } elseif ($type == 'consignment') {
-            $application = ConsignmentApplication::findOrFail($id);
+          
+            $application = ConsignmentApplication::with(['consignmentPermits'])->findOrFail($id);
             $permitIds = explode(',', $permitId);
 
             $permits = ConsignmentPermit::where('application_id', $id)
-            ->whereIn('id', $permitIds)->where('status', ['pending for payment', 'payment failed'])->get();
+            ->whereIn('id', $permitIds)->whereIn('status', ['pending for payment', 'payment failed'])->get();
+           
+            // dd($permits);
         }
 
-        // dd($permits);
+        
         if ($permits->isEmpty()) {
             abort(404, 'No permits found');
         }
 
         $amount = 30;
+
+
 
         $jsonData = [
             'application' => [

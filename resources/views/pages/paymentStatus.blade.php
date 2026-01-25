@@ -6,57 +6,98 @@
 
 
 @section('content')
-    
-   <div class="container-lg">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6 col-xl-5">
-            <div class="card">
-                <div class="card-body p-4 text-center">
+    @php
+        $user = $order->order_details['user'];
+        $permits = $order->order_details['permits'];
+    @endphp
 
-                    <div class="avatar-md mx-auto mb-3">
-                        <div class="avatar-title">
-                            @if ($paymentData['transaction_status'] == 'SUCCESSFUL')
-                                <i class="bx bx-check-circle h1 mb-0 text-success"></i>
-                            @elseif ($paymentData['transaction_status'] == 'UNSUCCESSFUL')
-                                <i class="bx bx-x-circle h1 mb-0 text-danger"></i>
-                            @else
-                               <i class="bi bi-exclamation-circle h1 mb-0 text-danger"></i>
-                            @endif
+    <div class="container-lg">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6 col-xl-5">
+                <div class="card">
+                    <div class="card-body p-4 text-center">
+
+                        <div class="avatar-md mx-auto mb-3">
+                            <div class="avatar-title">
+                                @if ($paymentData['transaction_status'] == 'SUCCESSFUL')
+                                    <i class="bx bx-check-circle h1 mb-0 text-success"></i>
+                                @elseif ($paymentData['transaction_status'] == 'UNSUCCESSFUL')
+                                    <i class="bx bx-x-circle h1 mb-0 text-danger"></i>
+                                @else
+                                    <i class="bi bi-exclamation-circle h1 mb-0 text-danger"></i>
+                                @endif
+                            </div>
                         </div>
-                    </div>
 
-                    <h4 class="mb-2">
-                        @if ($paymentData['transaction_status'] == 'SUCCESSFUL')
-                            Payment Successful
+                        <h4 class="mb-2">
+                            @if ($paymentData['transaction_status'] == 'SUCCESSFUL')
+                                Payment Successful
 
-                            <p class = "fs-12 text-muted mt-2">Your order ({{ $order->order_number}}) payment is success. </p>
-                        @elseif ($paymentData['transaction_status'] == 'UNSUCCESSFUL')
-                            Payment Failed
+                                <p class = "fs-12 text-muted mt-2">Your order ({{ $order->order_number }}) payment is
+                                    success. </p>
+                            @elseif ($paymentData['transaction_status'] == 'UNSUCCESSFUL')
+                                Payment Failed
 
-                            <p class = "fs-12 text-muted mt-2">Your order ({{ $order->order_number}}) payment is failed. Please try again. </p>
-                        @else
-                            Payment Pending
+                                <p class = "fs-12 text-muted mt-2">Your order ({{ $order->order_number }}) payment is
+                                    failed. Please try again. </p>
+                            @else
+                                Payment Pending
 
-                            <p class = "fs-12 text-muted mt-2">Your order ({{ $order->order_number}}) is pending for authorization. </p>
+                                <p class = "fs-12 text-muted mt-2">Your order ({{ $order->order_number }}) is pending for
+                                    authorization. </p>
+                            @endif
+                        </h4>
+
+                        @if (!empty($paymentData['message']))
+                            <p class="text-muted mb-0">{{ $paymentData['message'] }}</p>
                         @endif
-                    </h4>
 
-                    @if (!empty($paymentData['message']))
-                        <p class="text-muted mb-0">{{ $paymentData['message'] }}</p>
-                    @endif
+                        <div class="fs-14">
+                            <span class="fw-bold">FPX Reference: </span> {{ $order->fpx_seller_reference }}
+                        </div>
+                        <div class="fs-14">
+                            <span class="fw-bold">Amount: </span> RM {{ $order->payment_amount }}
+                        </div>
 
+                        <div class="fs-12 text-muted mt-2">
+                            <div class="">
+                                <span class="fw-bold">Application Type: </span> {{ $order->application_type }}
+                            </div>
+                            <div class="mt-2">
+                                <div class="">
+                                    <span class="fw-bold">Name: </span> {{ $user['fullname'] }}
+                                </div>
+                                <div class="">
+                                    <span class="fw-bold">Email: </span> {{ $user['email'] }}
+                                </div>
+                                <div class="">
+                                    <span class="fw-bold">Phone Number: </span> {{ $user['phone_number'] }}
+                                </div>
+                            </div>
+
+                            <div class="mt-2">
+                                <span class="fw-bold">Permits Number: </span>
+                            </div>
+
+                            {{-- @dd($permits) --}}
+                            @foreach ($permits as $item)
+                                {{ $item['permit_number'] }}@if (!$loop->last)
+                                    ,
+                                @endif
+                            @endforeach
+
+                        </div>
+
+                    </div>
                 </div>
-            </div>
 
-            <div class="mt-4 text-center">
-                <a href="/order/list" class="btn btn-primary btn-sm fw-medium">Back to main page</a>
-            </div>
+                <div class="mt-4 text-center">
+                    <a href="/order/list" class="btn btn-primary btn-sm fw-medium">Back to main page</a>
+                </div>
 
+            </div>
         </div>
     </div>
-</div>
-
-   
 @endsection
 
 {{-- payment processing --}}
