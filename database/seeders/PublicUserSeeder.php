@@ -27,6 +27,7 @@ class PublicUserSeeder extends Seeder
                 'postcode' => '89657',
                 'district' => 'Tambunan',
                 'state' => 'Sabah',
+                'doa_verified' => 1
             ],
         ];
 
@@ -46,6 +47,7 @@ class PublicUserSeeder extends Seeder
                 'postcode' => str_pad(rand(80000, 89999), 5, '0', STR_PAD_LEFT),
                 'district' => 'Tambunan',
                 'state' => 'Sabah',
+                'doa_verified' => 1
             ];
         }
 
