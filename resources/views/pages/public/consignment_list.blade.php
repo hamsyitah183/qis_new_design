@@ -68,6 +68,32 @@
         </div>
     </div>
 
+    <x-modal id="activityLogModal" title="Activity Log">
+
+        <!-- Your table goes here -->
+        <div class="table-responsive">
+            <table class="table text-wrap table-hover" id="applicationLogTable">
+                <thead class="table-primary">
+                    <tr>
+                        <th scope="col">Action</th>
+                        <th scope="col">User</th>
+                        <th scope="col">Remark</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Time and Date</th>
+                    </tr>
+                </thead>
+                <tbody class="table-group-divider">
+
+                </tbody>
+            </table>
+        </div>
+
+        @slot('footer')
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        @endslot
+
+    </x-modal>
+
 @endsection
 
 @push('scripts')

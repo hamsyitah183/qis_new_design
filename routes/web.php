@@ -217,6 +217,8 @@ Route::prefix('internal')
         // Inspection item accept/reject endpoints
         Route::post('/inspection_item/{id}/accept', [InspectionController::class, 'acceptInspectionItem']);
         Route::post('/inspection_item/{id}/reject', [InspectionController::class, 'rejectInspectionItem']);
+    
+        Route::post('/consignment/{id}', [ConsignmentApplicationController::class, 'accept_permit']);
     });
 
 Route::middleware(['auth.any'])->group(function () {
@@ -244,6 +246,7 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/consignment_application/{id}/data', [ConsignmentController::class, 'getApplicationDetails']);
     Route::get('/consignment/attachment/{id}', [ConsignmentApplicationController::class, 'viewAttachment'])->name('consignment.attachment.view');
     Route::get('/consignment/list/data', [ConsignmentController::class, 'getallconsignmentlist'])->name('consignment.data');
+    Route::post('/consignment/verify/{id}/', [ConsignmentController::class, 'verify_application_permit']);
 
     Route::get('/view_inspection_certificates/{id}', [InspectionController::class, 'viewInspection'])->name('inspection.view_details');
     Route::get('/inspection_application/{id}/data', [InspectionController::class, 'getApplicationDetails']);

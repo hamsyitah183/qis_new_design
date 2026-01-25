@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ConsignmentApplication;
+use App\Models\ConsignmentPermit;
 use App\Models\InspectionApplication;
 use App\Models\InspectionItem;
 use App\Models\IpApplication;
@@ -36,6 +38,12 @@ class PaymentController extends Controller
             $permitIds = explode(',', $permitId);
 
             $permits = InspectionItem::where('application_id', $id)
+            ->whereIn('id', $permitIds)->where('status', ['pending for payment', 'payment failed'])->get();
+        } elseif ($type == 'consignment') {
+            $application = ConsignmentApplication::findOrFail($id);
+            $permitIds = explode(',', $permitId);
+
+            $permits = ConsignmentPermit::where('application_id', $id)
             ->whereIn('id', $permitIds)->where('status', ['pending for payment', 'payment failed'])->get();
         }
 
@@ -112,6 +120,13 @@ class PaymentController extends Controller
             $permits = InspectionItem::where('application_id', $id)->whereIn('id', $permitIds)
             ->whereIn('status', ['pending for payment', 'payment failed'])->get();
             // dd($permits);
+        } elseif ($type == 'consignment') {
+            $application = ConsignmentApplication::findOrFail($id);
+            // $permitIds = explode(',', $permitId);
+
+            $permits = ConsignmentPermit::where('application_id', $id)->whereIn('id', $permitIds)
+            ->whereIn('status', ['pending for payment', 'payment failed'])->get();
+            // dd($permits);
         }
 
         // $application = IpApplication::findOrFail($request->application_id);
@@ -174,6 +189,7 @@ class PaymentController extends Controller
 
     private function bayuPay(Request $request, $applicationDetails)
     {
+      
         $application = $applicationDetails['application'];
         $user = $applicationDetails['user'];
         $permitsArray = $applicationDetails['permits'];
@@ -184,6 +200,8 @@ class PaymentController extends Controller
             $permits = IpConsignmentPermit::whereIn('id', $permitIds)->get();
         } elseif ($application['application_type'] == 'Inspection') {
             $permits = InspectionItem::whereIn('id', $permitIds)->get();
+        }  elseif ($application['application_type'] == 'Consignment Certificate') {
+            $permits = ConsignmentPermit::whereIn('id', $permitIds)->get();
         } else {
             $permits = [];
         }
@@ -216,6 +234,8 @@ class PaymentController extends Controller
             $itn = 'ITN10001';
         } elseif ($application['application_type'] == 'Inspection Certificate') {
             $itn = 'ITN10002';
+        } elseif ($application['application_type'] == 'Consignment Certificate') {
+            $itn = 'ITN10003';
         } else {
             $itn = 'ITN';
         }
@@ -280,6 +300,8 @@ class PaymentController extends Controller
 
         $permits = $order->order_details['permits'] ?? [];
 
+        // dd($application);
+
         DB::transaction(function () use ($paymentData, $order, $application, $permits, $kodTransaksi) {
             $transactionStatus = strtolower($paymentData['transaction_status']);
 
@@ -321,6 +343,8 @@ class PaymentController extends Controller
                     'Import Permit' => IpConsignmentPermit::where('id', $permit['permit_id'])->update(['status' => $config['permit_status']]),
 
                     'Inspection Certificate' => InspectionItem::where('id', $permit['permit_id'])->update(['status' => $config['permit_status']]),
+
+                    'Consignment Certificate' => ConsignmentPermit::where('id', $permit['permit_id'])->update(['status' => $config['permit_status']]),
 
                     default => null,
                 };

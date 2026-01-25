@@ -61,12 +61,12 @@ class ConsignmentApplication extends Model
 
     public function activity_log()
     {
-        return $this->hasMany(ImportPermitLog::class, 'application_id', 'application_id');
+        return $this->hasMany(ConsignmentLog::class, 'application_id', 'application_id');
     }
 
     public function latestLog()
     {
-        return $this->hasOne(ImportPermitLog::class, 'application_id', 'application_id')
+        return $this->hasOne(ConsignmentLog::class, 'application_id', 'application_id')
             ->latestOfMany();
     }
 }

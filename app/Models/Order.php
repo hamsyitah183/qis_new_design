@@ -29,11 +29,17 @@ class Order extends Model
         return $this->belongsTo(InspectionApplication::class, 'application_id', 'application_id')->where('application_type', 'Inspection Certificate');
     }
 
+    public function consignmentApplication()
+    {
+        return $this->belongsTo(ConsignmentApplication::class, 'application_id', 'application_id')->where('application_type', 'Consignment Certificate');
+    }
+
     public function application()
     {
         return match ($this->application_type) {
             'Import Permit' => $this->ipApplication(),
             'Inspection Certificate' => $this->inspectionApplication(),
+            'Consignment Certificate' => $this->consignmentApplication(),
             default => null,
         };
     }

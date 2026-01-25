@@ -24,6 +24,7 @@ use App\Notifications\ApplicationNotification;
 use App\Services\ApplicationActivityLogger;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
@@ -53,14 +54,7 @@ class ConsignmentController extends Controller
         $userUuid = $user->uuid;
         $type = $userData['type'];
 
-        $query = ConsignmentApplication::with([
-            'user',
-            'importer',
-            'exporter',
-            'entryPoint.districtCode',
-            'consignmentPermits',
-            'latestLog.causer'
-        ]);
+        $query = ConsignmentApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode', 'consignmentPermits', 'latestLog.causer', 'activity_log']);
 
         // Filter for public users
         if ($type === 'public') {
@@ -82,29 +76,21 @@ class ConsignmentController extends Controller
                 $causerName = $latestLog?->causer?->fullname ?? '-';
 
                 return match (true) {
-                    str_contains($status, 'pending') =>
-                    $this->badge('warning', 'Pending', $latestTime, $causerName, $id),
+                    str_contains($status, 'pending') => $this->badge('warning', 'Pending', $latestTime, $causerName, $id),
 
-                    str_contains($status, 'rejected') =>
-                    $this->badge('danger', 'Rejected', $latestTime, $causerName, $id),
+                    str_contains($status, 'rejected') => $this->badge('danger', 'Rejected', $latestTime, $causerName, $id),
 
-                    str_contains($status, 'not approved') =>
-                    $this->badge('danger', 'Not Approved', $latestTime, $causerName, $id),
+                    str_contains($status, 'not approved') => $this->badge('danger', 'Not Approved', $latestTime, $causerName, $id),
 
-                    str_contains($status, 'accepted') =>
-                    $this->badge('success', 'Accepted', $latestTime, $causerName, $id),
+                    str_contains($status, 'accepted') => $this->badge('success', 'Accepted', $latestTime, $causerName, $id),
 
-                    str_contains($status, 'fully processed') =>
-                    $this->badge('success', 'Fully Processed', $latestTime, $causerName, $id),
+                    str_contains($status, 'fully processed') => $this->badge('success', 'Fully Processed', $latestTime, $causerName, $id),
 
-                    str_contains($status, 'clerk verified') =>
-                    $this->badge('info', 'Clerk Verified', $latestTime, $causerName, $id),
+                    str_contains($status, 'clerk verified') => $this->badge('info', 'Clerk Verified', $latestTime, $causerName, $id),
 
-                    str_contains($status, 'submitted') =>
-                    $this->badge('primary', 'Submitted', $latestTime, $causerName, $id),
+                    str_contains($status, 'submitted') => $this->badge('primary', 'Submitted', $latestTime, $causerName, $id),
 
-                    default =>
-                    '<span class="badge bg-secondary fs-12 p-1 activityLog" data-log="' . $id . '">' . ucfirst($status) . '</span>',
+                    default => '<span class="badge bg-secondary fs-12 p-1 activityLog" data-log="' . $id . '">' . ucfirst($status) . '</span>',
                 };
             })
             ->addColumn('permit_status', function ($row) {
@@ -115,9 +101,7 @@ class ConsignmentController extends Controller
                     'paid' => 'bg-success',
                 ];
 
-                $permit_statuses = $row->consignmentPermits->pluck('status')
-                    ->map(fn($status) => strtolower($status))
-                    ->toArray();
+                $permit_statuses = $row->consignmentPermits->pluck('status')->map(fn($status) => strtolower($status))->toArray();
 
                 $statusCounts = array_fill_keys(array_keys($statusColors), 0);
 
@@ -130,10 +114,17 @@ class ConsignmentController extends Controller
                 $boxesHtml = '';
                 foreach ($statusColors as $status => $color) {
                     $count = $statusCounts[$status] ?? 0;
-                    $boxesHtml .= '<div class="badge ' . $color . ' text-white text-center" data-bs-toggle="tooltip"
-                            data-bs-placement="top" title="' . ucfirst($status) . '"
+                    $boxesHtml .=
+                        '<div class="badge ' .
+                        $color .
+                        ' text-white text-center" data-bs-toggle="tooltip"
+                            data-bs-placement="top" title="' .
+                        ucfirst($status) .
+                        '"
                            style="height:20px; width:20px; display:inline-flex; align-items:center; justify-content:center; margin-right:5px;">
-                           ' . $count . '
+                           ' .
+                        $count .
+                        '
                        </div>';
                 }
 
@@ -169,11 +160,8 @@ class ConsignmentController extends Controller
             $datatable->addColumn('submitted_by', fn($row) => $row->user->fullname ?? '-');
         }
 
-        return $datatable
-            ->rawColumns(['status', 'permit_status', 'action'])
-            ->make(true);
+        return $datatable->rawColumns(['status', 'permit_status', 'action'])->make(true);
     }
-
 
     public function getApplicationDetails($id)
     {
@@ -182,13 +170,7 @@ class ConsignmentController extends Controller
 
         // Fetch application and eager load relationships
         $application = ConsignmentApplication::where('application_id', $id)
-            ->with([
-                'user',
-                'importer',
-                'exporter',
-                'entryPoint.districtCode',
-                'consignmentPermits.attachments',
-            ])
+            ->with(['user', 'importer', 'exporter', 'entryPoint.districtCode', 'consignmentPermits.attachments', 'activity_log.causer'])
             ->firstOrFail();
 
         if ($type === 'internal') {
@@ -231,10 +213,13 @@ class ConsignmentController extends Controller
             $action = $request->input('status'); // 'Approved' or 'Rejected'
 
             if (!in_array($action, ['Approved', 'Rejected'], true)) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Invalid status value.',
-                ], 422);
+                return response()->json(
+                    [
+                        'status' => 'error',
+                        'message' => 'Invalid status value.',
+                    ],
+                    422,
+                );
             }
 
             $application = ConsignmentApplication::where('application_id', $id)->firstOrFail();
@@ -272,10 +257,13 @@ class ConsignmentController extends Controller
                     $actionLabel = 'Application rejected by officer';
                 }
             } else {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Cannot update status from current state: ' . $application->status,
-                ], 422);
+                return response()->json(
+                    [
+                        'status' => 'error',
+                        'message' => 'Cannot update status from current state: ' . $application->status,
+                    ],
+                    422,
+                );
             }
 
             $application->status = $newStatus;
@@ -291,31 +279,33 @@ class ConsignmentController extends Controller
                 ->withProperties([
                     'status' => $newStatus,
                     'action_label' => $actionLabel,
-                    'reason' => $request->input('reason')
+                    'reason' => $request->input('reason'),
                 ])
                 ->log(authUser()['user']['fullname'] . ' has ' . ($isApproved ? 'approved' : 'rejected') . ' a consignment application (ID: ' . $application->application_id . ') as ' . $newStatus);
 
             // Log activity (wrap in try-catch to prevent breaking the response)
             try {
-                $application->logActivity(
-                    action: $newStatus,
-                    remark: $actionLabel . ' by ' . authUser()['user']->fullname . ($request->input('reason') ? ' - ' . $request->input('reason') : ''),
-                    status: $newStatus
-                );
+                $application->logActivity(action: $newStatus, remark: $actionLabel . ' by ' . authUser()['user']->fullname . ($request->input('reason') ? ' - ' . $request->input('reason') : ''), status: $newStatus);
             } catch (\Exception $e) {
                 \Log::warning('Failed to log activity for consignment application: ' . $e->getMessage());
             }
 
-            return response()->json([
-                'status' => 'success',
-                'message' => $actionLabel . ' successfully.',
-            ], 200);
+            return response()->json(
+                [
+                    'status' => 'success',
+                    'message' => $actionLabel . ' successfully.',
+                ],
+                200,
+            );
         } catch (\Exception $e) {
             \Log::error('Error updating consignment status: ' . $e->getMessage());
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to update status: ' . $e->getMessage(),
-            ], 500);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => 'Failed to update status: ' . $e->getMessage(),
+                ],
+                500,
+            );
         }
     }
 
@@ -331,10 +321,13 @@ class ConsignmentController extends Controller
 
             // Only internal users can delete through this controller
             if ($type !== 'internal') {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Unauthorized to delete this application.',
-                ], 403);
+                return response()->json(
+                    [
+                        'status' => 'error',
+                        'message' => 'Unauthorized to delete this application.',
+                    ],
+                    403,
+                );
             }
 
             $application = ConsignmentApplication::where('application_id', $id)->firstOrFail();
@@ -352,7 +345,7 @@ class ConsignmentController extends Controller
                 ->causedBy(authUser()['user'])
                 ->performedOn(authUser()['user'])
                 ->withProperties([
-                    'application_id' => $applicationId
+                    'application_id' => $applicationId,
                 ])
                 ->log($userName . ' has deleted a consignment application (ID: ' . $applicationId . ')');
 
@@ -403,30 +396,201 @@ class ConsignmentController extends Controller
                 \Log::warning('Failed to send notification to owner: ' . $e->getMessage());
             }
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Consignment application deleted successfully.',
-            ], 200);
-
+            return response()->json(
+                [
+                    'status' => 'success',
+                    'message' => 'Consignment application deleted successfully.',
+                ],
+                200,
+            );
         } catch (\Exception $e) {
             if (DB::transactionLevel() > 0) {
                 DB::rollBack();
             }
             \Log::error('Error deleting consignment application: ' . $e->getMessage());
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to delete application: ' . $e->getMessage(),
-            ], 500);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => 'Failed to delete application: ' . $e->getMessage(),
+                ],
+                500,
+            );
         }
     }
     private function badge($color, $label, $time, $user, $id)
     {
         return '
-        <span class="badge bg-' . $color . ' fs-12 p-1 activityLog"  data-log="' . $id . '">' . $label . '</span>
+        <span class="badge bg-' .
+            $color .
+            ' fs-12 p-1 activityLog"  data-log="' .
+            $id .
+            '">' .
+            $label .
+            '</span>
         <br class="mt-1">
-        <small class="text-muted">at ' . $time . '</small><br>
-        <small class="text-muted">by ' . e($user) . '</small>
+        <small class="text-muted">at ' .
+            $time .
+            '</small><br>
+        <small class="text-muted">by ' .
+            e($user) .
+            '</small>
         ';
     }
-}
 
+    public function verify_application_permit($id, Request $request)
+    {
+        $application = ConsignmentApplication::where('application_id', $id)->firstOrFail();
+
+        // dd($application, $request->all());
+
+        // Centralized messages per status
+        $statusMessages = [
+            'Clerk Review In-Progress' => [
+                'public' => 'Your application has been verified by the importer and is now pending clerk review.',
+                'internal' => 'Application verified by importer and awaiting clerk review.',
+                'notify' => 'Import application is now awaiting clerk review.',
+            ],
+            'Not Approved' => [
+                'public' => 'Your application was not approved by the importer.',
+                'internal' => 'Application was not approved by the importer.',
+                'notify' => 'Import application was not approved by the importer.',
+            ],
+            'Clerk Verified' => [
+                'public' => 'Your application has been approved by the clerk.',
+                'internal' => 'Application approved by clerk.',
+                'notify' => 'Import application has been approved by clerk.',
+            ],
+            'Clerk Rejected' => [
+                'public' => 'Your application has been rejected by the clerk.',
+                'internal' => 'Application rejected by clerk.',
+                'notify' => 'Import application has been rejected by clerk.',
+            ],
+        ];
+
+        $status = null;
+
+        /**
+         * =====================
+         * STATUS HANDLING
+         * =====================
+         */
+        if ($request->input('verified')) {
+            $application->logActivity(action: 'Importer Verified', remark: 'Application verified by importer', status: 'Clerk Review In-Progress');
+
+            $application->status = 'Clerk Review In-Progress';
+            $application->importer_verify = 'Verified';
+            $status = 'Clerk Review In-Progress';
+
+           
+
+          
+        } elseif ($request->input('not_verified')) {
+            $application->logActivity(action: 'Importer Rejected', remark: 'Application rejected by importer', status: 'Not Approved');
+
+            $application->status = 'Not Approved';
+            $application->importer_verify = 'Not Approved';
+            $status = 'Not Approved';
+
+           
+        } elseif ($request->accepted) {
+            $application->logActivity(action: 'Clerk Approved', remark: 'Application approved by clerk', status: 'Clerk Verified');
+
+            $application->status = 'Clerk Verified';
+            $application->importer_verify = 'Accepted';
+            $status = 'Clerk Verified';
+
+        //    dd('accepted');
+
+            // $notificationController = new NotificationController();
+
+            // $notificationController->sendStatusMessage(
+            //     $application->importer_detail['fullname'] ?? 'User',
+            //     'Import Permit',
+            //     $application->application_id,
+            //     'accepted by DOA',
+            //     'Your application is under review and will be processed shortly',
+            //     $application->importer->phone_number ?? '+60143290092', // recipient number
+            // );
+
+        } elseif ($request->rejected) {
+            $application->logActivity(action: 'Clerk Rejected', remark: $request->input('reason'), status: 'Clerk Rejected');
+
+            $application->status = 'Clerk Rejected';
+            $status = 'Clerk Rejected';
+
+        }
+
+        // Save application state
+        $application->save();
+
+        // Safety check
+        if (!$status || !isset($statusMessages[$status])) {
+            return response()->json(
+                [
+                    'message' => 'Invalid application status.',
+                ],
+                400,
+            );
+        }
+
+        $messages = $statusMessages[$status];
+        $notificationUrl = route('viewApplication', $application->application_id);
+
+        /**
+         * =====================
+         * INTERNAL USER EVENT + NOTIFICATION
+         * =====================
+         */
+        try {
+            event(new ApplicationCreatedInternalUser($messages['internal']));
+        } catch (\Exception $e) {
+            Log::warning('Pusher connection failed but continuing internal notification: ' . $e->getMessage());
+        }
+
+        $internalUsers = InternalUser::all();
+        Notification::send($internalUsers, new ApplicationNotification($messages['notify'], authUser()['user']->fullname, $notificationUrl));
+
+        /**
+         * =====================
+         * PUBLIC USER (APPLICANT)
+         * =====================
+         */
+        $publicUser = PublicUser::where('uuid', $application->user_id)->first();
+
+        try {
+            event(new ApplicationCreatedPublicUser($messages['public'], $publicUser->uuid));
+        } catch (\Exception $e) {
+            Log::warning('Pusher connection failed but continuing public notification: ' . $e->getMessage());
+        }
+
+        Notification::send($publicUser, new ApplicationNotification($messages['public'], authUser()['user']->fullname, $notificationUrl));
+
+        /**
+         * =====================
+         * IMPORTER (IF DIFFERENT USER)
+         * =====================
+         */
+        // if ($application->importer_id !== $application->user_id) {
+        //     $importerUser = PublicUser::where('uuid', $application->importer_id)->first();
+
+        //     try {
+        //         event(new ApplicationCreatedPublicUser($messages['public'], $importerUser->uuid));
+        //     } catch (\Exception $e) {
+        //         Log::warning('Pusher connection failed but continuing importer notification: ' . $e->getMessage());
+        //     }
+
+        //     Notification::send($importerUser, new ApplicationNotification($messages['public'], authUser()['user']->fullname, $notificationUrl));
+            
+        // }
+
+        /**
+         * =====================
+         * RESPONSE
+         * =====================
+         */
+        return response()->json([
+            'message' => 'Application status updated successfully.',
+            'status' => $status,
+        ]);
+    }
+}

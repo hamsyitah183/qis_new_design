@@ -50,7 +50,7 @@
                             <div class="card border border-light custom-card">
                                 <div class="card-header">
                                     <div class="card-title">
-                                        Importer Details
+                                        Exporter Details
                                     </div>
                                 </div>
 
@@ -60,22 +60,22 @@
                                             <tbody>
                                                 <tr>
                                                     <th class="fw-bold" style="width: 30%;">Name:</th>
-                                                    <td class="text-muted" id="importerFullName">
-                                                        {{ $application->importer->fullname }}</td>
+                                                    <td class="text-muted" id="exporterFullName">
+                                                        {{ $application->exporter->fullname }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th class="fw-bold">Address:</th>
-                                                    <td class="text-muted" id="importerAddress">
-                                                        {{ $application->importer->address_1 }},
-                                                        {{ $application->importer->address_2 ? $application->importer->address_2 . ',' : '' }}
-                                                        {{ $application->importer->postcode }},
-                                                        {{ $application->importer->state }}
+                                                    <td class="text-muted" id="exporterAddress">
+                                                        {{ $application->exporter->address_1 }},
+                                                        {{ $application->exporter->address_2 ? $application->exporter->address_2 . ',' : '' }}
+                                                        {{ $application->exporter->postcode }},
+                                                        {{ $application->exporter->state }}
                                                     </td>
                                                 </tr>
                                                 <tr>
                                                     <th class="fw-bold">No Phone:</th>
-                                                    <td class="text-muted" id="importerNoPhone">
-                                                        {{ $application->importer->phone_number }}</td>
+                                                    <td class="text-muted" id="exporterNoPhone">
+                                                        {{ $application->exporter->phone_number }}</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -86,7 +86,7 @@
                             <div class="card border border-light custom-card">
                                 <div class="card-header">
                                     <div class="card-title ">
-                                        Exporter Details
+                                        Importer Details
                                     </div>
                                 </div>
 
@@ -96,23 +96,23 @@
                                             <tbody>
                                                 <tr>
                                                     <th class="fw-bold" style="width: 30%;">Name:</th>
-                                                    <td class="text-muted" id="exporterName">
-                                                        {{ $application->exporter->name }}</td>
+                                                    <td class="text-muted" id="importerName">
+                                                        {{ $application->importer->name }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th class="fw-bold">Address:</th>
-                                                    <td class="text-muted" id="exporterAddress">
-                                                        {{ $application->exporter->address }}</td>
+                                                    <td class="text-muted" id="importerAddress">
+                                                        {{ $application->importer->address }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th class="fw-bold">No Phone:</th>
-                                                    <td class="text-muted" id= "exporterNoPhone">
-                                                        {{ $application->exporter->phone_no }}</td>
+                                                    <td class="text-muted" id= "importerNoPhone">
+                                                        {{ $application->importer->phone_no }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th class="fw-bold">Country:</th>
-                                                    <td class="text-muted" id="exporterCountry">
-                                                        {{ $application->exporter->countryInfo->name }}
+                                                    <td class="text-muted" id="importerCountry">
+                                                        {{ $application->importer->countryInfo->name  }} 
                                                     </td>
                                                 </tr>
                                             </tbody>

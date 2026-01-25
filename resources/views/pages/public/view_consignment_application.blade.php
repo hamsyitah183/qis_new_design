@@ -114,7 +114,11 @@
                                 @include('pages.public.view_consignment.step4')
                             @endif
 
-                            @include('pages.public.view_consignment.step5')
+
+                            @if (authUser()['type'] == 'public' )
+                                @include('pages.public.view_consignment.step5')
+                            @endif
+                    
 
 
                         </aside>

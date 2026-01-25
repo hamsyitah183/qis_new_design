@@ -1,5 +1,6 @@
 import { formatTime, initTooltips } from "../../app";
 import Swal from "sweetalert2";
+import { activityLogDesign } from "../../appLog";
 
 console.log("consignment list");
 let consignmentListTable;
@@ -125,5 +126,60 @@ function handleDelete() {
 }
 document.addEventListener("DOMContentLoaded", data_table_init);
 
+
+function activityLog() {
+    $(document).on("click", ".activityLog", async function (e) {
+        e.preventDefault();
+
+        const id = $(this).data("log");
+        Swal.fire({
+            title: "Loading...",
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => Swal.showLoading(),
+        });
+        try {
+            const res = await fetch(`/consignment_application/${id}/data`);
+
+            if (!res.ok) {
+                throw new Error("Failed to fetch activity log");
+            }
+
+            const json = await res.json();
+
+            console.log("id:", id);
+            console.log("response:", json.activity_log);
+
+            Swal.close();
+
+            const tableBody = $("#applicationLogTable tbody");
+            tableBody.empty(); // clear existing rows
+
+            // console.log("application", application.activity_log);
+            let activity_log =  json.activity_log
+
+            
+
+            const modalEl = document.getElementById("activityLogModal");
+            modalEl.querySelector(".modal-title").textContent =
+                "Consignment Certificate Application Log" || "Activity Log";
+
+            const cardBody = $('#activityLogModal .modal-body');
+            cardBody.empty();
+            cardBody.addClass('scroll-div');
+
+            const html = activityLogDesign(activity_log);
+            cardBody.html(html);
+
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        } catch (error) {
+            console.error("Activity log error:", error);
+            Swal.close();
+        }
+    });
+}
+
 initTooltips();
+activityLog();
 

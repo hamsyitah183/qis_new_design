@@ -1,6 +1,7 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
 import { formatTime, getCountry, getEntryPoint } from "../../app";
+import { activityLogDesign } from "../../appLog";
 
 let application = null;
 let value = null;
@@ -122,7 +123,12 @@ async function attachmentTable() {
         if (s.includes("completed")) {
             text = '<span class="badge bg-success fs-11 p-1">Completed</span>';
 
-        } else if (s.includes("payment processing")) {
+        }else if (s.includes("payment failed")) {
+            text = '<span class="badge bg-danger fs-11 p-1">Payment Failed</span>';
+
+        } 
+        
+        else if (s.includes("payment processing")) {
             text = '<span class="badge bg-info fs-11 p-1">Payment Processing</span>';
 
         } else if (s.includes("paid")) {
@@ -136,6 +142,10 @@ async function attachmentTable() {
 
         } else if (s.includes("payment")) {
             text = '<span class="badge bg-warning fs-11 p-1">Pending For Payment</span>';
+
+        } else if (s.includes("reapplied")) {
+            text = '<span class="badge bg-info fs-11 p-1">Reapply</span>';
+
         }
 
         permitStatus = `<td>${text}</td>`;
@@ -167,9 +177,12 @@ async function pendingPaymentTable() {
 
     const permits = application.consignment_permits || [];
 
-    const pendingPaymentPermits = permits.filter(
-        (p) => p.status?.toLowerCase() === "pending for payment"
+    const pendingPaymentPermits = permits.filter((p) =>
+        ["pending for payment", "payment failed"].includes(
+            p.status?.toLowerCase()
+        )
     );
+
 
     if (!pendingPaymentPermits || pendingPaymentPermits.length === 0) {
         tableBody.append(`
@@ -237,7 +250,7 @@ function acceptPermit() {
                     }).then((secondResult) => {
                         if (secondResult.isConfirmed) {
                             $.ajax({
-                                url: `/internal/permit/${id}`,
+                                url: `/internal/consignment/${id}`,
                                 method: "POST",
                                 data: {
                                     _token: $("meta[name='csrf-token']").attr(
@@ -302,7 +315,7 @@ function rejectPermit() {
                 if (!result.isConfirmed) return;
 
                 $.ajax({
-                    url: `/internal/permit/${id}`,
+                    url: `/internal/consignment/${id}`,
                     method: "POST",
                     data: {
                         _token: $('meta[name="csrf-token"]').attr("content"),
@@ -676,7 +689,7 @@ function adminRejectApplication() {
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: `/application/verify/${applicationId}`,
+                    url: `/consignment/verify/${applicationId}`,
                     method: "POST",
                     data: {
                         _token: $("meta[name='csrf-token']").attr("content"),
@@ -726,7 +739,7 @@ function acceptApplication() {
             if (result.isConfirmed) {
                 // Send AJAX request to verify application
                 $.ajax({
-                    url: `/application/verify/${applicationId}`, // your route
+                    url: `/consignment/verify/${applicationId}`, // your route
                     method: "POST",
                     data: {
                         _token: $("meta[name='csrf-token']").attr("content"), // CSRF token
@@ -779,17 +792,13 @@ function applicationLog() {
             modalEl.querySelector(".modal-title").textContent =
                 " Activity Log" || "Activity Log";
 
-            activity_log.forEach((log, index) => {
-                tableBody.append(`
-    <tr>
-        <td>${log.action}</td>
-        <td>${log.causer.fullname}</td>
-        <td>${log.remark}</td>
-        <td>${log.status}</td>
-        <td>${formatTime(log.created_at)}</td>
-    </tr>
-    `);
-            });
+            const cardBody = $('#activityLogModal .modal-body');
+            cardBody.empty();
+            cardBody.addClass('scroll-div');
+
+            const html = activityLogDesign(activity_log);
+            
+            cardBody.html(html);
 
             const modal = new bootstrap.Modal(modalEl);
             modal.show();
@@ -918,6 +927,7 @@ async function initApplicationDetails() {
                 application_id: application.id,
                 permit_ids: selectedPermits,
                 total: totalPermit,
+                type: 'consignment',
                 _token: $('meta[name="csrf-token"]').attr("content"),
             },
             success: function (res) {
