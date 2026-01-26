@@ -102,10 +102,10 @@
 
                                 $isPublic = auth()->guard('public')->check();
                                 $isOwner =
-                                    $isPublic && $application->importer->uuid === auth()->guard('public')->user()->uuid;
+                                    $isPublic && $application->exporter_id === auth()->guard('public')->user()->uuid;
 
                             @endphp
-                            {{-- @dd($application->status) --}}
+                            {{-- @dd($isOwner || $isAdminOrClerk) --}}
                             @if (
                                     ($application->status === 'Clerk Review In-Progress' && $isAdminOrClerk) ||
                                     ($application->category_application == 1 && ($isOwner || $isAdminOrClerk))

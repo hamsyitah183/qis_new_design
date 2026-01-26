@@ -239,20 +239,20 @@ class PaymentController extends Controller
         $orderNumber = 'ORD-' . $request->application_id . '-' . $runningNumber;
 
         // dd($application['application_type']);
-        // if ($application['application_type'] == 'Import Permit') {
-        //     $itn = 'ITN10001';
-        // } elseif ($application['application_type'] == 'Inspection Certificate') {
-        //     $itn = 'ITN10002';
-        // } elseif ($application['application_type'] == 'Consignment Certificate') {
-        //     $itn = 'ITN10003';
-        // } else {
-        //     $itn = 'ITN';
-        // }
+        if ($application['application_type'] == 'Import Permit') {
+            $itn = 'ITN10001';
+        } elseif ($application['application_type'] == 'Inspection Certificate') {
+            $itn = 'ITN10002';
+        } elseif ($application['application_type'] == 'Consignment Certificate') {
+            $itn = 'ITN10003';
+        } else {
+            $itn = 'ITN';
+        }
 
-        // $sid = 'QIS123';
+        $sid = 'QIS123';
 
-        $itn = 'IT037962';
-        $sid = 'SE12501C';
+        // $itn = 'IT037962';
+        // $sid = 'SE12501C';
 
         $order = Order::create([
             'order_number' => $orderNumber,

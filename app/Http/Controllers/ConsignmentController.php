@@ -441,7 +441,7 @@ class ConsignmentController extends Controller
     {
         $application = ConsignmentApplication::where('application_id', $id)->firstOrFail();
 
-        // dd($application, $request->all());
+        dd($application, $request->all());
 
         // Centralized messages per status
         $statusMessages = [

@@ -523,7 +523,7 @@ function verifyApplication() {
             if (result.isConfirmed) {
                 // Send AJAX request to verify application
                 $.ajax({
-                    url: `/application/verify/${applicationId}`, // your route
+                    url: `/consignment/verify/${applicationId}`, // your route
                     method: "POST",
                     data: {
                         _token: $("meta[name='csrf-token']").attr("content"), // CSRF token
