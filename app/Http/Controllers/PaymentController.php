@@ -189,7 +189,7 @@ class PaymentController extends Controller
             abort(403, 'Application details expired');
         }
         if ($request['paymentMethod'] == 'bayuPay') {
-            // dd($data);
+            // dd($request->all(), $applicationDetails);
             $data = $this->bayuPay($request, $applicationDetails);
             return view('bayuPayRedirect', compact('data'));
         } else {
@@ -239,17 +239,20 @@ class PaymentController extends Controller
         $orderNumber = 'ORD-' . $request->application_id . '-' . $runningNumber;
 
         // dd($application['application_type']);
-        if ($application['application_type'] == 'Import Permit') {
-            $itn = 'ITN10001';
-        } elseif ($application['application_type'] == 'Inspection Certificate') {
-            $itn = 'ITN10002';
-        } elseif ($application['application_type'] == 'Consignment Certificate') {
-            $itn = 'ITN10003';
-        } else {
-            $itn = 'ITN';
-        }
+        // if ($application['application_type'] == 'Import Permit') {
+        //     $itn = 'ITN10001';
+        // } elseif ($application['application_type'] == 'Inspection Certificate') {
+        //     $itn = 'ITN10002';
+        // } elseif ($application['application_type'] == 'Consignment Certificate') {
+        //     $itn = 'ITN10003';
+        // } else {
+        //     $itn = 'ITN';
+        // }
 
-        $sid = 'QIS123';
+        // $sid = 'QIS123';
+
+        $itn = 'IT037962';
+        $sid = 'SE12501C';
 
         $order = Order::create([
             'order_number' => $orderNumber,
@@ -293,7 +296,10 @@ class PaymentController extends Controller
         }
 
         // Call BayuPay API
-        $response = Http::withToken('test-api')->get('https://bayupay-dummy.geovidia.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
+        $response = Http::withToken('test-api')
+        ->get('https://bayupay-dummy.geovidia.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
+        // $response = Http::withToken('test-api')
+        // ->get('http://10.71.97.95/readdata.php', ['kod_transaksi' => $kodTransaksi]);
 
         if (!$response->successful()) {
             abort(500, 'Failed to retrieve payment data');

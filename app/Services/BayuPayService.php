@@ -13,7 +13,12 @@ class BayuPayService
 {
     public function checkAndUpdatePayment(Order $order, string $kodTransaksi): array
     {
-        $response = Http::withToken('test-api')->get('https://bayupay-dummy.geovidia.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
+        // $response = Http::withToken('test-api')
+        // ->get('https://bayupay-dummy.geovidia.my/readdata.php', 
+        // ['kod_transaksi' => $kodTransaksi]);
+        $response = Http::withToken('test-api')
+        ->get(' http://10.71.97.95/readdata.php', 
+        ['kod_transaksi' => $kodTransaksi]);
 
         if (!$response->successful()) {
             throw new \Exception('Failed to retrieve payment data');
@@ -98,7 +103,14 @@ class BayuPayService
 
     public function checkAndUpdatePaymentWithoutTransactionCode(Order $order): array
     {
-        $response = Http::withToken('test-api')->get('https://bayupay-dummy.geovidia.my/readtransaction.php', [
+        // $response = Http::withToken('test-api')
+        // ->get('https://bayupay-dummy.geovidia.my/readtransaction.php', [
+        //     'sid' => $order->sid,
+        //     'itn' => $order->itn,
+        //     'rn' => $order->order_number,
+        // ]);
+        $response = Http::withToken('test-api')
+        ->get('http://10.71.97.95/readtransaction.php', [
             'sid' => $order->sid,
             'itn' => $order->itn,
             'rn' => $order->order_number,

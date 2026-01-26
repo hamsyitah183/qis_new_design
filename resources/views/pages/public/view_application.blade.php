@@ -122,7 +122,7 @@
 
                             @endphp --}}
 
-                            @if (authUser()['type'] == 'public' )
+                            @if (authUser()['type'] == 'public' && $application->user_id == authUser()['user']->uuid  )
                                 @include('pages.public.view_permit.step5')
                             @endif
 

@@ -384,11 +384,13 @@ class ConsignmentApplicationController extends Controller
             ->orderBy('created_at', 'desc')
             ->firstOrFail();
 
-        if(authUser()['type'] == 'public') {
-            if ($application->user->uuid !== authUser()['user']['uuid']) {
-                abort(403, 'You are not authorized to access this application.');
-            }
-        }
+        // if(authUser()['type'] == 'public') {
+        //     if ($application->user->uuid !== authUser()['user']['uuid']) {
+        //         abort(403, 'You are not authorized to access this application.');
+        //     } 
+
+        //     elseif($application->)
+        // }
 
         // $allStatuses = [];
 
