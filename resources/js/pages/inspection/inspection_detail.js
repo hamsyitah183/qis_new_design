@@ -51,7 +51,7 @@ async function fillInInput() {
 
     // Example: if returned JSON is { name: "Malaysia" }
     $("#expcountry").val(application.exporter.country_info.name);
-    $("#sexpCountry").text(country.name);
+    $("#sexpCountry").text(application.exporter.country_info.name);
 
     $("#entryPoint").val(entryPoint.entry_name);
     $("#sentryp").text(entryPoint.entry_name);
@@ -90,20 +90,27 @@ async function attachmentTable() {
         // Only Officer can accept/reject item details, Admin can do both
         if (applicationStatus === "Clerk Verified") {
             if (
-                (permit.status === "processing" || permit.status === "submitted") &&
-                (roles.includes("admin") || roles.includes("officer"))
+                (
+                    permit.status === "processing" ||
+                    permit.status === "submitted" ||
+                    permit.status === "reapplied"
+                ) &&
+                (
+                    roles.includes("admin") ||
+                    roles.includes("officer")
+                )
             ) {
                 permitAction = `
-                <div class="btn btn-sm btn-primary-light btn-wave accept" data-permit="${permit.id}">
-                    Approved
-                </div>
-                <div class="btn btn-sm btn-danger-light btn-wave reject" data-permit="${permit.id}">
-                    Rejected
-                </div>`;
+                    <div class="btn btn-sm btn-primary-light btn-wave accept" data-permit="${permit.id}">
+                        Approved
+                    </div>
+                    <div class="btn btn-sm btn-danger-light btn-wave reject" data-permit="${permit.id}">
+                        Rejected
+                    </div>
+                `;
             }
-
         }
-
+        
         if (permit.status === "rejected" &&
             (type.includes('public'))) {
             permitAction = `<div class = "btn btn-sm btn-danger-light btn-wave reapply"  data-permit = "${permit.id}" >Reapply</div>`
@@ -905,7 +912,7 @@ function saveConsignmentAttachment() {
             const id = $(this).data("id");
 
             const itemSelectValue = $modal.find("#itemSelect").val();
-            const itemSelectText  = $modal.find("#itemSelect option:selected").text();
+            const itemSelectText  = $modal.find("#itemSelect").val();
             const itemValue       = $modal.find("#itemValue").val().trim();
             const itemQuantity    = $modal.find("#itemQuantity").val().trim();
             const itemMeasure     = $modal.find("#itemMeasure").val();

@@ -71,12 +71,12 @@
                         <h3 class="mt-2">Pending</h3>
 
                         @if ($application->user->uuid == $authUuid)
-                            <p>Your permit application is currently pending verification by the respective importer.</p>
+                            <p>Your permit application is currently pending verification by the respective exporter.</p>
                         @else
-                            <p>This permit application is currently pending verification by the respective importer.</p>
+                            <p>This permit application is currently pending verification by the respective exporter.</p>
 
                             {{-- If logged in user is the importer, show verify/reject buttons --}}
-                            @if ($application->importer->uuid == $authUuid)
+                            @if ($application->exporter_id == $authUuid)
                                 <div class="d-flex justify-content-center gap-3 mt-3">
                                     <button id="verifyAppl" class="btn btn-sm btn-secondary">Verify Application</button>
                                     <button id="rejectAppl" class="btn btn-sm btn-danger">Reject Application</button>

@@ -145,7 +145,7 @@ class ConsignmentApplicationController extends Controller
             } else {
                 // Create new application
                 // Status flow: Draft or Application Submitted
-                $status = $isDraft ? 'Draft' : 'Application Submitted';
+                $status = $isDraft ? 'Draft' : ((int) ($permit['applCate'] ?? 0) === 1 ? 'Awaiting Approval' : 'Clerk Review In-Progress');
 
                 $isNewApplication = true;
                 $application = ConsignmentApplication::create([

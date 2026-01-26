@@ -894,7 +894,9 @@ class InspectionController extends Controller
             ], 403);
         }
         
+        
         // Update item status
+        $inspectionItem->permit_number = 'IP' . now()->format('YmdHis');
         $inspectionItem->status = 'pending for payment';
         $inspectionItem->save();
 
@@ -1088,7 +1090,21 @@ class InspectionController extends Controller
 
     public function reapply($id, Request $request)
     {
-        $permit = InspectionItem::with(['application'])->findOrFail($id);
+        $permit = InspectionItem::with(['application', 'attachments'])->findOrFail($id);
+
+        foreach ($permit->attachments as $attachment) {
+            // Remove file from storage
+            if ($attachment->file_path) {
+                // file_path = "/storage/import/xxx.jpg"
+                $storagePath = str_replace('/storage/', '', $attachment->file_path);
+
+                Storage::disk('public')->delete($storagePath);
+            }
+
+            // Remove DB record
+            $attachment->delete();
+        }
+
 
         // 1️⃣ Get item data
         $item = $request->items[0] ?? null;
