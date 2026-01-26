@@ -125,6 +125,7 @@ Route::prefix('public')
         Route::get('/inspection_certificates_list', [InspectionController::class, 'showAllInspectionList'])->name('showallinspectionlist');
         Route::get('/view_inspection_certificate/{id}', [InspectionController::class, 'viewInspection'])->name('viewInspectionApplication');
         Route::get('/inspection_application_data/{id}', [InspectionController::class, 'getApplicationData'])->name('inspection.app.data');
+        Route::post('/inspection/{id}/status', [InspectionController::class, 'updateStatus'])->name('inspection.status');
         Route::get('/inspection_certificates_application_self/{id?}', [InspectionController::class, 'getInspectionSelf'])->name('inspectionApplicationSelf');
         Route::get('/inspection_certificates_application_others/{id?}', [InspectionController::class, 'getInspectionOthers'])->name('inspectionApplicationOthers');
         Route::post('/save-inspection/{id}', [InspectionController::class, 'reapply']);
@@ -171,7 +172,7 @@ Route::prefix('internal')
 
         // ======================= inspection certificates ========================
         Route::get('/inspection_certificates_list', [InspectionController::class, 'showAllInspectionList'])->name('inspection.list');
-        Route::post('/inspection/{id}/status', [InspectionController::class, 'updateStatus'])->name('inspection.status');
+      
         Route::get('/view_inspection_certificate/{id}', [InspectionController::class, 'viewApplication'])->name('viewInspectionApplication');
         // Route::delete('/inspection/delete/{id}', [InspectionController::class, 'deleteApplication'])->name('inspection.delete');
     
@@ -217,6 +218,7 @@ Route::prefix('internal')
         // Inspection item accept/reject endpoints
         Route::post('/inspection_item/{id}/accept', [InspectionController::class, 'acceptInspectionItem']);
         Route::post('/inspection_item/{id}/reject', [InspectionController::class, 'rejectInspectionItem']);
+        Route::post('/inspection/{id}/status', [InspectionController::class, 'updateStatus'])->name('inspection.status');
     
         Route::post('/consignment/{id}', [ConsignmentApplicationController::class, 'accept_permit']);
     });

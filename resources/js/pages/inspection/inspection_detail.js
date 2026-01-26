@@ -503,7 +503,7 @@ function verifyApplication() {
             if (result.isConfirmed) {
                 // Send AJAX request to verify application
                 $.ajax({
-                    url: `/internal/inspection/${applicationId}/status`,
+                    url: `/public/inspection/${applicationId}/status`,
                     method: "POST",
                     data: {
                         _token: $("meta[name='csrf-token']").attr("content"),
