@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Charts\LineUserChart;
+use App\Charts\MonthlyUsersChart;
+use App\Charts\OrderDonutChart;
+use App\Charts\PaymentMethodBarChart;
 use App\Models\Country;
 use App\Models\IpEntryPoint;
 use Carbon\Carbon;
@@ -16,7 +20,7 @@ use Illuminate\Notifications\DatabaseNotification;
 class DashboardController extends Controller
 {
     //
-    public function dashboard()
+    public function dashboard(LineUserChart $lineChart,  OrderDonutChart $orderChart, PaymentMethodBarChart $paymentChart)
     {
         // ✅ Check which guard is logged in
         if (Auth::guard('public')->check()) {
@@ -24,7 +28,7 @@ class DashboardController extends Controller
         }
 
         if (Auth::guard('internal')->check()) {
-            return $this->internal_dashboard();
+            return $this->internal_dashboard($lineChart, $orderChart, $paymentChart);
         }
 
         // ❌ If no guard is logged in, redirect to login
@@ -41,7 +45,7 @@ class DashboardController extends Controller
         ]); // Public user dashboard
     }
 
-    protected function internal_dashboard()
+    protected function internal_dashboard(LineUserChart $lineChart, OrderDonutChart $orderChart, PaymentMethodBarChart $paymentChart)
     {
         // $notifications = Notification::where('notifiable_type', 'internal')
         //     ->where('notifiable_id', authUser()['user']->uuid)
@@ -49,8 +53,11 @@ class DashboardController extends Controller
         //     ->take(10)
         //     ->get();
 
-        return view('dashboard.internal.main-dashboard', [
+        return view('dashboard.internal.main_dashboard', [
             // 'notifications' => $notifications,
+            'userLineChart' => $lineChart->build(),
+            'orderChart' => $orderChart->build(),
+            'paymentChart' => $paymentChart->build()
         ]); // Internal user dashboard
     }
 
