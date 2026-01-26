@@ -107,6 +107,8 @@ Route::prefix('public')
         // itemSelect
         Route::post('/save-permit/{id}', [PermitApplicationController::class, 'reapply']);
 
+        Route::post('/save-consignment/{id}', [ConsignmentApplicationController::class, 'reapply']);
+
         // temporary file
         Route::post('/temp-upload', [TempFileController::class, 'upload']);
 

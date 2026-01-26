@@ -628,6 +628,7 @@ function resetAddItemModal() {
     // Reset plain input fields
     $("#itemValue").val("");
     $("#itemQuantity").val("");
+    $("#certificateNo").val("");
 
     // Reset Select2 fields
     $("#itemSelect").val(null).trigger("change");
@@ -648,9 +649,9 @@ function renderAllItems() {
         tableBody.insertAdjacentHTML(
             "beforeend",
             `<tr id="item-row-${item.id}">
-                <td>${index + 1}</td>
+                
                 <td>${item.item_name}</td>
-                <td>${item.quantity} ${item.measure}</td>
+             
                 <td class = "text-wrap">${item.purpose}</td>
                 <td class="text-center">
                     <div class="d-flex justify-content-center align-items-center gap-2">

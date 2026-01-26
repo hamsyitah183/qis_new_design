@@ -121,7 +121,7 @@ class ConsignmentApplicationController extends Controller
                     'importer_verify' => $importer_verify,
                 ]);
 
-                $application->status = 'Clerk Review In-Progress';
+                $application->status =  $permit['applCate'] == 0 ? 'Clerk Review In-Progress' : 'wait for company approval';
                 $application->save();
 
                 try {
@@ -164,7 +164,7 @@ class ConsignmentApplicationController extends Controller
                     'importer_verify' => $importer_verify,
                 ]);
 
-                $application->status = 'Clerk Review In-Progress';
+                $application->status =  $permit['applCate'] == 0 ? 'Clerk Review In-Progress' : 'wait for company approval';
                 $application->save();
 
                 try {
@@ -639,6 +639,77 @@ class ConsignmentApplicationController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Permit condition updated successfully.',
+        ]);
+    }
+
+    public function reapply($id, Request $request)
+    {
+        $permit = ConsignmentPermit::with(['application', 'attachments'])->findOrFail($id);
+
+        $attachments = $permit->attachments;
+
+        $permit = ConsignmentPermit::with(['application', 'attachments'])->findOrFail($id);
+
+
+        foreach ($permit->attachments as $attachment) {
+            // Remove file from storage
+            if ($attachment->file_path) {
+                // file_path = "/storage/import/xxx.jpg"
+                $storagePath = str_replace('/storage/', '', $attachment->file_path);
+
+                Storage::disk('public')->delete($storagePath);
+            }
+
+            // Remove DB record
+            $attachment->delete();
+        }
+
+        // 1️⃣ Get item data
+        $item = $request->items[0] ?? null;
+        if (!$item || !isset($item['data'])) {
+            return response()->json(['message' => 'Invalid item data'], 422);
+        }
+
+        $data = json_decode($item['data'], true);
+
+        // dd($data);
+        
+
+        // 2️⃣ Update permit fields
+        $permit->update([
+            'consignment_detail' => $data,
+            'quantity' => $data['quantity'] ?? $permit->quantity,
+            'unit_measurement' => $data['measure'] ?? $permit->unit_measurement,
+            'value' => $data['value'] ?? $permit->value,
+            'purpose' => $data['purpose'] ?? $permit->purpose,
+            'status' => 'reapplied',
+        ]);
+
+        // 3️⃣ Save attachments (single permit)
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
+                $name = uniqid() . '_' . $file->getClientOriginalName();
+                $path = $file->storeAs('import', $name, 'public');
+
+                ConsignmentAttachment::create([
+                    'permit_id' => $permit->id,
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => "/storage/{$path}",
+                    'file_type' => $file->getClientOriginalExtension(),
+                ]);
+            }
+        }
+
+        $application = $permit->application;
+
+        $application->logActivity(action: 'Consignment Reapply', remark: 'User reapply the consignment', status: 'User Reapply Consignment');
+
+        $application->status = 'Clerk Verified';
+        $application->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Permit updated and files uploaded successfully',
         ]);
     }
 }

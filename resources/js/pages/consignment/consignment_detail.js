@@ -2,7 +2,24 @@ import $ from "jquery";
 import Swal from "sweetalert2";
 import { formatTime, getCountry, getEntryPoint } from "../../app";
 import { activityLogDesign } from "../../appLog";
+import "dropzone/dist/dropzone.css";
+// Import Select2 module
+import select2 from "select2";
 
+// Force Select2 to attach to THIS jQuery:
+select2(window.jQuery);
+
+import "select2/dist/css/select2.min.css";
+
+Dropzone.autoDiscover = false;
+
+
+let itemDropzone = null;
+
+let tempItems = [];
+let tempAttachments = [];
+let itemPurpose = null;
+let temporaryItemsAttachment = [];
 let application = null;
 let value = null;
 
@@ -76,7 +93,7 @@ async function attachmentTable() {
         let permitAction = "";
         if (applicationStatus === "Clerk Verified") {
             if (
-                permit.status === "processing" &&
+                (permit.status === "processing" || permit.status === "reapplied" ) &&
                 (roles.includes("admin") || roles.includes("officer"))
             ) {
                 permitAction = `
@@ -89,6 +106,7 @@ async function attachmentTable() {
             } 
            
         }
+
 
         if( permit.status === "rejected" &&
             (type.includes('public'))) {
@@ -827,8 +845,318 @@ function updateTotalValue() {
 }
 
 
+function reapply() {
+    $(document)
+        .off("click", ".reapply")
+        .on("click", ".reapply", async function (e) {
+            e.preventDefault();
+
+            const id = $(this).data("permit");
+            const permits = application.consignment_permits;
+            const permit = permits.find(p => p.id == id);
+
+            if (!permit) {
+                console.warn("Permit not found!");
+                return;
+            }
+
+            $('#saveBtn').data('id', id).attr('data-id', id);
+
+            const detail = permit.consignment_detail;
+
+            await loadConsignmentSelection(detail.item_id);
+
+            // Show modal
+            const modalEl = document.getElementById("addItemModal");
+            const modal = new bootstrap.Modal(modalEl);
+
+            modalEl.addEventListener(
+                "shown.bs.modal",
+                async () => {
+                    
+                    const $modal = $(modalEl);
+                    itemConsigment($modal);
+
+                    // Fill inputs
+                    $modal.find('#itemValue').val(detail.value);
+                    $modal.find('#itemQuantity').val(detail.quantity);
+
+                    // PURPOSE (by data-description)
+                    $modal.find('#itemPurpose option').each(function () {
+                        if ($(this).data('description') === detail.purpose) {
+                            $(this).prop('selected', true);
+                        }
+                    });
+                    $modal.find('#itemPurpose').trigger('change');
+
+                    // MEASUREMENT (by value)
+                    $modal.find('#itemMeasure')
+                        .val(detail.measure)
+                        .trigger('change');
+
+                    console.log('measure selected:', detail.measure);
+
+                    // ✅ Load Uses AND select the value after data is loaded
+                    const itemId = $('#itemSelect').val();
+                    if (itemId) {
+                        const $itemUses = $modal.find('#itemUses');
+
+                        // Reset options
+                        $itemUses.empty().append('<option value="">-- Select Uses --</option>');
+
+                        try {
+                            Swal.fire({
+                                title: "Loading uses...",
+                                allowOutsideClick: false,
+                                didOpen: () => Swal.showLoading(),
+                            });
+
+                            const res = await fetch(`/public/consignment_uses/${itemId}`);
+                            const data = await res.json();
+                            let uses = data.data ?? [];
+
+                            // ✅ Remove duplicate uses
+                            uses = [...new Set(uses)];
+
+                            // Append unique options
+                            uses.forEach((row) => {
+                                $itemUses.append(`<option value="${row}">${row}</option>`);
+                            });
+
+                            // Initialize or refresh Select2
+                            if ($itemUses.hasClass("select2-hidden-accessible")) {
+                                $itemUses.trigger('change');
+                            } else {
+                                $itemUses.select2({
+                                    width: "100%",
+                                    placeholder: "-- Select Uses --",
+                                    allowClear: true,
+                                    dropdownParent: $modal,
+                                });
+                            }
+
+                            // ✅ Auto-select the current use if available
+                            if (detail.uses) {
+                                $itemUses.val(detail.uses).trigger('change');
+                            }
+
+                            Swal.close();
+                        } catch (err) {
+                            console.error("Failed to load uses:", err);
+                            Swal.close();
+                        }
+                    }
+
+                    saveConsignmentAttachment();
+                },
+                { once: true }
+            );
+
+            modal.show();
+        });
+}
 
 
+function itemConsigment($modal) {
+    const dropzoneEl = $modal.find("#itemDropzone")[0];
+
+    if (!dropzoneEl) {
+        console.warn("itemDropzone not found");
+        return;
+    }
+
+    if (dropzoneEl.dropzone) {
+        dropzoneEl.dropzone.destroy();
+    }
+
+    itemDropzone = new Dropzone(dropzoneEl, {
+        url: "/",
+        autoProcessQueue: false,
+        maxFilesize: 10,
+        acceptedFiles: ".jpg,.jpeg,.png,.pdf",
+        addRemoveLinks: true,
+        headers: {
+            "X-CSRF-TOKEN": document
+                .querySelector('meta[name="csrf-token"]').content,
+        },
+    });
+
+    groupPreview();
+}
+
+
+function groupPreview() {
+    $(document).ready(function () {
+        Swal.fire({
+            title: "Loading...",
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading(),
+        });
+
+        setTimeout(function () {
+            const $dropzone = $("#itemDropzone");
+            const $previews = $dropzone.find(".dz-preview");
+            const $deleteBtns = $previews.find(".dz-remove");
+
+            // Create group if it doesn't exist
+            let $group = $dropzone.find(".dz-preview-group");
+            if ($group.length === 0) {
+                $group = $('<div class="dz-preview-group"></div>');
+                $dropzone.find(".dz-message").after($group);
+            }
+
+            // Move all previews into the group
+            $previews.appendTo($group);
+
+            // Replace PDF previews with PDF logo
+            for (const file of itemDropzone.getAcceptedFiles()) {
+                if (file.type === "application/pdf") {
+                    const $preview = $(file.previewElement);
+                    const $img = $preview.find(
+                        ".dz-image img[data-dz-thumbnail]"
+                    );
+
+                    // Set your PDF logo path
+                    $img.attr(
+                        "src",
+                        "/images/pdf-logo.png" // <-- replace with your actual PDF logo path
+                    );
+                    $img.css({
+                        "object-fit": "contain",
+                        width: "100%",
+                        height: "100%",
+                    });
+                }
+            }
+
+            // Update delete buttons
+            $deleteBtns.html('<i class="ti ti-trash"></i>');
+
+            Swal.close();
+        }, 100);
+    });
+}
+let updateItem;
+function saveConsignmentAttachment() {
+    $(document)
+        .off("click", "#saveBtn")
+        .on("click", "#saveBtn", function (e) {
+            e.preventDefault();
+
+            const $modal = $("#addItemModal");
+            const id = $(this).data("id");
+
+            const itemSelectValue = $modal.find("#itemSelect").val();
+            const itemSelectText  = $modal.find("#itemSelect option:selected").text();
+            const itemValue       = $modal.find("#itemValue").val().trim();
+            const itemQuantity    = $modal.find("#itemQuantity").val().trim();
+            const itemMeasure     = $modal.find("#itemMeasure").val();
+            const itemPurpose     = $modal.find("#itemPurpose  option:selected").text();
+            const itemUsesValue   = $modal.find("#itemUses").val();
+
+            if (
+                !itemSelectValue ||
+                !itemValue ||
+                !itemQuantity ||
+                !itemMeasure ||
+                !itemPurpose ||
+                !itemUsesValue
+            ) {
+                Swal.fire("Error", "Please fill all required fields", "error");
+                return;
+            }
+
+            const files = itemDropzone?.getAcceptedFiles() || [];
+
+      
+            updateItem = {
+                item_id: itemSelectValue,
+                item_name: itemSelectText,
+                value: itemValue,
+                quantity: itemQuantity,
+                measure: itemMeasure,
+                purpose: itemPurpose,
+                uses: itemUsesValue,
+                files,
+            };
+
+            console.log("updateItem", updateItem);
+
+            saveapplication(id);
+            resetAddItemModal();
+            bootstrap.Modal.getInstance($modal[0]).hide();
+        });
+}
+
+
+function resetAddItemModal() {
+    // Reset plain input fields
+    $("#itemValue").val("");
+    $("#itemQuantity").val("");
+
+    // Reset Select2 fields
+    $("#itemSelect").val(null).trigger("change");
+    $("#itemMeasure").val("").trigger("change");
+    $("#itemPurpose").val("").trigger("change");
+    $("#itemUses").val(null).trigger("change");
+
+    // Clear Dropzone files
+    if (itemDropzone) itemDropzone.removeAllFiles(true);
+}
+
+function saveapplication(permitId) {
+    if (!updateItem) {
+        Swal.fire("Error", "No item to save", "error");
+        return;
+    }
+
+    const form = document.querySelector("#wizardForm");
+    if (!form) return console.error("Form not found");
+
+    const formData = new FormData(form);
+
+    const { files, ...otherData } = updateItem;
+
+    // ✅ single item (index 0)
+    formData.append("items[0][data]", JSON.stringify(otherData));
+
+    if (files && files.length > 0) {
+        files.forEach((file) => {
+            formData.append("files[]", file);
+            formData.append("file_item_index[]", 0);
+        });
+    }
+
+    Swal.fire({
+        title: "Submitting...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+    });
+
+    $.ajax({
+        url: "/public/save-consignment/" + permitId,
+        type: "POST",
+        data: formData,
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+        processData: false,
+        contentType: false,
+        success: function () {
+            Swal.fire({
+                icon: "success",
+                title: "Permit Reapply!",
+                timer: 1500,
+                showConfirmButton: false,
+            });
+
+            initApplicationDetails();
+        },
+        error: function () {
+            Swal.fire("Error", "Failed to save permit", "error");
+        },
+    });
+}
 
 
 /* -------------------------------
@@ -864,6 +1192,8 @@ async function initApplicationDetails() {
     pendingPaymentTable();
 
     // application_reapply(application)
+
+    reapply()
 
 
     Swal.close(); // Close after data is loaded
@@ -940,7 +1270,115 @@ async function initApplicationDetails() {
     });
 }
 
+
+async function loadConsignmentSelection(selectedItemId = null) {
+    const countryCode = $("#expcountryCode").val();
+    const $select = $("#itemSelect");
+
+    if (!countryCode) return;
+
+    $select.empty().append('<option value="">-- Select Item --</option>');
+
+    if ($select.hasClass("select2-hidden-accessible")) {
+        $select.select2("destroy");
+    }
+
+    $select.prop("disabled", true);
+
+    Swal.fire({
+        title: "Loading...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+    });
+
+    try {
+        console.log('country code', countryCode)
+        const res = await fetch(`${window.baseUrl}/public/get_consignment_certificate/${countryCode}`);
+        
+        const data = await res.json();
+
+        $select.prop("disabled", false);
+
+        data.data.forEach(row => {
+            $select.append(
+                `<option value="${row.id}">${row.item_name}</option>`
+            );
+        });
+
+        $select.select2({
+            width: "100%",
+            placeholder: "-- Select Item --",
+            allowClear: true,
+            dropdownParent: $("#addItemModal"),
+        });
+
+        // ✅ AUTO SELECT + TRIGGER CHANGE
+        if (selectedItemId) {
+            $select
+                .val(String(selectedItemId))
+                .trigger('change'); // 🔥 THIS is the key
+        }
+
+        Swal.close();
+    } catch (e) {
+        console.error("Error loading items:", e);
+        $select.prop("disabled", false);
+        Swal.close();
+    }
+}
 /* -------------------------------
     Run initializer
     -------------------------------- */
 initApplicationDetails();
+
+$(document).on("change", "#itemSelect", async function () {
+    const itemId = $(this).val();
+    const $modal = $("#addItemModal");
+    const $itemUses = $modal.find("#itemUses");
+
+    console.log('Selected item:', itemId);
+
+    // Reset the uses dropdown
+    $itemUses.empty().append('<option value="">-- Select Uses --</option>');
+
+    if (!itemId) return;
+
+    try {
+        Swal.fire({
+            title: "Loading uses...",
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading(),
+        });
+
+        const res = await fetch(`/public/consignment_uses/${itemId}`);
+        const data = await res.json();
+        let uses = data.data ?? [];
+
+       
+        uses = [...new Set(uses)];
+
+        // Append new options
+        uses.forEach((row) => {
+            $itemUses.append(`<option value="${row}">${row}</option>`);
+        });
+
+        console.log('Loaded uses (unique):', uses);
+
+        // Re-init or refresh Select2
+        if ($itemUses.hasClass("select2-hidden-accessible")) {
+            $itemUses.trigger('change'); // refresh Select2 visually
+        } else {
+            $itemUses.select2({
+                width: "100%",
+                placeholder: "-- Select Uses --",
+                allowClear: true,
+                dropdownParent: $modal,
+            });
+        }
+
+        Swal.close();
+    } catch (err) {
+        console.error("Failed to load uses:", err);
+        Swal.close();
+    }
+});

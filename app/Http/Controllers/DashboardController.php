@@ -49,7 +49,7 @@ class DashboardController extends Controller
         //     ->take(10)
         //     ->get();
 
-        return view('pages.internal.dashboard', [
+        return view('dashboard.internal.main-dashboard', [
             // 'notifications' => $notifications,
         ]); // Internal user dashboard
     }
