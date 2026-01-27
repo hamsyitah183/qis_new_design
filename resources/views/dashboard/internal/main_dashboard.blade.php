@@ -14,7 +14,7 @@
     <x-breadcrumb :items="[
             ['label' => ' ', 'url' => '/'],
           
-        ]" title="Welcome Admin">
+        ]" title="Welcome ">
 
     </x-breadcrumb>
 @endsection
@@ -22,23 +22,19 @@
 @section('content')
 
    
-    {{-- finance and application data --}}
-    @include('dashboard.internal.components.finance_application_data')
+    @php
+        $role = authUser()['roles'][0];
 
+        
+    @endphp
 
+    @if ($role == 'admin')
+        @include('dashboard.internal.admin_dashboard')
 
-    {{-- public user chart and latest log activity --}}
-    <div class="row align-items-stretch mb-2">
-        @include('dashboard.internal.components.user_chart')
-        @include('dashboard.internal.components.user_last_activity')
-    </div>
+    @elseif($role == 'finance')
+        @include('dashboard.internal.finance_dashboard')
 
-    {{-- order --}}
-    <div class="row align-items-stretch mt-4 mb-4">
-        @include('dashboard.internal.components.order_chart')
-        @include('dashboard.internal.components.payment_type_chart')
-    </div>
-
+    @endif
 
 @endsection
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Charts\ApplicationHorizontalChart;
 use App\Charts\LineUserChart;
 use App\Charts\MonthlyUsersChart;
 use App\Charts\OrderDonutChart;
@@ -20,7 +21,7 @@ use Illuminate\Notifications\DatabaseNotification;
 class DashboardController extends Controller
 {
     //
-    public function dashboard(LineUserChart $lineChart,  OrderDonutChart $orderChart, PaymentMethodBarChart $paymentChart)
+    public function dashboard(LineUserChart $lineChart,  OrderDonutChart $orderChart, PaymentMethodBarChart $paymentChart, ApplicationHorizontalChart $applicationChart)
     {
         // ✅ Check which guard is logged in
         if (Auth::guard('public')->check()) {
@@ -28,7 +29,7 @@ class DashboardController extends Controller
         }
 
         if (Auth::guard('internal')->check()) {
-            return $this->internal_dashboard($lineChart, $orderChart, $paymentChart);
+            return $this->internal_dashboard($lineChart, $orderChart, $paymentChart, $applicationChart);
         }
 
         // ❌ If no guard is logged in, redirect to login
@@ -45,19 +46,16 @@ class DashboardController extends Controller
         ]); // Public user dashboard
     }
 
-    protected function internal_dashboard(LineUserChart $lineChart, OrderDonutChart $orderChart, PaymentMethodBarChart $paymentChart)
+    protected function internal_dashboard(LineUserChart $lineChart, OrderDonutChart $orderChart, PaymentMethodBarChart $paymentChart, ApplicationHorizontalChart $applicationChart)
     {
-        // $notifications = Notification::where('notifiable_type', 'internal')
-        //     ->where('notifiable_id', authUser()['user']->uuid)
-        //     ->latest()
-        //     ->take(10)
-        //     ->get();
+      
 
         return view('dashboard.internal.main_dashboard', [
             // 'notifications' => $notifications,
             'userLineChart' => $lineChart->build(),
             'orderChart' => $orderChart->build(),
-            'paymentChart' => $paymentChart->build()
+            'paymentChart' => $paymentChart->build(),
+            'applicationChart' =>  $applicationChart->build()
         ]); // Internal user dashboard
     }
 
