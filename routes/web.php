@@ -174,7 +174,7 @@ Route::prefix('internal')
 
         // ======================= inspection certificates ========================
         Route::get('/inspection_certificates_list', [InspectionController::class, 'showAllInspectionList'])->name('inspection.list');
-      
+
         Route::get('/view_inspection_certificate/{id}', [InspectionController::class, 'viewApplication'])->name('viewInspectionApplication');
         // Route::delete('/inspection/delete/{id}', [InspectionController::class, 'deleteApplication'])->name('inspection.delete');
     
@@ -216,12 +216,12 @@ Route::prefix('internal')
 
         // ======================= notifications ===========================
         Route::post('/permit/{id}', [PermitConsignmentController::class, 'accept_permit']);
-        
+
         // Inspection item accept/reject endpoints
         Route::post('/inspection_item/{id}/accept', [InspectionController::class, 'acceptInspectionItem']);
         Route::post('/inspection_item/{id}/reject', [InspectionController::class, 'rejectInspectionItem']);
         Route::post('/inspection/{id}/status', [InspectionController::class, 'updateStatus'])->name('inspection.status');
-    
+
         Route::post('/consignment/{id}', [ConsignmentApplicationController::class, 'accept_permit']);
     });
 
