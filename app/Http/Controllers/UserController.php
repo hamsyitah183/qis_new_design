@@ -10,6 +10,7 @@ use App\Events\PublicUser as EventsPublicUser;
 use App\Models\InternalUser;
 use App\Models\PublicUser;
 use App\Models\ApprovedPublic;
+use App\Models\CountryNoPhone;
 use App\Notifications\InternalUserEditedNotification;
 use App\Notifications\UserNotification;
 use Illuminate\Http\Request;
@@ -41,11 +42,15 @@ class UserController extends Controller
     {
         $user = authUser()['user'];
 
+        $countryNo = CountryNoPhone::get();
+
         if (!$user->can('create public user')) {
             abort(403, 'Unauthorized action.'); // or redirect to another page
         }
 
-        return view('pages.internal.user_management.list_public');
+        return view('pages.internal.user_management.list_public', [
+            'countryNo' => $countryNo
+        ]);
     }
 
 

@@ -23,7 +23,11 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '/'], ['label' => 'Order List', 'url' => '/order/list'], ['label' => 'Order Details', 'url' => '#']]" title="Order Details">
+    <x-breadcrumb :items="[
+        ['label' => 'Home', 'url' => '/'],
+        ['label' => 'Order List', 'url' => '/order/list'],
+        ['label' => 'Order Details', 'url' => '#'],
+    ]" title="Order Details">
 
     </x-breadcrumb>
 @endsection
@@ -48,7 +52,8 @@
                                     <tbody>
                                         <tr>
                                             <th class="fs-14 p-2" style="width: 160px;">Order Number</th>
-                                            <td class="fs-14 p-2 text-muted text-wrap">{{ $order->order_number ?? '-' }}</td>
+                                            <td class="fs-14 p-2 text-muted text-wrap">{{ $order->order_number ?? '-' }}
+                                            </td>
                                         </tr>
                                         <tr>
                                             <th class="fs-14 p-2">Order Status</th>
@@ -56,7 +61,7 @@
                                         </tr>
                                         <tr>
                                             <th class="fs-14 p-2">Application ID</th>
-                                            <td class="fs-14 p-2 text-muted text-wrap">
+                                            <td class="fs-14 p-2 text-muted text-wrap" style = "max-width: 100px;">
                                                 {{ $order->order_details['application']['application_id'] ?? '-' }}</td>
                                         </tr>
                                         <tr>
@@ -87,7 +92,8 @@
 
                                     <tr>
                                         <th class="fs-14 p-2" style="width: 160px;">FPX Seller Reference</th>
-                                        <td class="fs-14 p-2 text-muted text-wrap">{{ $order->fpx_seller_reference ?? '-' }}</td>
+                                        <td class="fs-14 p-2 text-muted text-wrap">{{ $order->fpx_seller_reference ?? '-' }}
+                                        </td>
                                     </tr>
 
                                     <tr>
@@ -114,18 +120,23 @@
 
                                     <tr>
                                         <th class="fs-14 p-2" style="width: 160px;">Transaction Data</th>
-                                        <td class="fs-14 p-2 text-muted text-wrap">{{ $order->transaction_data ?? '-' }}</td>
+                                        <td class="fs-14 p-2 text-muted text-wrap">{{ $order->transaction_data ?? '-' }}
+                                        </td>
                                     </tr>
 
                                     <tr>
                                         <th class="fs-14 p-2" style="width: 160px;">Transaction Status</th>
-                                        <td class="fs-14 p-2 text-muted text-wrap">{{ $order->transaction_status ?? '-' }}</td>
+                                        <td class="fs-14 p-2 text-muted text-wrap">{{ $order->transaction_status ?? '-' }}
+                                        </td>
                                     </tr>
 
-                                    <tr>
-                                        <th class="fs-14 p-2" style="width: 160px;">Kod Transaksi</th>
-                                        <td class="fs-14 p-2 text-muted text-wrap">{{ $order->kod_transaksi ?? '-' }}</td>
-                                    </tr>
+                                    @if (authUser()['type'] == 'internal')
+                                        <tr>
+                                            <th class="fs-14 p-2" style="width: 160px;">Kod Transaksi</th>
+                                            <td class="fs-14 p-2 text-muted text-wrap">{{ $order->kod_transaksi ?? '-' }}
+                                            </td>
+                                        </tr>
+                                    @endif
                                 </tbody>
                             </table>
 
@@ -139,13 +150,15 @@
                                 <tbody>
                                     <tr>
                                         <th class="fs-14 p-2" style="width: 160px;">Application ID</th>
-                                        <td class="fs-14 p-2 text-muted text-wrap">{{ $application->application_id ?? '-' }}
+                                        <td class="fs-14 p-2 text-muted text-wrap">
+                                            {{ $application->application_id ?? '-' }}
                                         </td>
 
                                     </tr>
                                     <tr>
                                         <th class="fs-14 p-2" style="width: 160px;">Exporter Name</th>
-                                        <td class="fs-14 p-2 text-muted text-wrap">{{ $application->exporter->name ?? '-' }}
+                                        <td class="fs-14 p-2 text-muted text-wrap">
+                                            {{ $application->exporter->name ?? '-' }}
                                         </td>
 
                                     </tr>
@@ -202,49 +215,29 @@
                         <div class="row">
                             <h6 class="mt-4 fw-semibold">Permit Details</h6>
 
-                            @foreach ($permits as $permit)
-                                <div class="col-12 col-md-6">
-                                    <table class="table table-sm table-bordered mt-2 mt-md-4">
-                                        <tbody>
 
-                                            <tr>
-                                                <th class="fs-14 p-2" style="width: 160px;">Permit Number</th>
-                                                <td class="fs-14 p-2 text-muted text-wrap">
-                                                    {{ $permit->permit_number }}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <th class="fs-14 p-2" style="width: 160px;">Item Name</th>
-                                                <td class="fs-14 p-2 text-muted text-wrap">
-                                                    {{-- @dd($permit['consignment_detail']) --}}
-                                                    {{ $permit['consignment_detail']['item_name'] }}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <th class="fs-14 p-2" style="width: 160px;">Value</th>
-                                                <td class="fs-14 p-2 text-muted text-wrap">
-                                                    RM {{ $permit['consignment_detail']['value'] }}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <th class="fs-14 p-2" style="width: 160px;">Quantity</th>
-                                                <td class="fs-14 p-2 text-muted text-wrap">
-                                                    {{$permit['consignment_detail']['quantity'] }} {{ $permit['consignment_detail']['measure'] }}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <th class="fs-14 p-2" style="width: 160px;">Purpose</th>
-                                                <td class="fs-14 p-2 text-muted text-wrap">
-                                                    {{ $permit['consignment_detail']['purpose'] }} 
-                                                </td>
-                                            </tr>
+                            <div class="col-12">
+                                <table class="table table-sm table-bordered mt-2 mt-md-4">
+                                    <thead>
+                                        <tr>
+                                            <td>Permit Number</td>
+                                            <td>Item Name</td>
+                                            <td>View More</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
 
+                                        @foreach ($permits as $permit)
+                                            <tr>
+                                            <td class="text-muted">{{ $permit->permit_number }}</td>
+                                            <td class = "text-muted">{{ $permit->consignment_detail['item_name'] }}</td>
+                                            <td> <button class="btn-sm btn btn-primary btn-wave" data-id = "{{  $permit->id }}" data-type = "{{ $application->application_type }}">View More</button>  </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
 
-
-                                        </tbody>
-                                    </table>
-                                </div>
-                            @endforeach
 
                         </div>
                     </div>

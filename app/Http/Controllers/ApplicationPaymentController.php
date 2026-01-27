@@ -30,7 +30,7 @@ class ApplicationPaymentController extends Controller
             $query->where('public_user_uuid', $userUuid);
         }
 
-        return DataTables::eloquent($query)
+        $dataTable =  DataTables::eloquent($query)
             ->addIndexColumn()
 
             ->editColumn('status', function ($row) {
@@ -43,9 +43,9 @@ class ApplicationPaymentController extends Controller
                 };
             })
 
-            ->editColumn('kod_transaksi', function ($row) {
-                return $row->kod_transaksi ? '<span class="text-wrap">' . $row->kod_transaksi . '</span>' : '-';
-            })
+            // ->editColumn('kod_transaksi', function ($row) {
+            //     return $row->kod_transaksi ? '<span class="text-wrap">' . $row->kod_transaksi . '</span>' : '-';
+            // })
 
             ->editColumn('payment_amount', function ($row) {
                 return $row->payment_amount ? 'RM ' . number_format($row->payment_amount, 2) : '-';
@@ -74,9 +74,17 @@ class ApplicationPaymentController extends Controller
                 }
 
                 return $view . ' ' . $delete;
-            })
+            });
 
-            ->rawColumns(['status', 'kod_transaksi', 'payment_amount', 'action'])
+
+            if(authUser()['type'] == 'internal') {
+                $dataTable->editColumn('kod_transaksi', function ($row) {
+                    return $row->kod_transaksi ? '<span class="text-wrap">' . $row->kod_transaksi . '</span>' : '-';
+                });
+    
+            }
+
+            return $dataTable->rawColumns(['status', 'kod_transaksi', 'payment_amount', 'action'])
             ->make(true);
     }
 

@@ -12,7 +12,7 @@
     <div class="p-3">
         <p class="mb-1 fw-semibold text-muted op-5 fs-20">01</p>
         <div class="fs-15 fw-semibold d-sm-flex d-block align-items-center justify-content-between mb-3">
-            <div>Choose your account type</div>
+            <div>Choose your account type <span class="text-primary2">*</span></div>
         </div>
 
         <div class="row">

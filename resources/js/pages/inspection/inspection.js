@@ -4,7 +4,7 @@ window.$ = window.jQuery = $;
 import Swal from "sweetalert2";
 import { getAuthUser } from "../../app";
 import "dropzone/dist/dropzone.css";
-import { render } from "react-dom/cjs/react-dom.production.min";
+// import { render } from "react-dom/cjs/react-dom.production.min";
 
 // Import Select2 module
 import select2 from "select2";
@@ -42,7 +42,7 @@ async function selfImport() {
 // ------------------------- Exporter List -------------------------
 function fetchExporterList() {
     const $select = $("#selectexp");
-    const url = $select.data("route");
+    const url = '/public/get_exporters';
 
     return $.ajax({
         url,

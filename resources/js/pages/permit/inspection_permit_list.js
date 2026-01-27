@@ -1,7 +1,7 @@
 
 import Swal from "sweetalert2";
 
-console.log("permit list");
+console.log("inspection permit list");
 
 let orderListTable;
 

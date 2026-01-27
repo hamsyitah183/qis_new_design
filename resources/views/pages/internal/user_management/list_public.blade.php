@@ -168,8 +168,23 @@
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">Phone Number</label>
-                    <input type="text" class="form-control" id="phone_number" name="phone_number" required>
+
+                    <label class="form-label text-default phoneLabel">Phone Number  <span class="text-primary2">*</span></label>
+                    <div class="d-flex justify-content-between">
+                        <div class="">
+                            <select name="phoneNumber" id="phone_country" class = "form-control">
+                                @foreach ($countryNo as $item)
+                                    <option value="{{  $item->start_no  }}">{{ $item->country }} ({{ $item->start_no }})</option>
+                                @endforeach
+                            </select>
+                        </div>
+    
+                        <div class="w-100">
+    
+                            <input type="text" name="phone_number" class="form-control" id="phone_number">
+                        </div>
+                    </div>
+    
                 </div>
 
                 <div class="col-md-6">

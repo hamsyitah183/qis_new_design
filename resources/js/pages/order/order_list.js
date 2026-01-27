@@ -5,6 +5,8 @@ console.log("order list");
 
 let orderListTable;
 
+const isInternal = window.AUTH_TYPE === "internal";
+
 async function data_table_init() {
     const [{ default: DataTable }] = await Promise.all([
         import("datatables.net-bs5"),
@@ -18,29 +20,19 @@ async function data_table_init() {
         ajax: "/order/list/data",
 
         columns: [
-            {
-                data: "DT_RowIndex",
-                orderable: false,
-                searchable: false,
-            },
+          
             { data: "order_number" },
             { data: "status" },
             { data: "application_type" },
-            { data: "kod_transaksi" },
+
+            ...(isInternal ? [{ data: "kod_transaksi" }] : []),
+
+            // { data: "kod_transaksi" },
             { data: "payment_amount" },
             { data: "action", orderable: false, searchable: false },
         ],
 
-        columnDefs: [
-            { width: "50px", targets: 0 },
-            { width: "150px", targets: 1 },
-            { width: "150px", targets: 2 },
-            { width: "150px", targets: 3 },
-            { width: "180px", targets: 4 },
-            { width: "120px", targets: 5 },
-            { width: "120px", targets: 6 },
-        ],
-
+       
         responsive: true,
         autoWidth: false,
         pageLength: 10,
