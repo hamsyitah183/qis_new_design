@@ -18,6 +18,7 @@ use App\Models\IpConsignmentAttachment;
 use App\Models\IpConsignmentPermit;
 use App\Models\PublicCode;
 use App\Models\PublicUser;
+use App\Models\Exporter;
 use App\Models\TempAttachment;
 use App\Notifications\ApplicationNotification;
 use App\Services\ApplicationActivityLogger;
@@ -174,6 +175,16 @@ class PermitApplicationController extends Controller
             ->get();
 
         return response()->json($exporters);
+    }
+
+    public function showExportersPage()
+    {
+        $exporters = Exporter::with('countryInfo')
+            ->where('registered_by', auth('public')->id())
+            ->orderBy('name', 'asc')
+            ->get();
+
+        return view('pages.public.exporters.index', compact('exporters'));
     }
 
     public function getEntryPoint(Request $request)
