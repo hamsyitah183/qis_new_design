@@ -4,7 +4,7 @@
 
 <div class="row">
     <div class="col-xl-12 d-flex justify-content-between align-items-center mb-4">
-        <h4 class="page-title fw-semibold fs-18 mb-0">Welcome {{ $user->fullname }}</h4>
+        <h4 class="page-title fw-semibold fs-18 mb-0"></h4>
         <a href="{{ route('profile') }}" class="btn btn-primary btn-wave">
             <i class="ti ti-user me-1"></i> My Profile
         </a>
@@ -18,7 +18,7 @@
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="me-3">
-                        <span class="avatar avatar-lg bg-primary text-white">
+                        <span class="avatar avatar-lg bg-primary1 text-white">
                             <i class="ti ti-file-invoice fs-24"></i>
                         </span>
                     </div>
@@ -35,12 +35,12 @@
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="me-3">
-                        <span class="avatar avatar-lg bg-info text-white">
+                        <span class="avatar avatar-lg bg-primary2 text-white">
                             <i class="ti ti-search fs-24"></i>
                         </span>
                     </div>
                     <div>
-                        <p class="text-muted mb-1 fs-13">Inspections</p>
+                        <p class="text-muted mb-1 fs-13">Inspections Certificate</p>
                         <h3 class="fw-semibold mb-0">{{ $pendingInspections ?? 0 }}</h3>
                     </div>
                 </div>
@@ -52,12 +52,12 @@
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="me-3">
-                        <span class="avatar avatar-lg bg-warning text-white">
+                        <span class="avatar avatar-lg bg-secondary text-white">
                             <i class="ti ti-box fs-24"></i>
                         </span>
                     </div>
                     <div>
-                        <p class="text-muted mb-1 fs-13">Consignments</p>
+                        <p class="text-muted mb-1 fs-13">Consignments Certificate</p>
                         <h3 class="fw-semibold mb-0">{{ $pendingConsignments ?? 0 }}</h3>
                     </div>
                 </div>
@@ -113,9 +113,7 @@
     {{-- Daily Application Volume (Line Chart) --}}
     <div class="col-xl-12">
         <div class="card custom-card">
-            <div class="card-header">
-                <div class="card-title">Daily Application Volume</div>
-            </div>
+          
             <div class="card-body">
                 {!! $clerkVolumeChart->container() !!}
             </div>
@@ -150,9 +148,9 @@
                                     <td>
                                         @php
                                             $typeBadgeClass = match($app->type) {
-                                                'Import Permit' => 'bg-primary',
-                                                'Inspection' => 'bg-info',
-                                                'Consignment' => 'bg-warning',
+                                                'Import Permit' => 'bg-primary1',
+                                                'Inspection' => 'bg-primary2',
+                                                'Consignment' => 'bg-secondary',
                                                 default => 'bg-secondary'
                                             };
                                         @endphp

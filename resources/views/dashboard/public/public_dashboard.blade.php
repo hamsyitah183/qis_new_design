@@ -5,20 +5,15 @@
 @endphp
 
 @section('breadcrumb')
-    <x-breadcrumb 
-        :items="[
-            ['label' => 'Home', 'url' => route('public.dashboard')],
-            ['label' => 'Dashboard', 'url' => '#'],
-        ]" 
-        title="Public Dashboard"
-    >
-    </x-breadcrumb>
+<x-breadcrumb :items="[['label' => ' ', 'url' => '/']]" title="Welcome  {{ authUser()['user']->fullname }}">
+
+</x-breadcrumb>
 @endsection
 
 @section('content')
 <div class="row">
     <div class="col-xl-12 d-flex justify-content-between align-items-center mb-4">
-        <h4 class="page-title fw-semibold fs-18 mb-0">Welcome {{ $user->fullname }}</h4>
+        <h4 class="page-title fw-semibold fs-18 mb-0"></h4>
         <a href="{{ route('profile') }}" class="btn btn-primary btn-wave">
             <i class="ti ti-user me-1"></i> My Profile
         </a>

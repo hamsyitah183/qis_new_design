@@ -1,7 +1,7 @@
 {{-- finance and application data --}}
 @include('dashboard.internal.components.finance_application_data')
 
-
+@include('dashboard.internal.components.daily_application')
 
 {{-- public user chart and latest log activity --}}
 <div class="row align-items-stretch mb-2">

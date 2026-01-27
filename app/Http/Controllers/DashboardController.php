@@ -121,7 +121,8 @@ class DashboardController extends Controller
             'userLineChart' => $lineChart->build(),
             'orderChart' => $orderChart->build(),
             'paymentChart' => $paymentChart->build(),
-            'applicationChart' => $applicationChart->build()
+            'applicationChart' => $applicationChart->build(),
+            'clerkVolumeChart' => $clerkVolumeChart->build()
         ];
 
         if ($role === 'clerk') {
