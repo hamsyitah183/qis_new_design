@@ -38,11 +38,21 @@ class InspectionController extends Controller
     private function badge($color, $label, $time, $user, $id)
     {
         return '
-        <span class="badge bg-' . $color . ' fs-12 p-1 activityLog"  data-log = ' . $id . '
-         >' . $label . '</span>
+        <span class="badge bg-' .
+            $color .
+            ' fs-12 p-1 activityLog"  data-log = ' .
+            $id .
+            '
+         >' .
+            $label .
+            '</span>
         <br class = "mt-1">
-        <small class="text-muted">at ' . $time . '</small><br>
-        <small class="text-muted">by ' . e($user) . '</small>
+        <small class="text-muted">at ' .
+            $time .
+            '</small><br>
+        <small class="text-muted">by ' .
+            e($user) .
+            '</small>
     ';
     }
 
@@ -56,21 +66,12 @@ class InspectionController extends Controller
         $userUuid = authUser()['user']->uuid;
         $type = authUser()['type'];
 
-        $query = InspectionApplication::with([
-            'user',
-            'importer',
-            'exporter',
-            'entryPoint.districtCode',
-            'latestLog.causer',
-            'inspectionItems',
-        ]);
-
+        $query = InspectionApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode', 'latestLog.causer', 'inspectionItems']);
 
         // Filter for public users
         if ($type === 'public') {
             $query->where(function ($q) use ($userUuid) {
-                $q->where('user_id', $userUuid)
-                    ->orWhere('importer_id', $userUuid);
+                $q->where('user_id', $userUuid)->orWhere('importer_id', $userUuid);
             });
         }
 
@@ -79,50 +80,35 @@ class InspectionController extends Controller
             ->addColumn('importer', fn($row) => $row->importer->fullname ?? '-')
             ->addColumn('exporter', fn($row) => $row->exporter->name ?? '-')
             ->addColumn('status', function ($row) {
-
                 $status = strtolower($row->status ?? 'pending');
 
                 $latestLog = $row->latestLog;
                 $id = $row->application_id;
 
-                $latestTime = $latestLog?->updated_at
-                        ?->format('d M Y, h:i A') ?? '-';
+                $latestTime = $latestLog?->updated_at?->format('d M Y, h:i A') ?? '-';
 
                 $causerName = $latestLog?->causer?->fullname ?? '-';
 
                 return match (true) {
+                    str_contains($status, 'pending') => $this->badge('warning', 'Pending', $latestTime, $causerName, $id),
 
-                    str_contains($status, 'pending') =>
-                    $this->badge('warning', 'Pending', $latestTime, $causerName, $id),
+                    str_contains($status, 'rejected') => $this->badge('danger', 'Rejected', $latestTime, $causerName, $id),
 
-                    str_contains($status, 'rejected') =>
-                    $this->badge('danger', 'Rejected', $latestTime, $causerName, $id),
+                    str_contains($status, 'not approved') => $this->badge('danger', 'Not Approved', $latestTime, $causerName, $id),
 
-                    str_contains($status, 'not approved') =>
-                    $this->badge('danger', 'Not Approved', $latestTime, $causerName, $id),
+                    str_contains($status, 'accepted') => $this->badge('success', 'Accepted', $latestTime, $causerName, $id),
 
-                    str_contains($status, 'accepted') =>
-                    $this->badge('success', 'Accepted', $latestTime, $causerName, $id),
+                    str_contains($status, 'officer verification completed') => $this->badge('success', 'Officer Verification Completed', $latestTime, $causerName, $id),
 
-                    str_contains($status, 'officer verification completed') =>
-                    $this->badge('success', 'Officer Verification Completed', $latestTime, $causerName, $id),
+                    str_contains($status, 'clerk verified') => $this->badge('info', 'Clerk Verified', $latestTime, $causerName, $id),
 
-                    str_contains($status, 'clerk verified') =>
-                    $this->badge('info', 'Clerk Verified', $latestTime, $causerName, $id),
+                    str_contains($status, 'clerk review in-progress') => '<span class="badge bg-secondary fs-12 p-1 activityLog" data-log="' . $id . '">Clerk review in-progress</span>',
 
-                    str_contains($status, 'clerk review in-progress') =>
-                    '<span class="badge bg-secondary fs-12 p-1 activityLog" data-log="' . $id . '">Clerk review in-progress</span>',
+                    str_contains($status, 'draft') => '<span class="badge bg-secondary fs-12 p-1 activityLog" data-log="' . $id . '">Draft</span>',
 
-                    str_contains($status, 'draft') =>
-                    '<span class="badge bg-secondary fs-12 p-1 activityLog" data-log="' . $id . '">Draft</span>',
-
-                    default =>
-                    '<span class="badge bg-secondary fs-12 p-1  activityLog"  data-log = "' . $id . '">'
-                    . ucfirst($status) .
-                    '</span>',
+                    default => '<span class="badge bg-secondary fs-12 p-1  activityLog"  data-log = "' . $id . '">' . ucfirst($status) . '</span>',
                 };
             })
-
 
             ->addColumn('inspection_status', function ($row) {
                 // Map statuses to colors
@@ -130,16 +116,14 @@ class InspectionController extends Controller
                     'processing' => 'bg-info', // blue
     
                     'pending for payment' => 'bg-warning', // green
-                    'rejected' => 'bg-danger',  // red
+                    'rejected' => 'bg-danger', // red
                     // 'completed'  => 'bg-success', // green
                     'paid' => 'bg-success', // green
     
                 ];
 
                 // Get all permit statuses for this row, lowercase
-                $permit_statuses = $row->inspectionItems->pluck('status')
-                    ->map(fn($status) => strtolower($status))
-                    ->toArray();
+                $permit_statuses = $row->inspectionItems->pluck('status')->map(fn($status) => strtolower($status))->toArray();
 
                 // Count how many of each status
                 $statusCounts = [
@@ -147,7 +131,6 @@ class InspectionController extends Controller
                     'rejected' => 0,
                     'pending for payment' => 0,
                     'paid' => 0,
-
                 ];
 
                 foreach ($permit_statuses as $status) {
@@ -165,30 +148,41 @@ class InspectionController extends Controller
                 $boxesHtml = '';
                 foreach ($statusColors as $status => $color) {
                     $count = $statusCounts[$status] ?? 0;
-                    $boxesHtml .= '<div class="badge ' . $color . ' text-white text-center"  data-bs-toggle="tooltip"
-                            data-bs-placement="top" title="' . $status . '"
+                    $boxesHtml .=
+                        '<div class="badge ' .
+                        $color .
+                        ' text-white text-center"  data-bs-toggle="tooltip"
+                            data-bs-placement="top" title="' .
+                        $status .
+                        '"
                            style="height:20px; width:20px; display:inline-flex; align-items:center; justify-content:center; margin-right:5px;">
-                           ' . $count . '
+                           ' .
+                        $count .
+                        '
                        </div>';
                 }
 
                 return $boxesHtml;
             })
 
-
-
             ->addColumn('action', function ($row) {
                 $url = route('inspection.view_details', ['id' => $row->application_id]);
 
-                $view = '<a class="btn btn-sm btn-primary viewApplication" href="' . $url . '">
+                $view =
+                    '<a class="btn btn-sm btn-primary viewApplication" href="' .
+                    $url .
+                    '">
                         <i class="ti ti-eye"></i>
                      </a>';
 
                 $delete = '';
 
                 if (authUser()['type'] === 'internal') {
-                    $delete = '<button class="btn btn-sm btn-danger deleteApplication"
-                            data-id="' . $row->application_id . '">
+                    $delete =
+                        '<button class="btn btn-sm btn-danger deleteApplication"
+                            data-id="' .
+                        $row->application_id .
+                        '">
                             <i class="ti ti-trash"></i>
                            </button>';
                 }
@@ -196,14 +190,11 @@ class InspectionController extends Controller
                 return $view . ' ' . $delete;
             });
 
-
         if ($type === 'internal') {
             $datatable->addColumn('submitted_by', fn($row) => $row->user->fullname ?? '-');
         }
 
-        return $datatable
-            ->rawColumns(['status', 'action', 'inspection_status'])
-            ->make(true);
+        return $datatable->rawColumns(['status', 'action', 'inspection_status'])->make(true);
     }
 
     public function getApplicationDetails($id)
@@ -294,23 +285,35 @@ class InspectionController extends Controller
             if ($isDraft) {
                 $status = 'Draft';
             } else {
-                $status = 'Clerk review in-progress';
+                if($permit['applCate'] == 0 ) {
+                    $status = 'Clerk review in-progress';
+                }
+               
+                elseif($permit['applCate'] == 1) {
+                    $status = 'wait for company approval';
+                }
+                
+            }
+
+            $importer_verify = null;
+            if (!$isDraft && isset($permit['applCate'])) {
+                $importer_verify = $permit['applCate'] == 0 ? 'Clerk Review In-Progress' : 'wait for company approval';
             }
 
             if ($applicationUuid) {
                 $application = InspectionApplication::where('application_id', $applicationUuid)->firstOrFail();
                 $category = $permit['applCate'] ?? 0;
-                $importerVerify = 'pending';
+                // $importerVerify = 'pending';
                 $verifyDate = null;
 
-                if ($status !== 'Draft') {
-                    if ($category == 0) {
-                        $importerVerify = 'Verified';
-                        $verifyDate = now();
-                    } else {
-                        $importerVerify = 'Wait for company approval';
-                    }
-                }
+                // if ($status !== 'Draft') {
+                //     if ($category == 0) {
+                //         $importerVerify = 'Verified';
+                //         $verifyDate = now();
+                //     } else {
+                //         $importerVerify = 'Wait for company approval';
+                //     }
+                // }
 
                 $application->update([
                     'eta' => $permit['eta'] ?? null,
@@ -322,7 +325,7 @@ class InspectionController extends Controller
                     'importer_id' => $importer['uuid'] ?? null,
                     'importer_detail' => $importer ?? [],
                     'status' => $status,
-                    'importer_verify' => $importerVerify,
+                    'importer_verify' => $importer_verify,
                     'date_importer_verify' => $verifyDate,
                 ]);
 
@@ -334,10 +337,9 @@ class InspectionController extends Controller
                     ->causedBy(authUser()['user'])
                     ->performedOn($application)
                     ->withProperties([
-                        'application' => $application
+                        'application' => $application,
                     ])
                     ->log(authUser()['user']['fullname'] . ($isDraft ? ' has updated a draft inspection (ID: ' : ' has updated an inspection application (ID: ') . $application->application_id . ')');
-
             } else {
 
                 $category = $permit['applCate'] ?? 0;
@@ -416,17 +418,9 @@ class InspectionController extends Controller
 
             // inspection activity log
             if ($isDraft) {
-                $application->logActivity(
-                    action: $isNewApplication ? 'Draft Created' : 'Draft Updated',
-                    remark: $isNewApplication ? 'Inspection application saved as draft' : 'Inspection application draft updated',
-                    status: 'Draft'
-                );
+                $application->logActivity(action: $isNewApplication ? 'Draft Created' : 'Draft Updated', remark: $isNewApplication ? 'Inspection application saved as draft' : 'Inspection application draft updated', status: 'Draft');
             } else {
-                $application->logActivity(
-                    action: 'Submitted',
-                    remark: 'Inspection application submitted',
-                    status: 'Clerk review in-progress'
-                );
+                $application->logActivity(action: 'Submitted', remark: 'Inspection application submitted', status: 'Clerk review in-progress');
             }
 
             // Global activity log for inspection_activity
@@ -459,14 +453,9 @@ class InspectionController extends Controller
             $notificationUrl = route('public.viewInspectionApplication', ['id' => $application->application_id]);
 
             $internalUsers = InternalUser::role(['admin', 'clerk'])->get();
-            $internalMsg = $isDraft
-                ? ($isNewApplication ? 'New Inspection Certificate draft created' : 'Inspection Certificate draft updated')
-                : ($isNewApplication ? 'New Inspection Certificate application submitted' : 'Inspection Certificate application updated');
+            $internalMsg = $isDraft ? ($isNewApplication ? 'New Inspection Certificate draft created' : 'Inspection Certificate draft updated') : ($isNewApplication ? 'New Inspection Certificate application submitted' : 'Inspection Certificate application updated');
 
-            Notification::send(
-                $internalUsers,
-                new ApplicationNotification($internalMsg, Auth::user()->fullname, $notificationUrl)
-            );
+            Notification::send($internalUsers, new ApplicationNotification($internalMsg, Auth::user()->fullname, $notificationUrl));
 
             try {
                 event(new InternalUserAdminEvent($internalMsg . ' by ' . (Auth::user()->fullname ?? 'Unknown User')));
@@ -477,9 +466,7 @@ class InspectionController extends Controller
 
             $applicant = auth()->guard('public')->user();
             if ($applicant) {
-                $applicantMsg = $isDraft
-                    ? 'Your Inspection Certificate Application with id ' . $application->application_id . ' is saved as draft'
-                    : 'Your Inspection Certificate Application with id ' . $application->application_id . ' is submitted';
+                $applicantMsg = $isDraft ? 'Your Inspection Certificate Application with id ' . $application->application_id . ' is saved as draft' : 'Your Inspection Certificate Application with id ' . $application->application_id . ' is submitted';
 
                 $applicant->notify(new ApplicationNotification($applicantMsg, 'QIS', $notificationUrl));
 
@@ -494,23 +481,16 @@ class InspectionController extends Controller
             $notificationUrl = route('public.viewInspectionApplication', ['id' => $application->application_id]);
 
             $internalUsers = InternalUser::role(['admin', 'clerk'])->get();
-            $internalMsg = $isDraft
-                ? ($isNewApplication ? 'New Inspection Certificate draft created' : 'Inspection Certificate draft updated')
-                : ($isNewApplication ? 'New Inspection Certificate application submitted' : 'Inspection Certificate application updated');
+            $internalMsg = $isDraft ? ($isNewApplication ? 'New Inspection Certificate draft created' : 'Inspection Certificate draft updated') : ($isNewApplication ? 'New Inspection Certificate application submitted' : 'Inspection Certificate application updated');
 
-            Notification::send(
-                $internalUsers,
-                new ApplicationNotification($internalMsg, Auth::user()->fullname, $notificationUrl)
-            );
+            Notification::send($internalUsers, new ApplicationNotification($internalMsg, Auth::user()->fullname, $notificationUrl));
 
             event(new InternalUserAdminEvent($internalMsg . ' by ' . (Auth::user()->fullname ?? 'Unknown User')));
             event(new InternalUserClerkEvent($internalMsg . ' by ' . (Auth::user()->fullname ?? 'Unknown User')));
 
             $applicant = PublicUser::where('uuid', $application->user_id)->first();
             if ($applicant) {
-                $applicantMsg = $isDraft
-                    ? 'Your Inspection Certificate Application with id ' . $application->application_id . ' is saved as draft'
-                    : 'Your Inspection Certificate Application with id ' . $application->application_id . ' is submitted';
+                $applicantMsg = $isDraft ? 'Your Inspection Certificate Application with id ' . $application->application_id . ' is saved as draft' : 'Your Inspection Certificate Application with id ' . $application->application_id . ' is submitted';
 
                 $applicant->notify(new ApplicationNotification($applicantMsg, 'QIS', $notificationUrl));
                 event(new PublicUserEvent($applicantMsg, $applicant->uuid));
@@ -540,7 +520,6 @@ class InspectionController extends Controller
         }
     }
 
-
     /**
      * Verify inspection application permit (Clerk Review In-Progress / Clerk Verified / Officer Verification Completed) for internal users.
      */
@@ -548,6 +527,7 @@ class InspectionController extends Controller
     {
         $application = InspectionApplication::where('application_id', $id)->firstOrFail();
 
+        // dd($request->all());
         // Centralized messages per status
         $statusMessages = [
             'Clerk review in-progress' => [
@@ -610,7 +590,7 @@ class InspectionController extends Controller
             'Clerk Verified' => authUser()['user']->fullname . ' verified inspection certificate application ' . $application->application_id,
             'Rejected', 'Clerk Rejected' => authUser()['user']->fullname . ' rejected inspection certificate application ' . $application->application_id,
             'Clerk review in-progress' => authUser()['user']->fullname . ' moved inspection certificate application ' . $application->application_id . ' to clerk review',
-            default => authUser()['user']->fullname . ' updated inspection certificate application ' . $application->application_id . ' status to ' . $status
+            default => authUser()['user']->fullname . ' updated inspection certificate application ' . $application->application_id . ' status to ' . $status,
         };
 
         activity()
@@ -648,11 +628,7 @@ class InspectionController extends Controller
         }
 
         $internalUsers = InternalUser::role(['admin', 'clerk'])->get();
-        Notification::send($internalUsers, new ApplicationNotification(
-            $messages['notify'],
-            authUser()['user']->fullname,
-            $notificationUrl
-        ));
+        Notification::send($internalUsers, new ApplicationNotification($messages['notify'], authUser()['user']->fullname, $notificationUrl));
 
         /**
          * =====================
@@ -662,26 +638,15 @@ class InspectionController extends Controller
         $publicUser = PublicUser::where('uuid', $application->user_id)->first();
 
         try {
-            event(new PublicUserEvent(
-                $messages['public'],
-                $publicUser->uuid
-            ));
+            event(new PublicUserEvent($messages['public'], $publicUser->uuid));
         } catch (\Exception $e) {
             Log::warning('Pusher connection failed but continuing public notification: ' . $e->getMessage());
         }
 
-        Notification::send($publicUser, new ApplicationNotification(
-            $messages['public'],
-            authUser()['user']->fullname,
-            $notificationUrl
-        ));
+        Notification::send($publicUser, new ApplicationNotification($messages['public'], authUser()['user']->fullname, $notificationUrl));
 
         // activity log
-        $application->logActivity(
-            action: $status,
-            remark: "Inspection application {$status} by internal user",
-            status: $status
-        );
+        $application->logActivity(action: $status, remark: "Inspection application {$status} by internal user", status: $status);
 
         // notifications
         $notificationUrl = route('public.viewInspectionApplication', ['id' => $application->application_id]);
@@ -714,7 +679,7 @@ class InspectionController extends Controller
 
         return response()->json([
             'message' => 'Inspection application status updated successfully.',
-            'status' => $status
+            'status' => $status,
         ]);
     }
 
@@ -774,15 +739,11 @@ class InspectionController extends Controller
                 ->causedBy(authUser()['user'])
                 ->performedOn(authUser()['user'])
                 ->withProperties([
-                    'application_id' => $application->application_id
+                    'application_id' => $application->application_id,
                 ])
                 ->log(authUser()['user']['fullname'] . ' has deleted an inspection application (ID: ' . $application->application_id . ')');
             // activity log and notifications
-            $application->logActivity(
-                action: 'Deleted',
-                remark: 'Inspection application deleted',
-                status: 'Deleted'
-            );
+            $application->logActivity(action: 'Deleted', remark: 'Inspection application deleted', status: 'Deleted');
 
             // Global activity log for inspection_activity
             activity()
@@ -805,10 +766,7 @@ class InspectionController extends Controller
 
             $notificationUrl = route('public.showallinspectionlist');
             $internalUsers = InternalUser::role(['admin', 'clerk'])->get();
-            Notification::send(
-                $internalUsers,
-                new ApplicationNotification("Inspection application {$applicationId} has been deleted", authUser()['user']->fullname, $notificationUrl)
-            );
+            Notification::send($internalUsers, new ApplicationNotification("Inspection application {$applicationId} has been deleted", authUser()['user']->fullname, $notificationUrl));
 
             $applicant = PublicUser::where('uuid', $applicantUuid)->first();
             if ($applicant) {
@@ -856,10 +814,13 @@ class InspectionController extends Controller
         // Check if user has proper role (Officer or Admin)
         $user = authUser()['user'];
         if (!$user->hasAnyRole(['officer', 'admin'])) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Unauthorized: Only Officers and Administrators can approve inspection items.',
-            ], 403);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => 'Unauthorized: Only Officers and Administrators can approve inspection items.',
+                ],
+                403,
+            );
         }
 
         $inspectionItem = \App\Models\InspectionItem::findOrFail($id);
@@ -867,13 +828,17 @@ class InspectionController extends Controller
         // Check if application is in correct status for item-level actions
         $application = $inspectionItem->application;
         if (!str_contains(strtolower($application->status), 'clerk verified')) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Items can only be approved after Clerk verification.',
-            ], 403);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => 'Items can only be approved after Clerk verification.',
+                ],
+                403,
+            );
         }
 
         // Update item status
+        $inspectionItem->permit_number = 'IP' . now()->format('YmdHis');
         $inspectionItem->status = 'pending for payment';
         $inspectionItem->save();
 
@@ -960,14 +925,17 @@ class InspectionController extends Controller
         // Check if user has proper role (Officer or Admin)
         $user = authUser()['user'];
         if (!$user->hasAnyRole(['officer', 'admin'])) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Unauthorized: Only Officers and Administrators can reject inspection items.',
-            ], 403);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => 'Unauthorized: Only Officers and Administrators can reject inspection items.',
+                ],
+                403,
+            );
         }
 
         $request->validate([
-            'reason' => 'required|string|min:5'
+            'reason' => 'required|string|min:5',
         ]);
 
         $inspectionItem = \App\Models\InspectionItem::findOrFail($id);
@@ -975,10 +943,13 @@ class InspectionController extends Controller
         // Check if application is in correct status for item-level actions
         $application = $inspectionItem->application;
         if (!str_contains(strtolower($application->status), 'clerk verified')) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Items can only be rejected after Clerk verification.',
-            ], 403);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => 'Items can only be rejected after Clerk verification.',
+                ],
+                403,
+            );
         }
 
         // Update item status
@@ -1067,7 +1038,20 @@ class InspectionController extends Controller
 
     public function reapply($id, Request $request)
     {
-        $permit = InspectionItem::with(['application'])->findOrFail($id);
+        $permit = InspectionItem::with(['application', 'attachments'])->findOrFail($id);
+
+        foreach ($permit->attachments as $attachment) {
+            // Remove file from storage
+            if ($attachment->file_path) {
+                // file_path = "/storage/import/xxx.jpg"
+                $storagePath = str_replace('/storage/', '', $attachment->file_path);
+
+                Storage::disk('public')->delete($storagePath);
+            }
+
+            // Remove DB record
+            $attachment->delete();
+        }
 
         // 1️⃣ Get item data
         $item = $request->items[0] ?? null;

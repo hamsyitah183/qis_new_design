@@ -179,7 +179,7 @@ class ConsignmentController extends Controller
 
         if ($type === 'public') {
             // Check if user is either the submitter or the importer
-            if ($application->user_id !== $user->uuid && $application->importer_id !== $user->uuid) {
+            if ($application->user_id !== $user->uuid && $application->exporter_id !== $user->uuid) {
                 return response()->json(
                     [
                         'message' => 'You do not have authority to view this application',
@@ -440,6 +440,8 @@ class ConsignmentController extends Controller
     public function verify_application_permit($id, Request $request)
     {
         $application = ConsignmentApplication::where('application_id', $id)->firstOrFail();
+
+        // dd($application, $request->all());
 
         // Centralized messages per status
         $statusMessages = [

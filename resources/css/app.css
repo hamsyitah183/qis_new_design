@@ -182,11 +182,19 @@
 #activityLogModal .accordion-header .active-accordion {
     background-color: #b0b0b0;
 }
-/* 
+
 #activityLogModal .order-track .accordion::before {
     height: 100% !important;
 }
 
+#activityLogModal .order-track .accordion {
+    padding-block: 5px;
+}
+
+#activityLogModal .accordion .accordion-body {
+    padding-block: 3px;
+}
+/* 
 #activityLogModal .order-track .long .accordion::before {
     height: 90px !important;
 }

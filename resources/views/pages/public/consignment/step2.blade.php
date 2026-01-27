@@ -4,9 +4,9 @@
             <table id="itemListTbl" class="table text-nowrap fs-12">
                 <thead class="table-primary">
                     <tr>
-                        <th scope="col">#</th>
+                      
                         <th scope="col">Item Name</th>
-                        <th scope="col">Quantity</th>
+              
                         <th scope="col">Purpose</th>
                         <th scope="col">View More</th>
                     </tr>
