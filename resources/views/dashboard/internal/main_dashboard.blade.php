@@ -21,15 +21,18 @@
 
 @section('content')
 
-   
-    @php
-        $role = authUser()['roles'][0];
 
-        
-    @endphp
+   @php
+       $role = authUser()['roles'][0];
 
-    @if ($role == 'admin')
-        @include('dashboard.internal.admin_dashboard')
+   @endphp
+
+   @if ($role == 'admin')
+         @include ('dashboard.internal.admin_dashboard')
+    
+    @elseif ($role == 'clerk')
+         @include ('dashboard.internal.clerk_dashboard')
+    
 
     @elseif($role == 'finance')
         @include('dashboard.internal.finance_dashboard')
