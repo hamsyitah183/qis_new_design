@@ -14,12 +14,13 @@
     <x-breadcrumb :items="[
             ['label' => ' ', 'url' => '/'],
           
-        ]" title="Welcome Admin">
+        ]" title="Welcome ">
 
     </x-breadcrumb>
 @endsection
 
 @section('content')
+
 
    @php
        $role = authUser()['roles'][0];
@@ -32,6 +33,10 @@
     @elseif ($role == 'clerk')
          @include ('dashboard.internal.clerk_dashboard')
     
+
+    @elseif($role == 'finance')
+        @include('dashboard.internal.finance_dashboard')
+
     @endif
 
 @endsection

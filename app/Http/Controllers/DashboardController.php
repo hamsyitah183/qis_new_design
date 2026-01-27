@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Charts\ApplicationHorizontalChart;
 use App\Charts\LineUserChart;
 use App\Charts\MonthlyUsersChart;
 use App\Charts\OrderDonutChart;
@@ -48,6 +49,7 @@ class DashboardController extends Controller
                 app(ClerkDailyWorkloadChart::class),
                 app(ClerkDailyVolumeChart::class)
             );
+            return $this->internal_dashboard($lineChart, $orderChart, $paymentChart, $applicationChart);
         }
 
         // ❌ If no guard is logged in, redirect to login

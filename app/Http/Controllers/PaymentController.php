@@ -14,6 +14,7 @@ use App\Models\PaymentMethod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 
 class PaymentController extends Controller
@@ -188,13 +189,17 @@ class PaymentController extends Controller
         if (!$applicationDetails) {
             abort(403, 'Application details expired');
         }
-        if ($request['paymentMethod'] == 'bayuPay') {
-            // dd($request->all(), $applicationDetails);
+
+        if ($request['paymentMethod'] === 'bayuPay') {
             $data = $this->bayuPay($request, $applicationDetails);
+
+            // 🔥 LOG EXACT PAYLOAD
+            Log::info('BayuPay POST payload', $data);
+
             return view('bayuPayRedirect', compact('data'));
-        } else {
-            return 'no payment';
         }
+
+        return 'no payment';
     }
 
     private function bayuPay(Request $request, $applicationDetails)
@@ -240,16 +245,16 @@ class PaymentController extends Controller
 
         // dd($application['application_type']);
         if ($application['application_type'] == 'Import Permit') {
-            $itn = 'ITN10001';
+            $itn = 'IT037962';
         } elseif ($application['application_type'] == 'Inspection Certificate') {
-            $itn = 'ITN10002';
+            $itn = 'IT549383';
         } elseif ($application['application_type'] == 'Consignment Certificate') {
-            $itn = 'ITN10003';
+            $itn = 'IT037962';
         } else {
             $itn = 'ITN';
         }
 
-        $sid = 'QIS123';
+        $sid = 'SE13001C';
 
         // $itn = 'IT037962';
         // $sid = 'SE12501C';
@@ -270,12 +275,14 @@ class PaymentController extends Controller
             'sid' => $sid,
             'itn' => $itn,
             'rn' => $order->order_number,
-            'amount' => $request->amount,
+            'amount' => number_format((float) $request->amount, 2, '.', ''),
             'co_name' => $request->name,
             'email' => $request->email,
             'tel_no' => $request->no_phone,
-            'application_id' => $request->application_id,
-            'bounce' => url('/paymentUpdate' . '/' . $order->order_number),
+            'co_no' => $request->no_phone,
+            
+            // 'application_id' => $request->application_id,
+            'bounce' => url(' paymentUpdate' . '/' . $order->order_number),
         ];
 
         return $data;
@@ -296,10 +303,10 @@ class PaymentController extends Controller
         }
 
         // Call BayuPay API
-        $response = Http::withToken('test-api')
-        ->get('https://bayupay-dummy.geovidia.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
         // $response = Http::withToken('test-api')
-        // ->get('http://10.71.97.95/readdata.php', ['kod_transaksi' => $kodTransaksi]);
+        // ->get('https://bayupay-dummy.geovidia.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
+        // $response = Http::withToken('test-api')->get('https://hands-on5.sabah.gov.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
+        $response = Http::withToken('test-api')->get('https://hands-on5.sabah.gov.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
 
         if (!$response->successful()) {
             abort(500, 'Failed to retrieve payment data');
