@@ -7,7 +7,7 @@ use App\Charts\LineUserChart;
 use App\Charts\MonthlyUsersChart;
 use App\Charts\OrderDonutChart;
 use App\Charts\PaymentMethodBarChart;
-use App\Charts\ApplicationHorizontalChart;
+// use App\Charts\ApplicationHorizontalChart;
 use App\Models\IpApplication;
 use App\Models\InspectionApplication;
 use App\Models\ConsignmentApplication;
