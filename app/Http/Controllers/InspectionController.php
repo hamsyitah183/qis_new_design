@@ -114,11 +114,12 @@ class InspectionController extends Controller
                 // Map statuses to colors
                 $statusColors = [
                     'processing' => 'bg-info', // blue
-
+    
                     'pending for payment' => 'bg-warning', // green
                     'rejected' => 'bg-danger', // red
                     // 'completed'  => 'bg-success', // green
                     'paid' => 'bg-success', // green
+    
                 ];
 
                 // Get all permit statuses for this row, lowercase
@@ -133,12 +134,10 @@ class InspectionController extends Controller
                 ];
 
                 foreach ($permit_statuses as $status) {
-                    if ($status == 'submitted') {
+                    if ($status == 'submitted')
                         $status = 'processing';
-                    }
-                    if ($status == 'approved') {
+                    if ($status == 'approved')
                         $status = 'paid';
-                    }
 
                     if (isset($statusCounts[$status])) {
                         $statusCounts[$status]++;
@@ -205,7 +204,7 @@ class InspectionController extends Controller
 
         // Fetch application and eager load relationships
         $application = InspectionApplication::where('application_id', $id)
-            ->with(['user', 'importer', 'exporter.countryInfo', 'entryPoint.districtCode', 'inspectionItems.attachments', 'activity_log.causer'])
+            ->with(['user', 'importer', 'exporter.countryInfo', 'entryPoint.districtCode', 'inspectionItems.attachments', 'activity_log.causer',])
             ->firstOrFail();
 
         if ($type === 'internal') {
@@ -276,6 +275,7 @@ class InspectionController extends Controller
             $isDraft = $request->boolean('is_draft');
             $isNewApplication = false;
 
+
             // Decode JSON data from frontend
             $exporter = $request->exporterData ? json_decode($request->exporterData, true) : null;
             $importer = $request->importerData ? json_decode($request->importerData, true) : null;
@@ -341,31 +341,7 @@ class InspectionController extends Controller
                     ])
                     ->log(authUser()['user']['fullname'] . ($isDraft ? ' has updated a draft inspection (ID: ' : ' has updated an inspection application (ID: ') . $application->application_id . ')');
             } else {
-                $application = InspectionApplication::create([
-                    'application_id' => Str::uuid(),
-                    'eta' => $permit['eta'] ?? null,
-                    'transport_type' => $permit['tranType'] ?? null,
-                    'entry_point' => $permit['entrypoint'] ?? null,
-                    'category_application' => $permit['applCate'] ?? null,
-                    'user_id' => Auth::user()->uuid,
-                    'exporter_id' => $exporter['id'] ?? null,
-                    'importer_id' => $importer['uuid'] ?? null,
-                    'importer_detail' => $importer ?? [],
-                    'status' => $status,
-                    'importer_verify' => $importer_verify,
-                ]);
 
-                activity()
-                    ->tap(function (Activity $activity) {
-                        $activity->log_name = 'user_activity';
-                    })
-                    ->event($isDraft ? 'create draft inspection' : 'create inspection application')
-                    ->causedBy(authUser()['user'])
-                    ->performedOn($application)
-                    ->withProperties([
-                        'application' => $application,
-                    ])
-                    ->log(authUser()['user']['fullname'] . ($isDraft ? ' has created a new draft inspection (ID: ' : ' has created a new inspection application (ID: ') . $application->application_id . ')');
                 $category = $permit['applCate'] ?? 0;
                 $importerVerify = 'pending';
                 $verifyDate = null;
@@ -448,7 +424,9 @@ class InspectionController extends Controller
             }
 
             // Global activity log for inspection_activity
-            $actionText = $isDraft ? ($isNewApplication ? 'created a draft inspection application' : 'updated draft inspection application') : ($isNewApplication ? 'submitted a new inspection application' : 'updated inspection application');
+            $actionText = $isDraft
+                ? ($isNewApplication ? 'created a draft inspection application' : 'updated draft inspection application')
+                : ($isNewApplication ? 'submitted a new inspection application' : 'updated inspection application');
 
             activity()
                 ->tap(function ($activity) {
@@ -518,14 +496,13 @@ class InspectionController extends Controller
                 event(new PublicUserEvent($applicantMsg, $applicant->uuid));
             }
 
-            return response()->json(
-                [
-                    'status' => 'success',
-                    'message' => $isDraft ? 'Draft saved successfully' : 'Application submitted successfully',
-                    'application_id' => $application->application_id,
-                ],
-                200,
-            );
+            return response()->json([
+                'status' => 'success',
+                'message' => $isDraft ? 'Draft saved successfully' : 'Application submitted successfully',
+                'application_id' => $application->application_id
+            ], 200);
+
+
         } catch (\Exception $e) {
             DB::rollBack();
             foreach ($movedFiles as $file) {
@@ -583,12 +560,9 @@ class InspectionController extends Controller
         $status = $request->input('status');
 
         if (!isset($statusMessages[$status])) {
-            return response()->json(
-                [
-                    'message' => 'Invalid inspection application status.',
-                ],
-                400,
-            );
+            return response()->json([
+                'message' => 'Invalid inspection application status.'
+            ], 400);
         }
 
         $application->status = $status;
@@ -605,7 +579,11 @@ class InspectionController extends Controller
         $application->save();
 
         // activity log
-        $application->logActivity(action: $status, remark: $request->input('reason') ?? "Inspection application {$status}", status: $status);
+        $application->logActivity(
+            action: $status,
+            remark: $request->input('reason') ?? "Inspection application {$status}",
+            status: $status
+        );
 
         // Global activity log for inspection_activity
         $logMessage = match ($status) {
@@ -868,7 +846,11 @@ class InspectionController extends Controller
         $itemName = $detail['item_name'] ?? 'Item';
 
         // Log the activity
-        $application->logActivity(action: 'Item Accepted', remark: "Inspection item '{$itemName}' accepted by officer", status: 'Item Accepted');
+        $application->logActivity(
+            action: 'Item Accepted',
+            remark: "Inspection item '{$itemName}' accepted by officer",
+            status: 'Item Accepted'
+        );
 
         // Global activity log
         activity()
@@ -925,7 +907,11 @@ class InspectionController extends Controller
             $application->status = 'Officer Verification Completed';
             $application->save();
 
-            $application->logActivity(action: 'Officer Verification Completed', remark: 'All inspection items processed', status: 'Officer Verification Completed');
+            $application->logActivity(
+                action: 'Officer Verification Completed',
+                remark: 'All inspection items processed',
+                status: 'Officer Verification Completed'
+            );
         }
 
         return response()->json([
@@ -975,7 +961,11 @@ class InspectionController extends Controller
         $itemName = $detail['item_name'] ?? 'Item';
 
         // Log the activity
-        $application->logActivity(action: 'Item Rejected', remark: "Inspection item '{$itemName}' rejected. Reason: " . $request->reason, status: 'Item Rejected');
+        $application->logActivity(
+            action: 'Item Rejected',
+            remark: "Inspection item '{$itemName}' rejected. Reason: " . $request->reason,
+            status: 'Item Rejected'
+        );
 
         // Global activity log
         activity()
@@ -1033,7 +1023,11 @@ class InspectionController extends Controller
             $application->status = 'Officer Verification Completed';
             $application->save();
 
-            $application->logActivity(action: 'Officer Verification Completed', remark: 'All inspection items processed', status: 'Officer Verification Completed');
+            $application->logActivity(
+                action: 'Officer Verification Completed',
+                remark: 'All inspection items processed',
+                status: 'Officer Verification Completed'
+            );
         }
 
         return response()->json([
