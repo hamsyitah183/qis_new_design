@@ -52,6 +52,7 @@ class PermitApplicationController extends Controller
 
     public function storeExporter(Request $request)
     {
+        // dd($request['id']);
         $validated = $request->validate([
             'name' => 'required|string|max:150',
             'phone_no' => 'required|string|max:25',
@@ -59,19 +60,30 @@ class PermitApplicationController extends Controller
             'country' => 'required|string|max:50',
         ]);
 
-        $exporterId = \DB::table('exporter')->insertGetId([
-            'name' => $validated['name'],
-            'phone_no' => $validated['phone_no'],
-            'address' => $validated['address'],
-            'country' => $validated['country'],
-            'registered_by' => authUser()['user']['uuid'],
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        if(!$request['id']) {
+            $exporterId = \DB::table('exporter')->insertGetId([
+                'name' => $validated['name'],
+                'phone_no' => $validated['phone_no'],
+                'address' => $validated['address'],
+                'country' => $validated['country'],
+                'registered_by' => authUser()['user']['uuid'],
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+    
+            // fetch newly created exporter
+            $exporter = \DB::table('exporter')->where('id', $exporterId)->first();
+    
+        } else {
+            $exporter = Exporter::with(['countryInfo'])->find($request['id']);
 
-        // fetch newly created exporter
-        $exporter = \DB::table('exporter')->where('id', $exporterId)->first();
-
+            $exporter->name = $validated['name'];
+            $exporter->phone_no = $validated['phone_no'];
+            $exporter->address = $validated['address'];
+            $exporter->country = $validated['country'];
+            $exporter->save();
+        }
+       
         activity()
             ->tap(function (Activity $activity) {
                 $activity->log_name = 'user_activity';

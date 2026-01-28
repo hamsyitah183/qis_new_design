@@ -273,6 +273,16 @@ function acceptPermit() {
                         cancelButtonText: "Cancel",
                     }).then((secondResult) => {
                         if (secondResult.isConfirmed) {
+                            // ✅ Show processing/loading Swal
+                            Swal.fire({
+                                title: "Processing...",
+                                text: "Please wait while the permit is being accepted.",
+                                allowOutsideClick: false,
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                },
+                            });
+
                             $.ajax({
                                 url: `/internal/permit/${id}`,
                                 method: "POST",
@@ -283,15 +293,24 @@ function acceptPermit() {
                                     accepted: 1,
                                 },
                                 success: function () {
-                                    Swal.fire(
-                                        "Accepted!",
-                                        "The permit has been accepted.",
-                                        "success"
-                                    );
-                                    // Refresh table
+                                    // Close loading Swal first
+                                    Swal.close();
+
+                                    // ✅ Show success Swal
+                                    Swal.fire({
+                                        icon: "success",
+                                        title: "Accepted!",
+                                        text: "The permit has been accepted.",
+                                        timer: 2000,
+                                        showConfirmButton: false,
+                                    });
+
+                                    // Refresh table or UI
                                     initApplicationDetails();
                                 },
                                 error: function (err) {
+                                    Swal.close();
+
                                     Swal.fire({
                                         icon: "error",
                                         title: "Error!",
@@ -307,6 +326,7 @@ function acceptPermit() {
             });
         });
 }
+
 
 function rejectPermit() {
     $(document)
@@ -338,6 +358,16 @@ function rejectPermit() {
             }).then((result) => {
                 if (!result.isConfirmed) return;
 
+                // ✅ Show processing/loading Swal
+                Swal.fire({
+                    title: "Processing...",
+                    text: "Please wait while the permit is being rejected.",
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    },
+                });
+
                 $.ajax({
                     url: `/internal/permit/${id}`,
                     method: "POST",
@@ -347,14 +377,25 @@ function rejectPermit() {
                         reason: result.value, // 👈 SEND REASON
                     },
                     success: function () {
-                        Swal.fire(
-                            "Rejected!",
-                            "The permit has been rejected successfully.",
-                            "success"
-                        );
+                        // Close loading Swal first
+                        Swal.close();
+
+                        // ✅ Show success Swal
+                        Swal.fire({
+                            icon: "success",
+                            title: "Rejected!",
+                            text: "The permit has been rejected successfully.",
+                            timer: 2000,
+                            showConfirmButton: false,
+                        });
+
+                        // Refresh table or UI
                         initApplicationDetails();
                     },
                     error: function (err) {
+                        // Close loading Swal first
+                        Swal.close();
+
                         Swal.fire({
                             icon: "error",
                             title: "Error!",
@@ -367,6 +408,7 @@ function rejectPermit() {
             });
         });
 }
+
 
 function generatePermit() {
     $(document)
@@ -413,7 +455,7 @@ async function viewMore() {
 
         // Build attachment table
         let attachmentContent = `
-    <div class = "table-responsive">
+    <div class = "table-responsive scroll-div" style = "max-height: 250px;" >
         <table class="table table-bordered table-responsive rounded">
             <thead>
                 <tr>
@@ -978,6 +1020,23 @@ function itemConsigment($modal) {
             "X-CSRF-TOKEN": document
                 .querySelector('meta[name="csrf-token"]').content,
         },
+        processing: function (file) {
+            Swal.fire({
+                title: "Uploading...",
+                html: "Please wait while your file is being uploaded.",
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+            });
+            groupPreview();
+        },
+        
+    });
+
+    itemDropzone.on("addedfile", function (file) {
+        console.log('add file', itemDropzone)
+        groupPreview();
     });
 }
 
@@ -1004,6 +1063,8 @@ function groupPreview() {
 
             // Move all previews into the group
             $previews.appendTo($group);
+
+            console.log('item dropzone', itemDropzone)
 
             // Replace PDF previews with PDF logo
             for (const file of itemDropzone.getAcceptedFiles()) {
@@ -1190,7 +1251,7 @@ async function initApplicationDetails() {
 
     // application_reapply(application)
     reapply()
-  
+    // groupPreview()
     // reapplyInput()
 
 

@@ -407,7 +407,7 @@ async function viewMore() {
 
         // Build attachment table
         let attachmentContent = `
-    <div class = "table-responsive" style = "max-height: 250px;">
+    <div class = "table-responsive scroll-div" style = "max-height: 250px;">
         <table class="table table-bordered table-responsive rounded">
             <thead>
                 <tr>
@@ -979,9 +979,24 @@ function itemConsigment($modal) {
             "X-CSRF-TOKEN": document
                 .querySelector('meta[name="csrf-token"]').content,
         },
+        processing: function (file) {
+            Swal.fire({
+                title: "Uploading...",
+                html: "Please wait while your file is being uploaded.",
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+            });
+            groupPreview();
+        },
+        
     });
 
-    groupPreview();
+    itemDropzone.on("addedfile", function (file) {
+        console.log('add file', itemDropzone)
+        groupPreview();
+    });
 }
 
 

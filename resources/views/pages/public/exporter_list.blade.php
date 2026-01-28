@@ -33,7 +33,7 @@
     <div class="row">
         <div class="col-xl-12">
             <div class="card custom-card">
-                <div class="card-title">
+                <div class="card-title p-3">
                     <div class="d-flex justify-content-end">
                         <div class="btn btn-primary btn-sm" id="addExporter">
                             Add Exporter
@@ -67,6 +67,7 @@
         <form id="addExporterForm">
             @csrf
 
+            <input type="hidden" name="id" id="id">
             {{-- Name --}}
             <div class="mb-3">
                 <label for="addexpName" class="form-label">Name</label>

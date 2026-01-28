@@ -281,6 +281,7 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/notifications', [DashboardController::class, 'notifications_page'])->name('notifications.page');
     Route::delete('/inspection/delete/{id}', [InspectionController::class, 'deleteApplication'])->name('inspection.delete');
     Route::get('/application/exporter', [ApplicationController::class, 'show_exporter'])->name('application.exporter');
+    Route::get('/application/exporter/{id}', [ApplicationController::class, 'get_exporter']);
 
     Route::get('/permit/generate/{id}', [PermitGenerateController::class, 'generatePermitWord']);
 

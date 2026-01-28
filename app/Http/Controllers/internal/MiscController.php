@@ -130,6 +130,7 @@ class MiscController extends Controller
 
     public function saveCondition(Request $request)
     {
+        // dd('id', $request->all());
         // Validate
         $request->validate([
             'itemName' => 'required|string',
@@ -144,10 +145,20 @@ class MiscController extends Controller
         $countryValues = array_map(fn($i) => $i['value'] ?? ($i['name'] ?? null), $countryArr);
         $usageValues = array_map(fn($i) => $i['value'] ?? ($i['name'] ?? null), $usageArr);
 
-        // dd($countryValues, json_encode($countryValues));
+        // dd($countryValues, json_encode($countryValues), $request['itemName']);
 
-        // Save record
-        $save = IpCondition::create([
+       // Find the record first (single record, not collection)
+        $ipCondition = IpCondition::where('id', $request['id'])->first();
+
+        if (!$ipCondition) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'IP Condition not found'
+            ], 404);
+        }
+
+        // Update the record
+        $ipCondition->update([
             'category' => $request->itemCategory,
             'item_name' => $request->itemName,
             'addional_condition' => $request->permit_condition,
@@ -156,6 +167,12 @@ class MiscController extends Controller
             'country' => $countryValues,
             'usage' => $usageValues,
         ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'IP Condition updated successfully'
+        ]);
+
 
         return response()->json([
             'status' => 'success',
@@ -196,7 +213,63 @@ class MiscController extends Controller
         ]);
     }
 
-  
+    function accept_permit($id, Request $request)
+    {
+        $accepted = $request->input('accepted');
+        $status = '';
+
+        $permit = IpConsignmentPermit::findOrFail($id);
+
+        $permit->permit_number = 'IP' . now()->format('YmdHis');
+
+        $application = $permit->application;
+
+        if ($accepted == 1) {
+            $permit->status = 'pending for payment';
+            $status = 'Pending for Payment';
+        } else {
+            $permit->status = 'rejected';
+            $status = 'Rejected';
+            $permit->remark = $request['reason'];
+        }
+        $permit->save();
+
+        $allStatuses = IpConsignmentPermit::where('application_id', $permit->application->id)->pluck('status'); // gets a collection of all statuses
+
+        $url = '/view_application' . '/' . $permit->application->application_id;
+
+        // Events & notifications
+        event(new ApplicationDeleted('Permit in ' . $permit->application->application_id . ' is ' . $status));
+
+        $users = InternalUser::role(['admin', 'officer'])->get();
+        Notification::send($users, new ApplicationNotification('A permit with application ID ' . $permit->application->application_id . ' has been ' . $status, authUser()['user']->fullname, $url));
+
+        $user = PublicUser::where('uuid', $permit->application->user_id)->first();
+
+        event(new PublicUserEvent('A permit in application with ID ' . $permit->application->application_id . ' has been ' . $status, $user->uuid));
+
+        Notification::send($user, new ApplicationNotification('A permit in application with ID ' . $permit->application->application_id . ' has been ' . $status, authUser()['user']->fullname, $url));
+
+        $application->logActivity(action: 'Officer Verification', remark: $request['reason'] ?? 'Permit approved by officer', status: 'Officer Verified');
+
+        // Check if no status is 'processing'
+        if (!$allStatuses->contains('processing')) {
+            // dd($allStatuses);
+            $application->logActivity(action: 'Fully Processed', remark: 'Fully Processed', status: 'Fully Processed');
+
+            // dd($application);
+
+            $application->status = 'Fully Processed';
+            $application->save();
+        }
+
+        $permit->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Permit condition updated successfully.',
+        ]);
+    }
     public function updateEntry(Request $request)
     {
         $districtId = $request->input('district_id');

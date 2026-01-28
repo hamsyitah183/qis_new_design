@@ -686,4 +686,13 @@ class ApplicationController extends Controller
         $country = country::where('is_del', false)->get();
         return view('pages.public.exporter_list', compact('pubmeasure', 'pubpurpose', 'country'));
     }
+
+    function get_exporter($id)
+    {
+        $exporter = Exporter::with(['countryInfo'])->find($id);
+
+        return response()->json([
+            'exporter' => $exporter
+        ]);
+    }
 }

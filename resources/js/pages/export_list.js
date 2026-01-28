@@ -23,6 +23,7 @@ function initAddExporterModal() {
         const address2 = $("#addexpaddress2").val().trim();
         const full_address = `${address1} ${address2}`;
         const country = $("#addexpcountry").val();
+        const id = $('#id').val();
 
         if (!name || !phone_no || !country) {
             return Swal.fire("⚠️ Please fill in all required fields.");
@@ -31,7 +32,7 @@ function initAddExporterModal() {
         $.ajax({
             url: routeUrl,
             type: "POST",
-            data: { name, phone_no, address: full_address, country },
+            data: { name, phone_no, address: full_address, country, id },
             headers: {
                 "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
             },
@@ -173,3 +174,51 @@ $(document).on("click", ".deleteExporter", function () {
         }
     });
 });
+
+$(document).on("click", ".editExporter", function () {
+    const id = $(this).data("id");
+
+    console.log("Editing exporter ID:", id);
+
+    // Optional: show loading Swal
+    Swal.fire({
+        title: "Loading exporter data...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+    });
+
+    const modal = new bootstrap.Modal(document.getElementById("addExporterModal"));
+    modal.show();
+
+    $.ajax({
+        url: `/application/exporter/${id}`,
+        type: "GET",
+        dataType: "json",
+        success: function (data) {
+            Swal.close(); // close loading
+
+            const exporter = data.exporter;
+
+            console.log('exporter', exporter);
+
+            // Populate modal fields
+            $("#addexpName").val(exporter.name);
+            $("#addexpfonno").val(exporter.phone_no);
+            $("#addexpaddress1").val(exporter.address.split(" ")[0]); // adjust as needed
+            $("#addexpaddress2").val(exporter.address.split(" ")[1]); // adjust as needed
+            $("#addexpcountry").val(exporter.country);
+            $('#id').val(exporter.id)
+
+           
+           
+        },
+        error: function (xhr, status, error) {
+            Swal.close();
+            console.error("AJAX Error:", error);
+            console.log(xhr.responseText);
+            Swal.fire("Error", "Failed to load exporter data.", "error");
+        },
+    });
+});
+
+

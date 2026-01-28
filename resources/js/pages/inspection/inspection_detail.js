@@ -383,7 +383,7 @@ async function viewMore() {
 
         // Build attachment table
         let attachmentContent = `
-    <div class = "table-responsive" style = "max-height: 250px;">
+    <div class = "table-responsive scroll-div" style = "max-height: 250px;">
         <table class="table table-bordered table-responsive rounded">
             <thead>
                 <tr>
@@ -900,6 +900,23 @@ function itemConsigment($modal) {
             "X-CSRF-TOKEN": document
                 .querySelector('meta[name="csrf-token"]').content,
         },
+        processing: function (file) {
+            Swal.fire({
+                title: "Uploading...",
+                html: "Please wait while your file is being uploaded.",
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+            });
+            groupPreview();
+        },
+        
+    });
+
+    itemDropzone.on("addedfile", function (file) {
+        console.log('add file', itemDropzone)
+        groupPreview();
     });
 }
 
@@ -969,6 +986,60 @@ function resetAddItemModal() {
 
     // Clear Dropzone files
     if (itemDropzone) itemDropzone.removeAllFiles(true);
+}
+
+function groupPreview() {
+    $(document).ready(function () {
+        Swal.fire({
+            title: "Loading...",
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading(),
+        });
+
+        setTimeout(function () {
+            const $dropzone = $("#itemDropzone");
+            const $previews = $dropzone.find(".dz-preview");
+            const $deleteBtns = $previews.find(".dz-remove");
+
+            // Create group if it doesn't exist
+            let $group = $dropzone.find(".dz-preview-group");
+            if ($group.length === 0) {
+                $group = $('<div class="dz-preview-group"></div>');
+                $dropzone.find(".dz-message").after($group);
+            }
+
+            // Move all previews into the group
+            $previews.appendTo($group);
+
+            console.log('item dropzone', itemDropzone)
+
+            // Replace PDF previews with PDF logo
+            for (const file of itemDropzone.getAcceptedFiles()) {
+                if (file.type === "application/pdf") {
+                    const $preview = $(file.previewElement);
+                    const $img = $preview.find(
+                        ".dz-image img[data-dz-thumbnail]"
+                    );
+
+                    // Set your PDF logo path
+                    $img.attr(
+                        "src",
+                        "/images/pdf-logo.png" // <-- replace with your actual PDF logo path
+                    );
+                    $img.css({
+                        "object-fit": "contain",
+                        width: "100%",
+                        height: "100%",
+                    });
+                }
+            }
+
+            // Update delete buttons
+            $deleteBtns.html('<i class="ti ti-trash"></i>');
+
+            Swal.close();
+        }, 100);
+    });
 }
 
 function saveapplication(permitId) {
