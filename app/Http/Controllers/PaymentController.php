@@ -18,7 +18,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
+use Spatie\Activitylog\Models\Activity;
+use App\Models\PublicUser;
+use App\Notifications\ApplicationNotification;
 
 class PaymentController extends Controller
 {
@@ -436,6 +440,39 @@ class PaymentController extends Controller
                     Mail::to($userEmail)->send(
                         new PaymentReceiptMail($order, $paymentData, $permitNumbers)
                     );
+
+                    // Activity log for successful payment
+                    $user = $order->order_details['user'] ?? null;
+                    if ($user) {
+                        activity()
+                            ->tap(function (Activity $activity) {
+                                $activity->log_name = 'user_activity';
+                            })
+                            ->event('payment successful')
+                            ->performedOn($order)
+                            ->withProperties([
+                                'order_number' => $order->order_number,
+                                'application_id' => $order->application_id,
+                                'amount' => $paymentData['payment_amount'] ?? 0,
+                                'permit_numbers' => $permitNumbers,
+                            ])
+                            ->log(($user['fullname'] ?? 'User') . ' has successfully completed payment for order ' . $order->order_number);
+
+                        // Send notification to public user
+                        $publicUser = PublicUser::where('uuid', $user['uuid'] ?? null)->first();
+                        if ($publicUser) {
+                            try {
+                                $notificationUrl = url('/order/history');
+                                Notification::send($publicUser, new ApplicationNotification(
+                                    'Payment successful! Your order ' . $order->order_number . ' has been completed. Amount: RM' . number_format($paymentData['payment_amount'] ?? 0, 2),
+                                    'QIS Payment',
+                                    $notificationUrl
+                                ));
+                            } catch (\Exception $e) {
+                                Log::warning('Failed to send payment success notification: ' . $e->getMessage());
+                            }
+                        }
+                    }
                 }
             } catch (\Exception $e) {
                 // Log the error but don't break the payment flow
@@ -467,6 +504,40 @@ class PaymentController extends Controller
                     Mail::to($userEmail)->send(
                         new PaymentFailedMail($order, $paymentData, $permitNumbers)
                     );
+
+                    // Activity log for failed payment
+                    $user = $order->order_details['user'] ?? null;
+                    if ($user) {
+                        activity()
+                            ->tap(function (Activity $activity) {
+                                $activity->log_name = 'user_activity';
+                            })
+                            ->event('payment failed')
+                            ->performedOn($order)
+                            ->withProperties([
+                                'order_number' => $order->order_number,
+                                'application_id' => $order->application_id,
+                                'amount' => $paymentData['payment_amount'] ?? 0,
+                                'permit_numbers' => $permitNumbers,
+                                'reason' => $paymentData['transaction_data'] ?? 'Payment unsuccessful',
+                            ])
+                            ->log(($user['fullname'] ?? 'User') . ' payment failed for order ' . $order->order_number);
+
+                        // Send notification to public user
+                        $publicUser = PublicUser::where('uuid', $user['uuid'] ?? null)->first();
+                        if ($publicUser) {
+                            try {
+                                $notificationUrl = url('/order/history');
+                                Notification::send($publicUser, new ApplicationNotification(
+                                    'Payment failed for order ' . $order->order_number . '. Please try again or contact support.',
+                                    'QIS Payment',
+                                    $notificationUrl
+                                ));
+                            } catch (\Exception $e) {
+                                Log::warning('Failed to send payment failure notification: ' . $e->getMessage());
+                            }
+                        }
+                    }
                 }
             } catch (\Exception $e) {
                 // Log the error but don't break the payment flow

@@ -835,12 +835,16 @@ function saveapplication(isDraft = false) {
             });
 
             if (!isDraft) {
+                // Redirect to application list after submitting
                 setTimeout(() => {
                     window.location.href = "/public/view_all_application";
                 }, 1500);
+            } else {
+                // Reload page for draft to show updated status
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
             }
-
-            window.location.reload();
         },
         error: function (xhr) {
             Swal.fire("Error", "Failed to save application", "error");

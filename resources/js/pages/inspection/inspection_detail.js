@@ -84,8 +84,8 @@ async function attachmentTable() {
 
         console.log("user role?", window.authUser);
 
-        let roles = window.authUser.roles.map((role) => role.name);
-        let type = window.authUser.type;
+        let roles = window.authUser?.roles?.map((role) => role.name) || [];
+        let type = window.authUser?.type || '';
         console.log("is it", roles);
 
         let permitAction = "";

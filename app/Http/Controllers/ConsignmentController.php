@@ -481,6 +481,19 @@ class ConsignmentController extends Controller
         if ($request->input('verified')) {
             $application->logActivity(action: 'Importer Verified', remark: 'Application verified by importer', status: 'Clerk Review In-Progress');
 
+            activity()
+                ->tap(function (Activity $activity) {
+                    $activity->log_name = 'user_activity';
+                })
+                ->event('application verified by importer')
+                ->causedBy(authUser()['user'])
+                ->performedOn($application)
+                ->withProperties([
+                    'application_id' => $application->application_id,
+                    'status' => 'Clerk Review In-Progress',
+                ])
+                ->log(authUser()['user']['fullname'] . ' has verified consignment application ' . $application->application_id);
+
             $application->status = 'Clerk Review In-Progress';
             $application->importer_verify = 'Verified';
             $status = 'Clerk Review In-Progress';
@@ -491,6 +504,19 @@ class ConsignmentController extends Controller
         } elseif ($request->input('not_verified')) {
             $application->logActivity(action: 'Importer Rejected', remark: 'Application rejected by importer', status: 'Not Approved');
 
+            activity()
+                ->tap(function (Activity $activity) {
+                    $activity->log_name = 'user_activity';
+                })
+                ->event('application rejected by importer')
+                ->causedBy(authUser()['user'])
+                ->performedOn($application)
+                ->withProperties([
+                    'application_id' => $application->application_id,
+                    'status' => 'Not Approved',
+                ])
+                ->log(authUser()['user']['fullname'] . ' has rejected consignment application ' . $application->application_id);
+
             $application->status = 'Not Approved';
             $application->importer_verify = 'Not Approved';
             $status = 'Not Approved';
@@ -498,6 +524,19 @@ class ConsignmentController extends Controller
 
         } elseif ($request->accepted) {
             $application->logActivity(action: 'Clerk Approved', remark: 'Application approved by clerk', status: 'Clerk Verified');
+
+            activity()
+                ->tap(function (Activity $activity) {
+                    $activity->log_name = 'user_activity';
+                })
+                ->event('application approved by clerk')
+                ->causedBy(authUser()['user'])
+                ->performedOn($application)
+                ->withProperties([
+                    'application_id' => $application->application_id,
+                    'status' => 'Clerk Verified',
+                ])
+                ->log(authUser()['user']['fullname'] . ' has approved consignment application ' . $application->application_id);
 
             $application->status = 'Clerk Verified';
             $application->importer_verify = 'Accepted';
@@ -518,6 +557,20 @@ class ConsignmentController extends Controller
 
         } elseif ($request->rejected) {
             $application->logActivity(action: 'Clerk Rejected', remark: $request->input('reason'), status: 'Clerk Rejected');
+
+            activity()
+                ->tap(function (Activity $activity) {
+                    $activity->log_name = 'user_activity';
+                })
+                ->event('application rejected by clerk')
+                ->causedBy(authUser()['user'])
+                ->performedOn($application)
+                ->withProperties([
+                    'application_id' => $application->application_id,
+                    'status' => 'Clerk Rejected',
+                    'reason' => $request->input('reason'),
+                ])
+                ->log(authUser()['user']['fullname'] . ' has rejected consignment application ' . $application->application_id);
 
             $application->status = 'Clerk Rejected';
             $status = 'Clerk Rejected';

@@ -25,8 +25,7 @@
         <!-- Start::nav -->
         <nav class="main-menu-container nav nav-pills flex-column sub-open">
             <div class="slide-left" id="slide-left">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24" height="24"
-                    viewBox="0 0 24 24">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24" height="24" viewBox="0 0 24 24">
                     <path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z"></path>
                 </svg>
             </div>
@@ -113,13 +112,13 @@
                             </li>
 
                             <li class="slide">
-                                <a href="{{ route('public.showallinspectionlist') }}"
-                                    class="side-menu__item">Inspection Certificate List</a>
+                                <a href="{{ route('public.showallinspectionlist') }}" class="side-menu__item">Inspection
+                                    Certificate List</a>
                             </li>
 
                             <li class="slide">
-                                <a href="{{ route('public.showallconsignmentlist') }}"
-                                    class="side-menu__item">Consignment Certificate List</a>
+                                <a href="{{ route('public.showallconsignmentlist') }}" class="side-menu__item">Consignment
+                                    Certificate List</a>
                             </li>
                         </ul>
                     </li>
@@ -183,18 +182,18 @@
 
                             <li class="slide {{ $currentRoute === url('/permit/list/import') ? 'active' : '' }}">
                                 <a href="{{ url('/permit/list/import') }}" class="side-menu__item">
-                                    Import Permit 
+                                    Import Permit
                                 </a>
                             </li>
 
                             <li class="slide {{ $currentRoute === url('/permit/list/inspection') ? 'active' : '' }}">
                                 <a href="{{ url('/permit/list/inspection') }}" class="side-menu__item">
-                                    Inspection Certificate 
+                                    Inspection Certificate
                                 </a>
                             </li>
 
-                            <li class="slide {{ $currentRoute === 'internal.consignment.list' ? 'active' : '' }}">
-                                <a href="{{ route('internal.consignment.list') }}" class="side-menu__item">
+                            <li class="slide {{ $currentRoute === url('/permit/list/consignment') ? 'active' : '' }}">
+                                <a href="{{ url('/permit/list/consignment') }}" class="side-menu__item">
                                     Consignment Certificate
                                 </a>
                             </li>
@@ -245,10 +244,9 @@
                                     Users</a>
                             </li>
 
-                            <li
-                                class="slide {{ $currentRoute === 'internal.internal.activity_log' ? 'active' : '' }}">
-                                <a href="{{ route('internal.internal.activity_log') }}"
-                                    class="side-menu__item">Activity Log</a>
+                            <li class="slide {{ $currentRoute === 'internal.internal.activity_log' ? 'active' : '' }}">
+                                <a href="{{ route('internal.internal.activity_log') }}" class="side-menu__item">Activity
+                                    Log</a>
                             </li>
 
                             <li class="slide {{ $currentRoute === 'internal.internal.role' ? 'active' : '' }}">
@@ -281,10 +279,9 @@
                                     Condition</a>
                             </li>
 
-                            <li
-                                class="slide {{ $currentRoute === 'internal.state-district-management' ? 'active' : '' }}">
-                                <a href="{{ route('internal.state-district-management') }}"
-                                    class="side-menu__item">State & District Management</a>
+                            <li class="slide {{ $currentRoute === 'internal.state-district-management' ? 'active' : '' }}">
+                                <a href="{{ route('internal.state-district-management') }}" class="side-menu__item">State &
+                                    District Management</a>
                             </li>
 
                             <li style="display:none"
@@ -299,10 +296,9 @@
 
                 <li class="slide__category"><span class="category-name">Order</span></li>
 
-                
+
                 <li class="slide {{ Str::contains($currentRoute, 'order') ? 'open active' : '' }}">
-                    <a href="/order/list"
-                        class="side-menu__item">
+                    <a href="/order/list" class="side-menu__item">
 
                         {{-- --}}
                         <i class="ti ti-user side-menu__icon side-menu__icon"></i>
@@ -316,8 +312,8 @@
 
 
 
-            <div class="slide-right" id="slide-right"><svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191"
-                    width="24" height="24" viewBox="0 0 24 24">
+            <div class="slide-right" id="slide-right"><svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24"
+                    height="24" viewBox="0 0 24 24">
                     <path d="M10.707 17.707 16.414 12l-5.707-5.707-1.414 1.414L13.586 12l-4.293 4.293z">
                     </path>
                 </svg></div>

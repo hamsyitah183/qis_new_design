@@ -647,7 +647,11 @@ class InspectionController extends Controller
         if ($applicant) {
             $applicantMsg = "Your inspection application with id {$application->application_id} has been {$status}";
             $applicant->notify(new ApplicationNotification($applicantMsg, 'QIS', $notificationUrl));
-            event(new PublicUserEvent($applicantMsg, $applicant->uuid));
+            try {
+                event(new PublicUserEvent($applicantMsg, $applicant->uuid));
+            } catch (\Exception $e) {
+                Log::warning('Pusher connection failed but continuing: ' . $e->getMessage());
+            }
         }
 
         $application = InspectionApplication::where('application_id', $id)->firstOrFail();
@@ -761,7 +765,6 @@ class InspectionController extends Controller
             if ($applicant) {
                 $applicantMsg = "Your inspection application with id {$applicationId} has been deleted";
                 $applicant->notify(new ApplicationNotification($applicantMsg, 'QIS', $notificationUrl));
-                event(new PublicUserEvent($applicantMsg, $applicant->uuid));
 
                 try {
                     event(new PublicUserEvent($applicantMsg, $applicant->uuid));

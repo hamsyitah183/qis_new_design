@@ -15,7 +15,7 @@
     <script>
         let userId = @json($userId);
         // console.log('Current User ID:', userId);
-      
+
     </script>
 
     @vite(['resources/js/pages/internal/user_management/internal_list.js'])
@@ -23,13 +23,14 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/'], ['label' => 'Internal User List', 'url' => '#']]" title="Internal User List">
+    <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/'], ['label' => 'Internal User List', 'url' => '#']]"
+        title="Internal User List">
 
     </x-breadcrumb>
 @endsection
 
 @section('content')
-   
+
     <div class="row">
         <div class="col-xl-12">
             <div class="card custom-card">
@@ -123,6 +124,8 @@
                                     <option value="admin">Admin</option>
                                     <option value="officer">Officer</option>
                                     <option value="clerk">Clerk</option>
+                                    <option value="boundary officer">Boundary Officer</option>
+                                    <option value="finance">Finance</option>
                                 </select>
                             </div>
 

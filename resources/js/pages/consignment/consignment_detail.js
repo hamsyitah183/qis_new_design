@@ -371,7 +371,7 @@ function generatePermit() {
             const id = $(this).data("permit");
 
             // ✅ Trigger browser download
-            window.location.href = `/permit/generate/${id}`;
+            window.location.href = `/permit/generate/consignment/${id}`;
         });
 }
 
