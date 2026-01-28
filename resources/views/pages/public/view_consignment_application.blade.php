@@ -115,7 +115,7 @@
                             @endif
 
 
-                            @if (authUser()['type'] == 'public' )
+                            @if (authUser()['type'] == 'public' && $application->user_id == authUser()['user']->uuid )
                                 @include('pages.public.view_consignment.step5')
                             @endif
                     

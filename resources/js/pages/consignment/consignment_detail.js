@@ -484,7 +484,7 @@ async function viewMore() {
             <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
                             class="fa-solid fa-gear"></i></span> Certificate No (MyGAP or myOrganic): 
                             </strong> ${
-                                permit.mygap_myorganic_no ?? "-"
+                                detail.certificateNo ?? "-"
                             }</p>
         </div>
 

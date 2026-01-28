@@ -249,7 +249,8 @@ class PaymentController extends Controller
         } elseif ($application['application_type'] == 'Inspection Certificate') {
             $itn = 'IT549383';
         } elseif ($application['application_type'] == 'Consignment Certificate') {
-            $itn = 'IT037962';
+            // $itn = 'IT037963';
+            $itn = 'IT331659';
         } else {
             $itn = 'ITN';
         }
