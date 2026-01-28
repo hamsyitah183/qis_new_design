@@ -11,10 +11,13 @@ use App\Models\IpConsignmentPermit;
 use App\Models\Order;
 use App\Models\PaymentMethod;
 
+use App\Mail\PaymentFailedMail;
+use App\Mail\PaymentReceiptMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 
 class PaymentController extends Controller
@@ -280,7 +283,7 @@ class PaymentController extends Controller
             'email' => $request->email,
             'tel_no' => $request->no_phone,
             'co_no' => $request->no_phone,
-            
+
             // 'application_id' => $request->application_id,
             'bounce' => url(' paymentUpdate' . '/' . $order->order_number),
         ];
@@ -315,7 +318,19 @@ class PaymentController extends Controller
         $paymentData = $response->json();
 
         $order = Order::where('order_number', $rn)->firstOrFail();
-        $application = $order->application;
+
+        // Load the correct application based on application_type
+        $application = match ($order->application_type) {
+            'Import Permit' => IpApplication::where('application_id', $order->application_id)->firstOrFail(),
+            'Inspection Certificate' => InspectionApplication::where('application_id', $order->application_id)->firstOrFail(),
+            'Consignment Certificate' => ConsignmentApplication::where('application_id', $order->application_id)->firstOrFail(),
+            default => null,
+        };
+
+        if (!$application) {
+            abort(404, 'Application not found');
+        }
+
         $permits = $order->order_details['permits'] ?? [];
 
         DB::transaction(function () use ($paymentData, $order, $application, $permits, $kodTransaksi) {
@@ -328,7 +343,7 @@ class PaymentController extends Controller
                     'log_status' => 'Payment Successful',
                 ],
                 'unsuccessful' => [
-                    'permit_status' => 'payment failed',
+                    'permit_status' => 'Failed Payment',
                     'remark' => 'The order is unsuccessfully paid',
                     'log_status' => 'Payment Unsuccessful',
                 ],
@@ -400,6 +415,68 @@ class PaymentController extends Controller
                 'kod_transaksi' => $kodTransaksi,
             ]);
         });
+
+        // Send payment receipt email on successful payment (outside transaction)
+        if (strtolower($paymentData['transaction_status']) === 'successful') {
+            try {
+                // Refresh order to get latest data
+                $order->refresh();
+
+                // Collect permit numbers
+                $permitNumbers = [];
+                foreach ($permits as $permit) {
+                    $permitNumbers[] = $permit['permit_number'] ?? 'N/A';
+                }
+
+                // Use user's email from order details, not payment gateway email
+                $userEmail = $order->order_details['user']['email'] ?? null;
+
+                // Send email to the actual user
+                if (!empty($userEmail)) {
+                    Mail::to($userEmail)->send(
+                        new PaymentReceiptMail($order, $paymentData, $permitNumbers)
+                    );
+                }
+            } catch (\Exception $e) {
+                // Log the error but don't break the payment flow
+                Log::error('Failed to send payment receipt email: ' . $e->getMessage(), [
+                    'order_number' => $order->order_number,
+                    'user_email' => $userEmail ?? 'N/A',
+                    'payment_email' => $paymentData['email'] ?? 'N/A',
+                ]);
+            }
+        }
+
+        // Send payment failed email on unsuccessful payment (outside transaction)
+        if (strtolower($paymentData['transaction_status']) === 'unsuccessful') {
+            try {
+                // Refresh order to get latest data
+                $order->refresh();
+
+                // Collect permit numbers
+                $permitNumbers = [];
+                foreach ($permits as $permit) {
+                    $permitNumbers[] = $permit['permit_number'] ?? 'N/A';
+                }
+
+                // Use user's email from order details, not payment gateway email
+                $userEmail = $order->order_details['user']['email'] ?? null;
+
+                // Send email to the actual user
+                if (!empty($userEmail)) {
+                    Mail::to($userEmail)->send(
+                        new PaymentFailedMail($order, $paymentData, $permitNumbers)
+                    );
+                }
+            } catch (\Exception $e) {
+                // Log the error but don't break the payment flow
+                Log::error('Failed to send payment failed email: ' . $e->getMessage(), [
+                    'order_number' => $order->order_number,
+                    'user_email' => $userEmail ?? 'N/A',
+                    'payment_email' => $paymentData['email'] ?? 'N/A',
+                ]);
+            }
+        }
 
         return view('pages.paymentStatus', compact('title', 'kodTransaksi', 'paymentData', 'order'));
     }
