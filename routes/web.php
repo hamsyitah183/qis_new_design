@@ -19,6 +19,7 @@ use App\Http\Controllers\TempFileController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PermitConsignmentController;
+use App\Http\Controllers\InspectionPermitController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Broadcast;
@@ -82,7 +83,7 @@ Route::prefix('public')
         Route::delete('/delete_exporter/{id}', [PermitApplicationController::class, 'deleteExporter'])->name('deleteExp');
         Route::get('/get_importers/{idno}', [PermitApplicationController::class, 'getImporters'])->name('getImporters');
         Route::get('/manage_exporters', [PermitApplicationController::class, 'showExportersPage'])->name('getExporters');
-        Route::get('/get_exporters_json', [PermitApplicationController::class, 'getExporters'])->name('getExportersJson');
+        Route::get('/get_exporters', [PermitApplicationController::class, 'getExporters'])->name('getExportersJson');
         Route::get('/get_entry_point', [PermitApplicationController::class, 'getEntryPoint'])->name('getEntryPoint');
         Route::get('/get_consignment/{countryCode}', [PermitApplicationController::class, 'getConsignmentFromCountry'])->name('getItemFromCountry');
         Route::get('/consignment_uses/{id}', [PermitApplicationController::class, 'getConsignmentUses'])->name('consignmentUses');
@@ -300,9 +301,14 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/order/{order_number}', [ApplicationPaymentController::class, 'orderDetails']);
 
     // PERMIT
-    Route::get('/permit/list', [PermitConsignmentController::class, 'getView']);
-    Route::get('/permit/list/data', [PermitConsignmentController::class, 'getAllpermitList']);
-    Route::get('/permit/{permit_number}', [PermitConsignmentController::class, 'permitDetails']);
+    Route::get('/permit/list/import', [PermitConsignmentController::class, 'getView']);
+    Route::get('/permit/list/import/data', [PermitConsignmentController::class, 'getAllpermitList']);
+    Route::get('/permit/import/{permit_number}', [PermitConsignmentController::class, 'permitDetails']);
+
+    // INSPECTION CERTIFICATE PERMIT
+    Route::get('/permit/list/inspection', [InspectionPermitController::class, 'getView']);
+    Route::get('/permit/list/inspection/data', [InspectionPermitController::class, 'getAllpermitList']);
+    Route::get('/permit/inspection/{permit_number}', [InspectionPermitController::class, 'permitDetails']);
 
     // Route::post('/')
 

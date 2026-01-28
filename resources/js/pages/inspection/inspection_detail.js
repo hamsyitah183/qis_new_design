@@ -34,6 +34,8 @@ Load application data
 async function loadApplicationData() {
     const applicationId = getApplicationIdFromUrl();
 
+    console.log('allication id', applicationId)
+
     const res = await fetch(`/inspection_application/${applicationId}/data`);
     const json = await res.json();
 

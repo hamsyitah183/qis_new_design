@@ -144,27 +144,58 @@
                         <a href="javascript:void(0);" class="side-menu__item">
                             <i class="ri-arrow-down-s-line side-menu__angle"></i>
                             <i class="ti ti-file-info side-menu__icon"></i>
-                            <span class="side-menu__label">Applications</span>
+                            <span class="side-menu__label">Application List</span>
                         </a>
 
                         <ul class="slide-menu child1">
-                            <li class="slide side-menu__label1"><a href="javascript:void(0)">Application</a></li>
+                            <li class="slide side-menu__label1"><a href="javascript:void(0)">Application List</a></li>
 
                             <li class="slide {{ $currentRoute === 'internal.application.list' ? 'active' : '' }}">
                                 <a href="{{ route('internal.application.list') }}" class="side-menu__item">
-                                    Import Permit List
+                                    Import Permit
                                 </a>
                             </li>
 
                             <li class="slide {{ $currentRoute === 'internal.inspection.list' ? 'active' : '' }}">
                                 <a href="{{ route('internal.inspection.list') }}" class="side-menu__item">
-                                    Inspection Certificate List
+                                    Inspection Certificate
                                 </a>
                             </li>
 
                             <li class="slide {{ $currentRoute === 'internal.consignment.list' ? 'active' : '' }}">
                                 <a href="{{ route('internal.consignment.list') }}" class="side-menu__item">
-                                    Consignment Certificate List
+                                    Consignment Certificate
+                                </a>
+                            </li>
+
+                        </ul>
+                    </li>
+
+                    <li class="slide has-sub {{ $isApplicationActive ? 'open active' : '' }}">
+                        <a href="javascript:void(0);" class="side-menu__item">
+                            <i class="ri-arrow-down-s-line side-menu__angle"></i>
+                            <i class="ti ti-file-info side-menu__icon"></i>
+                            <span class="side-menu__label">Permit List</span>
+                        </a>
+
+                        <ul class="slide-menu child1">
+                            <li class="slide side-menu__label1"><a href="javascript:void(0)">Permit List</a></li>
+
+                            <li class="slide {{ $currentRoute === url('/permit/list/import') ? 'active' : '' }}">
+                                <a href="{{ url('/permit/list/import') }}" class="side-menu__item">
+                                    Import Permit 
+                                </a>
+                            </li>
+
+                            <li class="slide {{ $currentRoute === url('/permit/list/inspection') ? 'active' : '' }}">
+                                <a href="{{ url('/permit/list/inspection') }}" class="side-menu__item">
+                                    Inspection Certificate 
+                                </a>
+                            </li>
+
+                            <li class="slide {{ $currentRoute === 'internal.consignment.list' ? 'active' : '' }}">
+                                <a href="{{ route('internal.consignment.list') }}" class="side-menu__item">
+                                    Consignment Certificate
                                 </a>
                             </li>
 

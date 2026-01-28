@@ -45,14 +45,14 @@
                                     </div>
 
                                     <div class="col-xl-12">
-                                        <label for="signin-username" class="form-label text-default">Email</label>
+                                        <label for="signin-username" class="form-label text-default">Email  <span class="text-primary2">*</span> </label>
                                         <input type="email" name="email" class="form-control" id="signin-username"
                                             placeholder="Email">
                                     </div>
 
                                     <div class="col-xl-12 mb-2">
                                         <label for="signin-password"
-                                            class="form-label text-default d-block">Password</label>
+                                            class="form-label text-default d-block">Password  <span class="text-primary2">*</span></label>
                                         <div class="position-relative">
                                             <input type="password" name="password"
                                                 class="form-control" 

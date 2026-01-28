@@ -141,7 +141,7 @@ class PermitConsignmentController extends Controller
 
             ->addColumn('action', function ($row) use ($type) {
                 // Use application_id (correct)
-                $viewUrl = '/permit/' . $row->permit_number;
+                $viewUrl = '/permit/import/' . $row->permit_number;
 
                 $view =
                     '

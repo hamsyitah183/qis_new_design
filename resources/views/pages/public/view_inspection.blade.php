@@ -117,8 +117,7 @@
                             {{-- @dd($application->status) --}}
                             @if (
                                 (str_contains(strtolower($application->status), 'clerk review in-progress') && $isAdminOrClerk) ||
-                                    ($application->category_application == 1 && ($isOwner || $isAdminOrClerk)) ||
-                                    $isAdminOrClerk)
+                                    ($application->category_application == 1 && ($isOwner || $isAdminOrClerk)) )
                                 {{-- Step 3 --}}
                                 @include('pages.public.view_inspection.step4')
                             @endif
@@ -126,7 +125,7 @@
                             @php
                                 $hasPending = $application->inspectionItems
                                     ? $application->inspectionItems->contains(
-                                        fn ($permit) => $permit->status === 'pending for payment'
+                                        fn($permit) => $permit->status === 'pending for payment',
                                     )
                                     : false;
 
@@ -216,6 +215,8 @@
             new Wizard1(secondWizardConfig).init();
         })();
     </script>
+
+  
 
 
 

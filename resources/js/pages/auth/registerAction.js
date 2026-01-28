@@ -181,16 +181,16 @@ $(document).ready(function () {
     }
 
     function inputEdit() {
-        $(".fullnameLabel").text(
-            type === "individual" ? "Name" : "Company name"
+        $(".fullnameLabel").html(
+            type === "individual" ? `Name  <span class="text-primary2">*</span>` : `Company name  <span class="text-primary2">*</span> `
         );
-        $("#phoneLabel").text(
-            type === "individual" ? "Phone Number" : "Company Phone Number"
+        $("#phoneLabel").html(
+            type === "individual" ? `Phone Number  <span class="text-primary2">*</span>` : `Company Phone Number  <span class="text-primary2">*</span>`
         );
-        $(".icLabel").text(
+        $(".icLabel").html(
             type === "individual"
-                ? "Identification Number"
-                : "Company Registration Number"
+                ? `Identification Number   <span class="text-primary2">*</span>`
+                : `Company Registration Number  <span class="text-primary2">*</span>`
         );
 
         $("#fullname").attr(
