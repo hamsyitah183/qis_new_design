@@ -807,16 +807,15 @@ function acceptApplication() {
                     success: function (res) {
                         Swal.fire({
                             icon: "success",
-                            title: "Application Accepted!",
+                            title: "Application Verified!",
                             text:
                                 res.message ||
-                                "The application has been successfully accepted.",
+                                "The application has been successfully verified.",
                             // timer: 1800,
                             showConfirmButton: false,
                             // timerProgressBar: true,
                             position: "center",
                         });
-                        initApplicationDetails();
                         window.location.reload();
                     },
                     error: function (err) {

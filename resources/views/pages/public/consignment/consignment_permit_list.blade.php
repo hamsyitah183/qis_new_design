@@ -15,14 +15,14 @@
     <script>
         window.AUTH_TYPE = @json($type);
     </script>
-    @vite(['resources/js/pages/permit/inspection_permit_list.js'])
+    @vite(['resources/js/pages/permit/consignment_permit_list.js'])
 @endpush
 
-@section('pageName', 'List Inspection Permit')
+@section('pageName', ' List Consignment Permit')
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="Permit List">
+    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title=" Permit List">
 
     </x-breadcrumb>
 @endsection

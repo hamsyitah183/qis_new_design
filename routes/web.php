@@ -20,6 +20,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PermitConsignmentController;
 use App\Http\Controllers\InspectionPermitController;
+use App\Http\Controllers\ConsignmentPermitController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Broadcast;
@@ -284,6 +285,7 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/application/exporter/{id}', [ApplicationController::class, 'get_exporter']);
 
     Route::get('/permit/generate/{id}', [PermitGenerateController::class, 'generatePermitWord']);
+    Route::get('/permit/generate/consignment/{id}', [PermitGenerateController::class, 'generateConsignmentPermitWord']);
 
     Route::get('/payment/{id}/{permitId}/{total}/{type}', [PaymentController::class, 'checkout'])
         ->name('payment.checkout')
@@ -309,6 +311,9 @@ Route::middleware(['auth.any'])->group(function () {
     // INSPECTION CERTIFICATE PERMIT
     Route::get('/permit/list/inspection', [InspectionPermitController::class, 'getView']);
     Route::get('/permit/list/inspection/data', [InspectionPermitController::class, 'getAllpermitList']);
+
+    Route::get('/permit/list/consignment', [ConsignmentPermitController::class, 'getView']);
+    Route::get('/permit/list/consignment/data', [ConsignmentPermitController::class, 'getAllPermitList']);
     Route::get('/permit/inspection/{permit_number}', [InspectionPermitController::class, 'permitDetails']);
 
     // Route::post('/')

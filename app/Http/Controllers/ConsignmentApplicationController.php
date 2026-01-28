@@ -121,7 +121,7 @@ class ConsignmentApplicationController extends Controller
                     'importer_verify' => $importer_verify,
                 ]);
 
-                $application->status =  $permit['applCate'] == 0 ? 'Clerk Review In-Progress' : 'wait for company approval';
+                $application->status = $permit['applCate'] == 0 ? 'Clerk Review In-Progress' : 'wait for company approval';
                 $application->save();
 
                 try {
@@ -164,7 +164,7 @@ class ConsignmentApplicationController extends Controller
                     'importer_verify' => $importer_verify,
                 ]);
 
-                $application->status =  $permit['applCate'] == 0 ? 'Clerk Review In-Progress' : 'wait for company approval';
+                $application->status = $permit['applCate'] == 0 ? 'Clerk Review In-Progress' : 'wait for company approval';
                 $application->save();
 
                 try {
@@ -276,7 +276,7 @@ class ConsignmentApplicationController extends Controller
                 }
             }
 
-        
+
 
             DB::commit();
 
@@ -401,7 +401,7 @@ class ConsignmentApplicationController extends Controller
         // }
 
         // // dd($allStatuses);
-            
+
         $itemId = $application->id;
 
         // dd($application->consignmentPermits);
@@ -609,16 +609,16 @@ class ConsignmentApplicationController extends Controller
             ])
             ->log(authUser()['user']['fullname'] . ' has ' . strtolower($status) . ' permit conditions for application ' . $permit->application->application_id);
 
-            $application->logActivity(
-                'Officer Verification',
-                $request['reason'] ?? 'Permit approved by officer and pending for payment',
-                $accepted ? 'Officer Verified' : 'Officer Rejected'
-            );
+        $application->logActivity(
+            'Officer Verification',
+            $request['reason'] ?? 'Permit approved by officer and pending for payment',
+            $accepted ? 'Officer Verified' : 'Officer Rejected'
+        );
 
 
         $allStatuses = ConsignmentPermit::where('application_id', $application->id)
             ->pluck('status');
-        
+
         // Fully processed ONLY if no processing or reapplied permits remain
         if (
             !$allStatuses->contains('processing') &&
@@ -626,14 +626,14 @@ class ConsignmentApplicationController extends Controller
         ) {
             $application->status = 'Officer Verification Completed';
             $application->save();
-        
+
             $application->logActivity(
                 action: 'Officer Verification Completed',
                 remark: 'All permits have completed processing',
                 status: 'Officer Verification Completed'
             );
         }
-        
+
         $permit->save();
 
         return response()->json([
@@ -673,7 +673,7 @@ class ConsignmentApplicationController extends Controller
         $data = json_decode($item['data'], true);
 
         // dd($data);
-        
+
 
         // 2️⃣ Update permit fields
         $permit->update([
@@ -703,6 +703,21 @@ class ConsignmentApplicationController extends Controller
         $application = $permit->application;
 
         $application->logActivity(action: 'Consignment Reapply', remark: 'User reapply the consignment', status: 'User Reapply Consignment');
+
+        // Activity log for user reapplying permit
+        activity()
+            ->tap(function (Activity $activity) {
+                $activity->log_name = 'user_activity';
+            })
+            ->event('reapply consignment permit')
+            ->causedBy(authUser()['user'])
+            ->performedOn($permit)
+            ->withProperties([
+                'permit_id' => $permit->id,
+                'application_id' => $application->application_id,
+                'item_name' => $data['item_name'] ?? '-',
+            ])
+            ->log(authUser()['user']['fullname'] . ' has reapplied for permit in application ' . $application->application_id);
 
         $application->status = 'Clerk Verified';
         $application->save();
