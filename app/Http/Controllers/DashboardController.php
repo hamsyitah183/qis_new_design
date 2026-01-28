@@ -7,6 +7,9 @@ use App\Charts\LineUserChart;
 use App\Charts\MonthlyUsersChart;
 use App\Charts\OrderDonutChart;
 use App\Charts\PaymentMethodBarChart;
+<<<<<<< HEAD
+use App\Charts\ApplicationHorizontalChart;
+=======
 // use App\Charts\ApplicationHorizontalChart;
 use App\Models\IpApplication;
 use App\Models\InspectionApplication;
@@ -16,12 +19,14 @@ use App\Charts\ClerkApplicationStatusChart;
 use App\Charts\ClerkDailyWorkloadChart;
 use App\Charts\ClerkDailyVolumeChart;
 use App\Charts\PublicApplicationStatusChart;
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
 use App\Models\Country;
 use App\Models\IpEntryPoint;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
+use Spatie\Activitylog\Models\Activity;
 use Illuminate\Notifications\DatabaseNotification;
 
 
@@ -30,7 +35,11 @@ use Illuminate\Notifications\DatabaseNotification;
 class DashboardController extends Controller
 {
     //
+<<<<<<< HEAD
+    public function dashboard(LineUserChart $lineChart, OrderDonutChart $orderChart, PaymentMethodBarChart $paymentChart, ApplicationHorizontalChart $applicationChart)
+=======
     public function dashboard(LineUserChart $lineChart,  OrderDonutChart $orderChart, PaymentMethodBarChart $paymentChart, ApplicationHorizontalChart $applicationChart)
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
     {
         // ✅ Check which guard is logged in
         if (Auth::guard('public')->check()) {
@@ -40,6 +49,8 @@ class DashboardController extends Controller
         }
 
         if (Auth::guard('internal')->check()) {
+<<<<<<< HEAD
+=======
             return $this->internal_dashboard(
                 app(LineUserChart::class),
                 app(OrderDonutChart::class),
@@ -49,6 +60,7 @@ class DashboardController extends Controller
                 app(ClerkDailyWorkloadChart::class),
                 app(ClerkDailyVolumeChart::class)
             );
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
             return $this->internal_dashboard($lineChart, $orderChart, $paymentChart, $applicationChart);
         }
 
@@ -56,10 +68,17 @@ class DashboardController extends Controller
         return redirect()->route('login');
     }
 
+<<<<<<< HEAD
+    public function public_dashboard()
+    {
+        // $notifications = auth()->user()->notifications()->latest()->take(10)->get();
+        $notifications = []; // Public users may not have notifications
+=======
     protected function public_dashboard(
         PublicApplicationStatusChart $statusChart
     ) {
         $userId = Auth::id();
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
 
         // KPI Counts
         $draftCount = IpApplication::where('status', '=', 'Draft')->where('user_id', '=', $userId)->count() +
@@ -106,6 +125,103 @@ class DashboardController extends Controller
         ]);
     }
 
+<<<<<<< HEAD
+    public function internal_dashboard(LineUserChart $lineChart, OrderDonutChart $orderChart, PaymentMethodBarChart $paymentChart, ApplicationHorizontalChart $applicationChart)
+    {
+        // $notifications = Notification::where('notifiable_type', 'internal')
+        //     ->where('notifiable_id', authUser()['user']->uuid)
+        //     ->latest()
+        //     ->take(10)
+        //     ->get();
+
+        // Fetch latest applications from all three types
+        $importPermits = \App\Models\IpApplication::with('user')
+            ->latest()
+            ->take(10)
+            ->get()
+            ->map(function ($app) {
+                return [
+                    'id' => $app->id,
+                    'application_id' => $app->application_id,
+                    'user_name' => $app->user ? $app->user->fullname : 'N/A',
+                    'type' => 'Import Permit',
+                    'status' => $app->status,
+                    'created_at' => $app->created_at
+                ];
+            });
+
+        $inspectionCerts = \App\Models\InspectionApplication::with('user')
+            ->latest()
+            ->take(10)
+            ->get()
+            ->map(function ($app) {
+                return [
+                    'id' => $app->id,
+                    'application_id' => $app->application_id,
+                    'user_name' => $app->user ? $app->user->fullname : 'N/A',
+                    'type' => 'Inspection Certificate',
+                    'status' => $app->status,
+                    'created_at' => $app->created_at
+                ];
+            });
+
+        $consignmentCerts = \App\Models\ConsignmentApplication::with('user')
+            ->latest()
+            ->take(10)
+            ->get()
+            ->map(function ($app) {
+                return [
+                    'id' => $app->id,
+                    'application_id' => $app->application_id,
+                    'user_name' => $app->user ? $app->user->fullname : 'N/A',
+                    'type' => 'Consignment Certificate',
+                    'status' => $app->status,
+                    'created_at' => $app->created_at
+                ];
+            });
+
+        // Combine and sort all applications
+        $latestApplications = $importPermits
+            ->concat($inspectionCerts)
+            ->concat($consignmentCerts)
+            ->sortByDesc('created_at')
+            ->take(10);
+
+        // Get statistics counts
+        $totalImportPermits = \App\Models\IpApplication::count();
+        $totalInspectionCerts = \App\Models\InspectionApplication::count();
+        $totalConsignmentCerts = \App\Models\ConsignmentApplication::count();
+
+        // Count all approved/accepted applications across all types
+        $totalAccepted = \App\Models\IpApplication::where('status', 'Approved')->count() +
+            \App\Models\InspectionApplication::where('status', 'Approved')->count() +
+            \App\Models\ConsignmentApplication::where('status', 'Approved')->count();
+
+        // Get recent activity logs
+        try {
+            $recentActivities = Activity::with('causer')
+                ->latest()
+                ->take(4)
+                ->get();
+        } catch (\Exception $e) {
+            // If activity log fails, just show empty array
+            $recentActivities = collect([]);
+        }
+
+        return view('dashboard.internal.main_dashboard', [
+            // 'notifications' => $notifications,
+            'userLineChart' => $lineChart->build(),
+            'orderChart' => $orderChart->build(),
+            'paymentChart' => $paymentChart->build(),
+            'applicationChart' => $applicationChart->build(),
+            'latestApplications' => $latestApplications,
+            'totalImportPermits' => $totalImportPermits,
+            'totalInspectionCerts' => $totalInspectionCerts,
+            'totalConsignmentCerts' => $totalConsignmentCerts,
+            'totalAccepted' => $totalAccepted,
+            'recentActivities' => $recentActivities
+        ]); // Internal user dashboard
+=======
     protected function internal_dashboard(
         LineUserChart $lineChart, 
         OrderDonutChart $orderChart, 
@@ -173,6 +289,7 @@ class DashboardController extends Controller
         }
 
         return view('dashboard.internal.main_dashboard', $data);
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
     }
 
     public function get_country($code)
