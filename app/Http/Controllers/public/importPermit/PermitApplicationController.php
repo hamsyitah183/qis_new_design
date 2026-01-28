@@ -177,16 +177,6 @@ class PermitApplicationController extends Controller
         return response()->json($exporters);
     }
 
-    public function showExportersPage()
-    {
-        $exporters = Exporter::with('countryInfo')
-            ->where('registered_by', auth('public')->id())
-            ->orderBy('name', 'asc')
-            ->get();
-
-        return view('pages.public.exporters.index', compact('exporters'));
-    }
-
     public function getEntryPoint(Request $request)
     {
         $type = $request->query('type');

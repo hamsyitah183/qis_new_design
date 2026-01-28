@@ -20,7 +20,7 @@
                                     </td>
                                     <td class="w-10">:</td>
                                     <td class="text-start  text-muted" id="importerName">
-                                        {{ $application->exporter->fullname }}
+                                        {{ $application->exporter->fullname ?? 'N/A' }}
                                     </td>
                                 </tr>
                                 <tr>
@@ -30,7 +30,7 @@
                                     </td>
                                     <td class="w-10">:</td>
                                     <td class="text-start text-muted" id="importerPhoneno">
-                                        {{ $application->exporter->phone_number }}
+                                        {{ $application->exporter->phone_number ?? 'N/A' }}
                                     </td>
                                 </tr>
                                 <tr>
@@ -40,10 +40,10 @@
                                     </td>
                                     <td class="w-10">:</td>
                                     <td class="text-start text-muted" id="simpAdd">
-                                        {{ $application->exporter->address_1 }} ,
-                                        {{ $application->exporter->address_2 }} ,
-                                        {{ $application->exporter->postcode }},
-                                        {{ $application->exporter->district }}
+                                        {{ $application->exporter->address_1 ?? '' }} ,
+                                        {{ $application->exporter->address_2 ?? '' }} ,
+                                        {{ $application->exporter->postcode ?? '' }},
+                                        {{ $application->exporter->district ?? '' }}
                                     </td>
                                 </tr>
                                 <tr>
@@ -53,7 +53,7 @@
                                     </td>
                                     <td class="w-10">:</td>
                                     <td class="text-start text-muted" id="sexpName">
-                                        {{ $application->importer->name }}
+                                        {{ $application->importer->name ?? 'N/A' }}
                                     </td>
                                 </tr>
                                 <tr>
@@ -63,7 +63,7 @@
                                     </td>
                                     <td class="w-10">:</td>
                                     <td class="text-start text-muted" id="sexpfonno">
-                                        {{ $application->importer->phone_no }}
+                                        {{ $application->importer->phone_no ?? 'N/A' }}
                                     </td>
                                 </tr>
                                 <tr>
@@ -73,7 +73,7 @@
                                     </td>
                                     <td class="w-10">:</td>
                                     <td class="text-start text-muted" id="sexpAddress">
-                                        {{ $application->importer->address }}
+                                        {{ $application->importer->address ?? 'N/A' }}
                                     </td>
                                 </tr>
                                 <tr>
@@ -83,7 +83,7 @@
                                     </td>
                                     <td class="w-10">:</td>
                                     <td class="text-start text-muted" id="sexpCountry">
-                                        {{ $application->importer->countryInfo->name }}
+                                        {{ $application->importer->countryInfo->name ?? 'N/A' }}
                                     </td>
                                 </tr>
                             </tbody>

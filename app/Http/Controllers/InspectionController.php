@@ -477,25 +477,6 @@ class InspectionController extends Controller
                 }
             }
 
-            // inspection send notifications
-            $notificationUrl = route('public.viewInspectionApplication', ['id' => $application->application_id]);
-
-            $internalUsers = InternalUser::role(['admin', 'clerk'])->get();
-            $internalMsg = $isDraft ? ($isNewApplication ? 'New Inspection Certificate draft created' : 'Inspection Certificate draft updated') : ($isNewApplication ? 'New Inspection Certificate application submitted' : 'Inspection Certificate application updated');
-
-            Notification::send($internalUsers, new ApplicationNotification($internalMsg, Auth::user()->fullname, $notificationUrl));
-
-            event(new InternalUserAdminEvent($internalMsg . ' by ' . (Auth::user()->fullname ?? 'Unknown User')));
-            event(new InternalUserClerkEvent($internalMsg . ' by ' . (Auth::user()->fullname ?? 'Unknown User')));
-
-            $applicant = PublicUser::where('uuid', $application->user_id)->first();
-            if ($applicant) {
-                $applicantMsg = $isDraft ? 'Your Inspection Certificate Application with id ' . $application->application_id . ' is saved as draft' : 'Your Inspection Certificate Application with id ' . $application->application_id . ' is submitted';
-
-                $applicant->notify(new ApplicationNotification($applicantMsg, 'QIS', $notificationUrl));
-                event(new PublicUserEvent($applicantMsg, $applicant->uuid));
-            }
-
             return response()->json([
                 'status' => 'success',
                 'message' => $isDraft ? 'Draft saved successfully' : 'Application submitted successfully',

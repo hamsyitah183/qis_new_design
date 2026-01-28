@@ -85,6 +85,18 @@
             };
             new Wizard1(secondWizardConfig).init();
         })();
+
+        // Wizard validation error notification
+        document.querySelectorAll('.wizard-tab').forEach(wz => {
+            wz.addEventListener('wz.error', function (e) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Required Fields Missing',
+                    text: 'Please fill in all required details before proceeding to the next step.',
+                    confirmButtonColor: '#5e72e4',
+                });
+            });
+        });
     </script>
 
 

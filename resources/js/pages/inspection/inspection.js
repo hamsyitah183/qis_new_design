@@ -662,6 +662,12 @@ function renderAllItems() {
             </tr>`
         );
     });
+
+    // Update hidden field for wizard validation
+    const hasItemsInput = document.getElementById("hasItems");
+    if (hasItemsInput) {
+        hasItemsInput.value = tempItems.length > 0 ? "true" : "";
+    }
 }
 
 function viewMore() {
