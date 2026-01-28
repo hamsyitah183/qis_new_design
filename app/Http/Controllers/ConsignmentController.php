@@ -441,8 +441,11 @@ class ConsignmentController extends Controller
     {
         $application = ConsignmentApplication::where('application_id', $id)->firstOrFail();
 
+<<<<<<< HEAD
         // dd($application, $request->all());
 
+=======
+>>>>>>> e21d701971dfe2d947958b343788701d0c6a2a28
         // Centralized messages per status
         $statusMessages = [
             'Clerk Review In-Progress' => [

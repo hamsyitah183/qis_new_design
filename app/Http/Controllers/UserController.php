@@ -123,49 +123,53 @@ class UserController extends Controller
 
 
             $validated = $request->validate([
-                'fullname'     => 'required|string|max:255',
-                'email'        => 'required|email|unique:public_users,email,' . $public->id,
+                'fullname' => 'required|string|max:255',
+                'email' => 'required|email|unique:public_users,email,' . $public->id,
                 // 'password' => 'sometimes|min:8',
-                'no_ic'        => 'required|unique:public_users,no_ic,' . $public->id,
+                'no_ic' => 'required|unique:public_users,no_ic,' . $public->id,
                 'account_type' => 'required|in:individu,company',
                 'phone_number' => 'required|unique:public_users,phone_number,' . $public->id,
-                'address_1'    => 'required',
-                'postcode'     => 'required',
-                'district'     => 'required',
-                'state'        => 'required',
+                'address_1' => 'required',
+                'postcode' => 'required',
+                'district' => 'required',
+                'state' => 'required',
             ]);
 
             try {
                 DB::beginTransaction();
 
                 $public->update([
-                    'fullname'     => $validated['fullname'],
-                    'email'        => $validated['email'],
+                    'fullname' => $validated['fullname'],
+                    'email' => $validated['email'],
                     // Only update password if provided
-                    'password'     => $request->filled('password') ? Hash::make($request->password) : $public->password,
-                    'no_ic'        => $validated['no_ic'],
+                    'password' => $request->filled('password') ? Hash::make($request->password) : $public->password,
+                    'no_ic' => $validated['no_ic'],
                     'account_type' => $validated['account_type'],
                     'phone_number' => $validated['phone_number'],
-                    'address_1'    => $validated['address_1'],
-                    'address_2'    => $request->address_2,
-                    'postcode'     => $validated['postcode'],
-                    'district'     => $validated['district'],
-                    'state'        => $validated['state'],
+                    'address_1' => $validated['address_1'],
+                    'address_2' => $request->address_2,
+                    'postcode' => $validated['postcode'],
+                    'district' => $validated['district'],
+                    'state' => $validated['state'],
                     'office_number' => $request->office_number
                 ]);
 
                 DB::commit();
 
-                event(new \App\Events\PublicUserEvent(
-                    'Your profile has been updated',
-                    $public->uuid
-                ));
+                try {
+                    event(new \App\Events\PublicUserEvent(
+                        'Your profile has been updated',
+                        $public->uuid
+                    ));
 
 
-                event(new \App\Events\PublicUserUpdatedForInternal(
-                    'A public user updated their profile',
-                    $public->uuid
-                ));
+                    event(new \App\Events\PublicUserUpdatedForInternal(
+                        'A public user updated their profile',
+                        $public->uuid
+                    ));
+                } catch (\Exception $e) {
+                    \Log::info('Failed to broadcast event: ' . $e->getMessage());
+                }
 
                 $users = InternalUser::all(); // or filter by role/guard
 
@@ -185,54 +189,58 @@ class UserController extends Controller
 
                 return response()->json([
                     'message' => 'Public User Updated',
-                    'user'    => $public,
+                    'user' => $public,
                 ]);
             } catch (\Exception $e) {
                 DB::rollBack();
 
                 return response()->json([
                     'message' => 'Update failed. Please try again.',
-                    'error'   => $e->getMessage(),
+                    'error' => $e->getMessage(),
                 ], 500);
             }
         } else {
             // CREATE new user
             $validated = $request->validate([
-                'fullname'     => 'required|string|max:255',
-                'email'        => 'required|email|unique:public_users,email',
+                'fullname' => 'required|string|max:255',
+                'email' => 'required|email|unique:public_users,email',
                 // 'password' => 'required|min:8',
-                'no_ic'        => 'required|unique:public_users,no_ic',
+                'no_ic' => 'required|unique:public_users,no_ic',
                 'account_type' => 'required|in:individu,company',
                 'phone_number' => 'required|unique:public_users,phone_number',
-                'address_1'    => 'required',
-                'postcode'     => 'required',
-                'district'     => 'required',
-                'state'        => 'required',
+                'address_1' => 'required',
+                'postcode' => 'required',
+                'district' => 'required',
+                'state' => 'required',
             ]);
 
             try {
                 DB::beginTransaction();
 
                 $user = PublicUser::create([
-                    'fullname'     => $validated['fullname'],
-                    'email'        => $validated['email'],
-                    'password'     => Hash::make($validated['no_ic']),
-                    'no_ic'        => $validated['no_ic'],
+                    'fullname' => $validated['fullname'],
+                    'email' => $validated['email'],
+                    'password' => Hash::make($validated['no_ic']),
+                    'no_ic' => $validated['no_ic'],
                     'account_type' => $validated['account_type'],
                     'phone_number' => $validated['phone_number'],
-                    'address_1'    => $validated['address_1'],
-                    'address_2'    => $request->address_2,
-                    'postcode'     => $validated['postcode'],
-                    'district'     => $validated['district'],
-                    'state'        => $validated['state'],
+                    'address_1' => $validated['address_1'],
+                    'address_2' => $request->address_2,
+                    'postcode' => $validated['postcode'],
+                    'district' => $validated['district'],
+                    'state' => $validated['state'],
                 ]);
 
                 DB::commit();
 
-                event(new \App\Events\PublicUserUpdatedForInternal(
-                    'A public user created an account',
-                    $user->uuid
-                ));
+                try {
+                    event(new \App\Events\PublicUserUpdatedForInternal(
+                        'A public user created an account',
+                        $user->uuid
+                    ));
+                } catch (\Exception $e) {
+                    \Log::info('Failed to broadcast event: ' . $e->getMessage());
+                }
 
                 $users = InternalUser::all(); // or filter by role/guard
 
@@ -256,14 +264,14 @@ class UserController extends Controller
 
                 return response()->json([
                     'message' => 'Public User Created',
-                    'user'    => $user,
+                    'user' => $user,
                 ]);
             } catch (\Exception $e) {
                 DB::rollBack();
 
                 return response()->json([
                     'message' => 'Registration failed. Please try again.',
-                    'error'   => $e->getMessage(),
+                    'error' => $e->getMessage(),
                 ], 500);
             }
         }
@@ -431,10 +439,14 @@ class UserController extends Controller
         | 3️⃣ Broadcast event (for live refresh / toast)
         |----------------------------------------------------------------------
         */
-            event(new InternalUserEdited(
-                $internalUser->fullname . ' account was edited by ' . $actor->fullname,
-                $internalUser->uuid
-            ));
+            try {
+                event(new InternalUserEdited(
+                    $internalUser->fullname . ' account was edited by ' . $actor->fullname,
+                    $internalUser->uuid
+                ));
+            } catch (\Exception $e) {
+                \Log::info('Failed to broadcast event: ' . $e->getMessage());
+            }
 
             return response()->json([
                 'used_id' => $uuid,
@@ -479,7 +491,11 @@ class UserController extends Controller
             $url
         ));
 
-        event(new InternalUserAdded('A new internal user has been added'));
+        try {
+            event(new InternalUserAdded('A new internal user has been added'));
+        } catch (\Exception $e) {
+            \Log::info('Failed to broadcast event: ' . $e->getMessage());
+        }
 
         return response()->json([
             'used_id' => $internalUser->uuid,
@@ -650,14 +666,18 @@ class UserController extends Controller
 
 
 
-        event(new InternalUserAdminEvent(
-            $user->fullname . ' is uploaded a verification attachement.'
-        ));
+        try {
+            event(new InternalUserAdminEvent(
+                $user->fullname . ' is uploaded a verification attachement.'
+            ));
 
-        event(new PublicUserEvent(
-            'You Upload a verification attachment',
-            $user->uuid
-        ));
+            event(new PublicUserEvent(
+                'You Upload a verification attachment',
+                $user->uuid
+            ));
+        } catch (\Exception $e) {
+            \Log::info('Failed to broadcast event: ' . $e->getMessage());
+        }
 
         $users = InternalUser::role(['admin'])->get();
         $notificationUrl = route('internal.public.list');
@@ -744,16 +764,20 @@ class UserController extends Controller
             // 🔹 Commit if all good
             DB::commit();
 
-            event(new InternalUserAdminEvent(
-                $isApproved ? $user->fullname . ' account is verified' :
+            try {
+                event(new InternalUserAdminEvent(
+                    $isApproved ? $user->fullname . ' account is verified' :
                     $user->fullname . ' account verification is rejected'
-            ));
+                ));
 
-            event(new PublicUserEvent(
-                $isApproved ? 'Your Account is verified by DOA' :
+                event(new PublicUserEvent(
+                    $isApproved ? 'Your Account is verified by DOA' :
                     'Your Account is not verified by DOA',
-                $user->uuid
-            ));
+                    $user->uuid
+                ));
+            } catch (\Exception $e) {
+                \Log::info('Failed to broadcast event: ' . $e->getMessage());
+            }
 
             $users = InternalUser::role(['admin'])->get();
             $notificationUrl = route('internal.public.list');
@@ -769,8 +793,8 @@ class UserController extends Controller
                 ->performedOn($user)
                 ->causedBy(authUser()['user'])
                 ->log(
-                    $isApproved ? "{$user->fullname} was verified by "  . authUser()['user']['fullname'] :
-                        "{$user->fullname}'s verification is rejected by " . authUser()['user']['fullname']
+                    $isApproved ? "{$user->fullname} was verified by " . authUser()['user']['fullname'] :
+                    "{$user->fullname}'s verification is rejected by " . authUser()['user']['fullname']
                 );
             $user->notify(new ApplicationNotification(
                 $isApproved ? 'Your account is verified' : 'Your account verification is rejected',
