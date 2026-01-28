@@ -120,9 +120,13 @@ class InspectionController extends Controller
                     // 'completed'  => 'bg-success', // green
                     'paid' => 'bg-success', // green
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     
 >>>>>>> e21d701971dfe2d947958b343788701d0c6a2a28
+=======
+    
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
                 ];
 
                 // Get all permit statuses for this row, lowercase
@@ -138,6 +142,7 @@ class InspectionController extends Controller
 
                 foreach ($permit_statuses as $status) {
 <<<<<<< HEAD
+<<<<<<< HEAD
                     if ($status == 'submitted') {
                         $status = 'processing';
                     }
@@ -145,11 +150,16 @@ class InspectionController extends Controller
                         $status = 'paid';
                     }
 =======
+=======
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
                     if ($status == 'submitted')
                         $status = 'processing';
                     if ($status == 'approved')
                         $status = 'paid';
+<<<<<<< HEAD
 >>>>>>> e21d701971dfe2d947958b343788701d0c6a2a28
+=======
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
 
                     if (isset($statusCounts[$status])) {
                         $statusCounts[$status]++;
@@ -217,10 +227,14 @@ class InspectionController extends Controller
         // Fetch application and eager load relationships
         $application = InspectionApplication::where('application_id', $id)
 <<<<<<< HEAD
+<<<<<<< HEAD
             ->with(['user', 'importer', 'exporter.countryInfo', 'entryPoint.districtCode', 'inspectionItems.attachments', 'activity_log.causer'])
 =======
             ->with(['user', 'importer', 'exporter.countryInfo', 'entryPoint.districtCode', 'inspectionItems.attachments', 'activity_log.causer',])
 >>>>>>> e21d701971dfe2d947958b343788701d0c6a2a28
+=======
+            ->with(['user', 'importer', 'exporter.countryInfo', 'entryPoint.districtCode', 'inspectionItems.attachments', 'activity_log.causer',])
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
             ->firstOrFail();
 
         if ($type === 'internal') {
@@ -291,9 +305,13 @@ class InspectionController extends Controller
             $isDraft = $request->boolean('is_draft');
             $isNewApplication = false;
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 >>>>>>> e21d701971dfe2d947958b343788701d0c6a2a28
+=======
+
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
 
             // Decode JSON data from frontend
             $exporter = $request->exporterData ? json_decode($request->exporterData, true) : null;
@@ -360,6 +378,7 @@ class InspectionController extends Controller
                     ])
                     ->log(authUser()['user']['fullname'] . ($isDraft ? ' has updated a draft inspection (ID: ' : ' has updated an inspection application (ID: ') . $application->application_id . ')');
             } else {
+<<<<<<< HEAD
                 $application = InspectionApplication::create([
                     'application_id' => Str::uuid(),
                     'eta' => $permit['eta'] ?? null,
@@ -429,6 +448,8 @@ class InspectionController extends Controller
                     ->log(authUser()['user']['fullname'] . ($isDraft ? ' has updated a draft inspection (ID: ' : ' has updated an inspection application (ID: ') . $application->application_id . ')');
 
             } else {
+=======
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
 
                 $category = $permit['applCate'] ?? 0;
                 $importerVerify = 'pending';
@@ -458,7 +479,10 @@ class InspectionController extends Controller
                     'importer_verify' => $importerVerify,
                     'date_importer_verify' => $verifyDate,
                 ]);
+<<<<<<< HEAD
 >>>>>>> e21d701971dfe2d947958b343788701d0c6a2a28
+=======
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
             }
 
             $appId = $application->id;
@@ -514,12 +538,18 @@ class InspectionController extends Controller
 
             // Global activity log for inspection_activity
 <<<<<<< HEAD
+<<<<<<< HEAD
             $actionText = $isDraft ? ($isNewApplication ? 'created a draft inspection application' : 'updated draft inspection application') : ($isNewApplication ? 'submitted a new inspection application' : 'updated inspection application');
 =======
             $actionText = $isDraft
                 ? ($isNewApplication ? 'created a draft inspection application' : 'updated draft inspection application')
                 : ($isNewApplication ? 'submitted a new inspection application' : 'updated inspection application');
 >>>>>>> e21d701971dfe2d947958b343788701d0c6a2a28
+=======
+            $actionText = $isDraft
+                ? ($isNewApplication ? 'created a draft inspection application' : 'updated draft inspection application')
+                : ($isNewApplication ? 'submitted a new inspection application' : 'updated inspection application');
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
 
             activity()
                 ->tap(function ($activity) {
@@ -590,6 +620,7 @@ class InspectionController extends Controller
             }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
             return response()->json(
                 [
                     'status' => 'success',
@@ -599,6 +630,8 @@ class InspectionController extends Controller
                 200,
             );
 =======
+=======
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
             return response()->json([
                 'status' => 'success',
                 'message' => $isDraft ? 'Draft saved successfully' : 'Application submitted successfully',
@@ -606,7 +639,10 @@ class InspectionController extends Controller
             ], 200);
 
 
+<<<<<<< HEAD
 >>>>>>> e21d701971dfe2d947958b343788701d0c6a2a28
+=======
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
         } catch (\Exception $e) {
             DB::rollBack();
             foreach ($movedFiles as $file) {
@@ -665,6 +701,7 @@ class InspectionController extends Controller
 
         if (!isset($statusMessages[$status])) {
 <<<<<<< HEAD
+<<<<<<< HEAD
             return response()->json(
                 [
                     'message' => 'Invalid inspection application status.',
@@ -676,6 +713,11 @@ class InspectionController extends Controller
                 'message' => 'Invalid inspection application status.'
             ], 400);
 >>>>>>> e21d701971dfe2d947958b343788701d0c6a2a28
+=======
+            return response()->json([
+                'message' => 'Invalid inspection application status.'
+            ], 400);
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
         }
 
         $application->status = $status;
@@ -693,14 +735,20 @@ class InspectionController extends Controller
 
         // activity log
 <<<<<<< HEAD
+<<<<<<< HEAD
         $application->logActivity(action: $status, remark: $request->input('reason') ?? "Inspection application {$status}", status: $status);
 =======
+=======
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
         $application->logActivity(
             action: $status,
             remark: $request->input('reason') ?? "Inspection application {$status}",
             status: $status
         );
+<<<<<<< HEAD
 >>>>>>> e21d701971dfe2d947958b343788701d0c6a2a28
+=======
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
 
         // Global activity log for inspection_activity
         $logMessage = match ($status) {
@@ -964,14 +1012,20 @@ class InspectionController extends Controller
 
         // Log the activity
 <<<<<<< HEAD
+<<<<<<< HEAD
         $application->logActivity(action: 'Item Accepted', remark: "Inspection item '{$itemName}' accepted by officer", status: 'Item Accepted');
 =======
+=======
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
         $application->logActivity(
             action: 'Item Accepted',
             remark: "Inspection item '{$itemName}' accepted by officer",
             status: 'Item Accepted'
         );
+<<<<<<< HEAD
 >>>>>>> e21d701971dfe2d947958b343788701d0c6a2a28
+=======
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
 
         // Global activity log
         activity()
@@ -1029,14 +1083,20 @@ class InspectionController extends Controller
             $application->save();
 
 <<<<<<< HEAD
+<<<<<<< HEAD
             $application->logActivity(action: 'Officer Verification Completed', remark: 'All inspection items processed', status: 'Officer Verification Completed');
 =======
+=======
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
             $application->logActivity(
                 action: 'Officer Verification Completed',
                 remark: 'All inspection items processed',
                 status: 'Officer Verification Completed'
             );
+<<<<<<< HEAD
 >>>>>>> e21d701971dfe2d947958b343788701d0c6a2a28
+=======
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
         }
 
         return response()->json([
@@ -1087,14 +1147,20 @@ class InspectionController extends Controller
 
         // Log the activity
 <<<<<<< HEAD
+<<<<<<< HEAD
         $application->logActivity(action: 'Item Rejected', remark: "Inspection item '{$itemName}' rejected. Reason: " . $request->reason, status: 'Item Rejected');
 =======
+=======
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
         $application->logActivity(
             action: 'Item Rejected',
             remark: "Inspection item '{$itemName}' rejected. Reason: " . $request->reason,
             status: 'Item Rejected'
         );
+<<<<<<< HEAD
 >>>>>>> e21d701971dfe2d947958b343788701d0c6a2a28
+=======
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
 
         // Global activity log
         activity()
@@ -1153,14 +1219,20 @@ class InspectionController extends Controller
             $application->save();
 
 <<<<<<< HEAD
+<<<<<<< HEAD
             $application->logActivity(action: 'Officer Verification Completed', remark: 'All inspection items processed', status: 'Officer Verification Completed');
 =======
+=======
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
             $application->logActivity(
                 action: 'Officer Verification Completed',
                 remark: 'All inspection items processed',
                 status: 'Officer Verification Completed'
             );
+<<<<<<< HEAD
 >>>>>>> e21d701971dfe2d947958b343788701d0c6a2a28
+=======
+>>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
         }
 
         return response()->json([

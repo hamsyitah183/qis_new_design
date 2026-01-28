@@ -16,8 +16,11 @@ class BayuPayService
         // $response = Http::withToken('test-api')
         // ->get('https://bayupay-dummy.geovidia.my/readdata.php', 
         // ['kod_transaksi' => $kodTransaksi]);
+        // $response = Http::withToken('test-api')
+        // ->get(' http://10.71.97.95/readdata.php', 
+        // ['kod_transaksi' => $kodTransaksi]);
         $response = Http::withToken('test-api')
-        ->get(' http://10.71.97.95/readdata.php', 
+        ->get('https://hands-on5.sabah.gov.my/readdata.php', 
         ['kod_transaksi' => $kodTransaksi]);
 
         if (!$response->successful()) {
@@ -110,7 +113,7 @@ class BayuPayService
         //     'rn' => $order->order_number,
         // ]);
         $response = Http::withToken('test-api')
-        ->get('http://10.71.97.95/readtransaction.php', [
+        ->get('https://hands-on5.sabah.gov.my/readtransaction.php', [
             'sid' => $order->sid,
             'itn' => $order->itn,
             'rn' => $order->order_number,

@@ -20,6 +20,8 @@ class InternalUserSeeder extends Seeder
             'admin' => 'internal',
             'officer' => 'internal',
             'clerk' => 'internal',
+            'finance' => 'internal',
+            // 'clerk' => 'internal',
         ];
 
         foreach ($roles as $roleName => $guard) {
@@ -86,6 +88,17 @@ class InternalUserSeeder extends Seeder
                 'password' => '12345678',
                 'email_verified_at' => Carbon::now(),
                 'role' => 'admin',
+            ]
+            ,[
+                'email' => 'finance@example.com',
+                'fullname' => 'Finance',
+                'phone_number' => '01798227530',
+                'position' => 'Administrator',
+                'office' => 'HQ',
+                'no_ic' => '9111171266957',
+                'password' => '12345678',
+                'email_verified_at' => Carbon::now(),
+                'role' => 'finance',
             ]
         ];
 

@@ -83,9 +83,11 @@ class UserController extends Controller
             ->editColumn('created_at', fn($user) => $user->created_at->format('d-m-Y H:i'))
             ->editColumn('account_type', fn($user) => ucfirst($user->account_type))
             ->editColumn('doa_verified', function ($user) {
+
+                
                 if (!$user->approved) {
                     return '<span class="badge bg-dark-transparent cursor-pointer badge-verification" data-id="'
-                        . $user->uuid . '" data-verified="no">Not Verified</span>';
+                        . $user->uuid . '" data-verified="no">Not Verified </span>';
                 }
 
                 return $user->approved->doa_verified
