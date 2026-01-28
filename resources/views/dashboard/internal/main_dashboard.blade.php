@@ -2,8 +2,16 @@
 
 @section('pageName', 'Dashboard')
 
+
+@php
+$role = authUser()['roles'][0];
+
+@endphp
+
 @push('scripts')
     @vite(['resources/js/pages/dashboard.js'])
+
+
 
 @push('scripts')
    @if ($role == 'admin')
@@ -24,10 +32,6 @@
 
 @section('content')
 
-   @php
-       $role = authUser()['roles'][0];
-
-   @endphp
 
   
 

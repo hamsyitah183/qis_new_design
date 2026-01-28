@@ -7,19 +7,17 @@ use App\Charts\LineUserChart;
 use App\Charts\MonthlyUsersChart;
 use App\Charts\OrderDonutChart;
 use App\Charts\PaymentMethodBarChart;
-<<<<<<< HEAD
-use App\Charts\ApplicationHorizontalChart;
-=======
+// use App\Charts\ApplicationHorizontalChart;
 // use App\Charts\ApplicationHorizontalChart;
 use App\Models\IpApplication;
 use App\Models\InspectionApplication;
 use App\Models\ConsignmentApplication;
+// use App\Models\ClerkDailyVolumeChart;
 use ArielMejiaDev\LarapexCharts\LarapexChart;
 use App\Charts\ClerkApplicationStatusChart;
 use App\Charts\ClerkDailyWorkloadChart;
 use App\Charts\ClerkDailyVolumeChart;
 use App\Charts\PublicApplicationStatusChart;
->>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
 use App\Models\Country;
 use App\Models\IpEntryPoint;
 use Carbon\Carbon;
@@ -35,11 +33,7 @@ use Illuminate\Notifications\DatabaseNotification;
 class DashboardController extends Controller
 {
     //
-<<<<<<< HEAD
-    public function dashboard(LineUserChart $lineChart, OrderDonutChart $orderChart, PaymentMethodBarChart $paymentChart, ApplicationHorizontalChart $applicationChart)
-=======
-    public function dashboard(LineUserChart $lineChart,  OrderDonutChart $orderChart, PaymentMethodBarChart $paymentChart, ApplicationHorizontalChart $applicationChart)
->>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
+    public function dashboard(LineUserChart $lineChart, OrderDonutChart $orderChart, PaymentMethodBarChart $paymentChart, ApplicationHorizontalChart $applicationChart, ClerkDailyVolumeChart $clerkVolumeChart )
     {
         // ✅ Check which guard is logged in
         if (Auth::guard('public')->check()) {
@@ -49,8 +43,6 @@ class DashboardController extends Controller
         }
 
         if (Auth::guard('internal')->check()) {
-<<<<<<< HEAD
-=======
             return $this->internal_dashboard(
                 app(LineUserChart::class),
                 app(OrderDonutChart::class),
@@ -60,25 +52,17 @@ class DashboardController extends Controller
                 app(ClerkDailyWorkloadChart::class),
                 app(ClerkDailyVolumeChart::class)
             );
->>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
-            return $this->internal_dashboard($lineChart, $orderChart, $paymentChart, $applicationChart);
+            return $this->internal_dashboard($lineChart, $orderChart, $paymentChart, $applicationChart, $clerkVolumeChart);
         }
 
         // ❌ If no guard is logged in, redirect to login
         return redirect()->route('login');
     }
 
-<<<<<<< HEAD
-    public function public_dashboard()
-    {
-        // $notifications = auth()->user()->notifications()->latest()->take(10)->get();
-        $notifications = []; // Public users may not have notifications
-=======
     protected function public_dashboard(
         PublicApplicationStatusChart $statusChart
     ) {
         $userId = Auth::id();
->>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
 
         // KPI Counts
         $draftCount = IpApplication::where('status', '=', 'Draft')->where('user_id', '=', $userId)->count() +
@@ -125,8 +109,16 @@ class DashboardController extends Controller
         ]);
     }
 
-<<<<<<< HEAD
-    public function internal_dashboard(LineUserChart $lineChart, OrderDonutChart $orderChart, PaymentMethodBarChart $paymentChart, ApplicationHorizontalChart $applicationChart)
+    public function internal_dashboard(
+        LineUserChart $lineChart,
+        OrderDonutChart $orderChart,
+        PaymentMethodBarChart $paymentChart,
+        ApplicationHorizontalChart $applicationChart,
+        ClerkApplicationStatusChart $clerkStatusChart,
+        ClerkDailyWorkloadChart $clerkWorkloadChart,
+        ClerkDailyVolumeChart $clerkVolumeChart
+    )
+    
     {
         // $notifications = Notification::where('notifiable_type', 'internal')
         //     ->where('notifiable_id', authUser()['user']->uuid)
@@ -219,78 +211,79 @@ class DashboardController extends Controller
             'totalInspectionCerts' => $totalInspectionCerts,
             'totalConsignmentCerts' => $totalConsignmentCerts,
             'totalAccepted' => $totalAccepted,
-            'recentActivities' => $recentActivities
-        ]); // Internal user dashboard
-=======
-    protected function internal_dashboard(
-        LineUserChart $lineChart, 
-        OrderDonutChart $orderChart, 
-        PaymentMethodBarChart $paymentChart, 
-        ApplicationHorizontalChart $applicationChart,
-        ClerkApplicationStatusChart $clerkStatusChart,
-        ClerkDailyWorkloadChart $clerkWorkloadChart,
-        ClerkDailyVolumeChart $clerkVolumeChart
-    ) {
-        $role = authUser()['roles'][0];
-
-        $data = [
-            'userLineChart' => $lineChart->build(),
-            'orderChart' => $orderChart->build(),
-            'paymentChart' => $paymentChart->build(),
-            'applicationChart' => $applicationChart->build(),
+            'recentActivities' => $recentActivities,
             'clerkVolumeChart' => $clerkVolumeChart->build()
-        ];
 
-        if ($role === 'clerk') {
-            // KPI Counts
-            $data['pendingPermits'] = IpApplication::where('status', '=', 'Clerk Review In-Progress')->count();
-            $data['pendingInspections'] = InspectionApplication::where('status', '=', 'Clerk review in-progress')->count();
-            $data['pendingConsignments'] = ConsignmentApplication::where('status', '=', 'Clerk Review In-Progress')->count();
-            
-            // Verified Today (example logic: applications updated to a "verified" status today)
-            $today = Carbon::today();
-            $verifiedTodayPermits = IpApplication::where('status', '=', 'Clerk Verified')
-                ->whereDate('updated_at', '=', $today)->count();
-            $verifiedTodayInspections = InspectionApplication::where('status', '=', 'Clerk Verified')
-                ->whereDate('updated_at', '=', $today)->count();
-            $verifiedTodayConsignments = ConsignmentApplication::where('status', '=', 'Clerk Verified')
-                ->whereDate('updated_at', '=', $today)->count();
-            
-            $data['verifiedToday'] = $verifiedTodayPermits + $verifiedTodayInspections + $verifiedTodayConsignments;
-
-            // Charts
-            $data['clerkStatusChart'] = $clerkStatusChart->build();
-            $data['clerkWorkloadChart'] = $clerkWorkloadChart->build();
-            $data['clerkVolumeChart'] = $clerkVolumeChart->build();
-
-            // Action Needed Queue (Oldest 5 pending applications)
-            $pendingApps = collect();
-            
-            $permits = IpApplication::with('user')->where('status', '=', 'Clerk Review In-Progress')
-                ->orderBy('created_at', 'asc')->take(5)->get()->map(function($item) {
-                    $item->type = 'Import Permit';
-                    return $item;
-                });
-            
-            $inspections = InspectionApplication::with('user')->where('status', '=', 'Clerk review in-progress')
-                ->orderBy('created_at', 'asc')->take(5)->get()->map(function($item) {
-                    $item->type = 'Inspection';
-                    return $item;
-                });
-                
-            $consignments = ConsignmentApplication::with('user')->where('status', '=', 'Clerk Review In-Progress')
-                ->orderBy('created_at', 'asc')->take(5)->get()->map(function($item) {
-                    $item->type = 'Consignment';
-                    return $item;
-                });
-
-            $data['pendingQueue'] = $pendingApps->concat($permits)->concat($inspections)->concat($consignments)
-                ->sortBy('created_at')->take(5);
-        }
-
-        return view('dashboard.internal.main_dashboard', $data);
->>>>>>> cbeb9327aa5425b06eff6e8a132b8b8c7a8fb9b5
+        ]); // Internal user dashboard
     }
+    // protected function internal_dashboard(
+    //     LineUserChart $lineChart, 
+    //     OrderDonutChart $orderChart, 
+    //     PaymentMethodBarChart $paymentChart, 
+    //     ApplicationHorizontalChart $applicationChart,
+    //     ClerkApplicationStatusChart $clerkStatusChart,
+    //     ClerkDailyWorkloadChart $clerkWorkloadChart,
+    //     ClerkDailyVolumeChart $clerkVolumeChart
+    // ) {
+    //     $role = authUser()['roles'][0];
+
+    //     $data = [
+    //         'userLineChart' => $lineChart->build(),
+    //         'orderChart' => $orderChart->build(),
+    //         'paymentChart' => $paymentChart->build(),
+    //         'applicationChart' => $applicationChart->build(),
+    //         'clerkVolumeChart' => $clerkVolumeChart->build()
+    //     ];
+
+    //     if ($role === 'clerk') {
+    //         // KPI Counts
+    //         $data['pendingPermits'] = IpApplication::where('status', '=', 'Clerk Review In-Progress')->count();
+    //         $data['pendingInspections'] = InspectionApplication::where('status', '=', 'Clerk review in-progress')->count();
+    //         $data['pendingConsignments'] = ConsignmentApplication::where('status', '=', 'Clerk Review In-Progress')->count();
+            
+    //         // Verified Today (example logic: applications updated to a "verified" status today)
+    //         $today = Carbon::today();
+    //         $verifiedTodayPermits = IpApplication::where('status', '=', 'Clerk Verified')
+    //             ->whereDate('updated_at', '=', $today)->count();
+    //         $verifiedTodayInspections = InspectionApplication::where('status', '=', 'Clerk Verified')
+    //             ->whereDate('updated_at', '=', $today)->count();
+    //         $verifiedTodayConsignments = ConsignmentApplication::where('status', '=', 'Clerk Verified')
+    //             ->whereDate('updated_at', '=', $today)->count();
+            
+    //         $data['verifiedToday'] = $verifiedTodayPermits + $verifiedTodayInspections + $verifiedTodayConsignments;
+
+    //         // Charts
+    //         $data['clerkStatusChart'] = $clerkStatusChart->build();
+    //         $data['clerkWorkloadChart'] = $clerkWorkloadChart->build();
+    //         $data['clerkVolumeChart'] = $clerkVolumeChart->build();
+
+    //         // Action Needed Queue (Oldest 5 pending applications)
+    //         $pendingApps = collect();
+            
+    //         $permits = IpApplication::with('user')->where('status', '=', 'Clerk Review In-Progress')
+    //             ->orderBy('created_at', 'asc')->take(5)->get()->map(function($item) {
+    //                 $item->type = 'Import Permit';
+    //                 return $item;
+    //             });
+            
+    //         $inspections = InspectionApplication::with('user')->where('status', '=', 'Clerk review in-progress')
+    //             ->orderBy('created_at', 'asc')->take(5)->get()->map(function($item) {
+    //                 $item->type = 'Inspection';
+    //                 return $item;
+    //             });
+                
+    //         $consignments = ConsignmentApplication::with('user')->where('status', '=', 'Clerk Review In-Progress')
+    //             ->orderBy('created_at', 'asc')->take(5)->get()->map(function($item) {
+    //                 $item->type = 'Consignment';
+    //                 return $item;
+    //             });
+
+    //         $data['pendingQueue'] = $pendingApps->concat($permits)->concat($inspections)->concat($consignments)
+    //             ->sortBy('created_at')->take(5);
+    //     }
+
+    //     return view('dashboard.internal.main_dashboard', $data);
+    // }
 
     public function get_country($code)
     {
