@@ -710,7 +710,7 @@ class ApplicationController extends Controller
         $importer = ConsignmentImporter::with(['countryInfo'])->find($id);
 
         return response()->json([
-            'exporter' => $importer
+            'importer' => $importer
         ]);
     }
 }

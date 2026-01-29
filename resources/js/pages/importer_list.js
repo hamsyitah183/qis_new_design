@@ -39,8 +39,8 @@ function initAddExporterModal() {
             success: () => {
                 Swal.fire({
                     icon: "success",
-                    title: "Exporter Saved!",
-                    text: "The exporter has been successfully added to the list.",
+                    title: "Importer Saved!",
+                    text: "The Importer has been successfully added to the list.",
                     timer: 1800,
                     showConfirmButton: false,
                     timerProgressBar: true,
@@ -140,7 +140,7 @@ $(document).on("click", ".deleteExporter", function () {
             }).then((finalResult) => {
                 if (finalResult.isConfirmed) {
                     $.ajax({
-                        url: `/public/delete_exporter/${exporterId}`,
+                        url: `/public/delete_importer/${exporterId}`,
                         type: "DELETE",
                         headers: {
                             "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
@@ -165,7 +165,7 @@ $(document).on("click", ".deleteExporter", function () {
                                 title: "Failed",
                                 text:
                                     xhr.responseJSON?.message ||
-                                    "Unable to delete exporter.",
+                                    "Unable to delete importer.",
                             });
                         },
                     });
@@ -188,6 +188,9 @@ $(document).on("click", ".editExporter", function () {
     });
 
     const modal = new bootstrap.Modal(document.getElementById("addExporterModal"));
+
+    $('#addExporterModalLabel').text('Edit Importer')
+
     modal.show();
 
     $.ajax({

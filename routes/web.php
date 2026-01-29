@@ -108,6 +108,7 @@ Route::prefix('public')
         Route::get('/get_consignment_importers', [ConsignmentApplicationController::class, 'getConsignmentImporters'])->name('getConsignmentImporters');
         Route::post('/store_consignment_importer', [ConsignmentApplicationController::class, 'storeConsignmentImporter'])->name('storeImporter');
         Route::get('/get_consignment_certificate/{countryCode}', [ConsignmentApplicationController::class, 'getConsignmentFromCountry']);
+        Route::delete('/delete_importer/{id}', [ConsignmentApplicationController::class, 'deleteImporter']);
         // itemSelect
         Route::post('/save-permit/{id}', [PermitApplicationController::class, 'reapply']);
 

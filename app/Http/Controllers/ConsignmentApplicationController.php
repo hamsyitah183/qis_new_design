@@ -334,42 +334,86 @@ class ConsignmentApplicationController extends Controller
         }
     }
 
-    function storeConsignmentImporter(Request $request)
+    public function storeConsignmentImporter(Request $request)
     {
         \Log::info('Storing Consignment Importer', $request->all());
-
+    
+        // dd($request['id']);
         $validated = $request->validate([
-            'name' => 'required|string|max:150',
+            'name'     => 'required|string|max:150',
             'phone_no' => 'required|string|max:25',
-            'address' => 'required|string',
-            'country' => 'required|string|max:50',
+            'address'  => 'required|string',
+            'country'  => 'required|string|max:50',
+            'id'       => 'nullable|integer',
         ]);
-
+    
         $user = authUser()['user'];
-
+    
         if (!$user) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
+    
+        /** =========================
+         * CREATE
+         * ========================= */
+        if (empty($validated['id'])) {
+    
+            $exporter = ConsignmentImporter::create([
+                'name'          => $validated['name'],
+                'phone_no'      => $validated['phone_no'],
+                'address'       => $validated['address'],
+                'country'       => $validated['country'],
+                'registered_by' => $user->uuid,
+            ]);
+    
+            activity()
+                ->tap(fn (Activity $activity) => $activity->log_name = 'user_activity')
+                ->event('add importer')
+                ->causedBy($user)
+                ->performedOn($exporter)
+                ->withProperties(['importer' => $exporter])
+                ->log($user->fullname . ' has added an importer');
+    
+        } 
+        /** =========================
+         * UPDATE
+         * ========================= */
+        else {
+    
+            $exporter = ConsignmentImporter::findOrFail($validated['id']);
+    
+            $exporter->update([
+                'name'     => $validated['name'],
+                'phone_no' => $validated['phone_no'],
+                'address'  => $validated['address'],
+                'country'  => $validated['country'],
+            ]);
+    
+            activity()
+                ->tap(fn (Activity $activity) => $activity->log_name = 'user_activity')
+                ->event('update importer')
+                ->causedBy($user)
+                ->performedOn($exporter)
+                ->withProperties(['importer' => $exporter])
+                ->log($user->fullname . ' has updated an importer');
+        }
+    
+        return response()->json([
+            'status'  => 'success',
+            'data'    => $exporter,
+        ], 200);
+    }
 
-        $exporter = ConsignmentImporter::create([
-            'name' => $validated['name'],
-            'phone_no' => $validated['phone_no'],
-            'address' => $validated['address'],
-            'country' => $validated['country'],
-            'registered_by' => $user->uuid,
+
+    public function deleteImporter($id)
+    {
+        $importer = ConsignmentImporter::find($id);
+
+        $importer->delete();
+
+        return response()->json([
+            'message' => 'successful'
         ]);
-        activity()
-            ->tap(function (Activity $activity) {
-                $activity->log_name = 'user_activity';
-            })
-            ->event('add importer')
-            ->causedBy(authUser()['user'])
-            ->performedOn(authUser()['user'])
-            ->withProperties([
-                'importer' => $exporter,
-            ])
-            ->log(authUser()['user']['fullname'] . ' has added an importer');
-        return response()->json($exporter, 201);
     }
 
     public function viewapplication($uuid)

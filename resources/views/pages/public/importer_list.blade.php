@@ -67,6 +67,8 @@
         <form id="addExporterForm">
             @csrf
 
+            <input type="hidden" name="id" id="id">
+
             {{-- Name --}}
             <div class="mb-3">
                 <label for="addexpName" class="form-label">Name</label>
@@ -100,8 +102,8 @@
             @slot('footer')
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
 
-                <button type="button" id="addExporterbtn" class="btn btn-primary" data-route="{{ route('public.storeExp') }}">
-                    Save Exporter
+                <button type="button" id="addExporterbtn" class="btn btn-primary" data-route="{{ route('public.storeImporter') }}">
+                    Save Importer
                 </button>
             @endslot
         </form>
