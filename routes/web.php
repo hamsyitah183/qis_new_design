@@ -83,7 +83,6 @@ Route::prefix('public')
         Route::post('/store_exporter', [PermitApplicationController::class, 'storeExporter'])->name('storeExp');
         Route::delete('/delete_exporter/{id}', [PermitApplicationController::class, 'deleteExporter'])->name('deleteExp');
         Route::get('/get_importers/{idno}', [PermitApplicationController::class, 'getImporters'])->name('getImporters');
-        Route::get('/manage_exporters', [PermitApplicationController::class, 'showExportersPage'])->name('getExporters');
         Route::get('/get_exporters', [PermitApplicationController::class, 'getExporters'])->name('getExportersJson');
         Route::get('/get_importers', [PermitApplicationController::class, 'getConsignmentImporters'])->name('getImportersJson');
         Route::get('/get_entry_point', [PermitApplicationController::class, 'getEntryPoint'])->name('getEntryPoint');

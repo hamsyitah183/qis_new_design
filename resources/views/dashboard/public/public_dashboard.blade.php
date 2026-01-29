@@ -111,7 +111,7 @@
                     <button type="button" onclick="showCategories('consignment')" class="btn btn-warning-transparent btn-wave text-start">
                         <i class="ti ti-plus me-2"></i> New Consignment Certificate
                     </button>
-                    <a href="{{ route('public.getExporters') }}" class="btn btn-light btn-wave text-start">
+                    <a href="{{ route('application.exporter') }}" class="btn btn-light btn-wave text-start">
                         <i class="ti ti-users me-2"></i> Manage My Exporters
                     </a>
                 </div>

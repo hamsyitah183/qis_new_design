@@ -84,9 +84,9 @@
                                             <tr class="odd">
                                                 <td class="sorting_1 dtr-control" tabindex="0">#{{ $loop->iteration }}
                                                 </td>
-                                                <td>{{ $appl->importer->fullname }}</td>
-                                                <td>{{ $appl->exporter->name }}</td>
-                                                <td>{{ $appl->user->fullname }}</td>
+                                                <td>{{ $appl->importer->fullname ?? 'N/A' }}</td>
+                                                <td>{{ $appl->exporter->name ?? 'N/A' }}</td>
+                                                <td>{{ $appl->user->fullname ?? 'N/A' }}</td>
 
                                                 @if ($appl->category_application == 0)
                                                     <td style="text-align:center">
