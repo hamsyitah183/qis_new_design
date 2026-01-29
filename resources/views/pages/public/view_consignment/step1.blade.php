@@ -15,7 +15,7 @@
                     <div class="col-xl-6">
                         <label for="trnptType" class="form-label">Transport Type</label>
                         <select class="form-select" id="trnptType" name="trnptType"
-                            data-route="{{ route('public.getEntryPoint') }}" disabled>
+                            data-route="/public/get_entry_point" disabled>
                             <option value="">{{ $application->transport_type }}</option>
                             <option value="Air">Air</option>
                             <option value="Sea">Sea</option>

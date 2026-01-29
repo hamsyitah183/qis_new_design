@@ -13,7 +13,7 @@
                     <div class="col-xl-6">
                         <label for="trnptType" class="form-label">Transport Type</label>
                         <select class="form-select" id="trnptType" name="trnptType"
-                            data-route="{{ route('public.getEntryPoint') }}" required>
+                            data-route="/public/get_entry_point" required>
                             <option value="">-- Select Transport --</option>
                             <option value="Air">Air</option>
                             <option value="Sea">Sea</option>
