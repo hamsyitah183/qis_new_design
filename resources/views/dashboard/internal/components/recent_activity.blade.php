@@ -1,12 +1,12 @@
-
-    <div class="card custom-card overflow-hidden">
-        <div class="card-header">
-            <div class="card-title">
-                Recent Activity
-            </div>
+<div class="card custom-card overflow-hidden">
+    <div class="card-header">
+        <div class="card-title">
+            Recent Activity
         </div>
-        <div class="card-body p-0">
-            <ul class="list-unstyled mb-0 activity-timeline">
+    </div>
+    <div class="card-body p-0">
+        <div class = "scroll-div" style= "max-height: 450px;">
+            <ul class="list-unstyled mb-0 activity-timeline ">
                 @forelse($recentActivities ?? [] as $activity)
                     <li class="p-3 border-bottom">
                         <div class="d-flex align-items-start gap-2">
@@ -14,8 +14,7 @@
                                 $colors = ['primary', 'secondary', 'info', 'warning', 'success'];
                                 $color = $colors[$loop->index % count($colors)];
                             @endphp
-                            <span
-                                class="avatar avatar-xs avatar-rounded bg-{{ $color }}-transparent">
+                            <span class="avatar avatar-xs avatar-rounded bg-{{ $color }}-transparent">
                                 <i class="ti ti-point-filled"></i>
                             </span>
                             <div class="flex-fill">
@@ -47,3 +46,4 @@
             </ul>
         </div>
     </div>
+</div>

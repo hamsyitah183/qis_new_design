@@ -11,13 +11,13 @@ $role = authUser()['roles'][0];
 @push('scripts')
     @vite(['resources/js/pages/dashboard.js'])
 
+@endpush
 
-
-@push('scripts')
+{{-- @push('scripts')
    @if ($role == 'admin')
     @vite(['resources/js/pages/admin_dashboard.js'])
    @endif
-@endpush
+@endpush --}}
 
 
 

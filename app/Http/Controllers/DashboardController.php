@@ -20,6 +20,7 @@ use App\Charts\ClerkDailyVolumeChart;
 use App\Charts\PublicApplicationStatusChart;
 use App\Models\Country;
 use App\Models\IpEntryPoint;
+use App\Models\Order;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -175,7 +176,7 @@ class DashboardController extends Controller
 
         // Get recent activity logs
         try {
-            $recentActivities = Activity::with('causer')->latest()->take(4)->get();
+            $recentActivities = Activity::with('causer')->latest()->take(10)->get();
         } catch (\Exception $e) {
             // If activity log fails, just show empty array
             $recentActivities = collect([]);
@@ -236,6 +237,8 @@ class DashboardController extends Controller
 
         $data['pendingQueue'] = $pendingApps->concat($permits)->concat($inspections)->concat($consignments)->sortBy('created_at')->take(5);
 
+        $totalPayment = Order::where('status', 'payment complete')->sum('payment_amount');
+
         return view('dashboard.internal.main_dashboard', [
             // 'notifications' => $notifications,
             'userLineChart' => $lineChart->build(),
@@ -256,74 +259,7 @@ class DashboardController extends Controller
             $data,
         ]); // Internal user dashboard
     }
-    // protected function internal_dashboard(
-    //     LineUserChart $lineChart,
-    //     OrderDonutChart $orderChart,
-    //     PaymentMethodBarChart $paymentChart,
-    //     ApplicationHorizontalChart $applicationChart,
-    //     ClerkApplicationStatusChart $clerkStatusChart,
-    //     ClerkDailyWorkloadChart $clerkWorkloadChart,
-    //     ClerkDailyVolumeChart $clerkVolumeChart
-    // ) {
-    //     $role = authUser()['roles'][0];
-
-    //     $data = [
-    //         'userLineChart' => $lineChart->build(),
-    //         'orderChart' => $orderChart->build(),
-    //         'paymentChart' => $paymentChart->build(),
-    //         'applicationChart' => $applicationChart->build(),
-    //         'clerkVolumeChart' => $clerkVolumeChart->build()
-    //     ];
-
-    //     if ($role === 'clerk') {
-    //         // KPI Counts
-    //         $data['pendingPermits'] = IpApplication::where('status', '=', 'Clerk Review In-Progress')->count();
-    //         $data['pendingInspections'] = InspectionApplication::where('status', '=', 'Clerk review in-progress')->count();
-    //         $data['pendingConsignments'] = ConsignmentApplication::where('status', '=', 'Clerk Review In-Progress')->count();
-
-    //         // Verified Today (example logic: applications updated to a "verified" status today)
-    //         $today = Carbon::today();
-    //         $verifiedTodayPermits = IpApplication::where('status', '=', 'Clerk Verified')
-    //             ->whereDate('updated_at', '=', $today)->count();
-    //         $verifiedTodayInspections = InspectionApplication::where('status', '=', 'Clerk Verified')
-    //             ->whereDate('updated_at', '=', $today)->count();
-    //         $verifiedTodayConsignments = ConsignmentApplication::where('status', '=', 'Clerk Verified')
-    //             ->whereDate('updated_at', '=', $today)->count();
-
-    //         $data['verifiedToday'] = $verifiedTodayPermits + $verifiedTodayInspections + $verifiedTodayConsignments;
-
-    //         // Charts
-    //         $data['clerkStatusChart'] = $clerkStatusChart->build();
-    //         $data['clerkWorkloadChart'] = $clerkWorkloadChart->build();
-    //         $data['clerkVolumeChart'] = $clerkVolumeChart->build();
-
-    //         // Action Needed Queue (Oldest 5 pending applications)
-    //         $pendingApps = collect();
-
-    //         $permits = IpApplication::with('user')->where('status', '=', 'Clerk Review In-Progress')
-    //             ->orderBy('created_at', 'asc')->take(5)->get()->map(function($item) {
-    //                 $item->type = 'Import Permit';
-    //                 return $item;
-    //             });
-
-    //         $inspections = InspectionApplication::with('user')->where('status', '=', 'Clerk review in-progress')
-    //             ->orderBy('created_at', 'asc')->take(5)->get()->map(function($item) {
-    //                 $item->type = 'Inspection';
-    //                 return $item;
-    //             });
-
-    //         $consignments = ConsignmentApplication::with('user')->where('status', '=', 'Clerk Review In-Progress')
-    //             ->orderBy('created_at', 'asc')->take(5)->get()->map(function($item) {
-    //                 $item->type = 'Consignment';
-    //                 return $item;
-    //             });
-
-    //         $data['pendingQueue'] = $pendingApps->concat($permits)->concat($inspections)->concat($consignments)
-    //             ->sortBy('created_at')->take(5);
-    //     }
-
-    //     return view('dashboard.internal.main_dashboard', $data);
-    // }
+  
 
     public function get_country($code)
     {
