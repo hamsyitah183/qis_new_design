@@ -694,5 +694,11 @@ class ApplicationController extends Controller
         return response()->json([
             'exporter' => $exporter
         ]);
+    function show_importer()
+    {
+        $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
+        $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
+        $country = country::where('is_del', false)->get();
+        return view('pages.public.importer_list', compact('pubmeasure', 'pubpurpose', 'country'));
     }
 }

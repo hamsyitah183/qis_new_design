@@ -283,6 +283,7 @@ Route::middleware(['auth.any'])->group(function () {
     Route::delete('/inspection/delete/{id}', [InspectionController::class, 'deleteApplication'])->name('inspection.delete');
     Route::get('/application/exporter', [ApplicationController::class, 'show_exporter'])->name('application.exporter');
     Route::get('/application/exporter/{id}', [ApplicationController::class, 'get_exporter']);
+    Route::get('/application/importer', [ApplicationController::class, 'show_importer'])->name('application.importer');
 
     Route::get('/permit/generate/{id}', [PermitGenerateController::class, 'generatePermitWord']);
     Route::get('/permit/generate/consignment/{id}', [PermitGenerateController::class, 'generateConsignmentPermitWord']);
