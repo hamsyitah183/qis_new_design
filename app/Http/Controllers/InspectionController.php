@@ -249,6 +249,9 @@ class InspectionController extends Controller
 
     function getInspectionSelf($id = null)
     {
+        if(authUser()['user']['doa_verified'] == 0) {
+            return view('pages.public.wait_for_verified');
+        } 
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();
@@ -259,6 +262,9 @@ class InspectionController extends Controller
 
     function getInspectionOthers($id = null)
     {
+        if(authUser()['user']['doa_verified'] == 0) {
+            return view('pages.public.wait_for_verified');
+        } 
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();

@@ -70,13 +70,29 @@ $("#uploadBtn").on("click", function () {
         return;
     }
 
-    // Attach user_id before sending
+    // Show submitting Swal when queue starts
     verificationDropzone.on("sending", function (file, xhr, formData) {
         formData.append("user_id", userId);
+
+        // Only show Swal once
+        if (!Swal.isVisible()) {
+            Swal.fire({
+                title: "Submitting...",
+                text: "Please wait while your files are uploaded.",
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading(),
+            });
+        }
+    });
+
+    // Close Swal when all files are done
+    verificationDropzone.on("queuecomplete", function () {
+        Swal.close();
     });
 
     verificationDropzone.processQueue();
 });
+
 
 // On successful upload
 verificationDropzone.on("success", function (file, response) {

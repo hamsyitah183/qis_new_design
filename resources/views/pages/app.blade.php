@@ -8,10 +8,10 @@
     <meta charset="UTF-8">
     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="Description" content="Laravel Bootstrap Responsive Admin Web Dashboard Template">
-    <meta name="Author" content="Spruko Technologies Private Limited">
+    <meta name="Description" content="DOA QIS 2.0 SYSTEM">
+    <meta name="Author" content="DOA">
     <meta name="keywords"
-        content="laravel template, laravel, laravel admin, admin bootstrap, laravel admin template, dashboard, admin panel template, laravel framework, admin template, laravel admin panel, admin, laravel dashboard, dashboard for laravel, admin panel for laravel, bootstrap admin panel template.">
+        content="DOA plant doa QIS sabah Temadigital ">
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('images/tab-logo.png') }}">
@@ -61,15 +61,16 @@
     <link rel="stylesheet" href="{{ asset('build2/assets/libs/flatpickr/flatpickr.min.css') }}">
 
     <!-- Prism CSS -->
-    <link rel="stylesheet"
+    {{-- <link rel="stylesheet"
         href="https://laravelui.spruko.com/xintra/build/assets/libs/prismjs/themes/prism-coy.min.css">
 
     <link rel="stylesheet" href="https://laravelui.spruko.com/xintra/build/assets/libs/filepond/filepond.min.css">
     <link rel="stylesheet"
         href="https://laravelui.spruko.com/xintra/build/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.css">
     <link rel="stylesheet"
-        href="https://laravelui.spruko.com/xintra/build/assets/libs/filepond-plugin-image-edit/filepond-plugin-image-edit.min.css">
-    <link rel="stylesheet" href="https://laravelui.spruko.com/xintra/build/assets/libs/dropzone/dropzone.css">
+        href="https://laravelui.spruko.com/xintra/build/assets/libs/filepond-plugin-image-edit/filepond-plugin-image-edit.min.css"> --}}
+    {{-- <link rel="stylesheet" href="https://laravelui.spruko.com/xintra/build/assets/libs/dropzone/dropzone.css"> --}}
+    <link rel="stylesheet" href="{{ asset('build2/assets/libs/dropzone/dropzone.css') }}">
 
     <!-- Tagify CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css">

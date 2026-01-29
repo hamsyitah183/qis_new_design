@@ -204,65 +204,86 @@ function loadUses(itemId) {
 }
 
 // ------------------------- Add Exporter Modal -------------------------
-$("#addExporterbtn").on("click", (e) => {
-    e.preventDefault();
+function initAddExporterModal() {
+    console.log('this is the exporter modal');
 
-    const routeUrl = $(e.currentTarget).data("route");
-    const name = $("#addexpName").val().trim();
-    const phone_no = $("#addexpfonno").val().trim();
-    const address1 = $("#addexpaddress1").val().trim();
-    const address2 = $("#addexpaddress2").val().trim();
-    const full_address = `${address1} ${address2}`;
-    const country = $("#addexpcountry").val();
+    const modalEl = document.getElementById("addExporterModal");
+    const modal = new bootstrap.Modal(modalEl);
 
-    if (!name || !phone_no || !country) {
-        return Swal.fire("⚠️ Please fill in all required fields.");
-    }
-
-    // 🔄 SHOW LOADING SWAL
-    Swal.fire({
-        title: "Saving exporter...",
-        text: "Please wait",
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
+    $("#openExporterModalBtn").on("click", (e) => {
+        e.preventDefault();
+        modal.show();
     });
 
-    $.ajax({
-        url: '/public/store_exporter',
-        type: "POST",
-        data: { name, phone_no, address: full_address, country },
-        headers: {
-            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
-        },
-        success: () => {
-            fetchExporterList();
+    $("#addExporterbtn").on("click", (e) => {
+        e.preventDefault();
 
-            Swal.fire({
-                icon: "success",
-                title: "Exporter Saved!",
-                text: "The exporter has been successfully added to the list.",
-                timer: 1800,
-                showConfirmButton: false,
-                timerProgressBar: true,
-            });
+        console.log('submit')
 
-            $(modalEl).modal("hide");
-            $("#addExporterForm")[0].reset();
-        },
-        error: (xhr) => {
-            console.error(xhr.responseText);
+        const name = $("#addexpName").val().trim();
+        const phone_no = $("#addexpfonno").val().trim();
+        const address1 = $("#addexpaddress1").val().trim();
+        const address2 = $("#addexpaddress2").val().trim();
+        const full_address = `${address1} ${address2}`;
+        const country = $("#addexpcountry").val();
 
-            Swal.fire({
-                icon: "error",
-                title: "Failed!",
-                text: "Failed to save exporter. Please try again."
-            });
+        if (!name || !phone_no || !country) {
+            return Swal.fire("⚠️ Please fill in all required fields.");
         }
+
+        // 🔐 FORCE HTTPS
+        const httpsUrl = `${window.baseUrl}/public/store_exporter`;
+
+        // 🔄 Loading Swal
+        Swal.fire({
+            title: "Saving exporter...",
+            text: "Please wait",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        console.log('add exporter')
+
+        $.ajax({
+            url: '/public/store_exporter', // ✅ always HTTPS
+            method: "POST",
+            data: {
+                name,
+                phone_no,
+                address: full_address,
+                country
+            },
+            headers: {
+                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+            },
+            success: () => {
+                fetchExporterList();
+
+                Swal.fire({
+                    icon: "success",
+                    title: "Exporter Saved!",
+                    text: "The exporter has been successfully added to the list.",
+                    timer: 1800,
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                });
+
+                modal.hide();
+                $("#addExporterForm")[0].reset();
+            },
+            error: (xhr) => {
+                console.error(xhr.responseText);
+
+                Swal.fire({
+                    icon: "error",
+                    title: "Failed!",
+                    text: "Failed to save exporter. Please try again."
+                });
+            }
+        });
     });
-});
+}
 
 
 // ------------------------- Importer Lookup -------------------------

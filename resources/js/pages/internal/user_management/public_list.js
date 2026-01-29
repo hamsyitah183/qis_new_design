@@ -377,6 +377,10 @@ function handleVerificationModal(response, id) {
     $("#verificationBtn").show();
     $("#unverificationBtn").show();
 
+    if(response.doa_verified == 1) {
+        $("#verificationBtn").hide();
+        $("#unverificationBtn").hide();
+    }
 
 }
 
@@ -526,7 +530,8 @@ $("#unverificationBtn").on("click", function (e) {
             title: "Unverify User",
             html: `
             <p class="mb-2">Please provide a reason for unverifying this user:</p>
-            <textarea id="unverifyReason" class="swal2-textarea" placeholder="Enter reason here..."></textarea>
+            <textarea id="unverifyReason" style = "width:90%; font-size:12px; lineheight: 1.5;" 
+            class="swal2-textarea" placeholder="Enter reason here..."></textarea>
         `,
             showCancelButton: true,
             confirmButtonText: "Submit",

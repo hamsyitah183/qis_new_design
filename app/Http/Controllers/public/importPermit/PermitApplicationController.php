@@ -37,6 +37,10 @@ class PermitApplicationController extends Controller
 {
     public function show()
     {
+        if(authUser()['user']['doa_verified'] == 0) {
+            return view('pages.public.wait_for_verified');
+        } 
+
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = country::where('is_del', false)->get();
@@ -45,6 +49,9 @@ class PermitApplicationController extends Controller
 
     public function showassign()
     {
+        if(authUser()['user']['doa_verified'] == 0) {
+            return view('pages.public.wait_for_verified');
+        } 
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = country::where('is_del', false)->get();

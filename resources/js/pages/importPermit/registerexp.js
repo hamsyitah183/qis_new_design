@@ -1077,7 +1077,7 @@ export function summarySubmit() {
             `
                 <tr>
                     <td>${index + 1}</td>
-                    <td>${item.item_name || ""}</td>
+                    <td class = "text-wrap">${item.item_name || ""}</td>
                     <td>${item.quantity || ""}  ${item.measure || ""}</td>
                     <td>${item.purpose || ""} </td>
                     <td>${item.uses || ""}</td>

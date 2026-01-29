@@ -88,19 +88,34 @@ class UserController extends Controller
             ->editColumn('created_at', fn($user) => $user->created_at->format('d-m-Y H:i'))
             ->editColumn('account_type', fn($user) => ucfirst($user->account_type))
             ->editColumn('doa_verified', function ($user) {
-
-
+                // Default icon is blank
+                $icon = '';
+            
+                // Only show icon for NOT Verified with a verification attachment
+                if (!$user->approved?->doa_verified && !empty($user->approved?->verification_attachment)) {
+                    $icon = '<span class="text-warning fs-16 fw-bold ">
+                                <i class="bi bi-exclamation-circle"></i>
+                             </span>';
+                }
+            
+                // If no approved record, show Not Verified without icon
                 if (!$user->approved) {
                     return '<span class="badge bg-dark-transparent cursor-pointer badge-verification" data-id="'
-                        . $user->uuid . '" data-verified="no">Not Verified </span>';
+                        . $user->uuid . '" data-verified="no">Not Verified</span>';
                 }
-
-                return $user->approved->doa_verified
-                    ? '<span class="badge bg-success-transparent cursor-pointer badge-verification" data-id="'
-                    . $user->uuid . '" data-verified="yes">Verified</span>'
-                    : '<span class="badge bg-dark-transparent cursor-pointer badge-verification" data-id="'
-                    . $user->uuid . '" data-verified="no">Not Verified</span>';
+            
+                // Show Verified badge
+                if ($user->approved->doa_verified) {
+                    return '<span class="badge bg-success-transparent cursor-pointer badge-verification" data-id="'
+                        . $user->uuid . '" data-verified="yes">Verified</span>';
+                }
+            
+                // Show Not Verified badge (with icon if attachment exists)
+                return '<span class="badge bg-dark-transparent cursor-pointer badge-verification" data-id="'
+                    . $user->uuid . '" data-verified="no">Not Verified ' . $icon . '</span>';
             })
+            
+            
 
             ->rawColumns(['action', 'doa_verified'])
             ->make(true);
