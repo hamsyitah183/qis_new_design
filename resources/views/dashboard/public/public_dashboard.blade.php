@@ -22,7 +22,7 @@
 
 <div class="row">
     {{-- KPI Cards --}}
-    <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+    <div class="col-xl col-lg-6 col-md-6 col-sm-12">
         <div class="card custom-card">
             <div class="card-body">
                 <div class="d-flex align-items-center">
@@ -39,7 +39,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+    <div class="col-xl col-lg-6 col-md-6 col-sm-12">
         <div class="card custom-card">
             <div class="card-body">
                 <div class="d-flex align-items-center">
@@ -56,7 +56,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+    <div class="col-xl col-lg-6 col-md-6 col-sm-12">
         <div class="card custom-card">
             <div class="card-body">
                 <div class="d-flex align-items-center">
@@ -73,7 +73,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+    <div class="col-xl col-lg-6 col-md-6 col-sm-12">
         <div class="card custom-card">
             <div class="card-body">
                 <div class="d-flex align-items-center">
@@ -85,6 +85,23 @@
                     <div>
                         <p class="text-muted mb-1 fs-13">Rejected</p>
                         <h3 class="fw-semibold mb-0">{{ $rejectedCount ?? 0 }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl col-lg-6 col-md-6 col-sm-12">
+        <div class="card custom-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <span class="avatar avatar-lg bg-info text-white">
+                            <i class="ti ti-wallet fs-24"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <p class="text-muted mb-1 fs-13">Pending Payment</p>
+                        <h3 class="fw-semibold mb-0">{{ $pendingPaymentCount ?? 0 }}</h3>
                     </div>
                 </div>
             </div>

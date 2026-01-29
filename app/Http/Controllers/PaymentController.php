@@ -38,7 +38,7 @@ class PaymentController extends Controller
             $permitIds = explode(',', $permitId);
             $permits = IpConsignmentPermit::where('application_id', $id)
                 ->whereIn('id', $permitIds)
-                ->whereIn('status', ['pending for payment', 'payment failed'])
+                ->whereIn('status', ['pending for payment', 'payment failed', 'Payment Failed'])
                 ->get();
         } elseif ($type == 'inspection') {
             $application = InspectionApplication::findOrFail($id);
@@ -46,7 +46,7 @@ class PaymentController extends Controller
 
             $permits = InspectionItem::where('application_id', $id)
                 ->whereIn('id', $permitIds)
-                ->where('status', ['pending for payment', 'payment failed'])
+                ->whereIn('status', ['pending for payment', 'payment failed', 'Payment Failed'])
                 ->get();
         } elseif ($type == 'consignment') {
             $application = ConsignmentApplication::with(['consignmentPermits'])->findOrFail($id);
@@ -54,7 +54,7 @@ class PaymentController extends Controller
 
             $permits = ConsignmentPermit::where('application_id', $id)
                 ->whereIn('id', $permitIds)
-                ->whereIn('status', ['pending for payment', 'payment failed'])
+                ->whereIn('status', ['pending for payment', 'payment failed', 'Payment Failed'])
                 ->get();
 
             // dd($permits);
@@ -125,7 +125,7 @@ class PaymentController extends Controller
 
             $permits = IpConsignmentPermit::where('application_id', $id)
                 ->whereIn('id', $permitIds)
-                ->whereIn('status', ['pending for payment', 'payment failed'])
+                ->whereIn('status', ['pending for payment', 'payment failed', 'Payment Failed'])
                 ->get();
         } elseif ($type == 'inspection') {
             $application = InspectionApplication::findOrFail($id);
@@ -133,7 +133,7 @@ class PaymentController extends Controller
 
             $permits = InspectionItem::where('application_id', $id)
                 ->whereIn('id', $permitIds)
-                ->whereIn('status', ['pending for payment', 'payment failed'])
+                ->whereIn('status', ['pending for payment', 'payment failed', 'Payment Failed'])
                 ->get();
             // dd($permits);
         } elseif ($type == 'consignment') {
@@ -142,7 +142,7 @@ class PaymentController extends Controller
 
             $permits = ConsignmentPermit::where('application_id', $id)
                 ->whereIn('id', $permitIds)
-                ->whereIn('status', ['pending for payment', 'payment failed'])
+                ->whereIn('status', ['pending for payment', 'payment failed', 'Payment Failed'])
                 ->get();
             // dd($permits);
         }
@@ -348,7 +348,7 @@ class PaymentController extends Controller
                     'log_status' => 'Payment Successful',
                 ],
                 'unsuccessful' => [
-                    'permit_status' => 'Failed Payment',
+                    'permit_status' => 'payment failed',
                     'remark' => 'The order is unsuccessfully paid',
                     'log_status' => 'Payment Unsuccessful',
                 ],
@@ -381,13 +381,13 @@ class PaymentController extends Controller
 
             // Check if all permits are paid
             $allPaid = match ($application['application_type']) {
-                'Import Permit' => IpConsignmentPermit::where('application_id', $application->application_id)->where('status', '!=', 'paid')->doesntExist(),
+                'Import Permit' => (int) IpConsignmentPermit::where('application_id', $application->id)->where('status', '!=', 'paid')->doesntExist(),
 
-                'Inspection Certificate' => InspectionItem::where('application_id', $application->application_id)->where('status', '!=', 'paid')->doesntExist(),
+                'Inspection Certificate' => (int) InspectionItem::where('application_id', $application->id)->where('status', '!=', 'paid')->doesntExist(),
 
-                'Consignment Certificate' => ConsignmentPermit::where('application_id', $application->application_id)->where('status', '!=', 'paid')->doesntExist(),
+                'Consignment Certificate' => (int) ConsignmentPermit::where('application_id', $application->id)->where('status', '!=', 'paid')->doesntExist(),
 
-                default => false,
+                default => 0,
             };
 
             // Update order status

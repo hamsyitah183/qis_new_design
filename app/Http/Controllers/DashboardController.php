@@ -77,9 +77,22 @@ class DashboardController extends Controller
                          InspectionApplication::where('status', '=', 'Clerk Verified')->where('user_id', '=', $userId)->count() +
                          ConsignmentApplication::where('status', '=', 'Clerk Verified')->where('user_id', '=', $userId)->count();
 
-        $rejectedCount = IpApplication::where('status', '=', 'Clerk Rejected')->where('user_id', '=', $userId)->count() +
-                         InspectionApplication::where('status', '=', 'Clerk Rejected')->where('user_id', '=', $userId)->count() +
-                         ConsignmentApplication::where('status', '=', 'Clerk Rejected')->where('user_id', '=', $userId)->count();
+        $rejectedCount = IpApplication::where('status', 'like', '%Rejected%')->where('user_id', '=', $userId)->count() +
+                         InspectionApplication::where('status', 'like', '%Rejected%')->where('user_id', '=', $userId)->count() +
+                         ConsignmentApplication::where('status', 'like', '%Rejected%')->where('user_id', '=', $userId)->count();
+
+        $pendingPaymentCount = IpApplication::where('user_id', $userId)
+                         ->whereHas('consignmentPermits', function($q) {
+                             $q->where('status', 'pending for payment');
+                         })->count() +
+                         InspectionApplication::where('user_id', $userId)
+                         ->whereHas('inspectionItems', function($q) {
+                             $q->where('status', 'pending for payment');
+                         })->count() +
+                         ConsignmentApplication::where('user_id', $userId)
+                         ->whereHas('consignmentPermits', function($q) {
+                             $q->where('status', 'pending for payment');
+                         })->count();
 
         // Recent Applications
         $recentIp = IpApplication::where('user_id', '=', $userId)->latest()->take(5)->get()->map(function($item) {
@@ -104,6 +117,7 @@ class DashboardController extends Controller
             'pendingCount' => $pendingCount,
             'verifiedCount' => $verifiedCount,
             'rejectedCount' => $rejectedCount,
+            'pendingPaymentCount' => $pendingPaymentCount,
             'statusChart' => $statusChart->build(),
             'recentApplications' => $recentApplications,
         ]);

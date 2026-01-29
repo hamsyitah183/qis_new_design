@@ -112,7 +112,7 @@ async function attachmentTable() {
                 `;
             }
         }
-        
+
         if (permit.status === "rejected" &&
             (type.includes('public'))) {
             permitAction = `<div class = "btn btn-sm btn-danger-light btn-wave reapply"  data-permit = "${permit.id}" >Reapply</div>`
@@ -128,11 +128,11 @@ async function attachmentTable() {
         if (s.includes("completed")) {
             text = '<span class="badge bg-success fs-11 p-1">Completed</span>';
 
-        }else if (s.includes("payment failed")) {
+        } else if (s.includes("payment failed")) {
             text = '<span class="badge bg-danger fs-11 p-1">Payment Failed</span>';
 
-        } 
-        
+        }
+
         else if (s.includes("payment processing")) {
             text = '<span class="badge bg-info fs-11 p-1">Payment Processing</span>';
 
@@ -182,11 +182,10 @@ async function pendingPaymentTable() {
 
     const permits = application.inspection_items || [];
 
-    const pendingPaymentPermits = permits.filter((p) =>
-        ["pending for payment", "payment failed"].includes(
-            p.status?.toLowerCase()
-        )
-    );
+    const pendingPaymentPermits = permits.filter((p) => {
+        const s = p.status?.toLowerCase() || '';
+        return s === "pending for payment" || s === "payment failed";
+    });
 
 
     if (!pendingPaymentPermits || pendingPaymentPermits.length === 0) {
@@ -203,7 +202,7 @@ async function pendingPaymentTable() {
     pendingPaymentPermits.forEach((permit, index) => {
         let detail = permit.consignment_detail || {};
 
-   
+
 
         tableBody.append(`
         <tr>
@@ -805,10 +804,10 @@ function updateTotalValue() {
     // Update the totalValue element
     $("#totalValue").text(
         "RM " +
-            total.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-            })
+        total.toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        })
     );
 
     totalPermit = total;
@@ -843,7 +842,7 @@ function reapply() {
             modalEl.addEventListener(
                 "shown.bs.modal",
                 async () => {
-                    
+
                     const $modal = $(modalEl);
                     itemConsigment($modal);
 
@@ -867,7 +866,7 @@ function reapply() {
 
                     console.log('measure selected:', detail.measure);
 
-                   
+
 
                     saveConsignmentAttachment();
                 },
@@ -911,7 +910,7 @@ function itemConsigment($modal) {
             });
             groupPreview();
         },
-        
+
     });
 
     itemDropzone.on("addedfile", function (file) {
@@ -931,12 +930,12 @@ function saveConsignmentAttachment() {
             const id = $(this).data("id");
 
             const itemSelectValue = $modal.find("#itemSelect").val();
-            const itemSelectText  = $modal.find("#itemSelect").val();
-            const itemValue       = $modal.find("#itemValue").val().trim();
-            const itemQuantity    = $modal.find("#itemQuantity").val().trim();
-            const itemMeasure     = $modal.find("#itemMeasure").val();
-            const itemPurpose     = $modal.find("#itemPurpose  option:selected").text();
-            const itemUsesValue   = $modal.find("#itemUses").val();
+            const itemSelectText = $modal.find("#itemSelect").val();
+            const itemValue = $modal.find("#itemValue").val().trim();
+            const itemQuantity = $modal.find("#itemQuantity").val().trim();
+            const itemMeasure = $modal.find("#itemMeasure").val();
+            const itemPurpose = $modal.find("#itemPurpose  option:selected").text();
+            const itemUsesValue = $modal.find("#itemUses").val();
 
             if (
                 !itemSelectValue ||
@@ -952,7 +951,7 @@ function saveConsignmentAttachment() {
 
             const files = itemDropzone?.getAcceptedFiles() || [];
 
-      
+
             updateItem = {
                 item_id: itemSelectValue,
                 item_name: itemSelectText,
@@ -1136,7 +1135,7 @@ async function initApplicationDetails() {
 
     Swal.close(); // Close after data is loaded
 
-      // When "Check All" is toggled
+    // When "Check All" is toggled
     $(document).on("change", "#checkAllPermits", function () {
         const isChecked = $(this).is(":checked");
 

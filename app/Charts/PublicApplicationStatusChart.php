@@ -37,16 +37,30 @@ class PublicApplicationStatusChart
                     ConsignmentApplication::where('status', '=', 'Clerk Verified')->where('user_id', '=', $userId)->count();
 
         // Rejected
-        $rejected = IpApplication::where('status', '=', 'Clerk Rejected')->where('user_id', '=', $userId)->count() +
-                    InspectionApplication::where('status', '=', 'Clerk Rejected')->where('user_id', '=', $userId)->count() +
-                    ConsignmentApplication::where('status', '=', 'Clerk Rejected')->where('user_id', '=', $userId)->count();
+        $rejected = IpApplication::where('status', 'like', '%Rejected%')->where('user_id', '=', $userId)->count() +
+                    InspectionApplication::where('status', 'like', '%Rejected%')->where('user_id', '=', $userId)->count() +
+                    ConsignmentApplication::where('status', 'like', '%Rejected%')->where('user_id', '=', $userId)->count();
+
+        // Pending Payment
+        $pendingPayment = IpApplication::where('user_id', $userId)
+                         ->whereHas('consignmentPermits', function($q) {
+                             $q->where('status', 'pending for payment');
+                         })->count() +
+                         InspectionApplication::where('user_id', $userId)
+                         ->whereHas('inspectionItems', function($q) {
+                             $q->where('status', 'pending for payment');
+                         })->count() +
+                         ConsignmentApplication::where('user_id', $userId)
+                         ->whereHas('consignmentPermits', function($q) {
+                             $q->where('status', 'pending for payment');
+                         })->count();
 
         return $this->chart->donutChart()
             ->setTitle('Application Status')
             ->setSubtitle('Overview of your submissions')
-            ->addData([$drafts, $pending, $verified, $rejected])
-            ->setLabels(['Draft', 'Pending', 'Verified', 'Rejected'])
-            ->setColors(['#ABB3BB', '#FFB84D', '#2BCD95', '#F14336'])
+            ->addData([$drafts, $pending, $verified, $rejected, $pendingPayment])
+            ->setLabels(['Draft', 'Pending', 'Verified', 'Rejected', 'Pending Payment'])
+            ->setColors(['#ABB3BB', '#FFB84D', '#2BCD95', '#F14336', '#00CFE8'])
             ->setFontFamily('inherit');
     }
 }
