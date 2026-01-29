@@ -5,7 +5,8 @@ import "datatables.net-bs5";
 import "datatables.net-responsive-bs5";
 
 function initAddExporterModal() {
-    console.log('this is the exporter modal')
+    console.log('this is the exporter modal');
+
     const modalEl = document.getElementById("addExporterModal");
     const modal = new bootstrap.Modal(modalEl);
 
@@ -16,40 +17,45 @@ function initAddExporterModal() {
 
     $("#addExporterbtn").on("click", (e) => {
         e.preventDefault();
-    
-        const routeUrl = $(e.currentTarget).data("route");
+
         const name = $("#addexpName").val().trim();
         const phone_no = $("#addexpfonno").val().trim();
         const address1 = $("#addexpaddress1").val().trim();
         const address2 = $("#addexpaddress2").val().trim();
         const full_address = `${address1} ${address2}`;
         const country = $("#addexpcountry").val();
-    
+
         if (!name || !phone_no || !country) {
             return Swal.fire("⚠️ Please fill in all required fields.");
         }
-    
-        // 🔄 SHOW LOADING SWAL
+
+        // 🔐 FORCE HTTPS
+        const httpsUrl = `/public/store_exporter`;
+
+        // 🔄 Loading Swal
         Swal.fire({
             title: "Saving exporter...",
             text: "Please wait",
             allowOutsideClick: false,
             allowEscapeKey: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
+            didOpen: () => Swal.showLoading()
         });
-    
+
         $.ajax({
-            url: `${window.location.origin}/public/store_exporter`,
-            type: "POST",
-            data: { name, phone_no, address: full_address, country },
+            url: httpsUrl, // ✅ always HTTPS
+            method: "POST",
+            data: {
+                name,
+                phone_no,
+                address: full_address,
+                country
+            },
             headers: {
                 "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
             },
             success: () => {
                 fetchExporterList();
-    
+
                 Swal.fire({
                     icon: "success",
                     title: "Exporter Saved!",
@@ -58,13 +64,13 @@ function initAddExporterModal() {
                     showConfirmButton: false,
                     timerProgressBar: true,
                 });
-    
-                $(modalEl).modal("hide");
+
+                modal.hide();
                 $("#addExporterForm")[0].reset();
             },
             error: (xhr) => {
                 console.error(xhr.responseText);
-    
+
                 Swal.fire({
                     icon: "error",
                     title: "Failed!",
@@ -73,8 +79,8 @@ function initAddExporterModal() {
             }
         });
     });
-    
 }
+
 $(document).ready(function () {
     $("#exporterTable").DataTable({
         processing: true,
