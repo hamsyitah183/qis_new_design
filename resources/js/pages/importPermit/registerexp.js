@@ -139,8 +139,11 @@ function loadConsignmentSelection() {
         didOpen: () => Swal.showLoading(),
     });
 
-    $.get(`/public/get_consignment/${countryCode}`)
-        .done(function (data) {
+    $.ajax({
+        url: `/public/get_consignment/${countryCode}`,
+        method: "GET",
+        dataType: "json", // Ensure jQuery parses JSON automatically
+        success: function (data) {
             $select.prop("disabled", false);
 
             data.forEach((row) => {
@@ -158,12 +161,13 @@ function loadConsignmentSelection() {
             });
 
             Swal.close();
-        })
-        .fail(function (xhr, status, error) {
+        },
+        error: function (xhr, status, error) {
             console.error("Error loading items:", error);
             $select.prop("disabled", false);
             Swal.fire("Error", "Failed to load consignment items.", "error");
-        });
+        },
+    });
 }
 
 
