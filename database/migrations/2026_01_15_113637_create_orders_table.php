@@ -34,6 +34,8 @@ return new class extends Migration {
 
             $table->string('sid')->nullable();
             $table->string('itn')->nullable();
+
+            $table->string('payment_type')->nullable();
             $table->timestamps();
         });
     }

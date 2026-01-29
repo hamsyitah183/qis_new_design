@@ -69,22 +69,24 @@ class DashboardController extends Controller
 
         $verifiedCount = IpApplication::where('status', '=', 'Clerk Verified')->where('user_id', '=', $userId)->count() + InspectionApplication::where('status', '=', 'Clerk Verified')->where('user_id', '=', $userId)->count() + ConsignmentApplication::where('status', '=', 'Clerk Verified')->where('user_id', '=', $userId)->count();
 
-        $rejectedCount = IpApplication::where('status', 'like', '%Rejected%')->where('user_id', '=', $userId)->count() +
-                         InspectionApplication::where('status', 'like', '%Rejected%')->where('user_id', '=', $userId)->count() +
-                         ConsignmentApplication::where('status', 'like', '%Rejected%')->where('user_id', '=', $userId)->count();
+        $rejectedCount = IpApplication::where('status', 'like', '%Rejected%')->where('user_id', '=', $userId)->count() + InspectionApplication::where('status', 'like', '%Rejected%')->where('user_id', '=', $userId)->count() + ConsignmentApplication::where('status', 'like', '%Rejected%')->where('user_id', '=', $userId)->count();
 
-        $pendingPaymentCount = IpApplication::where('user_id', $userId)
-                         ->whereHas('consignmentPermits', function($q) {
-                             $q->where('status', 'pending for payment');
-                         })->count() +
-                         InspectionApplication::where('user_id', $userId)
-                         ->whereHas('inspectionItems', function($q) {
-                             $q->where('status', 'pending for payment');
-                         })->count() +
-                         ConsignmentApplication::where('user_id', $userId)
-                         ->whereHas('consignmentPermits', function($q) {
-                             $q->where('status', 'pending for payment');
-                         })->count();
+        $pendingPaymentCount =
+            IpApplication::where('user_id', $userId)
+                ->whereHas('consignmentPermits', function ($q) {
+                    $q->where('status', 'pending for payment');
+                })
+                ->count() +
+            InspectionApplication::where('user_id', $userId)
+                ->whereHas('inspectionItems', function ($q) {
+                    $q->where('status', 'pending for payment');
+                })
+                ->count() +
+            ConsignmentApplication::where('user_id', $userId)
+                ->whereHas('consignmentPermits', function ($q) {
+                    $q->where('status', 'pending for payment');
+                })
+                ->count();
         $rejectedCount = IpApplication::where('status', '=', 'Clerk Rejected')->where('user_id', '=', $userId)->count() + InspectionApplication::where('status', '=', 'Clerk Rejected')->where('user_id', '=', $userId)->count() + ConsignmentApplication::where('status', '=', 'Clerk Rejected')->where('user_id', '=', $userId)->count();
 
         // Recent Applications
@@ -273,10 +275,8 @@ class DashboardController extends Controller
             'clerkWorkloadChart' => $data['clerkWorkloadChart'],
             'pendingQueue' => $data['pendingQueue'],
             'verifiedToday' => $data['verifiedToday'],
-            
         ]); // Internal user dashboard
     }
-  
 
     public function get_country($code)
     {
@@ -325,13 +325,53 @@ class DashboardController extends Controller
 
     public function applicationCount()
     {
-        $ipCount = IpApplication::count();
-        $icCount = InspectionApplication::count();
-        $ccCount = ConsignmentApplication::count();
+        $ipCount = IpApplication::where('status', 'Clerk Review In-Progress')->count();
+        $icCount = InspectionApplication::where('status', 'Clerk Review In-Progress')->count();
+        $ccCount = ConsignmentApplication::where('status', 'Clerk Review In-Progress')->count();
         $data['ipCount'] = $ipCount;
+        $data['icCount'] = $icCount;
+        $data['ccCount'] = $ccCount;
+
+        $ipVerified = IpApplication::where('status', 'Clerk Approved')->count();
+        $icVerified = InspectionApplication::where('status', 'Clerk Approved')->count();
+        $ccVerified = ConsignmentApplication::where('status', 'Clerk Approved')->count();
+
+        $totalVerified = $ipVerified . $icVerified . $ccVerified;
+
+        $totalAmount = Order::where('transaction_status', 'SUCCESSFUL')->sum('payment_amount');
+
+        $data['total'] = $totalAmount;
+        $data['verified'] = $totalVerified;
 
         return response()->json([
-           'data' => $data
+            'data' => $data,
         ]);
     }
+
+    public function clerkCount()
+    {
+        $ipCount = IpApplication::where('status', 'Clerk Review In-Progress')->count();
+        $icCount = InspectionApplication::where('status', 'Clerk Review In-Progress')->count();
+        $ccCount = ConsignmentApplication::where('status', 'Clerk Review In-Progress')->count();
+        $data['ipCount'] = $ipCount;
+        $data['icCount'] = $icCount;
+        $data['ccCount'] = $ccCount;
+
+        $ipVerified = IpApplication::where('status', 'Clerk Approved')->count();
+        $icVerified = InspectionApplication::where('status', 'Clerk Approved')->count();
+        $ccVerified = ConsignmentApplication::where('status', 'Clerk Approved')->count();
+
+        $totalVerified = $ipVerified . $icVerified . $ccVerified;
+
+        $totalAmount = Order::where('transaction_status', 'SUCCESSFUL')->sum('payment_amount');
+
+        $data['total'] = $totalAmount;
+        $data['verified'] = $totalVerified;
+
+        return response()->json([
+            'data' => $data,
+        ]);
+    }
+
+   
 }

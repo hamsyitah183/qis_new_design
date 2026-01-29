@@ -4,8 +4,8 @@
             Recent Activity
         </div>
     </div>
-    <div class="card-body p-0">
-        <div class = "scroll-div" style= "max-height: 450px;">
+    <div class="card-body p-0 scroll-div" style= "max-height: 450px;">
+        <div class = "" >
             <ul class="list-unstyled mb-0 activity-timeline ">
                 @forelse($recentActivities ?? [] as $activity)
                     <li class="p-3 border-bottom">

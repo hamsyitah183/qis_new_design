@@ -57,10 +57,10 @@ class ClerkDailyWorkloadChart
         ->addData($totalData, 'Total')
         ->setXAxis($days)
         ->setColors([
-            '#009EF7', // Import Permit - Blue
-            '#50CD89', // Inspection - Green
-            '#FFC700', // Consignment - Yellow
-            '#F1416C', // Total - Red
+            '#E354D4', // Import Permit - Blue
+            '#FF5D9F', // Inspection - Green
+            '#9E5CF7', // Consignment - Yellow
+            '#5c67f7', // Total - Red
         ])
         ->setFontFamily('inherit')
         ->setHeight(300);

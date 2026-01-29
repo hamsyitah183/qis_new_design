@@ -277,6 +277,7 @@ class PaymentController extends Controller
             'transaction_status' => 'PAYMENT PROCESSING',
             'itn' => $itn,
             'sid' => $sid,
+            'payment_type' => 'bayupay'
         ]);
         // dd($order);
         $data = [

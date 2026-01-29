@@ -7,6 +7,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const chartId = window.clerkVolumeChartId;
     if (!chartId) return;
 
+    console.log('chartId', chartId)
+
     // Wait until ApexCharts instance exists
     const interval = setInterval(() => {
         if (!window.ApexCharts || !ApexCharts.instances) return;
@@ -31,11 +33,13 @@ function applicationCount()
         type: "GET",
         dataType: "json",
         cache: false,
-        success: (data) => {
+        success: (response) => {
+            let data= response.data
             console.log('data application', data)
             $('#ipCount').text(data.ipCount)
             $('#icCount').text(data.icCount)
             $('#ccCount').text(data.ccCount)
+            $("#amount").text('RM ', data.mount)
         },
         error: (xhr) => {
             console.error("Failed to load exporters:", xhr.responseText);

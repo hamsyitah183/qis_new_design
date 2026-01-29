@@ -50,6 +50,13 @@ class ClerkDailyVolumeChart
         ->addData($inspectionData, 'Inspection')
         ->addData($consignmentData, 'Consignment')
         ->setXAxis($days)
+        ->setColors([
+            '#5c67f7', // Total - Red
+            '#E354D4', // Import Permit - Blue
+            '#FF5D9F', // Inspection - Green
+            '#9E5CF7', // Consignment - Yellow
+           
+        ])
         ->setHeight(300)
         ->setFontFamily('inherit');
     

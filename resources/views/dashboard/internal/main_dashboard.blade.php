@@ -30,6 +30,7 @@
         @vite(['resources/js/pages/admin_dashboard.js'])
     @elseif ($role == 'clerk')
         @include ('dashboard.internal.clerk_dashboard')
+        @vite(['resources/js/pages/clerk_dashboard.js'])
     @elseif($role == 'finance')
         @include('dashboard.internal.finance_dashboard')
     @elseif ($role == 'officer')
