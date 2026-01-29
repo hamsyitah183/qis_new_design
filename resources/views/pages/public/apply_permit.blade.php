@@ -22,7 +22,7 @@
             <div class="card custom-card">
                 
                 <div class="card-body p-0"> <!-- method="POST"  data-wizard="active" style="display: block;"-->
-                    <form id="wizardForm" class="wizard wizard-tab horizontal" accept="multipart/form-data">
+                    <form id="wizardForm" class="wizard wizard-tab horizontal" action="javascript:void(0)" accept="multipart/form-data">
                         <aside class="wizard-nav dots">
                             <div class="wizard-step active" data-step="0">
                                 <span class="dot"></span>
