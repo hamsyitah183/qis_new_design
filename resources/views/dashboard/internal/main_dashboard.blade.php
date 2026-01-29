@@ -4,7 +4,8 @@
 
 
 @php
-$role = authUser()['roles'][0];
+
+    $role = authUser()['roles'][0];
 
 @endphp
 
@@ -21,7 +22,7 @@ $role = authUser()['roles'][0];
 @section('content')
 
 
-  
+   
 
     @if ($role == 'admin')
         @include ('dashboard.internal.admin_dashboard')

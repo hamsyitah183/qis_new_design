@@ -232,9 +232,18 @@ function initAddExporterModal() {
         if (!name || !phone_no || !country) {
             return Swal.fire("⚠️ Please fill in all required fields.");
         }
+        Swal.fire({
+            title: "Saving exporter...",
+            text: "Please wait",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
 
         $.ajax({
-            url: routeUrl,
+            url: '/public/store_consignment_importer',
             type: "POST",
             data: { name, phone_no, address: full_address, country },
             headers: {
