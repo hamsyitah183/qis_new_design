@@ -49,15 +49,14 @@ async function data_table_init() {
         ],
 
         columnDefs: [
-            { width: "30px", targets: 0 },       // #
-            { width: "50px", targets: 1 },      // Importer
-            { width: "50px", targets: 2 },      // Exporter
-            { width: "90px", targets: 3 },      // App Status
-            { width: "90px", targets: 4 },      // Permit Status
+            { width: "50px", targets: 0 },
+            { width: "150px", targets: 1 },
+            { width: "150px", targets: 2 },
+            { width: "100px", targets: 3 },
 
-            ...(isInternal ? [{ width: "90px", targets: 5 }] : []),  // Submitted By
+            ...(isInternal ? [{ width: "150px", targets: 4 }] : []),
 
-            { width: "90px", targets: isInternal ? 6 : 5 },  // Action
+            { width: "120px", targets: isInternal ? 5 : 4 },
         ],
 
         autoWidth: false,
@@ -156,9 +155,9 @@ function activityLog() {
             tableBody.empty(); // clear existing rows
 
             // console.log("application", application.activity_log);
-            let activity_log =  json.activity_log
+            let activity_log = json.activity_log
 
-            
+
 
             const modalEl = document.getElementById("activityLogModal");
             modalEl.querySelector(".modal-title").textContent =

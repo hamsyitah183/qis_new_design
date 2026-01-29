@@ -16,7 +16,7 @@
     <script>
         window.AUTH_TYPE = @json($type);
     </script>
-    @vite(['resources/js/pages/internal/consignment_list.js'])
+    @vite(['resources/js/pages/consignment/consignment_list.js'])
 @endpush
 
 @section('pageName', 'List All Consignment Certificate')

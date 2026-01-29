@@ -40,7 +40,7 @@
                             <div class="col-sm-12">
                                 <table id="consignmentListTable"
                                     class="table table-bordered text-nowrap w-100 dataTable no-footer dtr-inline"
-                                    aria-describedby="responsiveDataTable_info" style="width: 1588px;">
+                                    aria-describedby="responsiveDataTable_info" style="width: 100%;">
                                     <thead class="mt-3">
                                         <tr class="even">
                                             <th>#</th>
