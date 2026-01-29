@@ -42,7 +42,7 @@ async function selfImport() {
 // ------------------------- Exporter List -------------------------
 function fetchExporterList() {
     const $select = $("#selectexp");
-    const url = '/public/get_importers';
+    const url = '/public/get_consignment_importers';
 
     return $.ajax({
         url,
@@ -51,6 +51,8 @@ function fetchExporterList() {
         cache: false,
         success: (data) => {
             exporterListArray = data.data || [];
+
+            console.log('exporterListArray', exporterListArray)
 
             $select
                 .empty()
