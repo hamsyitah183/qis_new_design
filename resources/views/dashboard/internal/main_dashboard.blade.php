@@ -8,18 +8,6 @@ $role = authUser()['roles'][0];
 
 @endphp
 
-@push('scripts')
-    @vite(['resources/js/pages/dashboard.js'])
-
-@endpush
-
-{{-- @push('scripts')
-   @if ($role == 'admin')
-    @vite(['resources/js/pages/admin_dashboard.js'])
-   @endif
-@endpush --}}
-
-
 
 
 @section('breadcrumb')
