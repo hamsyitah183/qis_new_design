@@ -239,6 +239,8 @@ function initAddExporterModal() {
                 Swal.showLoading();
             }
         });
+
+        console.log('add exporter')
     
         $.ajax({
             url: '/public/store_exporter',
