@@ -4,25 +4,28 @@ import Swal from "sweetalert2";
 import "datatables.net-bs5";
 import "datatables.net-responsive-bs5";
 
-function initAddExporterModal() {
-    const modalEl = document.getElementById("addExporterModal");
+function initAddImporterModal() {
+    const modalEl = document.getElementById("addImporterModal");
     const modal = new bootstrap.Modal(modalEl);
 
-    $("#openExporterModalBtn").on("click", (e) => {
+    $("#addImporter").on("click", (e) => {
         e.preventDefault();
+        $("#addImporterForm")[0].reset();
+        $("#id").val("");
+        $("#addImporterModalLabel").text("Add Importer");
         modal.show();
     });
 
-    $("#addExporterbtn").on("click", (e) => {
+    $("#addImporterBtn").on("click", (e) => {
         e.preventDefault();
 
         const routeUrl = $(e.currentTarget).data("route");
-        const name = $("#addexpName").val().trim();
-        const phone_no = $("#addexpfonno").val().trim();
-        const address1 = $("#addexpaddress1").val().trim();
-        const address2 = $("#addexpaddress2").val().trim();
+        const name = $("#addimpName").val().trim();
+        const phone_no = $("#addimpfonno").val().trim();
+        const address1 = $("#addimpaddress1").val().trim();
+        const address2 = $("#addimpaddress2").val().trim();
         const full_address = `${address1} ${address2}`;
-        const country = $("#addexpcountry").val();
+        const country = $("#addimpcountry").val();
         const id = $('#id').val();
 
         if (!name || !phone_no || !country) {
@@ -40,7 +43,7 @@ function initAddExporterModal() {
                 Swal.fire({
                     icon: "success",
                     title: "Importer Saved!",
-                    text: "The Importer has been successfully added to the list.",
+                    text: "The Importer has been successfully saved.",
                     timer: 1800,
                     showConfirmButton: false,
                     timerProgressBar: true,
@@ -48,26 +51,25 @@ function initAddExporterModal() {
                 });
 
                 // ✅ Refresh DataTable
-                $("#exporterTable").DataTable().ajax.reload(null, false);
+                $("#importerTable").DataTable().ajax.reload(null, false);
 
                 // Hide modal
-                const modalInstance = bootstrap.Modal.getInstance(modalEl);
-                modalInstance.hide();
+                modal.hide(); // Bootstrap 5 instance hide
 
                 // Reset form
-                $("#addExporterForm")[0].reset();
+                $("#addImporterForm")[0].reset();
             },
 
             error: (xhr) => {
                 console.error(xhr.responseText);
-                Swal.fire("❌ Failed to save exporter. Please try again.");
+                Swal.fire("❌ Failed to save importer. Please try again.");
             },
         });
     });
 }
 
 $(document).ready(function () {
-    $("#exporterTable").DataTable({
+    $("#importerTable").DataTable({
         processing: true,
         responsive: true,
         ajax: {
@@ -83,7 +85,7 @@ $(document).ready(function () {
             { data: "name" },
             { data: "phone_no" },
             { data: "address" },
-            { data: "country_info.name" },
+            { data: "country_info.name", defaultContent: "-" },
             {
                 data: "id",
                 orderable: false,
@@ -91,10 +93,10 @@ $(document).ready(function () {
                 render: function (id) {
                     return `
                         <div class="d-flex gap-1">
-                            <button class="btn btn-sm btn-primary editExporter" data-id="${id}">
+                            <button class="btn btn-sm btn-primary editImporter" data-id="${id}">
                                 <i class="ti ti-pencil"></i>
                             </button>
-                            <button class="btn btn-sm btn-danger deleteExporter" data-id="${id}">
+                            <button class="btn btn-sm btn-danger deleteImporter" data-id="${id}">
                                 <i class="ti ti-trash"></i>
                             </button>
                         </div>
@@ -104,25 +106,17 @@ $(document).ready(function () {
         ],
     });
 
-    $(document).on("click", "#addExporter", function () {
-        const modal = new bootstrap.Modal(
-            document.getElementById("addExporterModal")
-        );
-        $("#addExporterForm")[0].reset();
-        modal.show();
-    });
-
-    // Submit form
-    initAddExporterModal();
+    // Initialize modal logic
+    initAddImporterModal();
 });
 
-$(document).on("click", ".deleteExporter", function () {
-    const exporterId = $(this).data("id");
+$(document).on("click", ".deleteImporter", function () {
+    const importerId = $(this).data("id");
 
     // First confirmation
     Swal.fire({
         title: "Are you sure?",
-        text: "This exporter will be permanently deleted.",
+        text: "This importer will be permanently deleted.",
         icon: "warning",
         showCancelButton: true,
         confirmButtonText: "Yes, continue",
@@ -140,7 +134,7 @@ $(document).on("click", ".deleteExporter", function () {
             }).then((finalResult) => {
                 if (finalResult.isConfirmed) {
                     $.ajax({
-                        url: `/public/delete_importer/${exporterId}`,
+                        url: `/public/delete_importer/${importerId}`,
                         type: "DELETE",
                         headers: {
                             "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
@@ -155,7 +149,7 @@ $(document).on("click", ".deleteExporter", function () {
                             });
 
                             // ✅ Refresh DataTable
-                            $("#exporterTable")
+                            $("#importerTable")
                                 .DataTable()
                                 .ajax.reload(null, false);
                         },
@@ -175,10 +169,10 @@ $(document).on("click", ".deleteExporter", function () {
     });
 });
 
-$(document).on("click", ".editExporter", function () {
+$(document).on("click", ".editImporter", function () {
     const id = $(this).data("id");
 
-    console.log("Editing exporter ID:", id);
+    console.log("Editing importer ID:", id);
 
     // Optional: show loading Swal
     Swal.fire({
@@ -187,11 +181,11 @@ $(document).on("click", ".editExporter", function () {
         didOpen: () => Swal.showLoading(),
     });
 
-    const modal = new bootstrap.Modal(document.getElementById("addExporterModal"));
+    const modalEl = document.getElementById("addImporterModal");
+    const modal = new bootstrap.Modal(modalEl);
 
-    $('#addExporterModalLabel').text('Edit Importer')
+    $("#addImporterModalLabel").text("Edit Importer");
 
-    modal.show();
 
     $.ajax({
         url: `/application/importer/${id}`,
@@ -199,27 +193,28 @@ $(document).on("click", ".editExporter", function () {
         dataType: "json",
         success: function (data) {
             Swal.close(); // close loading
+            modal.show();
 
-            const exporter = data.importer;
+            const importer = data.importer;
 
-            console.log('data, exporter', data, exporter);
+            console.log('data, importer', data, importer);
 
             // Populate modal fields
-            $("#addexpName").val(exporter.name);
-            $("#addexpfonno").val(exporter.phone_no);
-            $("#addexpaddress1").val(exporter.address.split(" ")[0]); // adjust as needed
-            $("#addexpaddress2").val(exporter.address.split(" ")[1]); // adjust as needed
-            $("#addexpcountry").val(exporter.country);
-            $('#id').val(exporter.id)
+            $("#addimpName").val(importer.name);
+            $("#addimpfonno").val(importer.phone_no);
+            // Handle address split safely
+            const addressParts = importer.address ? importer.address.split(" ") : ["", ""];
+            $("#addimpaddress1").val(addressParts[0] || ""); 
+            $("#addimpaddress2").val(addressParts.slice(1).join(" ") || ""); // Join rest of address
+            $("#addimpcountry").val(importer.country);
+            $('#id').val(importer.id);
 
-           
-           
         },
         error: function (xhr, status, error) {
             Swal.close();
             console.error("AJAX Error:", error);
             console.log(xhr.responseText);
-            Swal.fire("Error", "Failed to load exporter data.", "error");
+            Swal.fire("Error", "Failed to load importer data.", "error");
         },
     });
 });

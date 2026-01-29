@@ -88,6 +88,13 @@
                         </a>
                     </li>
 
+                    <li class="slide {{ $currentRoute === 'application.importer' ? 'active open' : '' }}">
+                        <a href="{{ route('application.importer') }}" class="side-menu__item">
+                            <i class="bi bi-people side-menu__icon"></i>
+                            <span class="side-menu__label">Importer</span>
+                        </a>
+                    </li>
+
                     <!-- Application List -->
                     <li class="slide has-sub {{ $isPublicAppActive ? 'open active' : '' }}">
                         <a href="javascript:void(0);" class="side-menu__item">
