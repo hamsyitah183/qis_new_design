@@ -23,7 +23,7 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="All Importer List">
+    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="All Consignment Certificate Importer List">
 
     </x-breadcrumb>
 @endsection
