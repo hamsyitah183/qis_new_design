@@ -80,7 +80,7 @@ Route::prefix('public')
         Route::get('/import_assign_application', [PermitApplicationController::class, 'showassign'])->name('permitAssignApplication');
         Route::get('/new_application', [ApplicationController::class, 'show'])->name('newApplication');
         Route::get('/newtest', [ApplicationController::class, 'showthis'])->name('newApplicatasdion');
-        Route::post('/store_exporter', [PermitApplicationController::class, 'storeExporter']);
+        Route::post('/store_exporter', [PermitApplicationController::class, 'storeExporter'])->name('storeExp');
         Route::delete('/delete_exporter/{id}', [PermitApplicationController::class, 'deleteExporter'])->name('deleteExp');
         Route::get('/get_importers/{idno}', [PermitApplicationController::class, 'getImporters'])->name('getImporters');
         Route::get('/get_exporters', [PermitApplicationController::class, 'getExporters'])->name('getExportersJson');
