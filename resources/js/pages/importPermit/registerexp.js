@@ -241,43 +241,45 @@ function initAddExporterModal() {
             didOpen: () => Swal.showLoading()
         });
 
-        $.ajax({
-            url: httpsUrl, // ✅ always HTTPS
-            method: "POST",
-            data: {
-                name,
-                phone_no,
-                address: full_address,
-                country
-            },
-            headers: {
-                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
-            },
-            success: () => {
-                fetchExporterList();
+        console.log('add exporter')
 
-                Swal.fire({
-                    icon: "success",
-                    title: "Exporter Saved!",
-                    text: "The exporter has been successfully added to the list.",
-                    timer: 1800,
-                    showConfirmButton: false,
-                    timerProgressBar: true,
-                });
+        // $.ajax({
+        //     url: httpsUrl, // ✅ always HTTPS
+        //     method: "POST",
+        //     data: {
+        //         name,
+        //         phone_no,
+        //         address: full_address,
+        //         country
+        //     },
+        //     headers: {
+        //         "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        //     },
+        //     success: () => {
+        //         fetchExporterList();
 
-                modal.hide();
-                $("#addExporterForm")[0].reset();
-            },
-            error: (xhr) => {
-                console.error(xhr.responseText);
+        //         Swal.fire({
+        //             icon: "success",
+        //             title: "Exporter Saved!",
+        //             text: "The exporter has been successfully added to the list.",
+        //             timer: 1800,
+        //             showConfirmButton: false,
+        //             timerProgressBar: true,
+        //         });
 
-                Swal.fire({
-                    icon: "error",
-                    title: "Failed!",
-                    text: "Failed to save exporter. Please try again."
-                });
-            }
-        });
+        //         modal.hide();
+        //         $("#addExporterForm")[0].reset();
+        //     },
+        //     error: (xhr) => {
+        //         console.error(xhr.responseText);
+
+        //         Swal.fire({
+        //             icon: "error",
+        //             title: "Failed!",
+        //             text: "Failed to save exporter. Please try again."
+        //         });
+        //     }
+        // });
     });
 }
 
