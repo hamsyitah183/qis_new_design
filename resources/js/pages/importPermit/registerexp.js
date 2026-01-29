@@ -230,7 +230,7 @@ function initAddExporterModal() {
         }
 
         // 🔐 FORCE HTTPS
-        const httpsUrl = `/public/store_exporter`;
+        const httpsUrl = `${window.baseUrl}/public/store_exporter`;
 
         // 🔄 Loading Swal
         Swal.fire({
