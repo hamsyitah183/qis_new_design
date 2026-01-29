@@ -135,14 +135,12 @@ function loadConsignmentSelection() {
     // Show loading Swal
     Swal.fire({
         title: "Loading...",
-        // html: "Please wait while items are loaded.",
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading(),
     });
 
-    fetch(`/public/get_consignment/${countryCode}`)
-        .then((res) => res.json())
-        .then((data) => {
+    $.get(`/public/get_consignment/${countryCode}`)
+        .done(function (data) {
             $select.prop("disabled", false);
 
             data.forEach((row) => {
@@ -156,17 +154,18 @@ function loadConsignmentSelection() {
                 width: "100%",
                 placeholder: "-- Select Item --",
                 allowClear: true,
-                dropdownParent: $("#addItemModal"), // Important: for modal
+                dropdownParent: $("#addItemModal"), // Important for modal
             });
 
-            Swal.close(); // Close loading
+            Swal.close();
         })
-        .catch((e) => {
-            console.error("Error loading items:", e);
+        .fail(function (xhr, status, error) {
+            console.error("Error loading items:", error);
             $select.prop("disabled", false);
             Swal.fire("Error", "Failed to load consignment items.", "error");
         });
 }
+
 
 function loadUses(itemId) {
     const $select = $("#itemUses");
