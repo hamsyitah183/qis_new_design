@@ -38,7 +38,7 @@ class PaymentController extends Controller
             $permitIds = explode(',', $permitId);
             $permits = IpConsignmentPermit::where('application_id', $id)
                 ->whereIn('id', $permitIds)
-                ->whereIn('status', ['pending for payment', 'payment failed'])
+                ->whereIn('status', ['pending for payment', 'payment failed', 'Payment Failed'])
                 ->get();
         } elseif ($type == 'inspection') {
             $application = InspectionApplication::findOrFail($id);
@@ -46,7 +46,7 @@ class PaymentController extends Controller
 
             $permits = InspectionItem::where('application_id', $id)
                 ->whereIn('id', $permitIds)
-                ->where('status', ['pending for payment', 'payment failed'])
+                ->whereIn('status', ['pending for payment', 'payment failed', 'Payment Failed'])
                 ->get();
         } elseif ($type == 'consignment') {
             $application = ConsignmentApplication::with(['consignmentPermits'])->findOrFail($id);
@@ -54,7 +54,7 @@ class PaymentController extends Controller
 
             $permits = ConsignmentPermit::where('application_id', $id)
                 ->whereIn('id', $permitIds)
-                ->whereIn('status', ['pending for payment', 'payment failed'])
+                ->whereIn('status', ['pending for payment', 'payment failed', 'Payment Failed'])
                 ->get();
 
             // dd($permits);
@@ -125,7 +125,7 @@ class PaymentController extends Controller
 
             $permits = IpConsignmentPermit::where('application_id', $id)
                 ->whereIn('id', $permitIds)
-                ->whereIn('status', ['pending for payment', 'payment failed'])
+                ->whereIn('status', ['pending for payment', 'payment failed', 'Payment Failed'])
                 ->get();
         } elseif ($type == 'inspection') {
             $application = InspectionApplication::findOrFail($id);
@@ -133,7 +133,7 @@ class PaymentController extends Controller
 
             $permits = InspectionItem::where('application_id', $id)
                 ->whereIn('id', $permitIds)
-                ->whereIn('status', ['pending for payment', 'payment failed'])
+                ->whereIn('status', ['pending for payment', 'payment failed', 'Payment Failed'])
                 ->get();
             // dd($permits);
         } elseif ($type == 'consignment') {
@@ -142,7 +142,7 @@ class PaymentController extends Controller
 
             $permits = ConsignmentPermit::where('application_id', $id)
                 ->whereIn('id', $permitIds)
-                ->whereIn('status', ['pending for payment', 'payment failed'])
+                ->whereIn('status', ['pending for payment', 'payment failed', 'Payment Failed'])
                 ->get();
             // dd($permits);
         }
@@ -324,6 +324,12 @@ class PaymentController extends Controller
 
         $order = Order::where('order_number', $rn)->firstOrFail();
 
+        // Idempotency check: If order is already processed, skip updates and notifications
+        $isProcessed = in_array($order->status, ['payment complete', 'payment partial', 'payment failed']);
+        if ($isProcessed) {
+            return view('pages.paymentStatus', compact('title', 'kodTransaksi', 'paymentData', 'order'));
+        }
+
         // Load the correct application based on application_type
         $application = match ($order->application_type) {
             'Import Permit' => IpApplication::where('application_id', $order->application_id)->firstOrFail(),
@@ -381,13 +387,13 @@ class PaymentController extends Controller
 
             // Check if all permits are paid
             $allPaid = match ($application['application_type']) {
-                'Import Permit' => IpConsignmentPermit::where('application_id', $application->application_id)->where('status', '!=', 'paid')->doesntExist(),
+                'Import Permit' => (int) IpConsignmentPermit::where('application_id', $application->id)->where('status', '!=', 'paid')->doesntExist(),
 
-                'Inspection Certificate' => InspectionItem::where('application_id', $application->application_id)->where('status', '!=', 'paid')->doesntExist(),
+                'Inspection Certificate' => (int) InspectionItem::where('application_id', $application->id)->where('status', '!=', 'paid')->doesntExist(),
 
-                'Consignment Certificate' => ConsignmentPermit::where('application_id', $application->application_id)->where('status', '!=', 'paid')->doesntExist(),
+                'Consignment Certificate' => (int) ConsignmentPermit::where('application_id', $application->id)->where('status', '!=', 'paid')->doesntExist(),
 
-                default => false,
+                default => 0,
             };
 
             // Update order status
@@ -463,7 +469,7 @@ class PaymentController extends Controller
                         $publicUser = PublicUser::where('uuid', $user['uuid'] ?? null)->first();
                         if ($publicUser) {
                             try {
-                                $notificationUrl = url('/order/history');
+                                $notificationUrl = url('/order/list');
                                 Notification::send($publicUser, new ApplicationNotification(
                                     'Payment successful! Your order ' . $order->order_number . ' has been completed. Amount: RM' . number_format($paymentData['payment_amount'] ?? 0, 2),
                                     'QIS Payment',
@@ -528,7 +534,7 @@ class PaymentController extends Controller
                         $publicUser = PublicUser::where('uuid', $user['uuid'] ?? null)->first();
                         if ($publicUser) {
                             try {
-                                $notificationUrl = url('/order/history');
+                                $notificationUrl = url('/order/list');
                                 Notification::send($publicUser, new ApplicationNotification(
                                     'Payment failed for order ' . $order->order_number . '. Please try again or contact support.',
                                     'QIS Payment',
