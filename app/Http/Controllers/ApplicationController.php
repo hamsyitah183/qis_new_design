@@ -6,6 +6,7 @@ use App\Events\ApplicationCreatedInternalUser;
 use App\Events\ApplicationCreatedPublicUser;
 use App\Events\ApplicationDeleted;
 use App\Events\PublicUserEvent;
+use App\Models\ConsignmentImporter;
 use App\Models\Country;
 use App\Models\Exporter;
 use App\Models\InternalUser;
@@ -685,5 +686,31 @@ class ApplicationController extends Controller
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = country::where('is_del', false)->get();
         return view('pages.public.exporter_list', compact('pubmeasure', 'pubpurpose', 'country'));
+    }
+
+    function get_exporter($id)
+    {
+        $exporter = Exporter::with(['countryInfo'])->find($id);
+
+        return response()->json([
+            'exporter' => $exporter
+        ]);
+    }
+
+    function show_importer()
+    {
+        $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
+        $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
+        $country = country::where('is_del', false)->get();
+        return view('pages.public.importer_list', compact('pubmeasure', 'pubpurpose', 'country'));
+    }
+
+    function get_importer($id)
+    {
+        $importer = ConsignmentImporter::with(['countryInfo'])->find($id);
+
+        return response()->json([
+            'importer' => $importer
+        ]);
     }
 }

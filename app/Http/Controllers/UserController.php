@@ -89,7 +89,7 @@ class UserController extends Controller
             ->editColumn('account_type', fn($user) => ucfirst($user->account_type))
             ->editColumn('doa_verified', function ($user) {
 
-                
+
                 if (!$user->approved) {
                     return '<span class="badge bg-dark-transparent cursor-pointer badge-verification" data-id="'
                         . $user->uuid . '" data-verified="no">Not Verified </span>';
@@ -297,14 +297,28 @@ class UserController extends Controller
 
     public function internal_user_delete($id)
     {
-        $public = InternalUser::where('uuid', $id)->first();
+        $user = InternalUser::where('uuid', $id)->first();
 
-        $public->delete();
+        if (!$user) {
+            return response()->json([
+                'message' => 'User not found'
+            ], 404);
+        }
 
-        event(new InternalUserDeleted($public->fullname . ' account has been deleted by ' . authUser()['user']->fullname));
+        // Store user name before deletion for event message
+        $userName = $user->fullname;
+        $actorName = authUser()['user']->fullname;
+
+        $user->delete();
+
+        try {
+            event(new InternalUserDeleted($userName . ' account has been deleted by ' . $actorName));
+        } catch (\Exception $e) {
+            \Log::warning('Failed to broadcast internal user deleted event: ' . $e->getMessage());
+        }
 
         return response()->json([
-            'user' => $public
+            'message' => 'User deleted successfully'
         ]);
     }
 

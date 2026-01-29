@@ -275,7 +275,6 @@ class InspectionController extends Controller
             $isDraft = $request->boolean('is_draft');
             $isNewApplication = false;
 
-
             // Decode JSON data from frontend
             $exporter = $request->exporterData ? json_decode($request->exporterData, true) : null;
             $importer = $request->importerData ? json_decode($request->importerData, true) : null;
@@ -285,14 +284,12 @@ class InspectionController extends Controller
             if ($isDraft) {
                 $status = 'Draft';
             } else {
-                if($permit['applCate'] == 0 ) {
+                if ($permit['applCate'] == 0) {
                     $status = 'Clerk review in-progress';
-                }
-               
-                elseif($permit['applCate'] == 1) {
+                } elseif ($permit['applCate'] == 1) {
                     $status = 'wait for company approval';
                 }
-                
+
             }
 
             $importer_verify = null;
@@ -370,6 +367,18 @@ class InspectionController extends Controller
                     'importer_verify' => $importerVerify,
                     'date_importer_verify' => $verifyDate,
                 ]);
+
+                activity()
+                    ->tap(function (Activity $activity) {
+                        $activity->log_name = 'user_activity';
+                    })
+                    ->event($isDraft ? 'create draft inspection' : 'create inspection application')
+                    ->causedBy(authUser()['user'])
+                    ->performedOn($application)
+                    ->withProperties([
+                        'application' => $application,
+                    ])
+                    ->log(authUser()['user']['fullname'] . ($isDraft ? ' has created a new draft inspection (ID: ' : ' has created a new inspection application (ID: ') . $application->application_id . ')');
             }
 
             $appId = $application->id;
@@ -482,7 +491,6 @@ class InspectionController extends Controller
                 'message' => $isDraft ? 'Draft saved successfully' : 'Application submitted successfully',
                 'application_id' => $application->application_id
             ], 200);
-
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -639,7 +647,11 @@ class InspectionController extends Controller
         if ($applicant) {
             $applicantMsg = "Your inspection application with id {$application->application_id} has been {$status}";
             $applicant->notify(new ApplicationNotification($applicantMsg, 'QIS', $notificationUrl));
-            event(new PublicUserEvent($applicantMsg, $applicant->uuid));
+            try {
+                event(new PublicUserEvent($applicantMsg, $applicant->uuid));
+            } catch (\Exception $e) {
+                Log::warning('Pusher connection failed but continuing: ' . $e->getMessage());
+            }
         }
 
         $application = InspectionApplication::where('application_id', $id)->firstOrFail();
@@ -753,7 +765,6 @@ class InspectionController extends Controller
             if ($applicant) {
                 $applicantMsg = "Your inspection application with id {$applicationId} has been deleted";
                 $applicant->notify(new ApplicationNotification($applicantMsg, 'QIS', $notificationUrl));
-                event(new PublicUserEvent($applicantMsg, $applicant->uuid));
 
                 try {
                     event(new PublicUserEvent($applicantMsg, $applicant->uuid));

@@ -216,7 +216,7 @@ function initAddExporterModal() {
 
     $("#addExporterbtn").on("click", (e) => {
         e.preventDefault();
-
+    
         const routeUrl = $(e.currentTarget).data("route");
         const name = $("#addexpName").val().trim();
         const phone_no = $("#addexpfonno").val().trim();
@@ -224,13 +224,24 @@ function initAddExporterModal() {
         const address2 = $("#addexpaddress2").val().trim();
         const full_address = `${address1} ${address2}`;
         const country = $("#addexpcountry").val();
-
+    
         if (!name || !phone_no || !country) {
             return Swal.fire("⚠️ Please fill in all required fields.");
         }
-
+    
+        // 🔄 SHOW LOADING SWAL
+        Swal.fire({
+            title: "Saving exporter...",
+            text: "Please wait",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    
         $.ajax({
-            url: routeUrl,
+            url: '/public/store_exporter',
             type: "POST",
             data: { name, phone_no, address: full_address, country },
             headers: {
@@ -238,6 +249,7 @@ function initAddExporterModal() {
             },
             success: () => {
                 fetchExporterList();
+    
                 Swal.fire({
                     icon: "success",
                     title: "Exporter Saved!",
@@ -245,17 +257,23 @@ function initAddExporterModal() {
                     timer: 1800,
                     showConfirmButton: false,
                     timerProgressBar: true,
-                    position: "center",
                 });
+    
                 $(modalEl).modal("hide");
                 $("#addExporterForm")[0].reset();
             },
             error: (xhr) => {
                 console.error(xhr.responseText);
-                Swal.fire("❌ Failed to save exporter. Please try again.");
-            },
+    
+                Swal.fire({
+                    icon: "error",
+                    title: "Failed!",
+                    text: "Failed to save exporter. Please try again."
+                });
+            }
         });
     });
+    
 }
 
 // ------------------------- Importer Lookup -------------------------
@@ -835,12 +853,16 @@ function saveapplication(isDraft = false) {
             });
 
             if (!isDraft) {
+                // Redirect to application list after submitting
                 setTimeout(() => {
                     window.location.href = "/public/view_all_application";
                 }, 1500);
+            } else {
+                // Reload page for draft to show updated status
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
             }
-
-            window.location.reload();
         },
         error: function (xhr) {
             Swal.fire("Error", "Failed to save application", "error");

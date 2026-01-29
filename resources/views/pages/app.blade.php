@@ -86,6 +86,10 @@
         $authUser = authUser();
         $user = $authUser['user'];
         $user->type = $authUser['type'];
+        // Ensure roles are loaded for serialization
+        if (!$user->relationLoaded('roles')) {
+            $user->load('roles');
+        }
     @endphp
 
     <script>
@@ -198,7 +202,8 @@
     <script src="{{ asset('build2/assets/form-wizard.js') }}"></script>
 
     <!-- Form Wizard Init -->
-    {{-- <link rel="modulepreload" href="{{ asset('build2/assets/form-wizard-init-iKT7VXTT.js') }}" />
+    {{--
+    <link rel="modulepreload" href="{{ asset('build2/assets/form-wizard-init-iKT7VXTT.js') }}" />
     <script type="module" src="{{ asset('build2/assets/form-wizard-init-iKT7VXTT.js') }}"></script> --}}
 
     <!-- Sticky JS -->
@@ -226,21 +231,24 @@
     </script>
     <script
         src="{{ asset('build2/assets/libs/filepond-plugin-image-exif-orientation/filepond-plugin-image-exif-orientation.min.js') }}">
-    </script>
+        </script>
     <script
         src="{{ asset('build2/assets/libs/filepond-plugin-file-validate-size/filepond-plugin-file-validate-size.min.js') }}">
-    </script>
+        </script>
     <script src="{{ asset('build2/assets/libs/filepond-plugin-file-encode/filepond-plugin-file-encode.min.js') }}">
     </script>
-    <script src="{{ asset('build2/assets/libs/filepond-plugin-image-edit/filepond-plugin-image-edit.min.js') }}"></script>
+    <script
+        src="{{ asset('build2/assets/libs/filepond-plugin-image-edit/filepond-plugin-image-edit.min.js') }}"></script>
     <script
         src="{{ asset('build2/assets/libs/filepond-plugin-file-validate-type/filepond-plugin-file-validate-type.min.js') }}">
-    </script>
-    <script src="{{ asset('build2/assets/libs/filepond-plugin-image-crop/filepond-plugin-image-crop.min.js') }}"></script>
+        </script>
+    <script
+        src="{{ asset('build2/assets/libs/filepond-plugin-image-crop/filepond-plugin-image-crop.min.js') }}"></script>
     <script src="{{ asset('build2/assets/libs/filepond-plugin-image-resize/filepond-plugin-image-resize.min.js') }}">
     </script>
-    <script src="{{ asset('build2/assets/libs/filepond-plugin-image-transform/filepond-plugin-image-transform.min.js') }}">
-    </script>
+    <script
+        src="{{ asset('build2/assets/libs/filepond-plugin-image-transform/filepond-plugin-image-transform.min.js') }}">
+        </script>
 
     <!-- Dropzone JS -->
     <script src="{{ asset('build2/assets/libs/dropzone/dropzone-min.js') }}"></script>

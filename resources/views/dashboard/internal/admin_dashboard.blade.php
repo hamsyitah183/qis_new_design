@@ -6,7 +6,11 @@
 {{-- public user chart and latest log activity --}}
 <div class="row align-items-stretch mb-2">
     @include('dashboard.internal.components.user_chart')
-    @include('dashboard.internal.components.user_last_activity')
+    <div class="col-12 col-lg-4 col-xl-5 d-flex">
+    
+            @include('dashboard.internal.components.recent_activity')
+   
+    </div>
 </div>
 
 {{-- order --}}

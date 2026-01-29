@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Country;
 use App\Models\IpApplication;
 use App\Models\IpConsignmentPermit;
+use App\Models\ConsignmentPermit;
 use Illuminate\Http\Request;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
@@ -261,6 +262,127 @@ class PermitGenerateController extends Controller
         $section->addText('Sabah, Malaysia', [], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::END]);
 
         $fileName = "Import_Permit_{$application->application_id}.docx";
+        $tempPath = storage_path("app/{$fileName}");
+
+        $writer = IOFactory::createWriter($phpWord, 'Word2007');
+        $writer->save($tempPath);
+
+        return response()->download($tempPath)->deleteFileAfterSend(true);
+    }
+
+    public function generateConsignmentPermitWord($id)
+    {
+        $permits = ConsignmentPermit::with(['application.user', 'application.entryPoint'])->where('id', $id)->first();
+
+        if (!$permits) {
+            abort(404, 'Permit not found');
+        }
+
+        $detail = $permits->consignment_detail;
+        $application = $permits->application;
+        $importer = $application->importer_detail;
+        $exporter = $importer; // For consignment, both are the same user
+
+        $phpWord = new PhpWord();
+        $phpWord->setDefaultFontName('Arial');
+        $phpWord->setDefaultFontSize(12);
+
+        $section = $phpWord->addSection([
+            'paperSize' => 'A4',
+            'marginTop' => 1000,
+            'marginBottom' => 1000,
+            'marginLeft' => 1200,
+            'marginRight' => 1200,
+        ]);
+
+        /* ===============================
+        HEADER TABLE
+    =============================== */
+        $logoTable = $section->addTable([
+            'borderSize' => 1,
+            'cellMargin' => 0,
+            'borderColor' => '#FFFFFF'
+        ]);
+
+        $logoTable->addRow();
+
+        // LEFT LOGO
+        $logoTable->addCell(1400, ['valign' => 'center'])->addImage(
+            public_path('/asset/jata-svg.jpg'),
+            ['width' => 60, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]
+        );
+
+        // CENTER TEXT
+        $centerCell = $logoTable->addCell(8000, ['valign' => 'center']);
+        $centerCell->addText('PLANT BIOSECURITY AND QUARANTINE DIVISION,', [], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
+        $centerCell->addText('DEPARTMENT OF AGRICULTURE, SABAH, MALAYSIA', [], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
+        $centerCell->addTextBreak(1);
+        $centerCell->addText('CONSIGNMENT CERTIFICATE', ['bold' => true, 'size' => 15], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
+        $centerCell->addText('REGULATED ARTICLES ', ['bold' => true, 'size' => 15], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
+
+        // RIGHT LOGO
+        $logoTable->addCell(1400, ['valign' => 'center'])->addImage(
+            public_path('/asset/sabah-svg.jpg'),
+            ['width' => 60, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]
+        );
+
+        $section->addTextBreak(1);
+        $section->addText('Permit No.: ' . ($permits->permit_number ?? '-'), ['bold' => true, 'size' => 12], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::END]);
+        $section->addTextBreak(1);
+
+        /* ===============================
+        PERMIT DETAILS
+    =============================== */
+        $section->addText('Consignee/Consignor: ' . strtoupper($application->user->fullname ?? '-'), ['size' => 11]);
+        $section->addTextBreak(1);
+
+        // Permission text with entry point
+        $textRun = $section->addTextRun(['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::BOTH]);
+        $textRun->addText(
+            'Permission is hereby granted through ',
+            ['size' => 11]
+        );
+        $textRun->addText(
+            strtoupper($application->entryPoint->entry_name ?? '-'),
+            ['underline' => \PhpOffice\PhpWord\Style\Font::UNDERLINE_SINGLE, 'size' => 11]
+        );
+
+        $section->addTextBreak(2);
+
+        /* ===============================
+        SCHEDULE TABLE
+    =============================== */
+        $section->addText('Schedule:', ['size' => 11, 'bold' => true]);
+
+        $table = $section->addTable([
+            'borderSize' => 6,
+            'borderColor' => '000000',
+            'cellMargin' => 80
+        ]);
+
+        $table->addRow();
+        $table->addCell(5000)->addText('Item Description', ['bold' => true, 'size' => 11]);
+        $table->addCell(2000)->addText('Quantity', ['bold' => true, 'size' => 11]);
+        $table->addCell(2500)->addText('Purpose', ['bold' => true, 'size' => 11]);
+
+        $itemName = $detail['item_name'] ?? '-';
+
+        $table->addRow();
+        $table->addCell(5000)->addText($itemName, ['size' => 11]);
+        $table->addCell(2000)->addText(($permits->quantity ?? '-') . ' ' . ($permits->unit_measurement ?? ''), ['size' => 11]);
+        $table->addCell(2500)->addText($permits->purpose ?? '-', ['size' => 11]);
+
+        $section->addTextBreak(2);
+
+        /* ===============================
+        FOOTER
+    =============================== */
+        $section->addText("Date of Issue: " . now()->format('d/m/Y'), ['size' => 11]);
+        $section->addTextBreak(2);
+        $section->addText('Director of Agriculture', ['bold' => true], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::END]);
+        $section->addText('Sabah, Malaysia', [], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::END]);
+
+        $fileName = "Consignment_Permit_{$permits->permit_number}.docx";
         $tempPath = storage_path("app/{$fileName}");
 
         $writer = IOFactory::createWriter($phpWord, 'Word2007');

@@ -9,6 +9,7 @@ use App\Events\InternalUserClerkEvent;
 use App\Events\PublicUserEvent;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\NotificationController;
+use App\Models\ConsignmentImporter;
 use App\Models\Country;
 use App\Models\ImportPermitLog;
 use App\Models\InternalUser;
@@ -52,6 +53,7 @@ class PermitApplicationController extends Controller
 
     public function storeExporter(Request $request)
     {
+        // dd($request['id']);
         $validated = $request->validate([
             'name' => 'required|string|max:150',
             'phone_no' => 'required|string|max:25',
@@ -59,19 +61,30 @@ class PermitApplicationController extends Controller
             'country' => 'required|string|max:50',
         ]);
 
-        $exporterId = \DB::table('exporter')->insertGetId([
-            'name' => $validated['name'],
-            'phone_no' => $validated['phone_no'],
-            'address' => $validated['address'],
-            'country' => $validated['country'],
-            'registered_by' => authUser()['user']['uuid'],
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        if(!$request['id']) {
+            $exporterId = \DB::table('exporter')->insertGetId([
+                'name' => $validated['name'],
+                'phone_no' => $validated['phone_no'],
+                'address' => $validated['address'],
+                'country' => $validated['country'],
+                'registered_by' => authUser()['user']['uuid'],
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+    
+            // fetch newly created exporter
+            $exporter = \DB::table('exporter')->where('id', $exporterId)->first();
+    
+        } else {
+            $exporter = Exporter::with(['countryInfo'])->find($request['id']);
 
-        // fetch newly created exporter
-        $exporter = \DB::table('exporter')->where('id', $exporterId)->first();
-
+            $exporter->name = $validated['name'];
+            $exporter->phone_no = $validated['phone_no'];
+            $exporter->address = $validated['address'];
+            $exporter->country = $validated['country'];
+            $exporter->save();
+        }
+       
         activity()
             ->tap(function (Activity $activity) {
                 $activity->log_name = 'user_activity';
@@ -175,6 +188,24 @@ class PermitApplicationController extends Controller
             ->get();
 
         return response()->json($exporters);
+    }
+
+    public function getConsignmentImporters()
+    {
+        $importers = ConsignmentImporter::with('countryInfo')->get();
+    
+        return response()->json($importers);
+    }
+    
+
+    public function showExportersPage()
+    {
+        $exporters = Exporter::with('countryInfo')
+            ->where('registered_by', auth('public')->id())
+            ->orderBy('name', 'asc')
+            ->get();
+
+        return view('pages.public.exporters.index', compact('exporters'));
     }
 
     public function getEntryPoint(Request $request)

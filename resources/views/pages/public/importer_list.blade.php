@@ -16,14 +16,14 @@
     <script>
         window.AUTH_TYPE = @json($type);
     </script>
-    @vite(['resources/js/pages/export_list.js'])
+    @vite(['resources/js/pages/importer_list.js'])
 @endpush
 
-@section('pageName', 'List All Exporter')
+@section('pageName', 'List All Consignment Importer')
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="All Exporter List">
+    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="All Consignment Certificate Importer List">
 
     </x-breadcrumb>
 @endsection
@@ -33,10 +33,10 @@
     <div class="row">
         <div class="col-xl-12">
             <div class="card custom-card">
-                <div class="card-title p-3">
+                <div class="card-title">
                     <div class="d-flex justify-content-end">
                         <div class="btn btn-primary btn-sm" id="addExporter">
-                            Add Exporter
+                            Add Importer
                         </div>
                     </div>
                 </div>
@@ -46,7 +46,7 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>#</th>
-                                    <th>Exporter Name</th>
+                                    <th>Importer Name</th>
                                     <th>Phone No</th>
                                     <th>Address</th>
                                     <th>Country</th>
@@ -68,6 +68,7 @@
             @csrf
 
             <input type="hidden" name="id" id="id">
+
             {{-- Name --}}
             <div class="mb-3">
                 <label for="addexpName" class="form-label">Name</label>
@@ -101,8 +102,8 @@
             @slot('footer')
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
 
-                <button type="button" id="addExporterbtn" class="btn btn-primary" data-route="{{ route('addExporterModal') }}">
-                    Save Exporter
+                <button type="button" id="addExporterbtn" class="btn btn-primary" data-route="{{ route('public.storeImporter') }}">
+                    Save Importer
                 </button>
             @endslot
         </form>

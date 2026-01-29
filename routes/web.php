@@ -20,6 +20,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PermitConsignmentController;
 use App\Http\Controllers\InspectionPermitController;
+use App\Http\Controllers\ConsignmentPermitController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Broadcast;
@@ -83,6 +84,7 @@ Route::prefix('public')
         Route::delete('/delete_exporter/{id}', [PermitApplicationController::class, 'deleteExporter'])->name('deleteExp');
         Route::get('/get_importers/{idno}', [PermitApplicationController::class, 'getImporters'])->name('getImporters');
         Route::get('/get_exporters', [PermitApplicationController::class, 'getExporters'])->name('getExportersJson');
+        Route::get('/get_importers', [PermitApplicationController::class, 'getConsignmentImporters'])->name('getImportersJson');
         Route::get('/get_entry_point', [PermitApplicationController::class, 'getEntryPoint'])->name('getEntryPoint');
         Route::get('/get_consignment/{countryCode}', [PermitApplicationController::class, 'getConsignmentFromCountry'])->name('getItemFromCountry');
         Route::get('/consignment_uses/{id}', [PermitApplicationController::class, 'getConsignmentUses'])->name('consignmentUses');
@@ -105,6 +107,7 @@ Route::prefix('public')
         Route::get('/get_consignment_importers', [ConsignmentApplicationController::class, 'getConsignmentImporters'])->name('getConsignmentImporters');
         Route::post('/store_consignment_importer', [ConsignmentApplicationController::class, 'storeConsignmentImporter'])->name('storeImporter');
         Route::get('/get_consignment_certificate/{countryCode}', [ConsignmentApplicationController::class, 'getConsignmentFromCountry']);
+        Route::delete('/delete_importer/{id}', [ConsignmentApplicationController::class, 'deleteImporter']);
         // itemSelect
         Route::post('/save-permit/{id}', [PermitApplicationController::class, 'reapply']);
 
@@ -175,7 +178,7 @@ Route::prefix('internal')
 
         // ======================= inspection certificates ========================
         Route::get('/inspection_certificates_list', [InspectionController::class, 'showAllInspectionList'])->name('inspection.list');
-      
+
         Route::get('/view_inspection_certificate/{id}', [InspectionController::class, 'viewApplication'])->name('viewInspectionApplication');
         // Route::delete('/inspection/delete/{id}', [InspectionController::class, 'deleteApplication'])->name('inspection.delete');
     
@@ -217,12 +220,12 @@ Route::prefix('internal')
 
         // ======================= notifications ===========================
         Route::post('/permit/{id}', [PermitConsignmentController::class, 'accept_permit']);
-        
+
         // Inspection item accept/reject endpoints
         Route::post('/inspection_item/{id}/accept', [InspectionController::class, 'acceptInspectionItem']);
         Route::post('/inspection_item/{id}/reject', [InspectionController::class, 'rejectInspectionItem']);
         Route::post('/inspection/{id}/status', [InspectionController::class, 'updateStatus'])->name('inspection.status');
-    
+
         Route::post('/consignment/{id}', [ConsignmentApplicationController::class, 'accept_permit']);
     });
 
@@ -280,8 +283,12 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/notifications', [DashboardController::class, 'notifications_page'])->name('notifications.page');
     Route::delete('/inspection/delete/{id}', [InspectionController::class, 'deleteApplication'])->name('inspection.delete');
     Route::get('/application/exporter', [ApplicationController::class, 'show_exporter'])->name('application.exporter');
+    Route::get('/application/exporter/{id}', [ApplicationController::class, 'get_exporter']);
+    Route::get('/application/importer', [ApplicationController::class, 'show_importer'])->name('application.importer');
+    Route::get('/application/importer/{id}', [ApplicationController::class, 'get_importer']);
 
     Route::get('/permit/generate/{id}', [PermitGenerateController::class, 'generatePermitWord']);
+    Route::get('/permit/generate/consignment/{id}', [PermitGenerateController::class, 'generateConsignmentPermitWord']);
 
     Route::get('/payment/{id}/{permitId}/{total}/{type}', [PaymentController::class, 'checkout'])
         ->name('payment.checkout')
@@ -307,6 +314,9 @@ Route::middleware(['auth.any'])->group(function () {
     // INSPECTION CERTIFICATE PERMIT
     Route::get('/permit/list/inspection', [InspectionPermitController::class, 'getView']);
     Route::get('/permit/list/inspection/data', [InspectionPermitController::class, 'getAllpermitList']);
+
+    Route::get('/permit/list/consignment', [ConsignmentPermitController::class, 'getView']);
+    Route::get('/permit/list/consignment/data', [ConsignmentPermitController::class, 'getAllPermitList']);
     Route::get('/permit/inspection/{permit_number}', [InspectionPermitController::class, 'permitDetails']);
 
     // Route::post('/')

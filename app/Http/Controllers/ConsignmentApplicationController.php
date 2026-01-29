@@ -121,7 +121,7 @@ class ConsignmentApplicationController extends Controller
                     'importer_verify' => $importer_verify,
                 ]);
 
-                $application->status =  $permit['applCate'] == 0 ? 'Clerk Review In-Progress' : 'wait for company approval';
+                $application->status = $permit['applCate'] == 0 ? 'Clerk Review In-Progress' : 'wait for company approval';
                 $application->save();
 
                 try {
@@ -164,7 +164,7 @@ class ConsignmentApplicationController extends Controller
                     'importer_verify' => $importer_verify,
                 ]);
 
-                $application->status =  $permit['applCate'] == 0 ? 'Clerk Review In-Progress' : 'wait for company approval';
+                $application->status = $permit['applCate'] == 0 ? 'Clerk Review In-Progress' : 'wait for company approval';
                 $application->save();
 
                 try {
@@ -276,7 +276,7 @@ class ConsignmentApplicationController extends Controller
                 }
             }
 
-        
+
 
             DB::commit();
 
@@ -334,42 +334,86 @@ class ConsignmentApplicationController extends Controller
         }
     }
 
-    function storeConsignmentImporter(Request $request)
+    public function storeConsignmentImporter(Request $request)
     {
         \Log::info('Storing Consignment Importer', $request->all());
-
+    
+        // dd($request['id']);
         $validated = $request->validate([
-            'name' => 'required|string|max:150',
+            'name'     => 'required|string|max:150',
             'phone_no' => 'required|string|max:25',
-            'address' => 'required|string',
-            'country' => 'required|string|max:50',
+            'address'  => 'required|string',
+            'country'  => 'required|string|max:50',
+            'id'       => 'nullable|integer',
         ]);
-
+    
         $user = authUser()['user'];
-
+    
         if (!$user) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
+    
+        /** =========================
+         * CREATE
+         * ========================= */
+        if (empty($validated['id'])) {
+    
+            $exporter = ConsignmentImporter::create([
+                'name'          => $validated['name'],
+                'phone_no'      => $validated['phone_no'],
+                'address'       => $validated['address'],
+                'country'       => $validated['country'],
+                'registered_by' => $user->uuid,
+            ]);
+    
+            activity()
+                ->tap(fn (Activity $activity) => $activity->log_name = 'user_activity')
+                ->event('add importer')
+                ->causedBy($user)
+                ->performedOn($exporter)
+                ->withProperties(['importer' => $exporter])
+                ->log($user->fullname . ' has added an importer');
+    
+        } 
+        /** =========================
+         * UPDATE
+         * ========================= */
+        else {
+    
+            $exporter = ConsignmentImporter::findOrFail($validated['id']);
+    
+            $exporter->update([
+                'name'     => $validated['name'],
+                'phone_no' => $validated['phone_no'],
+                'address'  => $validated['address'],
+                'country'  => $validated['country'],
+            ]);
+    
+            activity()
+                ->tap(fn (Activity $activity) => $activity->log_name = 'user_activity')
+                ->event('update importer')
+                ->causedBy($user)
+                ->performedOn($exporter)
+                ->withProperties(['importer' => $exporter])
+                ->log($user->fullname . ' has updated an importer');
+        }
+    
+        return response()->json([
+            'status'  => 'success',
+            'data'    => $exporter,
+        ], 200);
+    }
 
-        $exporter = ConsignmentImporter::create([
-            'name' => $validated['name'],
-            'phone_no' => $validated['phone_no'],
-            'address' => $validated['address'],
-            'country' => $validated['country'],
-            'registered_by' => $user->uuid,
+
+    public function deleteImporter($id)
+    {
+        $importer = ConsignmentImporter::find($id);
+
+        $importer->delete();
+
+        return response()->json([
+            'message' => 'successful'
         ]);
-        activity()
-            ->tap(function (Activity $activity) {
-                $activity->log_name = 'user_activity';
-            })
-            ->event('add importer')
-            ->causedBy(authUser()['user'])
-            ->performedOn(authUser()['user'])
-            ->withProperties([
-                'importer' => $exporter,
-            ])
-            ->log(authUser()['user']['fullname'] . ' has added an importer');
-        return response()->json($exporter, 201);
     }
 
     public function viewapplication($uuid)
@@ -401,7 +445,7 @@ class ConsignmentApplicationController extends Controller
         // }
 
         // // dd($allStatuses);
-            
+
         $itemId = $application->id;
 
         // dd($application->consignmentPermits);
@@ -609,16 +653,16 @@ class ConsignmentApplicationController extends Controller
             ])
             ->log(authUser()['user']['fullname'] . ' has ' . strtolower($status) . ' permit conditions for application ' . $permit->application->application_id);
 
-            $application->logActivity(
-                'Officer Verification',
-                $request['reason'] ?? 'Permit approved by officer and pending for payment',
-                $accepted ? 'Officer Verified' : 'Officer Rejected'
-            );
+        $application->logActivity(
+            'Officer Verification',
+            $request['reason'] ?? 'Permit approved by officer and pending for payment',
+            $accepted ? 'Officer Verified' : 'Officer Rejected'
+        );
 
 
         $allStatuses = ConsignmentPermit::where('application_id', $application->id)
             ->pluck('status');
-        
+
         // Fully processed ONLY if no processing or reapplied permits remain
         if (
             !$allStatuses->contains('processing') &&
@@ -626,14 +670,14 @@ class ConsignmentApplicationController extends Controller
         ) {
             $application->status = 'Officer Verification Completed';
             $application->save();
-        
+
             $application->logActivity(
                 action: 'Officer Verification Completed',
                 remark: 'All permits have completed processing',
                 status: 'Officer Verification Completed'
             );
         }
-        
+
         $permit->save();
 
         return response()->json([
@@ -673,7 +717,7 @@ class ConsignmentApplicationController extends Controller
         $data = json_decode($item['data'], true);
 
         // dd($data);
-        
+
 
         // 2️⃣ Update permit fields
         $permit->update([
@@ -703,6 +747,21 @@ class ConsignmentApplicationController extends Controller
         $application = $permit->application;
 
         $application->logActivity(action: 'Consignment Reapply', remark: 'User reapply the consignment', status: 'User Reapply Consignment');
+
+        // Activity log for user reapplying permit
+        activity()
+            ->tap(function (Activity $activity) {
+                $activity->log_name = 'user_activity';
+            })
+            ->event('reapply consignment permit')
+            ->causedBy(authUser()['user'])
+            ->performedOn($permit)
+            ->withProperties([
+                'permit_id' => $permit->id,
+                'application_id' => $application->application_id,
+                'item_name' => $data['item_name'] ?? '-',
+            ])
+            ->log(authUser()['user']['fullname'] . ' has reapplied for permit in application ' . $application->application_id);
 
         $application->status = 'Clerk Verified';
         $application->save();

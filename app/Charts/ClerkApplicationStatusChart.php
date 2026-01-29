@@ -2,9 +2,9 @@
 
 namespace App\Charts;
 
-use App\Models\IpApplication;
-use App\Models\InspectionApplication;
-use App\Models\ConsignmentApplication;
+use App\Models\ConsignmentLog;
+use App\Models\ImportPermitLog;
+use App\Models\InspectionLog;
 use ArielMejiaDev\LarapexCharts\LarapexChart;
 
 class ClerkApplicationStatusChart
@@ -18,17 +18,17 @@ class ClerkApplicationStatusChart
 
     public function build(): \ArielMejiaDev\LarapexCharts\DonutChart
     {
-        $pending = IpApplication::where('status', '=', 'Clerk Review In-Progress')->count() +
-                   InspectionApplication::where('status', '=', 'Clerk review in-progress')->count() +
-                   ConsignmentApplication::where('status', '=', 'Clerk Review In-Progress')->count();
+        $pending = ImportPermitLog::where('status', '=', 'Clerk Review In-Progress')->count() +
+                    InspectionLog::where('status', '=', 'Clerk review in-progress')->count() +
+                   ConsignmentLog::where('status', '=', 'Clerk Review In-Progress')->count();
 
-        $verified = IpApplication::where('status', '=', 'Clerk Verified')->count() +
-                    InspectionApplication::where('status', '=', 'Clerk Verified')->count() +
-                    ConsignmentApplication::where('status', '=', 'Clerk Verified')->count();
+        $verified = ImportPermitLog::where('status', '=', 'Clerk Verified')->count() +
+                    InspectionLog::where('status', '=', 'Clerk Verified')->count() +
+                    ConsignmentLog::where('status', '=', 'Clerk Verified')->count();
 
-        $rejected = IpApplication::where('status', '=', 'Clerk Rejected')->count() +
-                    InspectionApplication::where('status', '=', 'Clerk Rejected')->count() +
-                    ConsignmentApplication::where('status', '=', 'Clerk Rejected')->count();
+        $rejected = ImportPermitLog::where('status', '=', 'Clerk Rejected')->count() +
+                    InspectionLog::where('status', '=', 'Clerk Rejected')->count() +
+                    ConsignmentLog::where('status', '=', 'Clerk Rejected')->count();
 
         return $this->chart->donutChart()
             ->setTitle('Application Review Status')

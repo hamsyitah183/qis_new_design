@@ -5,7 +5,6 @@ import "datatables.net-bs5";
 import "datatables.net-responsive-bs5";
 
 function initAddExporterModal() {
-    console.log('this is the exporter modal')
     const modalEl = document.getElementById("addExporterModal");
     const modal = new bootstrap.Modal(modalEl);
 
@@ -16,7 +15,7 @@ function initAddExporterModal() {
 
     $("#addExporterbtn").on("click", (e) => {
         e.preventDefault();
-    
+
         const routeUrl = $(e.currentTarget).data("route");
         const name = $("#addexpName").val().trim();
         const phone_no = $("#addexpfonno").val().trim();
@@ -24,12 +23,12 @@ function initAddExporterModal() {
         const address2 = $("#addexpaddress2").val().trim();
         const full_address = `${address1} ${address2}`;
         const country = $("#addexpcountry").val();
-    
+        const id = $('#id').val();
+
         if (!name || !phone_no || !country) {
             return Swal.fire("⚠️ Please fill in all required fields.");
         }
-    
-        // 🔄 SHOW LOADING SWAL
+
         Swal.fire({
             title: "Saving exporter...",
             text: "Please wait",
@@ -39,48 +38,50 @@ function initAddExporterModal() {
                 Swal.showLoading();
             }
         });
-    
+
         $.ajax({
-            url: '/public/store_exporter',
+            url: '/public/store_consignment_importer',
             type: "POST",
-            data: { name, phone_no, address: full_address, country },
+            data: { name, phone_no, address: full_address, country, id },
             headers: {
                 "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
             },
             success: () => {
-                fetchExporterList();
-    
                 Swal.fire({
                     icon: "success",
-                    title: "Exporter Saved!",
-                    text: "The exporter has been successfully added to the list.",
+                    title: "Importer Saved!",
+                    text: "The Importer has been successfully added to the list.",
                     timer: 1800,
                     showConfirmButton: false,
                     timerProgressBar: true,
+                    position: "center",
                 });
-    
-                $(modalEl).modal("hide");
+
+                // ✅ Refresh DataTable
+                $("#exporterTable").DataTable().ajax.reload(null, false);
+
+                // Hide modal
+                const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                modalInstance.hide();
+
+                // Reset form
                 $("#addExporterForm")[0].reset();
             },
+
             error: (xhr) => {
                 console.error(xhr.responseText);
-    
-                Swal.fire({
-                    icon: "error",
-                    title: "Failed!",
-                    text: "Failed to save exporter. Please try again."
-                });
-            }
+                Swal.fire("❌ Failed to save exporter. Please try again.");
+            },
         });
     });
-    
 }
+
 $(document).ready(function () {
     $("#exporterTable").DataTable({
         processing: true,
         responsive: true,
         ajax: {
-            url: "/public/get_exporters",
+            url: "/public/get_importers",
             type: "GET",
             dataSrc: "",
         },
@@ -92,7 +93,7 @@ $(document).ready(function () {
             { data: "name" },
             { data: "phone_no" },
             { data: "address" },
-            { data: "country" },
+            { data: "country_info.name" },
             {
                 data: "id",
                 orderable: false,
@@ -149,7 +150,7 @@ $(document).on("click", ".deleteExporter", function () {
             }).then((finalResult) => {
                 if (finalResult.isConfirmed) {
                     $.ajax({
-                        url: `/public/delete_exporter/${exporterId}`,
+                        url: `/public/delete_importer/${exporterId}`,
                         type: "DELETE",
                         headers: {
                             "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
@@ -174,7 +175,7 @@ $(document).on("click", ".deleteExporter", function () {
                                 title: "Failed",
                                 text:
                                     xhr.responseJSON?.message ||
-                                    "Unable to delete exporter.",
+                                    "Unable to delete importer.",
                             });
                         },
                     });
@@ -191,24 +192,27 @@ $(document).on("click", ".editExporter", function () {
 
     // Optional: show loading Swal
     Swal.fire({
-        title: "Loading exporter data...",
+        title: "Loading importer data...",
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading(),
     });
 
     const modal = new bootstrap.Modal(document.getElementById("addExporterModal"));
+
+    $('#addExporterModalLabel').text('Edit Importer')
+
     modal.show();
 
     $.ajax({
-        url: `/application/exporter/${id}`,
+        url: `/application/importer/${id}`,
         type: "GET",
         dataType: "json",
         success: function (data) {
             Swal.close(); // close loading
 
-            const exporter = data.exporter;
+            const exporter = data.importer;
 
-            console.log('exporter', exporter);
+            console.log('data, exporter', data, exporter);
 
             // Populate modal fields
             $("#addexpName").val(exporter.name);
