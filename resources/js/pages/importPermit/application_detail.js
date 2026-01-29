@@ -1476,7 +1476,7 @@ async function loadConsignmentSelection(selectedItemId = null) {
     });
 
     try {
-        const res = await fetch(`${window.baseUrl}/public/get_consignment/${countryCode}`);
+        const res = await fetch(`/public/get_consignment/${countryCode}`);
         const data = await res.json();
 
         $select.prop("disabled", false);

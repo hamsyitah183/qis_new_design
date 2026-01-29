@@ -140,7 +140,7 @@ function loadConsignmentSelection() {
         didOpen: () => Swal.showLoading(),
     }); */
 
-    fetch(`${window.baseUrl}/public/get_consignment/${countryCode}`)
+    fetch(`/public/get_consignment/${countryCode}`)
         .then((res) => res.json())
         .then((data) => {
             $select.prop("disabled", false);
