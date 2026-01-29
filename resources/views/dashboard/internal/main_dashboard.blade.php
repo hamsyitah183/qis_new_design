@@ -4,21 +4,10 @@
 
 
 @php
-$role = authUser()['roles'][0];
+
+    $role = authUser()['roles'][0];
 
 @endphp
-
-@push('scripts')
-    @vite(['resources/js/pages/dashboard.js'])
-
-
-
-@push('scripts')
-   @if ($role == 'admin')
-    @vite(['resources/js/pages/admin_dashboard.js'])
-   @endif
-@endpush
-
 
 
 
@@ -33,7 +22,7 @@ $role = authUser()['roles'][0];
 @section('content')
 
 
-  
+   
 
     @if ($role == 'admin')
         @include ('dashboard.internal.admin_dashboard')

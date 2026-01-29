@@ -27,6 +27,7 @@
                 </tbody>
             </table>
             <div class="d-flex justify-content-end align-items-end">
+                <input type="hidden" id="hasItems" name="hasItems" required>
                 <button id="mdlAddItemBtn" type="button" class="btn btn-md btn-info mt-3" data-bs-toggle="modal"
                     data-bs-target="#addItemModal">
                     <i class="bx bx-plus me-1"></i> Add Item

@@ -42,7 +42,7 @@ async function selfImport() {
 // ------------------------- Exporter List -------------------------
 function fetchExporterList() {
     const $select = $("#selectexp");
-    const url = $select.data("route");
+    const url = '/public/get_importers';
 
     return $.ajax({
         url,
@@ -232,9 +232,18 @@ function initAddExporterModal() {
         if (!name || !phone_no || !country) {
             return Swal.fire("⚠️ Please fill in all required fields.");
         }
+        Swal.fire({
+            title: "Saving exporter...",
+            text: "Please wait",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
 
         $.ajax({
-            url: routeUrl,
+            url: '/public/store_consignment_importer',
             type: "POST",
             data: { name, phone_no, address: full_address, country },
             headers: {

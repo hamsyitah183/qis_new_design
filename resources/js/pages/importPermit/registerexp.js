@@ -135,14 +135,15 @@ function loadConsignmentSelection() {
     // Show loading Swal
     Swal.fire({
         title: "Loading...",
-        // html: "Please wait while items are loaded.",
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading(),
     });
 
-    fetch(`${window.baseUrl}/public/get_consignment/${countryCode}`)
-        .then((res) => res.json())
-        .then((data) => {
+    $.ajax({
+        url: `/public/get_consignment/${countryCode}`,
+        method: "GET",
+        dataType: "json", // Ensure jQuery parses JSON automatically
+        success: function (data) {
             $select.prop("disabled", false);
 
             data.forEach((row) => {
@@ -156,17 +157,19 @@ function loadConsignmentSelection() {
                 width: "100%",
                 placeholder: "-- Select Item --",
                 allowClear: true,
-                dropdownParent: $("#addItemModal"), // Important: for modal
+                dropdownParent: $("#addItemModal"), // Important for modal
             });
 
-            Swal.close(); // Close loading
-        })
-        .catch((e) => {
-            console.error("Error loading items:", e);
+            Swal.close();
+        },
+        error: function (xhr, status, error) {
+            console.error("Error loading items:", error);
             $select.prop("disabled", false);
             Swal.fire("Error", "Failed to load consignment items.", "error");
-        });
+        },
+    });
 }
+
 
 function loadUses(itemId) {
     const $select = $("#itemUses");
@@ -205,7 +208,8 @@ function loadUses(itemId) {
 
 // ------------------------- Add Exporter Modal -------------------------
 function initAddExporterModal() {
-    console.log('this is the exporter modal')
+    console.log('this is the exporter modal');
+
     const modalEl = document.getElementById("addExporterModal");
     const modal = new bootstrap.Modal(modalEl);
 
@@ -217,7 +221,8 @@ function initAddExporterModal() {
     $("#addExporterbtn").on("click", (e) => {
         e.preventDefault();
 
-        const routeUrl = $(e.currentTarget).data("route");
+        console.log('submit')
+
         const name = $("#addexpName").val().trim();
         const phone_no = $("#addexpfonno").val().trim();
         const address1 = $("#addexpaddress1").val().trim();
@@ -229,15 +234,35 @@ function initAddExporterModal() {
             return Swal.fire("⚠️ Please fill in all required fields.");
         }
 
+        // 🔐 FORCE HTTPS
+        const httpsUrl = `${window.baseUrl}/public/store_exporter`;
+
+        // 🔄 Loading Swal
+        Swal.fire({
+            title: "Saving exporter...",
+            text: "Please wait",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        console.log('add exporter')
+
         $.ajax({
-            url: routeUrl,
-            type: "POST",
-            data: { name, phone_no, address: full_address, country },
+            url: '/public/store_exporter', // ✅ always HTTPS
+            method: "POST",
+            data: {
+                name,
+                phone_no,
+                address: full_address,
+                country
+            },
             headers: {
                 "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
             },
             success: () => {
                 fetchExporterList();
+
                 Swal.fire({
                     icon: "success",
                     title: "Exporter Saved!",
@@ -245,15 +270,20 @@ function initAddExporterModal() {
                     timer: 1800,
                     showConfirmButton: false,
                     timerProgressBar: true,
-                    position: "center",
                 });
-                $(modalEl).modal("hide");
+
+                modal.hide();
                 $("#addExporterForm")[0].reset();
             },
             error: (xhr) => {
                 console.error(xhr.responseText);
-                Swal.fire("❌ Failed to save exporter. Please try again.");
-            },
+
+                Swal.fire({
+                    icon: "error",
+                    title: "Failed!",
+                    text: "Failed to save exporter. Please try again."
+                });
+            }
         });
     });
 }
@@ -352,7 +382,7 @@ function permitDetails() {
 
         // build URL with the selected value as query param
         const url = `${route}?type=${encodeURIComponent(value)}`;
-        console.log(url);
+        console.log('the url is', url);
         $.ajax({
             url: url, // the same URL you built earlier: route + ?type=value
             type: "GET",

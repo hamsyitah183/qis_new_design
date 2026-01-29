@@ -33,7 +33,7 @@
                     <input type="hidden" id="app_cate" value="1">
                     <div class="col-xl-12">
                         <label for="impname" class="form-label">Name</label>
-                        <input type="hidden" id="impid">
+                        <input type="hidden" id="impid" name="impid" required>
                         <input type="text" class="form-control " id="impname" name="impname" disabled >
                         <input type="hidden" id="impemail" name="impemail">
                     </div>
@@ -56,7 +56,7 @@
                     <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                         <label for="selectexp" class="form-label">Select Exporter</label>
                         <select id="selectexp" data-route="/public/get_exporters"
-                            class="form-select xintra-select2" name="selectexp" style="width:100%;">
+                            class="form-select xintra-select2" name="selectexp" style="width:100%;" required>
                             <option value="">-- Select Exporter --</option>
                         </select>
                     </div>
@@ -134,8 +134,7 @@
                         <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">
                             <i class="bx bx-x me-1"></i> Cancel
                         </button>
-                        <button type="button" id="addExporterbtn" class="btn btn-primary"
-                            data-route="{{ route('public.storeExp') }}">
+                        <button type="button" id="addExporterbtn" class="btn btn-primary">
                             <i class="bx bx-save me-1"></i> Save Exporter
                         </button>
                     </div>

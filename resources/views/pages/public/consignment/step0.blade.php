@@ -33,7 +33,7 @@
                 <div class="row gy-3">
                     <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                         <label for="selectexp" class="form-label">Select Importer</label>
-                        <select id="selectexp" data-route="{{ route('public.getConsignmentImporters') }}"
+                        <select id="selectexp" data-route="/public/get_importers"
                             class="form-select xintra-select2" name="selectexp" style="width:100%;" required>
                             <option value="">-- Select Importer --</option>
                         </select>
@@ -110,7 +110,7 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
 
                     <button type="button" id="addExporterbtn" class="btn btn-primary"
-                        data-route="{{ route('public.storeImporter') }}">
+                       >
                         Save Importer
                     </button>
                 @endslot

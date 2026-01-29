@@ -80,11 +80,11 @@ Route::prefix('public')
         Route::get('/import_assign_application', [PermitApplicationController::class, 'showassign'])->name('permitAssignApplication');
         Route::get('/new_application', [ApplicationController::class, 'show'])->name('newApplication');
         Route::get('/newtest', [ApplicationController::class, 'showthis'])->name('newApplicatasdion');
-        Route::post('/store_exporter', [PermitApplicationController::class, 'storeExporter'])->name('storeExp');
+        Route::post('/store_exporter', [PermitApplicationController::class, 'storeExporter']);
         Route::delete('/delete_exporter/{id}', [PermitApplicationController::class, 'deleteExporter'])->name('deleteExp');
         Route::get('/get_importers/{idno}', [PermitApplicationController::class, 'getImporters'])->name('getImporters');
-        Route::get('/manage_exporters', [PermitApplicationController::class, 'showExportersPage'])->name('getExporters');
         Route::get('/get_exporters', [PermitApplicationController::class, 'getExporters'])->name('getExportersJson');
+        Route::get('/get_importers', [PermitApplicationController::class, 'getConsignmentImporters'])->name('getImportersJson');
         Route::get('/get_entry_point', [PermitApplicationController::class, 'getEntryPoint'])->name('getEntryPoint');
         Route::get('/get_consignment/{countryCode}', [PermitApplicationController::class, 'getConsignmentFromCountry'])->name('getItemFromCountry');
         Route::get('/consignment_uses/{id}', [PermitApplicationController::class, 'getConsignmentUses'])->name('consignmentUses');
@@ -107,6 +107,7 @@ Route::prefix('public')
         Route::get('/get_consignment_importers', [ConsignmentApplicationController::class, 'getConsignmentImporters'])->name('getConsignmentImporters');
         Route::post('/store_consignment_importer', [ConsignmentApplicationController::class, 'storeConsignmentImporter'])->name('storeImporter');
         Route::get('/get_consignment_certificate/{countryCode}', [ConsignmentApplicationController::class, 'getConsignmentFromCountry']);
+        Route::delete('/delete_importer/{id}', [ConsignmentApplicationController::class, 'deleteImporter']);
         // itemSelect
         Route::post('/save-permit/{id}', [PermitApplicationController::class, 'reapply']);
 
@@ -283,6 +284,8 @@ Route::middleware(['auth.any'])->group(function () {
     Route::delete('/inspection/delete/{id}', [InspectionController::class, 'deleteApplication'])->name('inspection.delete');
     Route::get('/application/exporter', [ApplicationController::class, 'show_exporter'])->name('application.exporter');
     Route::get('/application/exporter/{id}', [ApplicationController::class, 'get_exporter']);
+    Route::get('/application/importer', [ApplicationController::class, 'show_importer'])->name('application.importer');
+    Route::get('/application/importer/{id}', [ApplicationController::class, 'get_importer']);
 
     Route::get('/permit/generate/{id}', [PermitGenerateController::class, 'generatePermitWord']);
     Route::get('/permit/generate/consignment/{id}', [PermitGenerateController::class, 'generateConsignmentPermitWord']);

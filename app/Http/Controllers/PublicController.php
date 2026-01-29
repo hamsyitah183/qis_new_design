@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\country;
+use App\Models\Country;
 use App\Models\IpApplication;
 use App\Models\IpConsignmentAttachment;
 use App\Models\IpConsignmentPermit;

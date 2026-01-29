@@ -202,7 +202,7 @@ async function pendingPaymentTable() {
     const permits = application.consignment_permits || [];
 
     const pendingPaymentPermits = permits.filter((p) =>
-        ["pending for payment", "payment failed"].includes(
+        ["pending for payment", "payment failed", "failed payment"].includes(
             p.status?.toLowerCase()
         )
     );
@@ -1476,7 +1476,7 @@ async function loadConsignmentSelection(selectedItemId = null) {
     });
 
     try {
-        const res = await fetch(`${window.baseUrl}/public/get_consignment/${countryCode}`);
+        const res = await fetch(`/public/get_consignment/${countryCode}`);
         const data = await res.json();
 
         $select.prop("disabled", false);

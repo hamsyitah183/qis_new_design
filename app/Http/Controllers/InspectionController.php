@@ -6,7 +6,7 @@ use App\Models\InspectionApplication;
 use Illuminate\Http\Request;
 
 use App\Http\Controllers\Controller;
-use App\Models\country;
+use App\Models\Country;
 use App\Models\PublicCode;
 
 use App\Events\ApplicationCreatedInternalUser;
