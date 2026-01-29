@@ -41,7 +41,7 @@ function initAddExporterModal() {
         });
     
         $.ajax({
-            url: '/public/store_exporter',
+            url: `${window.location.origin}/public/store_exporter`,
             type: "POST",
             data: { name, phone_no, address: full_address, country },
             headers: {
