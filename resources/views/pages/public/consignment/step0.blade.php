@@ -110,7 +110,7 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
 
                     <button type="button" id="addExporterbtn" class="btn btn-primary"
-                        data-route="{{ route('public.storeImporter') }}">
+                       >
                         Save Importer
                     </button>
                 @endslot
