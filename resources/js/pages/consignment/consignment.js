@@ -42,7 +42,7 @@ async function selfImport() {
 // ------------------------- Exporter List -------------------------
 function fetchExporterList() {
     const $select = $("#selectexp");
-    const url = $select.data("route");
+    const url = '/public/get_importers';
 
     return $.ajax({
         url,
