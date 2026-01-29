@@ -54,7 +54,10 @@ function initAddExporterModal() {
                 "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
             },
             success: () => {
-                fetchExporterList();
+                // fetchExporterList();
+                $("#exporterTable")
+                                .DataTable()
+                                .ajax.reload(null, false);
 
                 Swal.fire({
                     icon: "success",
