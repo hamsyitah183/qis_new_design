@@ -183,9 +183,9 @@ function activityLog() {
             tableBody.empty(); // clear existing rows
 
             // console.log("application", application.activity_log);
-            let activity_log =  json.activity_log
+            let activity_log = json.activity_log
 
-            
+
 
             const modalEl = document.getElementById("activityLogModal");
             modalEl.querySelector(".modal-title").textContent =

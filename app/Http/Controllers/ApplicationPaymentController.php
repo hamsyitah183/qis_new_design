@@ -23,7 +23,7 @@ class ApplicationPaymentController extends Controller
         $userUuid = authUser()['user']->uuid;
         $type = authUser()['type'];
 
-        $query = Order::query();
+        $query = Order::latest();
 
         // Apply filter for public users
         if ($type !== 'internal') {

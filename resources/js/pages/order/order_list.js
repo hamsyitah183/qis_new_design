@@ -20,7 +20,7 @@ async function data_table_init() {
         ajax: "/order/list/data",
 
         columns: [
-          
+
             { data: "order_number" },
             { data: "status" },
             { data: "application_type" },
@@ -32,10 +32,11 @@ async function data_table_init() {
             { data: "action", orderable: false, searchable: false },
         ],
 
-       
+
         responsive: true,
         autoWidth: false,
         pageLength: 10,
+        order: [],
     });
 
     orderListTable.on("draw.dt", function () {

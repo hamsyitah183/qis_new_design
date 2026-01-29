@@ -124,9 +124,10 @@
 
                             @php
                                 $hasPending = $application->inspectionItems
-                                    ? $application->inspectionItems->contains(
-                                        fn($permit) => $permit->status === 'pending for payment',
-                                    )
+                                    ? $application->inspectionItems->contains(function ($permit) {
+                                        $s = strtolower($permit->status ?? '');
+                                        return $s === 'pending for payment' || $s === 'payment failed';
+                                    })
                                     : false;
 
                                 $value = $hasPending ? 1 : 0;
