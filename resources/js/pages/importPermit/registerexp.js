@@ -379,7 +379,7 @@ function permitDetails() {
 
         // build URL with the selected value as query param
         const url = `${route}?type=${encodeURIComponent(value)}`;
-        console.log(url);
+        console.log('the url is', url);
         $.ajax({
             url: url, // the same URL you built earlier: route + ?type=value
             type: "GET",
