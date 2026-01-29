@@ -85,6 +85,7 @@ Route::prefix('public')
         Route::get('/get_importers/{idno}', [PermitApplicationController::class, 'getImporters'])->name('getImporters');
         Route::get('/manage_exporters', [PermitApplicationController::class, 'showExportersPage'])->name('getExporters');
         Route::get('/get_exporters', [PermitApplicationController::class, 'getExporters'])->name('getExportersJson');
+        Route::get('/get_importers', [PermitApplicationController::class, 'getConsignmentImporters'])->name('getImportersJson');
         Route::get('/get_entry_point', [PermitApplicationController::class, 'getEntryPoint'])->name('getEntryPoint');
         Route::get('/get_consignment/{countryCode}', [PermitApplicationController::class, 'getConsignmentFromCountry'])->name('getItemFromCountry');
         Route::get('/consignment_uses/{id}', [PermitApplicationController::class, 'getConsignmentUses'])->name('consignmentUses');
@@ -284,6 +285,7 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/application/exporter', [ApplicationController::class, 'show_exporter'])->name('application.exporter');
     Route::get('/application/exporter/{id}', [ApplicationController::class, 'get_exporter']);
     Route::get('/application/importer', [ApplicationController::class, 'show_importer'])->name('application.importer');
+    Route::get('/application/importer/{id}', [ApplicationController::class, 'get_importer']);
 
     Route::get('/permit/generate/{id}', [PermitGenerateController::class, 'generatePermitWord']);
     Route::get('/permit/generate/consignment/{id}', [PermitGenerateController::class, 'generateConsignmentPermitWord']);

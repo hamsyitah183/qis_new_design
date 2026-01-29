@@ -9,6 +9,7 @@ use App\Events\InternalUserClerkEvent;
 use App\Events\PublicUserEvent;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\NotificationController;
+use App\Models\ConsignmentImporter;
 use App\Models\Country;
 use App\Models\ImportPermitLog;
 use App\Models\InternalUser;
@@ -188,6 +189,14 @@ class PermitApplicationController extends Controller
 
         return response()->json($exporters);
     }
+
+    public function getConsignmentImporters()
+    {
+        $importers = ConsignmentImporter::with('countryInfo')->get();
+    
+        return response()->json($importers);
+    }
+    
 
     public function showExportersPage()
     {

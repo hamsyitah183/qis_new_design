@@ -348,7 +348,7 @@ class PaymentController extends Controller
                     'log_status' => 'Payment Successful',
                 ],
                 'unsuccessful' => [
-                    'permit_status' => 'Failed Payment',
+                    'permit_status' => 'payment failed',
                     'remark' => 'The order is unsuccessfully paid',
                     'log_status' => 'Payment Unsuccessful',
                 ],

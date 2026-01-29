@@ -202,7 +202,7 @@ async function pendingPaymentTable() {
     const permits = application.consignment_permits || [];
 
     const pendingPaymentPermits = permits.filter((p) =>
-        ["pending for payment", "payment failed"].includes(
+        ["pending for payment", "payment failed", "failed payment"].includes(
             p.status?.toLowerCase()
         )
     );

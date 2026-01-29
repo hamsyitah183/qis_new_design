@@ -16,14 +16,14 @@
     <script>
         window.AUTH_TYPE = @json($type);
     </script>
-    @vite(['resources/js/pages/export_list.js'])
+    @vite(['resources/js/pages/importer_list.js'])
 @endpush
 
-@section('pageName', 'List All Exporter')
+@section('pageName', 'List All Consignment Importer')
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="All Exporter List">
+    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="All Importer List">
 
     </x-breadcrumb>
 @endsection
@@ -36,7 +36,7 @@
                 <div class="card-title">
                     <div class="d-flex justify-content-end">
                         <div class="btn btn-primary btn-sm" id="addExporter">
-                            Add Exporter
+                            Add Importer
                         </div>
                     </div>
                 </div>
@@ -46,7 +46,7 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>#</th>
-                                    <th>Exporter Name</th>
+                                    <th>Importer Name</th>
                                     <th>Phone No</th>
                                     <th>Address</th>
                                     <th>Country</th>
