@@ -218,6 +218,8 @@ function initAddExporterModal() {
     $("#addExporterbtn").on("click", (e) => {
         e.preventDefault();
 
+        console.log('submit')
+
         const name = $("#addexpName").val().trim();
         const phone_no = $("#addexpfonno").val().trim();
         const address1 = $("#addexpaddress1").val().trim();
@@ -243,43 +245,43 @@ function initAddExporterModal() {
 
         console.log('add exporter')
 
-        // $.ajax({
-        //     url: httpsUrl, // ✅ always HTTPS
-        //     method: "POST",
-        //     data: {
-        //         name,
-        //         phone_no,
-        //         address: full_address,
-        //         country
-        //     },
-        //     headers: {
-        //         "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
-        //     },
-        //     success: () => {
-        //         fetchExporterList();
+        $.ajax({
+            url: httpsUrl, // ✅ always HTTPS
+            method: "POST",
+            data: {
+                name,
+                phone_no,
+                address: full_address,
+                country
+            },
+            headers: {
+                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+            },
+            success: () => {
+                fetchExporterList();
 
-        //         Swal.fire({
-        //             icon: "success",
-        //             title: "Exporter Saved!",
-        //             text: "The exporter has been successfully added to the list.",
-        //             timer: 1800,
-        //             showConfirmButton: false,
-        //             timerProgressBar: true,
-        //         });
+                Swal.fire({
+                    icon: "success",
+                    title: "Exporter Saved!",
+                    text: "The exporter has been successfully added to the list.",
+                    timer: 1800,
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                });
 
-        //         modal.hide();
-        //         $("#addExporterForm")[0].reset();
-        //     },
-        //     error: (xhr) => {
-        //         console.error(xhr.responseText);
+                modal.hide();
+                $("#addExporterForm")[0].reset();
+            },
+            error: (xhr) => {
+                console.error(xhr.responseText);
 
-        //         Swal.fire({
-        //             icon: "error",
-        //             title: "Failed!",
-        //             text: "Failed to save exporter. Please try again."
-        //         });
-        //     }
-        // });
+                Swal.fire({
+                    icon: "error",
+                    title: "Failed!",
+                    text: "Failed to save exporter. Please try again."
+                });
+            }
+        });
     });
 }
 

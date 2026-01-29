@@ -134,8 +134,7 @@
                         <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">
                             <i class="bx bx-x me-1"></i> Cancel
                         </button>
-                        <button type="button" id="addExporterbtn" class="btn btn-primary"
-                            data-route="{{ route('public.storeExp') }}">
+                        <button type="button" id="addExporterbtn" class="btn btn-primary">
                             <i class="bx bx-save me-1"></i> Save Exporter
                         </button>
                     </div>

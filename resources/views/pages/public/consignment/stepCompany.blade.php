@@ -131,8 +131,7 @@
                 @slot('footer')
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
 
-                    <button type="button" id="addExporterbtn" class="btn btn-primary"
-                        data-route="{{ route('public.storeImporter') }}">
+                    <button type="button" id="addExporterbtn" class="btn btn-primary">
                         Save Importer
                     </button>
                 @endslot
