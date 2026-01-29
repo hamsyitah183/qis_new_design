@@ -42,7 +42,7 @@ function initAddExporterModal() {
         });
 
         $.ajax({
-            url: httpsUrl, // ✅ always HTTPS
+            url: '/public/store_exporter', // ✅ always HTTPS
             method: "POST",
             data: {
                 name,
