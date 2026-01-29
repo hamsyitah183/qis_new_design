@@ -324,6 +324,13 @@ Route::middleware(['auth.any'])->group(function () {
     // bounce url
     // Route::get('/paymentUpdate/{kod_transaksi}', [PaymentController::class, 'bounce']);
     Route::get('/paymentUpdate/{rn}', [PaymentController::class, 'paymentUpdate']);
+
+
+
+
+
+    // dashboard
+    Route::get('/application/count', [DashboardController::class, 'applicationCount']);
 });
 
 // broadcast --dont kacau---

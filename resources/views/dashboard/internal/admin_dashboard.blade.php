@@ -1,5 +1,6 @@
 {{-- finance and application data --}}
 @include('dashboard.internal.components.finance_application_data')
+{{-- @dd($data) --}}
 
 @include('dashboard.internal.components.daily_application')
 

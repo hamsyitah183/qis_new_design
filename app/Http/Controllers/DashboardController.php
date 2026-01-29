@@ -273,7 +273,7 @@ class DashboardController extends Controller
             'clerkWorkloadChart' => $data['clerkWorkloadChart'],
             'pendingQueue' => $data['pendingQueue'],
             'verifiedToday' => $data['verifiedToday'],
-            $data,
+            
         ]); // Internal user dashboard
     }
   
@@ -321,5 +321,17 @@ class DashboardController extends Controller
         }
 
         return response()->json($query->latest()->get());
+    }
+
+    public function applicationCount()
+    {
+        $ipCount = IpApplication::count();
+        $icCount = InspectionApplication::count();
+        $ccCount = ConsignmentApplication::count();
+        $data['ipCount'] = $ipCount;
+
+        return response()->json([
+           'data' => $data
+        ]);
     }
 }

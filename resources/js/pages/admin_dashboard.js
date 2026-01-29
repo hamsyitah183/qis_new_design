@@ -23,4 +23,30 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 
+// ip count
+function applicationCount()
+{
+    return $.ajax({
+        url: '/application/count',
+        type: "GET",
+        dataType: "json",
+        cache: false,
+        success: (data) => {
+            console.log('data application', data)
+            $('#ipCount').text(data.ipCount)
+            $('#icCount').text(data.icCount)
+            $('#ccCount').text(data.ccCount)
+        },
+        error: (xhr) => {
+            console.error("Failed to load exporters:", xhr.responseText);
+            Swal.fire({
+                icon: "error",
+                title: "Failed to Load Exporters",
+                text: "Please try again or check your connection.",
+            });
+        },
+    });
+}
+
+applicationCount()
 

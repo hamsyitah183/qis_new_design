@@ -56,7 +56,7 @@
                     </div>
                     <div>
                         <p class="text-muted mb-1 fs-13">Import Permit</p>
-                        <h3 class="fw-semibold mb-0">0</h3>
+                        <h3 class="fw-semibold mb-0" id="ipCount">0</h3>
                     </div>
                 </div>
             </div>
@@ -86,7 +86,7 @@
                     </div>
                     <div>
                         <p class="text-muted mb-1 fs-13">Inspection Certificate</p>
-                        <h3 class="fw-semibold mb-0">0</h3>
+                        <h3 class="fw-semibold mb-0" id="icCount">0</h3>
                     </div>
                 </div>
             </div>
@@ -116,7 +116,7 @@
                     </div>
                     <div>
                         <p class="text-muted mb-1 fs-13">Consignment Certificate</p>
-                        <h3 class="fw-semibold mb-0">0</h3>
+                        <h3 class="fw-semibold mb-0" id="ccCount">0</h3>
                     </div>
                 </div>
             </div>
