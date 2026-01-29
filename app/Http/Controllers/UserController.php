@@ -420,6 +420,7 @@ class UserController extends Controller
                 'phone_number' => 'required|digits_between:7,15|unique:internal_users,phone_number,' . $internalUser->id,
                 'position' => 'required|string|max:255',
                 'office' => 'required|string|max:255',
+                'role' => 'required|string',
             ]);
 
             $internalUser->update([
@@ -430,6 +431,9 @@ class UserController extends Controller
                 'position' => $request->position,
                 'office' => $request->office,
             ]);
+
+            // Sync the user's role (replaces existing roles with the new one)
+            $internalUser->syncRoles([$request->role]);
 
             /*
         |----------------------------------------------------------------------

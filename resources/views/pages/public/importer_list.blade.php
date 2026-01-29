@@ -33,16 +33,16 @@
     <div class="row">
         <div class="col-xl-12">
             <div class="card custom-card">
-                <div class="card-title">
+                <div class="card-title p-3">
                     <div class="d-flex justify-content-end">
-                        <div class="btn btn-primary btn-sm" id="addExporter">
+                        <div class="btn btn-primary btn-sm" id="addImporter">
                             Add Importer
                         </div>
                     </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table id="exporterTable" class="table table-bordered table-striped align-middle w-100">
+                        <table id="importerTable" class="table table-bordered table-striped align-middle w-100">
                             <thead class="table-light">
                                 <tr>
                                     <th>#</th>
@@ -62,36 +62,37 @@
         </div>
     </div>
 
-    <!-- Add Exporter Modal -->
-    <x-modal id="addExporterModal" title="Add Exporter">
-        <form id="addExporterForm">
+    <!-- Add Importer Modal -->
+    <x-modal id="addImporterModal" title="Add Importer">
+        <form id="addImporterForm">
             @csrf
 
             <input type="hidden" name="id" id="id">
 
             {{-- Name --}}
             <div class="mb-3">
-                <label for="addexpName" class="form-label">Name</label>
-                <input type="text" id="addexpName" name="addexpName" class="form-control">
+                <label for="addimpName" class="form-label">Name</label>
+                <input type="text" id="addimpName" name="name" class="form-control">
             </div>
 
             {{-- Phone --}}
             <div class="mb-3">
-                <label for="addexpfonno" class="form-label">Phone No</label>
-                <input type="text" id="addexpfonno" name="addexpfonno" class="form-control">
+                <label for="addimpfonno" class="form-label">Phone No</label>
+                <input type="text" id="addimpfonno" name="phone_no" class="form-control">
             </div>
 
             {{-- Address --}}
             <div class="mb-3">
-                <label for="addexpaddress" class="form-label">Address</label>
-                <input type="text" id="addexpaddress1" name="addexpaddress1" class="form-control mb-2">
-                <input type="text" id="addexpaddress2" name="addexpaddress2" class="form-control">
+                <label for="addimpaddress" class="form-label">Address</label>
+                <input type="text" id="addimpaddress1" name="address1" class="form-control mb-2"
+                    placeholder="Address Line 1">
+                <input type="text" id="addimpaddress2" name="address2" class="form-control" placeholder="Address Line 2">
             </div>
 
             {{-- Country --}}
             <div class="mb-3">
-                <label for="addexpcountry" class="form-label">Country</label>
-                <select class="form-select" id="addexpcountry" name="addexpcountry">
+                <label for="addimpcountry" class="form-label">Country</label>
+                <select class="form-select" id="addimpcountry" name="country">
                     <option value="">-- Select Country --</option>
                     @foreach ($country as $coun)
                         <option value="{{ $coun->code }}">{{ $coun->name }}</option>
@@ -100,11 +101,12 @@
             </div>
 
             @slot('footer')
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
 
-                <button type="button" id="addExporterbtn" class="btn btn-primary" data-route="{{ route('public.storeImporter') }}">
-                    Save Importer
-                </button>
+            <button type="button" id="addImporterBtn" class="btn btn-primary"
+                data-route="{{ route('public.storeImporter') }}">
+                Save Importer
+            </button>
             @endslot
         </form>
     </x-modal>
