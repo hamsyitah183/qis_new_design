@@ -188,21 +188,21 @@
         localStorage.removeItem("bodylightRGB"),
         localStorage.removeItem("bodyBgRGB"));
   }
-  document.querySelector(".layout-setting").addEventListener("click", s),
-    document.addEventListener("DOMContentLoaded", function () {
-      var e = document.querySelectorAll("[data-trigger]");
-      for (let n = 0; n < e.length; ++n) {
-        var l = e[n];
-        new Choices(l, {
-          allowHTML: !0,
-          placeholderValue: "This is a placeholder set in the config",
-          searchPlaceholderValue: "Search",
-        });
-      }
-    }),
-    (document.getElementById("year").innerHTML = new Date().getFullYear()),
-    Waves.attach(".btn-wave", ["waves-light"]),
-    Waves.init();
+  // document.querySelector(".layout-setting").addEventListener("click", s),
+  //   document.addEventListener("DOMContentLoaded", function () {
+  //     var e = document.querySelectorAll("[data-trigger]");
+  //     for (let n = 0; n < e.length; ++n) {
+  //       var l = e[n];
+  //       new Choices(l, {
+  //         allowHTML: !0,
+  //         placeholderValue: "This is a placeholder set in the config",
+  //         searchPlaceholderValue: "Search",
+  //       });
+  //     }
+  //   }),
+  //   (document.getElementById("year").innerHTML = new Date().getFullYear()),
+  //   Waves.attach(".btn-wave", ["waves-light"]),
+  //   Waves.init();
   let w = ".card";
   document.querySelectorAll('[data-bs-toggle="card-remove"]').forEach((e) => {
     e.addEventListener("click", function (l) {
