@@ -3,7 +3,7 @@ window.$ = window.jQuery = $;
 import Swal from "sweetalert2";
 import "datatables.net-bs5";
 import "datatables.net-responsive-bs5";
-import { formatTime } from "../../../app"; // Ensure this matches your project structure
+import { fetchVerificationCount, formatTime } from "../../../app"; // Ensure this matches your project structure
 
 $(document).ready(function () {
     const table = $('#verificationTable').DataTable({
@@ -235,6 +235,8 @@ function handleAccept(userId, tableInstance, modalIdToHide = null) {
                         timer: 2000,
                         showConfirmButton: false,
                     });
+
+                    fetchVerificationCount()
                     
                     if (modalIdToHide) {
                         const modalEl = document.getElementById(modalIdToHide);
@@ -285,3 +287,4 @@ function handleReject(userId, reason, tableInstance, modalIdToHide = null) {
         },
     });
 }
+

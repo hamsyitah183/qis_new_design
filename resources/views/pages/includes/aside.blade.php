@@ -252,7 +252,7 @@
                             </li>
 
                             <li class="slide {{ $currentRoute === 'internal.public.verification.list' ? 'active' : '' }}">
-                                <a href="{{ route('internal.public.verification.list') }}" class="side-menu__item">User
+                                <a href="{{ route('internal.public.verification.list') }}" class="side-menu__item" id = "verificationCount">User
                                     Verification</a>
                             </li>
 
@@ -261,10 +261,12 @@
                                     Log</a>
                             </li>
 
+                           @role('superadmin')
                             <li class="slide {{ $currentRoute === 'internal.internal.role' ? 'active' : '' }}">
                                 <a href="{{ route('internal.internal.role') }}" class="side-menu__item">Role and
                                     Permission</a>
                             </li>
+                           @endrole
                         </ul>
                     </li>
 

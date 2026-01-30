@@ -1,6 +1,6 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
-import { formatTime } from "../../../app";
+import { fetchVerificationCount, formatTime } from "../../../app";
 
 let publicUsersTable;
 
@@ -488,7 +488,8 @@ $("#verificationBtn").on("click", function (e) {
                 timer: 2000,
                 showConfirmButton: false,
             });
-
+            fetchVerificationCount()
+            
             // Close modal after success
             const modal = bootstrap.Modal.getInstance(
                 document.getElementById("verificationModal")

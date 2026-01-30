@@ -132,6 +132,20 @@ class UserController extends Controller
         return view('pages.internal.user_management.verification_list', compact('count'));
     }
 
+    function verification_count()
+    {
+        $count = PublicUser::whereHas('approved', function ($query) {
+            $query->whereNotNull('verification_attachment')
+                ->where('doa_verified', '!=', 1)
+                ->where('status', '!=', 'Verification is rejected');
+        })->count();
+
+        return response()->json([
+            'count' => $count
+        ]);
+        // return $count;
+    }
+
     public function verification_list_data()
     {
         $query = PublicUser::whereHas('approved', function ($query) {

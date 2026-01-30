@@ -143,3 +143,22 @@ document.addEventListener('DOMContentLoaded', () => {
     startNotificationPolling();
 });
 
+export function fetchVerificationCount() {
+   
+    $.ajax({
+        url: `/internal/verification_count`,
+        method: "GET",
+        success: function(data) {
+            console.log('data', data)
+            if(data.count > 0) {
+                $('#verificationCount').html(`
+                    <span class = "d-flex justify-content-between"><span>User Verification</span>   <span class = "ms-4">( ${data.count} )</span> </span>
+                    `)
+            } else {
+                $('#verificationCount').text(`User Verification`)
+            }
+        }
+    });
+  
+}
+fetchVerificationCount();

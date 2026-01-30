@@ -150,6 +150,7 @@ Route::prefix('internal')
         // Verification Routes
         Route::get('/user_public/verification', [UserController::class, 'verification_list'])->name('public.verification.list');
         Route::get('/user_public/verification/data', [UserController::class, 'verification_list_data'])->name('public.verification.list.data');
+        Route::get('/verification_count', [UserController::class, 'verification_count']);
 
         Route::get('/user_public/user/data/{id}', [UserController::class, 'user_data']);
         Route::post('/user_public/save', [UserController::class, 'public_user_save']);

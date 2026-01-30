@@ -40,8 +40,7 @@ class RoleAndPermissionSeeder extends Seeder
             // activity log
             'read activity log',
 
-            // role
-            'update role', 
+           
 
 
             // ================================================

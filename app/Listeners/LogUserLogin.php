@@ -43,6 +43,6 @@ class LogUserLogin
                 'ip' => request()->ip(),
                 'guard' => $guard,
             ])
-            ->log("{$username} logged in to the system ({$guard} guard).");
+            ->log("{$username} logged in to the system ({$guard} user).");
     }
 }
