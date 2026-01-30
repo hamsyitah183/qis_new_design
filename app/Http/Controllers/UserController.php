@@ -44,9 +44,9 @@ class UserController extends Controller
 
         $countryNo = CountryNoPhone::get();
 
-        if (!$user->can('create public user')) {
-            abort(403, 'Unauthorized action.'); // or redirect to another page
-        }
+        // if (!$user->can('create public user')) {
+        //     abort(403, 'Unauthorized action.'); // or redirect to another page
+        // }
 
         return view('pages.internal.user_management.list_public', [
             'countryNo' => $countryNo
@@ -90,34 +90,74 @@ class UserController extends Controller
             ->editColumn('doa_verified', function ($user) {
                 // Default icon is blank
                 $icon = '';
-            
+
                 // Only show icon for NOT Verified with a verification attachment
                 if (!$user->approved?->doa_verified && !empty($user->approved?->verification_attachment)) {
                     $icon = '<span class="text-warning fs-16 fw-bold ">
                                 <i class="bi bi-exclamation-circle"></i>
                              </span>';
                 }
-            
+
                 // If no approved record, show Not Verified without icon
                 if (!$user->approved) {
                     return '<span class="badge bg-dark-transparent cursor-pointer badge-verification" data-id="'
                         . $user->uuid . '" data-verified="no">Not Verified</span>';
                 }
-            
+
                 // Show Verified badge
                 if ($user->approved->doa_verified) {
                     return '<span class="badge bg-success-transparent cursor-pointer badge-verification" data-id="'
                         . $user->uuid . '" data-verified="yes">Verified</span>';
                 }
-            
+
                 // Show Not Verified badge (with icon if attachment exists)
                 return '<span class="badge bg-dark-transparent cursor-pointer badge-verification" data-id="'
                     . $user->uuid . '" data-verified="no">Not Verified ' . $icon . '</span>';
             })
-            
-            
+
+
 
             ->rawColumns(['action', 'doa_verified'])
+            ->make(true);
+    }
+
+    public function verification_list()
+    {
+        $count = PublicUser::whereHas('approved', function ($query) {
+            $query->whereNotNull('verification_attachment')
+                ->where('doa_verified', '!=', 1)
+                ->where('status', '!=', 'Verification is rejected');
+        })->count();
+
+        return view('pages.internal.user_management.verification_list', compact('count'));
+    }
+
+    public function verification_list_data()
+    {
+        $query = PublicUser::whereHas('approved', function ($query) {
+            $query->whereNotNull('verification_attachment')
+                ->where('doa_verified', '!=', 1)
+                ->where('status', '!=', 'Verification is rejected');
+        })->with('approved');
+
+        \Log::info('Verification List Data Query Result Count: ' . $query->count());
+
+        return DataTables::of($query)
+            ->addColumn('verification_attachment', function ($user) {
+                if ($user->approved && $user->approved->verification_attachment) {
+                    return '<button class="btn btn-sm btn-info view-attachment" data-id="' . $user->uuid . '"><i class="ti ti-file-description"></i> View Attachment</button>';
+                }
+                return '-';
+            })
+            ->addColumn('action', function ($user) {
+                return '
+                    <div class="d-flex gap-2">
+                         <button class="btn btn-sm btn-success accept-btn" data-id="' . $user->uuid . '">Accept</button>
+                         <button class="btn btn-sm btn-danger reject-btn" data-id="' . $user->uuid . '">Reject</button>
+                    </div>
+                ';
+            })
+            ->rawColumns(['verification_attachment', 'action'])
             ->make(true);
     }
 
@@ -750,10 +790,16 @@ class UserController extends Controller
 
     public function verification_attachment($id)
     {
+        \Log::info("Fetching verification for user: {$id}");
 
         $verification = ApprovedPublic::with(['publicUser', 'approver'])
             ->where('user_id', $id)
             ->first();
+
+        if (!$verification) {
+            \Log::warning("No verification record found for user_id: {$id}");
+            return response()->json(['error' => 'Verification not found'], 404);
+        }
 
         return response()->json($verification);
     }
