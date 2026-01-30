@@ -38,7 +38,10 @@ class RoleAndPermissionSeeder extends Seeder
 
 
             // activity log
-            'read activity log'
+            'read activity log',
+
+            // role
+            'update role', 
 
 
             // ================================================
@@ -65,6 +68,10 @@ class RoleAndPermissionSeeder extends Seeder
         // ==================================================
         $roles = [
             // Internal roles
+            'superadmin' => [
+                'guard_name' => 'internal',
+                'permissions' => ['view dashboard', 'create internal user', 'create public user', 'approve public user'],
+            ],
             'admin' => [
                 'guard_name' => 'internal',
                 'permissions' => ['view dashboard', 'create internal user', 'create public user', 'approve public user'],

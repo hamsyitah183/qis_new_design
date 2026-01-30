@@ -17,6 +17,7 @@ class InternalUserSeeder extends Seeder
         // 1️⃣ Ensure roles exist first
         // ==================================================
         $roles = [
+            // 'superadmin' => 'internal',
             'admin' => 'internal',
             'officer' => 'internal',
             'clerk' => 'internal',
@@ -43,7 +44,7 @@ class InternalUserSeeder extends Seeder
                 'office' => 'HQ',
                 'no_ic' => '900101010001',
                 'password' => 'password123',
-                'role' => 'admin',
+                'role' => 'superadmin',
                 'email_verified_at' => Carbon::now(),
             ],
             [
@@ -54,7 +55,7 @@ class InternalUserSeeder extends Seeder
                 'office' => 'HQ',
                 'no_ic' => '000101010001',
                 'password' => 'password123',
-                'role' => 'admin',
+                'role' => 'superadmin',
                 'email_verified_at' => Carbon::now(),
             ],
             [

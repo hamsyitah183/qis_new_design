@@ -13,6 +13,7 @@ class ActivityLogController extends Controller
     //
     public function log()
     {
+
         return view('pages.internal.user_management.list_acitivity_log', [
             'title' => 'Activity Log'
         ]);
@@ -22,7 +23,7 @@ class ActivityLogController extends Controller
     // {
     //     $query = Activity::orderBy('created_at', 'desc');
 
-    //     // 🧩 Handle date & time filters
+    //     // 🧩 Handle date & time filters 
     //     if (
     //         $request->filled('start_date') ||
     //         $request->filled('end_date') ||
