@@ -18,9 +18,13 @@ use App\Charts\ClerkApplicationStatusChart;
 use App\Charts\ClerkDailyWorkloadChart;
 use App\Charts\ClerkDailyVolumeChart;
 use App\Charts\PublicApplicationStatusChart;
+use App\Charts\PermitDailyProcessChart;
 use App\Models\Country;
 use App\Models\IpEntryPoint;
 use App\Models\Order;
+use App\Models\IpConsignmentPermit;
+use App\Models\InspectionItem;
+use App\Models\ConsignmentPermit;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -33,7 +37,7 @@ use Illuminate\Notifications\DatabaseNotification;
 class DashboardController extends Controller
 {
     //
-    public function dashboard(LineUserChart $lineChart, OrderDonutChart $orderChart, PaymentMethodBarChart $paymentChart, ApplicationHorizontalChart $applicationChart, ClerkDailyVolumeChart $clerkVolumeChart)
+    public function dashboard(LineUserChart $lineChart, OrderDonutChart $orderChart, PaymentMethodBarChart $paymentChart, ApplicationHorizontalChart $applicationChart, ClerkDailyVolumeChart $clerkVolumeChart, PermitDailyProcessChart $permitChart)
     {
         // ✅ Check which guard is logged in
         if (Auth::guard('public')->check()) {
@@ -41,8 +45,8 @@ class DashboardController extends Controller
         }
 
         if (Auth::guard('internal')->check()) {
-            return $this->internal_dashboard(app(LineUserChart::class), app(OrderDonutChart::class), app(PaymentMethodBarChart::class), app(ApplicationHorizontalChart::class), app(ClerkApplicationStatusChart::class), app(ClerkDailyWorkloadChart::class), app(ClerkDailyVolumeChart::class));
-            return $this->internal_dashboard($lineChart, $orderChart, $paymentChart, $applicationChart, $clerkVolumeChart);
+            return $this->internal_dashboard(app(LineUserChart::class), app(OrderDonutChart::class), app(PaymentMethodBarChart::class), app(ApplicationHorizontalChart::class), app(ClerkApplicationStatusChart::class), app(ClerkDailyWorkloadChart::class), app(ClerkDailyVolumeChart::class), app(PermitDailyProcessChart::class));
+            return $this->internal_dashboard($lineChart, $orderChart, $paymentChart, $applicationChart, $clerkVolumeChart, $permitChart);
         }
 
         // ❌ If no guard is logged in, redirect to login
@@ -128,7 +132,7 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function internal_dashboard(LineUserChart $lineChart, OrderDonutChart $orderChart, PaymentMethodBarChart $paymentChart, ApplicationHorizontalChart $applicationChart, ClerkApplicationStatusChart $clerkStatusChart, ClerkDailyWorkloadChart $clerkWorkloadChart, ClerkDailyVolumeChart $clerkVolumeChart)
+    public function internal_dashboard(LineUserChart $lineChart, OrderDonutChart $orderChart, PaymentMethodBarChart $paymentChart, ApplicationHorizontalChart $applicationChart, ClerkApplicationStatusChart $clerkStatusChart, ClerkDailyWorkloadChart $clerkWorkloadChart, ClerkDailyVolumeChart $clerkVolumeChart, PermitDailyProcessChart $permitChart)
     {
         // $notifications = Notification::where('notifiable_type', 'internal')
         //     ->where('notifiable_id', authUser()['user']->uuid)
@@ -275,6 +279,7 @@ class DashboardController extends Controller
             'clerkWorkloadChart' => $data['clerkWorkloadChart'],
             'pendingQueue' => $data['pendingQueue'],
             'verifiedToday' => $data['verifiedToday'],
+            'permitChart' => $permitChart->build(),
         ]); // Internal user dashboard
     }
 
@@ -339,9 +344,31 @@ class DashboardController extends Controller
         $totalVerified = $ipVerified . $icVerified . $ccVerified;
 
         $totalAmount = Order::where('transaction_status', 'SUCCESSFUL')->sum('payment_amount');
+        
+
+        $ipCountOfficer = IpConsignmentPermit::count();
+        $icCountOfficer = InspectionItem::count();
+        $ccCountOfficer = ConsignmentPermit::count();
+        $data['ipOfficer'] = $ipCountOfficer;
+        $data['icOfficer'] = $icCountOfficer;
+        $data['ccOfficer'] = $ccCountOfficer;
+
+        $totalOfficer = $ipVerified . $icVerified . $ccVerified;
 
         $data['total'] = $totalAmount;
         $data['verified'] = $totalVerified;
+        $data['officer'] = $totalOfficer;
+
+        $ipCountReviewOfficer = IpApplication::where('status', 'Clerk Approved')->count();
+        $icCountReviewOfficer = InspectionApplication::where('status', 'Clerk Approved')->count();
+        $ccCountReviewOfficer = ConsignmentApplication::where('status', 'Clerk Approved')->count();
+
+        $totalReviewOfficer = $ipCountReviewOfficer
+            + $icCountReviewOfficer
+            + $ccCountReviewOfficer;
+
+
+        $data['totalReview'] = $totalReviewOfficer;
 
         return response()->json([
             'data' => $data,
@@ -367,6 +394,30 @@ class DashboardController extends Controller
 
         $data['total'] = $totalAmount;
         $data['verified'] = $totalVerified;
+
+        return response()->json([
+            'data' => $data,
+        ]);
+    }
+    public function officerCount()
+    {
+        $ipCountOfficer = IpConsignmentPermit::count();
+        $icCountOfficer = InspectionItem::count();
+        $ccCountOfficer = ConsignmentPermit::count();
+        $data['ipOfficer'] = $ipCountOfficer;
+        $data['icOfficer'] = $icCountOfficer;
+        $data['ccOfficer'] = $ccCountOfficer;
+
+        $ipVerified = IpApplication::where('status', 'Clerk Approved')->count();
+        $icVerified = InspectionApplication::where('status', 'Clerk Approved')->count();
+        $ccVerified = ConsignmentApplication::where('status', 'Clerk Approved')->count();
+
+        $totalOfficer = $ipCountOfficer . $icCountOfficer . $ccCountOfficer;
+
+        $totalAmount = Order::where('transaction_status', 'SUCCESSFUL')->sum('payment_amount');
+
+        $data['total'] = $totalAmount;
+        // $data['verified'] = $totalVerified;
 
         return response()->json([
             'data' => $data,

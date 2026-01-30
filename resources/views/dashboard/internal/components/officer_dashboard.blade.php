@@ -1,8 +1,9 @@
+
 <div class="row">
     <div class="col-12">
         <div class="row">
             <div class="col-xxl-3 col-md-6">
-                <div class="card custom-card overflow-hidden">
+                <div class="card custom-card overflow-hidden h-100 w-100">
                     <div class="card-body">
                         {{-- <div class="mb-3 d-flex align-items-start justify-content-between">
                             <span class="avatar avatar-lg bg-primary1 svg-white">
@@ -17,7 +18,7 @@
                             </div>
                            
                         </div> --}}
-        
+
                         <div class="d-flex align-items-center">
                             <div class="me-3">
                                 <span class="avatar avatar-lg bg-primary1 svg-white">
@@ -25,7 +26,7 @@
                                 </span>
                             </div>
                             <div>
-                                <p class="text-muted mb-1 fs-13">Import Permit</p>
+                                <p class="text-muted mb-1 fs-13">Total Import Permit</p>
                                 <h3 class="fw-semibold mb-0" id="ipCount">0</h3>
                             </div>
                         </div>
@@ -33,7 +34,7 @@
                 </div>
             </div>
             <div class="col-xxl-3 col-md-6">
-                <div class="card custom-card overflow-hidden">
+                <div class="card custom-card overflow-hidden h-100 w-100">
                     <div class="card-body">
                         {{-- <div class="mb-3 d-flex align-items-start justify-content-between">
                             <span class="avatar avatar-lg bg-primary2 svg-white">
@@ -55,7 +56,7 @@
                                 </span>
                             </div>
                             <div>
-                                <p class="text-muted mb-1 fs-13">Inspection Certificate</p>
+                                <p class="text-muted mb-1 fs-13">Total Inspection Certificate Permit</p>
                                 <h3 class="fw-semibold mb-0" id="icCount">0</h3>
                             </div>
                         </div>
@@ -63,7 +64,7 @@
                 </div>
             </div>
             <div class="col-xxl-3 col-md-6">
-                <div class="card custom-card overflow-hidden">
+                <div class="card custom-card overflow-hidden h-100 w-100">
                     <div class="card-body">
                         {{-- <div class="mb-3 d-flex align-items-start justify-content-between">
                             <span class="avatar avatar-lg bg-secondary svg-white">
@@ -85,7 +86,7 @@
                                 </span>
                             </div>
                             <div>
-                                <p class="text-muted mb-1 fs-13">Consignment Certificate</p>
+                                <p class="text-muted mb-1 fs-13">Total Consignment Certificate Permit</p>
                                 <h3 class="fw-semibold mb-0" id="ccCount">0</h3>
                             </div>
                         </div>
@@ -93,7 +94,7 @@
                 </div>
             </div>
             <div class="col-xxl-3 col-md-6">
-                <div class="card custom-card overflow-hidden">
+                <div class="card custom-card overflow-hidden h-100 w-100">
                     <div class="card-body">
                         {{-- <div class="mb-3 d-flex align-items-start justify-content-between">
                             <span class="avatar avatar-lg bg-secondary svg-white">
@@ -115,17 +116,17 @@
                                 </span>
                             </div>
                             <div>
-                                <p class="text-muted mb-1 fs-13">Pending to Review</p>
-                                <h3 class="fw-semibold mb-0" id="ccCount">0</h3>
+                                <p class="text-muted mb-1 fs-13">Permit Pending to Review</p>
+                                <h3 class="fw-semibold mb-0" id="pendingCount">0</h3>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-           
+
         </div>
-        <div class="row">
-            <div class="col-lg-8">
+        <div class="row mt-4">
+            {{-- <div class="col-lg-8">
                 <div class="card custom-card overflow-hidden">
                     <div class="card-header justify-content-between">
                         <div class="card-title">
@@ -222,8 +223,11 @@
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-lg-4">
-           {{-- @include('dashboard.internal.components.recent_activity') --}}
+            </div> --}}
+            <div class="col-lg-12">
+                @include('dashboard.internal.components.officer_daily_chart')
+
             </div>
         </div>
+    </div>
+</div>

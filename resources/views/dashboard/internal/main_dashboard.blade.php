@@ -35,6 +35,7 @@
         @include('dashboard.internal.finance_dashboard')
     @elseif ($role == 'officer')
         @include('dashboard.internal.components.officer_dashboard')
+        @vite(['resources/js/pages/officer_dashboard.js'])
     @endif
 
 @endsection
