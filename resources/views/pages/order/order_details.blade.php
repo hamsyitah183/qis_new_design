@@ -158,14 +158,15 @@
                                     <tr>
                                         <th class="fs-14 p-2" style="width: 160px;">Exporter Name</th>
                                         <td class="fs-14 p-2 text-muted text-wrap">
-                                            {{ $application->exporter->name ?? '-' }}
+                                            {{ optional($application->exporter)->name ?? $fullname ?? '' }}
+
                                         </td>
 
                                     </tr>
                                     <tr>
                                         <th class="fs-14 p-2" style="width: 160px;">Exporter Number Phone</th>
                                         <td class="fs-14 p-2 text-muted text-wrap">
-                                            {{ $application->exporter->phone_no ?? '-' }}</td>
+                                            {{ optional($application->exporter)->phone_no ?? $fullname ?? ''  ?? '-' }}</td>
 
                                     </tr>
                                     <tr>
@@ -222,7 +223,7 @@
                                         <tr>
                                             <td>Permit Number</td>
                                             <td>Item Name</td>
-                                            <td>View More</td>
+                                           
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -231,7 +232,7 @@
                                             <tr>
                                             <td class="text-muted">{{ $permit->permit_number }}</td>
                                             <td class = "text-muted">{{ $permit->consignment_detail['item_name'] }}</td>
-                                            <td> <button class="btn-sm btn btn-primary btn-wave" data-id = "{{  $permit->id }}" data-type = "{{ $application->application_type }}">View More</button>  </td>
+                                        
                                             </tr>
                                         @endforeach
                                     </tbody>

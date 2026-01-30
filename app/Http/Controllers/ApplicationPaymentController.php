@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ConsignmentPermit;
 use App\Models\InspectionItem;
 use App\Models\IpConsignmentPermit;
 use App\Models\Order;
@@ -113,6 +114,7 @@ class ApplicationPaymentController extends Controller
         $permits = match ($order->application_type) {
             'Import Permit' => IpConsignmentPermit::whereIn('id', $permitIds)->get(),
             'Inspection Certificate' => InspectionItem::whereIn('id', $permitIds)->get(),
+            'Consignment Certificate' => ConsignmentPermit::whereIn('id', $permitIds)->get(),
             default => collect(),
         };
 
