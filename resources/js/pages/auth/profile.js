@@ -72,9 +72,18 @@ function fillTheData(user, type) {
     $(".address_1").val(user.address_1);
     $(".address_2").val(user.address_2);
     $(".office_number").val(user.office_number);
-    $(".district").val(user.district);
-    $(".postcode").val(user.postcode);
     $(".state").val(user.state);
+    // Fetch districts if state is selected
+    if (user.state) {
+        fetchDistricts(user.state, user.district, (resolvedDistrictId) => {
+            if (resolvedDistrictId) {
+                fetchPostcodes(resolvedDistrictId, user.postcode);
+            }
+        });
+    }
+
+    // $(".district").val(user.district);
+    //$(".state").val(user.state);
     $("#account_type").val(user.account_type);
 
     if (type === "internal") {
@@ -177,8 +186,8 @@ function fillTheData(user, type) {
             </div>`;
 
             reason = `
-               <div class = "me-2 mt-2 border rounded-3 p-3">
-                <span class = "fw-bold">Reason: </span> 
+                <div class = "me-2 mt-2 border rounded-3 p-3">
+                <span class = "fw-bold">Reason: </span>
                 <span class = "text-muted">${approved.reason}</span>
                </div>`;
         } else {
@@ -453,5 +462,77 @@ $(document).ready(function () {
     loadProfile();
     editProfile();
     changePassword();
+
+    // State change event listener
+    $(document).on('change', '.state', function () {
+        const stateId = $(this).val();
+        fetchDistricts(stateId);
+    });
+
+    $(document).on('change', '.district', function () {
+        const districtId = $(this).val();
+        fetchPostcodes(districtId);
+    });
     // publicUserAddUpdate(user);
 });
+
+function fetchDistricts(stateId, selectedDistrict = null, callback = null) {
+    const $district = $(".district");
+    $district.html('<option value="">Loading...</option>');
+
+    if (!stateId) {
+        $district.html('<option value="">Select District</option>');
+        if (callback) callback(null);
+        return;
+    }
+
+    $.ajax({
+        url: `/get_districts/${stateId}`,
+        type: "GET",
+        success: function (data) {
+            $district.empty().append('<option value="">Select District</option>');
+            let matchedId = null;
+            data.forEach(district => {
+                const isSelected = selectedDistrict && (selectedDistrict == district.id || selectedDistrict == district.name);
+                if (isSelected) {
+                    matchedId = district.id;
+                }
+                const selectedAttr = isSelected ? 'selected' : '';
+                $district.append(`<option value="${district.id}" ${selectedAttr}>${district.name}</option>`);
+            });
+
+            if (callback) callback(matchedId);
+        },
+        error: function (err) {
+            console.error("Error fetching districts", err);
+            $district.html('<option value="">Error loading districts</option>');
+            if (callback) callback(null);
+        }
+    });
+}
+
+function fetchPostcodes(districtId, selectedPostcode = null) {
+    const $postcode = $(".postcode");
+    $postcode.html('<option value="">Loading...</option>');
+
+    if (!districtId) {
+        $postcode.html('<option value="">Select Postcode</option>');
+        return;
+    }
+
+    $.ajax({
+        url: `/get_postcodes/${districtId}`,
+        type: "GET",
+        success: function (data) {
+            $postcode.empty().append('<option value="">Select Postcode</option>');
+            data.forEach(postcode => {
+                const isSelected = selectedPostcode && (selectedPostcode == postcode.id || selectedPostcode == postcode.value) ? 'selected' : '';
+                $postcode.append(`<option value="${postcode.value}" ${isSelected}>${postcode.value}</option>`);
+            });
+        },
+        error: function (err) {
+            console.error("Error fetching postcodes", err);
+            $postcode.html('<option value="">Error loading postcodes</option>');
+        }
+    });
+}

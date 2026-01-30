@@ -2,6 +2,87 @@ import $ from "jquery";
 import Swal from "sweetalert2";
 
 $(document).ready(function () {
+    // Fetch States on page load
+    fetchStates();
+
+    // Handle State change
+    $(".state-register").on("change", function () {
+        const stateId = $(this).val();
+        $(".district-register").html('<option value="">Select District</option>');
+        $(".postcode-register").html('<option value="">Select Postcode</option>');
+
+        if (stateId) {
+            fetchDistricts(stateId);
+        }
+    });
+
+    // Handle District change
+    $(".district-register").on("change", function () {
+        const districtId = $(this).val();
+        $(".postcode-register").html('<option value="">Select Postcode</option>');
+
+        if (districtId) {
+            fetchPostcodes(districtId);
+        }
+    });
+
+    // Fetch States
+    function fetchStates() {
+        $.ajax({
+            url: "/get_states",
+            type: "GET",
+            success: function (data) {
+                $(".state-register").empty().append('<option value="">Select State</option>');
+                data.forEach(state => {
+                    $(".state-register").append(`<option value="${state.id}">${state.name}</option>`);
+                });
+            },
+            error: function (err) {
+                console.error("Error fetching states", err);
+            }
+        });
+    }
+
+    // Fetch Districts
+    function fetchDistricts(stateId) {
+        $(".district-register").html('<option value="">Loading...</option>');
+
+        $.ajax({
+            url: `/get_districts/${stateId}`,
+            type: "GET",
+            success: function (data) {
+                $(".district-register").empty().append('<option value="">Select District</option>');
+                data.forEach(district => {
+                    $(".district-register").append(`<option value="${district.id}">${district.name}</option>`);
+                });
+            },
+            error: function (err) {
+                console.error("Error fetching districts", err);
+                $(".district-register").html('<option value="">Error loading districts</option>');
+            }
+        });
+    }
+
+    // Fetch Postcodes
+    function fetchPostcodes(districtId) {
+        $(".postcode-register").html('<option value="">Loading...</option>');
+
+        $.ajax({
+            url: `/get_postcodes/${districtId}`,
+            type: "GET",
+            success: function (data) {
+                $(".postcode-register").empty().append('<option value="">Select Postcode</option>');
+                data.forEach(postcode => {
+                    $(".postcode-register").append(`<option value="${postcode.value}">${postcode.value}</option>`);
+                });
+            },
+            error: function (err) {
+                console.error("Error fetching postcodes", err);
+                $(".postcode-register").html('<option value="">Error loading postcodes</option>');
+            }
+        });
+    }
+
     $("#publicRegisterForm").on("submit", function (e) {
         e.preventDefault();
 

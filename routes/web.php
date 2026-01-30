@@ -229,6 +229,11 @@ Route::prefix('internal')
         Route::post('/consignment/{id}', [ConsignmentApplicationController::class, 'accept_permit']);
     });
 
+// Publicly accessible location routes
+Route::get('/get_states', [UserController::class, 'getStates']);
+Route::get('/get_districts/{state_id}', [UserController::class, 'getDistricts']);
+Route::get('/get_postcodes/{district_id}', [UserController::class, 'getPostcodes']);
+
 Route::middleware(['auth.any'])->group(function () {
     Route::get('/profile', [UserController::class, 'profile'])->name('profile');
     Route::get('/data', [UserController::class, 'userData']);
@@ -273,6 +278,7 @@ Route::middleware(['auth.any'])->group(function () {
 
         // Mark only these notifications as read
         foreach ($notifications as $notification) {
+            /** @var \Illuminate\Notifications\DatabaseNotification $notification */
             if (!$notification->read_at) {
                 $notification->markAsRead();
             }

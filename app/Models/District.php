@@ -12,4 +12,9 @@ class District extends Model
     {
         return $this->belongsTo(State::class);
     }
+
+    public function postcodes()
+    {
+        return $this->hasMany(Postcode::class);
+    }
 }

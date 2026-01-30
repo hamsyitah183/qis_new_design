@@ -10,6 +10,7 @@ use App\Events\PublicUser as EventsPublicUser;
 use App\Models\InternalUser;
 use App\Models\PublicUser;
 use App\Models\ApprovedPublic;
+use App\Models\Postcode;
 use App\Models\CountryNoPhone;
 use App\Notifications\InternalUserEditedNotification;
 use App\Notifications\UserNotification;
@@ -18,6 +19,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
+use App\Models\State;
+use App\Models\District;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Str;
 use App\Events\PublicUserEvent;
@@ -567,7 +571,8 @@ class UserController extends Controller
         // $permissions = $user->getAllPermissions(); // returns a collection of Permission models
 
         return view('pages.authentication.profile', [
-            'title' => 'Profile'
+            'title' => 'Profile',
+            'states' => State::all()
         ]);
     }
 
@@ -743,6 +748,24 @@ class UserController extends Controller
 
 
         return response()->json($result, $result['success'] ? 200 : 500);
+    }
+
+    public function getStates()
+    {
+        $states = State::all();
+        return response()->json($states);
+    }
+
+    public function getDistricts($state_id)
+    {
+        $districts = District::where('state_id', $state_id)->get();
+        return response()->json($districts);
+    }
+
+    public function getPostcodes($district_id)
+    {
+        $postcodes = Postcode::where('district_id', $district_id)->get();
+        return response()->json($postcodes);
     }
 
 

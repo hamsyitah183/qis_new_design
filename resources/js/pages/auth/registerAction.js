@@ -17,13 +17,13 @@ let type = null;
 // Function to load states
 async function loadStates() {
     try {
-        const response = await fetch('/api/states');
+        const response = await fetch('/get_states');
         const states = await response.json();
         const stateSelect = $('#state');
         stateSelect.empty();
         stateSelect.append('<option value="">Select State</option>');
         states.forEach(state => {
-            stateSelect.append(`<option value="${state.id}">${state.name}</option>`);
+            stateSelect.append(`<option value="${state.name}" data-id="${state.id}">${state.name}</option>`);
         });
     } catch (error) {
         console.error('Error loading states:', error);
@@ -44,7 +44,7 @@ async function loadDistricts(stateId) {
             }
         });
 
-        const response = await fetch(`/api/districts/${stateId}`);
+        const response = await fetch(`/get_districts/${stateId}`);
         const districts = await response.json();
 
         const districtSelect = $('#district');
@@ -60,7 +60,7 @@ async function loadDistricts(stateId) {
 
         districts.forEach(district => {
             districtSelect.append(
-                `<option value="${district.name}">${district.name}</option>`
+                `<option value="${district.name}" data-id="${district.id}">${district.name}</option>`
             );
         });
 
@@ -82,6 +82,40 @@ async function loadDistricts(stateId) {
         });
 
         console.error('Error loading districts:', error);
+    }
+}
+
+// Function to load postcodes for a district
+async function loadPostcodes(districtId) {
+    try {
+        const response = await fetch(`/get_postcodes/${districtId}`);
+        const postcodes = await response.json();
+
+        const postcodeSelect = $('#postcode');
+
+        // Destroy Select2 if already initialized
+        if (postcodeSelect.hasClass('select2-hidden-accessible')) {
+            postcodeSelect.select2('destroy');
+        }
+
+        postcodeSelect.empty();
+        postcodeSelect.append('<option value="">Select Postcode</option>');
+
+        postcodes.forEach(postcode => {
+            postcodeSelect.append(
+                `<option value="${postcode.value}">${postcode.value}</option>`
+            );
+        });
+
+        // Re-init Select2
+        postcodeSelect.select2({
+            placeholder: 'Select postcode',
+            width: '100%',
+            dropdownAutoWidth: true
+        });
+
+    } catch (error) {
+        console.error('Error loading postcodes:', error);
     }
 }
 
@@ -215,17 +249,33 @@ $(document).ready(function () {
 
     // State and District dropdown logic
     $(document).on("change", '#state', function () {
-        const selectedStateId = $(this).val();
+        const selectedOption = $(this).find(':selected');
+        const selectedStateId = selectedOption.data('id');
         const districtSelect = $('#district');
-        
+        const postcodeSelect = $('#postcode');
+
         console.log('State selected with ID:', selectedStateId);
-        
+
         if (selectedStateId) {
             loadDistricts(selectedStateId);
             districtSelect.prop('disabled', false);
+            postcodeSelect.empty().append('<option value="">Select Postcode</option>');
         } else {
             districtSelect.empty().append('<option value="">Select District</option>');
             districtSelect.prop('disabled', true);
+            postcodeSelect.empty().append('<option value="">Select Postcode</option>');
+        }
+    });
+
+    $(document).on("change", '#district', function () {
+        const selectedOption = $(this).find(':selected');
+        const selectedDistrictId = selectedOption.data('id');
+        console.log('District selected with ID:', selectedDistrictId);
+
+        if (selectedDistrictId) {
+            loadPostcodes(selectedDistrictId);
+        } else {
+            $('#postcode').empty().append('<option value="">Select Postcode</option>');
         }
     });
 
@@ -296,7 +346,17 @@ $(document).ready(function () {
         width: '100%',
         dropdownAutoWidth: true
     });
-    
+    $('#district').select2({
+        placeholder: 'Select district',
+        width: '100%',
+        dropdownAutoWidth: true
+    });
+    $('#postcode').select2({
+        placeholder: 'Select postcode',
+        width: '100%',
+        dropdownAutoWidth: true
+    });
+
 
     // ----------------------------
     // 3️⃣ Dropzone initialization
