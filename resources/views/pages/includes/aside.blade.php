@@ -251,6 +251,11 @@
                                     Users</a>
                             </li>
 
+                            <li class="slide {{ $currentRoute === 'internal.public.verification.list' ? 'active' : '' }}">
+                                <a href="{{ route('internal.public.verification.list') }}" class="side-menu__item">User
+                                    Verification</a>
+                            </li>
+
                             <li class="slide {{ $currentRoute === 'internal.internal.activity_log' ? 'active' : '' }}">
                                 <a href="{{ route('internal.internal.activity_log') }}" class="side-menu__item">Activity
                                     Log</a>
