@@ -113,22 +113,28 @@
                                 <textarea name="address_2" id="" cols="30" rows="3" class="form-control border"></textarea>
                             </div>
 
-                            <!-- Postcode -->
-                            <div class="col-xl-6">
-                                <label class="form-label text-default">Postcode</label>
-                                <input type="text" name="postcode" class="form-control" placeholder="Postcode">
+                            <!-- State -->
+                            <div class="col-xl-12">
+                                <label class="form-label text-default">State</label>
+                                <select name="state" class="form-control state-register">
+                                    <option value="">Select State</option>
+                                </select>
                             </div>
 
                             <!-- District -->
                             <div class="col-xl-6">
                                 <label class="form-label text-default">District</label>
-                                <input type="text" name="district" class="form-control" placeholder="District">
+                                <select name="district" class="form-control district-register">
+                                    <option value="">Select District</option>
+                                </select>
                             </div>
 
-                            <!-- State -->
-                            <div class="col-xl-12">
-                                <label class="form-label text-default">State</label>
-                                <input type="text" name="state" class="form-control" placeholder="State">
+                            <!-- Postcode -->
+                            <div class="col-xl-6">
+                                <label class="form-label text-default">Postcode</label>
+                                <select name="postcode" class="form-control postcode-register">
+                                    <option value="">Select Postcode</option>
+                                </select>
                             </div>
 
                         </div>

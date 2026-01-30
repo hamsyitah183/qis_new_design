@@ -76,8 +76,8 @@ async function public_user_list() {
         const title = isAdd
             ? "Add Public User"
             : isView
-            ? "View Public User"
-            : "Edit Public User";
+                ? "View Public User"
+                : "Edit Public User";
         $("#publicUserModalLabel").text(title);
 
         // Reset form + validation
@@ -98,6 +98,13 @@ async function public_user_list() {
 
         if (isAdd) {
             $("#userUuid").val("");
+            // Load states for new user
+            fetchStatesModal().then((states) => {
+                $(".state-modal").empty().append('<option value="">Select State</option>');
+                states.forEach(state => {
+                    $(".state-modal").append(`<option value="${state.id}">${state.name}</option>`);
+                });
+            });
             new bootstrap.Modal(
                 document.getElementById("publicUserModal")
             ).show();
@@ -128,9 +135,25 @@ async function public_user_list() {
                 $("#office_number").val(user.office_number || "");
                 $("#address_1").val(user.address_1);
                 $("#address_2").val(user.address_2 || "");
-                $("#postcode").val(user.postcode);
-                $("#district").val(user.district);
-                $("#state").val(user.state);
+
+                // Load location dropdowns in sequence
+                fetchStatesModal().then((states) => {
+                    $(".state-modal").empty().append('<option value="">Select State</option>');
+                    states.forEach(state => {
+                        const isSelected = user.state && (user.state == state.id || user.state == state.name);
+                        $(".state-modal").append(`<option value="${state.id}" ${isSelected ? 'selected' : ''}>${state.name}</option>`);
+                    });
+
+                    // Get selected state ID
+                    const selectedStateId = $(".state-modal").val();
+                    if (selectedStateId) {
+                        fetchDistrictsModal(selectedStateId, user.district, (resolvedDistrictId) => {
+                            if (resolvedDistrictId) {
+                                fetchPostcodesModal(resolvedDistrictId, user.postcode);
+                            }
+                        });
+                    }
+                });
 
                 Swal.close();
                 new bootstrap.Modal(
@@ -377,7 +400,7 @@ function handleVerificationModal(response, id) {
     $("#verificationBtn").show();
     $("#unverificationBtn").show();
 
-    if(response.doa_verified == 1) {
+    if (response.doa_verified == 1) {
         $("#verificationBtn").hide();
         $("#unverificationBtn").hide();
     }
@@ -397,7 +420,7 @@ function setupVerificationButton(response, id) {
         btn.addClass("btn-success").text("Verified User").attr("data-id", id);
     }
 
-     $("#unverificationBtn").attr('data-id', id);
+    $("#unverificationBtn").attr('data-id', id);
 }
 
 // 🔹 5. Render Attachment (image or PDF)
@@ -592,4 +615,86 @@ $("#unverificationBtn").on("click", function (e) {
             }
         });
     }, 200); // 200ms delay
+});
+
+// ========== Location Dropdown Helpers ==========
+
+function fetchStatesModal() {
+    return $.ajax({
+        url: "/get_states",
+        type: "GET"
+    });
+}
+
+function fetchDistrictsModal(stateId, selectedDistrict = null, callback = null) {
+    $(".district-modal").html('<option value="">Loading...</option>');
+
+    $.ajax({
+        url: `/get_districts/${stateId}`,
+        type: "GET",
+        success: function (data) {
+            $(".district-modal").empty().append('<option value="">Select District</option>');
+            let matchedId = null;
+
+            data.forEach(district => {
+                const isSelected = selectedDistrict && (selectedDistrict == district.id || selectedDistrict == district.name);
+                if (isSelected) {
+                    matchedId = district.id;
+                }
+                $(".district-modal").append(`<option value="${district.id}" ${isSelected ? 'selected' : ''}>${district.name}</option>`);
+            });
+
+            if (callback) callback(matchedId);
+        },
+        error: function (err) {
+            console.error("Error fetching districts", err);
+            $(".district-modal").html('<option value="">Error loading districts</option>');
+        }
+    });
+}
+
+function fetchPostcodesModal(districtId, selectedPostcode = null) {
+    $(".postcode-modal").html('<option value="">Loading...</option>');
+
+    if (!districtId) {
+        $(".postcode-modal").html('<option value="">Select Postcode</option>');
+        return;
+    }
+
+    $.ajax({
+        url: `/get_postcodes/${districtId}`,
+        type: "GET",
+        success: function (data) {
+            $(".postcode-modal").empty().append('<option value="">Select Postcode</option>');
+            data.forEach(postcode => {
+                const isSelected = selectedPostcode && (selectedPostcode == postcode.id || selectedPostcode == postcode.value) ? 'selected' : '';
+                $(".postcode-modal").append(`<option value="${postcode.value}" ${isSelected}>${postcode.value}</option>`);
+            });
+        },
+        error: function (err) {
+            console.error("Error fetching postcodes", err);
+            $(".postcode-modal").html('<option value="">Error loading postcodes</option>');
+        }
+    });
+}
+
+// Handle State change in modal
+$(document).on("change", ".state-modal", function () {
+    const stateId = $(this).val();
+    $(".district-modal").html('<option value="">Select District</option>');
+    $(".postcode-modal").html('<option value="">Select Postcode</option>');
+
+    if (stateId) {
+        fetchDistrictsModal(stateId);
+    }
+});
+
+// Handle District change in modal
+$(document).on("change", ".district-modal", function () {
+    const districtId = $(this).val();
+    $(".postcode-modal").html('<option value="">Select Postcode</option>');
+
+    if (districtId) {
+        fetchPostcodesModal(districtId);
+    }
 });

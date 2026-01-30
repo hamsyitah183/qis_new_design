@@ -206,17 +206,23 @@
 
                 <div class="col-md-4">
                     <label class="form-label">State</label>
-                    <input type="text" class="form-control" id="state" name="state" required>
+                    <select class="form-control state-modal" id="state" name="state" required>
+                        <option value="">Select State</option>
+                    </select>
                 </div>
 
                 <div class="col-md-4">
                     <label class="form-label">District</label>
-                    <input type="text" class="form-control" id="district" name="district" required>
+                    <select class="form-control district-modal" id="district" name="district" required>
+                        <option value="">Select District</option>
+                    </select>
                 </div>
 
                 <div class="col-md-4">
                     <label class="form-label">Postcode</label>
-                    <input type="text" class="form-control" id="postcode" name="postcode" required>
+                    <select class="form-control postcode-modal" id="postcode" name="postcode" required>
+                        <option value="">Select Postcode</option>
+                    </select>
                 </div>
 
 

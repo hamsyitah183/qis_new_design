@@ -131,8 +131,9 @@
                     </div>
                 </div>
                 <div class="col-xl-9">
-                    <input type="text" name="postcode" class="form-control postcode" placeholder="Postcode"
-                        value="">
+                    <select name="postcode" class="form-select postcode" required>
+                        <option value="">Select Postcode</option>
+                    </select>
                 </div>
 
                 <div class="col-xl-3">
@@ -145,8 +146,9 @@
                     </div>
                 </div>
                 <div class="col-xl-9">
-                    <input type="text" name="district" class="form-control district" placeholder="District"
-                        value="">
+                    <select name="district" class="form-select district" required>
+                        <option value="">Select District</option>
+                    </select>
                 </div>
 
                 <div class="col-xl-3">
@@ -159,8 +161,12 @@
                     </div>
                 </div>
                 <div class="col-xl-9">
-                    <input type="text" name="state" class="form-control state" placeholder="State"
-                        value="">
+                    <select name="state" class="form-select state" required>
+                        <option value="">Select State</option>
+                        @foreach ($states as $state)
+                            <option value="{{ $state->id }}">{{ $state->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
             @endif
 

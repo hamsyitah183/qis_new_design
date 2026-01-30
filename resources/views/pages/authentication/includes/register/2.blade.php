@@ -72,7 +72,9 @@
             <!-- Postcode -->
             <div class="col-xl-6">
                 <label class="form-label text-default">Postcode  <span class="text-primary2">*</span></label>
-                <input type="text" name="postcode" class="form-control" placeholder=" 89657">
+                <select name="postcode" class="form-control" id="postcode">
+                    <option value="">Select Postcode</option>
+                </select>
             </div>
 
             <!-- State -->
