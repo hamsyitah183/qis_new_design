@@ -629,6 +629,12 @@ function fetchStatesModal() {
 function fetchDistrictsModal(stateId, selectedDistrict = null, callback = null) {
     $(".district-modal").html('<option value="">Loading...</option>');
 
+    Swal.fire({
+        title: "Loading...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+    });
+
     $.ajax({
         url: `/get_districts/${stateId}`,
         type: "GET",
@@ -645,6 +651,8 @@ function fetchDistrictsModal(stateId, selectedDistrict = null, callback = null) 
             });
 
             if (callback) callback(matchedId);
+
+            Swal.close();
         },
         error: function (err) {
             console.error("Error fetching districts", err);
@@ -661,6 +669,12 @@ function fetchPostcodesModal(districtId, selectedPostcode = null) {
         return;
     }
 
+    Swal.fire({
+        title: "Loading...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+    });
+
     $.ajax({
         url: `/get_postcodes/${districtId}`,
         type: "GET",
@@ -670,6 +684,8 @@ function fetchPostcodesModal(districtId, selectedPostcode = null) {
                 const isSelected = selectedPostcode && (selectedPostcode == postcode.id || selectedPostcode == postcode.value) ? 'selected' : '';
                 $(".postcode-modal").append(`<option value="${postcode.value}" ${isSelected}>${postcode.value}</option>`);
             });
+
+            Swal.close();
         },
         error: function (err) {
             console.error("Error fetching postcodes", err);

@@ -121,35 +121,7 @@
                     <textarea name="address_2" id="" cols="30" rows="3" class="form-control border address_2"></textarea>
                 </div>
 
-                <div class="col-xl-3">
-                    <div class="lh-1">
-                        <span class="fw-medium">
-
-                            <span class="fw-medium">Postcode :</span>
-
-                        </span>
-                    </div>
-                </div>
-                <div class="col-xl-9">
-                    <select name="postcode" class="form-select postcode" required>
-                        <option value="">Select Postcode</option>
-                    </select>
-                </div>
-
-                <div class="col-xl-3">
-                    <div class="lh-1">
-                        <span class="fw-medium">
-
-                            <span class="fw-medium">District :</span>
-
-                        </span>
-                    </div>
-                </div>
-                <div class="col-xl-9">
-                    <select name="district" class="form-select district" required>
-                        <option value="">Select District</option>
-                    </select>
-                </div>
+                
 
                 <div class="col-xl-3">
                     <div class="lh-1">
@@ -162,12 +134,43 @@
                 </div>
                 <div class="col-xl-9">
                     <select name="state" class="form-select state" required>
-                        <option value="">Select State</option>
-                        @foreach ($states as $state)
+                        <option value="" id = "state">Select State</option>
+                        {{-- @foreach ($states as $state)
                             <option value="{{ $state->id }}">{{ $state->name }}</option>
-                        @endforeach
+                        @endforeach --}}
                     </select>
                 </div>
+                <div class="col-xl-3">
+                    <div class="lh-1">
+                        <span class="fw-medium">
+
+                            <span class="fw-medium">District :</span>
+
+                        </span>
+                    </div>
+                </div>
+                <div class="col-xl-9">
+                    <select name="district" class="form-select district" required>
+                        <option value="" id="district">Select District</option>
+                    </select>
+                </div>
+
+                <div class="col-xl-3">
+                    <div class="lh-1">
+                        <span class="fw-medium">
+
+                            <span class="fw-medium">Postcode :</span>
+
+                        </span>
+                    </div>
+                </div>
+                <div class="col-xl-9">
+                    <select name="postcode" class="form-select postcode" required>
+                        <option value="" id="postcode">Select Postcode</option>
+                    </select>
+                </div>
+
+               
             @endif
 
 

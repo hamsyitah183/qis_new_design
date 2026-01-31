@@ -69,13 +69,7 @@
                 <textarea name="address_2" id="" cols="30" rows="2" class="form-control border"></textarea>
             </div>
 
-            <!-- Postcode -->
-            <div class="col-xl-6">
-                <label class="form-label text-default">Postcode  <span class="text-primary2">*</span></label>
-                <select name="postcode" class="form-control" id="postcode">
-                    <option value="">Select Postcode</option>
-                </select>
-            </div>
+          
 
             <!-- State -->
             <div class="col-xl-6">
@@ -86,10 +80,18 @@
             </div>
 
             <!-- District -->
-            <div class="col-xl-12">
+            <div class="col-xl-6">
                 <label class="form-label text-default">District  <span class="text-primary2">*</span></label>
                 <select name="district" class="form-control" id="district" disabled>
                     <option value="">Select District</option>
+                </select>
+            </div>
+
+              <!-- Postcode -->
+              <div class="col-xl-12">
+                <label class="form-label text-default">Postcode  <span class="text-primary2">*</span></label>
+                <select name="postcode" class="form-control" id="postcode">
+                    <option value="">Select Postcode</option>
                 </select>
             </div>
         </div>

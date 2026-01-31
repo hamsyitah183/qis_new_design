@@ -36,6 +36,7 @@ class DatabaseSeeder extends Seeder
                 PaymentSeeder::class,
                 ConsignmentSeeder::class,
                 CountryNoSeeder::class,
+                PostcodeSeeder::class,
             ]);
 
             DB::commit();

@@ -1,6 +1,10 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
 import { notifyUser } from "../../app";
+import select2 from "select2";
+select2(window.jQuery);
+
+import "select2/dist/css/select2.min.css";
 
 let user = null;
 
@@ -35,6 +39,8 @@ export async function loadProfile() {
         if (user.type === "public") {
             publicUserAddUpdate(user);
         }
+
+        initAddressDropdowns(user);
 
         Swal.close();
     } catch (error) {
@@ -74,13 +80,17 @@ function fillTheData(user, type) {
     $(".office_number").val(user.office_number);
     $(".state").val(user.state);
     // Fetch districts if state is selected
-    if (user.state) {
-        fetchDistricts(user.state, user.district, (resolvedDistrictId) => {
-            if (resolvedDistrictId) {
-                fetchPostcodes(resolvedDistrictId, user.postcode);
-            }
-        });
-    }
+    // if (user.state) {
+    //     fetchDistricts(user.state, user.district, (resolvedDistrictId) => {
+    //         if (resolvedDistrictId) {
+    //             fetchPostcodes(resolvedDistrictId, user.postcode);
+    //         }
+    //     });
+    // }
+
+    
+   
+
 
     // $(".district").val(user.district);
     //$(".state").val(user.state);
@@ -203,6 +213,119 @@ function fillTheData(user, type) {
 
     $(".mainFullName").html(badgeVerification);
 }
+
+async function initAddressDropdowns(user) {
+    console.log('initadd', user);
+
+    Swal.fire({
+        title: 'Loading address...',
+        text: 'Please wait',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => Swal.showLoading(),
+    });
+
+    try {
+        // ✅ Await so errors are catchable
+        await loadStates(user);
+
+    } catch (error) {
+        console.error('Failed to load address dropdowns:', error);
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Failed to load address',
+            text: 'Please try again later',
+        });
+        return;
+    }
+
+    // ✅ Close only after everything succeeds
+    Swal.close();
+}
+
+async function loadStates(user) {
+    const res = await fetch('/get_states');
+    const states = await res.json();
+
+    const stateSelect = $('.state');
+    stateSelect.empty().append('<option value="">Select State</option>');
+
+    let selectedStateId = null;
+
+    states.forEach(s => {
+        stateSelect.append(
+            `<option value="${s.id}">${s.name}</option>`
+        );
+
+        if (user.state === s.name) {
+            selectedStateId = s.id;
+        }
+    });
+
+    // ✅ FORCE value selection
+    if (selectedStateId) {
+        stateSelect.val(selectedStateId).trigger('change');
+        loadDistricts(selectedStateId, user)
+    }
+}
+
+
+
+async function loadDistricts(stateId, user) {
+    if (!stateId) return;
+
+    const res = await fetch(`/get_districts/${stateId}`);
+    const districts = await res.json();
+
+    const districtSelect = $('.district');
+    districtSelect.empty().append('<option value="">Select District</option>');
+
+    let selectedDistrictId = null;
+
+    districts.forEach(d => {
+        districtSelect.append(
+            `<option value="${d.id}">${d.name}</option>`
+        );
+
+        if (user.district === d.name) {
+            selectedDistrictId = d.id;
+        }
+    });
+
+    if (selectedDistrictId) {
+        districtSelect.val(selectedDistrictId).trigger('change');
+        await loadPostcodes(selectedDistrictId, user);
+    }
+}
+
+
+async function loadPostcodes(districtId, user) {
+    if (!districtId) return;
+
+    const res = await fetch(`/get_postcodes/${districtId}`);
+    const postcodes = await res.json();
+
+    const postcodeSelect = $('.postcode');
+    postcodeSelect.empty().append('<option value="">Select Postcode</option>');
+
+    postcodes.forEach(p => {
+        postcodeSelect.append(
+            `<option value="${p.value}">${p.value}</option>`
+        );
+    });
+
+    // ✅ Force selection
+    if (user.postcode) {
+        postcodeSelect.val(user.postcode).trigger('change');
+    }
+}
+
+
+
+
+
+
 
 $(document).on("click", ".uploadAgain", function () {
     // Hide the container showing existing image

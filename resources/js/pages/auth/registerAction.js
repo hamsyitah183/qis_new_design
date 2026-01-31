@@ -87,6 +87,11 @@ async function loadDistricts(stateId) {
 
 // Function to load postcodes for a district
 async function loadPostcodes(districtId) {
+    Swal.fire({
+        title: "Load Postcode...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+    });
     try {
         const response = await fetch(`/get_postcodes/${districtId}`);
         const postcodes = await response.json();
@@ -113,9 +118,11 @@ async function loadPostcodes(districtId) {
             width: '100%',
             dropdownAutoWidth: true
         });
+        Swal.close();
 
     } catch (error) {
         console.error('Error loading postcodes:', error);
+        Swal.fire("Error", "Unable to load postcode", "error");
     }
 }
 
