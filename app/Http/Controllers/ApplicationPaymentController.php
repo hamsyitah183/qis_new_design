@@ -24,14 +24,14 @@ class ApplicationPaymentController extends Controller
         $userUuid = authUser()['user']->uuid;
         $type = authUser()['type'];
 
-        $query = Order::latest();
+        $query = Order::with('publicUser')->latest();
 
         // Apply filter for public users
         if ($type !== 'internal') {
             $query->where('public_user_uuid', $userUuid);
         }
 
-        $dataTable =  DataTables::eloquent($query)
+        $dataTable = DataTables::eloquent($query)
             ->addIndexColumn()
 
             ->editColumn('status', function ($row) {
@@ -42,6 +42,24 @@ class ApplicationPaymentController extends Controller
                     str_contains($status, 'SUCCESSFUL') => $this->badge('success', $status),
                     default => '<span class="badge bg-warning">' . e(ucfirst($status)) . '</span>',
                 };
+            })
+            ->addColumn('transaction_date', function ($row) {
+                return $row->created_at->format('d-m-Y H:i:s');
+            })
+            ->addColumn('fpx_reference', function ($row) {
+                return $row->fpx_seller_reference ?? '-';
+            })
+            ->addColumn('payment_reference', function ($row) {
+                return $row->seller_ref ?? '-';
+            })
+            ->addColumn('user_name', function ($row) {
+                return $row->publicUser->fullname ?? 'N/A';
+            })
+            ->addColumn('permit_number', function ($row) {
+                return $row->application_id ?? '-';
+            })
+            ->addColumn('transaction_data', function ($row) {
+                return $row->transaction_data ?? '-';
             })
 
             // ->editColumn('kod_transaksi', function ($row) {
@@ -78,14 +96,14 @@ class ApplicationPaymentController extends Controller
             });
 
 
-            if(authUser()['type'] == 'internal') {
-                $dataTable->editColumn('kod_transaksi', function ($row) {
-                    return $row->kod_transaksi ? '<span class="text-wrap">' . $row->kod_transaksi . '</span>' : '-';
-                });
-    
-            }
+        if(authUser()['type'] == 'internal') {
+            $dataTable->editColumn('kod_transaksi', function ($row) {
+                return $row->kod_transaksi ? '<span class="text-wrap">' . $row->kod_transaksi . '</span>' : '-';
+            });
 
-            return $dataTable->rawColumns(['status', 'kod_transaksi', 'payment_amount', 'action'])
+        }
+
+        return $dataTable->rawColumns(['status', 'kod_transaksi', 'payment_amount', 'action'])
             ->make(true);
     }
 
@@ -109,7 +127,7 @@ class ApplicationPaymentController extends Controller
         $permitsArray = $order->order_details['permits'] ?? [];
         $permitIds = collect($permitsArray)->pluck('permit_id')->toArray();
 
-        $application = $order->application; 
+        $application = $order->application;
 
         $permits = match ($order->application_type) {
             'Import Permit' => IpConsignmentPermit::whereIn('id', $permitIds)->get(),
