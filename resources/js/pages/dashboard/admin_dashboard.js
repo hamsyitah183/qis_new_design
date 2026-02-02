@@ -44,7 +44,7 @@ function applicationCount() {
         $('#ccCount').text(data.ccCount ?? 0);
 
         // ✅ FIXED
-        $('#amount').text(`RM ${data.amount ?? 0}`);
+        $('#amountRevenue').text(`RM ${data.amount ?? 0}`);
     }).fail(xhr => {
         console.error("Failed to load application count:", xhr.responseText);
         Swal.fire({

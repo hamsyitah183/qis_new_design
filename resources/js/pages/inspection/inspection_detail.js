@@ -99,7 +99,8 @@ async function attachmentTable() {
                 ) &&
                 (
                     roles.includes("admin") ||
-                    roles.includes("officer")
+                    roles.includes("officer") ||
+                    roles.includes("superadmin")
                 )
             ) {
                 permitAction = `

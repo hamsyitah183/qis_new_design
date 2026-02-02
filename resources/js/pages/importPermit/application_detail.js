@@ -100,7 +100,7 @@ async function attachmentTable() {
         if (applicationStatus === "Clerk Verified") {
             if (
                 (permit.status === "processing" || permit.status === "reapplied" ) &&
-                (roles.includes("admin") || roles.includes("officer"))
+                (roles.includes("admin") || roles.includes("officer") || roles.includes("superadmin"))
             ) {
                 permitAction = `
                 <div class="btn btn-sm btn-primary-light btn-wave accept" data-permit="${permit.id}">
