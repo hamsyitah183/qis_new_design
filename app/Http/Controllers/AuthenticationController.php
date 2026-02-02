@@ -181,7 +181,7 @@ class AuthenticationController extends Controller
                 Log::warning('Pusher connection failed but continuing registration: ' . $e->getMessage());
             }
 
-            $users = InternalUser::role(['admin'])->get();
+             $users = InternalUser::role(['admin', 'superadmin'])->get();
             $notificationUrl = route('internal.public.list');
             Notification::send($users, new ApplicationNotification('A new account is created', $user->fullname, $notificationUrl));
 

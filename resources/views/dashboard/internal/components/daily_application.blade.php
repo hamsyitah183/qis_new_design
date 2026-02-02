@@ -4,7 +4,16 @@
         <div class="card custom-card">
           
             <div class="card-body">
-                {!! $clerkVolumeChart->container() !!}
+                {{-- {!! $clerkVolumeChart->container() !!} --}}
+                <div id="dailyVolumeChart">
+
+                    <div class="d-flex justify-content-center align-items-center" style = "max-height: 200px;">
+                        <div class="spinner-border text-primary" role="status" >
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
     </div>

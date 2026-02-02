@@ -21,7 +21,7 @@ Broadcast::channel('internal-users', function ($user) {
 
 Broadcast::channel('internal-admins', function ($user) {
     // Ensure internal guard
-    if (Auth::guard('internal')->check() && $user->hasRole('admin')) {
+    if (Auth::guard('internal')->check() && ($user->hasRole('admin') || $user->hasRole('superadmin'))) {
         return true;
     }
 

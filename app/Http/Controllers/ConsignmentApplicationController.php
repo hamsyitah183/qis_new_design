@@ -289,7 +289,8 @@ class ConsignmentApplicationController extends Controller
             // -----------------------------
             // Send Notifications
             // -----------------------------
-            $users = InternalUser::role(['admin', 'clerk'])->get();
+            // $users = InternalUser::role(['admin', 'clerk', 'superadmin'])->get();
+            $users = InternalUser::permission('view dashboard')->get();
             $notificationUrl = url('/view_consignment/' . $application->application_id);
             Notification::send($users, new ApplicationNotification($isDraft ? ($isNewApplication ? 'New consignment certificate draft created' : 'Consignment certificate draft updated') : ($isNewApplication ? 'New consignment certificate application submitted' : 'Consignment certificate application updated'), Auth::user()->fullname ?? 'System', $notificationUrl));
 
@@ -557,7 +558,7 @@ class ConsignmentApplicationController extends Controller
 
             // Notify internal users (admins/clerks)
             try {
-                $users = InternalUser::role(['admin', 'clerk'])->get();
+                $users = InternalUser::role(['admin', 'clerk', 'superadmin'])->get();
                 Notification::send($users, new ApplicationNotification('Consignment certificate application deleted by ' . $userName, $userName, $notificationUrl));
             } catch (\Exception $e) {
                 Log::warning('Failed to send notification to internal users: ' . $e->getMessage());

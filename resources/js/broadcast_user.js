@@ -1,5 +1,6 @@
 import { notifyUser, showToast } from "./app";
 import { notification } from "./notification";
+import { admin_dashboard } from "./pages/dashboard/admin_dashboard";
 
 console.log("hello from apply permit page");
 console.log("Internal dashboard loaded");
@@ -34,6 +35,7 @@ export function internalUserEcho() {
                 console.log("Admin User:", e.message);
 
                 notifyUser(e.message, e.editor);
+                admin_dashboard();
             }
         );
 

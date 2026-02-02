@@ -21,6 +21,8 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PermitConsignmentController;
 use App\Http\Controllers\InspectionPermitController;
 use App\Http\Controllers\ConsignmentPermitController;
+use App\Http\Controllers\AdminDashboardController;
+
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Broadcast;
@@ -233,6 +235,13 @@ Route::prefix('internal')
         Route::post('/inspection/{id}/status', [InspectionController::class, 'updateStatus'])->name('inspection.status');
 
         Route::post('/consignment/{id}', [ConsignmentApplicationController::class, 'accept_permit']);
+
+
+
+        // dashboard
+        Route::get('/admin/dashboard/daily-volume', [AdminDashboardController::class, 'dailyVolume']);
+        Route::get('/admin/dashboard/user-registration', [AdminDashboardController::class, 'userRegistration']);
+
     });
 
 // Publicly accessible location routes

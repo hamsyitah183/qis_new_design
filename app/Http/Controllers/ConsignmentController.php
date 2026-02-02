@@ -378,7 +378,7 @@ class ConsignmentController extends Controller
 
             // Notify internal users (admins/clerks)
             try {
-                $users = InternalUser::role(['admin', 'clerk'])->get();
+                $users = InternalUser::role(['admin', 'clerk', 'superadmin'])->get();
                 Notification::send($users, new ApplicationNotification('Consignment certificate application deleted by ' . $userName, $userName, $notificationUrl));
             } catch (\Exception $e) {
                 \Log::warning('Failed to send notification to internal users: ' . $e->getMessage());

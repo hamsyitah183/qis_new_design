@@ -778,7 +778,7 @@ class UserController extends Controller
             \Log::info('Failed to broadcast event: ' . $e->getMessage());
         }
 
-        $users = InternalUser::role(['admin'])->get();
+         $users = InternalUser::role(['admin', 'superadmin'])->get();
         $notificationUrl = route('internal.public.list');
         Notification::send($users, new ApplicationNotification(
             'A user upload a verification attachment',
@@ -902,7 +902,7 @@ class UserController extends Controller
                 \Log::info('Failed to broadcast event: ' . $e->getMessage());
             }
 
-            $users = InternalUser::role(['admin'])->get();
+             $users = InternalUser::role(['admin', 'superadmin'])->get();
             $notificationUrl = route('internal.public.list');
             Notification::send($users, new ApplicationNotification(
                 $isApproved ? $user->fullname . ' account is verified' : $user->fullname . ' account verification is rejected',

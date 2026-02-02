@@ -343,13 +343,7 @@ class PermitApplicationController extends Controller
                     ])
                     ->log(authUser()['user']['fullname'] . ($isDraft ? ' has created a new draft application (ID: ' : ' has created a new import permit application (ID: ') . $application->application_id . ')');
 
-                // dd($application->importer_detail);
-
-                // event(new ApplicationCreatedInternalUser(
-                //     $isDraft
-                //         ? 'New import permit application DRAFT created by ' . ($importer['fullname'] ?? 'Unknown Importer')
-                //         : 'New import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')
-                // ));
+               
                 try {
                     event(new InternalUserAdminEvent($isDraft ? 'New import permit application DRAFT created by ' . ($importer['fullname'] ?? 'Unknown Importer') : 'New import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')));
                     event(new InternalUserClerkEvent($isDraft ? 'New import permit application DRAFT created by ' . ($importer['fullname'] ?? 'Unknown Importer') : 'New import permit application submitted by ' . ($importer['fullname'] ?? 'Unknown Importer')));
@@ -484,7 +478,7 @@ class PermitApplicationController extends Controller
             // -----------------------------
             // Send Notifications
             // -----------------------------
-            $users = InternalUser::role(['admin', 'clerk'])->get();
+            $users = InternalUser::role(['admin', 'clerk', 'superadmin'])->get();
             $notificationUrl = route('viewApplication', $application->application_id);
             Notification::send($users, new ApplicationNotification($isDraft ? ($isNewApplication ? 'New import permit draft created' : 'Import permit draft updated') : ($isNewApplication ? 'New import permit application submitted' : 'Import permit application updated'), Auth::user()->fullname, $notificationUrl));
             $publicUser = auth()->guard('public')->user();

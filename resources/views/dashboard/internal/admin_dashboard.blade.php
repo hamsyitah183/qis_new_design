@@ -3,6 +3,8 @@
 {{-- @dd($data) --}}
 
 @include('dashboard.internal.components.daily_application')
+{{-- <div id="dailyVolumeChart"></div> --}}
+
 
 {{-- public user chart and latest log activity --}}
 <div class="row align-items-stretch mb-2">
