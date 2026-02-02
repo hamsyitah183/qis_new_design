@@ -18,6 +18,7 @@ function initAddExporterModal() {
     $("#addExporterbtn").on("click", (e) => {
         e.preventDefault();
 
+        const id = $("#id").val();
         const name = $("#addexpName").val().trim();
         const phone_no = $("#addexpfonno").val().trim();
         const address1 = $("#addexpaddress1").val().trim();
@@ -45,6 +46,7 @@ function initAddExporterModal() {
             url: '/public/store_exporter', // ✅ always HTTPS
             method: "POST",
             data: {
+                id,
                 name,
                 phone_no,
                 address: full_address,
@@ -56,13 +58,13 @@ function initAddExporterModal() {
             success: () => {
                 // fetchExporterList();
                 $("#exporterTable")
-                                .DataTable()
-                                .ajax.reload(null, false);
+                    .DataTable()
+                    .ajax.reload(null, false);
 
                 Swal.fire({
                     icon: "success",
                     title: "Exporter Saved!",
-                    text: "The exporter has been successfully added to the list.",
+                    text: "The exporter has been successfully saved.",
                     timer: 1800,
                     showConfirmButton: false,
                     timerProgressBar: true,
@@ -70,6 +72,7 @@ function initAddExporterModal() {
 
                 modal.hide();
                 $("#addExporterForm")[0].reset();
+                $("#id").val('');
             },
             error: (xhr) => {
                 console.error(xhr.responseText);
@@ -127,6 +130,9 @@ $(document).ready(function () {
             document.getElementById("addExporterModal")
         );
         $("#addExporterForm")[0].reset();
+        $("#id").val("");
+        $("#addExporterModalLabel").text("Add Exporter");
+        $("#addExporterbtn").text("Save Exporter");
         modal.show();
     });
 
@@ -225,10 +231,13 @@ $(document).on("click", ".editExporter", function () {
             $("#addexpaddress1").val(exporter.address.split(" ")[0]); // adjust as needed
             $("#addexpaddress2").val(exporter.address.split(" ")[1]); // adjust as needed
             $("#addexpcountry").val(exporter.country);
-            $('#id').val(exporter.id)
+            $('#id').val(exporter.id);
 
-           
-           
+            $("#addExporterModalLabel").text("Edit Exporter");
+            $("#addExporterbtn").text("Update Exporter");
+
+
+
         },
         error: function (xhr, status, error) {
             Swal.close();
