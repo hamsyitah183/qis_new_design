@@ -168,7 +168,7 @@ class PaymentController extends Controller
 
         // order number
 
-        $total = number_format($request['total'], 2, '.', ''); // ensures '50.00' instead of 50
+        $total = number_format($request['total'], 2, '.', '');
 
         // dd( $application->id, $request->permit_ids, $total);
 

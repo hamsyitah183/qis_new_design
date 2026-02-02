@@ -37,7 +37,7 @@ use Illuminate\Notifications\DatabaseNotification;
 class DashboardController extends Controller
 {
     //
-    public function dashboard(LineUserChart $lineChart, OrderDonutChart $orderChart, PaymentMethodBarChart $paymentChart, ApplicationHorizontalChart $applicationChart, ClerkDailyVolumeChart $clerkVolumeChart, PermitDailyProcessChart $permitChart)
+    public function dashboard(LineUserChart $lineChart, OrderDonutChart $orderChart, PaymentMethodBarChart $paymentChart, ApplicationHorizontalChart $applicationChart, ClerkDailyVolumeChart $clerkVolumeChart, PermitDailyProcessChart $permitChart, ClerkApplicationStatusChart $clerkStatusChart, ClerkDailyWorkloadChart $clerkWorkloadChart)
     {
         // ✅ Check which guard is logged in
         if (Auth::guard('public')->check()) {
@@ -45,8 +45,10 @@ class DashboardController extends Controller
         }
 
         if (Auth::guard('internal')->check()) {
-            return $this->internal_dashboard(app(LineUserChart::class), app(OrderDonutChart::class), app(PaymentMethodBarChart::class), app(ApplicationHorizontalChart::class), app(ClerkApplicationStatusChart::class), app(ClerkDailyWorkloadChart::class), app(ClerkDailyVolumeChart::class), app(PermitDailyProcessChart::class));
-            return $this->internal_dashboard($lineChart, $orderChart, $paymentChart, $applicationChart, $clerkVolumeChart, $permitChart);
+            if (authUser()['user']->hasRole('finance')) {
+                return view('dashboard.internal.finance_dashboard');
+            }
+            return $this->internal_dashboard($lineChart, $orderChart, $paymentChart, $applicationChart, $clerkStatusChart, $clerkWorkloadChart, $clerkVolumeChart, $permitChart);
         }
 
         // ❌ If no guard is logged in, redirect to login
@@ -344,7 +346,7 @@ class DashboardController extends Controller
         $totalVerified = $ipVerified . $icVerified . $ccVerified;
 
         $totalAmount = Order::where('transaction_status', 'SUCCESSFUL')->sum('payment_amount');
-        
+
 
         $ipCountOfficer = IpConsignmentPermit::count();
         $icCountOfficer = InspectionItem::count();
@@ -424,5 +426,5 @@ class DashboardController extends Controller
         ]);
     }
 
-   
+
 }

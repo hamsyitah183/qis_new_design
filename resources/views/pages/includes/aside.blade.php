@@ -134,192 +134,197 @@
 
                 <!-- User Management -->
                 @if (auth('internal')->check())
-                    {{-- Application Section --}}
-                    <li class="slide__category"><span class="category-name">Application</span></li>
+                    @if(!auth('internal')->user()->hasRole('finance'))
+                        {{-- Application Section --}}
+                        <li class="slide__category"><span class="category-name">Application</span></li>
 
-                    @php
-                        // Check if the route name contains "application", "inspection", or "consignment"
-                        $isApplicationActive = Str::contains($currentRoute, [
-                            'application',
-                            'inspection',
-                            'consignment',
-                        ]);
-                    @endphp
+                        @php
+                            // Check if the route name contains "application", "inspection", or "consignment"
+                            $isApplicationActive = Str::contains($currentRoute, [
+                                'application',
+                                'inspection',
+                                'consignment',
+                            ]);
+                        @endphp
 
-                    <li class="slide has-sub {{ $isApplicationActive ? 'open active' : '' }}">
-                        <a href="javascript:void(0);" class="side-menu__item">
-                            <i class="ri-arrow-down-s-line side-menu__angle"></i>
-                            <i class="ti ti-file-info side-menu__icon"></i>
-                            <span class="side-menu__label">Application List</span>
-                        </a>
+                        <li class="slide has-sub {{ $isApplicationActive ? 'open active' : '' }}">
+                            <a href="javascript:void(0);" class="side-menu__item">
+                                <i class="ri-arrow-down-s-line side-menu__angle"></i>
+                                <i class="ti ti-file-info side-menu__icon"></i>
+                                <span class="side-menu__label">Application List</span>
+                            </a>
 
-                        <ul class="slide-menu child1">
-                            <li class="slide side-menu__label1"><a href="javascript:void(0)">Application List</a></li>
+                            <ul class="slide-menu child1">
+                                <li class="slide side-menu__label1"><a href="javascript:void(0)">Application List</a></li>
 
-                            <li class="slide {{ $currentRoute === 'internal.application.list' ? 'active' : '' }}">
-                                <a href="{{ route('internal.application.list') }}" class="side-menu__item">
-                                    Import Permit
-                                </a>
-                            </li>
+                                <li class="slide {{ $currentRoute === 'internal.application.list' ? 'active' : '' }}">
+                                    <a href="{{ route('internal.application.list') }}" class="side-menu__item">
+                                        Import Permit
+                                    </a>
+                                </li>
 
-                            <li class="slide {{ $currentRoute === 'internal.inspection.list' ? 'active' : '' }}">
-                                <a href="{{ route('internal.inspection.list') }}" class="side-menu__item">
-                                    Inspection Certificate
-                                </a>
-                            </li>
+                                <li class="slide {{ $currentRoute === 'internal.inspection.list' ? 'active' : '' }}">
+                                    <a href="{{ route('internal.inspection.list') }}" class="side-menu__item">
+                                        Inspection Certificate
+                                    </a>
+                                </li>
 
-                            <li class="slide {{ $currentRoute === 'internal.consignment.list' ? 'active' : '' }}">
-                                <a href="{{ route('internal.consignment.list') }}" class="side-menu__item">
-                                    Consignment Certificate
-                                </a>
-                            </li>
+                                <li class="slide {{ $currentRoute === 'internal.consignment.list' ? 'active' : '' }}">
+                                    <a href="{{ route('internal.consignment.list') }}" class="side-menu__item">
+                                        Consignment Certificate
+                                    </a>
+                                </li>
 
-                        </ul>
-                    </li>
+                            </ul>
+                        </li>
 
-                    <li class="slide has-sub {{ $isApplicationActive ? 'open active' : '' }}">
-                        <a href="javascript:void(0);" class="side-menu__item">
-                            <i class="ri-arrow-down-s-line side-menu__angle"></i>
-                            <i class="ti ti-file-info side-menu__icon"></i>
-                            <span class="side-menu__label">Permit List</span>
-                        </a>
+                        <li class="slide has-sub {{ $isApplicationActive ? 'open active' : '' }}">
+                            <a href="javascript:void(0);" class="side-menu__item">
+                                <i class="ri-arrow-down-s-line side-menu__angle"></i>
+                                <i class="ti ti-file-info side-menu__icon"></i>
+                                <span class="side-menu__label">Permit List</span>
+                            </a>
 
-                        <ul class="slide-menu child1">
-                            <li class="slide side-menu__label1"><a href="javascript:void(0)">Permit List</a></li>
+                            <ul class="slide-menu child1">
+                                <li class="slide side-menu__label1"><a href="javascript:void(0)">Permit List</a></li>
 
-                            <li class="slide {{ $currentRoute === url('/permit/list/import') ? 'active' : '' }}">
-                                <a href="{{ url('/permit/list/import') }}" class="side-menu__item">
-                                    Import Permit
-                                </a>
-                            </li>
+                                <li class="slide {{ $currentRoute === url('/permit/list/import') ? 'active' : '' }}">
+                                    <a href="{{ url('/permit/list/import') }}" class="side-menu__item">
+                                        Import Permit
+                                    </a>
+                                </li>
 
-                            <li class="slide {{ $currentRoute === url('/permit/list/inspection') ? 'active' : '' }}">
-                                <a href="{{ url('/permit/list/inspection') }}" class="side-menu__item">
-                                    Inspection Certificate
-                                </a>
-                            </li>
+                                <li class="slide {{ $currentRoute === url('/permit/list/inspection') ? 'active' : '' }}">
+                                    <a href="{{ url('/permit/list/inspection') }}" class="side-menu__item">
+                                        Inspection Certificate
+                                    </a>
+                                </li>
 
-                            <li class="slide {{ $currentRoute === url('/permit/list/consignment') ? 'active' : '' }}">
-                                <a href="{{ url('/permit/list/consignment') }}" class="side-menu__item">
-                                    Consignment Certificate
-                                </a>
-                            </li>
+                                <li class="slide {{ $currentRoute === url('/permit/list/consignment') ? 'active' : '' }}">
+                                    <a href="{{ url('/permit/list/consignment') }}" class="side-menu__item">
+                                        Consignment Certificate
+                                    </a>
+                                </li>
 
-                        </ul>
-                    </li>
-
-
+                            </ul>
+                        </li>
 
 
-                    <li class="slide__category"><span class="category-name">User</span></li>
 
-                    @php
-                        $userManagementRoutes = [
-                            'internal.public.',
-                            'internal.internal.',
-                            'internal.internal.activity_log',
-                            'internal.internal.role',
-                        ];
 
-                        $isUserManagementActive = false;
+                        <li class="slide__category"><span class="category-name">User</span></li>
 
-                        foreach ($userManagementRoutes as $prefix) {
-                            if (Str::startsWith($currentRoute, $prefix)) {
-                                $isUserManagementActive = true;
-                                break;
+                        @php
+                            $userManagementRoutes = [
+                                'internal.public.',
+                                'internal.internal.',
+                                'internal.internal.activity_log',
+                                'internal.internal.role',
+                            ];
+
+                            $isUserManagementActive = false;
+
+                            foreach ($userManagementRoutes as $prefix) {
+                                if (Str::startsWith($currentRoute, $prefix)) {
+                                    $isUserManagementActive = true;
+                                    break;
+                                }
                             }
-                        }
-                    @endphp
+                        @endphp
 
-                    <li class="slide has-sub {{ $isUserManagementActive ? 'open active' : '' }}">
-                        <a href="javascript:void(0);" class="side-menu__item">
-                            <i class="ri-arrow-down-s-line side-menu__angle"></i>
-                            <i class="ti ti-user side-menu__icon"></i>
-                            <span class="side-menu__label">User Management</span>
-                        </a>
+                        <li class="slide has-sub {{ $isUserManagementActive ? 'open active' : '' }}">
+                            <a href="javascript:void(0);" class="side-menu__item">
+                                <i class="ri-arrow-down-s-line side-menu__angle"></i>
+                                <i class="ti ti-user side-menu__icon"></i>
+                                <span class="side-menu__label">User Management</span>
+                            </a>
 
-                        <ul class="slide-menu child1">
-                            <li class="slide side-menu__label1"><a href="javascript:void(0)">Users</a></li>
+                            <ul class="slide-menu child1">
+                                <li class="slide side-menu__label1"><a href="javascript:void(0)">Users</a></li>
 
-                            <li class="slide {{ $currentRoute === 'internal.public.list' ? 'active' : '' }}">
-                                <a href="{{ route('internal.public.list') }}" class="side-menu__item">Public
-                                    Users</a>
-                            </li>
+                                <li class="slide {{ $currentRoute === 'internal.public.list' ? 'active' : '' }}">
+                                    <a href="{{ route('internal.public.list') }}" class="side-menu__item">Public
+                                        Users</a>
+                                </li>
 
-                            <li class="slide {{ $currentRoute === 'internal.internal.list' ? 'active' : '' }}">
-                                <a href="{{ route('internal.internal.list') }}" class="side-menu__item">Internal
-                                    Users</a>
-                            </li>
+                                <li class="slide {{ $currentRoute === 'internal.internal.list' ? 'active' : '' }}">
+                                    <a href="{{ route('internal.internal.list') }}" class="side-menu__item">Internal
+                                        Users</a>
+                                </li>
 
-                            <li class="slide {{ $currentRoute === 'internal.public.verification.list' ? 'active' : '' }}">
-                                <a href="{{ route('internal.public.verification.list') }}" class="side-menu__item" id = "verificationCount">User
-                                    Verification</a>
-                            </li>
+                                <li class="slide {{ $currentRoute === 'internal.public.verification.list' ? 'active' : '' }}">
+                                    <a href="{{ route('internal.public.verification.list') }}" class="side-menu__item"
+                                        id="verificationCount">User
+                                        Verification</a>
+                                </li>
 
-                            <li class="slide {{ $currentRoute === 'internal.internal.activity_log' ? 'active' : '' }}">
-                                <a href="{{ route('internal.internal.activity_log') }}" class="side-menu__item">Activity
-                                    Log</a>
-                            </li>
+                                <li class="slide {{ $currentRoute === 'internal.internal.activity_log' ? 'active' : '' }}">
+                                    <a href="{{ route('internal.internal.activity_log') }}" class="side-menu__item">Activity
+                                        Log</a>
+                                </li>
 
-                           @role('superadmin')
-                            <li class="slide {{ $currentRoute === 'internal.internal.role' ? 'active' : '' }}">
-                                <a href="{{ route('internal.internal.role') }}" class="side-menu__item">Role and
-                                    Permission</a>
-                            </li>
-                           @endrole
-                        </ul>
-                    </li>
+                                @role('superadmin')
+                                <li class="slide {{ $currentRoute === 'internal.internal.role' ? 'active' : '' }}">
+                                    <a href="{{ route('internal.internal.role') }}" class="side-menu__item">Role and
+                                        Permission</a>
+                                </li>
+                                @endrole
+                            </ul>
+                        </li>
 
 
-                    <li class="slide__category"><span class="category-name">Misc</span></li>
-                    <li class="slide has-sub {{ Str::startsWith($currentRoute, 'internal.') ? 'open active' : '' }}">
-                        <a href="javascript:void(0);" class="side-menu__item">
-                            <i class="ri-arrow-down-s-line side-menu__angle"></i>
-                            <i class="ti ti-user side-menu__icon"></i>
-                            <span class="side-menu__label" style="line-height: 1.3rem">
-                                <span>System <br> Configuration</span>
-                            </span>
-                        </a>
-                        <ul class="slide-menu child1">
-                            <li class="slide side-menu__label1"><a href="javascript:void(0)">Misc</a></li>
+                        <li class="slide__category"><span class="category-name">Misc</span></li>
+                        <li class="slide has-sub {{ Str::startsWith($currentRoute, 'internal.') ? 'open active' : '' }}">
+                            <a href="javascript:void(0);" class="side-menu__item">
+                                <i class="ri-arrow-down-s-line side-menu__angle"></i>
+                                <i class="ti ti-user side-menu__icon"></i>
+                                <span class="side-menu__label" style="line-height: 1.3rem">
+                                    <span>System <br> Configuration</span>
+                                </span>
+                            </a>
+                            <ul class="slide-menu child1">
+                                <li class="slide side-menu__label1"><a href="javascript:void(0)">Misc</a></li>
 
-                            <li class="slide {{ $currentRoute === 'internal.controlpanel' ? 'active' : '' }}">
-                                <a href="{{ url('/internal/control_panel') }}" class="side-menu__item">Control
-                                    Panel</a>
-                            </li>
+                                <li class="slide {{ $currentRoute === 'internal.controlpanel' ? 'active' : '' }}">
+                                    <a href="{{ url('/internal/control_panel') }}" class="side-menu__item">Control
+                                        Panel</a>
+                                </li>
 
-                            <li class="slide {{ $currentRoute === 'internal.internal.list' ? 'active' : '' }}">
-                                <a href="{{ url('/internal/permit_condition') }}" class="side-menu__item">Permit
-                                    Condition</a>
-                            </li>
+                                <li class="slide {{ $currentRoute === 'internal.internal.list' ? 'active' : '' }}">
+                                    <a href="{{ url('/internal/permit_condition') }}" class="side-menu__item">Permit
+                                        Condition</a>
+                                </li>
 
-                            <li class="slide {{ $currentRoute === 'internal.state-district-management' ? 'active' : '' }}">
-                                <a href="{{ route('internal.state-district-management') }}" class="side-menu__item">State &
-                                    District Management</a>
-                            </li>
+                                <li class="slide {{ $currentRoute === 'internal.state-district-management' ? 'active' : '' }}">
+                                    <a href="{{ route('internal.state-district-management') }}" class="side-menu__item">State &
+                                        District Management</a>
+                                </li>
 
-                            <li style="display:none"
-                                class="slide {{ $currentRoute === 'internal.internal.activity_log' ? 'active' : '' }} ">
-                                <a href="{{ route('internal.internal.activity_log') }}" class="side-menu__item">
-                                    Activity Log</a>
-                            </li>
-                        </ul>
-                    </li>
+                                <li style="display:none"
+                                    class="slide {{ $currentRoute === 'internal.internal.activity_log' ? 'active' : '' }} ">
+                                    <a href="{{ route('internal.internal.activity_log') }}" class="side-menu__item">
+                                        Activity Log</a>
+                                </li>
+                            </ul>
+                        </li>
+                    @endif
                 @endif
 
 
-                <li class="slide__category"><span class="category-name">Order</span></li>
+                @if(!(auth('internal')->check() && auth('internal')->user()->hasRole('finance')))
+                    <li class="slide__category"><span class="category-name">Order</span></li>
 
 
-                <li class="slide {{ Str::contains($currentRoute, 'order') ? 'open active' : '' }}">
-                    <a href="/order/list" class="side-menu__item">
+                    <li class="slide {{ Str::contains($currentRoute, 'order') ? 'open active' : '' }}">
+                        <a href="/order/list" class="side-menu__item">
 
-                        {{-- --}}
-                        <i class="ti ti-user side-menu__icon side-menu__icon"></i>
+                            {{-- --}}
+                            <i class="ti ti-user side-menu__icon side-menu__icon"></i>
 
-                        <span class="side-menu__label">Order</span>
-                    </a>
-                </li>
+                            <span class="side-menu__label">Order</span>
+                        </a>
+                    </li>
+                @endif
 
 
             </ul>
