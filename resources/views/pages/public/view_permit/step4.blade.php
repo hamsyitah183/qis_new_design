@@ -50,7 +50,7 @@
                         <p>This permit application is currently pending verification by Clerk.</p>
                     @else
                         <p>Waiting for approval.</p>
-                        @if (authUser() && (authUser()['user']->hasRole('clerk') || authUser()['user']->hasRole('admin')) )
+                        @if (authUser() && (authUser()['user']->hasRole('clerk') || authUser()['user']->hasRole('admin') || authUser()['user']->hasRole('superadmin')) )
                             <div class="d-flex justify-content-center gap-3 mt-3">
                                 <button id="acceptAppl" class="btn btn-sm btn-success">Accept Application</button>
                                 <button id="rejectAdminAppl" class="btn btn-sm btn-danger">Reject Application</button>
@@ -103,7 +103,7 @@
                         
                     @else
                         <p>Rejected</p>
-                        @if (authUser() && authUser()['user']->hasRole('admin'))
+                        @if (authUser() && (authUser()['user']->hasRole('admin') || authUser()['user']->hasRole('superadmin')))
                             {{-- <div class="d-flex justify-content-center gap-3 mt-3">
                                 <button id="acceptAppl" class="btn btn-sm btn-success">Accept Application</button>
                                 <button id="rejectAdminAppl" class="btn btn-sm btn-danger">Reject Application</button>

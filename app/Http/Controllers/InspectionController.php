@@ -467,7 +467,7 @@ class InspectionController extends Controller
             // inspection send notifications
             $notificationUrl = route('public.viewInspectionApplication', ['id' => $application->application_id]);
 
-            $internalUsers = InternalUser::role(['admin', 'clerk'])->get();
+            $internalUsers = InternalUser::role(['admin', 'clerk', 'superadmin'])->get();
             $internalMsg = $isDraft ? ($isNewApplication ? 'New Inspection Certificate draft created' : 'Inspection Certificate draft updated') : ($isNewApplication ? 'New Inspection Certificate application submitted' : 'Inspection Certificate application updated');
 
             Notification::send($internalUsers, new ApplicationNotification($internalMsg, Auth::user()->fullname, $notificationUrl));
@@ -622,7 +622,7 @@ class InspectionController extends Controller
             Log::warning('Pusher connection failed but continuing internal notification: ' . $e->getMessage());
         }
 
-        $internalUsers = InternalUser::role(['admin', 'clerk'])->get();
+        $internalUsers = InternalUser::role(['admin', 'clerk', 'superadmin'])->get();
         Notification::send($internalUsers, new ApplicationNotification($messages['notify'], authUser()['user']->fullname, $notificationUrl));
 
         /**
@@ -645,7 +645,7 @@ class InspectionController extends Controller
 
         // notifications
         $notificationUrl = route('public.viewInspectionApplication', ['id' => $application->application_id]);
-        $internalUsers = InternalUser::role(['admin', 'clerk'])->get();
+        $internalUsers = InternalUser::role(['admin', 'clerk', 'superadmin'])->get();
         $internalMsg = "Inspection application {$application->application_id} has been {$status}";
         Notification::send($internalUsers, new ApplicationNotification($internalMsg, authUser()['user']->fullname, $notificationUrl));
 
@@ -764,7 +764,7 @@ class InspectionController extends Controller
                 ->log(authUser()['user']->fullname . ' deleted inspection application ' . $applicationId);
 
             $notificationUrl = route('public.showallinspectionlist');
-            $internalUsers = InternalUser::role(['admin', 'clerk'])->get();
+            $internalUsers = InternalUser::role(['admin', 'clerk', 'superadmin'])->get();
             Notification::send($internalUsers, new ApplicationNotification("Inspection application {$applicationId} has been deleted", authUser()['user']->fullname, $notificationUrl));
 
             $applicant = PublicUser::where('uuid', $applicantUuid)->first();
@@ -811,7 +811,7 @@ class InspectionController extends Controller
     {
         // Check if user has proper role (Officer or Admin)
         $user = authUser()['user'];
-        if (!$user->hasAnyRole(['officer', 'admin'])) {
+        if (!$user->hasAnyRole(['officer', 'admin', 'superadmin'])) {
             return response()->json(
                 [
                     'status' => 'error',
@@ -882,7 +882,7 @@ class InspectionController extends Controller
             Log::warning('Pusher connection failed: ' . $e->getMessage());
         }
 
-        $internalUsers = InternalUser::role(['admin', 'clerk'])->get();
+        $internalUsers = InternalUser::role(['admin', 'clerk', 'superadmin'])->get();
         Notification::send($internalUsers, new ApplicationNotification($msg, $user->fullname, $notificationUrl));
 
         // Public Notification
@@ -922,7 +922,7 @@ class InspectionController extends Controller
     {
         // Check if user has proper role (Officer or Admin)
         $user = authUser()['user'];
-        if (!$user->hasAnyRole(['officer', 'admin'])) {
+        if (!$user->hasAnyRole(['officer', 'admin', 'superadmin'])) {
             return response()->json(
                 [
                     'status' => 'error',
@@ -998,7 +998,7 @@ class InspectionController extends Controller
             Log::warning('Pusher connection failed: ' . $e->getMessage());
         }
 
-        $internalUsers = InternalUser::role(['admin', 'clerk'])->get();
+        $internalUsers = InternalUser::role(['admin', 'clerk', 'superadmin'])->get();
         Notification::send($internalUsers, new ApplicationNotification($msg, $user->fullname, $notificationUrl));
 
         // Public Notification

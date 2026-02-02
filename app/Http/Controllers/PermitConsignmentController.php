@@ -42,7 +42,7 @@ class PermitConsignmentController extends Controller
 
         $url = '/view_application' . '/' . $permit->application->application_id;
 
-        $users = InternalUser::role(['admin', 'officer'])->get();
+        $users = InternalUser::role(['admin', 'officer', 'superadmin'])->get();
         Notification::send($users, new ApplicationNotification('A permit with application ID ' . $permit->application->application_id . ' has been ' . $status, authUser()['user']->fullname, $url));
 
         $user = PublicUser::where('uuid', $permit->application->user_id)->first();
