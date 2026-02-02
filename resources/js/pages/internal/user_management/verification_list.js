@@ -6,7 +6,7 @@ import "datatables.net-responsive-bs5";
 import { fetchVerificationCount, formatTime } from "../../../app"; // Ensure this matches your project structure
 
 $(document).ready(function () {
-    const table = $('#verificationTable').DataTable({
+    var verificationTable = $('#verificationTable').DataTable({
         processing: true,
         serverSide: true,
         ajax: "/internal/user_public/verification/data",
