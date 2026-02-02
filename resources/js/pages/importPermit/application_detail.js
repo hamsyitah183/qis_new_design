@@ -867,7 +867,8 @@ let totalPermit = 0;
 function updateTotalValue() {
     let total = 0;
     $(".permit-checkbox:checked").each(function () {
-        const value = parseFloat($(this).data("permit-value")) || 0;
+        // Use .attr() to get the explicit value from the HTML attribute
+        const value = parseFloat($(this).attr("data-permit-value")) || 0;
         total += value;
     });
 
@@ -1312,7 +1313,14 @@ async function initApplicationDetails() {
             didOpen: () => Swal.showLoading(),
         });
 
-        totalPermit = Number(totalPermit).toFixed(2);
+        // Recalculate total just to be safe
+        let calculatedTotal = 0;
+        $(".permit-checkbox:checked").each(function () {
+             const value = parseFloat($(this).attr("data-permit-value")) || 0;
+             calculatedTotal += value;
+        });
+
+        const finalTotal = Number(calculatedTotal).toFixed(2);
 
         $.ajax({
             url: "/payment/signed-url",
@@ -1320,7 +1328,7 @@ async function initApplicationDetails() {
             data: {
                 application_id: application.id,
                 permit_ids: selectedPermits,
-                total: totalPermit,
+                total: finalTotal,
                 type: "import_permit",
                 _token: $('meta[name="csrf-token"]').attr("content"),
             },
