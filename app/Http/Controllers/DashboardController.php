@@ -179,9 +179,16 @@ class DashboardController extends Controller
                     ->sortByDesc('created_at')
                     ->take(5)
                     ->values();
-            }
+            } 
             
 
+        }else {
+            $latestApplications =  $importPermits
+            ->concat($inspectionCerts)
+            ->concat($consignmentCerts)
+            ->sortByDesc('created_at')
+            ->take(5)
+            ->values();
         }
         
 
