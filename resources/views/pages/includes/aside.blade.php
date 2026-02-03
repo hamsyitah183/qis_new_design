@@ -114,6 +114,10 @@
                             </li>
 
                             <li class="slide">
+                                <a href="/public/agent_list" class="side-menu__item" >Representative List</a>
+                            </li>
+
+                            <li class="slide">
                                 <a href="{{ route('public.showallapplicationlist') }}" class="side-menu__item">Import
                                     Permit List</a>
                             </li>

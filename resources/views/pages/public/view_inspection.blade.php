@@ -111,32 +111,30 @@
 
                                 $isPublic = auth()->guard('public')->check();
                                 $isOwner =
-                                    $isPublic && $application->importer->uuid === auth()->guard('public')->user()->uuid;
+                                    $isPublic && $application->importer_id === auth()->guard('public')->user()->uuid;
+
+                                $allPending = $application->inspectionItems->every(
+                                    fn($permit) => $permit->status === 'pending for payment',
+                                );
+
+                                $value = $allPending ? 1 : 0;
+
+                                // dd($value);
 
                             @endphp
-                            {{-- @dd($application->status) --}}
+                            {{-- @dd($isOwner || $isAdminOrClerk) --}}
                             {{-- @if (
-                                (str_contains(strtolower($application->status), 'clerk review in-progress') && $isAdminOrClerk) ||
-                                    (($application->category_application == 1 && $isOwner ) && $isAdminOrClerk) ) --}}
-                            @if ( (  str_contains(strtolower($application->status), 'clerk review in-progress') && $isOwner) || $isAdminOrClerk  )
-                               
+                                    ($application->status === 'Clerk Review In-Progress' && $isAdminOrClerk) ||
+                                    ($application->category_application == 1 && ($isOwner || $isAdminOrClerk))
+                                ) --}}
+                                @if ( (  str_contains(strtolower($application->status), 'clerk review in-progress') && $isAdminOrClerk) || 
+                                (  str_contains(strtolower($application->status), 'wait for company approval') && ( $isOwner || $isAdminOrClerk) )  )
+                                {{-- Step 4 --}}
                                 @include('pages.public.view_inspection.step4')
                             @endif
 
-                            @php
-                                $hasPending = $application->inspectionItems
-                                    ? $application->inspectionItems->contains(function ($permit) {
-                                        $s = strtolower($permit->status ?? '');
-                                        return $s === 'pending for payment' || $s === 'payment failed';
-                                    })
-                                    : false;
 
-                                $value = $hasPending ? 1 : 0;
-                            @endphp
-
-
-
-                            @if (authUser()['type'] == 'public' && $value)
+                            @if (authUser()['type'] == 'public' && $application->user_id == authUser()['user']->uuid && $value)
                                 @include('pages.public.view_inspection.step5')
                             @endif
 

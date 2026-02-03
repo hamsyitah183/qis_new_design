@@ -50,6 +50,7 @@ class ApplicationController extends Controller
         return view('pages.public.application_list');
     }
 
+
     public function getallapplicationlist()
     {
         $userUuid = authUser()['user']->uuid;
@@ -457,6 +458,46 @@ class ApplicationController extends Controller
         $applications = $ipApplications->merge($consignmentApplications)->merge($inspectionApplications)->sortByDesc('created_at')->values();
 
         return view('pages.public.application_review_list', compact('applications'));
+    }
+
+    public function agentList()
+    {
+        $userId = auth()->id();
+
+        // Import Permit
+        $ipApplications = IpApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode', 'latestLog'])
+            ->where('importer_id', $userId)
+            ->where('category_application', true)
+            ->get()
+            ->map(function ($item) {
+                $item->application_source = 'import_permit';
+                return $item;
+            });
+
+        // Consignment
+        $consignmentApplications = ConsignmentApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode', 'latestLog'])
+            ->where('importer_id', $userId)
+            ->where('category_application', true)
+            ->get()
+            ->map(function ($item) {
+                $item->application_source = 'consignment';
+                return $item;
+            });
+
+        // Inspection
+        $inspectionApplications = InspectionApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode', 'latestLog'])
+            ->where('importer_id', $userId)
+            ->where('category_application', true)
+            ->get()
+            ->map(function ($item) {
+                $item->application_source = 'inspection';
+                return $item;
+            });
+
+        // ✅ Combine all
+        $applications = $ipApplications->merge($consignmentApplications)->merge($inspectionApplications)->sortByDesc('created_at')->values();
+
+        return view('pages.public.application_agent_list', compact('applications'));
     }
 
     public function viewapplication($uuid)

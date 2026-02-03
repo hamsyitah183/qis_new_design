@@ -103,6 +103,7 @@ Route::prefix('public')
         Route::get('/view_all_consignment', [ConsignmentController::class, 'showallconsignmentlist'])->name('showallconsignmentlist');
 
         Route::get('/verify_application', [ApplicationController::class, 'verifyapplication'])->name('verifyapplication');
+        Route::get('/agent_list', [ApplicationController::class, 'agentList']);
         Route::get('/view_application/{uuid}', [ConsignmentApplicationController::class, 'viewapplication'])->name('viewApplication');
 
         // get importer

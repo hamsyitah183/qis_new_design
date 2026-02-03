@@ -13,6 +13,7 @@ import select2 from "select2";
 select2(window.jQuery);
 
 import "select2/dist/css/select2.min.css";
+import { public_dashboard } from "../dashboard/public_dashboard";
 
 Dropzone.autoDiscover = false;
 
@@ -868,6 +869,7 @@ function saveapplication(isDraft = false) {
                 timer: 1500,
                 showConfirmButton: false,
             });
+            
 
             if (!isDraft) {
                 setTimeout(() => {
@@ -886,143 +888,148 @@ function saveapplication(isDraft = false) {
 
 // ------------------------- Initialize -------------------------
 // ------------------------- Initialize -------------------------
-$(document).ready(async function () {
-    // Show loading swal
-    Swal.fire({
-        title: "Loading...",
-        html: "Please wait while the page initializes.",
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading(),
-    });
-
-    try {
-        // Initialize self import
-        await selfImport();
-
-        // Fetch exporter list and set change handler
-        await fetchExporterList();
-        handleExporterChange();
-
-        // Initialize modals and search
-        initAddExporterModal();
-        initImporterSearch();
-        permitDetails();
-        itemConsigment();
-        saveConsignmentAttachment();
-        viewMore();
-        deleteItem();
-
-        $("#itemMeasure").select2({
-            width: "100%",
-            placeholder: "-- Select Measurement Unit --",
-            // allowClear: true,
-            dropdownParent: $("#addItemModal"), // Important: for modal
+export function consginment_application()
+{
+    $(document).ready(async function () {
+        // Show loading swal
+        Swal.fire({
+            title: "Loading...",
+            html: "Please wait while the page initializes.",
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading(),
         });
-
-        $("#addexpcountry").select2({
-            width: "100%",
-            placeholder: "-- Select Country --",
-            // allowClear: true,
-            dropdownParent: $("#addExporterModal"), // Important: for modal
-        });
-
-        $("#itemPurpose").select2({
-            width: "100%",
-            placeholder: "-- Select Purpose --",
-            // allowClear: true,
-            dropdownParent: $("#addItemModal"), // Important: for modal
-        });
-
-        // ------------------- Item Purpose -------------------
-        $("#itemPurpose").on("change", function () {
-            const selectedOption = $(this).find("option:selected");
-            itemPurpose = selectedOption.data("description") || "";
-            console.log("Item purpose selected:", itemPurpose);
-        });
-
-        // ------------------- Item Select (Consignment) -------------------
-        $("#itemSelect").on("change", function () {
-            const itemId = $(this).val();
-            const $itemUses = $("#itemUses");
-
-            // Reset uses dropdown
-            $itemUses
-                .empty()
-                .append('<option value="">-- Select Uses --</option>');
-
-            if (!itemId) return;
-
-            // Load uses for the selected item
-            loadUses(itemId);
-        });
-
-     
-        $("#mdlAddItemBtn").on("click", function(e) {
-            e.preventDefault();
-            console.log('hellooo ml item is cliked');
-            loadConsignmentSelection()
-        });
-
-        // Submit button handler
-        $(document).on("click", "#submitApps", function (e) {
-            e.preventDefault();
-            console.log("Submit clicked!");
-            saveapplication(false);
-        });
-
-        $(document).on(
-            "click",
-            `#logoutButton, 
-            .app-sidebar.sticky button, .app-sidebar.sticky a,
+    
+        try {
+            // Initialize self import
+            await selfImport();
+    
+            // Fetch exporter list and set change handler
+            await fetchExporterList();
+            handleExporterChange();
+    
+            // Initialize modals and search
+            initAddExporterModal();
+            initImporterSearch();
+            permitDetails();
+            itemConsigment();
+            saveConsignmentAttachment();
+            viewMore();
+            deleteItem();
+    
+            $("#itemMeasure").select2({
+                width: "100%",
+                placeholder: "-- Select Measurement Unit --",
+                // allowClear: true,
+                dropdownParent: $("#addItemModal"), // Important: for modal
+            });
+    
+            $("#addexpcountry").select2({
+                width: "100%",
+                placeholder: "-- Select Country --",
+                // allowClear: true,
+                dropdownParent: $("#addExporterModal"), // Important: for modal
+            });
+    
+            $("#itemPurpose").select2({
+                width: "100%",
+                placeholder: "-- Select Purpose --",
+                // allowClear: true,
+                dropdownParent: $("#addItemModal"), // Important: for modal
+            });
+    
+            // ------------------- Item Purpose -------------------
+            $("#itemPurpose").on("change", function () {
+                const selectedOption = $(this).find("option:selected");
+                itemPurpose = selectedOption.data("description") || "";
+                console.log("Item purpose selected:", itemPurpose);
+            });
+    
+            // ------------------- Item Select (Consignment) -------------------
+            $("#itemSelect").on("change", function () {
+                const itemId = $(this).val();
+                const $itemUses = $("#itemUses");
+    
+                // Reset uses dropdown
+                $itemUses
+                    .empty()
+                    .append('<option value="">-- Select Uses --</option>');
+    
+                if (!itemId) return;
+    
+                // Load uses for the selected item
+                loadUses(itemId);
+            });
+    
          
-            .breadcrumb .breadcrumb-item a
-            `,
-            function (e) {
-                if (!change) return;
-
+            $("#mdlAddItemBtn").on("click", function(e) {
                 e.preventDefault();
-                const target = this;
-
-                Swal.fire({
-                    title: "Unsaved Changes",
-                    text: "You have unsaved changes. What would you like to do?",
-                    icon: "warning",
-                    showCancelButton: true,
-                    showDenyButton: true,
-                    confirmButtonText: "Yes, leave",
-                    denyButtonText: "Save as Draft",
-                    cancelButtonText: "Stay",
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // Leave page
-                        change = false;
-
-                        if (target.tagName === "A") {
-                            window.location.href = target.href;
-                        } else {
-                            target.click();
+                console.log('hellooo ml item is cliked');
+                loadConsignmentSelection()
+            });
+    
+            // Submit button handler
+            $(document).on("click", "#submitApps", function (e) {
+                e.preventDefault();
+                console.log("Submit clicked!");
+                saveapplication(false);
+            });
+    
+            $(document).on(
+                "click",
+                `#logoutButton, 
+                .app-sidebar.sticky button, .app-sidebar.sticky a,
+             
+                .breadcrumb .breadcrumb-item a
+                `,
+                function (e) {
+                    if (!change) return;
+    
+                    e.preventDefault();
+                    const target = this;
+    
+                    Swal.fire({
+                        title: "Unsaved Changes",
+                        text: "You have unsaved changes. What would you like to do?",
+                        icon: "warning",
+                        showCancelButton: true,
+                        showDenyButton: true,
+                        confirmButtonText: "Yes, leave",
+                        denyButtonText: "Save as Draft",
+                        cancelButtonText: "Stay",
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Leave page
+                            change = false;
+    
+                            if (target.tagName === "A") {
+                                window.location.href = target.href;
+                            } else {
+                                target.click();
+                            }
                         }
-                    }
+    
+                        if (result.isDenied) {
+                            saveapplication(true);
+                        }
+    
+                        // result.isDismissed → user clicked "Stay"
+                    });
+                }
+            );
+        } catch (error) {
+            console.error("Error during initialization:", error);
+            Swal.fire(
+                "Error",
+                "Failed to initialize page. Check console for details.",
+                "error"
+            );
+        } finally {
+            Swal.close();
+        }
+    });
+}
 
-                    if (result.isDenied) {
-                        saveapplication(true);
-                    }
-
-                    // result.isDismissed → user clicked "Stay"
-                });
-            }
-        );
-    } catch (error) {
-        console.error("Error during initialization:", error);
-        Swal.fire(
-            "Error",
-            "Failed to initialize page. Check console for details.",
-            "error"
-        );
-    } finally {
-        Swal.close();
-    }
-});
+consginment_application();
 
 // ============= attachment =====================
 

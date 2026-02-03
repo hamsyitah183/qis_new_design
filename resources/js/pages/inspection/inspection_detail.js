@@ -67,26 +67,41 @@ async function attachmentTable() {
 
     const permits = application.inspection_items;
     const applicationStatus = application.status;
+    let roles = window.authUser.roles.map((role) => role.name);
 
-    let permitAction = "";
-        // Only Officer can accept/reject item details, Admin can do both
-    if (applicationStatus === "Clerk Verified") {
-      
-        permitAction = `
-       
-             <div class = "d-flex align-items-center justify-content-between w-100 mt-2">
-                    <div class="btn btn-sm btn-primary-light btn-wave accept me-2" data-application="${application.application_id}">
-                        Approved
-                    </div>
-                    <div class="btn btn-sm btn-danger-light btn-wave reject" data-application="${application.application_id}">
-                        Rejected
-                    </div>
+    // ❌ If any permit is rejected → block action
+    const hasRejectedPermit = permits.some(p =>
+        (p.status || '').toLowerCase() === 'rejected'
+    );
+
+    // ✅ Only allow if at least one permit is reapplied / processing
+    const hasAllowedPermit = permits.some(p =>
+        ['reapplied', 'processing'].includes((p.status || '').toLowerCase())
+    );
+
+    let buttonAction = "";
+
+    if (
+        applicationStatus === "Clerk Verified" &&
+        !hasRejectedPermit &&
+        hasAllowedPermit &&
+        (roles.includes("admin") || roles.includes("officer") || roles.includes("superadmin"))
+    ) {
+        buttonAction = `
+            <div class="d-flex align-items-center justify-content-between w-100 mt-2">
+                <div class="btn btn-sm btn-primary-light btn-wave accept me-2"
+                    data-application="${application.application_id}">
+                    Approved
+                </div>
+                <div class="btn btn-sm btn-danger-light btn-wave reject"
+                    data-application="${application.application_id}">
+                    Rejected
+                </div>
             </div>
-          
         `;
-        
-    } else {
-        permitAction = '';
+    }
+    else {
+        buttonAction = '';
     }
 
     if (!permits || permits.length === 0) {
@@ -112,35 +127,13 @@ async function attachmentTable() {
 
         selectedPermits.push(permit.id)
 
-        // let permitAction = "";
-        // // Only Officer can accept/reject item details, Admin can do both
-        // if (applicationStatus === "Clerk Verified") {
-        //     if (
-        //         (
-        //             permit.status === "processing" ||
-        //             permit.status === "submitted" ||
-        //             permit.status === "reapplied"
-        //         ) &&
-        //         (
-        //             roles.includes("admin") ||
-        //             roles.includes("officer") ||
-        //             roles.includes("superadmin")
-        //         )
-        //     ) {
-        //         permitAction = `
-        //             <div class="btn btn-sm btn-primary-light btn-wave accept" data-application="${permit.id}">
-        //                 Approved
-        //             </div>
-        //             <div class="btn btn-sm btn-danger-light btn-wave reject" data-application="${permit.id}">
-        //                 Rejected
-        //             </div>
-        //         `;
-        //     }
-        // }
+        let permitAction = null;
 
         if (permit.status === "rejected" &&
-            (type.includes('public'))) {
+            (type.includes('public'))  &&  (application.user.uuid == window.authUser.uuid) ) {
             permitAction = `<div class = "btn btn-sm btn-danger-light btn-wave reapply"  data-permit = "${permit.id}" >Reapply</div>`
+        } else {
+            permitAction= ``
         }
 
         let permitStatus = "";
@@ -193,6 +186,8 @@ async function attachmentTable() {
                 data-permit="${permit.id}">
                 <i class="ti ti-eye"></i>
             </div>
+
+            ${permitAction}
         
         </div>
     </td>
@@ -200,7 +195,7 @@ async function attachmentTable() {
 `);
     });
 
-    table.append(`${permitAction}`)
+    table.append(`${buttonAction}`)
 }
 async function pendingPaymentTable() {
     console.log("Running attachment table...");
@@ -288,6 +283,7 @@ function acceptPermit() {
                                     );
                                     // Refresh table
                                     initApplicationDetails();
+                                    attachmentTable()
                                 },
                                 error: function (err) {
                                     Swal.fire({
@@ -312,7 +308,8 @@ function rejectPermit() {
         .on("click", ".reject", function (e) {
             e.preventDefault();
 
-            const id = $(this).data("permit");
+            // const id = $(this).data("permit");
+            const id = $(this).data("application");
 
             Swal.fire({
                 title: "Reject Inspection Item",
@@ -350,6 +347,7 @@ function rejectPermit() {
                             "success"
                         );
                         initApplicationDetails();
+                        attachmentTable()
                     },
                     error: function (err) {
                         Swal.fire({

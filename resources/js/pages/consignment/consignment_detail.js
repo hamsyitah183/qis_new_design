@@ -69,6 +69,16 @@ async function attachmentTable() {
 
     const permits = application.consignment_permits;
     const applicationStatus = application.status;
+     // ❌ If any permit is rejected → block action
+     const hasRejectedPermit = permits.some(p =>
+        (p.status || '').toLowerCase() === 'rejected'
+    );
+
+    // ✅ Only allow if at least one permit is reapplied / processing
+    const hasAllowedPermit = permits.some(p =>
+        ['reapplied', 'processing'].includes((p.status || '').toLowerCase())
+    );
+
 
     if (!permits || permits.length === 0) {
         tableBody.append(`
@@ -86,8 +96,12 @@ async function attachmentTable() {
     console.log('roles', roles)
 
     let permitAction = "";
-    if (applicationStatus === "Clerk Verified"  &&
-        (roles.includes("admin") || roles.includes("officer") || roles.includes("superadmin") )) {
+    if (
+        applicationStatus === "Clerk Verified" &&
+        !hasRejectedPermit &&
+        hasAllowedPermit &&
+        (roles.includes("admin") || roles.includes("officer") || roles.includes("superadmin"))
+    ) {
        
         permitAction = `
 
