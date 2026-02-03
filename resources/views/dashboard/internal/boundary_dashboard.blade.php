@@ -84,16 +84,16 @@
                                     @forelse($latestApplications ?? [] as $application)
                                         <tr>
                                             <td>
-                                                <div class="fw-medium">{{ $application['user_name'] }}</div>
+                                                <div class="fw-medium">{{ $application['user']['fullname']  ?? $application['user']['name']}}</div>
                                             </td>
                                             <td>
                                                 <div class="d-flex align-items-center gap-2">
-                                                    @if ($application['type'] == 'Import Permit')
+                                                    @if ($application['application_type'] == 'Import Permit')
                                                         <span
                                                             class="avatar avatar-sm avatar-rounded bg-primary-transparent">
                                                             <i class="ti ti-file-import fs-16"></i>
                                                         </span>
-                                                    @elseif($application['type'] == 'Inspection Certificate')
+                                                    @elseif($application['application_type'] == 'Inspection Certificate')
                                                         <span
                                                             class="avatar avatar-sm avatar-rounded bg-secondary-transparent">
                                                             <i class="ti ti-file-certificate fs-16"></i>
@@ -104,7 +104,7 @@
                                                             <i class="ti ti-file-text fs-16"></i>
                                                         </span>
                                                     @endif
-                                                    <div class="fw-medium">{{ $application['type'] }}</div>
+                                                    <div class="fw-medium">{{ $application['application_type'] }}</div>
                                                 </div>
                                             </td>
                                             <td>
@@ -122,12 +122,12 @@
                                                     class="badge {{ $statusClass }}">{{ $application['status'] }}</span>
                                             </td>
                                             <td>
-                                                @if ($application['type'] == 'Import Permit')
+                                                @if ($application['application_type'] == 'Import Permit')
                                                     <a href="{{ route('viewApplication', $application['application_id']) }}"
                                                         class="btn btn-sm btn-primary-light">
                                                         <i class="ti ti-eye"></i> View
                                                     </a>
-                                                @elseif($application['type'] == 'Inspection Certificate')
+                                                @elseif($application['application_type'] == 'Inspection Certificate')
                                                     <a href="{{ route('inspection.view_details', $application['application_id']) }}"
                                                         class="btn btn-sm btn-primary-light">
                                                         <i class="ti ti-eye"></i> View

@@ -118,6 +118,19 @@ async function attachmentTable() {
         `;
         
        
+    }  else if( applicationStatus === "Completed" &&
+  
+        (roles.includes("admin") || roles.includes("boundary officer") || roles.includes("superadmin")))
+    {
+        permitAction = `
+        <div class="btn btn-sm btn btn-teal-light btn-wave generatePermit mt-2" 
+        data-permit="${application.application_id}"  data-type = "${application.application_type}">
+            Download Permit
+        </div>
+    `;
+    }
+    else {
+        permitAction = '';
     }
 
     permits.forEach((permit, index) => {
@@ -135,7 +148,7 @@ async function attachmentTable() {
 
 
         if( permit.status === "rejected" &&
-            (type.includes('public'))) {
+            (type.includes('public'))  &&  (application.user.uuid == window.authUser.uuid) ) {
             reapplyAction = `<div class = "btn btn-sm btn-danger-light btn-wave reapply"  data-permit = "${permit.id}" >Reapply</div>`
         } else {
             reapplyAction = ``;
@@ -143,13 +156,13 @@ async function attachmentTable() {
 
         
 
-        if (permit.status === "paid") {
-            permitAction = `
-<div class="btn btn-sm btn btn-teal-light btn-wave generatePermit" data-permit="${permit.id}">
-    Download Permit
-</div>
-`;
-        }
+//         if (permit.status === "paid") {
+//             permitAction = `
+// <div class="btn btn-sm btn btn-teal-light btn-wave generatePermit mt-2" data-permit="${application.application_id}">
+//     Download Permit
+// </div>
+// `;
+//         }
 
         let permitStatus = "";
 
@@ -385,7 +398,8 @@ function generatePermit() {
             const id = $(this).data("permit");
 
             // ✅ Trigger browser download
-            window.location.href = `/permit/generate/consignment/${id}`;
+            // window.location.href = `/permit/generate/consignment/${id}`;
+            window.location.href = `/consignment/generate/${id}`;
         });
 }
 
@@ -1376,3 +1390,8 @@ $(document).on("change", "#itemSelect", async function () {
         Swal.close();
     }
 });
+
+export function consignment_application()
+{
+    initApplicationDetails();
+}

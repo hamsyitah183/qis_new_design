@@ -320,6 +320,10 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/permit/generate/{id}', [PermitGenerateController::class, 'generatePermitWord']);
     Route::get('/permit/generate/consignment/{id}', [PermitGenerateController::class, 'generateConsignmentPermitWord']);
 
+    // list down all the inspection
+    Route::get('/inspection/generate/{id}', [PermitGenerateController::class, 'generateInspection']);
+    Route::get('/consignment/generate/{id}', [PermitGenerateController::class, 'generateConsignment']);
+
     Route::get('/payment/{id}/{permitId}/{total}/{type}', [PaymentController::class, 'checkout'])
         ->name('payment.checkout')
         ->middleware('signed');

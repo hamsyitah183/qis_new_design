@@ -100,6 +100,17 @@ async function attachmentTable() {
             </div>
         `;
     }
+    else if( applicationStatus === "Completed" &&
+  
+        (roles.includes("admin") || roles.includes("boundary officer") || roles.includes("superadmin")))
+    {
+        buttonAction = `
+        <div class="btn btn-sm btn btn-teal-light btn-wave generatePermit mt-2" 
+        data-permit="${application.application_id}"  data-type = "${application.application_type}">
+            Download Permit
+        </div>
+    `;
+    }
     else {
         buttonAction = '';
     }
@@ -363,7 +374,33 @@ function rejectPermit() {
         });
 }
 
+function generatePermit() {
+    $(document)
+        .off("click", ".generatePermit")
+        .on("click", ".generatePermit", function (e) {
+            e.preventDefault();
 
+            const id = $(this).data("permit");
+
+            Swal.fire({
+                title: "Generating Permit...",
+                text: "Please wait",
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+            });
+
+            // Small delay so loading is visible
+            setTimeout(() => {
+                window.location.href = `/inspection/generate/${id}`;
+                Swal.close();
+            }, 800);
+        });
+}
+
+
+generatePermit();
 
 async function viewMore() {
     $(document).on("click", ".view-attachment", function (e) {
