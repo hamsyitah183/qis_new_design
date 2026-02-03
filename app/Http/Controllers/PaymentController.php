@@ -568,25 +568,39 @@ class PaymentController extends Controller
     public function cancelPayment(Request $request)
     {
         $request->validate([
-            'permit_ids' => 'required|array',
             'order.order_number' => 'required|string',
         ]);
 
-        $permitIds = $request->permit_ids;
         $orderNumber = $request->input('order.order_number');
 
-        // Delete order (single record)
-        Order::where('order_number', $orderNumber)->delete();
-  
-        // Revert permit statuses
-        IpConsignmentPermit::whereIn('id', $permitIds)->update(['status' => 'pending for payment']);
+        // Retrieve order to determine application type and permit IDs
+        $order = Order::where('order_number', $orderNumber)->first();
+
+        if ($order) {
+            // Extract permit IDs (or item IDs) from the order details
+            // order_details is cast to array, structure: ['permits' => [['permit_id' => ...], ...], ...]
+            $permits = $order->order_details['permits'] ?? [];
+            $permitIds = collect($permits)->pluck('permit_id')->toArray();
+
+            if (!empty($permitIds)) {
+                // Revert permit statuses based on application type
+                match ($order->application_type) {
+                    'Import Permit' => IpConsignmentPermit::whereIn('id', $permitIds)->update(['status' => 'pending for payment']),
+                    'Inspection', 'Inspection Certificate' => InspectionItem::whereIn('id', $permitIds)->update(['status' => 'pending for payment']),
+                    'Consignment Certificate' => ConsignmentPermit::whereIn('id', $permitIds)->update(['status' => 'pending for payment']),
+                    default => null,
+                };
+            }
+
+            // Delete order
+            $order->delete();
+        }
 
         // Clear session flag
         session()->forget('payment_active');
 
         return response()->json([
             'status' => 'cancelled',
-            'permits' => $permitIds,
         ]);
     }
 }

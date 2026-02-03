@@ -134,7 +134,7 @@
 
                 <!-- User Management -->
                 @if (auth('internal')->check())
-                    @if(!auth('internal')->user()->hasRole('finance'))
+                    @if(!auth('internal')->user()->hasRole('finance') && !auth('internal')->user()->hasRole('boundary officer'))
                         {{-- Application Section --}}
                         <li class="slide__category"><span class="category-name">Application</span></li>
 
@@ -315,7 +315,7 @@
                 @endif
 
 
-                @if(!(auth('internal')->check() && auth('internal')->user()->hasRole('finance')))
+                @if(!(auth('internal')->check() && (auth('internal')->user()->hasRole('finance') || auth('internal')->user()->hasRole('boundary officer'))))
                     <li class="slide__category"><span class="category-name">Order</span></li>
 
 
