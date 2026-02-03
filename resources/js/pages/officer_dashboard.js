@@ -11,7 +11,7 @@ function applicationCount()
             $('#ipCount').text(data.ipOfficer)
             $('#icCount').text(data.icOfficer)
             $('#ccCount').text(data.ccOfficer)
-            $("#amount").text('RM ', data.mount)
+            // $("#amount").text('RM ', data.mount)
             $("#pendingCount").text(data.totalReview)
         },
         error: (xhr) => {
@@ -26,3 +26,8 @@ function applicationCount()
 }
 
 applicationCount()
+
+export function officer_dashboard()
+{
+    applicationCount();
+}

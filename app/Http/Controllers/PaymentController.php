@@ -247,21 +247,26 @@ class PaymentController extends Controller
         // Pad running number to 3 digits
         $runningNumber = str_pad($runningNumber, 3, '0', STR_PAD_LEFT);
 
-        // Build order number
-        $orderNumber = 'ORD-' . $request->application_id . '-' . $runningNumber;
-
-        // dd($application['application_type']);
+         // dd($application['application_type']);
         if ($application['application_type'] == 'Import Permit') {
             $itn = 'IT037962';
+            $application_name = 'IP' . $request->application_id;
         } elseif ($application['application_type'] == 'Inspection Certificate') {
             $itn = 'IT549383';
+            $application_name = 'SP' . $request->application_id;
         } elseif ($application['application_type'] == 'Consignment Certificate') {
             // $itn = 'IT037963';
             $itn = 'IT331659';
+            $application_name = 'SK' . $request->application_id;
         } else {
             $itn = 'ITN';
         }
 
+
+        // Build order number
+        $orderNumber = 'QIS-' . $application_name . '-' . $runningNumber;
+
+       
         $sid = 'SE13001C';
 
         // $itn = 'IT037962';
@@ -563,25 +568,39 @@ class PaymentController extends Controller
     public function cancelPayment(Request $request)
     {
         $request->validate([
-            'permit_ids' => 'required|array',
             'order.order_number' => 'required|string',
         ]);
 
-        $permitIds = $request->permit_ids;
         $orderNumber = $request->input('order.order_number');
 
-        // Delete order (single record)
-        Order::where('order_number', $orderNumber)->delete();
+        // Retrieve order to determine application type and permit IDs
+        $order = Order::where('order_number', $orderNumber)->first();
 
-        // Revert permit statuses
-        IpConsignmentPermit::whereIn('id', $permitIds)->update(['status' => 'pending for payment']);
+        if ($order) {
+            // Extract permit IDs (or item IDs) from the order details
+            // order_details is cast to array, structure: ['permits' => [['permit_id' => ...], ...], ...]
+            $permits = $order->order_details['permits'] ?? [];
+            $permitIds = collect($permits)->pluck('permit_id')->toArray();
+
+            if (!empty($permitIds)) {
+                // Revert permit statuses based on application type
+                match ($order->application_type) {
+                    'Import Permit' => IpConsignmentPermit::whereIn('id', $permitIds)->update(['status' => 'pending for payment']),
+                    'Inspection', 'Inspection Certificate' => InspectionItem::whereIn('id', $permitIds)->update(['status' => 'pending for payment']),
+                    'Consignment Certificate' => ConsignmentPermit::whereIn('id', $permitIds)->update(['status' => 'pending for payment']),
+                    default => null,
+                };
+            }
+
+            // Delete order
+            $order->delete();
+        }
 
         // Clear session flag
         session()->forget('payment_active');
 
         return response()->json([
             'status' => 'cancelled',
-            'permits' => $permitIds,
         ]);
     }
 }

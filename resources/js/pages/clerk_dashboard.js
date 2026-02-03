@@ -25,3 +25,9 @@ function applicationCount()
 }
 
 applicationCount()
+
+
+export function clerk_dashboard()
+{
+    applicationCount()
+}

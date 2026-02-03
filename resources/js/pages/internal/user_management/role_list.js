@@ -65,24 +65,24 @@ async function role_list() {
             ajax: "/internal/roles/list/data",
             columns: [
                 { data: "name", name: "name" },
-                {
-                    data: "users",
-                    name: "users",
-                    orderable: false,
-                    searchable: false,
-                },
+                // {
+                //     data: "users",
+                //     name: "users",
+                //     orderable: false,
+                //     searchable: false,
+                // },
                 {
                     data: "permissions",
                     name: "permissions",
                     orderable: false,
                     searchable: false,
                 },
-                {
-                    data: "user_count",
-                    orderable: false,
-                    searchable: false,
-                    visible: false,
-                },
+                // {
+                //     data: "user_count",
+                //     orderable: false,
+                //     searchable: false,
+                //     visible: false,
+                // },
                 {
                     data: "permission_names",
                     orderable: false,

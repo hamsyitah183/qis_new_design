@@ -41,6 +41,8 @@
     @elseif ($role == 'officer')
         @include('dashboard.internal.components.officer_dashboard')
         @vite(['resources/js/pages/officer_dashboard.js'])
+    @elseif ($role == 'boundary officer')
+        @include('dashboard.internal.boundary_dashboard')
     @endif
 
 @endsection

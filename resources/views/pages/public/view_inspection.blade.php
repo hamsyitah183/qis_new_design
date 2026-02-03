@@ -107,7 +107,7 @@
                                     auth()
                                         ->guard('internal')
                                         ->user()
-                                        ->hasAnyRole(['admin', 'clerk']);
+                                        ->hasAnyRole(['admin', 'clerk', 'superadmin']);
 
                                 $isPublic = auth()->guard('public')->check();
                                 $isOwner =

@@ -59,40 +59,44 @@
                             <span class="fw-bold">Amount: </span> RM {{ $order->payment_amount }}
                         </div>
 
-                        <div class="fs-12 text-muted mt-2">
-                            <div class="">
-                                <span class="fw-bold">Application Type: </span> {{ $order->application_type }}
-                            </div>
-                            <div class="mt-2">
-                                <div class="">
-                                    <span class="fw-bold">Name: </span> {{ $user['fullname'] }}
-                                </div>
-                                <div class="">
-                                    <span class="fw-bold">Email: </span> {{ $user['email'] }}
-                                </div>
-                                <div class="">
-                                    <span class="fw-bold">Phone Number: </span> {{ $user['phone_number'] }}
-                                </div>
-                            </div>
-
-                            <div class="mt-2">
-                                <span class="fw-bold">Permits Number: </span>
-                            </div>
-
-                            {{-- @dd($permits) --}}
-                            @foreach ($permits as $item)
-                                {{ $item['permit_number'] }}@if (!$loop->last)
-                                    ,
-                                @endif
-                            @endforeach
-
+                        <div class="table-responsive mt-4">
+                            <table class="table table-borderless table-sm text-start">
+                                <tbody>
+                                    <tr>
+                                        <th scope="row" class="text-nowrap" style="width: 1%;">Application Type:</th>
+                                        <td>{{ $order->application_type }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row" class="text-nowrap">Name:</th>
+                                        <td>{{ $user['fullname'] }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row" class="text-nowrap">Email:</th>
+                                        <td>{{ $user['email'] }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row" class="text-nowrap">Phone Number:</th>
+                                        <td>{{ $user['phone_number'] }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row" class="text-nowrap">Permits Number:</th>
+                                        <td>
+                                            @foreach ($permits as $item)
+                                                {{ $item['permit_number'] }}@if (!$loop->last)
+                                                    ,
+                                                @endif
+                                            @endforeach
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
 
                     </div>
                 </div>
 
                 <div class="mt-4 text-center">
-                    <a href="/order/list" class="btn btn-primary btn-sm fw-medium">Back to main page</a>
+                    <a href="/order/list" class="btn btn-primary btn-sm fw-medium">Back to order list</a>
                 </div>
 
             </div>

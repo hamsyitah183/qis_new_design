@@ -288,3 +288,10 @@ function handleReject(userId, reason, tableInstance, modalIdToHide = null) {
     });
 }
 
+$('#confirmRejectBtn').on('click', function(e) {
+    e.preventDefault()
+    const userId = $('#rejectUserUuid').val();
+    const reason = $('#rejectReason').val();
+    handleReject(userId, reason, verificationTable, 'rejectModal');
+})
+

@@ -22,7 +22,7 @@ use App\Http\Controllers\PermitConsignmentController;
 use App\Http\Controllers\InspectionPermitController;
 use App\Http\Controllers\ConsignmentPermitController;
 use App\Http\Controllers\AdminDashboardController;
-
+use App\Http\Controllers\BoundaryOfficerController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Broadcast;
@@ -236,6 +236,13 @@ Route::prefix('internal')
 
         Route::post('/consignment/{id}', [ConsignmentApplicationController::class, 'accept_permit']);
 
+
+        // BOUNDARY OFFICER
+        Route::get("/boundary/list", [BoundaryOfficerController::class, 'view'])->name('boundary.list');
+        Route::get("/boundary/list/data", [BoundaryOfficerController::class, 'data']);
+        Route::get('/boundary/{id}', [BoundaryOfficerController::class, 'getBoundaryData']);
+        Route::post('/boundary/{id}/save', [BoundaryOfficerController::class, 'saveInternal']);
+        Route::get('/get_entry_point', [PermitApplicationController::class, 'getEntryPoint']);
 
 
         // dashboard

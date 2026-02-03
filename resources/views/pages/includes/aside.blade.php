@@ -134,7 +134,7 @@
 
                 <!-- User Management -->
                 @if (auth('internal')->check())
-                    @if(!auth('internal')->user()->hasRole('finance'))
+                    @if(!auth('internal')->user()->hasRole('finance') && !auth('internal')->user()->hasRole('boundary officer'))
                         {{-- Application Section --}}
                         <li class="slide__category"><span class="category-name">Application</span></li>
 
@@ -268,6 +268,10 @@
                                     <a href="{{ route('internal.internal.role') }}" class="side-menu__item">Role and
                                         Permission</a>
                                 </li>
+
+                                <li class="slide {{ $currentRoute === 'internal.boundary.list' ? 'active' : '' }}">
+                                    <a href="{{ route('internal.boundary.list') }}" class="side-menu__item">Boundary Officer</a>
+                                </li>
                                 @endrole
                             </ul>
                         </li>
@@ -311,7 +315,7 @@
                 @endif
 
 
-                @if(!(auth('internal')->check() && auth('internal')->user()->hasRole('finance')))
+                @if(!(auth('internal')->check() && (auth('internal')->user()->hasRole('finance') || auth('internal')->user()->hasRole('boundary officer'))))
                     <li class="slide__category"><span class="category-name">Order</span></li>
 
 

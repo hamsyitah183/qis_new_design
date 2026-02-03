@@ -25,6 +25,7 @@ use App\Models\District;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Str;
 use App\Events\PublicUserEvent;
+use App\Models\BoundaryOfficer;
 use App\Notifications\ApplicationNotification;
 use App\Services\VerificationService;
 use Illuminate\Support\Facades\Notification;
@@ -476,131 +477,131 @@ class UserController extends Controller
 
     public function internal_user_save(Request $request)
     {
-        $uuid = $request->input('uuid');
-        $actor = authUser()['user']; // person doing the change
-        $url = route('internal.internal.list'); // Link to internal user list (or specific page)
-
-        if ($uuid) {
+        $actor = authUser()['user'];
+        $url = route('internal.internal.list');
+    
+        return DB::transaction(function () use ($request, $actor, $url) {
+    
+            $uuid = $request->input('uuid');
+    
+            if ($uuid) {
+                // =========================
+                // UPDATE USER
+                // =========================
+                $internalUser = InternalUser::where('uuid', $uuid)->firstOrFail();
+    
+                $request->validate([
+                    'fullname' => 'required|string|max:255',
+                    'email' => 'required|email|max:255|unique:internal_users,email,' . $internalUser->id,
+                    'no_ic' => 'required|digits:12|unique:internal_users,no_ic,' . $internalUser->id,
+                    'phone_number' => 'required|digits_between:7,15|unique:internal_users,phone_number,' . $internalUser->id,
+                    'position' => 'required|string|max:255',
+                    'office' => 'required|string|max:255',
+                    'role' => 'required|string',
+                ]);
+    
+                $internalUser->update([
+                    'fullname' => $request->fullname,
+                    'email' => $request->email,
+                    'no_ic' => $request->no_ic,
+                    'phone_number' => $request->phone_number,
+                    'position' => $request->position,
+                    'office' => $request->office,
+                ]);
+    
+                // Sync role
+                $internalUser->syncRoles([$request->role]);
+    
+                // Notify edited user (if not self)
+                if ($internalUser->uuid !== $actor->uuid) {
+                    $internalUser->notify(new InternalUserEditedNotification(
+                        'Your account was updated',
+                        'Your account details were updated by ' . $actor->fullname,
+                        $url
+                    ));
+                }
+    
+                // Notify actor
+                $actor->notify(new InternalUserEditedNotification(
+                    'Account updated',
+                    'You updated ' . $internalUser->fullname . '\'s account',
+                    $url
+                ));
+    
+                // Broadcast
+                try {
+                    event(new InternalUserEdited(
+                        $internalUser->fullname . ' account was edited by ' . $actor->fullname,
+                        $internalUser->uuid
+                    ));
+                } catch (\Exception $e) {
+                    \Log::info('Broadcast failed: ' . $e->getMessage());
+                }
+    
+                return response()->json([
+                    'used_id' => $uuid,
+                    'message' => 'User Updated'
+                ]);
+            }
+    
             // =========================
-            // UPDATE USER
+            // CREATE USER
             // =========================
-            $internalUser = InternalUser::where('uuid', $uuid)->firstOrFail();
-
             $request->validate([
                 'fullname' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:internal_users,email,' . $internalUser->id,
-                'no_ic' => 'required|digits:12|unique:internal_users,no_ic,' . $internalUser->id,
-                'phone_number' => 'required|digits_between:7,15|unique:internal_users,phone_number,' . $internalUser->id,
+                'email' => 'required|email|max:255|unique:internal_users,email',
+                'no_ic' => 'required|digits:12|unique:internal_users,no_ic',
+                'phone_number' => 'required|digits_between:7,15|unique:internal_users,phone_number',
                 'position' => 'required|string|max:255',
                 'office' => 'required|string|max:255',
                 'role' => 'required|string',
             ]);
-
-            $internalUser->update([
+    
+            $internalUser = InternalUser::create([
+                'uuid' => Str::uuid(),
                 'fullname' => $request->fullname,
                 'email' => $request->email,
                 'no_ic' => $request->no_ic,
                 'phone_number' => $request->phone_number,
                 'position' => $request->position,
                 'office' => $request->office,
+                'password' => Hash::make($request->no_ic),
             ]);
-
-            // Sync the user's role (replaces existing roles with the new one)
-            $internalUser->syncRoles([$request->role]);
-
-            /*
-        |----------------------------------------------------------------------
-        | 1️⃣ Notify the USER WHO WAS EDITED
-        |----------------------------------------------------------------------
-        */
-            if ($internalUser->uuid !== $actor->uuid) {
-                $internalUser->notify(new InternalUserEditedNotification(
-                    'Your account was updated',
-                    'Your account details were updated by ' . $actor->fullname,
-                    $url // pass URL
-                ));
+    
+            $internalUser->assignRole($request->role);
+    
+            if ($request->role === 'boundary officer') {
+                BoundaryOfficer::create([
+                    'user_id' => $internalUser->uuid
+                ]);
+    
+                activity()
+                    ->useLog('user_activity')
+                    ->event('created')
+                    ->performedOn($internalUser)
+                    ->causedBy($actor)
+                    ->log("{$internalUser->fullname} is new user for boundary officer.");
             }
-
-            /*
-        |----------------------------------------------------------------------
-        | 2️⃣ Notify the USER WHO DID THE EDIT
-        |----------------------------------------------------------------------
-        */
+    
+            // Notify creator
             $actor->notify(new InternalUserEditedNotification(
-                'Account updated',
-                'You updated ' . $internalUser->fullname . '\'s account',
+                'User created',
+                'You created a new user: ' . $internalUser->fullname,
                 $url
             ));
-
-            /*
-        |----------------------------------------------------------------------
-        | 3️⃣ Broadcast event (for live refresh / toast)
-        |----------------------------------------------------------------------
-        */
+    
             try {
-                event(new InternalUserEdited(
-                    $internalUser->fullname . ' account was edited by ' . $actor->fullname,
-                    $internalUser->uuid
-                ));
+                event(new InternalUserAdded('A new internal user has been added'));
             } catch (\Exception $e) {
-                \Log::info('Failed to broadcast event: ' . $e->getMessage());
+                \Log::info('Broadcast failed: ' . $e->getMessage());
             }
-
+    
             return response()->json([
-                'used_id' => $uuid,
-                'message' => 'User Updated'
+                'used_id' => $internalUser->uuid,
+                'message' => 'User Created'
             ]);
-        }
-
-        // =========================
-        // CREATE USER
-        // =========================
-        $request->validate([
-            'fullname' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:internal_users,email',
-            'no_ic' => 'required|digits:12|unique:internal_users,no_ic',
-            'phone_number' => 'required|digits_between:7,15|unique:internal_users,phone_number',
-            'position' => 'required|string|max:255',
-            'office' => 'required|string|max:255',
-            'role' => 'required|string',
-        ]);
-
-        $internalUser = InternalUser::create([
-            'uuid' => Str::uuid(),
-            'fullname' => $request->fullname,
-            'email' => $request->email,
-            'no_ic' => $request->no_ic,
-            'phone_number' => $request->phone_number,
-            'position' => $request->position,
-            'office' => $request->office,
-            'password' => Hash::make($request->no_ic),
-        ]);
-
-        $internalUser->assignRole($request->role);
-
-        /*
-    |----------------------------------------------------------------------
-    | Notify creator
-    |----------------------------------------------------------------------
-    */
-        $actor->notify(new InternalUserEditedNotification(
-            'User created',
-            'You created a new user: ' . $internalUser->fullname,
-            $url
-        ));
-
-        try {
-            event(new InternalUserAdded('A new internal user has been added'));
-        } catch (\Exception $e) {
-            \Log::info('Failed to broadcast event: ' . $e->getMessage());
-        }
-
-        return response()->json([
-            'used_id' => $internalUser->uuid,
-            'message' => 'User Created'
-        ]);
+        });
     }
-
 
 
     public function user_list($type)

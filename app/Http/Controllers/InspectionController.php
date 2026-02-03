@@ -360,7 +360,8 @@ class InspectionController extends Controller
 
                 $isNewApplication = true;
                 $application = InspectionApplication::create([
-                    'application_id' => Str::uuid(),
+                    // 'application_id' => Str::uuid(),
+                    'application_id' => now()->format('ymd') . random_int(1000, 9999),
                     'eta' => $permit['eta'] ?? null,
                     'transport_type' => $permit['tranType'] ?? null,
                     'entry_point' => $permit['entrypoint'] ?? null,
@@ -467,7 +468,7 @@ class InspectionController extends Controller
             // inspection send notifications
             $notificationUrl = route('public.viewInspectionApplication', ['id' => $application->application_id]);
 
-            $internalUsers = InternalUser::role(['admin', 'clerk'])->get();
+            $internalUsers = InternalUser::role(['admin', 'clerk', 'superadmin'])->get();
             $internalMsg = $isDraft ? ($isNewApplication ? 'New Inspection Certificate draft created' : 'Inspection Certificate draft updated') : ($isNewApplication ? 'New Inspection Certificate application submitted' : 'Inspection Certificate application updated');
 
             Notification::send($internalUsers, new ApplicationNotification($internalMsg, Auth::user()->fullname, $notificationUrl));
@@ -622,7 +623,7 @@ class InspectionController extends Controller
             Log::warning('Pusher connection failed but continuing internal notification: ' . $e->getMessage());
         }
 
-        $internalUsers = InternalUser::role(['admin', 'clerk'])->get();
+        $internalUsers = InternalUser::role(['admin', 'clerk', 'superadmin'])->get();
         Notification::send($internalUsers, new ApplicationNotification($messages['notify'], authUser()['user']->fullname, $notificationUrl));
 
         /**
@@ -645,7 +646,7 @@ class InspectionController extends Controller
 
         // notifications
         $notificationUrl = route('public.viewInspectionApplication', ['id' => $application->application_id]);
-        $internalUsers = InternalUser::role(['admin', 'clerk'])->get();
+        $internalUsers = InternalUser::role(['admin', 'clerk', 'superadmin'])->get();
         $internalMsg = "Inspection application {$application->application_id} has been {$status}";
         Notification::send($internalUsers, new ApplicationNotification($internalMsg, authUser()['user']->fullname, $notificationUrl));
 
@@ -764,7 +765,7 @@ class InspectionController extends Controller
                 ->log(authUser()['user']->fullname . ' deleted inspection application ' . $applicationId);
 
             $notificationUrl = route('public.showallinspectionlist');
-            $internalUsers = InternalUser::role(['admin', 'clerk'])->get();
+            $internalUsers = InternalUser::role(['admin', 'clerk', 'superadmin'])->get();
             Notification::send($internalUsers, new ApplicationNotification("Inspection application {$applicationId} has been deleted", authUser()['user']->fullname, $notificationUrl));
 
             $applicant = PublicUser::where('uuid', $applicantUuid)->first();
@@ -811,7 +812,7 @@ class InspectionController extends Controller
     {
         // Check if user has proper role (Officer or Admin)
         $user = authUser()['user'];
-        if (!$user->hasAnyRole(['officer', 'admin'])) {
+        if (!$user->hasAnyRole(['officer', 'admin', 'superadmin'])) {
             return response()->json(
                 [
                     'status' => 'error',
@@ -821,11 +822,12 @@ class InspectionController extends Controller
             );
         }
 
-        $inspectionItem = \App\Models\InspectionItem::findOrFail($id);
+        // $inspectionItem = \App\Models\InspectionItem::findOrFail($id);
+        $inspectionApplication = InspectionApplication::where('application_id', $id)->first();
 
         // Check if application is in correct status for item-level actions
-        $application = $inspectionItem->application;
-        if (!str_contains(strtolower($application->status), 'clerk verified')) {
+        // $application = $inspectionItem->application;
+        if (!str_contains(strtolower($inspectionApplication->status), 'clerk verified')) {
             return response()->json(
                 [
                     'status' => 'error',
@@ -836,17 +838,27 @@ class InspectionController extends Controller
         }
 
         // Update item status
-        $inspectionItem->permit_number = 'IP' . now()->format('YmdHis');
-        $inspectionItem->status = 'pending for payment';
-        $inspectionItem->save();
+        // $inspectionItem->permit_number = 'SP/' . now()->format('ymd') . rand(1000, 9999);
+        // $inspectionItem->status = 'pending for payment';
+        // $inspectionItem->save();
 
-        $detail = $inspectionItem->consignment_detail;
-        $itemName = $detail['item_name'] ?? 'Item';
+        // $detail = $inspectionItem->consignment_detail;
+        // $itemName = $detail['item_name'] ?? 'Item';
+
+        // find all items
+        $items = $inspectionApplication->inspectionItems;
+
+        foreach($items as $item) {
+            $item->permit_number = 'SP/' . now()->format('ymd') . rand(1000, 9999);
+            $item->status = 'pending for payment';
+            $item->save();
+        }
+      
 
         // Log the activity
-        $application->logActivity(
+        $inspectionApplication->logActivity(
             action: 'Item Accepted',
-            remark: "Inspection item '{$itemName}' accepted by officer",
+            remark: "All Inspection Item are accepted",
             status: 'Item Accepted'
         );
 
@@ -857,22 +869,21 @@ class InspectionController extends Controller
             })
             ->event('item_accepted')
             ->causedBy($user)
-            ->performedOn($application)
+            ->performedOn($inspectionApplication)
             ->withProperties([
-                'application_id' => $application->application_id,
-                'item_id' => $id,
-                'item_name' => $itemName,
+                'application_id' => $inspectionApplication->application_id,
+               
                 'status' => 'Item Accepted',
                 'user' => [
                     'name' => $user->fullname ?? 'Unknown',
                     'email' => $user->email ?? 'N/A',
                 ],
             ])
-            ->log($user->fullname . " accepted inspection item '{$itemName}'");
+            ->log($user->fullname . " accepted inspection item '");
 
         // Notifications
-        $notificationUrl = route('public.viewInspectionApplication', ['id' => $application->application_id]);
-        $msg = "Inspection item '{$itemName}' has been accepted";
+        $notificationUrl = route('public.viewInspectionApplication', ['id' => $inspectionApplication->application_id]);
+        $msg = "All Inspection item has been accepted";
 
         // Internal Notification
         try {
@@ -882,11 +893,11 @@ class InspectionController extends Controller
             Log::warning('Pusher connection failed: ' . $e->getMessage());
         }
 
-        $internalUsers = InternalUser::role(['admin', 'clerk'])->get();
+        $internalUsers = InternalUser::role(['admin', 'clerk', 'superadmin'])->get();
         Notification::send($internalUsers, new ApplicationNotification($msg, $user->fullname, $notificationUrl));
 
         // Public Notification
-        $publicUser = PublicUser::where('uuid', $application->user_id)->first();
+        $publicUser = PublicUser::where('uuid', $inspectionApplication->user_id)->first();
         if ($publicUser) {
             try {
                 event(new PublicUserEvent($msg, $publicUser->uuid));
@@ -897,15 +908,15 @@ class InspectionController extends Controller
         }
 
         // Check if all items are processed (either approved or rejected)
-        $allItemsProcessed = $application->inspectionItems->every(function ($item) {
+        $allItemsProcessed = $inspectionApplication->inspectionItems->every(function ($item) {
             return in_array($item->status, ['pending for payment', 'rejected']);
         });
 
         if ($allItemsProcessed) {
-            $application->status = 'Officer Verification Completed';
-            $application->save();
+            $inspectionApplication->status = 'Officer Verification Completed';
+            $inspectionApplication->save();
 
-            $application->logActivity(
+            $inspectionApplication->logActivity(
                 action: 'Officer Verification Completed',
                 remark: 'All inspection items processed',
                 status: 'Officer Verification Completed'
@@ -922,7 +933,7 @@ class InspectionController extends Controller
     {
         // Check if user has proper role (Officer or Admin)
         $user = authUser()['user'];
-        if (!$user->hasAnyRole(['officer', 'admin'])) {
+        if (!$user->hasAnyRole(['officer', 'admin', 'superadmin'])) {
             return response()->json(
                 [
                     'status' => 'error',
@@ -998,7 +1009,7 @@ class InspectionController extends Controller
             Log::warning('Pusher connection failed: ' . $e->getMessage());
         }
 
-        $internalUsers = InternalUser::role(['admin', 'clerk'])->get();
+        $internalUsers = InternalUser::role(['admin', 'clerk', 'superadmin'])->get();
         Notification::send($internalUsers, new ApplicationNotification($msg, $user->fullname, $notificationUrl));
 
         // Public Notification
