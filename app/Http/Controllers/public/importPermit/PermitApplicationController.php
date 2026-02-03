@@ -318,7 +318,8 @@ class PermitApplicationController extends Controller
                 $status = $isDraft ? 'Draft' : ((int) ($permit['applCate'] ?? 0) === 1 ? 'Awaiting Approval' : 'Clerk Review In-Progress');
                 $isNewApplication = true;
                 $application = IpApplication::create([
-                    'application_id' => Str::uuid(),
+                    'application_id' => now()->format('ymd') . random_int(1000, 9999),
+
                     'eta' => $permit['eta'] ?? null,
                     'transport_type' => $permit['tranType'] ?? null,
                     'entry_point' => $permit['entrypoint'] ?? null,

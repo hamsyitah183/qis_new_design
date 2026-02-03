@@ -247,21 +247,26 @@ class PaymentController extends Controller
         // Pad running number to 3 digits
         $runningNumber = str_pad($runningNumber, 3, '0', STR_PAD_LEFT);
 
-        // Build order number
-        $orderNumber = 'ORD-' . $request->application_id . '-' . $runningNumber;
-
-        // dd($application['application_type']);
+         // dd($application['application_type']);
         if ($application['application_type'] == 'Import Permit') {
             $itn = 'IT037962';
+            $application_name = 'IP' . $request->application_id;
         } elseif ($application['application_type'] == 'Inspection Certificate') {
             $itn = 'IT549383';
+            $application_name = 'SP' . $request->application_id;
         } elseif ($application['application_type'] == 'Consignment Certificate') {
             // $itn = 'IT037963';
             $itn = 'IT331659';
+            $application_name = 'SK' . $request->application_id;
         } else {
             $itn = 'ITN';
         }
 
+
+        // Build order number
+        $orderNumber = 'QIS-' . $application_name . '-' . $runningNumber;
+
+       
         $sid = 'SE13001C';
 
         // $itn = 'IT037962';
@@ -572,7 +577,7 @@ class PaymentController extends Controller
 
         // Delete order (single record)
         Order::where('order_number', $orderNumber)->delete();
-
+  
         // Revert permit statuses
         IpConsignmentPermit::whereIn('id', $permitIds)->update(['status' => 'pending for payment']);
 

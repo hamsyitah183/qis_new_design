@@ -23,18 +23,11 @@
                                             <table id="summaryTable4" class="table text-nowrap">
                                                 <thead class="table-success">
                                                     <tr>
-                                                        <th scope = "col">
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="checkbox"
-                                                                    value="" id="checkAllPermits">
-
-                                                            </div>
-                                                        </th>
+                                                      
                                                         <th scope="col">Permit Number</th>
                                                         <th scope="col">Item Name</th>
 
-                                                        <th scope="col">Value</th>
-
+                                                      
 
 
                                                     </tr>
@@ -64,7 +57,7 @@
 
         <div class="col-xl-12">
             <div class="d-flex justify-content-end">
-                <button class="btn btn-primary" id="checkoutPage" disabled>
+                <button class="btn btn-primary" id="checkoutPage">
                     Go To Checkout
                 </button>
             </div>
