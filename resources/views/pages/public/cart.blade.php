@@ -149,9 +149,9 @@
                                                     Item Name
                                                 </th>
 
-                                                <th class = "text-center">
+                                                {{-- <th class = "text-center">
                                                     Total Price (RM)
-                                                </th>
+                                                </th> --}}
 
                                             </tr>
                                         </thead>
@@ -201,11 +201,11 @@
                                                         </div>
                                                     </td>
 
-                                                    <td>
+                                                    {{-- <td>
                                                         <div class="fw-semibold fs-14 text-center">
                                                             RM 30
                                                         </div>
-                                                    </td>
+                                                    </td> --}}
                                                 </tr>
                                             @endforeach
 
