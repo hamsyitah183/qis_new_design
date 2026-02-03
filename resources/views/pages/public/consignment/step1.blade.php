@@ -5,15 +5,15 @@
                 <h6 class="mb-3">Consignment Details :</h6>
                 <div class="row gy-3 mb-3">
                     <div class="col-xl-6">
-                        <label for="eta" class="form-label">Estimated Time Arrival</label>
+                        <label for="eta" class="form-label">Estimated Time Arrival <a style="color:red"> * </a></label>
                         <input type="date" class="form-control " id="eta" name="eta" required>
                     </div>
                 </div>
                 <div class="row gy-3">
                     <div class="col-xl-6">
-                        <label for="trnptType" class="form-label">Transport Type</label>
-                        <select class="form-select" id="trnptType" name="trnptType"
-                            data-route="/public/get_entry_point" required>
+                        <label for="trnptType" class="form-label">Transport Type <a style="color:red"> * </a></label>
+                        <select class="form-select" id="trnptType" name="trnptType" data-route="/public/get_entry_point"
+                            required>
                             <option value="">-- Select Transport --</option>
                             <option value="Air">Air</option>
                             <option value="Sea">Sea</option>
@@ -21,8 +21,8 @@
                         </select>
                     </div>
                     <div class="col-xl-6">
-                        <label for="entryPoint" class="form-label">Entry Point</label>
-                        <select class="form-select" id="entryPoint" name="entryPoint"required>
+                        <label for="entryPoint" class="form-label">Entry Point<a style="color:red"> * </a></label>
+                        <select class="form-select" id="entryPoint" name="entryPoint" required>
                             <option value="">-- Select Entry Point --</option>
 
                         </select>
