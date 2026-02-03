@@ -110,7 +110,7 @@
                         <ul class="slide-menu child1">
 
                             <li class="slide">
-                                <a href="{{ route('public.verifyapplication') }}" class="side-menu__item">To Review</a>
+                                <a href="{{ route('public.verifyapplication') }}" class="side-menu__item" id="toReviewCount">To Review</a>
                             </li>
 
                             <li class="slide">

@@ -6,9 +6,11 @@ use App\Events\ApplicationCreatedInternalUser;
 use App\Events\ApplicationCreatedPublicUser;
 use App\Events\ApplicationDeleted;
 use App\Events\PublicUserEvent;
+use App\Models\ConsignmentApplication;
 use App\Models\ConsignmentImporter;
 use App\Models\Country;
 use App\Models\Exporter;
+use App\Models\InspectionApplication;
 use App\Models\InternalUser;
 use App\Models\IpApplication;
 use App\Models\IpConsignmentAttachment;
@@ -24,7 +26,6 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
-
 
 class ApplicationController extends Controller
 {
@@ -54,20 +55,12 @@ class ApplicationController extends Controller
         $userUuid = authUser()['user']->uuid;
         $type = authUser()['type'];
 
-        $query = IpApplication::with([
-            'user',
-            'importer',
-            'exporter',
-            'entryPoint.districtCode',
-            'latestLog.causer',
-        ]);
-
+        $query = IpApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode', 'latestLog.causer']);
 
         // Filter for public users
         if ($type === 'public') {
             $query->where(function ($q) use ($userUuid) {
-                $q->where('user_id', $userUuid)
-                    ->orWhere('importer_id', $userUuid);
+                $q->where('user_id', $userUuid)->orWhere('importer_id', $userUuid);
             });
         }
 
@@ -76,61 +69,45 @@ class ApplicationController extends Controller
             ->addColumn('importer', fn($row) => $row->importer->fullname ?? '-')
             ->addColumn('exporter', fn($row) => $row->exporter->name ?? '-')
             ->addColumn('status', function ($row) {
-
                 $status = strtolower($row->status ?? 'pending');
 
                 $latestLog = $row->latestLog;
                 $id = $row->application_id;
 
-                $latestTime = $latestLog?->updated_at
-                        ?->format('d M Y, h:i A') ?? '-';
+                $latestTime = $latestLog?->updated_at?->format('d M Y, h:i A') ?? '-';
 
                 $causerName = $latestLog?->causer?->fullname ?? '-';
 
                 return match (true) {
+                    str_contains($status, 'pending') => $this->badge('warning', 'Pending', $latestTime, $causerName, $id),
 
-                    str_contains($status, 'pending') =>
-                    $this->badge('warning', 'Pending', $latestTime, $causerName, $id),
+                    str_contains($status, 'rejected') => $this->badge('danger', 'Rejected', $latestTime, $causerName, $id),
 
-                    str_contains($status, 'rejected') =>
-                    $this->badge('danger', 'Rejected', $latestTime, $causerName, $id),
+                    str_contains($status, 'not approved') => $this->badge('danger', 'Not Approved', $latestTime, $causerName, $id),
 
-                    str_contains($status, 'not approved') =>
-                    $this->badge('danger', 'Not Approved', $latestTime, $causerName, $id),
+                    str_contains($status, 'accepted') => $this->badge('success', 'Accepted', $latestTime, $causerName, $id),
 
-                    str_contains($status, 'accepted') =>
-                    $this->badge('success', 'Accepted', $latestTime, $causerName, $id),
+                    str_contains($status, 'officer verification completed') => $this->badge('success', 'Officer Verification Completed', $latestTime, $causerName, $id),
 
-                    str_contains($status, 'officer verification completed') =>
-                    $this->badge('success', 'Officer Verification Completed', $latestTime, $causerName, $id),
+                    str_contains($status, 'clerk verified') => $this->badge('info', 'Clerk Verified', $latestTime, $causerName, $id),
 
-                    str_contains($status, 'clerk verified') =>
-                    $this->badge('info', 'Clerk Verified', $latestTime, $causerName, $id),
-
-                    default =>
-                    '<span class="badge bg-secondary fs-12 p-1  activityLog"  data-log = "' . $id . '">'
-                    . ucfirst($status) .
-                    '</span>',
+                    default => '<span class="badge bg-secondary fs-12 p-1  activityLog"  data-log = "' . $id . '">' . ucfirst($status) . '</span>',
                 };
             })
-
 
             ->addColumn('permit_status', function ($row) {
                 // Map statuses to colors
                 $statusColors = [
                     'processing' => 'bg-info', // blue
-    
+
                     'pending for payment' => 'bg-warning', // green
-                    'rejected' => 'bg-danger',  // red
+                    'rejected' => 'bg-danger', // red
                     // 'completed'  => 'bg-success', // green
                     'paid' => 'bg-success', // green
-    
                 ];
 
                 // Get all permit statuses for this row, lowercase
-                $permit_statuses = $row->consignmentPermits->pluck('status')
-                    ->map(fn($status) => strtolower($status))
-                    ->toArray();
+                $permit_statuses = $row->consignmentPermits->pluck('status')->map(fn($status) => strtolower($status))->toArray();
 
                 // Count how many of each status
                 $statusCounts = [
@@ -138,7 +115,6 @@ class ApplicationController extends Controller
                     'rejected' => 0,
                     'pending for payment' => 0,
                     'paid' => 0,
-
                 ];
 
                 foreach ($permit_statuses as $status) {
@@ -151,30 +127,41 @@ class ApplicationController extends Controller
                 $boxesHtml = '';
                 foreach ($statusColors as $status => $color) {
                     $count = $statusCounts[$status] ?? 0;
-                    $boxesHtml .= '<div class="badge ' . $color . ' text-white text-center"  data-bs-toggle="tooltip"
-                            data-bs-placement="top" title="' . $status . '"
+                    $boxesHtml .=
+                        '<div class="badge ' .
+                        $color .
+                        ' text-white text-center"  data-bs-toggle="tooltip"
+                            data-bs-placement="top" title="' .
+                        $status .
+                        '"
                            style="height:20px; width:20px; display:inline-flex; align-items:center; justify-content:center; margin-right:5px;">
-                           ' . $count . '
+                           ' .
+                        $count .
+                        '
                        </div>';
                 }
 
                 return $boxesHtml;
             })
 
-
-
             ->addColumn('action', function ($row) {
                 $url = '/view_application/' . $row->application_id;
 
-                $view = '<a class="btn btn-sm btn-primary viewApplication" href="' . $url . '">
+                $view =
+                    '<a class="btn btn-sm btn-primary viewApplication" href="' .
+                    $url .
+                    '">
                         <i class="ti ti-eye"></i>
                      </a>';
 
                 $delete = '';
 
                 if (authUser()['type'] === 'internal') {
-                    $delete = '<button class="btn btn-sm btn-danger deleteApplication"
-                            data-id="' . $row->application_id . '">
+                    $delete =
+                        '<button class="btn btn-sm btn-danger deleteApplication"
+                            data-id="' .
+                        $row->application_id .
+                        '">
                             <i class="ti ti-trash"></i>
                            </button>';
                 }
@@ -182,81 +169,208 @@ class ApplicationController extends Controller
                 return $view . ' ' . $delete;
             });
 
-
         if ($type === 'internal') {
             $datatable->addColumn('submitted_by', fn($row) => $row->user->fullname ?? '-');
         }
 
-        return $datatable
-            ->rawColumns(['status', 'action', 'permit_status'])
-            ->make(true);
+        return $datatable->rawColumns(['status', 'action', 'permit_status'])->make(true);
     }
 
     private function badge($color, $label, $time, $user, $id)
     {
         return '
-        <span class="badge bg-' . $color . ' fs-12 p-1 activityLog"  data-log = ' . $id . '
-         >' . $label . '</span>
+        <span class="badge bg-' .
+            $color .
+            ' fs-12 p-1 activityLog"  data-log = ' .
+            $id .
+            '
+         >' .
+            $label .
+            '</span>
         <br class = "mt-1">
-        <small class="text-muted">at ' . $time . '</small><br>
-        <small class="text-muted">by ' . e($user) . '</small>
+        <small class="text-muted">at ' .
+            $time .
+            '</small><br>
+        <small class="text-muted">by ' .
+            e($user) .
+            '</small>
     ';
     }
-
-
 
     public function getAllReviewapplicationList()
     {
         $userUuid = authUser()['user']->uuid;
         $type = authUser()['type'];
 
-        $query = IpApplication::with([
-            'user',
-            'importer',
-            'exporter',
-            'entryPoint.districtCode',
-        ]);
+        // Import Permit
+        $ip = IpApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode'])
+        ->whereIn('status', [
+            'awaiting approval',
+            'wait for company approval',
+        ])
+        ->when($type === 'public', function ($q) use ($userUuid) {
+            $q->where('category_application', 1)
+              ->where('importer_id', $userUuid);
+        })
+        ->get()
+        ->map(function ($item) {
+            $item->application_source = 'import_permit';
+            $item->url = '/view_application/' . $item->application_id;
+            return $item;
+        });
+    
 
-        if ($type === 'public') {
-            $query->where(function ($q) use ($userUuid) {
-                $q->where('category_application', 1)
-                    ->where('importer_id', $userUuid);
-            });
-        }
+        // Consignment
+        $consignment = ConsignmentApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode'])
+        ->whereIn('status', [
+            'awaiting approval',
+            'wait for company approval',
+        ])
+        ->when($type === 'public', function ($q) use ($userUuid) {
+            $q->where('category_application', 1)
+              ->where('exporter_id', $userUuid);
+        })
+        ->get()
+        ->map(function ($item) {
+            $item->application_source = 'consignment';
+            $item->url = '/view_consignment/' . $item->application_id;
+            return $item;
+        });
+    
 
-        return DataTables::of($query)
+        // Inspection
+        $inspection = InspectionApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode'])
+        ->whereIn('status', [
+            'awaiting approval',
+            'wait for company approval',
+        ])
+        ->when($type === 'public', function ($q) use ($userUuid) {
+            $q->where('category_application', 1)
+              ->where('importer_id', $userUuid);
+        })
+        ->get()
+        ->map(function ($item) {
+            $item->application_source = 'inspection';
+            $item->url = '/view_inspection_certificates/' . $item->application_id;
+            return $item;
+        });
+    
+
+        // ✅ Merge everything
+        $applications = collect()->merge($ip)->merge($consignment)->merge($inspection)->sortByDesc('created_at')->values();
+
+        return DataTables::of($applications)
             ->addIndexColumn()
-            ->addColumn('importer', fn($row) => $row->importer->fullname ?? '-')
-            ->addColumn('exporter', fn($row) => $row->exporter->name ?? '-')
-            ->addColumn('submitted_by', fn($row) => $row->user->fullname ?? '-')
-            ->addColumn('importer_type', function ($row) {
-                $type = $row->category_application == 1 ? 'Others' : 'Self';
-                return '<span class="badge bg-primary-transparent fs-13 p-1">' . $type . '</span>';
+
+            ->addColumn('application_type', function ($row) {
+                return match ($row->application_source) {
+                    'import_permit' => '<span class="badge bg-info">Import Permit</span>',
+                    'consignment' => '<span class="badge bg-warning">Consignment</span>',
+                    'inspection' => '<span class="badge bg-success">Inspection</span>',
+                };
             })
-            ->addColumn('date', fn($row) => $row->eta ? $row->eta->format('Y-m-d') : '-')
+
+            ->addColumn('importer', fn($row) => $row->importer?->fullname ?? ($row->importer?->name ?? '-'))
+
+            ->addColumn('exporter', fn($row) => $row->exporter?->name ??( $row->exporter?->fullname ?? '-'))
+            ->addColumn('submitted_by', fn($row) => $row->user?->fullname ?? '-')
+
+            // ->addColumn('importer_type', function ($row) {
+            //     $type = $row->category_application == 1 ? 'Others' : 'Self';
+            //     return '<span class="badge bg-primary-transparent fs-13 p-1">' . $type . '</span>';
+            // })
+
+            // ->addColumn('date', fn($row) => $row->eta ? $row->eta->format('Y-m-d') : '-')
+
             ->addColumn('status', function ($row) {
                 $status = strtolower($row->status ?? 'pending');
 
                 return match (true) {
-                    str_contains($status, 'pending') => '<span class="badge bg-warning fs-13 p-1">Pending</span>',
-                    str_contains($status, 'rejected') => '<span class="badge bg-danger fs-13 p-1">Rejected</span>',
-                    str_contains($status, 'success') => '<span class="badge bg-success fs-13 p-1">Success</span>',
-                    default => '<span class="badge bg-secondary fs-13 p-1">' . ucfirst($status) . '</span>',
+                    str_contains($status, 'pending') => '<span class="badge bg-warning fs-11 p-2">Pending</span>',
+                    str_contains($status, 'rejected') => '<span class="badge bg-danger fs-11 p-2">Rejected</span>',
+                    str_contains($status, 'approved'), str_contains($status, 'success') => '<span class="badge bg-success fs-11 p-2">Approved</span>',
+                    default => '<span class="badge bg-secondary fs-11 p-2">' . ucfirst($status) . '</span>',
                 };
             })
+
             ->addColumn('action', function ($row) {
-                $url = '/view_application/' . $row->application_id;
-                return '<a class="btn btn-sm btn-primary viewApplication" href="' . $url . '">View</a>';
+                return '<a class="btn btn-sm btn-primary viewApplication"
+                            href="' .
+                    $row->url .
+                    '">
+                            View
+                        </a>';
             })
 
-            ->rawColumns(['status', 'importer_type', 'action'])
+            ->rawColumns(['status', 'importer_type', 'action', 'application_type'])
+            ->make(true);
+    }
+
+    public function getAllAgentApplicationList()
+    {
+        $userUuid = authUser()['user']->uuid;
+        $type = authUser()['type'];
+
+        $ip = IpApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode']) ->when($type === 'public', function ($q) use ($userUuid) { $q->where('category_application', 1)->where('importer_id', $userUuid); }) ->get() ->map(function ($item) { $item->application_source = 'import_permit'; $item->url = '/view_application/' . $item->application_id; return $item; }); 
+        // Consignment $consignment = 
+        $consignment = ConsignmentApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode']) ->when($type === 'public', function ($q) use ($userUuid) { $q->where('category_application', 1)->where('exporter_id', $userUuid); }) ->get() ->map(function ($item) { $item->application_source = 'consignment'; $item->url = '/view_consignment/' . $item->application_id; return $item; }); 
+        // Inspection $inspection = 
+        $inspection = InspectionApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode']) ->when($type === 'public', function ($q) use ($userUuid) { $q->where('category_application', 1)->where('importer_id', $userUuid); }) ->get() ->map(function ($item) { $item->application_source = 'inspection'; $item->url = '/view_inspection_certificates/' . $item->application_id; return $item; });
+    
+
+        // ✅ Merge everything
+        $applications = collect()->merge($ip)->merge($consignment)->merge($inspection)->sortByDesc('created_at')->values();
+
+        return DataTables::of($applications)
+            ->addIndexColumn()
+
+            ->addColumn('application_type', function ($row) {
+                return match ($row->application_source) {
+                    'import_permit' => '<span class="badge bg-info">Import Permit</span>',
+                    'consignment' => '<span class="badge bg-warning">Consignment</span>',
+                    'inspection' => '<span class="badge bg-success">Inspection</span>',
+                };
+            })
+
+            ->addColumn('importer', fn($row) => $row->importer?->fullname ?? ($row->importer?->name ?? '-'))
+
+            ->addColumn('exporter', fn($row) => $row->exporter?->name ??( $row->exporter?->fullname ?? '-'))
+            ->addColumn('submitted_by', fn($row) => $row->user?->fullname ?? '-')
+
+            // ->addColumn('importer_type', function ($row) {
+            //     $type = $row->category_application == 1 ? 'Others' : 'Self';
+            //     return '<span class="badge bg-primary-transparent fs-13 p-1">' . $type . '</span>';
+            // })
+
+            // ->addColumn('date', fn($row) => $row->eta ? $row->eta->format('Y-m-d') : '-')
+
+            ->addColumn('status', function ($row) {
+                $status = strtolower($row->status ?? 'pending');
+
+                return match (true) {
+                    str_contains($status, 'pending') => '<span class="badge bg-warning fs-11 p-2">Pending</span>',
+                    str_contains($status, 'rejected') => '<span class="badge bg-danger fs-11 p-2">Rejected</span>',
+                    str_contains($status, 'approved'), str_contains($status, 'success') => '<span class="badge bg-success fs-11 p-2">Approved</span>',
+                    default => '<span class="badge bg-secondary fs-11 p-2">' . ucfirst($status) . '</span>',
+                };
+            })
+
+            ->addColumn('action', function ($row) {
+                return '<a class="btn btn-sm btn-primary viewApplication"
+                            href="' .
+                    $row->url .
+                    '">
+                            View
+                        </a>';
+            })
+
+            ->rawColumns(['status', 'importer_type', 'action', 'application_type'])
             ->make(true);
     }
 
     public function deleteApplication($id)
     {
         return DB::transaction(function () use ($id) {
-
             $application = IpApplication::where('application_id', $id)->firstOrFail();
 
             $consignments = IpConsignmentPermit::where('application_id', $application->id)->get();
@@ -292,40 +406,57 @@ class ApplicationController extends Controller
                 // Events & notifications
                 event(new ApplicationDeleted('Application with ID ' . $id . ' has been deleted.'));
 
-                event(new PublicUserEvent(
-                    'Your Application with ID ' . $id . ' has been deleted.',
-                    $user->uuid
-                ));
+                event(new PublicUserEvent('Your Application with ID ' . $id . ' has been deleted.', $user->uuid));
             } catch (\Exception $e) {
                 Log::warning('Pusher connection failed but continuing application deletion: ' . $e->getMessage());
             }
 
-            Notification::send($user, new ApplicationNotification(
-                'Import Application with ID ' . $id . ' has been deleted.',
-                authUser()['user']->fullname
-            ));
+            Notification::send($user, new ApplicationNotification('Import Application with ID ' . $id . ' has been deleted.', authUser()['user']->fullname));
 
             return response()->json([
-                'message' => 'Application and all attachments deleted successfully.'
+                'message' => 'Application and all attachments deleted successfully.',
             ]);
         });
     }
 
-
-
     public function verifyapplication()
     {
-        $application = IpApplication::with([
-            'user',         // submitted by
-            'importer',     // importer user
-            'exporter',       // exporter record
-            'entryPoint.districtCode'
-        ])
-            ->where('importer_id', auth()->id())
-            ->where('category_application', true)
-            ->get();
+        $userId = auth()->id();
 
-        return view('pages.public.application_review_list', compact('application'));
+        // Import Permit
+        $ipApplications = IpApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode', 'latestLog'])
+            ->where('importer_id', $userId)
+            ->where('category_application', true)
+            ->get()
+            ->map(function ($item) {
+                $item->application_source = 'import_permit';
+                return $item;
+            });
+
+        // Consignment
+        $consignmentApplications = ConsignmentApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode', 'latestLog'])
+            ->where('importer_id', $userId)
+            ->where('category_application', true)
+            ->get()
+            ->map(function ($item) {
+                $item->application_source = 'consignment';
+                return $item;
+            });
+
+        // Inspection
+        $inspectionApplications = InspectionApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode', 'latestLog'])
+            ->where('importer_id', $userId)
+            ->where('category_application', true)
+            ->get()
+            ->map(function ($item) {
+                $item->application_source = 'inspection';
+                return $item;
+            });
+
+        // ✅ Combine all
+        $applications = $ipApplications->merge($consignmentApplications)->merge($inspectionApplications)->sortByDesc('created_at')->values();
+
+        return view('pages.public.application_review_list', compact('applications'));
     }
 
     public function viewapplication($uuid)
@@ -333,24 +464,21 @@ class ApplicationController extends Controller
         // Artisan::call('bayupay:check-pending');
 
         $application = IpApplication::with([
-            'user',         // submitted by
-            'importer',     // importer user
-            'exporter',       // exporter record
+            'user', // submitted by
+            'importer', // importer user
+            'exporter', // exporter record
             // 'exporter.country',
-            'entryPoint.districtCode'
+            'entryPoint.districtCode',
         ])
             ->where('application_id', $uuid)
             ->orderBy('created_at', 'desc')
             ->firstOrFail();
 
         $itemId = $application->id;
-        
+
         // dd($application->consignmentPermits);
 
-        $consignment = IpConsignmentPermit::with([
-            'unit',
-            'purposeCode'
-        ])
+        $consignment = IpConsignmentPermit::with(['unit', 'purposeCode'])
             ->where('application_id', $itemId)
             ->get();
 
@@ -365,20 +493,19 @@ class ApplicationController extends Controller
             'consignment' => $consignment,
             'pubmeasure' => $pubmeasure,
             'pubpurpose' => $pubpurpose,
-            'country' => $country
+            'country' => $country,
             // 'consignmentDetails' => $consignment[0]->attachments
         ]); //, 'consignment', 'attachment'
     }
     public function editApplication($uuid)
     {
-
         $application = IpApplication::with([
-            'user',         // submitted by
-            'importer',     // importer user
-            'exporter',       // exporter record
+            'user', // submitted by
+            'importer', // importer user
+            'exporter', // exporter record
             // 'exporter.country',
             'entryPoint.districtCode',
-            'consignmentPermits.attachments'
+            'consignmentPermits.attachments',
         ])
             ->where('application_id', $uuid)
             ->orderBy('created_at', 'desc')
@@ -392,13 +519,9 @@ class ApplicationController extends Controller
 
         // dd($application->consignmentPermits);
 
-        $consignment = IpConsignmentPermit::with([
-            'unit',
-            'purposeCode'
-        ])
+        $consignment = IpConsignmentPermit::with(['unit', 'purposeCode'])
             ->where('application_id', $itemId)
             ->get();
-
 
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
@@ -408,31 +531,22 @@ class ApplicationController extends Controller
 
     public function modalspeItem($id)
     {
-        $cons = IpConsignmentPermit::with(['attachments'])
-            ->findOrFail($id);
+        $cons = IpConsignmentPermit::with(['attachments'])->findOrFail($id);
 
         return response()->json([
             'status' => 'success',
-            'data' => $cons
+            'data' => $cons,
         ]);
     }
 
-
     public function getApplicationDetails($id)
     {
-        $type = authUser()['type'];   // 'public' or 'internal'
-        $user = authUser()['user'];   // authenticated user object
+        $type = authUser()['type']; // 'public' or 'internal'
+        $user = authUser()['user']; // authenticated user object
 
         // Fetch application and eager load relationships
         $application = IpApplication::where('application_id', $id)
-            ->with([
-                'user',
-                'importer',
-                'exporter.countryInfo',
-                'entryPoint.districtCode',
-                'consignmentPermits.attachments',
-                'activity_log.causer'
-            ])
+            ->with(['user', 'importer', 'exporter.countryInfo', 'entryPoint.districtCode', 'consignmentPermits.attachments', 'activity_log.causer'])
             ->firstOrFail();
 
         if ($type === 'internal') {
@@ -442,18 +556,24 @@ class ApplicationController extends Controller
         if ($type === 'public') {
             // Check if user is either the submitter or the importer
             if ($application->user_id !== $user->uuid && $application->importer_id !== $user->uuid) {
-                return response()->json([
-                    'message' => 'You do not have authority to view this application'
-                ], 403);
+                return response()->json(
+                    [
+                        'message' => 'You do not have authority to view this application',
+                    ],
+                    403,
+                );
             }
 
             return response()->json($application);
         }
 
         // Default fallback
-        return response()->json([
-            'message' => 'User type not recognized'
-        ], 400);
+        return response()->json(
+            [
+                'message' => 'User type not recognized',
+            ],
+            400,
+        );
     }
 
     public function verify_application_permit($id, Request $request)
@@ -492,70 +612,49 @@ class ApplicationController extends Controller
          * =====================
          */
         if ($request->input('verified')) {
-
-            $application->logActivity(
-                action: 'Importer Verified',
-                remark: 'Application verified by importer',
-                status: 'Clerk Review In-Progress'
-            );
+            $application->logActivity(action: 'Importer Verified', remark: 'Application verified by importer', status: 'Clerk Review In-Progress');
 
             $application->status = 'Clerk Review In-Progress';
             $application->importer_verify = 'Verified';
             $status = 'Clerk Review In-Progress';
 
-
             ApplicationActivityLogger::log(
                 application: $application,
                 event: 'importer_verified',
-                description: authUser()['user']->fullname
-                . " verified application with id {$application->application_id}",
+                description: authUser()['user']->fullname . " verified application with id {$application->application_id}",
                 properties: [
                     'role' => 'importer',
-                ]
+                ],
             );
         } elseif ($request->input('not_verified')) {
-
-            $application->logActivity(
-                action: 'Importer Rejected',
-                remark: 'Application rejected by importer',
-                status: 'Not Approved'
-            );
+            $application->logActivity(action: 'Importer Rejected', remark: 'Application rejected by importer', status: 'Not Approved');
 
             $application->status = 'Not Approved';
             $application->importer_verify = 'Not Approved';
             $status = 'Not Approved';
 
-
             ApplicationActivityLogger::log(
                 application: $application,
                 event: 'importer_verified',
-                description: authUser()['user']->fullname
-                . " not verified application with id {$application->application_id}",
+                description: authUser()['user']->fullname . " not verified application with id {$application->application_id}",
                 properties: [
                     'role' => 'importer',
-                ]
+                ],
             );
         } elseif ($request->accepted) {
-
-            $application->logActivity(
-                action: 'Clerk Approved',
-                remark: 'Application approved by clerk',
-                status: 'Clerk Verified'
-            );
+            $application->logActivity(action: 'Clerk Approved', remark: 'Application approved by clerk', status: 'Clerk Verified');
 
             $application->status = 'Clerk Verified';
             $application->importer_verify = 'Accepted';
             $status = 'Clerk Verified';
 
-
             ApplicationActivityLogger::log(
                 application: $application,
                 event: 'clerk_verified',
-                description: authUser()['user']->fullname
-                . " verified application {$application->application_id}",
+                description: authUser()['user']->fullname . " verified application {$application->application_id}",
                 properties: [
                     'role' => 'clerk',
-                ]
+                ],
             );
 
             $notificationController = new NotificationController();
@@ -566,28 +665,21 @@ class ApplicationController extends Controller
                 $application->application_id,
                 'accepted by DOA',
                 'Your application is under review and will be processed shortly',
-                $application->importer->phone_number ?? '+60143290092' // recipient number
+                $application->importer->phone_number ?? '+60143290092', // recipient number
             );
         } elseif ($request->rejected) {
-
-            $application->logActivity(
-                action: 'Clerk Rejected',
-                remark: $request->input('reason'),
-                status: 'Clerk Rejected'
-            );
+            $application->logActivity(action: 'Clerk Rejected', remark: $request->input('reason'), status: 'Clerk Rejected');
 
             $application->status = 'Clerk Rejected';
             $status = 'Clerk Rejected';
 
-
             ApplicationActivityLogger::log(
                 application: $application,
                 event: 'clerk_verified',
-                description: authUser()['user']->fullname
-                . " not verified application with id {$application->application_id} with reason " . $request->input('reason') . " .",
+                description: authUser()['user']->fullname . " not verified application with id {$application->application_id} with reason " . $request->input('reason') . ' .',
                 properties: [
                     'role' => 'clerk',
-                ]
+                ],
             );
         }
 
@@ -596,9 +688,12 @@ class ApplicationController extends Controller
 
         // Safety check
         if (!$status || !isset($statusMessages[$status])) {
-            return response()->json([
-                'message' => 'Invalid application status.'
-            ], 400);
+            return response()->json(
+                [
+                    'message' => 'Invalid application status.',
+                ],
+                400,
+            );
         }
 
         $messages = $statusMessages[$status];
@@ -616,11 +711,7 @@ class ApplicationController extends Controller
         }
 
         $internalUsers = InternalUser::all();
-        Notification::send($internalUsers, new ApplicationNotification(
-            $messages['notify'],
-            authUser()['user']->fullname,
-            $notificationUrl
-        ));
+        Notification::send($internalUsers, new ApplicationNotification($messages['notify'], authUser()['user']->fullname, $notificationUrl));
 
         /**
          * =====================
@@ -630,19 +721,12 @@ class ApplicationController extends Controller
         $publicUser = PublicUser::where('uuid', $application->user_id)->first();
 
         try {
-            event(new ApplicationCreatedPublicUser(
-                $messages['public'],
-                $publicUser->uuid
-            ));
+            event(new ApplicationCreatedPublicUser($messages['public'], $publicUser->uuid));
         } catch (\Exception $e) {
             Log::warning('Pusher connection failed but continuing public notification: ' . $e->getMessage());
         }
 
-        Notification::send($publicUser, new ApplicationNotification(
-            $messages['public'],
-            authUser()['user']->fullname,
-            $notificationUrl
-        ));
+        Notification::send($publicUser, new ApplicationNotification($messages['public'], authUser()['user']->fullname, $notificationUrl));
 
         /**
          * =====================
@@ -653,19 +737,12 @@ class ApplicationController extends Controller
             $importerUser = PublicUser::where('uuid', $application->importer_id)->first();
 
             try {
-                event(new ApplicationCreatedPublicUser(
-                    $messages['public'],
-                    $importerUser->uuid
-                ));
+                event(new ApplicationCreatedPublicUser($messages['public'], $importerUser->uuid));
             } catch (\Exception $e) {
                 Log::warning('Pusher connection failed but continuing importer notification: ' . $e->getMessage());
             }
 
-            Notification::send($importerUser, new ApplicationNotification(
-                $messages['public'],
-                authUser()['user']->fullname,
-                $notificationUrl
-            ));
+            Notification::send($importerUser, new ApplicationNotification($messages['public'], authUser()['user']->fullname, $notificationUrl));
         }
 
         /**
@@ -675,10 +752,9 @@ class ApplicationController extends Controller
          */
         return response()->json([
             'message' => 'Application status updated successfully.',
-            'status' => $status
+            'status' => $status,
         ]);
     }
-
 
     function show_exporter()
     {
@@ -693,7 +769,7 @@ class ApplicationController extends Controller
         $exporter = Exporter::with(['countryInfo'])->find($id);
 
         return response()->json([
-            'exporter' => $exporter
+            'exporter' => $exporter,
         ]);
     }
 
@@ -710,7 +786,7 @@ class ApplicationController extends Controller
         $importer = ConsignmentImporter::with(['countryInfo'])->find($id);
 
         return response()->json([
-            'importer' => $importer
+            'importer' => $importer,
         ]);
     }
 }

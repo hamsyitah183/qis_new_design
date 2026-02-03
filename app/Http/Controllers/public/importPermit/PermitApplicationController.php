@@ -147,7 +147,22 @@ class PermitApplicationController extends Controller
 
     public function getImporters($idno)
     {
-        $importers = \DB::table('public_users')->where('no_ic', $idno)->first();
+        $authNoIc = authUser()['user']->no_ic ?? null;
+
+        if ($authNoIc && $authNoIc === $idno) {
+            return response()->json(
+                [
+                    'status' => 'not_found',
+                    'message' => 'Enter another user Identity Number',
+                    'data' => [],
+                ],
+                404,
+            );
+        }
+
+        $importers = \DB::table('public_users')
+            ->where('no_ic', $idno)
+            ->first();
 
         // If no data found
         if (!$importers) {
@@ -315,7 +330,7 @@ class PermitApplicationController extends Controller
                 }
             } else {
                 // Create new application
-                $status = $isDraft ? 'Draft' : ((int) ($permit['applCate'] ?? 0) === 1 ? 'Awaiting Approval' : 'Clerk Review In-Progress');
+                $status = $isDraft ? 'Draft' : ((int) ($permit['applCate'] ?? 0) === 1 ? 'Wait for company approval' : 'Clerk Review In-Progress');
                 $isNewApplication = true;
                 $application = IpApplication::create([
                     'application_id' => now()->format('ymd') . random_int(1000, 9999),

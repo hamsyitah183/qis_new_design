@@ -271,6 +271,7 @@ Route::middleware(['auth.any'])->group(function () {
     //============================= application ======================
     Route::get('/application/list/data', [ApplicationController::class, 'getallapplicationlist'])->name('application.data');
     Route::get('/application/review/list/data', [ApplicationController::class, 'getAllReviewapplicationList'])->name('application.review.data');
+    Route::get('/application/agent/list/data', [ApplicationController::class, 'getAllAgentApplicationList'])->name('application.review.data');
     Route::get('/inspection_certificates_list/data', [InspectionController::class, 'getAllInspectionList'])->name('inspection.list.data');
 
     Route::get('/application/{id}/data', [ApplicationController::class, 'getApplicationDetails']);

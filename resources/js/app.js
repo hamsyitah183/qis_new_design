@@ -12,6 +12,7 @@ import { notification, notificationContent } from "./notification";
 import "datatables.net-bs5/css/dataTables.bootstrap5.min.css";
 import "datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css";
 import "datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css";
+import { public_dashboard } from "./pages/dashboard/public_dashboard";
 
 
 $("#redirectProfile").on("click", function (e) {
@@ -161,4 +162,12 @@ export function fetchVerificationCount() {
     });
   
 }
-fetchVerificationCount();
+
+if(window.authUser.type == 'internal') {
+    fetchVerificationCount();
+}
+
+if(window.authUser.type == 'public') {
+
+    public_dashboard()
+}

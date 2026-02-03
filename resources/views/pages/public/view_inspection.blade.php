@@ -115,10 +115,11 @@
 
                             @endphp
                             {{-- @dd($application->status) --}}
-                            @if (
+                            {{-- @if (
                                 (str_contains(strtolower($application->status), 'clerk review in-progress') && $isAdminOrClerk) ||
-                                    ($application->category_application == 1 && ($isOwner || $isAdminOrClerk)) )
-                                {{-- Step 3 --}}
+                                    (($application->category_application == 1 && $isOwner ) && $isAdminOrClerk) ) --}}
+                            @if ( (  str_contains(strtolower($application->status), 'clerk review in-progress') && $isOwner) || $isAdminOrClerk  )
+                               
                                 @include('pages.public.view_inspection.step4')
                             @endif
 

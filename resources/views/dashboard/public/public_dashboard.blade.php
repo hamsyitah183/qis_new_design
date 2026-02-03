@@ -139,7 +139,7 @@
                     <a href="{{ route('public.permitApplication') }}" class="btn btn-primary btn-wave text-start">
                         <i class="ti ti-user me-2"></i> Self Import
                     </a>
-                    <a href="{{ route('public.permitAssignApplication') }}" class="btn btn-outline-primary btn-wave text-start">
+                    <a href="/public/import_assign_application" class="btn btn-outline-primary btn-wave text-start">
                         <i class="ti ti-users me-2"></i> For Someone Else
                     </a>
                     <button type="button" onclick="showMainMenu()" class="btn btn-light btn-wave mt-2">

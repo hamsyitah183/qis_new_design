@@ -13,7 +13,6 @@ import "select2/dist/css/select2.min.css";
 
 Dropzone.autoDiscover = false;
 
-
 let itemDropzone = null;
 
 let tempItems = [];

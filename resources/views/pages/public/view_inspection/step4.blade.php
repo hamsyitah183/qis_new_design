@@ -73,6 +73,7 @@
                         @if ($application->user->uuid == $authUuid)
                             <p>Your permit application is currently pending verification by the respective importer.</p>
                         @else
+                        
                             <p>This permit application is currently pending verification by the respective importer.</p>
 
                             {{-- If logged in user is the importer, show verify/reject buttons --}}

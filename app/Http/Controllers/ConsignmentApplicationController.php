@@ -170,6 +170,7 @@ class ConsignmentApplicationController extends Controller
                     'status' => $status,
                     'importer_verify' => $importer_verify,
                 ]);
+                
 
                 $application->status = $permit['applCate'] == 0 ? 'Clerk Review In-Progress' : 'wait for company approval';
                 $application->save();

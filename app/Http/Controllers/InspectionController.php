@@ -354,7 +354,7 @@ class InspectionController extends Controller
                         $importerVerify = 'Verified';
                         $verifyDate = now();
                     } else {
-                        $importerVerify = 'Wait for company approval';
+                        $importerVerify = 'Awaiting approval';
                     }
                 }
 

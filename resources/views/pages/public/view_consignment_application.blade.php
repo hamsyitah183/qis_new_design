@@ -104,18 +104,28 @@
                                 $isOwner =
                                     $isPublic && $application->exporter_id === auth()->guard('public')->user()->uuid;
 
+                                $allPending = $application->consignmentPermits->every(
+                                    fn($permit) => $permit->status === 'pending for payment',
+                                );
+
+                                $value = $allPending ? 1 : 0;
+
+                                // dd($value);
+
                             @endphp
                             {{-- @dd($isOwner || $isAdminOrClerk) --}}
-                            @if (
+                            {{-- @if (
                                     ($application->status === 'Clerk Review In-Progress' && $isAdminOrClerk) ||
                                     ($application->category_application == 1 && ($isOwner || $isAdminOrClerk))
-                                )
+                                ) --}}
+                                @if ( (  str_contains(strtolower($application->status), 'clerk review in-progress') && $isAdminOrClerk) || 
+                                (  str_contains(strtolower($application->status), 'wait for company approval') && ( $isOwner || $isAdminOrClerk) )  )
                                 {{-- Step 4 --}}
                                 @include('pages.public.view_consignment.step4')
                             @endif
 
 
-                            @if (authUser()['type'] == 'public' && $application->user_id == authUser()['user']->uuid )
+                            @if (authUser()['type'] == 'public' && $application->user_id == authUser()['user']->uuid && $value)
                                 @include('pages.public.view_consignment.step5')
                             @endif
                     

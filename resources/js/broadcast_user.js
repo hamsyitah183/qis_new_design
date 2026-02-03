@@ -2,6 +2,7 @@ import { notifyUser, showToast } from "./app";
 import { notification } from "./notification";
 import { clerk_dashboard } from "./pages/clerk_dashboard";
 import { admin_dashboard } from "./pages/dashboard/admin_dashboard";
+import { public_dashboard } from "./pages/dashboard/public_dashboard";
 import { officer_dashboard } from "./pages/officer_dashboard";
 
 console.log("hello from apply permit page");
@@ -90,6 +91,7 @@ export function publicUserEcho(uuid) {
             (e) => {
                 console.log("✅ Application Public user event:", e.message);
                 notifyUser(e.message);
+                public_dashboard();
             }
         );
     }, 100);
