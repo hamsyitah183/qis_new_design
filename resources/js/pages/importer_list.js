@@ -33,7 +33,7 @@ function initAddImporterModal() {
         }
 
         Swal.fire({
-            title: "Saving exporter...",
+            title: "Saving importer...",
             text: "Please wait",
             allowOutsideClick: false,
             allowEscapeKey: false,
@@ -64,7 +64,12 @@ function initAddImporterModal() {
                 $("#importerTable").DataTable().ajax.reload(null, false);
 
                 // Hide modal
-                modal.hide(); // Bootstrap 5 instance hide
+                const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                if (modalInstance) {
+                    modalInstance.hide();
+                } else {
+                    modal.hide();
+                }
 
                 // Reset form
                 $("#addImporterForm")[0].reset();
@@ -192,7 +197,7 @@ $(document).on("click", ".editImporter", function () {
     });
 
     const modalEl = document.getElementById("addImporterModal");
-    const modal = new bootstrap.Modal(modalEl);
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
 
     $("#addImporterModalLabel").text("Edit Importer");
 
