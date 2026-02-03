@@ -238,7 +238,7 @@ Route::prefix('internal')
 
 
         // BOUNDARY OFFICER
-        Route::get("/boundary/list", [BoundaryOfficerController::class, 'view']);
+        Route::get("/boundary/list", [BoundaryOfficerController::class, 'view'])->name('boundary.list');
         Route::get("/boundary/list/data", [BoundaryOfficerController::class, 'data']);
         Route::get('/boundary/{id}', [BoundaryOfficerController::class, 'getBoundaryData']);
         Route::post('/boundary/{id}/save', [BoundaryOfficerController::class, 'saveInternal']);

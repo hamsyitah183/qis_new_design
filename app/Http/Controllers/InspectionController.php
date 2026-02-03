@@ -836,7 +836,7 @@ class InspectionController extends Controller
         }
 
         // Update item status
-        $inspectionItem->permit_number = 'IP' . now()->format('YmdHis');
+        $inspectionItem->permit_number = 'SP/' . now()->format('ymd') . rand(1000, 9999);
         $inspectionItem->status = 'pending for payment';
         $inspectionItem->save();
 

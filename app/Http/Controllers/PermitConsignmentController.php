@@ -24,7 +24,7 @@ class PermitConsignmentController extends Controller
 
         $permit = IpConsignmentPermit::findOrFail($id);
 
-        $permit->permit_number = 'IP' . now()->format('YmdHis');
+        $permit->permit_number = 'IPO/' . now()->format('ymd') . rand(1000, 9999);
 
         $application = $permit->application;
 

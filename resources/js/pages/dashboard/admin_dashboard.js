@@ -44,7 +44,7 @@ function applicationCount() {
         $('#ccCount').text(data.ccCount ?? 0);
 
         // ✅ FIXED
-        $('#amountRevenue').text(`RM ${data.amount ?? 0}`);
+        $('#amountRevenue').text(`RM ${data.total ?? 0}`);
     }).fail(xhr => {
         console.error("Failed to load application count:", xhr.responseText);
         Swal.fire({
@@ -74,6 +74,7 @@ async function loadDailyVolumeChart() {
                     chart: {
                         type: 'line',
                         height: 300,
+                        fontFamily: 'inherit',
                     },
                     title: {
                         text: 'Daily Application Volume',

@@ -613,7 +613,8 @@ class ConsignmentApplicationController extends Controller
 
         $permit = ConsignmentPermit::findOrFail($id);
 
-        $permit->permit_number = 'IP' . now()->format('YmdHis');
+        $permit->permit_number = 'SK/' . now()->format('ymd') . rand(1000, 9999);
+
 
         $application = $permit->application;
 

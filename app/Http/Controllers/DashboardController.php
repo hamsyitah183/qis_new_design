@@ -332,50 +332,60 @@ class DashboardController extends Controller
 
     public function applicationCount()
     {
-        $ipCount = IpApplication::where('status', 'Clerk Review In-Progress')->count();
-        $icCount = InspectionApplication::where('status', 'Clerk Review In-Progress')->count();
-        $ccCount = ConsignmentApplication::where('status', 'Clerk Review In-Progress')->count();
-        $data['ipCount'] = $ipCount;
-        $data['icCount'] = $icCount;
-        $data['ccCount'] = $ccCount;
+        $auth = authUser();
 
-        $ipVerified = IpApplication::where('status', 'Clerk Approved')->count();
-        $icVerified = InspectionApplication::where('status', 'Clerk Approved')->count();
-        $ccVerified = ConsignmentApplication::where('status', 'Clerk Approved')->count();
+        if (!$auth) {
+            return response()->json(['data' => []], 401);
+        }
 
-        $totalVerified = $ipVerified . $icVerified . $ccVerified;
-
-        $totalAmount = Order::where('transaction_status', 'SUCCESSFUL')->sum('payment_amount');
-
-
-        $ipCountOfficer = IpConsignmentPermit::count();
-        $icCountOfficer = InspectionItem::count();
-        $ccCountOfficer = ConsignmentPermit::count();
-        $data['ipOfficer'] = $ipCountOfficer;
-        $data['icOfficer'] = $icCountOfficer;
-        $data['ccOfficer'] = $ccCountOfficer;
-
-        $totalOfficer = $ipVerified . $icVerified . $ccVerified;
-
-        $data['total'] = $totalAmount;
-        $data['verified'] = $totalVerified;
-        $data['officer'] = $totalOfficer;
-
-        $ipCountReviewOfficer = IpApplication::where('status', 'Clerk Approved')->count();
-        $icCountReviewOfficer = InspectionApplication::where('status', 'Clerk Approved')->count();
-        $ccCountReviewOfficer = ConsignmentApplication::where('status', 'Clerk Approved')->count();
-
-        $totalReviewOfficer = $ipCountReviewOfficer
-            + $icCountReviewOfficer
-            + $ccCountReviewOfficer;
-
-
-        $data['totalReview'] = $totalReviewOfficer;
+        if ($auth['roles']->contains('admin') || $auth['roles']->contains('superadmin')) {
+            $data = $this->adminCount();
+        } elseif ($auth['roles']->contains('clerk')) {
+            return $this->clerkCount();
+        } elseif ($auth['roles']->contains('officer')) {
+            return $this->officerCount();
+        } else {
+            $data = [];
+        }
 
         return response()->json([
             'data' => $data,
         ]);
     }
+
+
+    private function adminCount()
+    {
+        // In-progress
+        $data['ipCount'] = IpApplication::count();
+        $data['icCount'] = InspectionApplication::count();
+        $data['ccCount'] = ConsignmentApplication::count();
+    
+        // Verified
+        $ipVerified = IpApplication::where('status', 'Clerk Approved')->count();
+        $icVerified = InspectionApplication::where('status', 'Clerk Approved')->count();
+        $ccVerified = ConsignmentApplication::where('status', 'Clerk Approved')->count();
+    
+        // ✅ FIX: numeric sum
+        $data['verified'] = $ipVerified + $icVerified + $ccVerified;
+    
+        // ✅ Revenue (successful payments only)
+        $data['total'] = Order::where('transaction_status', 'SUCCESSFUL')
+            ->sum('payment_amount');
+    
+        // Officers
+        $data['ipOfficer'] = IpConsignmentPermit::count();
+        $data['icOfficer'] = InspectionItem::count();
+        $data['ccOfficer'] = ConsignmentPermit::count();
+    
+        $data['officer'] = $data['ipOfficer'] + $data['icOfficer'] + $data['ccOfficer'];
+    
+        // Review officer
+        $data['totalReview'] = $data['verified'];
+    
+        return $data;
+    }
+    
 
     public function clerkCount()
     {

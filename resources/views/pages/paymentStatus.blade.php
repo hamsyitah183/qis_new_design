@@ -92,7 +92,7 @@
                 </div>
 
                 <div class="mt-4 text-center">
-                    <a href="/order/list" class="btn btn-primary btn-sm fw-medium">Back to main page</a>
+                    <a href="/order/list" class="btn btn-primary btn-sm fw-medium">Back to order list</a>
                 </div>
 
             </div>

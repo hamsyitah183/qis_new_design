@@ -138,12 +138,12 @@ document.querySelectorAll('.dropdown-item-notification').forEach(item => {
 export function notificationContent(hours = null) {
     const notificationList = document.getElementById("notificationList");
 
-    Swal.fire({
-        title: 'Loading...',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        didOpen: () => Swal.showLoading()
-    });
+    // Swal.fire({
+    //     title: 'Loading...',
+    //     allowOutsideClick: false,
+    //     allowEscapeKey: false,
+    //     didOpen: () => Swal.showLoading()
+    // });
 
     let url = "/notifications/data/get";
 
