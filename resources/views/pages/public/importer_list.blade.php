@@ -92,10 +92,10 @@
             {{-- Country --}}
             <div class="mb-3">
                 <label for="addimpcountry" class="form-label">Country</label>
-                <select class="form-select" id="addexpcountry" name="addexpcountry">
+                <select class="form-select" id="addimpcountry" name="country">
                     <option value="">-- Select Country --</option>
                     {{-- @foreach ($country as $coun)
-                        <option value="{{ $coun->code }}">{{ $coun->name }}</option>
+                    <option value="{{ $coun->code }}">{{ $coun->name }}</option>
                     @endforeach --}}
                     <option value="SWK">Sarawak, Malaysia</option>
                     <option value="BN">Brunei Darussalam</option>

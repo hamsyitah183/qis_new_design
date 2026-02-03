@@ -29,7 +29,7 @@
         </div>
         <div class="col-xl-6">
             <div class="register-page">
-                <h6 class="mb-3">Exporter :</h6>
+                <h6 class="mb-3">Exporter :<a style="color:red"> * </a></h6>
                 <div class="row gy-3">
                     <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                         <label for="selectexp" class="form-label">Select Exporter</label>
@@ -76,26 +76,26 @@
 
                 {{-- Name --}}
                 <div class="mb-3">
-                    <label for="addexpName" class="form-label">Name</label>
+                    <label for="addexpName" class="form-label">Name<a style="color:red"> * </a></label>
                     <input type="text" id="addexpName" name="addexpName" class="form-control">
                 </div>
 
                 {{-- Phone --}}
                 <div class="mb-3">
-                    <label for="addexpfonno" class="form-label">Phone No</label>
+                    <label for="addexpfonno" class="form-label">Phone No<a style="color:red"> * </a></label>
                     <input type="text" id="addexpfonno" name="addexpfonno" class="form-control">
                 </div>
 
                 {{-- Address --}}
                 <div class="mb-3">
-                    <label for="addexpaddress" class="form-label">Address</label>
+                    <label for="addexpaddress" class="form-label">Address<a style="color:red"> * </a></label>
                     <input type="text" id="addexpaddress1" name="addexpaddress1" class="form-control mb-2">
                     <input type="text" id="addexpaddress2" name="addexpaddress2" class="form-control">
                 </div>
 
                 {{-- Country --}}
                 <div class="mb-3">
-                    <label for="addexpcountry" class="form-label">Country</label>
+                    <label for="addexpcountry" class="form-label">Country<a style="color:red"> * </a></label>
                     <select class="form-select" id="addexpcountry" name="addexpcountry">
                         <option value="">-- Select Country --</option>
                         @foreach ($country as $coun)
