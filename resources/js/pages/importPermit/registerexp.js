@@ -208,7 +208,7 @@ function loadUses(itemId) {
 
 // ------------------------- Add Exporter Modal -------------------------
 function initAddExporterModal() {
-    console.log('this is the exporter modal');
+    console.log("this is the exporter modal");
 
     const modalEl = document.getElementById("addExporterModal");
     const modal = new bootstrap.Modal(modalEl);
@@ -221,7 +221,7 @@ function initAddExporterModal() {
     $("#addExporterbtn").on("click", (e) => {
         e.preventDefault();
 
-        console.log('submit')
+        console.log("submit");
 
         const name = $("#addexpName").val().trim();
         const phone_no = $("#addexpfonno").val().trim();
@@ -424,6 +424,37 @@ function permitDetails() {
 
         summarySubmit();
     });
+
+    // ------------------- ETA Date Validation -------------------
+    const etaInput = document.getElementById("eta");
+    if (etaInput) {
+        // Set minimum date to today
+        const today = new Date().toISOString().split("T")[0];
+        etaInput.setAttribute("min", today);
+
+        // Validation function
+        const validateETA = function () {
+            const selectedDate = new Date(this.value);
+            const todayDate = new Date();
+            todayDate.setHours(0, 0, 0, 0); // Reset time for accurate comparison
+
+            if (this.value && selectedDate < todayDate) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Invalid Date",
+                    text: "Estimated Time Arrival cannot be a past date. Please select today or a future date.",
+                });
+                this.value = ""; // Clear the invalid date
+                this.classList.add("is-invalid");
+            } else {
+                this.classList.remove("is-invalid");
+            }
+        };
+
+        // Validate on change and blur
+        etaInput.addEventListener("change", validateETA);
+        etaInput.addEventListener("blur", validateETA);
+    }
 }
 
 // ============= attachment =====================
@@ -865,7 +896,7 @@ function saveapplication(isDraft = false) {
             });
 
 
-          
+
             setTimeout(() => {
                 window.location.href = "/public/view_all_application";
             }, 1500);
@@ -968,7 +999,7 @@ $(document).ready(async function () {
             .app-sidebar.sticky button, .app-sidebar.sticky a,
             .breadcrumb .breadcrumb-item a
             `,
-            
+
             function (e) {
                 if (!change) return;
 
@@ -1058,7 +1089,7 @@ export function summarySubmit() {
     targetTable.innerHTML = ""; // clear existing rows
 
     tempItems.forEach((item, index) => {
-        console.log('item summary', item)
+        console.log("item summary", item);
         // --- Build attachment list ---
         let attachmentHTML = "";
 

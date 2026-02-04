@@ -7,13 +7,15 @@
                     <div class="col-xl-6">
                         <label for="eta" class="form-label">Expected Inspection Date<a style="color:red"> * </a></label>
                         <input type="date" class="form-control " id="eta" name="eta" required>
+                        <div class="invalid-feedback" id="etaError">Expected Inspection Date cannot be a past date.
+                        </div>
                     </div>
                 </div>
                 <div class="row gy-3">
                     <div class="col-xl-6">
                         <label for="trnptType" class="form-label">Transport Type<a style="color:red"> * </a></label>
-                        <select class="form-select" id="trnptType" name="trnptType"
-                            data-route="/public/get_entry_point" required>
+                        <select class="form-select" id="trnptType" name="trnptType" data-route="/public/get_entry_point"
+                            required>
                             <option value="">-- Select Transport --</option>
                             <option value="Air">Air</option>
                             <option value="Sea">Sea</option>
@@ -22,7 +24,7 @@
                     </div>
                     <div class="col-xl-6">
                         <label for="entryPoint" class="form-label">Entry Point<a style="color:red"> * </a></label>
-                        <select class="form-select" id="entryPoint" name="entryPoint"required>
+                        <select class="form-select" id="entryPoint" name="entryPoint" required>
                             <option value="">-- Select Entry Point --</option>
 
                         </select>

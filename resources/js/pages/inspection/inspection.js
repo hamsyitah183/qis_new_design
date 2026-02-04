@@ -444,6 +444,33 @@ function permitDetails() {
 
         summarySubmit();
     });
+
+    // ------------------- ETA Date Validation -------------------
+    const etaInput = document.getElementById("eta");
+    if (etaInput) {
+        // Set minimum date to today
+        const today = new Date().toISOString().split("T")[0];
+        etaInput.setAttribute("min", today);
+
+        // Validate on change
+        etaInput.addEventListener("change", function () {
+            const selectedDate = new Date(this.value);
+            const todayDate = new Date();
+            todayDate.setHours(0, 0, 0, 0); // Reset time for accurate comparison
+
+            if (selectedDate < todayDate) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Invalid Date",
+                    text: "Expected Inspection Date cannot be a past date. Please select today or a future date.",
+                });
+                this.value = ""; // Clear the invalid date
+                this.classList.add("is-invalid");
+            } else {
+                this.classList.remove("is-invalid");
+            }
+        });
+    }
 }
 
 // ============= attachment =====================
