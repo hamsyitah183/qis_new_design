@@ -888,8 +888,7 @@ function saveapplication(isDraft = false) {
 
 // ------------------------- Initialize -------------------------
 // ------------------------- Initialize -------------------------
-export function consginment_application()
-{
+
     $(document).ready(async function () {
         // Show loading swal
         Swal.fire({
@@ -1027,9 +1026,8 @@ export function consginment_application()
             Swal.close();
         }
     });
-}
 
-consginment_application();
+
 
 // ============= attachment =====================
 
