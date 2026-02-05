@@ -27,20 +27,20 @@
 
     @if ($role == 'admin')
         @include ('dashboard.internal.admin_dashboard')
-        @vite(['resources/js/pages/admin_dashboard.js'])
+        @vite(['resources/js/pages/dashboard/admin_dashboard.js'])
 
     @elseif ($role == 'superadmin')
         @include ('dashboard.internal.admin_dashboard')
-        @vite(['resources/js/pages/admin_dashboard.js'])
+        @vite(['resources/js/pages/dashboard/admin_dashboard.js'])
 
     @elseif ($role == 'clerk')
         @include ('dashboard.internal.clerk_dashboard')
-        @vite(['resources/js/pages/clerk_dashboard.js'])
+        @vite(['resources/js/pages/dashboard/clerk_dashboard.js'])
     @elseif($role == 'finance')
         @include('dashboard.internal.finance_dashboard')
     @elseif ($role == 'officer')
         @include('dashboard.internal.components.officer_dashboard')
-        @vite(['resources/js/pages/officer_dashboard.js'])
+        @vite(['resources/js/pages/dashboard/officer_dashboard.js'])
     @elseif ($role == 'boundary officer')
         @include('dashboard.internal.boundary_dashboard')
     @endif
