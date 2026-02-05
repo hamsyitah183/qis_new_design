@@ -3,10 +3,10 @@ import Swal from "sweetalert2";
 
 window.$ = window.jQuery = $;
 
-$(document).ready(function () {
+$(document).ready(function() {
     $(document)
         .off("submit", "#loginForm")
-        .on("submit", "#loginForm", function (e) {
+        .on("submit", "#loginForm", function(e) {
             e.preventDefault();
             const form = $(this);
             const formData = form.serialize();
@@ -22,7 +22,7 @@ $(document).ready(function () {
             });
 
             $.ajax({
-                url: form.attr("action"),
+                url: '/login',
                 method: "POST",
                 data: formData,
                 headers: {
@@ -30,7 +30,7 @@ $(document).ready(function () {
                         "content"
                     ),
                 },
-                success: function (response) {
+                success: function(response) {
                     Swal.fire({
                         icon: "success",
                         title: response.message || "Login successful!",
@@ -40,7 +40,7 @@ $(document).ready(function () {
                         window.location.href = response.redirect;
                     });
                 },
-                error: function (xhr) {
+                error: function(xhr) {
                     Swal.close();
 
                     let errorMsg =
@@ -52,7 +52,7 @@ $(document).ready(function () {
                     // 🔸 Handle unverified users (403)
                     if (
                         xhr.status === 403 &&
-                        xhr.responseJSON?.status === "unverified"
+                        xhr.responseJSON ? .status === "unverified"
                     ) {
                         Swal.fire({
                             icon: "warning",
@@ -66,7 +66,7 @@ $(document).ready(function () {
                     }
 
                     // 🔸 Validation errors (422)
-                    if (xhr.status === 422 && xhr.responseJSON?.errors) {
+                    if (xhr.status === 422 && xhr.responseJSON ? .errors) {
                         const errors = xhr.responseJSON.errors;
                         let combinedMessages = Object.values(errors)
                             .map((errArr) => errArr.join(" "))
@@ -89,7 +89,7 @@ $(document).ready(function () {
                     // 🔸 Invalid credentials (401 or 400)
                     if (xhr.status === 401 || xhr.status === 400) {
                         errorMsg =
-                            xhr.responseJSON?.message ||
+                            xhr.responseJSON ? .message ||
                             "Invalid credentials or password.";
                         swalIcon = "error";
                         swalTitle = "Authentication Failed";
@@ -103,7 +103,7 @@ $(document).ready(function () {
                     }
 
                     // 🔸 Catch-all (any unexpected error)
-                    if (xhr.responseJSON?.message) {
+                    if (xhr.responseJSON ? .message) {
                         errorMsg = xhr.responseJSON.message;
                     }
 
