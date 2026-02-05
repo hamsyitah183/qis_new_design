@@ -79,41 +79,14 @@ async function attachmentTable() {
         ['reapplied', 'processing'].includes((p.status || '').toLowerCase())
     );
 
-    let buttonAction = "";
-
-    if (
-        applicationStatus === "Clerk Verified" &&
+    // Determine if approve/reject buttons should be shown
+    const showApproveReject = applicationStatus === "Clerk Verified" &&
         !hasRejectedPermit &&
         hasAllowedPermit &&
-        (roles.includes("admin") || roles.includes("officer") || roles.includes("superadmin"))
-    ) {
-        buttonAction = `
-            <div class="d-flex align-items-center justify-content-between w-100 mt-2">
-                <div class="btn btn-sm btn-primary-light btn-wave accept me-2"
-                    data-application="${application.application_id}">
-                    Approved
-                </div>
-                <div class="btn btn-sm btn-danger-light btn-wave reject"
-                    data-application="${application.application_id}">
-                    Rejected
-                </div>
-            </div>
-        `;
-    }
-    else if( applicationStatus === "Completed" &&
-  
-        (roles.includes("admin") || roles.includes("boundary officer") || roles.includes("superadmin")))
-    {
-        buttonAction = `
-        <div class="btn btn-sm btn btn-teal-light btn-wave generatePermit mt-2" 
-        data-permit="${application.application_id}"  data-type = "${application.application_type}">
-            Download Permit
-        </div>
-    `;
-    }
-    else {
-        buttonAction = '';
-    }
+        (roles.includes("admin") || roles.includes("officer") || roles.includes("superadmin"));
+
+    const showDownloadPermit = applicationStatus === "Completed" &&
+        (roles.includes("admin") || roles.includes("boundary officer") || roles.includes("superadmin"));
 
     if (!permits || permits.length === 0) {
         tableBody.append(`
@@ -145,6 +118,39 @@ async function attachmentTable() {
             permitAction = `<div class = "btn btn-sm btn-danger-light btn-wave reapply"  data-permit = "${permit.id}" >Reapply</div>`
         } else {
             permitAction= ``
+        }
+
+        // Build action buttons
+        let actionButtons = `
+            <div class="btn btn-sm btn-success-light btn-wave view-attachment"
+                data-permit="${permit.id}">
+                <i class="ti ti-eye"></i>
+            </div>
+            ${permitAction}
+        `;
+
+        // Add approve/reject buttons for the first row only if conditions are met
+        if (index === 0 && showApproveReject) {
+            actionButtons += `
+            <div class="btn btn-sm btn-primary-light btn-wave accept ms-2"
+                data-application="${application.application_id}">
+                Approved
+            </div>
+            <div class="btn btn-sm btn-danger-light btn-wave reject ms-2"
+                data-application="${application.application_id}">
+                Rejected
+            </div>
+            `;
+        }
+
+        // Add download permit button for the first row only if conditions are met
+        if (index === 0 && showDownloadPermit) {
+            actionButtons += `
+            <div class="btn btn-sm btn-teal-light btn-wave generatePermit ms-2" 
+                data-permit="${application.application_id}" data-type="${application.application_type}">
+                Download Permit
+            </div>
+            `;
         }
 
         let permitStatus = "";
@@ -193,20 +199,12 @@ async function attachmentTable() {
     ${permitStatus}
     <td>
         <div class="d-flex gap-2 align-items-center">
-            <div class="btn btn-sm btn-success-light btn-wave view-attachment"
-                data-permit="${permit.id}">
-                <i class="ti ti-eye"></i>
-            </div>
-
-            ${permitAction}
-        
+            ${actionButtons}
         </div>
     </td>
 </tr>
 `);
     });
-
-    table.append(`${buttonAction}`)
 }
 async function pendingPaymentTable() {
     console.log("Running attachment table...");

@@ -95,43 +95,14 @@ async function attachmentTable() {
 
     console.log('roles', roles)
 
-    let permitAction = "";
-    if (
-        applicationStatus === "Clerk Verified" &&
+    // Determine if approve/reject buttons should be shown
+    const showApproveReject = applicationStatus === "Clerk Verified" &&
         !hasRejectedPermit &&
         hasAllowedPermit &&
-        (roles.includes("admin") || roles.includes("officer") || roles.includes("superadmin"))
-    ) {
-       
-        permitAction = `
+        (roles.includes("admin") || roles.includes("officer") || roles.includes("superadmin"));
 
-        <div class = "mt-2 d-flex justify-content-between">
-            <div class="btn btn-sm btn-primary-light btn-wave accept me-2" data-application="${application.application_id}">
-                Approved
-            </div>
-            <div class="btn btn-sm btn-danger-light btn-wave reject" data-application="${application.application_id}">
-                Rejected
-            </div>
-
-        </div>
-        
-        `;
-        
-       
-    }  else if( applicationStatus === "Completed" &&
-  
-        (roles.includes("admin") || roles.includes("boundary officer") || roles.includes("superadmin")))
-    {
-        permitAction = `
-        <div class="btn btn-sm btn btn-teal-light btn-wave generatePermit mt-2" 
-        data-permit="${application.application_id}"  data-type = "${application.application_type}">
-            Download Permit
-        </div>
-    `;
-    }
-    else {
-        permitAction = '';
-    }
+    const showDownloadPermit = applicationStatus === "Completed" &&
+        (roles.includes("admin") || roles.includes("boundary officer") || roles.includes("superadmin"));
 
     permits.forEach((permit, index) => {
         let detail = permit.consignment_detail || {};
@@ -154,15 +125,38 @@ async function attachmentTable() {
             reapplyAction = ``;
         }
 
-        
+        // Build action buttons
+        let actionButtons = `
+            <div class="btn btn-sm btn-success-light btn-wave view-attachment"
+                data-permit="${permit.id}">
+                <i class="ti ti-eye"></i>
+            </div>
+            ${reapplyAction}
+        `;
 
-//         if (permit.status === "paid") {
-//             permitAction = `
-// <div class="btn btn-sm btn btn-teal-light btn-wave generatePermit mt-2" data-permit="${application.application_id}">
-//     Download Permit
-// </div>
-// `;
-//         }
+        // Add approve/reject buttons for the first row only if conditions are met
+        if (index === 0 && showApproveReject) {
+            actionButtons += `
+            <div class="btn btn-sm btn-primary-light btn-wave accept ms-2"
+                data-application="${application.application_id}">
+                Approved
+            </div>
+            <div class="btn btn-sm btn-danger-light btn-wave reject ms-2"
+                data-application="${application.application_id}">
+                Rejected
+            </div>
+            `;
+        }
+
+        // Add download permit button for the first row only if conditions are met
+        if (index === 0 && showDownloadPermit) {
+            actionButtons += `
+            <div class="btn btn-sm btn-teal-light btn-wave generatePermit ms-2" 
+                data-permit="${application.application_id}" data-type="${application.application_type}">
+                Download Permit
+            </div>
+            `;
+        }
 
         let permitStatus = "";
 
@@ -210,18 +204,12 @@ async function attachmentTable() {
     ${permitStatus}
     <td>
         <div class="d-flex gap-2 align-items-center">
-            <div class="btn btn-sm btn-success-light btn-wave view-attachment"
-                data-permit="${permit.id}">
-                <i class="ti ti-eye"></i>
-            </div>
-            ${reapplyAction}
+            ${actionButtons}
         </div>
     </td>
 </tr>
 `);
     });
-
-    table.append(`${permitAction}`)
 }
 async function pendingPaymentTable() {
     console.log("Running attachment table...");
