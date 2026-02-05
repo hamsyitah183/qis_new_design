@@ -1,3 +1,6 @@
+import $ from "jquery";
+window.$ = window.jQuery = $;
+
 function applicationCount() {
     return $.ajax({
         url: '/application/count',
@@ -7,11 +10,10 @@ function applicationCount() {
         success: (response) => {
             let data = response.data
             console.log('data application', data)
-            $('#ipCount').text(data.ipOfficer)
-            $('#icCount').text(data.icOfficer)
-            $('#ccCount').text(data.ccOfficer)
-                // $("#amount").text('RM ', data.mount)
-            $("#pendingCount").text(data.totalReview)
+            $('#ipCount').text(data.ipCount)
+            $('#icCount').text(data.icCount)
+            $('#ccCount').text(data.ccCount)
+            $("#verified").text(data.verified)
         },
         error: (xhr) => {
             console.error("Failed to load exporters:", xhr.responseText);
@@ -26,6 +28,7 @@ function applicationCount() {
 
 applicationCount()
 
-export function officer_dashboard() {
-    applicationCount();
+
+export function clerk_dashboard() {
+    applicationCount()
 }
