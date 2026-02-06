@@ -25,7 +25,7 @@
                     </div>
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
 
-                        <label for="itemValue" class="form-label">Value (RM)<<a style="color:red"> * </a>/label>
+                        <label for="itemValue" class="form-label">Value (RM)<a style="color:red"> * </a></label>
                                 <input type="number" class="form-control" id="itemValue" name="itemValue"
                                     placeholder="RM ...">
                     </div>

@@ -110,11 +110,12 @@
                         <ul class="slide-menu child1">
 
                             <li class="slide">
-                                <a href="{{ route('public.verifyapplication') }}" class="side-menu__item" id="toReviewCount">To Review</a>
+                                <a href="{{ route('public.verifyapplication') }}" class="side-menu__item"
+                                    id="toReviewCount">To Review</a>
                             </li>
 
                             <li class="slide">
-                                <a href="/public/agent_list" class="side-menu__item" >Representative List</a>
+                                <a href="/public/agent_list" class="side-menu__item">Representative List</a>
                             </li>
 
                             <li class="slide">
@@ -197,19 +198,6 @@
                                         Import Permit
                                     </a>
                                 </li>
-
-                                <li class="slide {{ $currentRoute === url('/permit/list/inspection') ? 'active' : '' }}">
-                                    <a href="{{ url('/permit/list/inspection') }}" class="side-menu__item">
-                                        Inspection Certificate
-                                    </a>
-                                </li>
-
-                                <li class="slide {{ $currentRoute === url('/permit/list/consignment') ? 'active' : '' }}">
-                                    <a href="{{ url('/permit/list/consignment') }}" class="side-menu__item">
-                                        Consignment Certificate
-                                    </a>
-                                </li>
-
                             </ul>
                         </li>
 
