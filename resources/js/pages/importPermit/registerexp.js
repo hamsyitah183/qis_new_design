@@ -587,6 +587,10 @@ function saveConsignmentAttachment() {
         const itemPurpose = $("#itemPurpose").val();
         const itemUsesValue = $("#itemUses").val();
 
+        // ✅ Get files from Dropzone
+        const files = itemDropzone.getAcceptedFiles();
+        const itemPurposeDescription = $("#itemPurpose option:selected").data("description") || $("#itemPurpose").val();
+
         // ✅ Validation
         if (
             !itemSelectValue ||
@@ -594,19 +598,16 @@ function saveConsignmentAttachment() {
             !itemQuantity ||
             !itemMeasure ||
             !itemPurpose ||
-            !itemUsesValue
+            !itemUsesValue ||
+            files.length === 0
         ) {
             Swal.fire({
                 icon: "error",
                 title: "Incomplete Data",
-                text: "Please fill in all required fields before saving.",
+                text: "Please fill in all required fields and upload an attachment before saving.",
             });
             return;
         }
-
-        // ✅ Get files from Dropzone
-        const files = itemDropzone.getAcceptedFiles();
-        const itemPurposeDescription = $("#itemPurpose option:selected").data("description") || $("#itemPurpose").val();
 
         // ✅ Build new item
         const newItem = {
@@ -658,6 +659,24 @@ function resetAddItemModal() {
 function renderAllItems() {
     const tableBody = document.querySelector("#itemListTbl tbody");
     tableBody.innerHTML = ""; // Clear existing rows
+
+    // Update validation input
+    const countInput = document.getElementById("itemCountCheck");
+    if (countInput) {
+        countInput.value = tempItems.length > 0 ? "1" : "";
+        if (tempItems.length > 0) {
+            countInput.classList.remove('is-invalid');
+            countInput.style.border = '';
+
+            // Also remove red border from button
+            const addBtn = document.getElementById("mdlAddItemBtn");
+            if (addBtn) {
+                addBtn.classList.remove('is-invalid');
+                addBtn.style.setProperty('border', '', 'important');
+                addBtn.style.color = '';
+            }
+        }
+    }
 
     tempItems.forEach((item, index) => {
         tableBody.insertAdjacentHTML(
@@ -865,11 +884,11 @@ function saveapplication(isDraft = false) {
             });
 
 
-          
+
             setTimeout(() => {
                 window.location.href = "/public/view_all_application";
             }, 1500);
-          
+
 
 
         },
@@ -968,7 +987,7 @@ $(document).ready(async function () {
             .app-sidebar.sticky button, .app-sidebar.sticky a,
             .breadcrumb .breadcrumb-item a
             `,
-            
+
             function (e) {
                 if (!change) return;
 
@@ -1026,8 +1045,8 @@ export function summarySubmit() {
     // --- IMPORTER & EXPORTER SUMMARY ---
     impAddrs = importer
         ? [importer.address_1, importer.address_2]
-              .filter((x) => x && x.trim() !== "")
-              .join(", ")
+            .filter((x) => x && x.trim() !== "")
+            .join(", ")
         : "";
 
     permitDetails = {
