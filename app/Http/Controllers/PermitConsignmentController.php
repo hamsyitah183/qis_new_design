@@ -71,11 +71,11 @@ class PermitConsignmentController extends Controller
             ])
             ->log(authUser()['user']['fullname'] . ' has ' . strtolower($status) . ' permit conditions for application ' . $permit->application->application_id);
 
-            $application->logActivity(
-                'Officer Verification',
-                $request['reason'] ?? 'Permit approved by officer and pending for payment',
-                $accepted ? 'Officer Verified' : 'Officer Rejected'
-            );
+        $application->logActivity(
+            'Officer Verification',
+            $request['reason'] ?? 'Permit approved by officer and pending for payment',
+            $accepted ? 'Officer Verified' : 'Officer Rejected'
+        );
 
 
         // dd($application->importer_detail);
@@ -122,7 +122,7 @@ class PermitConsignmentController extends Controller
         $userUuid = authUser()['user']->uuid;
         $type = authUser()['type'];
 
-        $query = IpConsignmentPermit::query()->with('application'); // eager load application if needed
+        $query = IpConsignmentPermit::query()->with(['application.importer', 'application.exporter.countryInfo', 'application.entryPoint.districtCode']); // eager load relations
 
         // Apply filter for public users
         if ($type !== 'internal') {
@@ -132,32 +132,38 @@ class PermitConsignmentController extends Controller
         return DataTables::eloquent($query)
             ->addIndexColumn()
 
+            // Importer column
+            ->addColumn('importer', fn($row) => $row->application->importer->fullname ?? 'N/A')
+
+            // Exporter column
+            ->addColumn('exporter', fn($row) => $row->application->exporter->name ?? 'N/A')
+
+            // Country of origin
+            ->addColumn('country', fn($row) => $row->application->exporter->countryInfo->name ?? 'N/A')
+
+            // Entry point
+            ->addColumn('entry_point', function ($row) {
+                if ($row->application->entryPoint) {
+                    $entryPoint = $row->application->entryPoint;
+                    $district = $entryPoint->districtCode->district_name ?? '';
+                    return $entryPoint->entry_point_name . ($district ? " ({$district})" : '');
+                }
+                return 'N/A';
+            })
+
+            // Item name from consignment_detail JSON
             ->editColumn('item_name', fn($row) => $row->item_name)
             ->filterColumn('item_name', function ($query, $keyword) {
                 $query->whereRaw("LOWER(JSON_UNQUOTE(JSON_EXTRACT(consignment_detail, '$.item_name'))) LIKE ?", ['%' . strtolower($keyword) . '%']);
             })
 
-            ->addColumn('importer', fn($row) => $row->application->importer->fullname)
-
             ->addColumn('action', function ($row) use ($type) {
-                // Use application_id (correct)
-                $viewUrl = '/permit/import/' . $row->permit_number;
-
-                $view =
-                    '
-                <a href="' .
-                    $viewUrl .
-                    '" class="btn btn-sm btn-primary">
-                    <i class="ti ti-eye"></i>
-                </a>
-            ';
-
                 $downloadPermit = '';
 
                 if ($type === 'internal') {
                     $downloadPermit =
                         '
-                    <button 
+                    <button
                         class="btn btn-sm btn-success btn-wave generatePermit ms-2"
                         data-permit="' .
                         $row->id .
@@ -167,7 +173,7 @@ class PermitConsignmentController extends Controller
                 ';
                 }
 
-                return $view . $downloadPermit;
+                return $downloadPermit;
             })
 
             ->rawColumns(['action'])
@@ -176,6 +182,11 @@ class PermitConsignmentController extends Controller
 
     function permitDetails($permitNumber)
     {
-        return $permitNumber;
+        // Find import permit by permit number and redirect to application detail
+        $importPermit = IpConsignmentPermit::where('permit_number', $permitNumber)
+            ->with('application')
+            ->firstOrFail();
+
+        return redirect('/view_application/' . $importPermit->application->application_id);
     }
 }

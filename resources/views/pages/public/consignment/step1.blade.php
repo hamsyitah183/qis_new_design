@@ -7,6 +7,7 @@
                     <div class="col-xl-6">
                         <label for="eta" class="form-label">Estimated Time Arrival <a style="color:red"> * </a></label>
                         <input type="date" class="form-control " id="eta" name="eta" required>
+                        <div class="invalid-feedback" id="etaError">Estimated Time Arrival cannot be a past date.</div>
                     </div>
                 </div>
                 <div class="row gy-3">

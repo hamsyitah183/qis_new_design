@@ -28,7 +28,8 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/'], ['label' => 'Public User List', 'url' => '#']]" title="Public User List">
+    <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/'], ['label' => 'Public User List', 'url' => '#']]"
+        title="Public User List">
 
     </x-breadcrumb>
 @endsection
@@ -54,7 +55,7 @@
                                         <label class="form-label fw-semibold mb-1">Account Type</label>
                                         <select class="form-select form-select-sm" id="filterAccountType">
                                             <option value="">All</option>
-                                            <option value="individual">Individual</option>
+                                            <option value="individu">Individu</option>
                                             <option value="company">Company</option>
                                         </select>
                                     </li>
@@ -145,22 +146,22 @@
                 <input type="hidden" id="userUuid" name="uuid">
 
                 <div class="col-md-6">
-                    <label class="form-label ">Full Name</label>
+                    <label class="form-label text-default">Full Name <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" id="fullname" name="fullname" required>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label ">IC Number</label>
+                    <label class="form-label text-default">IC Number <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" id="no_ic" name="no_ic" required>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">Email</label>
+                    <label class="form-label text-default">Email <span class="text-danger">*</span></label>
                     <input type="email" class="form-control" id="email" name="email" required>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">Account Type</label>
+                    <label class="form-label text-default">Account Type <span class="text-danger">*</span></label>
                     <select class="form-select" id="account_type" name="account_type" required>
                         <option value="individu">Individu</option>
                         <option value="company">Company</option>
@@ -169,22 +170,24 @@
 
                 <div class="col-md-6">
 
-                    <label class="form-label text-default phoneLabel">Phone Number  <span class="text-primary2">*</span></label>
+                    <label class="form-label text-default phoneLabel">Phone Number <span
+                            class="text-danger">*</span></label>
                     <div class="d-flex justify-content-between">
                         <div class="">
-                            <select name="phoneNumber" id="phone_country" class = "form-control">
+                            <select name="phoneNumber" id="phone_country" class="form-control">
                                 @foreach ($countryNo as $item)
-                                    <option value="{{  $item->start_no  }}">{{ $item->country }} ({{ $item->start_no }})</option>
+                                    <option value="{{  $item->start_no  }}">{{ $item->country }} ({{ $item->start_no }})
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
-    
+
                         <div class="w-100">
-    
+
                             <input type="text" name="phone_number" class="form-control" id="phone_number">
                         </div>
                     </div>
-    
+
                 </div>
 
                 <div class="col-md-6">
@@ -193,7 +196,7 @@
                 </div>
 
                 <div class="col-md-12">
-                    <label class="form-label">Address 1</label>
+                    <label class="form-label text-default">Address 1 <span class="text-danger">*</span></label>
 
                     <textarea class="form-control" name="address_1" id="address_1" cols="30" rows="2" required></textarea>
                 </div>
@@ -205,22 +208,22 @@
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label">State</label>
-                    <select class="form-control state-modal" id="state" name="state" required>
+                    <label class="form-label text-default">State <span class="text-danger">*</span></label>
+                    <select class="form-select state-modal" id="state" name="state" required>
                         <option value="">Select State</option>
                     </select>
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label">District</label>
-                    <select class="form-control district-modal" id="district" name="district" required>
+                    <label class="form-label text-default">District <span class="text-danger">*</span></label>
+                    <select class="form-select district-modal" id="district" name="district" required>
                         <option value="">Select District</option>
                     </select>
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label">Postcode</label>
-                    <select class="form-control postcode-modal" id="postcode" name="postcode" required>
+                    <label class="form-label text-default">Postcode <span class="text-danger">*</span></label>
+                    <select class="form-select postcode-modal" id="postcode" name="postcode" required>
                         <option value="">Select Postcode</option>
                     </select>
                 </div>
@@ -231,8 +234,8 @@
             </div>
 
             @slot('footer')
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="submit" form="publicUserForm" class="btn btn-primary" id="saveUserBtn">Save</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" form="publicUserForm" class="btn btn-primary" id="saveUserBtn">Save</button>
             @endslot
         </form>
     </x-modal>
@@ -251,13 +254,13 @@
             </div>
 
             <div class="status mt-3"></div>
-            <div class="fs-12 mt-3"> <span class="fw-bold">Submitted On: </span> <span
-                    class="updated_at text-muted"></span> </div>
+            <div class="fs-12 mt-3"> <span class="fw-bold">Submitted On: </span> <span class="updated_at text-muted"></span>
+            </div>
 
             @slot('footer')
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="submit" class="btn btn-primary" id="verificationBtn">Verified</button>
-                <button type="submit" class="btn btn-danger" id="unverificationBtn">Reject</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary" id="verificationBtn">Verified</button>
+            <button type="submit" class="btn btn-danger" id="unverificationBtn">Reject</button>
             @endslot
         </form>
     </x-modal>

@@ -82,44 +82,45 @@
                             <input type="hidden" id="userUuid" name="uuid">
 
                             <div class="col-md-6">
-                                <label class="form-label ">Full Name</label>
+                                <label class="form-label text-default">Full Name <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="fullname" name="fullname" required>
                                 <div class="invalid-feedback" id="error-fullname"></div>
 
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label ">IC Number</label>
+                                <label class="form-label text-default">IC Number <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="no_ic" name="no_ic" required>
                                 <div class="invalid-feedback" id="error-no_ic"></div>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Email</label>
+                                <label class="form-label text-default">Email <span class="text-danger">*</span></label>
                                 <input type="email" class="form-control" id="email" name="email" required>
                                 <div class="invalid-feedback" id="error-email"></div>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Phone Number</label>
+                                <label class="form-label text-default">Phone Number <span
+                                        class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="phone_number" name="phone_number" required>
                                 <div class="invalid-feedback" id="error-phone"></div>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Position</label>
+                                <label class="form-label text-default">Position <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="position" name="position" required>
                                 <div class="invalid-feedback" id="error-position"></div>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Office</label>
+                                <label class="form-label text-default">Office <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="office" name="office" required>
                                 <div class="invalid-feedback" id="error-office"></div>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Role</label>
+                                <label class="form-label text-default">Role <span class="text-danger">*</span></label>
                                 <select class="form-select" id="role" name="role" required>
                                     <option value="admin">Admin</option>
                                     <option value="officer">Officer</option>

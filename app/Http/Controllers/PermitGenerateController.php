@@ -7,6 +7,7 @@ use App\Models\IpApplication;
 use App\Models\IpConsignmentPermit;
 use App\Models\ConsignmentPermit;
 use App\Models\InspectionApplication;
+use App\Models\InspectionItem;
 use App\Models\ConsignmentApplication;
 use Illuminate\Http\Request;
 use PhpOffice\PhpWord\IOFactory;
@@ -183,8 +184,11 @@ class PermitGenerateController extends Controller
     // inspection application
     function generateInspection($id)
     {
-        $application = InspectionApplication::with(['importer', 'exporter', 'inspectionItems'])
-        ->where('application_id', $id)->first();
+        // $id is the inspection item id, not application id
+        $inspectionItem = InspectionItem::with(['application.importer', 'application.exporter', 'application.inspectionItems'])
+            ->where('id', $id)->firstOrFail();
+
+        $application = $inspectionItem->application;
 
         // dd($application);
 
@@ -310,38 +314,38 @@ class PermitGenerateController extends Controller
             'borderColor' => '999999',
             'cellMargin' => 80,
         ]);
-        
+
         // Header row
         $table->addRow();
         $table->addCell(2500)->addText('Permit Number');
         $table->addCell(2500)->addText('Item Name');
         $table->addCell(3000)->addText('Purpose');
         $table->addCell(4000)->addText('Consignment Detail');
-        
+
 
         foreach ($items as $item) {
-      
+
 
             // Decode JSON string into array
             $consignment = $item['consignment_detail'];
-        
+
             $itemName = $consignment['item_name'] ?? '-';
-        
+
             // Make consignment detail a STRING (important!)
             $consignmentText =
                 'Quantity: ' . ($consignment['quantity'] ?? '-') . "\n" .
                 'Value: ' . ($consignment['value'] ?? '-') . "\n" .
                 'Measure: ' . ($consignment['measure'] ?? '-') . "\n" .
                 'Uses: ' . ($consignment['uses'] ?? '-');
-        
+
             $table->addRow();
             $table->addCell(2500)->addText((string) ($item->permit_number ?? '-'));
             $table->addCell(2500)->addText((string) $itemName);
             $table->addCell(3000)->addText((string) ($item->purpose ?? '-'));
             $table->addCell(4000)->addText($consignmentText);
         }
-        
-        
+
+
 
         $section->addText("Date of Issue: " . now()->format('d/m/Y'), [], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::BOTH]);
         $section->addTextBreak(2);
@@ -360,7 +364,7 @@ class PermitGenerateController extends Controller
     function generateConsignment($id)
     {
         $application = ConsignmentApplication::with(['importer', 'exporter', 'consignmentPermits'])
-        ->where('application_id', $id)->first();
+            ->where('application_id', $id)->first();
 
         // dd($application);
 
@@ -486,38 +490,38 @@ class PermitGenerateController extends Controller
             'borderColor' => '999999',
             'cellMargin' => 80,
         ]);
-        
+
         // Header row
         $table->addRow();
         $table->addCell(2500)->addText('Permit Number');
         $table->addCell(2500)->addText('Item Name');
         $table->addCell(3000)->addText('Purpose');
         $table->addCell(4000)->addText('Consignment Detail');
-        
+
 
         foreach ($items as $item) {
-      
+
 
             // Decode JSON string into array
             $consignment = $item['consignment_detail'];
-        
+
             $itemName = $consignment['item_name'] ?? '-';
-        
+
             // Make consignment detail a STRING (important!)
             $consignmentText =
                 'Quantity: ' . ($consignment['quantity'] ?? '-') . "\n" .
                 'Value: ' . ($consignment['value'] ?? '-') . "\n" .
                 'Measure: ' . ($consignment['measure'] ?? '-') . "\n" .
                 'Uses: ' . ($consignment['uses'] ?? '-');
-        
+
             $table->addRow();
             $table->addCell(2500)->addText((string) ($item->permit_number ?? '-'));
             $table->addCell(2500)->addText((string) $itemName);
             $table->addCell(3000)->addText((string) ($item->purpose ?? '-'));
             $table->addCell(4000)->addText($consignmentText);
         }
-        
-        
+
+
 
         $section->addText("Date of Issue: " . now()->format('d/m/Y'), [], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::BOTH]);
         $section->addTextBreak(2);

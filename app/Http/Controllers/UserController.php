@@ -59,9 +59,42 @@ class UserController extends Controller
     }
 
 
-    public function public_list_data()
+    public function public_list_data(Request $request)
     {
         $users = PublicUser::query();
+
+        // Apply filters from request
+        if ($request->has('account_type') && $request->account_type != '') {
+            $users->where('account_type', $request->account_type);
+        }
+
+        if ($request->has('email_verification') && $request->email_verification != '') {
+            if ($request->email_verification == 'verified') {
+                $users->whereNull('email_verified_at');
+            } else if ($request->email_verification == 'not_verified') {
+                $users->whereNotNull('email_verified_at');
+            }
+        }
+
+        if ($request->has('account_verification') && $request->account_verification != '') {
+            if ($request->account_verification == 'verified') {
+                $users->whereHas('approved', function ($query) {
+                    $query->where('doa_verified', true);
+                });
+            } else if ($request->account_verification == 'not_verified') {
+                $users->whereDoesntHave('approved', function ($query) {
+                    $query->where('doa_verified', true);
+                });
+            }
+        }
+
+        if ($request->has('sort_by') && $request->sort_by != '') {
+            if ($request->sort_by == 'created_at') {
+                $users->orderBy('created_at', 'asc');
+            } else if ($request->sort_by == 'latest') {
+                $users->orderBy('created_at', 'desc');
+            }
+        }
         $currentUser = Auth::guard('public')->user();
 
         return DataTables::of($users)
@@ -479,17 +512,17 @@ class UserController extends Controller
     {
         $actor = authUser()['user'];
         $url = route('internal.internal.list');
-    
+
         return DB::transaction(function () use ($request, $actor, $url) {
-    
+
             $uuid = $request->input('uuid');
-    
+
             if ($uuid) {
                 // =========================
                 // UPDATE USER
                 // =========================
                 $internalUser = InternalUser::where('uuid', $uuid)->firstOrFail();
-    
+
                 $request->validate([
                     'fullname' => 'required|string|max:255',
                     'email' => 'required|email|max:255|unique:internal_users,email,' . $internalUser->id,
@@ -499,7 +532,7 @@ class UserController extends Controller
                     'office' => 'required|string|max:255',
                     'role' => 'required|string',
                 ]);
-    
+
                 $internalUser->update([
                     'fullname' => $request->fullname,
                     'email' => $request->email,
@@ -508,10 +541,10 @@ class UserController extends Controller
                     'position' => $request->position,
                     'office' => $request->office,
                 ]);
-    
+
                 // Sync role
                 $internalUser->syncRoles([$request->role]);
-    
+
                 // Notify edited user (if not self)
                 if ($internalUser->uuid !== $actor->uuid) {
                     $internalUser->notify(new InternalUserEditedNotification(
@@ -520,14 +553,14 @@ class UserController extends Controller
                         $url
                     ));
                 }
-    
+
                 // Notify actor
                 $actor->notify(new InternalUserEditedNotification(
                     'Account updated',
                     'You updated ' . $internalUser->fullname . '\'s account',
                     $url
                 ));
-    
+
                 // Broadcast
                 try {
                     event(new InternalUserEdited(
@@ -537,13 +570,13 @@ class UserController extends Controller
                 } catch (\Exception $e) {
                     \Log::info('Broadcast failed: ' . $e->getMessage());
                 }
-    
+
                 return response()->json([
                     'used_id' => $uuid,
                     'message' => 'User Updated'
                 ]);
             }
-    
+
             // =========================
             // CREATE USER
             // =========================
@@ -556,7 +589,7 @@ class UserController extends Controller
                 'office' => 'required|string|max:255',
                 'role' => 'required|string',
             ]);
-    
+
             $internalUser = InternalUser::create([
                 'uuid' => Str::uuid(),
                 'fullname' => $request->fullname,
@@ -567,14 +600,14 @@ class UserController extends Controller
                 'office' => $request->office,
                 'password' => Hash::make($request->no_ic),
             ]);
-    
+
             $internalUser->assignRole($request->role);
-    
+
             if ($request->role === 'boundary officer') {
                 BoundaryOfficer::create([
                     'user_id' => $internalUser->uuid
                 ]);
-    
+
                 activity()
                     ->useLog('user_activity')
                     ->event('created')
@@ -582,20 +615,20 @@ class UserController extends Controller
                     ->causedBy($actor)
                     ->log("{$internalUser->fullname} is new user for boundary officer.");
             }
-    
+
             // Notify creator
             $actor->notify(new InternalUserEditedNotification(
                 'User created',
                 'You created a new user: ' . $internalUser->fullname,
                 $url
             ));
-    
+
             try {
                 event(new InternalUserAdded('A new internal user has been added'));
             } catch (\Exception $e) {
                 \Log::info('Broadcast failed: ' . $e->getMessage());
             }
-    
+
             return response()->json([
                 'used_id' => $internalUser->uuid,
                 'message' => 'User Created'
@@ -655,7 +688,7 @@ class UserController extends Controller
         $validated = $request->validate([
             // 'type' => 'required|in:public,internal',
             // 'uuid' => 'required|uuid',
-            'old_password' => 'nullable|string',
+            'old_password' => 'required|string',
             'new_password' => 'required|string|min:8|confirmed', // expects new_password + new_password_confirmation
         ]);
 
@@ -670,10 +703,11 @@ class UserController extends Controller
             ], 404);
         }
 
-        // If old password is required (e.g., user changing their own password)
-        if ($validated['old_password'] && !Hash::check($validated['old_password'], $user->password)) {
+        // Verify old password before allowing change
+        if (!Hash::check($validated['old_password'], $user->password)) {
             return response()->json([
                 'message' => 'Old password is incorrect.',
+
             ], 400);
         }
 
@@ -779,7 +813,7 @@ class UserController extends Controller
             \Log::info('Failed to broadcast event: ' . $e->getMessage());
         }
 
-         $users = InternalUser::role(['admin', 'superadmin'])->get();
+        $users = InternalUser::role(['admin', 'superadmin'])->get();
         $notificationUrl = route('internal.public.list');
         Notification::send($users, new ApplicationNotification(
             'A user upload a verification attachment',
@@ -903,7 +937,7 @@ class UserController extends Controller
                 \Log::info('Failed to broadcast event: ' . $e->getMessage());
             }
 
-             $users = InternalUser::role(['admin', 'superadmin'])->get();
+            $users = InternalUser::role(['admin', 'superadmin'])->get();
             $notificationUrl = route('internal.public.list');
             Notification::send($users, new ApplicationNotification(
                 $isApproved ? $user->fullname . ' account is verified' : $user->fullname . ' account verification is rejected',
