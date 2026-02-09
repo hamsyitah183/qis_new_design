@@ -57,102 +57,107 @@
 
         <div class="row mt-4">
             <div class="col-lg-12">
-                <div class="card custom-card overflow-hidden">
-                    <div class="card-header justify-content-between">
-                        <div class="card-title">
-                            Recent Applications
-                        </div>
-                    </div>
-                    <div class="card-body p-0 pb-1">
-                        <div class="table-responsive">
-                            <table class="table text-nowrap table-compact">
-                                <colgroup>
-                                    <col style="width: 20%;">
-                                    <col style="width: 25%;">
-                                    <col style="width: 15%;">
-                                    <col style="width: 10%;">
-                                </colgroup>
-                                <thead>
-                                    <tr>
-                                        <th>User Name</th>
-                                        <th>Application Type</th>
-                                        <th>Status</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($latestApplications ?? [] as $application)
-                                        <tr>
-                                            <td>
-                                                <div class="fw-medium">{{ $application['user']['fullname']  ?? $application['user']['name']}}</div>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex align-items-center gap-2">
-                                                    @if ($application['application_type'] == 'Import Permit')
-                                                        <span
-                                                            class="avatar avatar-sm avatar-rounded bg-primary-transparent">
-                                                            <i class="ti ti-file-import fs-16"></i>
-                                                        </span>
-                                                    @elseif($application['application_type'] == 'Inspection Certificate')
-                                                        <span
-                                                            class="avatar avatar-sm avatar-rounded bg-secondary-transparent">
-                                                            <i class="ti ti-file-certificate fs-16"></i>
-                                                        </span>
-                                                    @else
-                                                        <span
-                                                            class="avatar avatar-sm avatar-rounded bg-info-transparent">
-                                                            <i class="ti ti-file-text fs-16"></i>
-                                                        </span>
-                                                    @endif
-                                                    <div class="fw-medium">{{ $application['application_type'] }}</div>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                @php
-                                                    $statusClass = match ($application['status']) {
-                                                        'Approved' => 'bg-success',
-                                                        'Pending' => 'bg-warning',
-                                                        'Draft' => 'bg-secondary',
-                                                        'Rejected', 'Clerk Rejected' => 'bg-danger',
-                                                        'Submitted', 'Clerk Verified' => 'bg-info',
-                                                        default => 'bg-primary',
-                                                    };
-                                                @endphp
-                                                <span
-                                                    class="badge {{ $statusClass }}">{{ $application['status'] }}</span>
-                                            </td>
-                                            <td>
-                                                @if ($application['application_type'] == 'Import Permit')
-                                                    <a href="{{ route('viewApplication', $application['application_id']) }}"
-                                                        class="btn btn-sm btn-primary-light">
-                                                        <i class="ti ti-eye"></i> View
-                                                    </a>
-                                                @elseif($application['application_type'] == 'Inspection Certificate')
-                                                    <a href="{{ route('inspection.view_details', $application['application_id']) }}"
-                                                        class="btn btn-sm btn-primary-light">
-                                                        <i class="ti ti-eye"></i> View
-                                                    </a>
-                                                @else
-                                                    <a href="{{ url('/view_consignment/' . $application['application_id']) }}"
-                                                        class="btn btn-sm btn-primary-light">
-                                                        <i class="ti ti-eye"></i> View
-                                                    </a>
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="4" class="text-center text-muted py-4">
-                                                <i class="ti ti-inbox fs-24 mb-2"></i>
-                                                <p class="mb-0">No applications found</p>
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+@push('style')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.12.1/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.3.0/css/responsive.bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.bootstrap5.min.css">
+@endpush
+
+<div class="card custom-card overflow-hidden">
+    <div class="card-header justify-content-between">
+        <div class="card-title">
+            Recent Applications
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table id="boundaryApplicationsTable" class="table text-nowrap table-compact">
+                <colgroup>
+                    <col style="width: 20%;">
+                    <col style="width: 25%;">
+                    <col style="width: 15%;">
+                    <col style="width: 10%;">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>User Name</th>
+                        <th>Application Type</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($latestApplications ?? [] as $application)
+                        <tr>
+                            <td>
+                                <div class="fw-medium">{{ $application['user']['fullname']  ?? $application['user']['name']}}</div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    @if ($application['application_type'] == 'Import Permit')
+                                        <span
+                                            class="avatar avatar-sm avatar-rounded bg-primary-transparent">
+                                            <i class="ti ti-file-import fs-16"></i>
+                                        </span>
+                                    @elseif($application['application_type'] == 'Inspection Certificate')
+                                        <span
+                                            class="avatar avatar-sm avatar-rounded bg-secondary-transparent">
+                                            <i class="ti ti-file-certificate fs-16"></i>
+                                        </span>
+                                    @else
+                                        <span
+                                            class="avatar avatar-sm avatar-rounded bg-info-transparent">
+                                            <i class="ti ti-file-text fs-16"></i>
+                                        </span>
+                                    @endif
+                                    <div class="fw-medium">{{ $application['application_type'] }}</div>
+                                </div>
+                            </td>
+                            <td>
+                                @php
+                                    $statusClass = match ($application['status']) {
+                                        'Approved' => 'bg-success',
+                                        'Pending' => 'bg-warning',
+                                        'Draft' => 'bg-secondary',
+                                        'Rejected', 'Clerk Rejected' => 'bg-danger',
+                                        'Submitted', 'Clerk Verified' => 'bg-info',
+                                        default => 'bg-primary',
+                                    };
+                                @endphp
+                                <span
+                                    class="badge {{ $statusClass }}">{{ $application['status'] }}</span>
+                            </td>
+                            <td>
+                                @if ($application['application_type'] == 'Import Permit')
+                                    <a href="{{ route('viewApplication', $application['application_id']) }}"
+                                        class="btn btn-sm btn-primary-light">
+                                        <i class="ti ti-eye"></i> View
+                                    </a>
+                                @elseif($application['application_type'] == 'Inspection Certificate')
+                                    <a href="{{ route('inspection.view_details', $application['application_id']) }}"
+                                        class="btn btn-sm btn-primary-light">
+                                        <i class="ti ti-eye"></i> View
+                                    </a>
+                                @else
+                                    <a href="{{ url('/view_consignment/' . $application['application_id']) }}"
+                                        class="btn btn-sm btn-primary-light">
+                                        <i class="ti ti-eye"></i> View
+                                    </a>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        {{-- Empty state handled by DataTable usually, but keeping it for initial render doesn't hurt --}}
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+    @vite(['resources/js/pages/boundary_dashboard.js'])
+@endpush
             </div>
         </div>
     </div>

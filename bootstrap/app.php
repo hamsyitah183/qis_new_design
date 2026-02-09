@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
             'auth.any' => \App\Http\Middleware\EnsureUserIsAuthenticatedAny::class,
             'unverified' => \App\Http\Middleware\RedirectIfEmailVerified::class,
+            'not.boundary' => \App\Http\Middleware\EnsureNotBoundaryOfficer::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

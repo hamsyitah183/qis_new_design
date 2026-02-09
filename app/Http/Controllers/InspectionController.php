@@ -360,7 +360,7 @@ class InspectionController extends Controller
                 $isNewApplication = true;
                 $application = InspectionApplication::create([
                     // 'application_id' => Str::uuid(),
-                    'application_id' => now()->format('ymd') . random_int(1000, 9999),
+                    'application_id' => 'SP' . now()->format('ymd') . random_int(1000, 9999),
                     'eta' => $permit['eta'] ?? null,
                     'transport_type' => $permit['tranType'] ?? null,
                     'entry_point' => $permit['entrypoint'] ?? null,

@@ -147,85 +147,104 @@ Route::prefix('internal')
         Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
 
         // ==================== user managemet =================
-        Route::get('/user_public/list', [UserController::class, 'public_list'])->name('public.list');
-        Route::get('/user_public/list/data', [UserController::class, 'public_list_data'])->name('public.list.data');
+        Route::middleware(['not.boundary'])->group(function () {
+            Route::get('/user_public/list', [UserController::class, 'public_list'])->name('public.list');
+            Route::get('/user_public/list/data', [UserController::class, 'public_list_data'])->name('public.list.data');
 
-        // Verification Routes
-        Route::get('/user_public/verification', [UserController::class, 'verification_list'])->name('public.verification.list');
-        Route::get('/user_public/verification/data', [UserController::class, 'verification_list_data'])->name('public.verification.list.data');
-        Route::get('/verification_count', [UserController::class, 'verification_count']);
+            // Verification Routes
+            Route::get('/user_public/verification', [UserController::class, 'verification_list'])->name('public.verification.list');
+            Route::get('/user_public/verification/data', [UserController::class, 'verification_list_data'])->name('public.verification.list.data');
+            Route::get('/verification_count', [UserController::class, 'verification_count']);
 
-        Route::get('/user_public/user/data/{id}', [UserController::class, 'user_data']);
-        Route::post('/user_public/save', [UserController::class, 'public_user_save']);
-        Route::delete('/user_public/delete/{id}', [UserController::class, 'public_user_delete']);
+            Route::get('/user_public/user/data/{id}', [UserController::class, 'user_data']);
+            Route::post('/user_public/save', [UserController::class, 'public_user_save']);
+            Route::delete('/user_public/delete/{id}', [UserController::class, 'public_user_delete']);
 
-        Route::get('/user_internal/list', [UserController::class, 'internal_list'])->name('internal.list');
-        Route::get('/user_internal/list/data', [UserController::class, 'internal_list_data'])->name('internal.list.data');
-        Route::get('/user_internal/user/data/{id}', [UserController::class, 'internal_user_data']);
-        Route::post('/user_internal/save', [UserController::class, 'internal_user_save']);
-        Route::delete('/user_internal/delete/{id}', [UserController::class, 'internal_user_delete']);
+            Route::get('/user_internal/list', [UserController::class, 'internal_list'])->name('internal.list');
+            Route::get('/user_internal/list/data', [UserController::class, 'internal_list_data'])->name('internal.list.data');
+            Route::get('/user_internal/user/data/{id}', [UserController::class, 'internal_user_data']);
+            Route::post('/user_internal/save', [UserController::class, 'internal_user_save']);
+            Route::delete('/user_internal/delete/{id}', [UserController::class, 'internal_user_delete']);
 
-        Route::get('/activity_log', [ActivityLogController::class, 'log'])->name('internal.activity_log');
-        Route::get('/activity_log/data', [ActivityLogController::class, 'data']);
+            Route::get('/activity_log', [ActivityLogController::class, 'log'])->name('internal.activity_log');
+            Route::get('/activity_log/data', [ActivityLogController::class, 'data']);
 
-        Route::get('/user_list/{type}', [UserController::class, 'user_list']);
+            Route::get('/user_list/{type}', [UserController::class, 'user_list']);
 
-        Route::get('/verification/{id}', [UserController::class, 'verification_attachment']);
-        Route::post('/verification/{id}/save', [UserController::class, 'save_attachment']);
+            Route::get('/verification/{id}', [UserController::class, 'verification_attachment']);
+            Route::post('/verification/{id}/save', [UserController::class, 'save_attachment']);
 
-        Route::get('/roles', [RoleAndPermissionController::class, 'role'])->name('internal.role');
-        Route::get('/roles/list/data', [RoleAndPermissionController::class, 'role_list_data']);
-        Route::post('/roles/update', [RoleAndPermissionController::class, 'update_role']);
+            Route::get('/roles', [RoleAndPermissionController::class, 'role'])->name('internal.role');
+            Route::get('/roles/list/data', [RoleAndPermissionController::class, 'role_list_data']);
+            Route::post('/roles/update', [RoleAndPermissionController::class, 'update_role']);
 
-        Route::get('/permission/data', [RoleAndPermissionController::class, 'get_permission']);
-        Route::post('/permission/update', [RoleAndPermissionController::class, 'update_permission']);
+            Route::get('/permission/data', [RoleAndPermissionController::class, 'get_permission']);
+            Route::post('/permission/update', [RoleAndPermissionController::class, 'update_permission']);
+        });
         // ==================== user managemet =================
     
         // ======================= application ========================
-        Route::get('/view_all_application', [ApplicationController::class, 'showallapplicationlist'])->name('application.list');
-        Route::delete('/application/delete/{id}', [ApplicationController::class, 'deleteApplication'])->name('application.delete');
+        Route::middleware(['not.boundary'])->group(function () {
+            Route::get('/view_all_application', [ApplicationController::class, 'showallapplicationlist'])->name('application.list');
+            Route::delete('/application/delete/{id}', [ApplicationController::class, 'deleteApplication'])->name('application.delete');
+        });
 
         // ======================= inspection certificates ========================
-        Route::get('/inspection_certificates_list', [InspectionController::class, 'showAllInspectionList'])->name('inspection.list');
+        Route::middleware(['not.boundary'])->group(function () {
+             Route::get('/inspection_certificates_list', [InspectionController::class, 'showAllInspectionList'])->name('inspection.list');
+        });
 
         Route::get('/view_inspection_certificate/{id}', [InspectionController::class, 'viewApplication'])->name('viewInspectionApplication');
         // Route::delete('/inspection/delete/{id}', [InspectionController::class, 'deleteApplication'])->name('inspection.delete');
     
         // ======================= consignment certificates ========================
-        Route::get('/consignment_certificates_list', [ConsignmentController::class, 'showInternalConsignmentList'])->name('consignment.list');
+        Route::middleware(['not.boundary'])->group(function () {
+            Route::get('/consignment_certificates_list', [ConsignmentController::class, 'showInternalConsignmentList'])->name('consignment.list');
+            Route::delete('/consignment/delete/{id}', [ConsignmentController::class, 'deleteApplication'])->name('internal.consignment.delete');
+        });
+
         Route::post('/consignment/{id}/status', [ConsignmentController::class, 'updateStatus'])->name('consignment.status');
-        Route::delete('/consignment/delete/{id}', [ConsignmentController::class, 'deleteApplication'])->name('internal.consignment.delete');
         Route::delete('/inspection/delete/{id}', [InspectionController::class, 'deleteApplication'])->name('inspection.delete');
         Route::get('/inspection_application/{id}/data', [InspectionController::class, 'getApplicationDetails']);
 
         // Route::get('/application/exporter/get', [ApplicationController::class, 'get_exporter'])->name('application.exporter.get');
     
-        //MISC
-    
-        Route::get('/control_panel', [MiscController::class, 'showcontrolpanel']);
-        Route::get('/state-district-management', [MiscController::class, 'showStateDistrictManagement'])->name('state-district-management');
-        Route::get('/get_pbdata/{cate}', [MiscController::class, 'getpbdata']);
-        Route::get('/getspecificpbdata/{id}', [MiscController::class, 'getspecificpbdata']);
-        Route::post('/updatepbdata', [MiscController::class, 'updatepbdata']);
-        Route::delete('/deletepbdata/{id}', [MiscController::class, 'deletepbdata']);
-        Route::post('/addpbdata', [MiscController::class, 'addpbdata']);
+        //MISC - Restricted to non-boundary officers
+        Route::middleware(['not.boundary'])->group(function () {
+            Route::get('/control_panel', [MiscController::class, 'showcontrolpanel']);
+            Route::get('/state-district-management', [MiscController::class, 'showStateDistrictManagement'])->name('state-district-management');
+            Route::get('/get_pbdata/{cate}', [MiscController::class, 'getpbdata']);
+            Route::get('/getspecificpbdata/{id}', [MiscController::class, 'getspecificpbdata']);
+            Route::post('/updatepbdata', [MiscController::class, 'updatepbdata']);
+            Route::delete('/deletepbdata/{id}', [MiscController::class, 'deletepbdata']);
+            Route::post('/addpbdata', [MiscController::class, 'addpbdata']);
 
-        //PERMIT CONDITION
-        Route::get('/permit_condition', [MiscController::class, 'showpermitcondition']);
-        Route::get('/permit_condition/data', [MiscController::class, 'getpermitconditiondata']);
-        Route::get('/permit_condition/getdata/{id}', [MiscController::class, 'getpermitconditionbyid']);
-        Route::get('/permit_add_condition', [MiscController::class, 'permitaddcondition'])->name('permitaddcondition');
-        Route::post('/save_condition', [MiscController::class, 'saveCondition'])->name('saveCondition');
-        Route::get('/permit_edit_condition/{id}', [MiscController::class, 'editCondition']);
+            //PERMIT CONDITION
+            Route::get('/permit_condition', [MiscController::class, 'showpermitcondition']);
+            Route::get('/permit_condition/data', [MiscController::class, 'getpermitconditiondata']);
+            Route::get('/permit_condition/getdata/{id}', [MiscController::class, 'getpermitconditionbyid']);
+            Route::get('/permit_add_condition', [MiscController::class, 'permitaddcondition'])->name('permitaddcondition');
+            Route::post('/save_condition', [MiscController::class, 'saveCondition'])->name('saveCondition');
+            Route::get('/permit_edit_condition/{id}', [MiscController::class, 'editCondition']);
 
-        Route::get('/permit_condition', [MiscController::class, 'showpermitcondition'])->name('permitcondition');
-        // Route::get('/permit_add_condition', [MiscController::class, 'permitaddcondition']);
-        Route::post('/save_condition', [MiscController::class, 'saveCondition'])->name('saveCondition');
-        // Route::get('/permit_edit_condition/{id}', [MiscController::class, 'editCondition']);
-        // Route::get('/control_panel', [MiscController::class, 'showcontrolpanel'])->name('controlpanel');
-        Route::post('/district/entry-point/update', [MiscController::class, 'updateEntry']);
+            Route::get('/permit_condition', [MiscController::class, 'showpermitcondition'])->name('permitcondition');
+            // Route::get('/permit_add_condition', [MiscController::class, 'permitaddcondition']);
+            Route::post('/save_condition', [MiscController::class, 'saveCondition'])->name('saveCondition');
+            // Route::get('/permit_edit_condition/{id}', [MiscController::class, 'editCondition']);
+            // Route::get('/control_panel', [MiscController::class, 'showcontrolpanel'])->name('controlpanel');
+            Route::post('/district/entry-point/update', [MiscController::class, 'updateEntry']);
 
+            // BOUNDARY OFFICER MANAGEMENT - Restricted
+            Route::get("/boundary/list", [BoundaryOfficerController::class, 'view'])->name('boundary.list');
+            Route::get("/boundary/list/data", [BoundaryOfficerController::class, 'data']);
+            Route::get('/boundary/{id}', [BoundaryOfficerController::class, 'getBoundaryData']);
+            Route::post('/boundary/{id}/save', [BoundaryOfficerController::class, 'saveInternal']);
+            Route::get('/get_entry_point', [PermitApplicationController::class, 'getEntryPoint']);
 
+            // Admin dashboard - Restricted
+            Route::get('/admin/dashboard/daily-volume', [AdminDashboardController::class, 'dailyVolume']);
+            Route::get('/admin/dashboard/user-registration', [AdminDashboardController::class, 'userRegistration']);
+        });
 
         // ======================= notifications ===========================
         Route::post('/permit/{id}', [PermitConsignmentController::class, 'accept_permit']);
@@ -236,19 +255,6 @@ Route::prefix('internal')
         Route::post('/inspection/{id}/status', [InspectionController::class, 'updateStatus'])->name('inspection.status');
 
         Route::post('/consignment/{id}', [ConsignmentApplicationController::class, 'accept_permit']);
-
-
-        // BOUNDARY OFFICER
-        Route::get("/boundary/list", [BoundaryOfficerController::class, 'view'])->name('boundary.list');
-        Route::get("/boundary/list/data", [BoundaryOfficerController::class, 'data']);
-        Route::get('/boundary/{id}', [BoundaryOfficerController::class, 'getBoundaryData']);
-        Route::post('/boundary/{id}/save', [BoundaryOfficerController::class, 'saveInternal']);
-        Route::get('/get_entry_point', [PermitApplicationController::class, 'getEntryPoint']);
-
-
-        // dashboard
-        Route::get('/admin/dashboard/daily-volume', [AdminDashboardController::class, 'dailyVolume']);
-        Route::get('/admin/dashboard/user-registration', [AdminDashboardController::class, 'userRegistration']);
 
     });
 
@@ -318,6 +324,7 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/application/importer/{id}', [ApplicationController::class, 'get_importer']);
 
     Route::get('/permit/generate/{id}', [PermitGenerateController::class, 'generatePermitWord']);
+    Route::get('/permit/generate/pdf/{id}', [PermitGenerateController::class, 'generatePermitPdf']);
     Route::get('/permit/generate/consignment/{id}', [PermitGenerateController::class, 'generateConsignmentPermitWord']);
 
     // list down all the inspection
@@ -335,23 +342,25 @@ Route::middleware(['auth.any'])->group(function () {
     Route::post('/payment/cancel', [PaymentController::class, 'cancelPayment']);
 
 
-    // VIEW PAYMENT
-    Route::get('/order/list', [ApplicationPaymentController::class, 'getView']);
-    Route::get('/order/list/data', [ApplicationPaymentController::class, 'getAllOrderList']);
-    Route::get('/order/{order_number}', [ApplicationPaymentController::class, 'orderDetails']);
+    // VIEW PAYMENT - Restricted
+    Route::middleware(['not.boundary'])->group(function () {
+        Route::get('/order/list', [ApplicationPaymentController::class, 'getView']);
+        Route::get('/order/list/data', [ApplicationPaymentController::class, 'getAllOrderList']);
+        Route::get('/order/{order_number}', [ApplicationPaymentController::class, 'orderDetails']);
 
-    // PERMIT
-    Route::get('/permit/list/import', [PermitConsignmentController::class, 'getView']);
-    Route::get('/permit/list/import/data', [PermitConsignmentController::class, 'getAllpermitList']);
-    Route::get('/permit/import/{permit_number}', [PermitConsignmentController::class, 'permitDetails']);
+        // PERMIT
+        Route::get('/permit/list/import', [PermitConsignmentController::class, 'getView']);
+        Route::get('/permit/list/import/data', [PermitConsignmentController::class, 'getAllpermitList']);
+        Route::get('/permit/import/{permit_number}', [PermitConsignmentController::class, 'permitDetails']);
 
-    // INSPECTION CERTIFICATE PERMIT
-    Route::get('/permit/list/inspection', [InspectionPermitController::class, 'getView']);
-    Route::get('/permit/list/inspection/data', [InspectionPermitController::class, 'getAllpermitList']);
+        // INSPECTION CERTIFICATE PERMIT
+        Route::get('/permit/list/inspection', [InspectionPermitController::class, 'getView']);
+        Route::get('/permit/list/inspection/data', [InspectionPermitController::class, 'getAllpermitList']);
 
-    Route::get('/permit/list/consignment', [ConsignmentPermitController::class, 'getView']);
-    Route::get('/permit/list/consignment/data', [ConsignmentPermitController::class, 'getAllPermitList']);
-    Route::get('/permit/inspection/{permit_number}', [InspectionPermitController::class, 'permitDetails']);
+        Route::get('/permit/list/consignment', [ConsignmentPermitController::class, 'getView']);
+        Route::get('/permit/list/consignment/data', [ConsignmentPermitController::class, 'getAllPermitList']);
+        Route::get('/permit/inspection/{permit_number}', [InspectionPermitController::class, 'permitDetails']);
+    });
 
     // Route::post('/')
 

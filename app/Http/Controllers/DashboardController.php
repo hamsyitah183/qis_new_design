@@ -160,35 +160,35 @@ class DashboardController extends Controller
 
         // Combine and sort all applications
         if(authUser()['roles'][0] == 'boundary officer') {
-            $boundary = InternalUser::with(['boundaryOfficer.entryPoint'])->where('uuid', authUser()['user']['uuid'])->first();
-            // dd($boundary->boundaryOfficer);
-            if (authUser()['roles'][0] === 'boundary officer') {
-
-                $boundary = InternalUser::with('boundaryOfficer')
-                    ->where('uuid', authUser()['user']['uuid'])
-                    ->first();
+            $boundary = InternalUser::with(['boundaryOfficer.entryPoint'])
+                ->where('uuid', authUser()['user']['uuid'])
+                ->first();
             
-                $entryPoint = $boundary?->boundaryOfficer?->ip_entry_id;
+            $entryPoint = $boundary?->boundaryOfficer?->ip_entry_id;
 
-                // dd( $importPermits, $entryPoint);
-            
+            // If entry point is set, filter by it; otherwise show all
+            if ($entryPoint) {
                 $latestApplications = $importPermits
                     ->concat($inspectionCerts)
                     ->concat($consignmentCerts)
-                    ->filter(fn ($app) => $app->entry_point === $entryPoint)
+                    ->filter(fn ($app) => $app->entry_point == $entryPoint) // Use loose comparison
                     ->sortByDesc('created_at')
-                    ->take(5)
                     ->values();
-            } 
-            
-
-        }else {
+            } else {
+                // No entry point assigned, show all applications
+                $latestApplications = $importPermits
+                    ->concat($inspectionCerts)
+                    ->concat($consignmentCerts)
+                    ->sortByDesc('created_at')
+                    ->values();
+            }
+        } else {
             $latestApplications =  $importPermits
-            ->concat($inspectionCerts)
-            ->concat($consignmentCerts)
-            ->sortByDesc('created_at')
-            ->take(5)
-            ->values();
+                ->concat($inspectionCerts)
+                ->concat($consignmentCerts)
+                ->sortByDesc('created_at')
+                ->take(5)
+                ->values();
         }
         
 
