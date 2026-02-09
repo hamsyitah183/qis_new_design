@@ -374,6 +374,17 @@ class InspectionController extends Controller
                     'date_importer_verify' => $verifyDate,
                 ]);
 
+                $notificationController = new NotificationController();
+
+                $notificationController->sendStatusMessage(
+                    $application->importer_detail['fullname'] ?? 'User',
+                    'Inspection Application',
+                    $application->application_id,
+                    'will be check by DOA',
+                    `Your application has been successfully submitted.`,
+                    $application->importer->phone_number ?? '60143290092', // recipient number
+                );
+
                 activity()
                     ->tap(function (Activity $activity) {
                         $activity->log_name = 'user_activity';
@@ -582,25 +593,25 @@ class InspectionController extends Controller
         } elseif ($status === 'Rejected' || $status === 'Clerk Rejected') {
             $application->importer_verify = 'Rejected';
 
-            // $notificationController->sendStatusMessage(
-            //     $application->importer_detail['fullname'] ?? 'User',
-            //     'Inspection Application',
-            //     $application->application_id,
-            //     'has been rejected by DOA',
-            //     `Your application is rejected.`,
-            //     $application->importer->phone_number ?? '60143290092', // recipient number
-            // );
+            $notificationController->sendStatusMessage(
+                $application->importer_detail['fullname'] ?? 'User',
+                'Inspection Application',
+                $application->application_id,
+                'has been rejected by DOA',
+                `Your application is rejected.`,
+                $application->importer->phone_number ?? '60143290092', // recipient number
+            );
         } elseif ($status === 'Clerk Verified') {
             $application->importer_verify = 'Accepted';
 
-            // $notificationController->sendStatusMessage(
-            //     $application->importer_detail['fullname'] ?? 'User',
-            //     'Inspection Application',
-            //     $application->application_id,
-            //     'has been accepted by DOA',
-            //     `Your application is under review and will be processed shortly.`,
-            //     $application->importer->phone_number ?? '60143290092', // recipient number
-            // );
+            $notificationController->sendStatusMessage(
+                $application->importer_detail['fullname'] ?? 'User',
+                'Inspection Application',
+                $application->application_id,
+                'has been accepted by DOA',
+                `Your application is under review and will be processed shortly.`,
+                $application->importer->phone_number ?? '60143290092', // recipient number
+            );
         }
 
         $application->save();
@@ -875,9 +886,9 @@ class InspectionController extends Controller
 
         // find all items
         $items = $inspectionApplication->inspectionItems;
-
+        $permit_number =  'SP/' . now()->format('ymd') . rand(1000, 9999);
         foreach ($items as $item) {
-            $item->permit_number = 'SP/' . now()->format('ymd') . rand(1000, 9999);
+            $item->permit_number = $permit_number;
             $item->status = 'pending for payment';
             $item->save();
         }
@@ -1064,6 +1075,18 @@ class InspectionController extends Controller
             $application->save();
 
             $application->logActivity(action: 'Officer Verification Completed', remark: 'All inspection items processed', status: 'Officer Verification Completed');
+        
+
+            $notificationController = new NotificationController();
+
+            $notificationController->sendStatusMessage(
+                $application->importer_detail['fullname'] ?? 'User',
+                'Inspection Application',
+                $application->application_id,
+                'checked by DOA',
+                "All your application's inspection items have been checked by DOA. Please reapply any rejected items.",
+                $application->importer->phone_number ?? '+60143290092', // recipient number
+            );
         }
 
         return response()->json([

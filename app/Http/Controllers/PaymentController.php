@@ -420,7 +420,7 @@ class PaymentController extends Controller
                     $application->importer_detail['fullname'] ?? 'User' ,
                     $application['application_type'],
                     $application->application_id,
-                    'submitted',
+                    'paid',
                     'Your application is successfully paid.',
                     $application->importer->phone_number ?? '60143290092' // recipient number
                 );
@@ -432,7 +432,7 @@ class PaymentController extends Controller
                 $application->importer_detail['fullname'] ?? 'User' ,
                 $application['application_type'],
                 $application->application_id,
-                'submitted',
+                $transactionStatus === 'unsuccessful' ? 'failed' : 'pending authorization',
                 'Your application payment is ' . $transactionStatus . '.',
 
                 $application->importer->phone_number ?? '60143290092' // recipient number

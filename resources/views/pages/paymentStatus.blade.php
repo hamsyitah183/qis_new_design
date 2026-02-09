@@ -81,11 +81,16 @@
                                     <tr>
                                         <th scope="row" class="text-nowrap">Permits Number:</th>
                                         <td>
-                                            @foreach ($permits as $item)
-                                                {{ $item['permit_number'] }}@if (!$loop->last)
-                                                    ,
-                                                @endif
-                                            @endforeach
+                                            @if ($order->application_type == 'Import Permit')
+                                                @foreach ($permits as $item)
+                                                    {{ $item['permit_number'] }}@if (!$loop->last)
+                                                        ,
+                                                    @endif
+                                                @endforeach
+                                            @else 
+                                                {{   $items[0]['permit_number'] }}
+                                            @endif
+
                                         </td>
                                     </tr>
                                 </tbody>
