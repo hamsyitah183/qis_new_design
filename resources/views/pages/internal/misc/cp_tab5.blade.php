@@ -6,7 +6,7 @@
                     <div class="card-header justify-content-between d-sm-flex d-block">
                         <div class="card-title">Rejection Notes</div>
                         <div class="mt-sm-0 mt-2">
-                            <button class="btn btn-sm btn-primary" onclick="addmodal('rejection')"><i
+                            <button class="btn btn-sm btn-primary" onclick="addmodal('rejection')" data-type = "rejection"><i
                                     class="ri-add-line me-1"></i> Add Rejection Notes</button>
                         </div>
                     </div>

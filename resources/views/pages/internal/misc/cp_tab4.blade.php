@@ -6,7 +6,7 @@
                     <div class="card-header justify-content-between d-sm-flex d-block">
                         <div class="card-title">Category</div>
                         <div class="mt-sm-0 mt-2">
-                            <button class="btn btn-sm btn-primary" onclick="addmodal('condition')"><i
+                            <button class="btn btn-sm btn-primary" onclick="addmodal('condition')" data-type = "condition"><i
                                     class="ri-add-line me-1"></i> Add Category</button>
                         </div>
                     </div>

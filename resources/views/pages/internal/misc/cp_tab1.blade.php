@@ -6,7 +6,7 @@
                     <div class="card-header justify-content-between d-sm-flex d-block">
                         <div class="card-title">District Entry</div>
                         <div class="mt-sm-0 mt-2">
-                            <button class="btn btn-sm btn-primary" onclick="addmodal('entry')"><i
+                            <button class="btn btn-sm btn-primary" onclick="addmodal('entry')" data-type = "entry"><i
                                     class="ri-add-line me-1"></i> Add Entry Point</button>
                         </div>
                     </div>

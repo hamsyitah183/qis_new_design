@@ -13,13 +13,13 @@
 
     <p>If you are not redirected automatically, click the button below.</p>
 
-    {{-- <form method="POST"
+    <form method="POST"
       action="https://bayupay-dummy.geovidia.my/checkout.php"
-      id="bayupayForm"> --}}
+      id="bayupayForm">
     {{-- @dd($data) --}}
     {{-- <form method="POST" action="https://hands-on5.my/checkout.php" id="bayupayForm"> --}}
         
-    <form method="POST" action="https://hands-on5.sabah.gov.my/checkout.php" id="bayupayForm">
+    {{-- <form method="POST" action="https://hands-on5.sabah.gov.my/checkout.php" id="bayupayForm"> --}}
 
         <input type="hidden" name="amount" value="{{ number_format($data['amount'], 2, '.', '') }}">
         <input type="hidden" name="sid" value="{{ $data['sid'] }}">

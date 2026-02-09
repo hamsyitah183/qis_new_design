@@ -93,6 +93,7 @@ class MiscController extends Controller
 
     public function addpbdata(Request $request)
     {
+        dd($request->all());
         $cate = $request->input('category');
         $code = $request->input('item_code');
         $desc = $request->input('item_desc');

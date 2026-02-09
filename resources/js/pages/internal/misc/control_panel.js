@@ -3,6 +3,8 @@ import Swal from "sweetalert2";
 
 // var tempDropzoneUrl = `${window.baseUrl}/public/temp_upload`;
 
+let cateName = "";
+
 $(document).ready(function () {
     // console.log("Control Panel JS loaded");
 
@@ -433,7 +435,7 @@ $(document).ready(function () {
         const thismodal = new bootstrap.Modal(modalEl);
         thismodal.show();
 
-        let categoryTitle, cateName;
+        let categoryTitle;
         switch (cate) {
             case "entry":
                 categoryTitle = "District Entry";
@@ -454,6 +456,7 @@ $(document).ready(function () {
                 categoryTitle = "Unit Measurement";
                 cateName = "unit_measurement";
                 $("#addCodev").prop("disabled", false);
+                
                 break;
             case "reject":
                 categoryTitle = "Rejection Notes";
@@ -477,7 +480,7 @@ $(document).ready(function () {
 
         console.log("Add generic button clicked!");
 
-        const cate = $("#addItemType").val();
+        const cate = cateName;
         const code = $("#addCodev").val();
         const desc = $("#addDescv").val();
 

@@ -436,6 +436,16 @@ class InspectionController extends Controller
                 $application->logActivity(action: $isNewApplication ? 'Draft Created' : 'Draft Updated', remark: $isNewApplication ? 'Inspection application saved as draft' : 'Inspection application draft updated', status: 'Draft');
             } else {
                 $application->logActivity(action: 'Submitted', remark: 'Inspection application submitted', status: 'Clerk review in-progress');
+                $notificationController = new NotificationController();
+
+                $notificationController->sendStatusMessage(
+                    $application->importer_detail['fullname'] ?? 'User',
+                    'Inspection Application',
+                    $application->application_id,
+                    'will be check by DOA',
+                    `Your application has been successfully submitted.`,
+                    $application->importer->phone_number ?? '60143290092', // recipient number
+                );
             }
 
             // Global activity log for inspection_activity
@@ -564,14 +574,33 @@ class InspectionController extends Controller
         }
 
         $application->status = $status;
+        $notificationController = new NotificationController();
 
         // Handle verification fields if applicable
         if ($status === 'Clerk review in-progress') {
             $application->importer_verify = 'Verified';
         } elseif ($status === 'Rejected' || $status === 'Clerk Rejected') {
             $application->importer_verify = 'Rejected';
+
+            // $notificationController->sendStatusMessage(
+            //     $application->importer_detail['fullname'] ?? 'User',
+            //     'Inspection Application',
+            //     $application->application_id,
+            //     'has been rejected by DOA',
+            //     `Your application is rejected.`,
+            //     $application->importer->phone_number ?? '60143290092', // recipient number
+            // );
         } elseif ($status === 'Clerk Verified') {
             $application->importer_verify = 'Accepted';
+
+            // $notificationController->sendStatusMessage(
+            //     $application->importer_detail['fullname'] ?? 'User',
+            //     'Inspection Application',
+            //     $application->application_id,
+            //     'has been accepted by DOA',
+            //     `Your application is under review and will be processed shortly.`,
+            //     $application->importer->phone_number ?? '60143290092', // recipient number
+            // );
         }
 
         $application->save();
@@ -607,6 +636,7 @@ class InspectionController extends Controller
             ->log($logMessage);
 
         $messages = $statusMessages[$status];
+
         $notificationUrl = route('public.viewInspectionApplication', ['id' => $application->application_id]);
 
         /**
@@ -921,7 +951,7 @@ class InspectionController extends Controller
     public function rejectInspectionItem($id, Request $request)
     {
         // Check if user has proper role (Officer or Admin)
-    
+
         $user = authUser()['user'];
         if (!$user->hasAnyRole(['officer', 'admin', 'superadmin'])) {
             return response()->json(

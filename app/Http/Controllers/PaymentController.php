@@ -249,14 +249,17 @@ class PaymentController extends Controller
 
          // dd($application['application_type']);
         if ($application['application_type'] == 'Import Permit') {
-            $itn = 'IT037962';
+            // $itn = 'IT037962';
+            $itn = 'ITN10001';
             $application_name = 'IP' . $request->application_id;
         } elseif ($application['application_type'] == 'Inspection Certificate') {
-            $itn = 'IT549383';
+            // $itn = 'IT549383';
+            $itn = 'ITN10002';
             $application_name = 'SP' . $request->application_id;
         } elseif ($application['application_type'] == 'Consignment Certificate') {
             // $itn = 'IT037963';
-            $itn = 'IT331659';
+            // $itn = 'IT331659';
+            $itn = 'ITN10003';
             $application_name = 'SK' . $request->application_id;
         } else {
             $itn = 'ITN';
@@ -267,10 +270,12 @@ class PaymentController extends Controller
         $orderNumber = 'QIS-' . $application_name . '-' . $runningNumber;
 
        
-        $sid = 'SE13001C';
+        $sid = 'QIS123';
 
         // $itn = 'IT037962';
         // $sid = 'SE12501C';
+
+     
 
         $order = Order::create([
             'order_number' => $orderNumber,
@@ -296,7 +301,8 @@ class PaymentController extends Controller
             'co_no' => $request->no_phone,
 
             // 'application_id' => $request->application_id,
-            'bounce' => url(' paymentUpdate' . '/' . $order->order_number),
+            // 'bounce' => '/paymentUpdate' . '/' . $order->order_number,
+            'bounce' => route('payment.update', ['rn' => $order->order_number]),
         ];
 
         return $data;

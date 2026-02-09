@@ -6,7 +6,7 @@
                     <div class="card-header justify-content-between d-sm-flex d-block">
                         <div class="card-title">Unit Measurement</div>
                         <div class="mt-sm-0 mt-2">
-                            <button class="btn btn-sm btn-primary" onclick="addmodal('measurement')"><i
+                            <button class="btn btn-sm btn-primary" onclick="addmodal('measurement')" data-type = "measurement"><i
                                     class="ri-add-line me-1"></i> Add Measurement Unit</button>
                         </div>
                     </div>

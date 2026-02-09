@@ -366,7 +366,7 @@ Route::middleware(['auth.any'])->group(function () {
 
     // bounce url
     // Route::get('/paymentUpdate/{kod_transaksi}', [PaymentController::class, 'bounce']);
-    Route::get('/paymentUpdate/{rn}', [PaymentController::class, 'paymentUpdate']);
+    Route::get('/paymentUpdate/{rn}', [PaymentController::class, 'paymentUpdate'])->name('payment.update');
 
 
 
