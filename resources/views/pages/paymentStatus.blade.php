@@ -88,7 +88,7 @@
                                                     @endif
                                                 @endforeach
                                             @else 
-                                                {{   $items[0]['permit_number'] }}
+                                                {{   $permits[0]['permit_number'] }}
                                             @endif
 
                                         </td>
