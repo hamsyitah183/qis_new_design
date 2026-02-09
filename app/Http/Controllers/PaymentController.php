@@ -404,11 +404,33 @@ class PaymentController extends Controller
                 default => 0,
             };
 
+            $notificationController = new NotificationController();
+
             // Update order status
             if ($transactionStatus === 'successful') {
                 $order->status = $allPaid ? 'payment complete' : 'payment partial';
+
+                $notificationController->sendStatusMessage(
+                    $application->importer_detail['fullname'] ?? 'User' ,
+                    $application['application_type'],
+                    $application->application_id,
+                    'submitted',
+                    'Your application is successfully paid.',
+                    $application->importer->phone_number ?? '60143290092' // recipient number
+                );
+
             } else {
                 $order->status = $transactionStatus === 'unsuccessful' ? 'payment failed' : 'pending authorization';
+            
+                $notificationController->sendStatusMessage(
+                $application->importer_detail['fullname'] ?? 'User' ,
+                $application['application_type'],
+                $application->application_id,
+                'submitted',
+                'Your application payment is ' . $transactionStatus . '.',
+
+                $application->importer->phone_number ?? '60143290092' // recipient number
+            );
             }
 
             $order->save();
