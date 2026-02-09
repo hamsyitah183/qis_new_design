@@ -59,9 +59,42 @@ class UserController extends Controller
     }
 
 
-    public function public_list_data()
+    public function public_list_data(Request $request)
     {
         $users = PublicUser::query();
+
+        // Apply filters from request
+        if ($request->has('account_type') && $request->account_type != '') {
+            $users->where('account_type', $request->account_type);
+        }
+
+        if ($request->has('email_verification') && $request->email_verification != '') {
+            if ($request->email_verification == 'verified') {
+                $users->whereNull('email_verified_at');
+            } else if ($request->email_verification == 'not_verified') {
+                $users->whereNotNull('email_verified_at');
+            }
+        }
+
+        if ($request->has('account_verification') && $request->account_verification != '') {
+            if ($request->account_verification == 'verified') {
+                $users->whereHas('approved', function ($query) {
+                    $query->where('doa_verified', true);
+                });
+            } else if ($request->account_verification == 'not_verified') {
+                $users->whereDoesntHave('approved', function ($query) {
+                    $query->where('doa_verified', true);
+                });
+            }
+        }
+
+        if ($request->has('sort_by') && $request->sort_by != '') {
+            if ($request->sort_by == 'created_at') {
+                $users->orderBy('created_at', 'asc');
+            } else if ($request->sort_by == 'latest') {
+                $users->orderBy('created_at', 'desc');
+            }
+        }
         $currentUser = Auth::guard('public')->user();
 
         return DataTables::of($users)

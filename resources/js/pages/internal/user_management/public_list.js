@@ -300,6 +300,44 @@ async function public_user_list() {
 
     delete_public_user();
 
+    // ========== Filter Functionality ==========
+    
+    // Apply Filter Button
+    $(document).on("click", "#applyFilterBtn", function (e) {
+        e.preventDefault();
+        
+        const filters = {
+            account_type: $("#filterAccountType").val(),
+            email_verification: $("#filterEmailVerification").val(),
+            account_verification: $("#filterAccountVerification").val(),
+            sort_by: $("#filterTime").val()
+        };
+
+        // Update DataTable AJAX URL with filter parameters
+        const url = new URL("/internal/user_public/list/data", window.location.origin);
+        Object.keys(filters).forEach(key => {
+            if (filters[key]) {
+                url.searchParams.append(key, filters[key]);
+            }
+        });
+
+        publicUsersTable.ajax.url(url.toString()).load();
+    });
+
+    // Reset Filter Button
+    $(document).on("click", "#resetFilterBtn", function (e) {
+        e.preventDefault();
+        
+        // Reset all filter dropdowns
+        $("#filterAccountType").val("");
+        $("#filterEmailVerification").val("");
+        $("#filterAccountVerification").val("");
+        $("#filterTime").val("");
+
+        // Reset DataTable to default URL
+        publicUsersTable.ajax.url("/internal/user_public/list/data").load();
+    });
+
     // Reset modal on close
     $("#publicUserModal").on("hidden.bs.modal", function () {
         $("#publicUserModalLabel").text("Add Public User");

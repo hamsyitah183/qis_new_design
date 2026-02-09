@@ -55,7 +55,7 @@
                                         <label class="form-label fw-semibold mb-1">Account Type</label>
                                         <select class="form-select form-select-sm" id="filterAccountType">
                                             <option value="">All</option>
-                                            <option value="individual">Individual</option>
+                                            <option value="individu">Individu</option>
                                             <option value="company">Company</option>
                                         </select>
                                     </li>
