@@ -38,6 +38,7 @@
         "laravel-echo": "^2.2.7",
         "select2": "^4.1.0-rc.0",
         "sweetalert2": "^11.26.3",
-        "tabler-icons": "^1.35.0"
+        "tabler-icons": "^1.35.0",
+        "uuid": "^13.0.0"
     }
 }

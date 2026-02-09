@@ -2,7 +2,7 @@ import Dropzone from "dropzone";
 import $ from "jquery";
 window.$ = window.jQuery = $;
 import Swal from "sweetalert2";
-import { getAuthUser } from "../../app";
+import { generateUUID, getAuthUser } from "../../app";
 import "dropzone/dist/dropzone.css";
 import { render } from "react-dom/cjs/react-dom.production.min";
 
@@ -598,7 +598,8 @@ function saveConsignmentAttachment() {
 
         // ✅ Build the item object
         const newItem = {
-            id: crypto.randomUUID(),
+            // id: crypto.randomUUID(),
+            id: generateUUID(),
             item_id: itemSelectValue,
             item_name: itemSelectText,
             value: itemValue,

@@ -383,14 +383,35 @@ class PermitApplicationController extends Controller
                 if (!$isDraft) {
                     $notificationController = new NotificationController();
 
-                    $notificationController->sendStatusMessage(
-                        $application->importer_detail['fullname'] ?? 'User',
-                        'Import Permit',
-                        $application->application_id,
-                        'will be check by DOA',
-                        `Your application has been successfully submitted.`,
-                        $application->importer->phone_number ?? '60143290092', // recipient number
-                    );
+                    if($application->category_application == 1) {
+                        $notificationController->sendStatusMessage(
+                            $application->importer['fullname'] ?? 'User',
+                            'Import Permit',
+                            $application->application_id,
+                            'submitted',
+                            `An application is need your approval.`,
+                            $application->importer->phone_number ?? '60143290092', // recipient number
+                        );
+                        $notificationController->sendStatusMessage(
+                            $application->user['fullname'] ?? 'User',
+                            'Import Permit',
+                            $application->application_id,
+                            'submitted',
+                            `Your application has been successfully submitted and wait for approval from the respective importer.`,
+                            $application->user->phone_number ?? '60143290092', // recipient number
+                        );
+                    } else {
+                        $notificationController->sendStatusMessage(
+                            $application->importer['fullname'] ?? 'User',
+                            'Import Permit',
+                            $application->application_id,
+                            'will be check by DOA',
+                            `Your application has been successfully submitted.`,
+                            $application->importer->phone_number ?? '60143290092', // recipient number
+                        );
+                    }
+
+                   
                 }
             }
 
