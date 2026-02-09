@@ -718,9 +718,11 @@ class ConsignmentApplicationController extends Controller
         
         $permits = $application->consignmentPermits;
 
+        $permit_number = 'SK/' . now()->format('ymd') . rand(1000, 9999);
+
         if ($accepted == 1) {
             foreach($permits as $permit) {
-                $permit->permit_number = 'SK/' . now()->format('ymd') . rand(1000, 9999);
+                $permit->permit_number = $permit_number;
                 $permit->status = 'pending for payment';
                 $status = 'Pending for Payment';
                 $permit->save();
