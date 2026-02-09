@@ -256,14 +256,14 @@
                                 </li>
 
                                 @role('superadmin')
-                                <li class="slide {{ $currentRoute === 'internal.internal.role' ? 'active' : '' }}">
-                                    <a href="{{ route('internal.internal.role') }}" class="side-menu__item">Role and
-                                        Permission</a>
-                                </li>
+                                    <li class="slide {{ $currentRoute === 'internal.internal.role' ? 'active' : '' }}">
+                                        <a href="{{ route('internal.internal.role') }}" class="side-menu__item">Role and
+                                            Permission</a>
+                                    </li>
 
-                                <li class="slide {{ $currentRoute === 'internal.boundary.list' ? 'active' : '' }}">
-                                    <a href="{{ route('internal.boundary.list') }}" class="side-menu__item">Boundary Officer</a>
-                                </li>
+                                    <li class="slide">
+                                        <a href="{{ route('internal.boundary.list') }}" class="side-menu__item">Boundary Officer</a>
+                                    </li>
                                 @endrole
                             </ul>
                         </li>
