@@ -5,11 +5,11 @@
     <title>Import Permit</title>
     <style>
         @page {
-            margin: 2.54cm 2.54cm; /* A4 standard margin */
+            margin: 1.54cm 1.54cm; /* A4 standard margin */
         }
         body {
             font-family: Arial, sans-serif;
-            font-size: 12pt;
+            font-size: 11pt;
             line-height: 1.3;
         }
         .header-table {
