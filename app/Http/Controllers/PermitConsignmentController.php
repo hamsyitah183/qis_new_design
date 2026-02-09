@@ -96,7 +96,7 @@ class PermitConsignmentController extends Controller
                 $application->importer_detail['fullname'] ?? 'User',
                 'Import Permit',
                 $application->application_id,
-                'officer verification completed by DOA',
+                'checked and verified by DOA',
                 "All your application's permit has been verified by DOA. Please reapply a permit that has been rejected if theres any",
                 $application->importer->phone_number ?? '+60143290092', // recipient number
             );

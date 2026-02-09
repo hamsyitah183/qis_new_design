@@ -317,10 +317,12 @@ class PaymentController extends Controller
         }
 
         // Call BayuPay API
-        // $response = Http::withToken('test-api')
-        // ->get('https://bayupay-dummy.geovidia.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
+        $response = Http::withToken('test-api')
+        ->get('https://bayupay-dummy.geovidia.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
         // $response = Http::withToken('test-api')->get('https://hands-on5.sabah.gov.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
-        $response = Http::withToken('test-api')->get('https://hands-on5.sabah.gov.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
+
+
+        // $response = Http::withToken('test-api')->get('https://hands-on5.sabah.gov.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
 
         if (!$response->successful()) {
             abort(500, 'Failed to retrieve payment data');
