@@ -112,7 +112,7 @@
                 <div>Regulations 3, 5(1) and 5(4)</div>
             </td>
             <td style="width: 15%;">
-                <img src="{{ public_path('asset/sabah-svg.jpg') }}" class="logo" alt="Sabah Logo">
+                <img src="{{ public_path('asset/sabah-svg.jpg') }}" class="logo" alt="Sabah Logo" style="width: 80px;">
             </td>
         </tr>
     </table>

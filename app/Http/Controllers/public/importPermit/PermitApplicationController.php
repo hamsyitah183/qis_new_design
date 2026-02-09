@@ -329,8 +329,9 @@ class PermitApplicationController extends Controller
                     Log::warning('Pusher connection failed but continuing application save: ' . $e->getMessage());
                 }
             } else {
+               
                 // Create new application
-                $status = $isDraft ? 'Draft' : ((int) ($permit['applCate'] ?? 0) === 1 ? 'Wait for company approval' : 'Clerk Review In-Progress');
+                $status = $isDraft ? 'Draft' : ((int) ($permit['applCate'] ?? 0) === 1 ? 'wait for company approval' : 'Clerk Review In-Progress');
                 $isNewApplication = true;
                 $application = IpApplication::create([
                     'application_id' => 'IPO' . now()->format('ymd') . random_int(1000, 9999),
@@ -379,11 +380,12 @@ class PermitApplicationController extends Controller
                         'application' => $application
                     ])
                     ->log(authUser()['user']['fullname'] . ' has created an application (ID: ' . $application->application_id . ')');
-
+                $notificationController = new NotificationController();
                 if (!$isDraft) {
-                    $notificationController = new NotificationController();
+                    // dd('is not draf', $application->category_application);
+                    
 
-                    if($application->category_application == 1) {
+                    if($application->category_application = 1) {
                         $notificationController->sendStatusMessage(
                             $application->importer['fullname'] ?? 'User',
                             'Import Permit',
@@ -392,6 +394,7 @@ class PermitApplicationController extends Controller
                             `An application is need your approval.`,
                             $application->importer->phone_number ?? '60143290092', // recipient number
                         );
+
                         $notificationController->sendStatusMessage(
                             $application->user['fullname'] ?? 'User',
                             'Import Permit',
@@ -405,7 +408,7 @@ class PermitApplicationController extends Controller
                             $application->importer['fullname'] ?? 'User',
                             'Import Permit',
                             $application->application_id,
-                            'will be check by DOA',
+                            'submitted',
                             `Your application has been successfully submitted.`,
                             $application->importer->phone_number ?? '60143290092', // recipient number
                         );

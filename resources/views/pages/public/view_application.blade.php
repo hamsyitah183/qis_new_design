@@ -108,7 +108,9 @@
                             {{-- @dd($application->status) --}}
                             @if (
                                 ($application->status === 'Clerk Review In-Progress' && $isAdminOrClerk) ||
-                                    ($application->category_application == 1 && ($isOwner || $isAdminOrClerk)))
+                                    ($application->category_application == 1 &&
+                                    $application->status === 'Wait for company approval'
+                                    && ($isOwner || $isAdminOrClerk)))
                                 {{-- Step 4 --}}
                                 @include('pages.public.view_permit.step4')
                             @endif
