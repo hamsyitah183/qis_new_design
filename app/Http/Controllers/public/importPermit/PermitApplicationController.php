@@ -514,17 +514,17 @@ class PermitApplicationController extends Controller
             if (!$isDraft) {
                 // instantiate the controller
 
-                // $notificationController = new NotificationController();
+                $notificationController = new NotificationController();
 
-                // // optionally, pass dynamic data instead of hardcoded
-                // $notificationController->sendStatusMessage(
-                //     $application->importer_detail['fullname'] ?? 'User',
-                //     'Import Permit',
-                //     $application->application_id,
-                //     'submitted',
-                //     'Your application is under review and will be processed shortly.',
-                //     $application->importer->phone_number ?? '60143290092' // recipient number
-                // );
+                // optionally, pass dynamic data instead of hardcoded
+                $notificationController->sendStatusMessage(
+                    $application->importer_detail['fullname'] ?? 'User',
+                    'Import Permit',
+                    $application->application_id,
+                    'submitted',
+                    'Your application is under review and will be processed shortly.',
+                    $application->importer->phone_number ?? '60143290092' // recipient number
+                );
             }
 
             return response()->json([

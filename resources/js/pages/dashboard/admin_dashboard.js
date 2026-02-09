@@ -47,11 +47,11 @@ function applicationCount() {
         $('#amountRevenue').text(`RM ${data.total ?? 0}`);
     }).fail(xhr => {
         console.error("Failed to load application count:", xhr.responseText);
-        Swal.fire({
-            icon: "error",
-            title: "Failed to Load Data",
-            text: "Please try again or check your connection.",
-        });
+        // Swal.fire({
+        //     icon: "error",
+        //     title: "Failed to Load Data",
+        //     text: "Please try again or check your connection.",
+        // });
     });
 }
 

@@ -37,9 +37,7 @@
 {{-- SCRIPTS --}}
 @push('scripts')
     @if (in_array($role, ['admin', 'superadmin']))
-        {{-- @vite(['resources/js/pages/dashboard/admin_dashboard.js']) --}}
         @vite(['resources/js/pages/dashboard/admin_dashboard.js'])
-
 
     @elseif ($role === 'clerk')
         @vite(['resources/js/pages/dashboard/clerk_dashboard.js'])
@@ -48,4 +46,3 @@
         @vite(['resources/js/pages/dashboard/officer_dashboard.js'])
     @endif
 @endpush
-

@@ -10,6 +10,7 @@ services:
     volumes:
       - .:/var/www/html
       # - storage:/var/www/html/storage
+      - ./.docker/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini
       - storage:/var/www/html/storage/app/public  # named volume for storage
       - cache:/var/www/html/bootstrap/cache
     working_dir: /var/www/html

@@ -13,6 +13,9 @@ use Illuminate\Http\Request;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
 use Barryvdh\DomPDF\Facade\Pdf;
+// use PhpOffice\PhpWord\PhpWord;
+// use PhpOffice\PhpWord\IOFactory;
+use PhpOffice\PhpWord\Settings;
 
 class PermitGenerateController extends Controller
 {
@@ -182,17 +185,18 @@ class PermitGenerateController extends Controller
 
 
     // inspection application
-    function generateInspection($id)
+    function generateInspectionWord($id)
     {
+        // dd($id, InspectionItem::all());
         // $id is the inspection item id, not application id
-        $inspectionItem = InspectionItem::with(['application.importer', 'application.exporter', 'application.inspectionItems'])
-            ->where('id', $id)->firstOrFail();
+        $application = InspectionApplication::where('application_id', $id)->firstOrFail();
 
-        $application = $inspectionItem->application;
+    
+
+        $items = $application->inspectionItems;
 
         // dd($application);
 
-        $items = $application->inspectionItems;
         // dd($items);
 
         $importer = $application->importer_detail;
@@ -360,6 +364,37 @@ class PermitGenerateController extends Controller
 
         return response()->download($tempPath)->deleteFileAfterSend(true);
     }
+
+    public function generateInspection($id)
+{
+    // $id = inspection application id
+    $application = InspectionApplication::where('application_id', $id)->first();
+
+    if (!$application) {
+        abort(404, 'Inspection application not found');
+    }
+
+    $items    = $application->inspectionItems;
+    // dd( $items );
+    $importer = $application->importer_detail;
+    $exporter = $application->exporter;
+    $entry    = $application->entryPoint;
+
+    $pdf = Pdf::loadView(
+        'pdf.permit_inspection',
+        compact(
+            'application',
+            'items',
+            'importer',
+            'exporter',
+            'entry'
+        )
+    )->setPaper('a4', 'portrait');
+
+    return $pdf->stream(
+        "Inspection_Certificate_{$application->application_id}.pdf"
+    );
+}
 
     function generateConsignment($id)
     {

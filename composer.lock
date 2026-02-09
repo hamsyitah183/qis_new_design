@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5543301cdbba90ee2867572af6dbc12a",
+    "content-hash": "af4a0c97e4f0dcb92075c33bc8ab0f6e",
     "packages": [
         {
             "name": "arielmejiadev/larapex-charts",
@@ -11402,12 +11402,12 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.2"
     },
-    "platform-dev": {},
+    "platform-dev": [],
     "plugin-api-version": "2.6.0"
 }

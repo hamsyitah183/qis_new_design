@@ -15,11 +15,11 @@ function applicationCount() {
         },
         error: (xhr) => {
             console.error("Failed to load exporters:", xhr.responseText);
-            Swal.fire({
-                icon: "error",
-                title: "Failed to Load Exporters",
-                text: "Please try again or check your connection.",
-            });
+            // Swal.fire({
+            //     icon: "error",
+            //     title: "Failed to Load Exporters",
+            //     text: "Please try again or check your connection.",
+            // });
         },
     });
 }
