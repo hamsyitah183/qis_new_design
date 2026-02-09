@@ -329,7 +329,7 @@ Route::middleware(['auth.any'])->group(function () {
 
     // list down all the inspection
     Route::get('/inspection/generate/{id}', [PermitGenerateController::class, 'generateInspection']);
-    Route::get('/consignment/generate/{id}', [PermitGenerateController::class, 'generateConsignment']);
+    Route::get('/consignment/generate/{id}', [PermitGenerateController::class, 'generateConsignmentApplication']);
 
     Route::get('/payment/{id}/{permitId}/{total}/{type}', [PaymentController::class, 'checkout'])
         ->name('payment.checkout')

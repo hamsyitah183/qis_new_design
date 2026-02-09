@@ -24,7 +24,8 @@ class PublicUser extends Authenticatable implements MustVerifyEmail
     public $incrementing = false; // important for UUID
     protected $keyType = 'string';
 
-    protected $fillable = ['uuid', 'fullname', 'no_ic', 'email', 'account_type', 'phone_number', 'office_number', 'address_1', 'address_2', 'postcode', 'district', 'state', 'password', 'doa_verified', 'verification_attachment', 'email_verified_at'];
+    protected $fillable = ['uuid', 'fullname', 'no_ic', 'email', 'account_type',
+     'phone_number', 'office_number', 'address_1', 'address_2', 'postcode', 'district', 'state', 'password', 'doa_verified', 'verification_attachment', 'email_verified_at'];
 
     protected $hidden = ['password', 'remember_token'];
 

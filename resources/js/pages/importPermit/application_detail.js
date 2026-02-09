@@ -419,7 +419,8 @@ function generatePermit() {
             const id = $(this).data("permit");
 
             // ✅ Trigger browser download
-            window.location.href = `/permit/generate/${id}`;
+            let url = `/permit/generate/${id}`;
+            window.open(url, "_blank");
         });
 }
 

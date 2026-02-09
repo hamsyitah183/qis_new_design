@@ -548,7 +548,7 @@ class ConsignmentController extends Controller
 
             $notificationController->sendStatusMessage(
                 $application->importer_detail['fullname'] ?? 'User',
-                'Import Permit',
+                'Consignment Application',
                 $application->application_id,
                 'accepted by DOA',
                 'Your application is under review and will be processed shortly',
@@ -574,6 +574,18 @@ class ConsignmentController extends Controller
 
             $application->status = 'Clerk Rejected';
             $status = 'Clerk Rejected';
+
+
+             $notificationController = new NotificationController();
+
+            $notificationController->sendStatusMessage(
+                $application->importer_detail['fullname'] ?? 'User',
+                'Consignment Application',
+                $application->application_id,
+                'rejected by DOA',
+                'Your application is rejected.',
+                $application->importer->phone_number ?? '+60143290092', // recipient number
+            );
 
         }
 

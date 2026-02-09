@@ -251,16 +251,16 @@ class PaymentController extends Controller
         if ($application['application_type'] == 'Import Permit') {
             // $itn = 'IT037962';
             $itn = 'ITN10001';
-            $application_name = 'IP' . $request->application_id;
+            $application_name = $request->application_id;
         } elseif ($application['application_type'] == 'Inspection Certificate') {
             // $itn = 'IT549383';
             $itn = 'ITN10002';
-            $application_name = 'SP' . $request->application_id;
+            $application_name = $request->application_id;
         } elseif ($application['application_type'] == 'Consignment Certificate') {
             // $itn = 'IT037963';
             // $itn = 'IT331659';
             $itn = 'ITN10003';
-            $application_name = 'SK' . $request->application_id;
+            $application_name = $request->application_id;
         } else {
             $itn = 'ITN';
         }

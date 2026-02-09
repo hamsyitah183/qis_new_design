@@ -92,6 +92,7 @@ async function attachmentTable() {
     }
 
     let roles = window.authUser.roles.map((role) => role.name);
+    let approveRejectButtons = '';
 
     console.log('roles', roles)
 
@@ -103,6 +104,34 @@ async function attachmentTable() {
 
     const showDownloadPermit = applicationStatus === "Completed" &&
         (roles.includes("admin") || roles.includes("boundary officer") || roles.includes("superadmin"));
+
+    
+    // Add approve/reject buttons for the first row only if conditions are met
+    if (showApproveReject) {
+        approveRejectButtons = `
+        <div class="btn btn-sm btn-primary-light btn-wave accept ms-2"
+            data-application="${application.application_id}">
+            Approved
+        </div>
+        <div class="btn btn-sm btn-danger-light btn-wave reject ms-2"
+            data-application="${application.application_id}">
+            Rejected
+        </div>
+        `;
+    }
+
+    // Add download permit button for the first row only if conditions are met
+    else if (showDownloadPermit) {
+        approveRejectButtons = `
+        <div class="btn btn-sm btn-teal-light btn-wave generatePermit ms-2" 
+            data-permit="${application.application_id}" data-type="${application.application_type}">
+            Download Permit
+        </div>
+        `;
+    } else {
+        approveRejectButtons = ``;
+    }
+
 
     permits.forEach((permit, index) => {
         let detail = permit.consignment_detail || {};
@@ -134,29 +163,8 @@ async function attachmentTable() {
             ${reapplyAction}
         `;
 
-        // Add approve/reject buttons for the first row only if conditions are met
-        if (index === 0 && showApproveReject) {
-            actionButtons += `
-            <div class="btn btn-sm btn-primary-light btn-wave accept ms-2"
-                data-application="${application.application_id}">
-                Approved
-            </div>
-            <div class="btn btn-sm btn-danger-light btn-wave reject ms-2"
-                data-application="${application.application_id}">
-                Rejected
-            </div>
-            `;
-        }
-
-        // Add download permit button for the first row only if conditions are met
-        if (index === 0 && showDownloadPermit) {
-            actionButtons += `
-            <div class="btn btn-sm btn-teal-light btn-wave generatePermit ms-2" 
-                data-permit="${application.application_id}" data-type="${application.application_type}">
-                Download Permit
-            </div>
-            `;
-        }
+       
+        
 
         let permitStatus = "";
 
@@ -210,6 +218,8 @@ async function attachmentTable() {
 </tr>
 `);
     });
+
+    table.append(approveRejectButtons)
 }
 async function pendingPaymentTable() {
     console.log("Running attachment table...");
@@ -387,7 +397,8 @@ function generatePermit() {
 
             // ✅ Trigger browser download
             // window.location.href = `/permit/generate/consignment/${id}`;
-            window.location.href = `/consignment/generate/${id}`;
+            let url= `/consignment/generate/${id}`;
+            window.open(url, "_blank");
         });
 }
 

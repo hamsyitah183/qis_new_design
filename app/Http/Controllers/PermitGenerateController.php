@@ -49,21 +49,22 @@ class PermitGenerateController extends Controller
         if (!$permits) {
             abort(404, 'Permit not found');
         }
-        
+
         $detail = $permits->consignment_detail;
         $application = $permits->application;
         $importer = $application->importer_detail;
         $exporter = $application->exporter;
 
-        $pdf = Pdf::loadView('pdf.permit_pdf', compact('permits', 'detail', 'application', 'importer', 'exporter'))
-            ->setPaper('a4', 'portrait');
+        $pdf = Pdf::loadView('pdf.permit_pdf', compact('permits', 'detail', 'application', 'importer', 'exporter'))->setPaper('a4', 'portrait');
 
         return $pdf->stream("Import_Permit_{$application->application_id}.pdf");
     }
 
     public function generateConsignmentPermitWord($id)
     {
-        $permits = ConsignmentPermit::with(['application.user', 'application.entryPoint'])->where('id', $id)->first();
+        $permits = ConsignmentPermit::with(['application.user', 'application.entryPoint'])
+            ->where('id', $id)
+            ->first();
 
         if (!$permits) {
             abort(404, 'Permit not found');
@@ -92,16 +93,13 @@ class PermitGenerateController extends Controller
         $logoTable = $section->addTable([
             'borderSize' => 1,
             'cellMargin' => 0,
-            'borderColor' => '#FFFFFF'
+            'borderColor' => '#FFFFFF',
         ]);
 
         $logoTable->addRow();
 
         // LEFT LOGO
-        $logoTable->addCell(1400, ['valign' => 'center'])->addImage(
-            public_path('/asset/jata-svg.jpg'),
-            ['width' => 60, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]
-        );
+        $logoTable->addCell(1400, ['valign' => 'center'])->addImage(public_path('/asset/jata-svg.jpg'), ['width' => 60, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
 
         // CENTER TEXT
         $centerCell = $logoTable->addCell(8000, ['valign' => 'center']);
@@ -112,10 +110,7 @@ class PermitGenerateController extends Controller
         $centerCell->addText('REGULATED ARTICLES ', ['bold' => true, 'size' => 15], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
 
         // RIGHT LOGO
-        $logoTable->addCell(1400, ['valign' => 'center'])->addImage(
-            public_path('/asset/sabah-svg.jpg'),
-            ['width' => 60, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]
-        );
+        $logoTable->addCell(1400, ['valign' => 'center'])->addImage(public_path('/asset/sabah-svg.jpg'), ['width' => 60, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
 
         $section->addTextBreak(1);
         $section->addText('Permit No.: ' . ($permits->permit_number ?? '-'), ['bold' => true, 'size' => 12], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::END]);
@@ -129,14 +124,8 @@ class PermitGenerateController extends Controller
 
         // Permission text with entry point
         $textRun = $section->addTextRun(['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::BOTH]);
-        $textRun->addText(
-            'Permission is hereby granted through ',
-            ['size' => 11]
-        );
-        $textRun->addText(
-            strtoupper($application->entryPoint->entry_name ?? '-'),
-            ['underline' => \PhpOffice\PhpWord\Style\Font::UNDERLINE_SINGLE, 'size' => 11]
-        );
+        $textRun->addText('Permission is hereby granted through ', ['size' => 11]);
+        $textRun->addText(strtoupper($application->entryPoint->entry_name ?? '-'), ['underline' => \PhpOffice\PhpWord\Style\Font::UNDERLINE_SINGLE, 'size' => 11]);
 
         $section->addTextBreak(2);
 
@@ -148,7 +137,7 @@ class PermitGenerateController extends Controller
         $table = $section->addTable([
             'borderSize' => 6,
             'borderColor' => '000000',
-            'cellMargin' => 80
+            'cellMargin' => 80,
         ]);
 
         $table->addRow();
@@ -168,7 +157,7 @@ class PermitGenerateController extends Controller
         /* ===============================
         FOOTER
     =============================== */
-        $section->addText("Date of Issue: " . now()->format('d/m/Y'), ['size' => 11]);
+        $section->addText('Date of Issue: ' . now()->format('d/m/Y'), ['size' => 11]);
         $section->addTextBreak(2);
         $section->addText('Director of Agriculture', ['bold' => true], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::END]);
         $section->addText('Sabah, Malaysia', [], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::END]);
@@ -182,16 +171,12 @@ class PermitGenerateController extends Controller
         return response()->download($tempPath)->deleteFileAfterSend(true);
     }
 
-
-
     // inspection application
     function generateInspectionWord($id)
     {
         // dd($id, InspectionItem::all());
         // $id is the inspection item id, not application id
         $application = InspectionApplication::where('application_id', $id)->firstOrFail();
-
-    
 
         $items = $application->inspectionItems;
 
@@ -220,16 +205,13 @@ class PermitGenerateController extends Controller
         $logoTable = $section->addTable([
             'borderSize' => 1,
             'cellMargin' => 0,
-            'borderColor' => '#FFFFFF'
+            'borderColor' => '#FFFFFF',
         ]);
 
         $logoTable->addRow();
 
         // LEFT LOGO
-        $logoTable->addCell(1400, ['valign' => 'center'])->addImage(
-            public_path('/asset/jata-svg.jpg'),
-            ['width' => 60, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]
-        );
+        $logoTable->addCell(1400, ['valign' => 'center'])->addImage(public_path('/asset/jata-svg.jpg'), ['width' => 60, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
 
         // CENTER TEXT
         $centerCell = $logoTable->addCell(8000, ['valign' => 'center']);
@@ -242,10 +224,7 @@ class PermitGenerateController extends Controller
         $centerCell->addText('Regulations 3, 5(1) and 5(4)', [], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
 
         // RIGHT LOGO
-        $logoTable->addCell(1400, ['valign' => 'center'])->addImage(
-            public_path('/asset/sabah-svg.jpg'),
-            ['width' => 60, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]
-        );
+        $logoTable->addCell(1400, ['valign' => 'center'])->addImage(public_path('/asset/sabah-svg.jpg'), ['width' => 60, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
 
         $section->addTextBreak(1);
         $section->addText('Permit No.:', ['bold' => true, 'size' => 12], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::END]);
@@ -257,57 +236,36 @@ class PermitGenerateController extends Controller
         // Name of consignee
         $textRun = $section->addTextRun(['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::BOTH]);
         $textRun->addText('Name of consignee ', ['size' => 11]);
-        $textRun->addText(
-            str_pad(strtoupper($importer['fullname'] ?? '-'), 100, ' '),
-            ['underline' => \PhpOffice\PhpWord\Style\Font::UNDERLINE_DOTTED, 'size' => 11]
-        );
+        $textRun->addText(str_pad(strtoupper($importer['fullname'] ?? '-'), 100, ' '), ['underline' => \PhpOffice\PhpWord\Style\Font::UNDERLINE_DOTTED, 'size' => 11]);
 
         $section->addTextBreak(1);
 
         // Address
         $textAddress = $section->addTextRun(['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::BOTH]);
         $textAddress->addText('and address ', ['size' => 11]);
-        $fullAddress = ($importer['address_1'] ?? '') .
-            ', ' . ($importer['address_2'] ?? '') .
-            ', ' . ($importer['postcode'] ?? '') . ' ' . ($importer['district'] ?? '') .
-            ', ' . ($importer['state'] ?? '');
-        $textAddress->addText(
-            str_pad(strtoupper($fullAddress), 100, ' '),
-            ['underline' => \PhpOffice\PhpWord\Style\Font::UNDERLINE_DOTTED, 'size' => 11]
-        );
+        $fullAddress = ($importer['address_1'] ?? '') . ', ' . ($importer['address_2'] ?? '') . ', ' . ($importer['postcode'] ?? '') . ' ' . ($importer['district'] ?? '') . ', ' . ($importer['state'] ?? '');
+        $textAddress->addText(str_pad(strtoupper($fullAddress), 100, ' '), ['underline' => \PhpOffice\PhpWord\Style\Font::UNDERLINE_DOTTED, 'size' => 11]);
 
         $section->addTextBreak(1);
 
         // Name of consignor
         $textConsignor = $section->addTextRun(['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::BOTH]);
         $textConsignor->addText('Name of consignor ', ['size' => 11]);
-        $textConsignor->addText(
-            str_pad(strtoupper($exporter['name'] ?? '-'), 100, ' '),
-            ['underline' => \PhpOffice\PhpWord\Style\Font::UNDERLINE_DOTTED, 'size' => 11]
-        );
+        $textConsignor->addText(str_pad(strtoupper($exporter['name'] ?? '-'), 100, ' '), ['underline' => \PhpOffice\PhpWord\Style\Font::UNDERLINE_DOTTED, 'size' => 11]);
 
         $section->addTextBreak(1);
 
         // Consignor address
         $textConsignorAddress = $section->addTextRun(['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::BOTH]);
         $textConsignorAddress->addText('add address ', ['size' => 11]);
-        $textConsignorAddress->addText(
-            str_pad(strtoupper($exporter['address'] ?? '-'), 100, ' '),
-            ['underline' => \PhpOffice\PhpWord\Style\Font::UNDERLINE_DOTTED, 'size' => 11]
-        );
+        $textConsignorAddress->addText(str_pad(strtoupper($exporter['address'] ?? '-'), 100, ' '), ['underline' => \PhpOffice\PhpWord\Style\Font::UNDERLINE_DOTTED, 'size' => 11]);
 
         $section->addTextBreak(1);
 
         // Permission text with entry point underlined
         $textRun = $section->addTextRun(['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::BOTH]);
-        $textRun->addText(
-            'Permission is hereby granted to the consignee *soil/rooting compost/growing media/beneficial organisms contained in the Schedule hereto through ',
-            ['size' => 11]
-        );
-        $textRun->addText(
-            str_pad(strtoupper($application->entryPoint->entry_name ?? '-'), 50, ' '),
-            ['underline' => \PhpOffice\PhpWord\Style\Font::UNDERLINE_DOTTED, 'size' => 11]
-        );
+        $textRun->addText('Permission is hereby granted to the consignee *soil/rooting compost/growing media/beneficial organisms contained in the Schedule hereto through ', ['size' => 11]);
+        $textRun->addText(str_pad(strtoupper($application->entryPoint->entry_name ?? '-'), 50, ' '), ['underline' => \PhpOffice\PhpWord\Style\Font::UNDERLINE_DOTTED, 'size' => 11]);
 
         $section->addTextBreak(1);
 
@@ -326,21 +284,14 @@ class PermitGenerateController extends Controller
         $table->addCell(3000)->addText('Purpose');
         $table->addCell(4000)->addText('Consignment Detail');
 
-
         foreach ($items as $item) {
-
-
             // Decode JSON string into array
             $consignment = $item['consignment_detail'];
 
             $itemName = $consignment['item_name'] ?? '-';
 
             // Make consignment detail a STRING (important!)
-            $consignmentText =
-                'Quantity: ' . ($consignment['quantity'] ?? '-') . "\n" .
-                'Value: ' . ($consignment['value'] ?? '-') . "\n" .
-                'Measure: ' . ($consignment['measure'] ?? '-') . "\n" .
-                'Uses: ' . ($consignment['uses'] ?? '-');
+            $consignmentText = 'Quantity: ' . ($consignment['quantity'] ?? '-') . "\n" . 'Value: ' . ($consignment['value'] ?? '-') . "\n" . 'Measure: ' . ($consignment['measure'] ?? '-') . "\n" . 'Uses: ' . ($consignment['uses'] ?? '-');
 
             $table->addRow();
             $table->addCell(2500)->addText((string) ($item->permit_number ?? '-'));
@@ -349,9 +300,7 @@ class PermitGenerateController extends Controller
             $table->addCell(4000)->addText($consignmentText);
         }
 
-
-
-        $section->addText("Date of Issue: " . now()->format('d/m/Y'), [], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::BOTH]);
+        $section->addText('Date of Issue: ' . now()->format('d/m/Y'), [], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::BOTH]);
         $section->addTextBreak(2);
         $section->addText('Director of Agriculture', ['bold' => true], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::END]);
         $section->addText('Sabah, Malaysia', [], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::END]);
@@ -366,40 +315,52 @@ class PermitGenerateController extends Controller
     }
 
     public function generateInspection($id)
-{
-    // $id = inspection application id
-    $application = InspectionApplication::where('application_id', $id)->first();
+    {
+        // $id = inspection application id
+        $application = InspectionApplication::where('application_id', $id)->first();
 
-    if (!$application) {
-        abort(404, 'Inspection application not found');
+        if (!$application) {
+            abort(404, 'Inspection application not found');
+        }
+
+        $items = $application->inspectionItems;
+        // dd( $items );
+        $importer = $application->importer_detail;
+        $exporter = $application->exporter;
+        $entry = $application->entryPoint;
+
+        $pdf = Pdf::loadView('pdf.permit_inspection', compact('application', 'items', 'importer', 'exporter', 'entry'))->setPaper('a4', 'portrait');
+
+        return $pdf->stream("Inspection_Certificate_{$application->application_id}.pdf");
     }
 
-    $items    = $application->inspectionItems;
-    // dd( $items );
-    $importer = $application->importer_detail;
-    $exporter = $application->exporter;
-    $entry    = $application->entryPoint;
+     public function generateConsignmentApplication($id)
+    {
+        // $id = inspection application id
+        $application = ConsignmentApplication::where('application_id', $id)->first();
 
-    $pdf = Pdf::loadView(
-        'pdf.permit_inspection',
-        compact(
-            'application',
-            'items',
-            'importer',
-            'exporter',
-            'entry'
-        )
-    )->setPaper('a4', 'portrait');
+        if (!$application) {
+            abort(404, 'Consignment application not found');
+        }
 
-    return $pdf->stream(
-        "Inspection_Certificate_{$application->application_id}.pdf"
-    );
-}
+        $items = $application->consignmentPermits;
+        // dd( $items );
+        $importer = $application->importer;
+        $exporter = $application->exporter;
+        $entry = $application->entryPoint;
+        
+        
+
+        $pdf = Pdf::loadView('pdf.permit_consignment', compact('application', 'items', 'importer', 'exporter', 'entry'))->setPaper('a4', 'portrait');
+
+        return $pdf->stream("Inspection_Certificate_{$application->application_id}.pdf");
+    }
 
     function generateConsignment($id)
     {
         $application = ConsignmentApplication::with(['importer', 'exporter', 'consignmentPermits'])
-            ->where('application_id', $id)->first();
+            ->where('application_id', $id)
+            ->first();
 
         // dd($application);
 
@@ -427,16 +388,13 @@ class PermitGenerateController extends Controller
         $logoTable = $section->addTable([
             'borderSize' => 1,
             'cellMargin' => 0,
-            'borderColor' => '#FFFFFF'
+            'borderColor' => '#FFFFFF',
         ]);
 
         $logoTable->addRow();
 
         // LEFT LOGO
-        $logoTable->addCell(1400, ['valign' => 'center'])->addImage(
-            public_path('/asset/jata-svg.jpg'),
-            ['width' => 60, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]
-        );
+        $logoTable->addCell(1400, ['valign' => 'center'])->addImage(public_path('/asset/jata-svg.jpg'), ['width' => 60, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
 
         // CENTER TEXT
         $centerCell = $logoTable->addCell(8000, ['valign' => 'center']);
@@ -449,10 +407,7 @@ class PermitGenerateController extends Controller
         $centerCell->addText('Regulations 3, 5(1) and 5(4)', [], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
 
         // RIGHT LOGO
-        $logoTable->addCell(1400, ['valign' => 'center'])->addImage(
-            public_path('/asset/sabah-svg.jpg'),
-            ['width' => 60, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]
-        );
+        $logoTable->addCell(1400, ['valign' => 'center'])->addImage(public_path('/asset/sabah-svg.jpg'), ['width' => 60, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
 
         $section->addTextBreak(1);
         $section->addText('Permit No.:', ['bold' => true, 'size' => 12], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::END]);
@@ -464,57 +419,36 @@ class PermitGenerateController extends Controller
         // Name of consignee
         $textRun = $section->addTextRun(['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::BOTH]);
         $textRun->addText('Name of consignee ', ['size' => 11]);
-        $textRun->addText(
-            str_pad(strtoupper($importer['fullname'] ?? '-'), 100, ' '),
-            ['underline' => \PhpOffice\PhpWord\Style\Font::UNDERLINE_DOTTED, 'size' => 11]
-        );
+        $textRun->addText(str_pad(strtoupper($importer['fullname'] ?? '-'), 100, ' '), ['underline' => \PhpOffice\PhpWord\Style\Font::UNDERLINE_DOTTED, 'size' => 11]);
 
         $section->addTextBreak(1);
 
         // Address
         $textAddress = $section->addTextRun(['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::BOTH]);
         $textAddress->addText('and address ', ['size' => 11]);
-        $fullAddress = ($importer['address_1'] ?? '') .
-            ', ' . ($importer['address_2'] ?? '') .
-            ', ' . ($importer['postcode'] ?? '') . ' ' . ($importer['district'] ?? '') .
-            ', ' . ($importer['state'] ?? '');
-        $textAddress->addText(
-            str_pad(strtoupper($fullAddress), 100, ' '),
-            ['underline' => \PhpOffice\PhpWord\Style\Font::UNDERLINE_DOTTED, 'size' => 11]
-        );
+        $fullAddress = ($importer['address_1'] ?? '') . ', ' . ($importer['address_2'] ?? '') . ', ' . ($importer['postcode'] ?? '') . ' ' . ($importer['district'] ?? '') . ', ' . ($importer['state'] ?? '');
+        $textAddress->addText(str_pad(strtoupper($fullAddress), 100, ' '), ['underline' => \PhpOffice\PhpWord\Style\Font::UNDERLINE_DOTTED, 'size' => 11]);
 
         $section->addTextBreak(1);
 
         // Name of consignor
         $textConsignor = $section->addTextRun(['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::BOTH]);
         $textConsignor->addText('Name of consignor ', ['size' => 11]);
-        $textConsignor->addText(
-            str_pad(strtoupper($exporter['name'] ?? '-'), 100, ' '),
-            ['underline' => \PhpOffice\PhpWord\Style\Font::UNDERLINE_DOTTED, 'size' => 11]
-        );
+        $textConsignor->addText(str_pad(strtoupper($exporter['name'] ?? '-'), 100, ' '), ['underline' => \PhpOffice\PhpWord\Style\Font::UNDERLINE_DOTTED, 'size' => 11]);
 
         $section->addTextBreak(1);
 
         // Consignor address
         $textConsignorAddress = $section->addTextRun(['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::BOTH]);
         $textConsignorAddress->addText('add address ', ['size' => 11]);
-        $textConsignorAddress->addText(
-            str_pad(strtoupper($exporter['address'] ?? '-'), 100, ' '),
-            ['underline' => \PhpOffice\PhpWord\Style\Font::UNDERLINE_DOTTED, 'size' => 11]
-        );
+        $textConsignorAddress->addText(str_pad(strtoupper($exporter['address'] ?? '-'), 100, ' '), ['underline' => \PhpOffice\PhpWord\Style\Font::UNDERLINE_DOTTED, 'size' => 11]);
 
         $section->addTextBreak(1);
 
         // Permission text with entry point underlined
         $textRun = $section->addTextRun(['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::BOTH]);
-        $textRun->addText(
-            'Permission is hereby granted to the consignee *soil/rooting compost/growing media/beneficial organisms contained in the Schedule hereto through ',
-            ['size' => 11]
-        );
-        $textRun->addText(
-            str_pad(strtoupper($application->entryPoint->entry_name ?? '-'), 50, ' '),
-            ['underline' => \PhpOffice\PhpWord\Style\Font::UNDERLINE_DOTTED, 'size' => 11]
-        );
+        $textRun->addText('Permission is hereby granted to the consignee *soil/rooting compost/growing media/beneficial organisms contained in the Schedule hereto through ', ['size' => 11]);
+        $textRun->addText(str_pad(strtoupper($application->entryPoint->entry_name ?? '-'), 50, ' '), ['underline' => \PhpOffice\PhpWord\Style\Font::UNDERLINE_DOTTED, 'size' => 11]);
 
         $section->addTextBreak(1);
 
@@ -533,21 +467,14 @@ class PermitGenerateController extends Controller
         $table->addCell(3000)->addText('Purpose');
         $table->addCell(4000)->addText('Consignment Detail');
 
-
         foreach ($items as $item) {
-
-
             // Decode JSON string into array
             $consignment = $item['consignment_detail'];
 
             $itemName = $consignment['item_name'] ?? '-';
 
             // Make consignment detail a STRING (important!)
-            $consignmentText =
-                'Quantity: ' . ($consignment['quantity'] ?? '-') . "\n" .
-                'Value: ' . ($consignment['value'] ?? '-') . "\n" .
-                'Measure: ' . ($consignment['measure'] ?? '-') . "\n" .
-                'Uses: ' . ($consignment['uses'] ?? '-');
+            $consignmentText = 'Quantity: ' . ($consignment['quantity'] ?? '-') . "\n" . 'Value: ' . ($consignment['value'] ?? '-') . "\n" . 'Measure: ' . ($consignment['measure'] ?? '-') . "\n" . 'Uses: ' . ($consignment['uses'] ?? '-');
 
             $table->addRow();
             $table->addCell(2500)->addText((string) ($item->permit_number ?? '-'));
@@ -556,9 +483,7 @@ class PermitGenerateController extends Controller
             $table->addCell(4000)->addText($consignmentText);
         }
 
-
-
-        $section->addText("Date of Issue: " . now()->format('d/m/Y'), [], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::BOTH]);
+        $section->addText('Date of Issue: ' . now()->format('d/m/Y'), [], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::BOTH]);
         $section->addTextBreak(2);
         $section->addText('Director of Agriculture', ['bold' => true], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::END]);
         $section->addText('Sabah, Malaysia', [], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::END]);

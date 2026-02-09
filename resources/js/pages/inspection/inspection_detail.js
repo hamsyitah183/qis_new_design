@@ -64,6 +64,7 @@ async function attachmentTable() {
     const tableBody = $("#summaryTable3 tbody");
     const table = $('#summaryTable3')
     tableBody.empty();
+    let approveRejectAction = '';
 
     const permits = application.inspection_items;
     const applicationStatus = application.status;
@@ -79,14 +80,34 @@ async function attachmentTable() {
         ['reapplied', 'processing'].includes((p.status || '').toLowerCase())
     );
 
-    // Determine if approve/reject buttons should be shown
-    const showApproveReject = applicationStatus === "Clerk Verified" &&
-        !hasRejectedPermit &&
-        hasAllowedPermit &&
-        (roles.includes("admin") || roles.includes("officer") || roles.includes("superadmin"));
+    // Add approve/reject buttons for the first row only if conditions are met
+    if ((applicationStatus === "Clerk Verified") && (roles.includes("admin") || roles.includes("officer") || roles.includes("superadmin") )) {
+        approveRejectAction  = `
+        <div class="d-flex gap-2 mb-2 my-2">
+            <div class="btn btn-sm btn-primary-light btn-wave accept ms-2"
+            data-application="${application.application_id}">
+                Approved
+            </div>
+            <div class="btn btn-sm btn-danger-light btn-wave reject ms-2"
+                data-application="${application.application_id}">
+                Rejected
+            </div>
+        </div>
+        `;
+    }
 
-    const showDownloadPermit = applicationStatus === "Completed" &&
-        (roles.includes("admin") || roles.includes("boundary officer") || roles.includes("superadmin"));
+    // Add download permit button for the first row only if conditions are met
+    else if (applicationStatus === "Completed" && (roles.includes("admin") || roles.includes("boundary officer") || roles.includes("superadmin")) ) {
+        approveRejectAction = `
+        <div class="btn btn-sm btn-teal-light btn-wave generatePermit my-2 ms-2" 
+            data-permit="${application.application_id}" data-type="${application.application_type}">
+            Download Permit
+        </div>
+        `;
+    } else {
+        approveRejectAction = ``;
+    }
+
 
     if (!permits || permits.length === 0) {
         tableBody.append(`
@@ -112,6 +133,7 @@ async function attachmentTable() {
         selectedPermits.push(permit.id)
 
         let permitAction = null;
+        
 
         if (permit.status === "rejected" &&
             (type.includes('public'))  &&  (application.user.uuid == window.authUser.uuid) ) {
@@ -129,30 +151,7 @@ async function attachmentTable() {
             ${permitAction}
         `;
 
-        // Add approve/reject buttons for the first row only if conditions are met
-        if (index === 0 && showApproveReject) {
-            actionButtons += `
-            <div class="btn btn-sm btn-primary-light btn-wave accept ms-2"
-                data-application="${application.application_id}">
-                Approved
-            </div>
-            <div class="btn btn-sm btn-danger-light btn-wave reject ms-2"
-                data-application="${application.application_id}">
-                Rejected
-            </div>
-            `;
-        }
-
-        // Add download permit button for the first row only if conditions are met
-        if (index === 0 && showDownloadPermit) {
-            actionButtons += `
-            <div class="btn btn-sm btn-teal-light btn-wave generatePermit ms-2" 
-                data-permit="${application.application_id}" data-type="${application.application_type}">
-                Download Permit
-            </div>
-            `;
-        }
-
+    
         let permitStatus = "";
 
         let statuses = permit.status;
@@ -191,20 +190,24 @@ async function attachmentTable() {
         permitStatus = `<td>${text}</td>`;
 
         tableBody.append(`
-<tr>
-    <td class = "text-wrap">${detail.item_name ?? "—"}</td>
-    <td>${detail.quantity ?? "—"} ${detail.measure ?? ""}</td>
-    <td class="text-wrap">${detail.purpose ?? "—"}</td>
-    <td>RM ${detail.value ?? "—"}</td>
-    ${permitStatus}
-    <td>
-        <div class="d-flex gap-2 align-items-center">
-            ${actionButtons}
-        </div>
-    </td>
-</tr>
-`);
+            <tr>
+                <td class = "text-wrap">${detail.item_name ?? "—"}</td>
+                <td>${detail.quantity ?? "—"} ${detail.measure ?? ""}</td>
+                <td class="text-wrap">${detail.purpose ?? "—"}</td>
+                <td>RM ${detail.value ?? "—"}</td>
+                ${permitStatus}
+                <td>
+                    <div class="d-flex gap-2 align-items-center">
+                        ${actionButtons}
+                    </div>
+                </td>
+            </tr>
+        `);
+
+       
     });
+
+    table.append(approveRejectAction);
 }
 async function pendingPaymentTable() {
     console.log("Running attachment table...");
@@ -391,7 +394,8 @@ function generatePermit() {
 
             // Small delay so loading is visible
             setTimeout(() => {
-                window.location.href = `/inspection/generate/${id}`;
+                let url = `/inspection/generate/${id}`;
+                window.open(url, "_blank");
                 Swal.close();
             }, 800);
         });

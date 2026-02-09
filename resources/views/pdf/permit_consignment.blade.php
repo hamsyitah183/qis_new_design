@@ -85,6 +85,8 @@
     </style>
 </head>
 <body>
+    
+ 
 
     <!-- Header -->
     <table class="header-table">
@@ -96,7 +98,7 @@
                 <div>PLANT BIOSECURITY AND QUARANTINE DIVISION,</div>
                 <div>DEPARTMENT OF AGRICULTURE, SABAH, MALAYSIA</div>
                 <br>
-                <div style="font-size: 14pt; font-weight: bold;">INSPECTION APPLICATION</div>
+                <div style="font-size: 14pt; font-weight: bold;">CONSIGNMENT APPLICATION</div>
                 <div style="font-size: 14pt; font-weight: bold;">REGULATED ARTICLES</div>
                 <div>SIXTH / EIGHTH SCHEDULE</div>
                 <div>Regulations 3, 5(1) and 5(4)</div>
@@ -119,21 +121,22 @@
             Name of consignee
         </td>
         <td style="padding:2px 5px; border-bottom:1px dotted #000;">
-            {{ strtoupper($importer['fullname'] ?? '-') }}
+            {{ strtoupper($importer['name'] ?? '-') }}
         </td>
     </tr>
 
     <tr>
+        @php
+             $country = \App\Models\Country::select('name')->where('code', $importer['country'])->first();
+        @endphp
         <td style="white-space:nowrap; padding:2px 5px;">
             And address
         </td>
         <td style="padding:2px 5px; border-bottom:1px dotted #000;">
             {{ strtoupper(
-                ($importer['address_1'] ?? '') . ', ' .
-                ($importer['address_2'] ?? '') . ', ' .
-                ($importer['postcode'] ?? '') . ' ' .
-                ($importer['district'] ?? '') . ', ' .
-                ($importer['state'] ?? '')
+                ($importer['address'] ?? '') . ', ' .
+              
+                ( $country->name ?? '')
             ) }}
         </td>
     </tr>
@@ -143,7 +146,7 @@
             Name of consignor
         </td>
         <td style="padding:2px 5px; border-bottom:1px dotted #000;">
-            {{ strtoupper($exporter['name'] ?? '-') }}
+            {{ strtoupper($exporter['fullname'] ?? '-') }}
         </td>
     </tr>
 
@@ -152,7 +155,16 @@
             And address
         </td>
         <td style="padding:2px 5px; border-bottom:1px dotted #000;">
-            {{ strtoupper($exporter['address'] ?? '-') }}
+            @php
+                $state = \App\Models\Country::select('name')->where('code', $exporter['state'])->first();
+            @endphp
+             {{ strtoupper(
+                ($exporter['address_1'] ?? '') . ', ' .
+                ($exporter['address_2'] ?? '') . ', ' .
+                ($exporter['postcode'] ?? '') . ' ' .
+                ($exporter['district'] ?? '') . ', ' .
+                ($exporter['state'] ?? '')
+            ) }}
         </td>
     </tr>
 
@@ -233,7 +245,7 @@
                 $parts = explode('-', $itemName);
                 $afterDash = isset($parts[1]) ? trim($parts[1]) : $itemName;
                 
-                $country = \App\Models\Country::select('name')->where('code', $exporter['country'])->first();
+                $country = \App\Models\Country::select('name')->where('code', $importer['country'])->first();
             @endphp
             <tr>
                 <td>{{ $afterDash }}</td>

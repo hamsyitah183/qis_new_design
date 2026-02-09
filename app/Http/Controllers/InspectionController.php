@@ -940,6 +940,17 @@ class InspectionController extends Controller
             $inspectionApplication->save();
 
             $inspectionApplication->logActivity(action: 'Officer Verification Completed', remark: 'All inspection items processed', status: 'Officer Verification Completed');
+
+            $notificationController = new NotificationController();
+
+            $notificationController->sendStatusMessage(
+                $inspectionApplication->importer_detail['fullname'] ?? 'User',
+                'Inspection Application',
+                $inspectionApplication->application_id,
+                'checked by DOA',
+                "All your application's inspection items have been checked by DOA. Please reapply any rejected items.",
+                $inspectionApplication->importer->phone_number ?? '+60143290092', // recipient number
+            );
         }
 
         return response()->json([

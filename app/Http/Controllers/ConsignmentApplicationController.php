@@ -197,6 +197,17 @@ class ConsignmentApplicationController extends Controller
                 if (!$isDraft) {
                     $application->logActivity('Submiited', 'Application submitted', 'Submitted');
                     $application->logActivity('Clerk Review In-Progress', 'Pending for clerk approval', 'Clerk Review In-Progress');
+
+                    $notificationController = new NotificationController();
+
+                    $notificationController->sendStatusMessage(
+                        $application->exporter['fullname'] ?? 'User',
+                        'Consignment Application',
+                        $application->application_id,
+                        'will be check by DOA',
+                        `Your application has been successfully submitted.`,
+                        $application->exporter->phone_number  ?? '60143290092', // recipient number
+                    );
                 }
             }
 
@@ -725,6 +736,8 @@ class ConsignmentApplicationController extends Controller
         }
   
 
+
+
         $allStatuses = ConsignmentPermit::where('application_id', $permit->application->id)->pluck('status'); // gets a collection of all statuses
 
         $url = '/view_consignment' . '/' . $permit->application->application_id;
@@ -780,6 +793,17 @@ class ConsignmentApplicationController extends Controller
                 action: 'Officer Verification Completed',
                 remark: 'All permits have completed processing',
                 status: 'Officer Verification Completed'
+            );
+
+            $notificationController = new NotificationController();
+
+            $notificationController->sendStatusMessage(
+                $application->exporter['fullname'] ?? 'User',
+                'Consignment Application',
+                $application->application_id,
+                'checked by DOA',
+                "All your application's consignment items have been checked by DOA. Please reapply any rejected items.",
+                $application->exporter['phone_number'] ?? '+60143290092', // recipient number
             );
         }
 
