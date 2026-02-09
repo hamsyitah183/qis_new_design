@@ -544,16 +544,16 @@ class ConsignmentController extends Controller
 
             //    dd('accepted');
 
-            // $notificationController = new NotificationController();
+            $notificationController = new NotificationController();
 
-            // $notificationController->sendStatusMessage(
-            //     $application->importer_detail['fullname'] ?? 'User',
-            //     'Import Permit',
-            //     $application->application_id,
-            //     'accepted by DOA',
-            //     'Your application is under review and will be processed shortly',
-            //     $application->importer->phone_number ?? '+60143290092', // recipient number
-            // );
+            $notificationController->sendStatusMessage(
+                $application->importer_detail['fullname'] ?? 'User',
+                'Import Permit',
+                $application->application_id,
+                'accepted by DOA',
+                'Your application is under review and will be processed shortly',
+                $application->importer->phone_number ?? '+60143290092', // recipient number
+            );
 
         } elseif ($request->rejected) {
             $application->logActivity(action: 'Clerk Rejected', remark: $request->input('reason'), status: 'Clerk Rejected');
