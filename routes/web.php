@@ -324,6 +324,7 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/application/importer/{id}', [ApplicationController::class, 'get_importer']);
 
     Route::get('/permit/generate/{id}', [PermitGenerateController::class, 'generatePermitWord']);
+    Route::get('/permit/generate/pdf/{id}', [PermitGenerateController::class, 'generatePermitPdf']);
     Route::get('/permit/generate/consignment/{id}', [PermitGenerateController::class, 'generateConsignmentPermitWord']);
 
     // list down all the inspection
