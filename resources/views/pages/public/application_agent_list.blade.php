@@ -31,7 +31,7 @@
 
                         <div class="row">
                             <div class="col-sm-12">
-                                <table id="reviewApplicationListTable"
+                                <table id="agentApplicationListTable"
                                     class="table table-bordered text-nowrap w-100 dataTable no-footer dtr-inline"
                                     aria-describedby="responsiveDataTable_info" style="width: 1588px;">
                                     <thead class="mt-3">

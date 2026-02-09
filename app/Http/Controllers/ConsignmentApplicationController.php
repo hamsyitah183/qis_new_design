@@ -155,7 +155,8 @@ class ConsignmentApplicationController extends Controller
 
                 $isNewApplication = true;
                 $application = ConsignmentApplication::create([
-                    'application_id' => Str::uuid(),
+                    // 'application_id' => Str::uuid(),
+                    'application_id' => 'SK' . now()->format('ymd') . random_int(1000, 9999),
                     'eta' => $permit['eta'] ?? null,
                     'transport_type' => $permit['tranType'] ?? null,
                     'entry_point' => $permit['entrypoint'] ?? null,
@@ -169,6 +170,7 @@ class ConsignmentApplicationController extends Controller
                     'status' => $status,
                     'importer_verify' => $importer_verify,
                 ]);
+                
 
                 $application->status = $permit['applCate'] == 0 ? 'Clerk Review In-Progress' : 'wait for company approval';
                 $application->save();
@@ -606,27 +608,122 @@ class ConsignmentApplicationController extends Controller
     }
 
 
+    // function accept_permit($id, Request $request)
+    // {
+    //     $accepted = $request->input('accepted');
+    //     $status = '';
+
+    //     $permit = ConsignmentPermit::findOrFail($id);
+        
+
+    //     $permit->permit_number = 'SK/' . now()->format('ymd') . rand(1000, 9999);
+
+
+    //     $application = $permit->application;
+
+    //     if ($accepted == 1) {
+    //         $permit->status = 'pending for payment';
+    //         $status = 'Pending for Payment';
+    //     } else {
+    //         $permit->status = 'rejected';
+    //         $status = 'Rejected';
+    //         $permit->remark = $request['reason'];
+    //     }
+    //     $permit->save();
+
+    //     $allStatuses = ConsignmentPermit::where('application_id', $permit->application->id)->pluck('status'); // gets a collection of all statuses
+
+    //     $url = '/view_consignment' . '/' . $permit->application->application_id;
+
+    //     $users = InternalUser::role(['admin', 'officer'])->get();
+    //     Notification::send($users, new ApplicationNotification('A permit with application ID ' . $permit->application->application_id . ' has been ' . $status, authUser()['user']->fullname, $url));
+
+    //     $user = PublicUser::where('uuid', $permit->application->user_id)->first();
+
+    //     try {
+    //         // Events & notifications
+    //         event(new ApplicationDeleted('Permit in ' . $permit->application->application_id . ' is ' . $status));
+
+    //         event(new PublicUserEvent('A permit in application with ID ' . $permit->application->application_id . ' has been ' . $status, $user->uuid));
+    //     } catch (\Exception $e) {
+    //         Log::warning('Pusher connection failed but continuing permit acceptance: ' . $e->getMessage());
+    //     }
+
+    //     Notification::send($user, new ApplicationNotification('A permit in application with ID ' . $permit->application->application_id . ' has been ' . $status, authUser()['user']->fullname, $url));
+
+    //     activity()
+    //         ->tap(function (Activity $activity) {
+    //             $activity->log_name = 'user_activity';
+    //         })
+    //         ->event(strtolower($status) . ' consignment permit conditions')
+    //         ->causedBy(authUser()['user'])
+    //         ->performedOn($permit->application->user)
+    //         ->withProperties([
+    //             'permit' => $permit,
+    //             'application_id' => $permit->application->application_id,
+    //         ])
+    //         ->log(authUser()['user']['fullname'] . ' has ' . strtolower($status) . ' permit conditions for application ' . $permit->application->application_id);
+
+    //     $application->logActivity(
+    //         'Officer Verification',
+    //         $request['reason'] ?? 'Permit approved by officer and pending for payment',
+    //         $accepted ? 'Officer Verified' : 'Officer Rejected'
+    //     );
+
+
+    //     $allStatuses = ConsignmentPermit::where('application_id', $application->id)
+    //         ->pluck('status');
+
+    //     // Fully processed ONLY if no processing or reapplied permits remain
+    //     if (
+    //         !$allStatuses->contains('processing') &&
+    //         !$allStatuses->contains('reapplied')
+    //     ) {
+    //         $application->status = 'Officer Verification Completed';
+    //         $application->save();
+
+    //         $application->logActivity(
+    //             action: 'Officer Verification Completed',
+    //             remark: 'All permits have completed processing',
+    //             status: 'Officer Verification Completed'
+    //         );
+    //     }
+
+    //     $permit->save();
+
+    //     return response()->json([
+    //         'status' => 'success',
+    //         'message' => 'Permit condition updated successfully.',
+    //     ]);
+    // }
     function accept_permit($id, Request $request)
     {
         $accepted = $request->input('accepted');
         $status = '';
 
-        $permit = ConsignmentPermit::findOrFail($id);
+        // dd($id);
 
-        $permit->permit_number = 'SK/' . now()->format('ymd') . rand(1000, 9999);
-
-
-        $application = $permit->application;
+        $application = ConsignmentApplication::with(['consignmentPermits'])->where('application_id', $id)->first();
+        
+        $permits = $application->consignmentPermits;
 
         if ($accepted == 1) {
-            $permit->status = 'pending for payment';
-            $status = 'Pending for Payment';
+            foreach($permits as $permit) {
+                $permit->permit_number = 'SK/' . now()->format('ymd') . rand(1000, 9999);
+                $permit->status = 'pending for payment';
+                $status = 'Pending for Payment';
+                $permit->save();
+            }
         } else {
-            $permit->status = 'rejected';
-            $status = 'Rejected';
-            $permit->remark = $request['reason'];
+            foreach($permits as $permit) {
+                $permit->status = 'rejected';
+                $status = 'Rejected';
+                $permit->remark = $request['reason'];
+                $permit->save();
+            }
+          
         }
-        $permit->save();
+  
 
         $allStatuses = ConsignmentPermit::where('application_id', $permit->application->id)->pluck('status'); // gets a collection of all statuses
 

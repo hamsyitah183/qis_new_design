@@ -2,7 +2,7 @@
 <div class="row">
     <div class="col-12">
         <div class="row">
-            <div class="col-xxl-3 col-md-6">
+            <div class="col-xxl-4 col-md-6">
                 <div class="card custom-card overflow-hidden h-100 w-100">
                     <div class="card-body">
                         {{-- <div class="mb-3 d-flex align-items-start justify-content-between">
@@ -33,7 +33,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xxl-3 col-md-6">
+            <div class="col-xxl-4 col-md-6">
                 <div class="card custom-card overflow-hidden h-100 w-100">
                     <div class="card-body">
                         {{-- <div class="mb-3 d-flex align-items-start justify-content-between">
@@ -63,7 +63,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xxl-3 col-md-6">
+            <div class="col-xxl-4 col-md-6">
                 <div class="card custom-card overflow-hidden h-100 w-100">
                     <div class="card-body">
                         {{-- <div class="mb-3 d-flex align-items-start justify-content-between">
@@ -93,36 +93,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xxl-3 col-md-6">
-                <div class="card custom-card overflow-hidden h-100 w-100">
-                    <div class="card-body">
-                        {{-- <div class="mb-3 d-flex align-items-start justify-content-between">
-                            <span class="avatar avatar-lg bg-secondary svg-white">
-                                <i class="ri-check-double-line fs-24"></i>
-                            </span>
-        
-                        </div>
-                        <div class="d-flex align-items-end justify-content-between flex-wrap">
-                            <div class="flex-shrink-0">
-                                <div class="text-muted mb-1">Consignment Certificate</div>
-                                <h4 class="mb-0 fs-20 fw-medium">122</h4>
-                            </div>
-        
-                        </div> --}}
-                        <div class="d-flex align-items-center">
-                            <div class="me-3">
-                                <span class="avatar avatar-lg bg-warning svg-white">
-                                    <i class="ti ti-box fs-24"></i>
-                                </span>
-                            </div>
-                            <div>
-                                <p class="text-muted mb-1 fs-13">Permit Pending to Review</p>
-                                <h3 class="fw-semibold mb-0" id="pendingCount">0</h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+           
 
         </div>
         <div class="row mt-4">
@@ -227,6 +198,85 @@
             <div class="col-lg-12">
                 @include('dashboard.internal.components.officer_daily_chart')
 
+            </div>
+        </div>
+        <div class="row mt-2">
+            {{-- Action Needed Queue --}}
+            <div class="col-xl-12">
+                <div class="card custom-card">
+                    <div class="card-header justify-content-between">
+                        <div class="card-title">Action Needed Queue</div>
+                        <div class="text-muted fs-11">Showing oldest pending applications</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered text-nowrap mt-2">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Type</th>
+                                        <th scope="col">Application ID</th>
+                                        <th scope="col">Submitter</th>
+                                        <th scope="col">Received Date</th>
+                                        <th scope="col">Status</th>
+                                        <th scope="col">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse ($pendingQueue as $app)
+                                        <tr>
+                                            <td>
+                                                @php
+                                                    $typeBadgeClass = match($app->type) {
+                                                        'Import Permit' => 'bg-primary1',
+                                                        'Inspection' => 'bg-primary2',
+                                                        'Consignment' => 'bg-secondary',
+                                                        default => 'bg-secondary'
+                                                    };
+                                                @endphp
+                                                <span class="badge {{ $typeBadgeClass }}">{{ $app->type }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="fw-semibold">{{ $app->application_id }}</span>
+                                            </td>
+                                            <td>{{ $app->user->fullname ?? 'N/A' }}</td>
+                                            <td>{{ $app->created_at->format('d M Y, h:i A') }}</td>
+                                            <td>
+                                                @php
+                                                    $badgeClass = match($app->status) {
+                                                        'Draft' => 'bg-primary',
+                                                        'Clerk Review In-Progress', 'Clerk review in-progress' => 'bg-primary',
+                                                        'Clerk Verified' => 'bg-info',
+                                                        'Clerk Rejected', 'Rejected' => 'bg-danger',
+                                                        'Officer Verification Completed' => 'bg-success',
+                                                        default => 'bg-warning'
+                                                    };
+                                                @endphp
+                                                <span class="badge {{ $badgeClass }}">{{ $app->status }}</span>
+                                            </td>
+                                            <td>
+                                                @php
+                                                    $viewUrl = match($app->type) {
+                                                        'Import Permit' => route('viewApplication', $app->application_id),
+                                                        'Inspection' => route('inspection.view_details', $app->application_id),
+                                                        'Consignment' => route('consignment.view', $app->application_id),
+                                                        default => '#'
+                                                    };
+                                                @endphp
+                                                <a href="{{ $viewUrl }}" class="btn btn-sm btn-primary">
+                                                    <i class="ti ti-eye me-1"></i> View & Verify
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="6" class="text-center">No pending applications found.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

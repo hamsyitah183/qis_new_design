@@ -259,7 +259,7 @@ function initAddExporterModal() {
             },
             success: () => {
                 fetchExporterList();
-
+            
                 Swal.fire({
                     icon: "success",
                     title: "Exporter Saved!",
@@ -270,8 +270,20 @@ function initAddExporterModal() {
                 });
 
                 modal.hide();
+            
+                // 🔥 CLEAR FORM FIELDS
+                $("#addexpName").val('');
+                $("#addexpfonno").val('');
+                $("#addexpaddress1").val('');
+                $("#addexpaddress2").val('');
+                $("#addexpcountry").val('').trigger('change'); // important if Select2
+            
+                // OR reset everything at once
                 $("#addExporterForm")[0].reset();
+            
+               
             },
+            
             error: (xhr) => {
                 console.error(xhr.responseText);
 

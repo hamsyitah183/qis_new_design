@@ -16,7 +16,7 @@ class InternalUser extends Authenticatable implements MustVerifyEmail
 {
     //
 
-    use Notifiable, HasRoles, HasRoles, HasActivityLog;
+    use Notifiable, HasRoles,  HasActivityLog;
 
     protected $guard = 'internal';
 
@@ -59,6 +59,14 @@ class InternalUser extends Authenticatable implements MustVerifyEmail
         return 'private-internal-user.' . $this->uuid;
     }
 
+    public function boundaryOfficer()
+    {
+        return $this->hasOne(
+            BoundaryOfficer::class,
+            'user_id', // boundary_officers.user_id
+            'uuid'     // internal_users.uuid
+        );
+    }
 
     // public function roles()
     // {

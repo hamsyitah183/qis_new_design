@@ -12,7 +12,7 @@ import "select2/dist/css/select2.min.css";
 // import { application_reapply } from "./application_reapply";
 let application = null;
 let value = null;
-
+let selectedPermits = [];
 
 
 Dropzone.autoDiscover = false;
@@ -62,10 +62,58 @@ async function fillInInput() {
 async function attachmentTable() {
     console.log("Running attachment table...");
     const tableBody = $("#summaryTable3 tbody");
+    const table = $('#summaryTable3')
     tableBody.empty();
 
     const permits = application.inspection_items;
     const applicationStatus = application.status;
+    let roles = window.authUser.roles.map((role) => role.name);
+
+    // ❌ If any permit is rejected → block action
+    const hasRejectedPermit = permits.some(p =>
+        (p.status || '').toLowerCase() === 'rejected'
+    );
+
+    // ✅ Only allow if at least one permit is reapplied / processing
+    const hasAllowedPermit = permits.some(p =>
+        ['reapplied', 'processing'].includes((p.status || '').toLowerCase())
+    );
+
+    let buttonAction = "";
+
+    if (
+        applicationStatus === "Clerk Verified" &&
+        !hasRejectedPermit &&
+        hasAllowedPermit &&
+        (roles.includes("admin") || roles.includes("officer") || roles.includes("superadmin"))
+    ) {
+        buttonAction = `
+            <div class="d-flex align-items-center justify-content-between w-100 mt-2">
+                <div class="btn btn-sm btn-primary-light btn-wave accept me-2"
+                    data-application="${application.application_id}">
+                    Approved
+                </div>
+                <div class="btn btn-sm btn-danger-light btn-wave reject"
+                    data-application="${application.application_id}">
+                    Rejected
+                </div>
+            </div>
+        `;
+    }
+    else if( applicationStatus === "Completed" &&
+  
+        (roles.includes("admin") || roles.includes("boundary officer") || roles.includes("superadmin")))
+    {
+        buttonAction = `
+        <div class="btn btn-sm btn btn-teal-light btn-wave generatePermit mt-2" 
+        data-permit="${application.application_id}"  data-type = "${application.application_type}">
+            Download Permit
+        </div>
+    `;
+    }
+    else {
+        buttonAction = '';
+    }
 
     if (!permits || permits.length === 0) {
         tableBody.append(`
@@ -88,35 +136,15 @@ async function attachmentTable() {
         let type = window.authUser?.type || '';
         console.log("is it", roles);
 
-        let permitAction = "";
-        // Only Officer can accept/reject item details, Admin can do both
-        if (applicationStatus === "Clerk Verified") {
-            if (
-                (
-                    permit.status === "processing" ||
-                    permit.status === "submitted" ||
-                    permit.status === "reapplied"
-                ) &&
-                (
-                    roles.includes("admin") ||
-                    roles.includes("officer") ||
-                    roles.includes("superadmin")
-                )
-            ) {
-                permitAction = `
-                    <div class="btn btn-sm btn-primary-light btn-wave accept" data-permit="${permit.id}">
-                        Approved
-                    </div>
-                    <div class="btn btn-sm btn-danger-light btn-wave reject" data-permit="${permit.id}">
-                        Rejected
-                    </div>
-                `;
-            }
-        }
+        selectedPermits.push(permit.id)
+
+        let permitAction = null;
 
         if (permit.status === "rejected" &&
-            (type.includes('public'))) {
+            (type.includes('public'))  &&  (application.user.uuid == window.authUser.uuid) ) {
             permitAction = `<div class = "btn btn-sm btn-danger-light btn-wave reapply"  data-permit = "${permit.id}" >Reapply</div>`
+        } else {
+            permitAction= ``
         }
 
         let permitStatus = "";
@@ -169,12 +197,16 @@ async function attachmentTable() {
                 data-permit="${permit.id}">
                 <i class="ti ti-eye"></i>
             </div>
+
             ${permitAction}
+        
         </div>
     </td>
 </tr>
 `);
     });
+
+    table.append(`${buttonAction}`)
 }
 async function pendingPaymentTable() {
     console.log("Running attachment table...");
@@ -207,20 +239,10 @@ async function pendingPaymentTable() {
 
         tableBody.append(`
         <tr>
-            <td>
-                <div class="form-check">
-                    <input
-                        class="form-check-input permit-checkbox"
-                        type="checkbox"
-                        value="${permit.id}"
-                        data-permit-value="30"
-                        ${permit.status?.includes('payment processing') ? 'disabled' : ''}
-                    >
-                </div>
-            </td>
+           
             <td>${permit.permit_number ?? '—'}</td>
             <td class = "text-wrap">${detail.item_name ?? '—'}</td>
-            <td>RM 30</td>
+       
         </tr>
         `);
 
@@ -234,11 +256,13 @@ function acceptPermit() {
         .off("click", ".accept")
         .on("click", ".accept", function (e) {
             e.preventDefault();
-            const id = $(this).data("permit");
+            // const id = $(this).data("permit");
+            const id = $(this).data("application");
+        
 
             Swal.fire({
                 title: "Are you sure?",
-                text: "Do you want to accept this inspection item?",
+                text: "Do you want to accept all these inspection item?",
                 icon: "question",
                 showCancelButton: true,
                 confirmButtonText: "Yes, proceed",
@@ -247,7 +271,7 @@ function acceptPermit() {
                 if (firstResult.isConfirmed) {
                     Swal.fire({
                         title: "Please Confirm Again",
-                        text: "This action cannot be undone. Accept the inspection item?",
+                        text: "This action cannot be undone. Accept all the inspection item?",
                         icon: "warning",
                         showCancelButton: true,
                         confirmButtonText: "Yes, accept it",
@@ -270,6 +294,7 @@ function acceptPermit() {
                                     );
                                     // Refresh table
                                     initApplicationDetails();
+                                    attachmentTable()
                                 },
                                 error: function (err) {
                                     Swal.fire({
@@ -294,7 +319,8 @@ function rejectPermit() {
         .on("click", ".reject", function (e) {
             e.preventDefault();
 
-            const id = $(this).data("permit");
+            // const id = $(this).data("permit");
+            const id = $(this).data("application");
 
             Swal.fire({
                 title: "Reject Inspection Item",
@@ -332,6 +358,7 @@ function rejectPermit() {
                             "success"
                         );
                         initApplicationDetails();
+                        attachmentTable()
                     },
                     error: function (err) {
                         Swal.fire({
@@ -347,7 +374,33 @@ function rejectPermit() {
         });
 }
 
+function generatePermit() {
+    $(document)
+        .off("click", ".generatePermit")
+        .on("click", ".generatePermit", function (e) {
+            e.preventDefault();
 
+            const id = $(this).data("permit");
+
+            Swal.fire({
+                title: "Generating Permit...",
+                text: "Please wait",
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+            });
+
+            // Small delay so loading is visible
+            setTimeout(() => {
+                window.location.href = `/inspection/generate/${id}`;
+                Swal.close();
+            }, 800);
+        });
+}
+
+
+generatePermit();
 
 async function viewMore() {
     $(document).on("click", ".view-attachment", function (e) {
@@ -796,22 +849,15 @@ function applicationLog() {
 let totalPermit = 0;
 // Function to sum selected permit values
 function updateTotalValue() {
-    let total = 0;
-    $(".permit-checkbox:checked").each(function () {
-        const value = parseFloat($(this).data("permit-value")) || 0;
-        total += value;
-    });
+   
 
     // Update the totalValue element
     $("#totalValue").text(
-        "RM " +
-        total.toLocaleString("en-US", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        })
+        "RM 30.00"
+        
     );
 
-    totalPermit = total;
+    totalPermit = 30;
 
 }
 
@@ -1130,37 +1176,14 @@ async function initApplicationDetails() {
 
 
     pendingPaymentTable();
+    updateTotalValue()
 
     // application_reapply(application)
 
 
     Swal.close(); // Close after data is loaded
 
-    // When "Check All" is toggled
-    $(document).on("change", "#checkAllPermits", function () {
-        const isChecked = $(this).is(":checked");
 
-        // Toggle all row checkboxes
-        $(".permit-checkbox").prop("checked", isChecked);
-
-        // Enable/disable the checkout button
-        $("#checkoutPage").prop("disabled", !isChecked);
-
-        // Update total value
-        updateTotalValue();
-    });
-
-    // When individual checkboxes are toggled
-    $(document).on("change", ".permit-checkbox", function () {
-        const total = $(".permit-checkbox").length;
-        const checked = $(".permit-checkbox:checked").length;
-
-        $("#checkoutPage").prop("disabled", checked === 0);
-        $("#checkAllPermits").prop("checked", total > 0 && total === checked);
-
-        // Update total value
-        updateTotalValue();
-    });
 
     let checkoutLocked = false;
 
@@ -1173,18 +1196,6 @@ async function initApplicationDetails() {
         const $btn = $(this);
         $btn.prop("disabled", true).text("Processing...");
 
-        const selectedPermits = $(".permit-checkbox:checked")
-            .map(function () {
-                return $(this).val();
-            })
-            .get();
-
-        if (selectedPermits.length === 0) {
-            Swal.fire("Error!", "Choose the permit to continue.", "error");
-            checkoutLocked = false;
-            $btn.prop("disabled", false).text("Checkout");
-            return;
-        }
 
         Swal.fire({
             title: "Loading...",
@@ -1193,6 +1204,8 @@ async function initApplicationDetails() {
         });
 
         totalPermit = Number(totalPermit).toFixed(2);
+
+        
 
         $.ajax({
             url: "/payment/signed-url",

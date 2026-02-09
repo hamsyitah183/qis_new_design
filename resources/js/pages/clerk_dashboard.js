@@ -1,3 +1,5 @@
+import $ from "jquery";
+window.$ = window.jQuery = $;
 function applicationCount()
 {
     return $.ajax({
@@ -25,3 +27,9 @@ function applicationCount()
 }
 
 applicationCount()
+
+
+export function clerk_dashboard()
+{
+    applicationCount()
+}

@@ -61,7 +61,7 @@
                     @endif
                 @endif
 
-
+                {{-- @dd($application->importer->uuid,$authUuid) --}}
                 {{-- Category 1 Cases --}}
                 @if ($application->category_application == 1)
 
@@ -73,9 +73,11 @@
                         @if ($application->user->uuid == $authUuid)
                             <p>Your permit application is currently pending verification by the respective importer.</p>
                         @else
+                        
                             <p>This permit application is currently pending verification by the respective importer.</p>
 
                             {{-- If logged in user is the importer, show verify/reject buttons --}}
+                        
                             @if ($application->importer->uuid == $authUuid)
                                 <div class="d-flex justify-content-center gap-3 mt-3">
                                     <button id="verifyAppl" class="btn btn-sm btn-secondary">Verify Application</button>

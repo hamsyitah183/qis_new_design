@@ -16,21 +16,21 @@
             <div class="modal-body">
                 <div class="row gy-4 mb-3 p-4">
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                        <label for="itemSelect" class="form-label">Item </label>
+                        <label for="itemSelect" class="form-label">Item<a style="color:red"> * </a> </label>
                         <input type="text" class="form-control" id="itemSelect" name="itemSelect">
                         <small style="color:red">Item refering to the exporter's Country</small>
                     </div>
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
 
-                        <label for="itemValue" class="form-label">Value (RM)</label>
+                        <label for="itemValue" class="form-label">Value (RM)<a style="color:red"> * </a></label>
                         <input type="number" class="form-control" id="itemValue" name="itemValue" placeholder="RM ...">
                     </div>
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                        <label for="itemQuantity" class="form-label">Quantity</label>
+                        <label for="itemQuantity" class="form-label">Quantity<a style="color:red"> * </a></label>
                         <input type="number" class="form-control" id="itemQuantity" name="itemQuantity">
                     </div>
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                        <label for="itemMeasure" class="form-label">Measurement Unit</label>
+                        <label for="itemMeasure" class="form-label">Measurement Unit<a style="color:red"> * </a></label>
                         <select class="form-select" id="itemMeasure" name="itemMeasure">
                             <option value="">-- Select Measurement Unit --</option>
                             @foreach ($pubmeasure as $measure)
@@ -40,17 +40,17 @@
 
                     </div>
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                        <label for="itemPurpose" class="form-label">Purpose</label>
+                        <label for="itemPurpose" class="form-label">Purpose<a style="color:red"> * </a></label>
                         <select class="form-select" id="itemPurpose" name="itemPurpose">
                             <option value="">-- Select Purpose --</option>
                             @foreach ($pubpurpose as $purpose)
-                                <option value="{{ $purpose->cate_code }}"
-                                    data-description="{{ $purpose->description }}">{{ $purpose->description }}</option>
+                                <option value="{{ $purpose->cate_code }}" data-description="{{ $purpose->description }}">
+                                    {{ $purpose->description }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                        <label for="itemUses" class="form-label">Uses</label>
+                        <label for="itemUses" class="form-label">Uses<a style="color:red"> * </a></label>
                         <select class="form-select" id="itemUses" name="itemUses">
                             <option value="fresh produce">Fresh Produce</option>
                             <option value="for animal consumption">For Animal Consumption</option>
@@ -62,7 +62,7 @@
 
                             <div class="card-header">
                                 <div class="card-title">
-                                    Attachment
+                                    Attachment<a style="color:red"> * </a>
                                 </div>
                             </div>
                             <div class="card-body">

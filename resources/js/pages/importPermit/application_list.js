@@ -5,6 +5,7 @@ import { activityLogDesign } from "../../appLog";
 console.log("application list");
 let applicationListTable;
 let reviewApplicationListTable;
+let agentApplicationListTable;
 
 const isInternal = window.AUTH_TYPE === "internal";
 
@@ -82,8 +83,10 @@ async function data_table_init() {
             },
             { data: "importer", name: "importer" },
             { data: "exporter", name: "exporter" },
-            { data: "importer_type", name: "importer_type" },
-            { data: "date", name: "date" },
+            // { data: "importer_type", name: "importer_type" },
+            // { data: "date", name: "date" },
+            { data: "application_type", name: "application_type" },
+
             { data: "status", name: "status" },
             { data: "submitted_by", name: "submitted_by" },
             { data: "action", name: "action" },
@@ -93,11 +96,11 @@ async function data_table_init() {
             { width: "50px", targets: 0 }, // #
             { width: "150px", targets: 1 }, // Importer
             { width: "150px", targets: 2 }, // Exporter
-            { width: "120px", targets: 3 }, // Importer Type
-            { width: "100px", targets: 4 }, // ETA
-            { width: "100px", targets: 5 }, // Status
-            { width: "150px", targets: 6 }, // Submitted By
-            { width: "120px", targets: 7 }, // Action
+            // { width: "120px", targets: 3 }, // Importer Type
+            // { width: "100px", targets: 4 }, // ETA
+            { width: "100px", targets: 3 }, // Status
+            { width: "150px", targets: 4 }, // Submitted By
+            { width: "120px", targets: 5 }, // Action
         ],
 
         autoWidth: false,
@@ -106,6 +109,48 @@ async function data_table_init() {
     });
 
     reviewApplicationListTable.on("draw.dt", function () {
+        initTooltips();
+    });
+
+    agentApplicationListTable = new DataTable("#agentApplicationListTable", {
+        processing: true,
+        serverSide: true,
+        ajax: "/application/agent/list/data",
+        columns: [
+            {
+                data: "DT_RowIndex",
+                name: "DT_RowIndex",
+                orderable: false,
+                searchable: false,
+            },
+            { data: "importer", name: "importer" },
+            { data: "exporter", name: "exporter" },
+            // { data: "importer_type", name: "importer_type" },
+            // { data: "date", name: "date" },
+            { data: "application_type", name: "application_type" },
+
+            { data: "status", name: "status" },
+            { data: "submitted_by", name: "submitted_by" },
+            { data: "action", name: "action" },
+        ],
+
+        columnDefs: [
+            { width: "50px", targets: 0 }, // #
+            { width: "150px", targets: 1 }, // Importer
+            { width: "150px", targets: 2 }, // Exporter
+            // { width: "120px", targets: 3 }, // Importer Type
+            // { width: "100px", targets: 4 }, // ETA
+            { width: "100px", targets: 3 }, // Status
+            { width: "150px", targets: 4 }, // Submitted By
+            { width: "120px", targets: 5 }, // Action
+        ],
+
+        autoWidth: false,
+        responsive: true,
+        pageLength: 10,
+    });
+
+    agentApplicationListTable.on("draw.dt", function () {
         initTooltips();
     });
 

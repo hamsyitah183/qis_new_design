@@ -114,12 +114,11 @@ class InspectionController extends Controller
                 // Map statuses to colors
                 $statusColors = [
                     'processing' => 'bg-info', // blue
-    
+
                     'pending for payment' => 'bg-warning', // green
                     'rejected' => 'bg-danger', // red
                     // 'completed'  => 'bg-success', // green
                     'paid' => 'bg-success', // green
-    
                 ];
 
                 // Get all permit statuses for this row, lowercase
@@ -134,10 +133,12 @@ class InspectionController extends Controller
                 ];
 
                 foreach ($permit_statuses as $status) {
-                    if ($status == 'submitted')
+                    if ($status == 'submitted') {
                         $status = 'processing';
-                    if ($status == 'approved')
+                    }
+                    if ($status == 'approved') {
                         $status = 'paid';
+                    }
 
                     if (isset($statusCounts[$status])) {
                         $statusCounts[$status]++;
@@ -204,7 +205,7 @@ class InspectionController extends Controller
 
         // Fetch application and eager load relationships
         $application = InspectionApplication::where('application_id', $id)
-            ->with(['user', 'importer', 'exporter.countryInfo', 'entryPoint.districtCode', 'inspectionItems.attachments', 'activity_log.causer',])
+            ->with(['user', 'importer', 'exporter.countryInfo', 'entryPoint.districtCode', 'inspectionItems.attachments', 'activity_log.causer'])
             ->firstOrFail();
 
         if ($type === 'internal') {
@@ -249,9 +250,9 @@ class InspectionController extends Controller
 
     function getInspectionSelf($id = null)
     {
-        if(authUser()['user']['doa_verified'] == 0) {
+        if (authUser()['user']['doa_verified'] == 0) {
             return view('pages.public.wait_for_verified');
-        } 
+        }
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();
@@ -262,9 +263,9 @@ class InspectionController extends Controller
 
     function getInspectionOthers($id = null)
     {
-        if(authUser()['user']['doa_verified'] == 0) {
+        if (authUser()['user']['doa_verified'] == 0) {
             return view('pages.public.wait_for_verified');
-        } 
+        }
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();
@@ -295,7 +296,6 @@ class InspectionController extends Controller
                 } elseif ($permit['applCate'] == 1) {
                     $status = 'wait for company approval';
                 }
-
             }
 
             $importer_verify = null;
@@ -344,7 +344,6 @@ class InspectionController extends Controller
                     ])
                     ->log(authUser()['user']['fullname'] . ($isDraft ? ' has updated a draft inspection (ID: ' : ' has updated an inspection application (ID: ') . $application->application_id . ')');
             } else {
-
                 $category = $permit['applCate'] ?? 0;
                 $importerVerify = 'pending';
                 $verifyDate = null;
@@ -354,13 +353,14 @@ class InspectionController extends Controller
                         $importerVerify = 'Verified';
                         $verifyDate = now();
                     } else {
-                        $importerVerify = 'Wait for company approval';
+                        $importerVerify = 'Awaiting approval';
                     }
                 }
 
                 $isNewApplication = true;
                 $application = InspectionApplication::create([
-                    'application_id' => Str::uuid(),
+                    // 'application_id' => Str::uuid(),
+                    'application_id' => 'SP' . now()->format('ymd') . random_int(1000, 9999),
                     'eta' => $permit['eta'] ?? null,
                     'transport_type' => $permit['tranType'] ?? null,
                     'entry_point' => $permit['entrypoint'] ?? null,
@@ -439,9 +439,7 @@ class InspectionController extends Controller
             }
 
             // Global activity log for inspection_activity
-            $actionText = $isDraft
-                ? ($isNewApplication ? 'created a draft inspection application' : 'updated draft inspection application')
-                : ($isNewApplication ? 'submitted a new inspection application' : 'updated inspection application');
+            $actionText = $isDraft ? ($isNewApplication ? 'created a draft inspection application' : 'updated draft inspection application') : ($isNewApplication ? 'submitted a new inspection application' : 'updated inspection application');
 
             activity()
                 ->tap(function ($activity) {
@@ -492,12 +490,14 @@ class InspectionController extends Controller
                 }
             }
 
-            return response()->json([
-                'status' => 'success',
-                'message' => $isDraft ? 'Draft saved successfully' : 'Application submitted successfully',
-                'application_id' => $application->application_id
-            ], 200);
-
+            return response()->json(
+                [
+                    'status' => 'success',
+                    'message' => $isDraft ? 'Draft saved successfully' : 'Application submitted successfully',
+                    'application_id' => $application->application_id,
+                ],
+                200,
+            );
         } catch (\Exception $e) {
             DB::rollBack();
             foreach ($movedFiles as $file) {
@@ -555,9 +555,12 @@ class InspectionController extends Controller
         $status = $request->input('status');
 
         if (!isset($statusMessages[$status])) {
-            return response()->json([
-                'message' => 'Invalid inspection application status.'
-            ], 400);
+            return response()->json(
+                [
+                    'message' => 'Invalid inspection application status.',
+                ],
+                400,
+            );
         }
 
         $application->status = $status;
@@ -574,11 +577,7 @@ class InspectionController extends Controller
         $application->save();
 
         // activity log
-        $application->logActivity(
-            action: $status,
-            remark: $request->input('reason') ?? "Inspection application {$status}",
-            status: $status
-        );
+        $application->logActivity(action: $status, remark: $request->input('reason') ?? "Inspection application {$status}", status: $status);
 
         // Global activity log for inspection_activity
         $logMessage = match ($status) {
@@ -821,11 +820,12 @@ class InspectionController extends Controller
             );
         }
 
-        $inspectionItem = \App\Models\InspectionItem::findOrFail($id);
+        // $inspectionItem = \App\Models\InspectionItem::findOrFail($id);
+        $inspectionApplication = InspectionApplication::where('application_id', $id)->first();
 
         // Check if application is in correct status for item-level actions
-        $application = $inspectionItem->application;
-        if (!str_contains(strtolower($application->status), 'clerk verified')) {
+        // $application = $inspectionItem->application;
+        if (!str_contains(strtolower($inspectionApplication->status), 'clerk verified')) {
             return response()->json(
                 [
                     'status' => 'error',
@@ -836,19 +836,24 @@ class InspectionController extends Controller
         }
 
         // Update item status
-        $inspectionItem->permit_number = 'SP/' . now()->format('ymd') . rand(1000, 9999);
-        $inspectionItem->status = 'pending for payment';
-        $inspectionItem->save();
+        // $inspectionItem->permit_number = 'SP/' . now()->format('ymd') . rand(1000, 9999);
+        // $inspectionItem->status = 'pending for payment';
+        // $inspectionItem->save();
 
-        $detail = $inspectionItem->consignment_detail;
-        $itemName = $detail['item_name'] ?? 'Item';
+        // $detail = $inspectionItem->consignment_detail;
+        // $itemName = $detail['item_name'] ?? 'Item';
+
+        // find all items
+        $items = $inspectionApplication->inspectionItems;
+
+        foreach ($items as $item) {
+            $item->permit_number = 'SP/' . now()->format('ymd') . rand(1000, 9999);
+            $item->status = 'pending for payment';
+            $item->save();
+        }
 
         // Log the activity
-        $application->logActivity(
-            action: 'Item Accepted',
-            remark: "Inspection item '{$itemName}' accepted by officer",
-            status: 'Item Accepted'
-        );
+        $inspectionApplication->logActivity(action: 'Item Accepted', remark: 'All Inspection Item are accepted', status: 'Item Accepted');
 
         // Global activity log
         activity()
@@ -857,22 +862,21 @@ class InspectionController extends Controller
             })
             ->event('item_accepted')
             ->causedBy($user)
-            ->performedOn($application)
+            ->performedOn($inspectionApplication)
             ->withProperties([
-                'application_id' => $application->application_id,
-                'item_id' => $id,
-                'item_name' => $itemName,
+                'application_id' => $inspectionApplication->application_id,
+
                 'status' => 'Item Accepted',
                 'user' => [
                     'name' => $user->fullname ?? 'Unknown',
                     'email' => $user->email ?? 'N/A',
                 ],
             ])
-            ->log($user->fullname . " accepted inspection item '{$itemName}'");
+            ->log($user->fullname . " accepted inspection item '");
 
         // Notifications
-        $notificationUrl = route('public.viewInspectionApplication', ['id' => $application->application_id]);
-        $msg = "Inspection item '{$itemName}' has been accepted";
+        $notificationUrl = route('public.viewInspectionApplication', ['id' => $inspectionApplication->application_id]);
+        $msg = 'All Inspection item has been accepted';
 
         // Internal Notification
         try {
@@ -886,7 +890,7 @@ class InspectionController extends Controller
         Notification::send($internalUsers, new ApplicationNotification($msg, $user->fullname, $notificationUrl));
 
         // Public Notification
-        $publicUser = PublicUser::where('uuid', $application->user_id)->first();
+        $publicUser = PublicUser::where('uuid', $inspectionApplication->user_id)->first();
         if ($publicUser) {
             try {
                 event(new PublicUserEvent($msg, $publicUser->uuid));
@@ -897,19 +901,15 @@ class InspectionController extends Controller
         }
 
         // Check if all items are processed (either approved or rejected)
-        $allItemsProcessed = $application->inspectionItems->every(function ($item) {
+        $allItemsProcessed = $inspectionApplication->inspectionItems->every(function ($item) {
             return in_array($item->status, ['pending for payment', 'rejected']);
         });
 
         if ($allItemsProcessed) {
-            $application->status = 'Officer Verification Completed';
-            $application->save();
+            $inspectionApplication->status = 'Officer Verification Completed';
+            $inspectionApplication->save();
 
-            $application->logActivity(
-                action: 'Officer Verification Completed',
-                remark: 'All inspection items processed',
-                status: 'Officer Verification Completed'
-            );
+            $inspectionApplication->logActivity(action: 'Officer Verification Completed', remark: 'All inspection items processed', status: 'Officer Verification Completed');
         }
 
         return response()->json([
@@ -921,6 +921,7 @@ class InspectionController extends Controller
     public function rejectInspectionItem($id, Request $request)
     {
         // Check if user has proper role (Officer or Admin)
+    
         $user = authUser()['user'];
         if (!$user->hasAnyRole(['officer', 'admin', 'superadmin'])) {
             return response()->json(
@@ -936,10 +937,10 @@ class InspectionController extends Controller
             'reason' => 'required|string|min:5',
         ]);
 
-        $inspectionItem = \App\Models\InspectionItem::findOrFail($id);
+        $application = InspectionApplication::where('application_id', $id)->first();
 
         // Check if application is in correct status for item-level actions
-        $application = $inspectionItem->application;
+        // $application = $inspectionItem->application;
         if (!str_contains(strtolower($application->status), 'clerk verified')) {
             return response()->json(
                 [
@@ -950,20 +951,20 @@ class InspectionController extends Controller
             );
         }
 
-        // Update item status
-        $inspectionItem->status = 'rejected';
-        $inspectionItem->remark = $request->reason;
-        $inspectionItem->save();
+        $inspectionItems = $application->inspectionItems;
+
+        foreach ($inspectionItems as $inspectionItem) {
+            // Update item status
+            $inspectionItem->status = 'rejected';
+            $inspectionItem->remark = $request->reason;
+            $inspectionItem->save();
+        }
 
         $detail = $inspectionItem->consignment_detail;
         $itemName = $detail['item_name'] ?? 'Item';
 
         // Log the activity
-        $application->logActivity(
-            action: 'Item Rejected',
-            remark: "Inspection item '{$itemName}' rejected. Reason: " . $request->reason,
-            status: 'Item Rejected'
-        );
+        $application->logActivity(action: 'Item Rejected', remark: "Inspection item '{$itemName}' rejected. Reason: " . $request->reason, status: 'Item Rejected');
 
         // Global activity log
         activity()
@@ -1021,11 +1022,7 @@ class InspectionController extends Controller
             $application->status = 'Officer Verification Completed';
             $application->save();
 
-            $application->logActivity(
-                action: 'Officer Verification Completed',
-                remark: 'All inspection items processed',
-                status: 'Officer Verification Completed'
-            );
+            $application->logActivity(action: 'Officer Verification Completed', remark: 'All inspection items processed', status: 'Officer Verification Completed');
         }
 
         return response()->json([

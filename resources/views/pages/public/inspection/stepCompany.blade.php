@@ -90,56 +90,49 @@
             </div>
         </div>
         <!-- Add Exporter Modal -->
-        <div class="modal fade" id="addExporterModal" tabindex="-1" aria-labelledby="addExporterModalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-md">
-                <div class="modal-content">
-                    <!-- Header -->
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title" id="addExporterModalLabel">
-                            <i class="bx bx-user-plus me-2"></i> Add Exporter
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                    </div>
+        <x-modal id="addExporterModal" title="Add Exporter">
+            <form id="addExporterForm">
+                @csrf
 
-                    <!-- Body -->
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="addexpName" class="form-label">Name</label>
-                            <input type="text" id="addexpName" name="addexpName" class="form-control">
-                        </div>
-                        <div class="mb-3">
-                            <label for="addexpfonno" class="form-label">Phone No</label>
-                            <input type="text" id="addexpfonno" name="addexpfonno" class="form-control">
-                        </div>
-                        <div class="mb-3">
-                            <label for="addexpaddress" class="form-label">Address</label>
-                            <input type="text" id="addexpaddress1" name="addexpaddress1" class="form-control mb-2">
-                            <input type="text" id="addexpaddress2" name="addexpaddress2" class="form-control">
-                        </div>
-                        <div class="mb-3">
-                            <label for="addexpcountry" class="form-label">Country</label>
-                            <select class="form-select" id="addexpcountry" name="addexpcountry">
-                                <option value="">-- Select Country --</option>
-                                @foreach ($country as $coun)
-                                    <option value="{{ $coun->code }}">{{ $coun->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
+                {{-- Name --}}
+                <div class="mb-3">
+                    <label for="addexpName" class="form-label">Name<a style="color:red"> * </a></label>
+                    <input type="text" id="addexpName" name="addexpName" class="form-control">
+                </div>
 
-                    <!-- Footer -->
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">
-                            <i class="bx bx-x me-1"></i> Cancel
-                        </button>
-                        <button type="button" id="addExporterbtn" class="btn btn-primary">
-                            <i class="bx bx-save me-1"></i> Save Exporter
-                        </button>
-                    </div>
-                </div> <!-- end class:modal-content -->
-            </div>
-        </div> <!-- end modal -->
+                {{-- Phone --}}
+                <div class="mb-3">
+                    <label for="addexpfonno" class="form-label">Phone No<a style="color:red"> * </a></label>
+                    <input type="text" id="addexpfonno" name="addexpfonno" class="form-control">
+                </div>
+
+                {{-- Address --}}
+                <div class="mb-3">
+                    <label for="addexpaddress" class="form-label">Address<a style="color:red"> * </a></label>
+                    <input type="text" id="addexpaddress1" name="addexpaddress1" class="form-control mb-2">
+                    <input type="text" id="addexpaddress2" name="addexpaddress2" class="form-control">
+                </div>
+
+                {{-- Country --}}
+                <div class="mb-3">
+                    <label for="addexpcountry" class="form-label">Country<a style="color:red"> * </a></label>
+                    <select class="form-select" id="addexpcountry" name="addexpcountry">
+                        <option value="">-- Select Country --</option>
+                        @foreach ($country as $coun)
+                            <option value="{{ $coun->code }}">{{ $coun->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                @slot('footer')
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+
+                    <button type="button" id="addExporterbtn" class="btn btn-primary"
+                      >
+                        Save Exporter
+                    </button>
+                @endslot
+            </form>
+        </x-modal>
     </div>
 </div>

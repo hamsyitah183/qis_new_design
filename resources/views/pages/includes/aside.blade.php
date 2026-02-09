@@ -110,7 +110,11 @@
                         <ul class="slide-menu child1">
 
                             <li class="slide">
-                                <a href="{{ route('public.verifyapplication') }}" class="side-menu__item">To Review</a>
+                                <a href="{{ route('public.verifyapplication') }}" class="side-menu__item" id="toReviewCount">To Review</a>
+                            </li>
+
+                            <li class="slide">
+                                <a href="/public/agent_list" class="side-menu__item" >Representative List</a>
                             </li>
 
                             <li class="slide">
@@ -134,7 +138,7 @@
 
                 <!-- User Management -->
                 @if (auth('internal')->check())
-                    @if(!auth('internal')->user()->hasRole('finance'))
+                    @if(!auth('internal')->user()->hasRole('finance') && !auth('internal')->user()->hasRole('boundary officer'))
                         {{-- Application Section --}}
                         <li class="slide__category"><span class="category-name">Application</span></li>
 
@@ -315,7 +319,7 @@
                 @endif
 
 
-                @if(!(auth('internal')->check() && auth('internal')->user()->hasRole('finance')))
+                @if(!(auth('internal')->check() && (auth('internal')->user()->hasRole('finance') || auth('internal')->user()->hasRole('boundary officer'))))
                     <li class="slide__category"><span class="category-name">Order</span></li>
 
 

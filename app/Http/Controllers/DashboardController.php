@@ -25,6 +25,7 @@ use App\Models\Order;
 use App\Models\IpConsignmentPermit;
 use App\Models\InspectionItem;
 use App\Models\ConsignmentPermit;
+use App\Models\InternalUser;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -144,52 +145,52 @@ class DashboardController extends Controller
 
         // Fetch latest applications from all three types
         $importPermits = \App\Models\IpApplication::with('user')
-            ->latest()
-            ->take(10)
-            ->get()
-            ->map(function ($app) {
-                return [
-                    'id' => $app->id,
-                    'application_id' => $app->application_id,
-                    'user_name' => $app->user ? $app->user->fullname : 'N/A',
-                    'type' => 'Import Permit',
-                    'status' => $app->status,
-                    'created_at' => $app->created_at,
-                ];
-            });
-
+            ->where('status', 'Completed')
+            ->get();
+           
         $inspectionCerts = \App\Models\InspectionApplication::with('user')
-            ->latest()
-            ->take(10)
-            ->get()
-            ->map(function ($app) {
-                return [
-                    'id' => $app->id,
-                    'application_id' => $app->application_id,
-                    'user_name' => $app->user ? $app->user->fullname : 'N/A',
-                    'type' => 'Inspection Certificate',
-                    'status' => $app->status,
-                    'created_at' => $app->created_at,
-                ];
-            });
+            ->where('status', 'Completed')
+            ->get();
+           
 
         $consignmentCerts = \App\Models\ConsignmentApplication::with('user')
-            ->latest()
-            ->take(10)
-            ->get()
-            ->map(function ($app) {
-                return [
-                    'id' => $app->id,
-                    'application_id' => $app->application_id,
-                    'user_name' => $app->user ? $app->user->fullname : 'N/A',
-                    'type' => 'Consignment Certificate',
-                    'status' => $app->status,
-                    'created_at' => $app->created_at,
-                ];
-            });
+            ->where('status', 'Completed')
+            ->get();
+           
 
         // Combine and sort all applications
-        $latestApplications = $importPermits->concat($inspectionCerts)->concat($consignmentCerts)->sortByDesc('created_at')->take(10);
+        if(authUser()['roles'][0] == 'boundary officer') {
+            $boundary = InternalUser::with(['boundaryOfficer.entryPoint'])
+                ->where('uuid', authUser()['user']['uuid'])
+                ->first();
+            
+            $entryPoint = $boundary?->boundaryOfficer?->ip_entry_id;
+
+            // If entry point is set, filter by it; otherwise show all
+            if ($entryPoint) {
+                $latestApplications = $importPermits
+                    ->concat($inspectionCerts)
+                    ->concat($consignmentCerts)
+                    ->filter(fn ($app) => $app->entry_point == $entryPoint) // Use loose comparison
+                    ->sortByDesc('created_at')
+                    ->values();
+            } else {
+                // No entry point assigned, show all applications
+                $latestApplications = $importPermits
+                    ->concat($inspectionCerts)
+                    ->concat($consignmentCerts)
+                    ->sortByDesc('created_at')
+                    ->values();
+            }
+        } else {
+            $latestApplications =  $importPermits
+                ->concat($inspectionCerts)
+                ->concat($consignmentCerts)
+                ->sortByDesc('created_at')
+                ->take(5)
+                ->values();
+        }
+        
 
         // Get statistics counts
         $totalImportPermits = \App\Models\IpApplication::count();
