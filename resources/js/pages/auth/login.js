@@ -3,15 +3,18 @@ import Swal from "sweetalert2";
 
 window.$ = window.jQuery = $;
 
-$(document).ready(function() {
+console.log('hello login page')
+
+$(document).ready(function () {
     $(document)
         .off("submit", "#loginForm")
-        .on("submit", "#loginForm", function(e) {
+        .on("submit", "#loginForm", function (e) {
             e.preventDefault();
+
             const form = $(this);
             const formData = form.serialize();
 
-            // 🔹 Clear old validation feedback
+            // Clear old validation states
             form.find(".is-invalid").removeClass("is-invalid");
             form.find(".invalid-feedback").remove();
 
@@ -22,37 +25,32 @@ $(document).ready(function() {
             });
 
             $.ajax({
-                url: '/login',
-                method: "POST",
+                url: "/login",
+                type: "POST",
                 data: formData,
                 headers: {
-                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
-                        "content"
-                    ),
+                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
                 },
-                success: function(response) {
+                success: function (response) {
                     Swal.fire({
                         icon: "success",
-                        title: response.message || "Login successful!",
+                        title: response?.message || "Login successful!",
                         showConfirmButton: false,
                         timer: 1000,
                     }).then(() => {
-                        window.location.href = response.redirect;
+                        window.location.href = "/";
                     });
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     Swal.close();
 
                     let errorMsg =
                         "Something went wrong. Please try again later.";
-                    let swalIcon = "error";
-                    let swalTitle = "Login Failed";
-                    let redirectUrl = null;
 
-                    // 🔸 Handle unverified users (403)
+                    /* 🔸 403 — Unverified email */
                     if (
                         xhr.status === 403 &&
-                        xhr.responseJSON ? .status === "unverified"
+                        xhr.responseJSON?.status === "unverified"
                     ) {
                         Swal.fire({
                             icon: "warning",
@@ -60,23 +58,26 @@ $(document).ready(function() {
                             text: xhr.responseJSON.message,
                             confirmButtonText: "Go to Verify Page",
                         }).then(() => {
-                            window.location.href = xhr.responseJSON.redirect;
+                            window.location.href =
+                                xhr.responseJSON.redirect;
                         });
                         return;
                     }
 
-                    // 🔸 Validation errors (422)
-                    if (xhr.status === 422 && xhr.responseJSON ? .errors) {
+                    /* 🔸 422 — Validation errors */
+                    if (xhr.status === 422 && xhr.responseJSON?.errors) {
                         const errors = xhr.responseJSON.errors;
-                        let combinedMessages = Object.values(errors)
-                            .map((errArr) => errArr.join(" "))
+
+                        const combinedMessages = Object.values(errors)
+                            .flat()
                             .join("\n");
 
                         // Highlight inputs
-                        for (let field in errors) {
-                            const input = form.find(`[name="${field}"]`);
-                            input.addClass("is-invalid");
-                        }
+                        Object.keys(errors).forEach((field) => {
+                            form.find(`[name="${field}"]`).addClass(
+                                "is-invalid"
+                            );
+                        });
 
                         Swal.fire({
                             icon: "error",
@@ -86,30 +87,26 @@ $(document).ready(function() {
                         return;
                     }
 
-                    // 🔸 Invalid credentials (401 or 400)
+                    /* 🔸 401 / 400 — Invalid credentials */
                     if (xhr.status === 401 || xhr.status === 400) {
-                        errorMsg =
-                            xhr.responseJSON ? .message ||
-                            "Invalid credentials or password.";
-                        swalIcon = "error";
-                        swalTitle = "Authentication Failed";
-
                         Swal.fire({
-                            icon: swalIcon,
-                            title: swalTitle,
-                            text: errorMsg,
+                            icon: "error",
+                            title: "Authentication Failed",
+                            text:
+                                xhr.responseJSON?.message ||
+                                "Invalid credentials or password.",
                         });
                         return;
                     }
 
-                    // 🔸 Catch-all (any unexpected error)
-                    if (xhr.responseJSON ? .message) {
+                    /* 🔸 Catch-all */
+                    if (xhr.responseJSON?.message) {
                         errorMsg = xhr.responseJSON.message;
                     }
 
                     Swal.fire({
-                        icon: swalIcon,
-                        title: swalTitle,
+                        icon: "error",
+                        title: "Login Failed",
                         text: errorMsg,
                     });
                 },
