@@ -65,6 +65,41 @@ class ApplicationController extends Controller
             });
         }
 
+        // Apply filters from request
+        if (request()->has('status') && request('status') != '') {
+            $query->where('status', 'like', '%' . request('status') . '%');
+        }
+
+        if (request()->has('start_date') && request('start_date') != '') {
+            $query->whereDate('created_at', '>=', request('start_date'));
+        }
+
+        if (request()->has('end_date') && request('end_date') != '') {
+            $query->whereDate('created_at', '<=', request('end_date'));
+        }
+
+        // Filter by exporter ID
+        if (request()->has('exporter_id') && request('exporter_id') != '') {
+            $query->where('exporter_id', request('exporter_id'));
+        }
+
+        // Filter by importer ID (importer is a PublicUser UUID)
+        if (request()->has('importer_id') && request('importer_id') != '') {
+            $query->where('importer_id', request('importer_id'));
+        }
+
+        // Filter by public user UUID (for internal)
+        if ($type === 'internal' && request()->has('public_user_uuid') && request('public_user_uuid') != '') {
+            $query->where('user_id', request('public_user_uuid'));
+        }
+
+        // Filter by "Submitted By" username (for internal)
+        if ($type === 'internal' && request()->has('username') && request('username') != '') {
+            $query->whereHas('user', function($q) {
+                $q->where('fullname', 'like', '%' . request('username') . '%');
+            });
+        }
+
         $datatable = DataTables::eloquent($query)
             ->addIndexColumn()
             ->addColumn('importer', fn($row) => $row->importer->fullname ?? '-')

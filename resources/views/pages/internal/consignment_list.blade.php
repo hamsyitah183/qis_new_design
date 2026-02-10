@@ -37,6 +37,72 @@
                 <div class="card-body">
                     <div id="" class="dataTables_wrapper dt-bootstrap5 no-footer">
 
+                        <!-- Filter Section -->
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="card-title mb-3">Filter Applications</h6>
+                                        <div class="row g-3">
+                                            <div class="col-md-3">
+                                                <label for="filterStatus" class="form-label">Status</label>
+                                                <select id="filterStatus" class="form-select">
+                                                    <option value="">All Statuses</option>
+                                                    <option value="pending">Pending</option>
+                                                    <option value="clerk review in-progress">Clerk Review In-Progress</option>
+                                                    <option value="clerk verified">Clerk Verified</option>
+                                                    <option value="officer verification completed">Officer Verification Completed</option>
+                                                    <option value="submitted">Submitted</option>
+                                                    <option value="rejected">Rejected</option>
+                                                    <option value="not approved">Not Approved</option>
+                                                    <option value="draft">Draft</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label for="filterStartDate" class="form-label">Start Date</label>
+                                                <input type="date" id="filterStartDate" class="form-control">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label for="filterEndDate" class="form-label">End Date</label>
+                                                <input type="date" id="filterEndDate" class="form-control">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label for="filterPublicUser" class="form-label">Public User</label>
+                                                <select id="filterPublicUser" class="form-select">
+                                                    <option value="">All Users</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label for="filterExporter" class="form-label">Exporter</label>
+                                                <select id="filterExporter" class="form-select">
+                                                    <option value="">All Exporters</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label for="filterImporter" class="form-label">Importer</label>
+                                                <select id="filterImporter" class="form-select">
+                                                    <option value="">All Importers</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label for="filterUsername" class="form-label">Submitted By</label>
+                                                <input type="text" id="filterUsername" class="form-control" placeholder="Enter username">
+                                            </div>
+                                            <div class="col-md-12">
+                                                <button type="button" id="btnFilter" class="btn btn-primary">
+                                                    <i class="ti ti-filter"></i> Filter
+                                                </button>
+                                                <button type="button" id="btnResetFilter" class="btn btn-secondary">
+                                                    <i class="ti ti-refresh"></i> Reset
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- End Filter Section -->
+
                         <div class="row">
                             <div class="col-sm-12">
                                 <table id="consignmentListTable"

@@ -127,7 +127,7 @@ async function loadActivityTimeline(
         params.causer_id = userId;
 
         const { data: activities } = await axios.get(
-            "/internal/activity_log/data",
+            "/internal/activity-logs/data",
             { params }
         );
 
@@ -186,38 +186,37 @@ function renderTimeline(groupedActivities) {
             </div>
             <div class="timeline-continue">
                 ${activities
-                    .map(
-                        (activity) => `
+                .map(
+                    (activity) => `
                     <div class="timeline-right">
                         <div class="timeline-content">
                             <p class="timeline-date text-muted mb-2">
                                 ${new Date(
-                                    activity.created_at
-                                ).toLocaleTimeString([], {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                    hour12: true,
-                                })}
+                        activity.created_at
+                    ).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                    })}
                             </p>
                             <div class="timeline-box">
                                 <p class="mb-2">${activity.description}</p>
-                                ${
-                                    activity.properties?.attributes
-                                        ? `<p class="text-muted mb-0 ms-2">
+                                ${activity.properties?.attributes
+                            ? `<p class="text-muted mb-0 ms-2">
                                             Changed <b>${Object.keys(
-                                                activity.properties.attributes
-                                            ).join(", ")}</b>
+                                activity.properties.attributes
+                            ).join(", ")}</b>
                                             to <b>${Object.values(
-                                                activity.properties.attributes
-                                            ).join(", ")}</b>
+                                activity.properties.attributes
+                            ).join(", ")}</b>
                                         </p>`
-                                        : ""
-                                }
+                            : ""
+                        }
                             </div>
                         </div>
                     </div>`
-                    )
-                    .join("")}
+                )
+                .join("")}
             </div>`;
         container.appendChild(dateSection);
     });
@@ -417,3 +416,40 @@ $("#find").on("click", function (e) {
 
     loadActivityTimeline(start, end, startTime, endTime, userTypeVal, userIds);
 });
+
+// 🔹 Export Excel
+$("#exportExcel").on("click", function (e) {
+    e.preventDefault();
+    exportActivityLog('excel');
+});
+
+// 🔹 Export PDF
+$("#exportPdf").on("click", function (e) {
+    e.preventDefault();
+    exportActivityLog('pdf');
+});
+
+function exportActivityLog(type) {
+    let params = new URLSearchParams();
+
+    if (start) params.append('start_date', start);
+    if (end) params.append('end_date', end);
+    if (startTime) params.append('start_time', startTime);
+    if (endTime) params.append('end_time', endTime);
+
+    if (userTypeVal === "public") {
+        params.append('causer_type', 'public');
+    } else if (userTypeVal === "internal") {
+        params.append('causer_type', 'internal');
+    }
+
+    if (userIds && userIds.length > 0) {
+        // Handle array of user IDs
+        userIds.forEach(id => params.append('causer_id[]', id));
+    }
+
+    let url = type === 'excel' ? '/internal/activity-logs/export-excel' : '/internal/activity-logs/export-pdf';
+
+    // Redirect to download
+    window.location.href = `${url}?${params.toString()}`;
+}
