@@ -128,7 +128,7 @@ async function attachmentTable() {
         // }
         // }
 
-        if (permit.status === "paid") {
+        if (permit.status === "paid" && (roles.includes("admin") || roles.includes("officer") || roles.includes("superadmin") || roles.includes('boundary officer'))) {
             permitAction = `
 <div class="btn btn-sm btn btn-teal-light btn-wave generatePermit" data-permit="${permit.id}">
     Download Permit
