@@ -135,8 +135,6 @@ class MiscController extends Controller
 
     public function saveCondition(Request $request)
     {
-        // dd('id', $request->all());
-        // Validate
         $request->validate([
             'itemName' => 'required|string',
             'itemCategory' => 'required|integer',
@@ -145,45 +143,50 @@ class MiscController extends Controller
 
         // Decode Tagify arrays
         $countryArr = json_decode($request->countryTag, true) ?? [];
-        $usageArr = json_decode($request->usageTags, true) ?? [];
+        $usageArr   = json_decode($request->usageTags, true) ?? [];
 
         $countryValues = array_map(fn($i) => $i['value'] ?? ($i['name'] ?? null), $countryArr);
-        $usageValues = array_map(fn($i) => $i['value'] ?? ($i['name'] ?? null), $usageArr);
+        $usageValues   = array_map(fn($i) => $i['value'] ?? ($i['name'] ?? null), $usageArr);
 
-        // dd($countryValues, json_encode($countryValues), $request['itemName']);
+        $data = [
+            'category'           => $request->itemCategory,
+            'item_name'          => $request->itemName,
+            'addional_condition' => $request->permit_condition,
+            'quantity_limit'     => $request->quanLimit ?: null,
+            'date_limit'         => $request->spedate ?: null,
+            'country'            => $countryValues,
+            'usage'              => $usageValues,
+        ];
 
-       // Find the record first (single record, not collection)
-        $ipCondition = IpCondition::where('id', $request['id'])->first();
+        // UPDATE
+        if ($request->filled('id')) {
+            $ipCondition = IpCondition::find($request->id);
 
-        if (!$ipCondition) {
+            if (!$ipCondition) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'IP Condition not found'
+                ], 404);
+            }
+
+            $ipCondition->update($data);
+
             return response()->json([
-                'status' => 'error',
-                'message' => 'IP Condition not found'
-            ], 404);
+                'status' => 'success',
+                'message' => 'IP Condition updated successfully'
+            ]);
         }
 
-        // Update the record
-        $ipCondition->update([
-            'category' => $request->itemCategory,
-            'item_name' => $request->itemName,
-            'addional_condition' => $request->permit_condition,
-            'quantity_limit' => $request->quanLimit ?: null,
-            'date_limit' => $request->spedate ?: null,
-            'country' => $countryValues,
-            'usage' => $usageValues,
-        ]);
+        // CREATE
+        $ipCondition = IpCondition::create($data);
 
         return response()->json([
             'status' => 'success',
-            'message' => 'IP Condition updated successfully'
-        ]);
-
-
-        return response()->json([
-            'status' => 'success',
-            'data' => $save,
+            'message' => 'IP Condition created successfully',
+            'data' => $ipCondition
         ]);
     }
+
 
     public function editCondition($id)
     {
