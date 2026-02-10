@@ -70,7 +70,7 @@
     </div>
 
     <!-- edit modal -->
-    {{-- <div class="modal fade" id="editItemModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="editItemModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-md modal-dialog-centered">
             <div class="modal-content">
 
@@ -109,10 +109,10 @@
 
             </div>
         </div>
-    </div> --}}
+    </div>
 
     <!-- add modal -->
-    {{-- <div class="modal fade" id="addGenericModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="addGenericModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-md modal-dialog-centered">
             <div class="modal-content">
 
@@ -143,9 +143,9 @@
 
             </div>
         </div>
-    </div> --}}
+    </div>
 
-    <x-modal id="editItemModal" title="Edit Item" size="modal-md">
+    {{-- <x-modal id="editItemModal" title="Edit Item" size="modal-md">
         <form id="edititemmdl">
             @csrf
 
@@ -222,7 +222,7 @@
                 </button>
             @endslot
         </form>
-    </x-modal>
+    </x-modal> --}}
 
 
 @endsection

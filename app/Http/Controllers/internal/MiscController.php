@@ -93,7 +93,7 @@ class MiscController extends Controller
 
     public function addpbdata(Request $request)
     {
-        dd($request->all());
+        // dd($request->all());
         $cate = $request->input('category');
         $code = $request->input('item_code');
         $desc = $request->input('item_desc');
@@ -104,12 +104,16 @@ class MiscController extends Controller
             $code = $getcode + 1;
         }
 
-        $pbdata = new PublicCode();
-        $pbdata->cate_name = $cate;
-        $pbdata->cate_code = $code;
-        $pbdata->description = $desc;
-        $pbdata->is_del = false;
-        $pbdata->save();
+        if($cate != 'unit_measurement') {
+            $pbdata = new PublicCode();
+            $pbdata->cate_name = $cate;
+            $pbdata->cate_code = $code;
+            $pbdata->description = $desc;
+            $pbdata->is_del = false;
+            $pbdata->save();
+        }
+
+       
 
         return response()->json([
             'status' => 'success',
