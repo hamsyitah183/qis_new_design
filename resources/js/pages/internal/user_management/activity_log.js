@@ -417,16 +417,23 @@ $("#find").on("click", function (e) {
     loadActivityTimeline(start, end, startTime, endTime, userTypeVal, userIds);
 });
 
-// 🔹 Export Excel
-$("#exportExcel").on("click", function (e) {
+// 🔹 Open Export Modal
+$("#openExportModal").on("click", function (e) {
     e.preventDefault();
-    exportActivityLog('excel');
+    const modal = new bootstrap.Modal("#exportModal");
+    modal.show();
 });
 
-// 🔹 Export PDF
-$("#exportPdf").on("click", function (e) {
+// 🔹 Confirm Export Excel
+$("#confirmExportExcel").on("click", function (e) {
     e.preventDefault();
-    exportActivityLog('pdf');
+    exportActivityLogModal('excel');
+});
+
+// 🔹 Confirm Export PDF
+$("#confirmExportPdf").on("click", function (e) {
+    e.preventDefault();
+    exportActivityLogModal('pdf');
 });
 
 function exportActivityLog(type) {
@@ -452,4 +459,47 @@ function exportActivityLog(type) {
 
     // Redirect to download
     window.location.href = `${url}?${params.toString()}`;
+}
+
+function exportActivityLogModal(type) {
+    let params = new URLSearchParams();
+
+    // Get selected Month and Year from modal
+    const month = $("#exportMonth").val();
+    const year = $("#exportYear").val();
+
+    // Calculate start and end date for the selected month
+    const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+    // Get last day of the month
+    const lastDay = new Date(year, month, 0).getDate();
+    const endDate = `${year}-${String(month).padStart(2, '0')}-${lastDay}`;
+
+    // Set full date range (00:00 to 23:59)
+    params.append('start_date', startDate);
+    params.append('end_date', endDate);
+    params.append('start_time', '12:00 AM');
+    params.append('end_time', '11:59 PM');
+
+    if (userTypeVal === "public") {
+        params.append('causer_type', 'public');
+    } else if (userTypeVal === "internal") {
+        params.append('causer_type', 'internal');
+    }
+
+    if (userIds && userIds.length > 0) {
+        // Handle array of user IDs
+        userIds.forEach(id => params.append('causer_id[]', id));
+    }
+
+    let url = type === 'excel' ? '/internal/activity-logs/export-excel' : '/internal/activity-logs/export-pdf';
+
+    // Redirect to download
+    window.location.href = `${url}?${params.toString()}`;
+
+    // Close modal properly
+    const modalEl = document.getElementById("exportModal");
+    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (modalInstance) {
+        modalInstance.hide();
+    }
 }

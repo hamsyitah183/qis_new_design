@@ -98,6 +98,11 @@
                                                 <button type="button" id="btnResetFilter" class="btn btn-secondary">
                                                     <i class="ti ti-refresh"></i> Reset
                                                 </button>
+                                                @if($type === 'internal')
+                                                    <button type="button" id="btnOpenExportModal" class="btn btn-info">
+                                                        <i class="ti ti-download"></i> Download Report
+                                                    </button>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -166,6 +171,26 @@
         @endslot
 
     </x-modal>
+
+    @if($type === 'internal')
+        {{-- 📑 Application Export Modal --}}
+        <x-modal id="applicationExportModal" title="Download Report" size="modal-dialog-centered">
+            <div class="p-3 text-center">
+                <p>Select the format for your exported report. The current filters will be applied.</p>
+                <div class="d-flex justify-content-center gap-3 mt-4">
+                    <button type="button" class="btn btn-success btn-lg" id="btnConfirmExportExcel">
+                        <i class="ti ti-file-spreadsheet fs-20"></i><br>Excel (CSV)
+                    </button>
+                    <button type="button" class="btn btn-danger btn-lg" id="btnConfirmExportPdf">
+                        <i class="ti ti-file-description fs-20"></i><br>PDF Document
+                    </button>
+                </div>
+            </div>
+            @slot('footer')
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            @endslot
+        </x-modal>
+    @endif
 
 @endsection
 

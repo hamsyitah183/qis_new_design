@@ -29,6 +29,119 @@ use Yajra\DataTables\Facades\DataTables;
 
 class ApplicationController extends Controller
 {
+    private function getFilteredApplicationQuery(Request $request)
+    {
+        $userUuid = authUser()['user']->uuid;
+        $type = authUser()['type'];
+
+        $query = IpApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode', 'latestLog.causer']);
+
+        // Filter for public users
+        if ($type === 'public') {
+            $query->where(function ($q) use ($userUuid) {
+                $q->where('user_id', $userUuid)->orWhere('importer_id', $userUuid);
+            });
+        }
+
+        // Apply filters from request
+        if ($request->has('status') && $request->status != '') {
+            $query->where('status', 'like', '%' . $request->status . '%');
+        }
+
+        if ($request->has('start_date') && $request->start_date != '') {
+            $query->whereDate('created_at', '>=', $request->start_date);
+        }
+
+        if ($request->has('end_date') && $request->end_date != '') {
+            $query->whereDate('created_at', '<=', $request->end_date);
+        }
+
+        // Filter by exporter ID
+        if ($request->has('exporter_id') && $request->exporter_id != '') {
+            $query->where('exporter_id', $request->exporter_id);
+        }
+
+        // Filter by importer ID (importer is a PublicUser UUID)
+        if ($request->has('importer_id') && $request->importer_id != '') {
+            $query->where('importer_id', $request->importer_id);
+        }
+
+        // Filter by public user UUID (for internal)
+        if ($type === 'internal' && $request->has('public_user_uuid') && $request->public_user_uuid != '') {
+            $query->where('user_id', $request->public_user_uuid);
+        }
+
+        // Filter by "Submitted By" username (for internal)
+        if ($type === 'internal' && $request->has('username') && $request->username != '') {
+            $query->whereHas('user', function($q) use ($request) {
+                $q->where('fullname', 'like', '%' . $request->username . '%');
+            });
+        }
+
+        return $query;
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $fileName = 'import_permit_applications_' . date('d_m_Y_H_i_s') . '.csv';
+        $query = $this->getFilteredApplicationQuery($request);
+        $applications = $query->get();
+
+        $headers = array(
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        );
+
+        $columns = array('App ID', 'Date', 'Importer', 'Exporter', 'Status');
+
+        $callback = function() use($applications, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            foreach ($applications as $app) {
+                $row['App ID'] = $app->application_id;
+                $row['Date'] = $app->created_at->format('d-m-Y H:i');
+                $row['Importer'] = $app->importer->fullname ?? '-';
+                $row['Exporter'] = $app->exporter->name ?? '-';
+                $row['Status'] = strtoupper($app->status);
+
+                fputcsv($file, array($row['App ID'], $row['Date'], $row['Importer'], $row['Exporter'], $row['Status']));
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $query = $this->getFilteredApplicationQuery($request);
+        $applications = $query->get();
+
+        $exporterName = null;
+        if ($request->has('exporter_id') && $request->exporter_id != '') {
+            $exporterName = \App\Models\Exporter::find($request->exporter_id)?->name;
+        }
+
+        $importerName = null;
+        if ($request->has('importer_id') && $request->importer_id != '') {
+            $importerName = \App\Models\PublicUser::where('uuid', $request->importer_id)->first()?->fullname;
+        }
+
+        $publicUserName = null;
+        if ($request->has('public_user_uuid') && $request->public_user_uuid != '') {
+            $publicUserName = \App\Models\PublicUser::where('uuid', $request->public_user_uuid)->first()?->fullname;
+        }
+
+        $html = view('pages.public.pdf.application_list_pdf', compact('applications', 'exporterName', 'importerName', 'publicUserName'))->render();
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html);
+        return $pdf->download('import_permit_applications_' . date('d_m_Y_H_i_s') . '.pdf');
+    }
+
     //
     public function show()
     {
@@ -53,52 +166,8 @@ class ApplicationController extends Controller
 
     public function getallapplicationlist()
     {
-        $userUuid = authUser()['user']->uuid;
         $type = authUser()['type'];
-
-        $query = IpApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode', 'latestLog.causer']);
-
-        // Filter for public users
-        if ($type === 'public') {
-            $query->where(function ($q) use ($userUuid) {
-                $q->where('user_id', $userUuid)->orWhere('importer_id', $userUuid);
-            });
-        }
-
-        // Apply filters from request
-        if (request()->has('status') && request('status') != '') {
-            $query->where('status', 'like', '%' . request('status') . '%');
-        }
-
-        if (request()->has('start_date') && request('start_date') != '') {
-            $query->whereDate('created_at', '>=', request('start_date'));
-        }
-
-        if (request()->has('end_date') && request('end_date') != '') {
-            $query->whereDate('created_at', '<=', request('end_date'));
-        }
-
-        // Filter by exporter ID
-        if (request()->has('exporter_id') && request('exporter_id') != '') {
-            $query->where('exporter_id', request('exporter_id'));
-        }
-
-        // Filter by importer ID (importer is a PublicUser UUID)
-        if (request()->has('importer_id') && request('importer_id') != '') {
-            $query->where('importer_id', request('importer_id'));
-        }
-
-        // Filter by public user UUID (for internal)
-        if ($type === 'internal' && request()->has('public_user_uuid') && request('public_user_uuid') != '') {
-            $query->where('user_id', request('public_user_uuid'));
-        }
-
-        // Filter by "Submitted By" username (for internal)
-        if ($type === 'internal' && request()->has('username') && request('username') != '') {
-            $query->whereHas('user', function($q) {
-                $q->where('fullname', 'like', '%' . request('username') . '%');
-            });
-        }
+        $query = $this->getFilteredApplicationQuery(request());
 
         $datatable = DataTables::eloquent($query)
             ->addIndexColumn()
