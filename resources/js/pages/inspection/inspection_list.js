@@ -2,6 +2,14 @@ import { formatTime, initTooltips } from "../../app";
 import Swal from "sweetalert2";
 import { activityLogDesign } from "../../appLog";
 
+// Import Select2 module
+import select2 from "select2";
+
+// Force Select2 to attach to THIS jQuery:
+select2(window.jQuery);
+
+import "select2/dist/css/select2.min.css";
+
 console.log("inspection list");
 let inspectionListTable;
 
@@ -27,10 +35,26 @@ async function data_table_init() {
         import("datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css"),
     ]);
 
+    // Load filter data on page load
+    await loadFilterData();
+
     inspectionListTable = new DataTable("#inspectionListTable", {
         processing: true,
         serverSide: true,
-        ajax: "/inspection_certificates_list/data",
+        ajax: {
+            url: "/inspection_certificates_list/data",
+            data: function (d) {
+                d.status = $("#filterStatus").val();
+                d.start_date = $("#filterStartDate").val();
+                d.end_date = $("#filterEndDate").val();
+                d.exporter_id = $("#filterExporter").val();
+                d.importer_id = $("#filterImporter").val();
+                if (isInternal) {
+                    d.username = $("#filterUsername").val();
+                    d.public_user_uuid = $("#filterPublicUser").val();
+                }
+            }
+        },
         columns: [
             {
                 data: "DT_RowIndex",
@@ -157,6 +181,47 @@ async function data_table_init() {
         }
     });
 
+    // Filter button
+    $("#btnFilter").on("click", function () {
+        inspectionListTable.ajax.reload();
+    });
+
+    // Reset button
+    $("#btnResetFilter").on("click", function () {
+        $("#filterStatus").val("");
+        $("#filterStartDate").val("");
+        $("#filterEndDate").val("");
+
+        // Destroy Select2 instances before resetting
+        if ($('#filterExporter').hasClass('select2-hidden-accessible')) {
+            $('#filterExporter').select2('destroy');
+        }
+        if ($('#filterImporter').hasClass('select2-hidden-accessible')) {
+            $('#filterImporter').select2('destroy');
+        }
+        if (isInternal && $('#filterPublicUser').hasClass('select2-hidden-accessible')) {
+            $('#filterPublicUser').select2('destroy');
+        }
+
+        $("#filterExporter").html('<option value="">All Exporters</option>');
+        $("#filterImporter").html('<option value="">All Importers</option>');
+
+        if (isInternal) {
+            $("#filterPublicUser").val("");
+            $("#filterUsername").val("");
+            // Reinitialize public user dropdown
+            $('#filterPublicUser').select2({
+                placeholder: 'Select a user',
+                allowClear: true,
+                width: '100%'
+            }).trigger('change');
+        } else {
+            loadFilterData();
+        }
+
+        inspectionListTable.ajax.reload();
+    });
+
     initTooltips();
     activityLog();
 }
@@ -223,3 +288,95 @@ function activityLog() {
 }
 
 document.addEventListener("DOMContentLoaded", data_table_init);
+
+// Load filter data based on user type
+async function loadFilterData() {
+    if (isInternal) {
+        try {
+            const response = await fetch('/internal/api/filters/public-users');
+            const users = await response.json();
+            const $select = $('#filterPublicUser');
+            $select.html('<option value="">All Users</option>');
+            users.forEach(user => {
+                $select.append(`<option value="${user.uuid}">${user.fullname} (${user.email})</option>`);
+            });
+            // Initialize Select2 for searchable dropdown
+            $select.select2({
+                placeholder: 'Select a user',
+                allowClear: true,
+                width: '100%'
+            });
+
+            // Use namespaced event to avoid removing Select2's internal handlers
+            $select.off('change.customFilter').on('change.customFilter', async function () {
+                const selectedUser = $(this).val();
+
+                // Destroy existing Select2 instances before repopulating
+                if ($('#filterExporter').hasClass('select2-hidden-accessible')) {
+                    $('#filterExporter').select2('destroy');
+                }
+                if ($('#filterImporter').hasClass('select2-hidden-accessible')) {
+                    $('#filterImporter').select2('destroy');
+                }
+
+                $('#filterExporter').html('<option value="">All Exporters</option>');
+                $('#filterImporter').html('<option value="">All Importers</option>');
+
+                if (selectedUser) {
+                    const exportersResp = await fetch(`/internal/api/filters/user/${selectedUser}/exporters`);
+                    const exporters = await exportersResp.json();
+                    exporters.forEach(exp => $('#filterExporter').append(`<option value="${exp.id}">${exp.name}</option>`));
+                    $('#filterExporter').select2({
+                        placeholder: 'Select exporter',
+                        allowClear: true,
+                        width: '100%'
+                    });
+                    const importersResp = await fetch(`/internal/api/filters/user/${selectedUser}/importers`);
+                    const importers = await importersResp.json();
+                    importers.forEach(imp => $('#filterImporter').append(`<option value="${imp.id}">${imp.name}</option>`));
+                    $('#filterImporter').select2({
+                        placeholder: 'Select importer',
+                        allowClear: true,
+                        width: '100%'
+                    });
+                } else {
+                    $('#filterExporter').select2({
+                        placeholder: 'Select exporter',
+                        allowClear: true,
+                        width: '100%'
+                    });
+                    $('#filterImporter').select2({
+                        placeholder: 'Select importer',
+                        allowClear: true,
+                        width: '100%'
+                    });
+                }
+            });
+        } catch (error) {
+            console.error('Error loading public users:', error);
+        }
+    } else {
+        try {
+            $('#filterExporter').html('<option value="">All Exporters</option>');
+            const exportersResp = await fetch('/public/api/filters/my-exporters');
+            const exporters = await exportersResp.json();
+            exporters.forEach(exp => $('#filterExporter').append(`<option value="${exp.id}">${exp.name}</option>`));
+            $('#filterExporter').select2({
+                placeholder: 'Select exporter',
+                allowClear: true,
+                width: '100%'
+            });
+            $('#filterImporter').html('<option value="">All Importers</option>');
+            const importersResp = await fetch('/public/api/filters/my-importers');
+            const importers = await importersResp.json();
+            importers.forEach(imp => $('#filterImporter').append(`<option value="${imp.id}">${imp.name}</option>`));
+            $('#filterImporter').select2({
+                placeholder: 'Select importer',
+                allowClear: true,
+                width: '100%'
+            });
+        } catch (error) {
+            console.error('Error loading filter data:', error);
+        }
+    }
+}

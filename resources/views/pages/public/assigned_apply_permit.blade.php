@@ -112,6 +112,64 @@
                 validate: true
             };
             new Wizard1(secondWizardConfig).init();
+             
+            // Event Listener for the wizard error
+            document.querySelector(".wizard-tab").addEventListener("wz.error", function(e) {
+                
+                let targets = e.detail.target;
+
+                targets.forEach(t => {
+                    // Logic for Importer Selection
+                    if (t.id == 'impid' || t.id == 'findImporter') {
+                        notifyUser('Please select an importer first!');
+                        let findImp = document.getElementById('findImporter');
+                        if (findImp) {
+                            findImp.classList.add('is-invalid');
+                            findImp.style.setProperty('border', '1px solid red', 'important');
+
+                            // Remove error on input
+                            findImp.addEventListener('input', function() {
+                                this.classList.remove('is-invalid');
+                                this.style.border = '';
+                            }, { once: true });
+                        }
+                    }
+
+
+                    // Logic for Exporter Selection
+                    if (t.id == 'selectexp') {
+                        // Check for Select2
+                        let nextElem = t.nextElementSibling;
+                        if (nextElem && nextElem.classList.contains('select2')) {
+                            let selection = nextElem.querySelector('.select2-selection');
+                            if (selection) {
+                                selection.style.setProperty('border', '1px solid red', 'important');
+                                // Remove error on change (Select2 triggers change on original select)
+                                $('#selectexp').one('select2:open change', function() {
+                                    selection.style.border = '';
+                                });
+                            }
+                        } else {
+                            t.classList.add('is-invalid');
+                            t.style.setProperty('border', '1px solid red', 'important');
+                            t.addEventListener('change', function() {
+                                this.classList.remove('is-invalid');
+                                this.style.border = '';
+                            }, { once: true });
+                        }
+                    }
+
+                    // Logic for Item List Validation
+                    if (t.id == 'itemCountCheck') {
+                         notifyUser('Please add at least one item!');
+                         let addBtn = document.getElementById('mdlAddItemBtn');
+                         if(addBtn) {
+                             addBtn.style.setProperty('border', '1px solid red', 'important');
+                             addBtn.style.color = 'red';
+                         }
+                    }
+                });
+            });
         })();
     </script>
 
