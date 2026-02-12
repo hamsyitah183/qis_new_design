@@ -12,7 +12,7 @@
                             <option value="">-- Select  --</option>
                             <option value="">-- SelectImporter --</option>
                         </select> -->
-                        <input type="text" class="form-control mb-3" id="findImporter" name="findImporter"
+                        <input type="text" class="form-control mb-3 required" id="findImporter" name="findImporter"
                             placeholder="Company Number / Identification Number">
                         <button type="button" class="btn btn-md btn-info mb-3" id="btnFindImp"><i
                                 class="bx bx-search"></i> Find Importer</button>
@@ -34,7 +34,7 @@
                     <input type="hidden" id="app_cate" value="1">
                     <div class="col-xl-12">
                         <label for="impname" class="form-label">Name</label>
-                        <input type="hidden" id="impid">
+                        <input type="hidden" id="impid" class="required">
                         <input type="text" class="form-control " id="impname" name="impname" disabled>
                         <input type="hidden" id="impemail" name="impemail">
                     </div>
@@ -56,8 +56,8 @@
                 <div class="row gy-3">
                     <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                         <label for="selectexp" class="form-label">Select Exporter</label>
-                        <select id="selectexp" data-route="/public/get_exporters" class="form-select xintra-select2"
-                            name="selectexp" style="width:100%;">
+                        <select id="selectexp" data-route="/public/get_exporters" class="form-select xintra-select2 required"
+                            name="selectexp" style="width:100%;" required>
                             <option value="">-- Select Exporter --</option>
                         </select>
                     </div>

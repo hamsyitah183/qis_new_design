@@ -23,6 +23,7 @@ use App\Http\Controllers\InspectionPermitController;
 use App\Http\Controllers\ConsignmentPermitController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\BoundaryOfficerController;
+use App\Http\Controllers\FilterController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Broadcast;
@@ -138,6 +139,10 @@ Route::prefix('public')
         Route::get('/inspection_certificates_application_self/{id?}', [InspectionController::class, 'getInspectionSelf'])->name('inspectionApplicationSelf');
         Route::get('/inspection_certificates_application_others/{id?}', [InspectionController::class, 'getInspectionOthers'])->name('inspectionApplicationOthers');
         Route::post('/save-inspection/{id}', [InspectionController::class, 'reapply']);
+
+        // ==================== Filter API Endpoints ====================
+        Route::get('/api/filters/my-exporters', [FilterController::class, 'getMyExporters'])->name('api.filters.myExporters');
+        Route::get('/api/filters/my-importers', [FilterController::class, 'getMyImporters'])->name('api.filters.myImporters');
     });
 
 Route::prefix('internal')
@@ -166,9 +171,10 @@ Route::prefix('internal')
             Route::post('/user_internal/save', [UserController::class, 'internal_user_save']);
             Route::delete('/user_internal/delete/{id}', [UserController::class, 'internal_user_delete']);
 
-            Route::get('/activity_log', [ActivityLogController::class, 'log'])->name('internal.activity_log');
-            Route::get('/activity_log/data', [ActivityLogController::class, 'data']);
-
+            Route::get('/activity-logs', [ActivityLogController::class, 'log'])->name('activity_logs');
+            Route::get('/activity-logs/data', [ActivityLogController::class, 'data'])->name('activity_logs.data');
+            Route::get('/activity-logs/export-excel', [ActivityLogController::class, 'exportExcel'])->name('activity_logs.export_excel');
+            Route::get('/activity-logs/export-pdf', [ActivityLogController::class, 'exportPdf'])->name('activity_logs.export_pdf');
             Route::get('/user_list/{type}', [UserController::class, 'user_list']);
 
             Route::get('/verification/{id}', [UserController::class, 'verification_attachment']);
@@ -206,6 +212,11 @@ Route::prefix('internal')
         Route::post('/consignment/{id}/status', [ConsignmentController::class, 'updateStatus'])->name('consignment.status');
         Route::delete('/inspection/delete/{id}', [InspectionController::class, 'deleteApplication'])->name('inspection.delete');
         Route::get('/inspection_application/{id}/data', [InspectionController::class, 'getApplicationDetails']);
+
+        // ==================== Filter API Endpoints (Internal) ====================
+        Route::get('/api/filters/public-users', [FilterController::class, 'getPublicUsers'])->name('api.filters.publicUsers');
+        Route::get('/api/filters/user/{uuid}/exporters', [FilterController::class, 'getUserExporters'])->name('api.filters.userExporters');
+        Route::get('/api/filters/user/{uuid}/importers', [FilterController::class, 'getUserImporters'])->name('api.filters.userImporters');
 
         // Route::get('/application/exporter/get', [ApplicationController::class, 'get_exporter'])->name('application.exporter.get');
     

@@ -75,6 +75,12 @@
 
                         {{-- clear button --}}
                         <div class="me-auto pt-2 d-flex align-items-end justify-content-end">
+                            <button class="btn btn-sm btn-success me-1" id="exportExcel">
+                                <i class="ri-file-excel-2-line"></i> Export Excel
+                            </button>
+                            <button class="btn btn-sm btn-danger me-1" id="exportPdf">
+                                <i class="ri-file-pdf-line"></i> Export PDF
+                            </button>
                             <button class="btn btn-sm btn-primary me-1" id="find">Search</button>
                             <button class="btn btn-sm btn-secondary" id="clearAll">Clear All</button>
                         </div>

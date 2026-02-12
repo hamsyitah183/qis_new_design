@@ -210,7 +210,7 @@
                             $userManagementRoutes = [
                                 'internal.public.',
                                 'internal.internal.',
-                                'internal.internal.activity_log',
+                                'activity_logs',
                                 'internal.internal.role',
                             ];
 
@@ -250,8 +250,8 @@
                                         Verification</a>
                                 </li>
 
-                                <li class="slide {{ $currentRoute === 'internal.internal.activity_log' ? 'active' : '' }}">
-                                    <a href="{{ route('internal.internal.activity_log') }}" class="side-menu__item">Activity
+                                <li class="slide {{ $currentRoute === 'internal.activity_logs' ? 'active' : '' }}">
+                                    <a href="{{ route('internal.activity_logs') }}" class="side-menu__item">Activity
                                         Log</a>
                                 </li>
 
@@ -297,8 +297,8 @@
                                 </li>
 
                                 <li style="display:none"
-                                    class="slide {{ $currentRoute === 'internal.internal.activity_log' ? 'active' : '' }} ">
-                                    <a href="{{ route('internal.internal.activity_log') }}" class="side-menu__item">
+                                    class="slide {{ $currentRoute === 'internal.activity_logs' ? 'active' : '' }} ">
+                                    <a href="{{ route('internal.activity_logs') }}" class="side-menu__item">
                                         Activity Log</a>
                                 </li>
                             </ul>
