@@ -75,11 +75,8 @@
 
                         {{-- clear button --}}
                         <div class="me-auto pt-2 d-flex align-items-end justify-content-end">
-                            <button class="btn btn-sm btn-success me-1" id="exportExcel">
-                                <i class="ri-file-excel-2-line"></i> Export Excel
-                            </button>
-                            <button class="btn btn-sm btn-danger me-1" id="exportPdf">
-                                <i class="ri-file-pdf-line"></i> Export PDF
+                            <button class="btn btn-sm btn-info me-1" id="openExportModal">
+                                <i class="ri-download-cloud-2-line"></i> Download Report
                             </button>
                             <button class="btn btn-sm btn-primary me-1" id="find">Search</button>
                             <button class="btn btn-sm btn-secondary" id="clearAll">Clear All</button>
@@ -163,6 +160,42 @@
         @slot('footer')
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             <button type="submit" form="userVerificationForm" class="btn btn-primary" id="submitBtn">Submit</button>
+        @endslot
+    </x-modal>
+
+    {{-- Export Modal --}}
+    <x-modal id="exportModal" title="Download Report" size="modal-dialog-centered">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label for="exportMonth" class="form-label">Month</label>
+                <select class="form-select" id="exportMonth">
+                    @foreach(range(1, 12) as $m)
+                        <option value="{{ $m }}" {{ date('n') == $m ? 'selected' : '' }}>
+                            {{ date('F', mktime(0, 0, 0, $m, 1)) }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="exportYear" class="form-label">Year</label>
+                <select class="form-select" id="exportYear">
+                    @foreach(range(date('Y'), date('Y') - 5) as $y)
+                        <option value="{{ $y }}" {{ date('Y') == $y ? 'selected' : '' }}>
+                            {{ $y }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
+        @slot('footer')
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-success" id="confirmExportExcel">
+                <i class="ri-file-excel-2-line"></i> Download Excel
+            </button>
+            <button type="button" class="btn btn-danger" id="confirmExportPdf">
+                <i class="ri-file-pdf-line"></i> Download PDF
+            </button>
         @endslot
     </x-modal>
 @endsection

@@ -33,6 +33,119 @@ use Spatie\Activitylog\Models\Activity;
 
 class ConsignmentController extends Controller
 {
+    private function getFilteredConsignmentQuery(Request $request)
+    {
+        $userData = authUser();
+        $userUuid = $userData['user']->uuid;
+        $type = $userData['type'];
+
+        $query = ConsignmentApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode', 'consignmentPermits', 'latestLog.causer', 'activity_log']);
+
+        // Filter for public users
+        if ($type === 'public') {
+            $query->where(function ($q) use ($userUuid) {
+                $q->where('user_id', $userUuid)->orWhere('exporter_id', $userUuid);
+            });
+        }
+
+        // Apply filters from request
+        if ($request->has('status') && $request->status != '') {
+            $query->where('status', 'like', '%' . $request->status . '%');
+        }
+
+        if ($request->has('start_date') && $request->start_date != '') {
+            $query->whereDate('created_at', '>=', $request->start_date);
+        }
+
+        if ($request->has('end_date') && $request->end_date != '') {
+            $query->whereDate('created_at', '<=', $request->end_date);
+        }
+
+        // Filter by exporter ID
+        if ($request->has('exporter_id') && $request->exporter_id != '') {
+            $query->where('exporter_id', $request->exporter_id);
+        }
+
+        // Filter by importer ID
+        if ($request->has('importer_id') && $request->importer_id != '') {
+            $query->where('importer_id', $request->importer_id);
+        }
+
+        // Filter by public user UUID
+        if ($request->has('public_user_uuid') && $request->public_user_uuid != '') {
+            $query->where('user_id', $request->public_user_uuid);
+        }
+
+        if ($type === 'internal' && $request->has('username') && $request->username != '') {
+            $query->whereHas('user', function($q) use ($request) {
+                $q->where('fullname', 'like', '%' . $request->username . '%');
+            });
+        }
+
+        return $query;
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $fileName = 'consignment_certificates_' . date('d_m_Y_H_i_s') . '.csv';
+        $query = $this->getFilteredConsignmentQuery($request);
+        $applications = $query->get();
+
+        $headers = array(
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        );
+
+        $columns = array('App ID', 'Date', 'Importer', 'Exporter', 'Status');
+
+        $callback = function() use($applications, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            foreach ($applications as $app) {
+                fputcsv($file, array(
+                    $app->application_id,
+                    $app->created_at->format('d-m-Y H:i'),
+                    $app->importer->name ?? '-',
+                    $app->exporter->fullname ?? '-',
+                    strtoupper($app->status)
+                ));
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $query = $this->getFilteredConsignmentQuery($request);
+        $applications = $query->get();
+
+        $exporterName = null;
+        if ($request->has('exporter_id') && $request->exporter_id != '') {
+            $exporterName = \App\Models\Exporter::find($request->exporter_id)?->fullname;
+        }
+
+        $importerName = null;
+        if ($request->has('importer_id') && $request->importer_id != '') {
+            $importerName = \App\Models\ConsignmentImporter::find($request->importer_id)?->name;
+        }
+
+        $publicUserName = null;
+        if ($request->has('public_user_uuid') && $request->public_user_uuid != '') {
+            $publicUserName = \App\Models\PublicUser::where('uuid', $request->public_user_uuid)->first()?->fullname;
+        }
+
+        $html = view('pages.public.pdf.consignment_list_pdf', compact('applications', 'exporterName', 'importerName', 'publicUserName'))->render();
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html);
+        return $pdf->download('consignment_certificates_' . date('d_m_Y_H_i_s') . '.pdf');
+    }
+
     //
     public function showallconsignmentlist()
     {
@@ -50,52 +163,8 @@ class ConsignmentController extends Controller
     public function getallconsignmentlist()
     {
         $userData = authUser();
-        $user = $userData['user'];
-        $userUuid = $user->uuid;
         $type = $userData['type'];
-
-        $query = ConsignmentApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode', 'consignmentPermits', 'latestLog.causer', 'activity_log']);
-
-        // Filter for public users
-        if ($type === 'public') {
-            $query->where(function ($q) use ($userUuid) {
-                $q->where('user_id', $userUuid)->orWhere('exporter_id', $userUuid);
-            });
-        }
-
-        // Apply filters from request
-        if (request()->has('status') && request('status') != '') {
-            $query->where('status', 'like', '%' . request('status') . '%');
-        }
-
-        if (request()->has('start_date') && request('start_date') != '') {
-            $query->whereDate('created_at', '>=', request('start_date'));
-        }
-
-        if (request()->has('end_date') && request('end_date') != '') {
-            $query->whereDate('created_at', '<=', request('end_date'));
-        }
-
-        // Filter by exporter ID
-        if (request()->has('exporter_id') && request('exporter_id') != '') {
-            $query->where('exporter_id', request('exporter_id'));
-        }
-
-        // Filter by importer ID
-        if (request()->has('importer_id') && request('importer_id') != '') {
-            $query->where('importer_id', request('importer_id'));
-        }
-
-        // Filter by public user UUID
-        if (request()->has('public_user_uuid') && request('public_user_uuid') != '') {
-            $query->where('user_id', request('public_user_uuid'));
-        }
-
-        if ($type === 'internal' && request()->has('username') && request('username') != '') {
-            $query->whereHas('user', function($q) {
-                $q->where('fullname', 'like', '%' . request('username') . '%');
-            });
-        }
+        $query = $this->getFilteredConsignmentQuery(request());
 
         $datatable = DataTables::eloquent($query)
             ->addIndexColumn()

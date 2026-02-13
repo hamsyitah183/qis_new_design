@@ -310,3 +310,44 @@ function activityLog() {
 initTooltips();
 activityLog();
 
+// ⬇️ Export consignment list modal logic
+$(document).on("click", "#btnOpenExportModal", function (e) {
+    e.preventDefault();
+    const modal = new bootstrap.Modal("#consignmentExportModal");
+    modal.show();
+});
+
+$(document).on("click", "#btnConfirmExportExcel", function (e) {
+    e.preventDefault();
+    exportConsignments("excel");
+});
+
+$(document).on("click", "#btnConfirmExportPdf", function (e) {
+    e.preventDefault();
+    exportConsignments("pdf");
+});
+
+function exportConsignments(type) {
+    const params = new URLSearchParams();
+    params.append("status", $("#filterStatus").val() || "");
+    params.append("start_date", $("#filterStartDate").val() || "");
+    params.append("end_date", $("#filterEndDate").val() || "");
+    params.append("exporter_id", $("#filterExporter").val() || "");
+    params.append("importer_id", $("#filterImporter").val() || "");
+
+    const isInternal = typeof $("#filterPublicUser").val() !== "undefined";
+    if (isInternal) {
+        params.append("username", $("#filterUsername").val() || "");
+        params.append("public_user_uuid", $("#filterPublicUser").val() || "");
+    }
+
+    const url = type === "excel" ? "/consignment/export-excel" : "/consignment/export-pdf";
+    window.location.href = `${url}?${params.toString()}`;
+
+    // Close modal properly
+    const modalEl = document.getElementById("consignmentExportModal");
+    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (modalInstance) {
+        modalInstance.hide();
+    }
+}
