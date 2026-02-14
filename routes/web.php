@@ -298,6 +298,8 @@ Route::middleware(['auth.any'])->group(function () {
 
     //============================= application ======================
     Route::get('/application/list/data', [ApplicationController::class, 'getallapplicationlist'])->name('application.data');
+    Route::get('/application/export-excel', [ApplicationController::class, 'exportExcel'])->name('application.export_excel');
+    Route::get('/application/export-pdf', [ApplicationController::class, 'exportPdf'])->name('application.export_pdf');
     Route::get('/application/review/list/data', [ApplicationController::class, 'getAllReviewapplicationList'])->name('application.review.data');
     Route::get('/application/agent/list/data', [ApplicationController::class, 'getAllAgentApplicationList'])->name('application.review.data');
     Route::get('/inspection_certificates_list/data', [InspectionController::class, 'getAllInspectionList'])->name('inspection.list.data');
@@ -310,8 +312,12 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/consignment_application/{id}/data', [ConsignmentController::class, 'getApplicationDetails']);
     Route::get('/consignment/attachment/{id}', [ConsignmentApplicationController::class, 'viewAttachment'])->name('consignment.attachment.view');
     Route::get('/consignment/list/data', [ConsignmentController::class, 'getallconsignmentlist'])->name('consignment.data');
+    Route::get('/consignment/export-excel', [ConsignmentController::class, 'exportExcel'])->name('consignment.export_excel');
+    Route::get('/consignment/export-pdf', [ConsignmentController::class, 'exportPdf'])->name('consignment.export_pdf');
     Route::post('/consignment/verify/{id}/', [ConsignmentController::class, 'verify_application_permit']);
 
+    Route::get('/inspection/export-excel', [InspectionController::class, 'exportExcel'])->name('inspection.export_excel');
+    Route::get('/inspection/export-pdf', [InspectionController::class, 'exportPdf'])->name('inspection.export_pdf');
     Route::get('/view_inspection_certificates/{id}', [InspectionController::class, 'viewInspection'])->name('inspection.view_details');
     Route::get('/inspection_application/{id}/data', [InspectionController::class, 'getApplicationDetails']);
 
