@@ -6,13 +6,13 @@
         <!-- Start::header-element -->
         <div class="header-element">
             <div class="horizontal-logo">
-                <a href="https://laravelui.spruko.com/xintra/index" class="header-logo">
-                    <img src="{{ asset('/asset/image.png') }}" alt="logo" class="desktop-logo">
-                    <img src="{{ asset('/asset/image.png') }}" alt="logo" class="toggle-dark">
-                    <img src="{{ asset('/asset/image.png') }}" alt="logo" class="desktop-dark">
-                    <img src="{{ asset('/asset/image.png') }}" alt="logo" class="toggle-logo">
-                    <img src="{{ asset('/asset/image.png') }}" alt="logo" class="toggle-white">
-                    <img src="{{ asset('/asset/image.png') }}" alt="logo" class="desktop-white">
+                <a href="/" class="header-logo">
+                    <img src="{{ asset('/asset/Logo-DOA.png') }}" alt="logo" class="desktop-logo">
+                    <img src="{{ asset('/asset/Logo-DOA.png') }}" alt="logo" class="toggle-dark">
+                    <img src="{{ asset('/asset/Logo-DOA.png') }}" alt="logo" class="desktop-dark">
+                    <img src="{{ asset('/asset/Logo-DOA.png') }}" alt="logo" class="toggle-logo">
+                    <img src="{{ asset('/asset/Logo-DOA.png') }}" alt="logo" class="toggle-white">
+                    <img src="{{ asset('/asset/Logo-DOA.png') }}" alt="logo" class="desktop-white">
                 </a>
             </div>
         </div>

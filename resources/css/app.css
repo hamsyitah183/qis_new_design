@@ -202,3 +202,7 @@
 #activityLogModal .order-track .mid .accordion::before {
     height: 50px !important;
 } */
+
+#conditionHtml pre.ql-syntax {
+    text-wrap: wrap !important;
+}

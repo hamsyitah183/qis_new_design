@@ -13,6 +13,8 @@
         ->implode('');
 @endphp
 
+@section('pageName', 'My Profile')
+
 @section('breadcrumb')
     <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/'], ['label' => 'My Profile', 'url' => '#']]" title="My Profile">
 

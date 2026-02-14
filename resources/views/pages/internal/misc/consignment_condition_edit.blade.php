@@ -1,18 +1,18 @@
 @extends('pages.app')
 
-@section('pageName', 'Permit Condition List')
+@section('pageName', 'Consignment Item Edit')
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '/'], ['label' => 'Permit Condition List', 'url' => '/internal/permit_condition'], ['label' => 'Edit Permit Condition', 'url' => '#']]" 
+    <x-breadcrumb :items="[['label' => 'Home', 'url' => '/'], ['label' => 'Consignment List', 'url' => '/internal/consignment_condition'], ['label' => 'Edit Consignment Item', 'url' => '#']]" 
         
-        title="Add New Permit Condition">
+        title="Edit Consignment Item">
 
     </x-breadcrumb>
 @endsection
 
 @push('scripts')
-@vite(['resources/js/pages/permit/permit_condition.js'])
+@vite(['resources/js/pages/internal/misc/consignment_condition_edit.js'])
 @endpush
 
 @section('content')
@@ -60,12 +60,14 @@
                         <div class="col-xl-6">
                             <label for="blog-category" class="form-label">Category</label>
                             <select class="form-select" name="itemCategory" id="itemCategory">
-                                <option value="{{ $condition->category }}" selected>{{ $condition->code->description }}
-                                </option>
                                 @foreach ($pbdata as $cate)
-                                    <option value="{{ $cate->cate_code }}">{{ $cate->description }}</option>
+                                    <option value="{{ $cate->cate_code }}"
+                                        {{ $condition->category == $cate->cate_code ? 'selected' : '' }}>
+                                        {{ $cate->description }}
+                                    </option>
                                 @endforeach
                             </select>
+
                         </div>
                     </div>
                     <div class="row gy-3 mt-1">
@@ -129,6 +131,7 @@
     <script>
         window.countryTagify = null;
         window.usageTagify = null;
+
     </script>
 
     <script>
@@ -162,6 +165,7 @@
                 value: i,
                 name: i
             }));
+            
 
             $.ajax({
                 url: '/get_country',

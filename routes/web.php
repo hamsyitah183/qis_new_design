@@ -23,6 +23,7 @@ use App\Http\Controllers\InspectionPermitController;
 use App\Http\Controllers\ConsignmentPermitController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\BoundaryOfficerController;
+use App\Http\Controllers\ConsignmentMiscController;
 use App\Http\Controllers\FilterController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Notifications\DatabaseNotification;
@@ -237,6 +238,15 @@ Route::prefix('internal')
             Route::get('/permit_add_condition', [MiscController::class, 'permitaddcondition'])->name('permitaddcondition');
             Route::post('/save_condition', [MiscController::class, 'saveCondition'])->name('saveCondition');
             Route::get('/permit_edit_condition/{id}', [MiscController::class, 'editCondition']);
+
+
+            // CONSIGNMENT CONDITION
+             Route::get('/consignment_condition', [ConsignmentMiscController::class, 'showConsignmentCondition']);
+            Route::get('/consignment_condition/data', [ConsignmentMiscController::class, 'getConsignmentConditionData']);
+            Route::get('/consignment_condition/data/{id}', [ConsignmentMiscController::class, 'getConsignmentConditionDataById']);
+            Route::get('/consignment_condition/edit/{id}', [ConsignmentMiscController::class, 'editConsignmentConditionDataById']);
+            Route::post('/consignment_condition/save', [ConsignmentMiscController::class, 'saveCondition']);
+            Route::get('/consignment_condition/add', [ConsignmentMiscController::class, 'addConsignmentConditionData']);
 
             Route::get('/permit_condition', [MiscController::class, 'showpermitcondition'])->name('permitcondition');
             // Route::get('/permit_add_condition', [MiscController::class, 'permitaddcondition']);

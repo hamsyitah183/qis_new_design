@@ -1,0 +1,94 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\ConsignmentCondition;
+use App\Models\PublicCode;
+use Illuminate\Http\Request;
+use Yajra\DataTables\Facades\DataTables;
+
+class ConsignmentMiscController extends Controller
+{
+    //
+
+    public function showConsignmentCondition()
+    {
+        return view('pages.internal.misc.consignment_condition_list');
+    }
+
+    public function getConsignmentConditionData()
+    {
+        $query = ConsignmentCondition::with(['condcategory'])->select('id', 'item_name', 'category', 'usage', 'country');
+
+        return DataTables::of($query)->make(true);
+    }
+
+    public function getConsignmentConditionDataById($id)
+    {
+        $condition = ConsignmentCondition::with(['code', 'condcategory'])->find($id);
+
+        if (!$condition) {
+            return response()->json(['error' => 'Consignment Condition not found'], 404);
+        }
+
+        return response()->json([
+            'data' => $condition,
+        ]);
+    }
+
+    public function editConsignmentConditionDataById($id)
+    {
+        $condition = ConsignmentCondition::find($id);
+
+        // dd($condition);
+        $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->where('cate_name', 'consignment_purpose')->where('is_del', false)->get();
+
+        if (!$condition) {
+            return response()->json(['error' => 'Consignment Condition not found'], 404);
+        }
+
+        return view('pages.internal.misc.consignment_condition_edit', compact('condition', 'pbdata'));
+    }
+
+    public function saveCondition(Request $request)
+    {
+        $data = $request->all();
+        // dd($data);
+
+        $condition = ConsignmentCondition::find($data['id']);
+
+        
+
+        $countryArr = json_decode($request->country, true) ?? [];
+        $usageArr = json_decode($request->usage, true) ?? [];
+
+        $countryValues = array_map(fn($i) => $i['value'] ?? ($i['name'] ?? null), $countryArr);
+        $usageValues = array_map(fn($i) => $i['value'] ?? ($i['name'] ?? null), $usageArr);
+
+
+        if( $condition) {
+            $condition = ConsignmentCondition::find($request->id);
+        } else {
+            $condition = new ConsignmentCondition();
+        }
+
+        $condition->item_name = $data['item_name'];
+        $condition->addional_condition = $data['addional_condition'];
+        $condition->quantity_limit = $data['quantity_limit'];
+        $condition->date_limit = $data['date_limit'];
+        $condition->country = $countryValues;
+        $condition->usage = $usageValues;
+        $condition->category = $data['category'];
+
+        $condition->save();
+
+        return response()->json(['success' => 'Consignment Condition updated successfully']);
+    }
+
+    public function addConsignmentConditionData()
+    {
+        $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->where('cate_name', 'consignment_purpose')->where('is_del', false)->get();
+
+        return view('pages.internal.misc.consignment_condition_add', compact('pbdata'));
+    }
+}

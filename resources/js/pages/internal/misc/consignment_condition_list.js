@@ -2,6 +2,7 @@ import $ from "jquery";
 import Swal from "sweetalert2";
 
 
+console.log("Loaded consignment_condition_list.js");
 
     let internalListTable;
     let countryLookup = {};
@@ -71,7 +72,7 @@ import Swal from "sweetalert2";
         processing: true,
         serverSide: false,
         ajax: {
-            url: "/internal/permit_condition/data",
+            url: "/internal/consignment_condition/data",
             type: "GET",
             dataSrc: "data"
         },
@@ -118,7 +119,7 @@ import Swal from "sweetalert2";
                     searchable: false,
                     render: function (id) {
                         return `
-                            <a href="/internal/permit_edit_condition/${id}" 
+                            <a href="/internal/consignment_condition/edit/${id}" 
                                 class="btn btn-sm btn-primary">
                                 <i class="ri-edit-line"></i> Edit
                             </a>
@@ -148,7 +149,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         const modal = new bootstrap.Modal(modalelement);
 
         $.ajax({
-            url: `/internal/permit_condition/getdata/${id}`,
+            url: `/internal/consignment_condition/data/${id}`,
             type: "GET",
 
             beforeSend: function () {

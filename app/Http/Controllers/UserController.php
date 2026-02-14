@@ -512,6 +512,8 @@ class UserController extends Controller
     {
         $actor = authUser()['user'];
         $url = route('internal.internal.list');
+        
+        // dd('internal user save', $request->all());
 
         return DB::transaction(function () use ($request, $actor, $url) {
 
@@ -527,7 +529,7 @@ class UserController extends Controller
                     'fullname' => 'required|string|max:255',
                     'email' => 'required|email|max:255|unique:internal_users,email,' . $internalUser->id,
                     'no_ic' => 'required|digits:12|unique:internal_users,no_ic,' . $internalUser->id,
-                    'phone_number' => 'required|digits_between:7,15|unique:internal_users,phone_number,' . $internalUser->id,
+                    'phone_number' => 'required|unique:internal_users,phone_number,' . $internalUser->id,
                     'position' => 'required|string|max:255',
                     'office' => 'required|string|max:255',
                     'role' => 'required|string',

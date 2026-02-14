@@ -16,6 +16,7 @@ use App\Notifications\ApplicationNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Yajra\DataTables\Facades\DataTables;
 
 class MiscController extends Controller
 {
@@ -104,7 +105,7 @@ class MiscController extends Controller
             $code = $getcode + 1;
         }
 
-        if($cate != 'unit_measurement') {
+        if ($cate != 'unit_measurement') {
             $pbdata = new PublicCode();
             $pbdata->cate_name = $cate;
             $pbdata->cate_code = $code;
@@ -112,8 +113,6 @@ class MiscController extends Controller
             $pbdata->is_del = false;
             $pbdata->save();
         }
-
-       
 
         return response()->json([
             'status' => 'success',
@@ -143,19 +142,19 @@ class MiscController extends Controller
 
         // Decode Tagify arrays
         $countryArr = json_decode($request->countryTag, true) ?? [];
-        $usageArr   = json_decode($request->usageTags, true) ?? [];
+        $usageArr = json_decode($request->usageTags, true) ?? [];
 
         $countryValues = array_map(fn($i) => $i['value'] ?? ($i['name'] ?? null), $countryArr);
-        $usageValues   = array_map(fn($i) => $i['value'] ?? ($i['name'] ?? null), $usageArr);
+        $usageValues = array_map(fn($i) => $i['value'] ?? ($i['name'] ?? null), $usageArr);
 
         $data = [
-            'category'           => $request->itemCategory,
-            'item_name'          => $request->itemName,
+            'category' => $request->itemCategory,
+            'item_name' => $request->itemName,
             'addional_condition' => $request->permit_condition,
-            'quantity_limit'     => $request->quanLimit ?: null,
-            'date_limit'         => $request->spedate ?: null,
-            'country'            => $countryValues,
-            'usage'              => $usageValues,
+            'quantity_limit' => $request->quanLimit ?: null,
+            'date_limit' => $request->spedate ?: null,
+            'country' => $countryValues,
+            'usage' => $usageValues,
         ];
 
         // UPDATE
@@ -163,17 +162,20 @@ class MiscController extends Controller
             $ipCondition = IpCondition::find($request->id);
 
             if (!$ipCondition) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'IP Condition not found'
-                ], 404);
+                return response()->json(
+                    [
+                        'status' => 'error',
+                        'message' => 'IP Condition not found',
+                    ],
+                    404,
+                );
             }
 
             $ipCondition->update($data);
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'IP Condition updated successfully'
+                'message' => 'IP Condition updated successfully',
             ]);
         }
 
@@ -183,10 +185,9 @@ class MiscController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'IP Condition created successfully',
-            'data' => $ipCondition
+            'data' => $ipCondition,
         ]);
     }
-
 
     public function editCondition($id)
     {
@@ -199,14 +200,9 @@ class MiscController extends Controller
 
     public function getpermitconditiondata()
     {
-        $conditions = IpCondition::with(['code', 'condcategory'])
-            ->select('id', 'item_name', 'category', 'usage', 'country')
-            ->get();
+        $query = IpCondition::with(['condcategory'])->select('id', 'item_name', 'category', 'usage', 'country');
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $conditions,
-        ]);
+        return DataTables::of($query)->make(true);
     }
 
     public function getpermitconditionbyid($id)

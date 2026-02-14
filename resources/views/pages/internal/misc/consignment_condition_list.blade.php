@@ -9,7 +9,7 @@
 @endpush
 
 @push('scripts')
-    @vite(['resources/js/pages/internal/misc/permit_condition_list.js'])
+    @vite(['resources/js/pages/internal/misc/consignment_condition_list.js'])
 @endpush
 
 
@@ -19,7 +19,7 @@
             ['label' => 'Home', 'url' => '#'],
           
         ]" 
-        title="Permit Condition List"
+        title="Consignment List"
     >
      
     </x-breadcrumb>
@@ -32,7 +32,7 @@
             <div class="card custom-card">
                 <div class="card-header">
                     <div class="ms-auto">
-                        <a type="button" href="{{ url('internal/permit_add_condition') }}" class="btn btn-success btn-sm">Add Permit Condition</a>
+                        <a type="button" href="{{ url('internal/consignment_condition/add') }}" class="btn btn-success btn-sm">Add Consignment Item</a>
                     </div>
                 </div>
 
@@ -92,7 +92,7 @@
 
                     <!-- PERMIT CONDITION -->
                     <div class="mt-4">
-                        <h5 class="fw-bold text-muted">Permit Condition</h5>
+                        <h5 class="fw-bold text-muted">Consignment Condition</h5>
                         <div id="conditionHtml" 
                             class="border rounded p-3 bg-light"
                             style="min-height: 150px;">

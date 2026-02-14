@@ -355,8 +355,13 @@ function editProfile() {
                 return;
             }
 
+            let role =  window.authUser?.roles[0]?.name || '';
+
             const $form = $(this);
             const formData = new FormData(this);
+
+            formData.append("role", role);
+
             const allInputs = $form.find("input, select, button, textarea");
             allInputs.prop("disabled", true);
             $form.find(".is-invalid").removeClass("is-invalid");

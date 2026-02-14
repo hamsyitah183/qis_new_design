@@ -5,13 +5,13 @@
         <a href="{{ url('/') }}" class="header-logo">
             <img src="{{ asset('/asset/doa-logo.png') }}" alt="logo" class="desktop-logo">
 
-            <img src="{{ asset('/asset/doa-logo.png') }}" alt="logo" class="toggle-dark">
+            <img src="{{ asset('/asset/Logo-DOA.png') }}" alt="logo" class="toggle-dark">
 
             <img src="{{ asset('/asset/doa-logo.png') }}" alt="logo" class="desktop-dark">
 
-            <img src="{{ asset('/asset/doa-logo.png') }}" alt="logo" class="toggle-logo">
+            <img src="{{ asset('/asset/Logo-DOA.png') }}" alt="logo" class="toggle-logo">
 
-            <img src="{{ asset('/asset/doa-logo.png') }}" alt="logo" class="toggle-white">
+            <img src="{{ asset('/asset/Logo-DOA.png') }}" alt="logo" class="toggle-white">
 
             <img src="{{ asset('/asset/doa-logo.png') }}" alt="logo" class="desktop-white">
         </a>
@@ -288,7 +288,12 @@
 
                                 <li class="slide {{ $currentRoute === 'internal.internal.list' ? 'active' : '' }}">
                                     <a href="{{ url('/internal/permit_condition') }}" class="side-menu__item">Permit
-                                        Condition</a>
+                                        Item</a>
+                                </li>
+
+
+                                <li class="slide {{ $currentRoute === '/internal/consignment_condition' ? 'active' : '' }}">
+                                    <a href="{{ url('/internal/consignment_condition') }}" class="side-menu__item">Consignment Item</a>
                                 </li>
 
                                 <li class="slide {{ $currentRoute === 'internal.state-district-management' ? 'active' : '' }}">
