@@ -1,5 +1,8 @@
 @extends('pages.app')
 
+
+@section('pageName', 'Verification List')
+
 @push('style')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.12.1/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.3.0/css/responsive.bootstrap.min.css">
@@ -20,11 +23,7 @@
     <div class="row">
         <div class="col-xl-12">
             <div class="card custom-card">
-                <div class="card-header justify-content-between">
-                    <div class="card-title">
-                        Users Needing Verification ({{ $count }})
-                    </div>
-                </div>
+               
 
                 <div class="card-body">
                     <table id="verificationTable" class="table table-bordered text-nowrap w-100">

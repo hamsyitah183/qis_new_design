@@ -1,5 +1,5 @@
 import { notifyUser, showToast } from "./app";
-import { notification } from "./notification";
+import { notification, notificationContent } from "./notification";
 import { clerk_dashboard } from "./pages/clerk_dashboard";
 import { admin_dashboard } from "./pages/dashboard/admin_dashboard";
 import { public_dashboard } from "./pages/dashboard/public_dashboard";
@@ -20,6 +20,7 @@ export function internalUserEcho() {
             (e) => {
                 console.log("✅ Application created:", e.message);
                 notifyUser(e.message, e.editor);
+                notificationContent()
             }
         );
 
@@ -29,6 +30,7 @@ export function internalUserEcho() {
                 console.log("✅ Application deleted:", e.message);
 
                 notifyUser(e.message, e.editor);
+                notificationContent()
             }
         );
 
@@ -39,6 +41,7 @@ export function internalUserEcho() {
 
                 notifyUser(e.message, e.editor);
                 admin_dashboard();
+                notificationContent()
             }
         );
 
@@ -49,6 +52,7 @@ export function internalUserEcho() {
 
                 notifyUser(e.message, e.editor);
                 clerk_dashboard();
+                notificationContent()
             }
         );
 
@@ -59,6 +63,7 @@ export function internalUserEcho() {
 
                 notifyUser(e.message, e.editor);
                 officer_dashboard();
+                notificationContent()
             }
         );
 
@@ -68,6 +73,7 @@ export function internalUserEcho() {
                 console.log("🔔 Internal notification:", e.message);
                 console.log("Public User UUID:", e.public_user_uuid);
                 notifyUser(e.message);
+                notificationContent()
             }
         );
     }, 100);
@@ -93,6 +99,7 @@ export function publicUserEcho(uuid) {
                 notifyUser(e.message);
                 public_dashboard();
                 // consginment_application()
+                notificationContent()
             }
         );
     }, 100);

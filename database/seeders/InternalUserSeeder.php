@@ -39,7 +39,7 @@ class InternalUserSeeder extends Seeder
             [
                 'email' => 'admin@example.com',
                 'fullname' => 'System Admin',
-                'phone_number' => '0130000001',
+                'phone_number' => '+60130000001',
                 'position' => 'Administrator',
                 'office' => 'HQ',
                 'no_ic' => '900101010001',
@@ -50,7 +50,7 @@ class InternalUserSeeder extends Seeder
             [
                 'email' => 'hamsyitahnur@gmail.com',
                 'fullname' => 'Hamsyitah Internal',
-                'phone_number' => '0130400001',
+                'phone_number' => '+60130400001',
                 'position' => 'Administrator',
                 'office' => 'HQ',
                 'no_ic' => '000101010001',
@@ -61,7 +61,7 @@ class InternalUserSeeder extends Seeder
             [
                 'email' => 'officer@example.com',
                 'fullname' => 'Department Officer',
-                'phone_number' => '0130000002',
+                'phone_number' => '+60130000002',
                 'position' => 'Officer',
                 'office' => 'District Office',
                 'no_ic' => '900101010002',
@@ -72,7 +72,7 @@ class InternalUserSeeder extends Seeder
             [
                 'email' => 'clerk@example.com',
                 'fullname' => 'Department Clerk',
-                'phone_number' => '0130000003',
+                'phone_number' => '+60130000003',
                 'position' => 'Clerk',
                 'office' => 'District Office',
                 'no_ic' => '900101010003',
@@ -82,7 +82,7 @@ class InternalUserSeeder extends Seeder
             ],[
                 'email' => 'aarondalejchin@gmail.com',
                 'fullname' => 'Aaron Internal',
-                'phone_number' => '0198227530',
+                'phone_number' => '+60198227530',
                 'position' => 'Administrator',
                 'office' => 'HQ',
                 'no_ic' => '911117126657',
@@ -93,7 +93,7 @@ class InternalUserSeeder extends Seeder
             ,[
                 'email' => 'finance@example.com',
                 'fullname' => 'Finance',
-                'phone_number' => '01798227530',
+                'phone_number' => '+601798227530',
                 'position' => 'Administrator',
                 'office' => 'HQ',
                 'no_ic' => '9111171266957',
@@ -111,7 +111,7 @@ class InternalUserSeeder extends Seeder
             $users[] = [
                 'email' => "internal{$i}@example.com",
                 'fullname' => "Internal User {$i}",
-                'phone_number' => '013' . str_pad(rand(1000004, 9999999), 7, '0', STR_PAD_LEFT),
+                'phone_number' => '+6013' . str_pad(rand(1000004, 9999999), 7, '0', STR_PAD_LEFT),
                 'position' => ucfirst($role),
                 'office' => 'HQ',
                 'no_ic' => str_pad(rand(900101010004, 900101019999), 12, '0', STR_PAD_LEFT),

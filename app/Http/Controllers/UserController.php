@@ -826,7 +826,7 @@ class UserController extends Controller
 
         $user->notify(new ApplicationNotification(
             'You Upload a verification attachment',
-            'System',
+            'QIS',
             '/profile'
         ));
 

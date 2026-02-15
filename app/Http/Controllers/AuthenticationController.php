@@ -197,7 +197,7 @@ class AuthenticationController extends Controller
                 }
 
                 $admins = InternalUser::role(['admin'])->get();
-                $notificationUrl = route('internal.public.list');
+                $notificationUrl = '/internal/user_public/verification';
                 Notification::send($admins, new ApplicationNotification('A user uploaded a verification attachment', $user->fullname, $notificationUrl));
 
                 $user->notify(new ApplicationNotification('You uploaded a verification attachment', 'QIS', '/profile'));

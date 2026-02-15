@@ -12,7 +12,8 @@
                         <div class="d-flex justify-content-center mb-3 type-div">
                             <div class="d-flex flex-column align-items-center gap-2">
                                 <h6 class="icon-box fs-16 fw-semibold border border-3 p-3 rounded-3">
-                                    <i class="bx bx-package fs-2 text-primary icon"></i>
+                                  
+                                    <i class="bi bi-person-fill fs-2 text-primary icon"></i>
                                 </h6>
                                 <span class="fs-15 fw-bold">Self Apply</span>
                             </div>
@@ -28,7 +29,8 @@
                         <div class="d-flex justify-content-center mb-3 type-div">
                             <div class="d-flex flex-column align-items-center gap-2">
                                 <h6 class="icon-box fs-16 fw-semibold border border-3 p-3 rounded-3">
-                                    <i class="bx bx-package fs-2 text-primary icon"></i>
+                                    {{-- <i class="bx bx-package fs-2 text-primary icon"></i> --}}
+                                    <i class="bi bi-people-fill fs-2 text-primary icon"></i>
                                 </h6>
                                 <span class="fs-15 fw-bold">Apply For Others</span>
                             </div>

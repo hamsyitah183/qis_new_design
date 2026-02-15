@@ -5,8 +5,10 @@ import "datatables.net-bs5";
 import "datatables.net-responsive-bs5";
 import { fetchVerificationCount, formatTime } from "../../../app"; // Ensure this matches your project structure
 
+let verificationTable = null;
+
 $(document).ready(function () {
-    var verificationTable = $('#verificationTable').DataTable({
+    verificationTable = $('#verificationTable').DataTable({
         processing: true,
         serverSide: true,
         ajax: "/internal/user_public/verification/data",
@@ -281,6 +283,7 @@ function handleReject(userId, reason, tableInstance, modalIdToHide = null) {
             }
 
             if (tableInstance) tableInstance.ajax.reload();
+            if (verificationTable) verificationTable.ajax.reload();
         },
         error: function (xhr) {
              Swal.fire("Error", xhr.responseJSON?.message || "Action failed", "error");
