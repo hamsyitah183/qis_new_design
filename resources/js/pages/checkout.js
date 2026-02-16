@@ -6,7 +6,7 @@ function returnToApplication() {
 
     $(document).on('click', '#returnToApplication', function (e) {
         e.preventDefault();
-
+        console.log('cancel payment')
         const applicationId = $(this).data('app-id');
 
         // Extract ONLY permit IDs
@@ -22,23 +22,25 @@ function returnToApplication() {
             cancelButtonText: "Cancel",
         }).then((result) => {
             if (result.isConfirmed) {
-                fetch('/payment/cancel', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        application_id: applicationId,
-                        permit_ids: permitIds,
-                        order: order
-                    })
-                })
-                .then(res => res.json())
-                .then(() => {
-                    window.location.href =
+                // fetch('/payment/cancel', {
+                //     method: 'POST',
+                //     headers: {
+                //         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                //         'Content-Type': 'application/json'
+                //     },
+                //     body: JSON.stringify({
+                //         application_id: applicationId,
+                //         permit_ids: permitIds,
+                //         order: order
+                //     })
+                // })
+                // .then(res => res.json())
+                // .then(() => {
+                //     window.location.href =
+                //         '/view_application/' + applicationId + '#pending';
+                // });
+                window.location.href =
                         '/view_application/' + applicationId + '#pending';
-                });
             }
         });
     });

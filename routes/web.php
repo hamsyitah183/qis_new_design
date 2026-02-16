@@ -100,7 +100,7 @@ Route::prefix('public')
 
         Route::post('/save_application_consignment', [ConsignmentApplicationController::class, 'saveApplication'])->name('saveApplicationConsignment');
         // view application
-        Route::get('/view_all_application', [ApplicationController::class, 'showallapplicationlist'])->name('showallapplicationlist');
+        Route::get('/view_import_permit', [ApplicationController::class, 'showallapplicationlist'])->name('showallapplicationlist');
 
         Route::get('/view_all_consignment', [ConsignmentController::class, 'showallconsignmentlist'])->name('showallconsignmentlist');
 
@@ -192,7 +192,7 @@ Route::prefix('internal')
     
         // ======================= application ========================
         Route::middleware(['not.boundary'])->group(function () {
-            Route::get('/view_all_application', [ApplicationController::class, 'showallapplicationlist'])->name('application.list');
+            Route::get('/view_import_permit', [ApplicationController::class, 'showallapplicationlist'])->name('application.list');
             Route::delete('/application/delete/{id}', [ApplicationController::class, 'deleteApplication'])->name('application.delete');
         });
 

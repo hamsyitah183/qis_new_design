@@ -74,6 +74,14 @@ class MiscController extends Controller
         $pbdata->description = $desc;
         $pbdata->save();
 
+        activity()
+        ->useLog('user_activity')
+        ->event('update data')
+        ->causedBy(authUser()['user'])
+        ->log(
+             authUser()['user']['fullname'] . ' is updated ' . $pbdata->description . ' of ' . $pbdata->cate_name
+        );
+
         return response()->json([
             'status' => 'success',
             'message' => 'Public code updated successfully.',
@@ -85,6 +93,14 @@ class MiscController extends Controller
         $pbdata = PublicCode::findorFail($id);
         $pbdata->is_del = true;
         $pbdata->save();
+
+        activity()
+        ->useLog('user_activity')
+        ->event('delete data')
+        ->causedBy(authUser()['user'])
+        ->log(
+             authUser()['user']['fullname'] . ' is deleted ' . $pbdata->description . ' from ' . $pbdata->cate_name
+        );
 
         return response()->json([
             'status' => 'success',
@@ -98,21 +114,26 @@ class MiscController extends Controller
         $cate = $request->input('category');
         $code = $request->input('item_code');
         $desc = $request->input('item_desc');
-        // dd($cate,$code,$desc);
 
         if ($code == null || $code == '') {
             $getcode = PublicCode::where('cate_name', $cate)->max('cate_code');
             $code = $getcode + 1;
         }
 
-        if ($cate != 'unit_measurement') {
-            $pbdata = new PublicCode();
-            $pbdata->cate_name = $cate;
-            $pbdata->cate_code = $code;
-            $pbdata->description = $desc;
-            $pbdata->is_del = false;
-            $pbdata->save();
-        }
+        $pbdata = new PublicCode();
+        $pbdata->cate_name = $cate;
+        $pbdata->cate_code = $code;
+        $pbdata->description = $desc;
+        $pbdata->is_del = false;
+        $pbdata->save();
+
+        activity()
+        ->useLog('user_activity')
+        ->event('add data')
+        ->causedBy(authUser()['user'])
+        ->log(
+            authUser()['user']['fullname'] . ' is added ' . $pbdata->description . ' to ' . $pbdata->cate_name
+        );
 
         return response()->json([
             'status' => 'success',

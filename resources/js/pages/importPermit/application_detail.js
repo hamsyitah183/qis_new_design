@@ -232,14 +232,14 @@ async function pendingPaymentTable() {
                         class="form-check-input permit-checkbox"
                         type="checkbox"
                         value="${permit.id}"
-                        data-permit-value="30"
+                        data-permit-value="15"
                         ${permit.status?.includes('payment processing') ? 'disabled' : ''}
                     >
                 </div>
             </td>
             <td>${permit.permit_number ?? '—'}</td>
             <td class = "text-wrap">${detail.item_name ?? '—'}</td>
-            <td>RM 30</td>
+            <td>RM 15</td>
         </tr>
         `);
 

@@ -22,7 +22,7 @@
 
 <div class="row">
     {{-- KPI Cards --}}
-    <div class="col-xl col-lg-6 col-md-6 col-sm-12">
+    {{-- <div class="col-xl col-lg-6 col-md-6 col-sm-12">
         <div class="card custom-card">
             <div class="card-body">
                 <div class="d-flex align-items-center">
@@ -38,7 +38,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> --}}
     <div class="col-xl col-lg-6 col-md-6 col-sm-12">
         <div class="card custom-card">
             <div class="card-body">
@@ -177,7 +177,7 @@
             </div>
         </div>
 
-        <div class="card custom-card">
+        {{-- <div class="card custom-card">
             <div class="card-header justify-content-between">
                 <div class="card-title">Expiring Soon</div>
                 <span class="badge bg-danger-transparent">Biosecurity Alert</span>
@@ -191,7 +191,7 @@
                     </li>
                 </ul>
             </div>
-        </div>
+        </div> --}}
     </div>
 
     {{-- Recent Applications Queue --}}

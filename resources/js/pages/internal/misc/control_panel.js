@@ -55,7 +55,9 @@ $(document).ready(function () {
 
             case "unit_measurement":
                 tableId = "#tabletab3";
+                console.log('unit measurement clicked');
                 document.getElementById("editICOde").disabled = false;
+                $('#editItemModal #editICOde').attr('disabled', false)
                 break;
 
             case "reject_purpose":

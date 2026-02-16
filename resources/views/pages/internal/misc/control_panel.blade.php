@@ -75,7 +75,7 @@
             <div class="modal-content">
 
                 <!-- Header -->
-                <div class="modal-header bg-primary text-white">
+                <div class="modal-header">
                     <h5 class="modal-title">
                         <i class="ri-edit-line me-1"></i> Edit Item
                     </h5>
@@ -193,7 +193,7 @@
                 <button type="submit" class="btn btn-primary" id="saveGenericBtn">Save</button>
             @endslot
         </form>
-    </x-modal>
+    </x-modal>--}}
 
     <x-modal id="entryPointModal" title="Entry Point" size="modal-md">
         <form id="entryPointForm">
@@ -222,7 +222,7 @@
                 </button>
             @endslot
         </form>
-    </x-modal> --}}
+    </x-modal> 
 
 
 @endsection

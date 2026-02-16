@@ -102,7 +102,7 @@ class PermitApplicationController extends Controller
             ->withProperties([
                 'exporter' => $exporter,
             ])
-            ->log(authUser()['user']['fullname'] . ' has added an exporter');
+            ->log(authUser()['user']['fullname'] . ' has added an exporter (' . $exporter->name . ')');
 
         return response()->json($exporter, 201);
     }
@@ -524,7 +524,7 @@ class PermitApplicationController extends Controller
             $publicUser = auth()->guard('public')->user();
             $publicUser->notify(new ApplicationNotification($isDraft ? 'Your Application with id ' . $application->application_id . ' is saved as draft' : 'Your Application with id ' . $application->application_id . ' is submitted', 'QIS', route('viewApplication', $application->application_id)));
 
-            if ($application->category_application == 1 && !$isDraft) {
+            if ($application->category_application && !$isDraft) {
                 $company = PublicUser::where('uuid', $application['importer_id'])->first();
                 try {
                     event(new ApplicationCreatedInternalUser('Import permit application requires company approval for ' . ($company['fullname'] ?? 'Unknown Importer')));

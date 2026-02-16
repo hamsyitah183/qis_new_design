@@ -918,7 +918,7 @@ function saveapplication(isDraft = false) {
 
 
             setTimeout(() => {
-                window.location.href = "/public/view_all_application";
+                window.location.href = "/public/view_import_permit";
             }, 1500);
 
 
@@ -1049,7 +1049,7 @@ $(document).ready(async function () {
 
                     if (result.isDenied) {
                         saveapplication(true); // ✅ draft
-                        window.location.href = "/public/view_all_application";
+                        window.location.href = "/public/view_import_permit";
                     }
 
                     // result.isDismissed → user clicked "Stay"

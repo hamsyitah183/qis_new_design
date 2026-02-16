@@ -180,7 +180,7 @@
                             </ul>
                         </li>
 
-                        <li class="slide has-sub {{ $isApplicationActive ? 'open active' : '' }}">
+                        {{-- <li class="slide has-sub {{ $isApplicationActive ? 'open active' : '' }}">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <i class="ri-arrow-down-s-line side-menu__angle"></i>
                                 <i class="bi bi-file-earmark side-menu__icon"></i>
@@ -196,7 +196,7 @@
                                     </a>
                                 </li>
                             </ul>
-                        </li>
+                        </li> --}}
 
 
 
@@ -252,7 +252,7 @@
                                         Log</a>
                                 </li>
 
-                                @role('superadmin')
+                                @if(auth('internal')->user()->hasRole('superadmin'))
                                     <li class="slide {{ $currentRoute === 'internal.internal.role' ? 'active' : '' }}">
                                         <a href="{{ route('internal.internal.role') }}" class="side-menu__item">Role and
                                             Permission</a>
@@ -261,7 +261,7 @@
                                     <li class="slide">
                                         <a href="{{ route('internal.boundary.list') }}" class="side-menu__item">Boundary Officer</a>
                                     </li>
-                                @endrole
+                                @endif
                             </ul>
                         </li>
 

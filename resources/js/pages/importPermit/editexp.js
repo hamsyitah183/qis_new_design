@@ -958,7 +958,7 @@ function saveapplication(isDraft = false) {
 
             if (!isDraft) {
                 setTimeout(() => {
-                    window.location.href = "/public/view_all_application";
+                    window.location.href = "/public/view_import_permit";
                 }, 1500);
             }
         },
@@ -1091,7 +1091,7 @@ $(document).ready(async function () {
                     if (result.isDenied) {
                         console.log("draft is saved !");
                         saveapplication(true); // ✅ draft
-                        window.location.href = "/public/view_all_application";
+                        window.location.href = "/public/view_import_permit";
                         
                     }
 

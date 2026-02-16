@@ -249,16 +249,16 @@ class PaymentController extends Controller
 
          // dd($application['application_type']);
         if ($application['application_type'] == 'Import Permit') {
-            // $itn = 'IT037962';
+            $itn = 'IT037962';
             $itn = 'ITN10001';
             $application_name = $request->application_id;
         } elseif ($application['application_type'] == 'Inspection Certificate') {
-            // $itn = 'IT549383';
+            $itn = 'IT549383';
             $itn = 'ITN10002';
             $application_name = $request->application_id;
         } elseif ($application['application_type'] == 'Consignment Certificate') {
             // $itn = 'IT037963';
-            // $itn = 'IT331659';
+            $itn = 'IT331659';
             $itn = 'ITN10003';
             $application_name = $request->application_id;
         } else {
@@ -272,7 +272,7 @@ class PaymentController extends Controller
        
         $sid = 'QIS123';
 
-        // $itn = 'IT037962';
+
         // $sid = 'SE12501C';
 
      
@@ -328,7 +328,7 @@ class PaymentController extends Controller
         // $response = Http::withToken('test-api')->get('https://hands-on5.sabah.gov.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
 
 
-        // $response = Http::withToken('test-api')->get('https://hands-on5.sabah.gov.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
+        // $response = Http::withToken('test-api')->get('https://hands-on11.sabah.gov.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
 
         if (!$response->successful()) {
             abort(500, 'Failed to retrieve payment data');
