@@ -296,6 +296,7 @@ function acceptPermit() {
                                     // Refresh table
                                     initApplicationDetails();
                                     attachmentTable()
+                                    window.location.reload()
                                 },
                                 error: function (err) {
                                     Swal.fire({
@@ -855,11 +856,11 @@ function updateTotalValue() {
 
     // Update the totalValue element
     $("#totalValue").text(
-        "RM 30.00"
+        "RM 10.00"
         
     );
 
-    totalPermit = 30;
+    totalPermit = 10;
 
 }
 
