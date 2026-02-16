@@ -11,14 +11,36 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[
-        ['label' => 'Dashboard', 'url' => '/'],
-        ['label' => 'Application List', 'url' => '/internal/view_import_permit'],
-        ['label' => 'Application: ' . $application->application_id, 'url' => '#'],
-    ]" title="View Application">
 
-    </x-breadcrumb>
+    @php
+        $internalUser = auth('internal')->user();
+        $isInternal = auth('internal')->check();
+        $applicationUrl = $isInternal
+            ? '/internal/view_import_permit'
+            : '/public/view_import_permit';
+    @endphp
+
+    @if ($internalUser && $internalUser->hasRole('boundary officer'))
+        <x-breadcrumb :items="[
+                ['label' => 'Dashboard', 'url' => '/'],
+                ['label' => 'Application: ' . $application->application_id, 'url' => '#'],
+            ]"
+            title="View Application">
+        </x-breadcrumb>
+    @else
+        <x-breadcrumb :items="[
+                ['label' => 'Dashboard', 'url' => '/'],
+                ['label' => 'Application List', 'url' => $applicationUrl],
+                ['label' => 'Application: ' . $application->application_id, 'url' => '#'],
+            ]"
+            title="View Application">
+        </x-breadcrumb>
+    @endif
+
 @endsection
+
+
+
 
 @section('content')
 
@@ -109,7 +131,7 @@
                             @if (
                                 ($application->status === 'Clerk Review In-Progress' && $isAdminOrClerk) ||
                                     ( ($application->category_application == 1 &&
-                                        $application->status === 'Wait for company approval')
+                                        $application->status === 'wait for company approval')
                                     && ($isOwner || $isAdminOrClerk)))
                                 {{-- Step 4 --}}
                                 @include('pages.public.view_permit.step4')

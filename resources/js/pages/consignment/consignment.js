@@ -1001,48 +1001,48 @@ function saveapplication(isDraft = false) {
                 saveapplication(false);
             });
     
-            $(document).on(
-                "click",
-                `#logoutButton, 
-                .app-sidebar.sticky button, .app-sidebar.sticky a,
+            // $(document).on(
+            //     "click",
+            //     `#logoutButton, 
+            //     .app-sidebar.sticky button, .app-sidebar.sticky a,
              
-                .breadcrumb .breadcrumb-item a
-                `,
-                function (e) {
-                    if (!change) return;
+            //     .breadcrumb .breadcrumb-item a
+            //     `,
+            //     function (e) {
+            //         if (!change) return;
     
-                    e.preventDefault();
-                    const target = this;
+            //         e.preventDefault();
+            //         const target = this;
     
-                    Swal.fire({
-                        title: "Unsaved Changes",
-                        text: "You have unsaved changes. What would you like to do?",
-                        icon: "warning",
-                        showCancelButton: true,
-                        showDenyButton: true,
-                        confirmButtonText: "Yes, leave",
-                        denyButtonText: "Save as Draft",
-                        cancelButtonText: "Stay",
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            // Leave page
-                            change = false;
+            //         Swal.fire({
+            //             title: "Unsaved Changes",
+            //             text: "You have unsaved changes. What would you like to do?",
+            //             icon: "warning",
+            //             showCancelButton: true,
+            //             showDenyButton: true,
+            //             confirmButtonText: "Yes, leave",
+            //             denyButtonText: "Save as Draft",
+            //             cancelButtonText: "Stay",
+            //         }).then((result) => {
+            //             if (result.isConfirmed) {
+            //                 // Leave page
+            //                 change = false;
     
-                            if (target.tagName === "A") {
-                                window.location.href = target.href;
-                            } else {
-                                target.click();
-                            }
-                        }
+            //                 if (target.tagName === "A") {
+            //                     window.location.href = target.href;
+            //                 } else {
+            //                     target.click();
+            //                 }
+            //             }
     
-                        if (result.isDenied) {
-                            saveapplication(true);
-                        }
+            //             if (result.isDenied) {
+            //                 saveapplication(true);
+            //             }
     
-                        // result.isDismissed → user clicked "Stay"
-                    });
-                }
-            );
+            //             // result.isDismissed → user clicked "Stay"
+            //         });
+            //     }
+            // );
         } catch (error) {
             console.error("Error during initialization:", error);
             Swal.fire(

@@ -14,7 +14,7 @@ function getReviewCount()
         let recordCount = response.recordsTotal;
 
         if(recordCount > 0) {
-            $('#toReviewCount').html(`To Review <span class="badge ms-3 bg-success p-1">${recordCount}</span>`)
+            $('#toReviewCount').html(`To Review <span class="badge ms-3 bg-success">${recordCount}</span>`)
         } else {
             $('#toReviewCount').html(`To Review`)
         }
