@@ -4,6 +4,20 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.12.1/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.3.0/css/responsive.bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.bootstrap5.min.css">
+
+    <style>
+        .filter-dropdown {
+            width: 600px;
+        }
+
+        @media (max-width: 768px) {
+            .filter-dropdown {
+                width: 100%;
+                left: 0 !important;
+                right: 0 !important;
+            }
+        }
+    </style>
 @endpush
 
 
@@ -34,82 +48,96 @@
         <div class="col-xl-12">
             <div class="card custom-card">
 
-                <div class="card-body">
-                    <div id="" class="dataTables_wrapper dt-bootstrap5 no-footer">
+                <div class="card-header">
+                    <div class="ms-auto d-flex gap-2 align-items-center">
+                        <button class="btn btn-sm btn-primary filter dropdown-toggle" type="button"
+                            id="filterDropdownBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                            aria-expanded="false">
+                            <span class="me-2"><i class="ti ti-adjustments-horizontal"></i></span>Filter
+                        </button>
 
-                        <!-- Filter Section -->
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h6 class="card-title mb-3">Filter Applications</h6>
-                                        <div class="row g-3">
-                                            <div class="col-md-3">
-                                                <label for="filterStatus" class="form-label">Status</label>
-                                                <select id="filterStatus" class="form-select">
-                                                    <option value="">All Statuses</option>
-                                                    <option value="pending">Pending</option>
-                                                    <option value="clerk review in-progress">Clerk Review In-Progress</option>
-                                                    <option value="clerk verified">Clerk Verified</option>
-                                                    <option value="officer verification completed">Officer Verification Completed</option>
-                                                    <option value="rejected">Rejected</option>
-                                                    <option value="not approved">Not Approved</option>
-                                                    <option value="draft">Draft</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label for="filterStartDate" class="form-label">Start Date</label>
-                                                <input type="date" id="filterStartDate" class="form-control">
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label for="filterEndDate" class="form-label">End Date</label>
-                                                <input type="date" id="filterEndDate" class="form-control">
-                                            </div>
-                                            @if (authUser()['type'] == 'internal')
-                                                <div class="col-md-3">
-                                                    <label for="filterPublicUser" class="form-label">Public User</label>
-                                                    <select id="filterPublicUser" class="form-select">
-                                                        <option value="">All Users</option>
-                                                    </select>
-                                                </div>
-                                            @endif
-                                            <div class="col-md-3">
-                                                <label for="filterExporter" class="form-label">Exporter</label>
-                                                <select id="filterExporter" class="form-select">
-                                                    <option value="">All Exporters</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label for="filterImporter" class="form-label">Importer</label>
-                                                <select id="filterImporter" class="form-select">
-                                                    <option value="">All Importers</option>
-                                                </select>
-                                            </div>
-                                            @if (authUser()['type'] == 'internal')
-                                                <div class="col-md-3">
-                                                    <label for="filterUsername" class="form-label">Submitted By</label>
-                                                    <input type="text" id="filterUsername" class="form-control" placeholder="Enter username">
-                                                </div>
-                                            @endif
-                                            <div class="col-md-12">
-                                                <button type="button" id="btnFilter" class="btn btn-primary">
-                                                    <i class="ti ti-filter"></i> Filter
-                                                </button>
-                                                <button type="button" id="btnResetFilter" class="btn btn-secondary">
-                                                    <i class="ti ti-refresh"></i> Reset
-                                                </button>
-                                                @if($type === 'internal')
-                                                    <button type="button" id="btnOpenExportModal" class="btn btn-info">
-                                                        <i class="ti ti-download"></i> Download Report
-                                                    </button>
-                                                @endif
-                                            </div>
-                                        </div>
+                        <ul class="dropdown-menu p-3 filter-dropdown" aria-labelledby="filterDropdownBtn">
+                            <div class="row gx-3">
+                                <div class="col-12 col-md-6">
+                                    <li class="mb-3">
+                                        <label class="form-label fw-semibold mb-1">Status</label>
+                                        <select id="filterStatus" class="form-select form-select-sm">
+                                            <option value="">All Statuses</option>
+                                            <option value="pending">Pending</option>
+                                            <option value="clerk review in-progress">Clerk Review In-Progress</option>
+                                            <option value="clerk verified">Clerk Verified</option>
+                                            <option value="officer verification completed">Officer Verification Completed</option>
+                                            <option value="rejected">Rejected</option>
+                                            <option value="not approved">Not Approved</option>
+                                            <option value="draft">Draft</option>
+                                        </select>
+                                    </li>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <li class="mb-3">
+                                        <label class="form-label fw-semibold mb-1">Exporter</label>
+                                        <select id="filterExporter" class="form-select form-select-sm">
+                                            <option value="">All Exporters</option>
+                                        </select>
+                                    </li>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <li class="mb-3">
+                                        <label class="form-label fw-semibold mb-1">Importer</label>
+                                        <select id="filterImporter" class="form-select form-select-sm">
+                                            <option value="">All Importers</option>
+                                        </select>
+                                    </li>
+                                </div>
+                                @if (authUser()['type'] == 'internal')
+                                    <div class="col-12 col-md-6">
+                                        <li class="mb-3">
+                                            <label class="form-label fw-semibold mb-1">Public User</label>
+                                            <select id="filterPublicUser" class="form-select form-select-sm">
+                                                <option value="">All Users</option>
+                                            </select>
+                                        </li>
                                     </div>
+                                    <div class="col-12 col-md-6">
+                                        <li class="mb-3">
+                                            <label class="form-label fw-semibold mb-1">Submitted By</label>
+                                            <input type="text" id="filterUsername" class="form-control form-control-sm" placeholder="Enter username">
+                                        </li>
+                                    </div>
+                                @endif
+                                <div class="col-12 col-md-6">
+                                    <li class="mb-3">
+                                        <label class="form-label fw-semibold mb-1">Start Date</label>
+                                        <input type="date" id="filterStartDate" class="form-control form-control-sm">
+                                    </li>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <li class="mb-3">
+                                        <label class="form-label fw-semibold mb-1">End Date</label>
+                                        <input type="date" id="filterEndDate" class="form-control form-control-sm">
+                                    </li>
                                 </div>
                             </div>
-                        </div>
-                        <!-- End Filter Section -->
+                            <li class="d-flex justify-content-end gap-2 mt-2">
+                                <button class="btn btn-sm btn-secondary" id="btnResetFilter">
+                                    <i class="ti ti-refresh"></i> Reset
+                                </button>
+                                <button class="btn btn-sm btn-primary" id="btnFilter">
+                                    <i class="ti ti-filter"></i> Apply
+                                </button>
+                            </li>
+                        </ul>
+
+                        @if($type === 'internal')
+                            <button type="button" id="btnOpenExportModal" class="btn btn-sm btn-info">
+                                <i class="ti ti-download"></i> Download Report
+                            </button>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div id="" class="dataTables_wrapper dt-bootstrap5 no-footer">
 
                         <div class="row">
                             <div class="col-sm-12">
