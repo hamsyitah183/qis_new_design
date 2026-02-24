@@ -250,16 +250,16 @@ class PaymentController extends Controller
          // dd($application['application_type']);
         if ($application['application_type'] == 'Import Permit') {
             $itn = 'IT037962';
-            $itn = 'ITN10001';
+            // $itn = 'ITN10001';
             $application_name = $request->application_id;
         } elseif ($application['application_type'] == 'Inspection Certificate') {
             $itn = 'IT549383';
-            $itn = 'ITN10002';
+            // $itn = 'ITN10002';
             $application_name = $request->application_id;
         } elseif ($application['application_type'] == 'Consignment Certificate') {
             // $itn = 'IT037963';
             $itn = 'IT331659';
-            $itn = 'ITN10003';
+            // $itn = 'ITN10003';
             $application_name = $request->application_id;
         } else {
             $itn = 'ITN';
@@ -270,10 +270,10 @@ class PaymentController extends Controller
         $orderNumber = 'QIS-' . $application_name . '-' . $runningNumber;
 
        
-        $sid = 'QIS123';
+        // $sid = 'QIS123';
 
 
-        // $sid = 'SE12501C';
+        $sid = 'SE13001C';
 
      
 
