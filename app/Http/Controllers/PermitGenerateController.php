@@ -9,6 +9,7 @@ use App\Models\ConsignmentPermit;
 use App\Models\InspectionApplication;
 use App\Models\InspectionItem;
 use App\Models\ConsignmentApplication;
+use App\Services\ApplicationActivityLogger;
 use Illuminate\Http\Request;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
@@ -16,6 +17,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 // use PhpOffice\PhpWord\PhpWord;
 // use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\Settings;
+use Spatie\Activitylog\Models\Activity;
 
 class PermitGenerateController extends Controller
 {
@@ -334,7 +336,7 @@ class PermitGenerateController extends Controller
         return $pdf->stream("Inspection_Certificate_{$application->application_id}.pdf");
     }
 
-     public function generateConsignmentApplication($id)
+    public function generateConsignmentApplication($id)
     {
         // $id = inspection application id
         $application = ConsignmentApplication::where('application_id', $id)->first();
@@ -348,8 +350,6 @@ class PermitGenerateController extends Controller
         $importer = $application->importer;
         $exporter = $application->exporter;
         $entry = $application->entryPoint;
-        
-        
 
         $pdf = Pdf::loadView('pdf.permit_consignment', compact('application', 'items', 'importer', 'exporter', 'entry'))->setPaper('a4', 'portrait');
 
@@ -496,4 +496,103 @@ class PermitGenerateController extends Controller
 
         return response()->download($tempPath)->deleteFileAfterSend(true);
     }
+
+    public function permitCount(Request $request)
+    {
+        $type = $request->type;
+
+        $id = $request->permit_number;
+
+        $reason = $request->reason;
+
+      
+
+        if ($type == 'Import Permit') {
+
+            $permit = IpConsignmentPermit::where('id', $id)->first();
+            $flag = $this->countReason($permit, $reason);
+
+            $application = $permit->application;
+
+            ApplicationActivityLogger::log(
+                application: $application,
+                event: 'boundary_officer',
+                description: 'A permit with id '  . $permit->permit_number .  ' is downloaded by ' . authUser()['user']->fullname .  '. (Reason:' . $reason . ') .' ,
+                properties: [ 
+                    'role' => 'boundary officer',
+                ],
+            );
+        
+
+        } elseif ($type == 'Consignment') {
+
+            $application = ConsignmentApplication::where('application_id', $id)->first();
+            $permits = $application->consignmentPermits;
+      
+            foreach($permits as $permit) {
+   
+                $flag = $this->countReason($permit, $reason);
+            }
+
+             $application = $permits[0]->application;
+
+        } elseif($type == 'Inspection') {
+ 
+            $application = InspectionApplication::where('application_id', $id)->first();
+            $permits = $application->inspectionItems;
+
+            // dd($id, $permits);
+
+            foreach($permits as $permit) {
+                $flag = $this->countReason($permit, $reason);
+            }
+
+        }
+       
+
+       
+       
+
+        return $flag;
+    }
+
+    private function countReason($permit, $reason)
+    {
+        $count = $permit->print_calc;
+
+      
+
+        if ($count == 0 || $count == null) {
+
+            $permit->print_calc = 1;
+            $permit->save();
+
+      
+
+            return 'yes';
+
+        } else {
+
+            if($reason) {
+                $permit->print_calc = $count + 1;
+                $permit->print_reason = $reason;
+                $permit->save();
+
+
+                return response()->json([
+                    'message' => 'Add response'
+                ]);
+            } 
+
+            else {
+                 
+                return response()->json([
+                    'message' => 'Need Response',
+                ]);
+        
+            }
+            
+        }
+    }
+
 }

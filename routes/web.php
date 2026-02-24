@@ -277,6 +277,10 @@ Route::prefix('internal')
 
         Route::post('/consignment/{id}', [ConsignmentApplicationController::class, 'accept_permit']);
 
+
+
+      
+
     });
 
 // Publicly accessible location routes
@@ -354,6 +358,8 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/permit/generate/pdf/{id}', [PermitGenerateController::class, 'generatePermitPdf']);
     Route::get('/permit/generate/consignment/{id}', [PermitGenerateController::class, 'generateConsignmentPermitWord']);
 
+
+
     // list down all the inspection
     Route::get('/inspection/generate/{id}', [PermitGenerateController::class, 'generateInspection']);
     Route::get('/consignment/generate/{id}', [PermitGenerateController::class, 'generateConsignmentApplication']);
@@ -395,7 +401,8 @@ Route::middleware(['auth.any'])->group(function () {
     // Route::get('/paymentUpdate/{kod_transaksi}', [PaymentController::class, 'bounce']);
     Route::get('/paymentUpdate/{rn}', [PaymentController::class, 'paymentUpdate'])->name('payment.update');
 
-
+                  // count 
+    Route::post('/permit/print', [PermitGenerateController::class, 'permitCount']);
 
 
 
