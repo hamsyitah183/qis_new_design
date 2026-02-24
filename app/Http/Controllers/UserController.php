@@ -70,9 +70,9 @@ class UserController extends Controller
 
         if ($request->has('email_verification') && $request->email_verification != '') {
             if ($request->email_verification == 'verified') {
-                $users->whereNull('email_verified_at');
-            } else if ($request->email_verification == 'not_verified') {
                 $users->whereNotNull('email_verified_at');
+            } else if ($request->email_verification == 'not_verified') {
+                $users->whereNull('email_verified_at');
             }
         }
 
