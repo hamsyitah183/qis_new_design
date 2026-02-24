@@ -423,7 +423,7 @@ function generatePermit() {
 
             const id = $(this).data("permit");
 
-             $.ajax({
+            $.ajax({
                 url: `/permit/print`, // your route
                 method: "POST",
                 data: {

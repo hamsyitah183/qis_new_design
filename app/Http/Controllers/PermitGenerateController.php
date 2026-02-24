@@ -508,8 +508,8 @@ class PermitGenerateController extends Controller
       
 
         if ($type == 'Import Permit') {
-            $permit = IpConsignmentPermit::where('id', $id)->first();
 
+            $permit = IpConsignmentPermit::where('id', $id)->first();
             $flag = $this->countReason($permit, $reason);
 
             $application = $permit->application;
@@ -522,11 +522,36 @@ class PermitGenerateController extends Controller
                     'role' => 'boundary officer',
                 ],
             );
-
-          
-        } 
-
         
+
+        } elseif ($type == 'Consignment') {
+
+            $application = ConsignmentApplication::where('application_id', $id)->first();
+            $permits = $application->consignmentPermits;
+      
+            foreach($permits as $permit) {
+   
+                $flag = $this->countReason($permit, $reason);
+            }
+
+             $application = $permits[0]->application;
+
+        } elseif($type == 'Inspection') {
+ 
+            $application = InspectionApplication::where('application_id', $id)->first();
+            $permits = $application->inspectionItems;
+
+            // dd($id, $permits);
+
+            foreach($permits as $permit) {
+                $flag = $this->countReason($permit, $reason);
+            }
+
+        }
+       
+
+       
+       
 
         return $flag;
     }
@@ -537,7 +562,7 @@ class PermitGenerateController extends Controller
 
       
 
-        if ($count == 0 || $count === null) {
+        if ($count == 0 || $count == null) {
 
             $permit->print_calc = 1;
             $permit->save();

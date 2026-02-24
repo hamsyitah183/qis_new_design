@@ -38,9 +38,7 @@ return new class extends Migration
 
             $table->text('remark')->nullable();
 
-            $table->integer('print_calc')->nullable();
-
-            $table->text('print_reason')->nullable();
+          
 
             $table->timestamps();
         });
