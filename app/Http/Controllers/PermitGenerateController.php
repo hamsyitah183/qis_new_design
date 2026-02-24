@@ -534,8 +534,6 @@ class PermitGenerateController extends Controller
                 $flag = $this->countReason($permit, $reason);
             }
 
-             $application = $permits[0]->application;
-
         } elseif($type == 'Inspection') {
  
             $application = InspectionApplication::where('application_id', $id)->first();
@@ -551,8 +549,6 @@ class PermitGenerateController extends Controller
        
 
        
-       
-
         return $flag;
     }
 
