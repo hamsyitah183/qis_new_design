@@ -119,7 +119,7 @@
 
                                 $value = $allPending ? 1 : 0;
 
-                                // dd($value);
+                                // dd($application->status, $isOwner);
 
                             @endphp
                             {{-- @dd($isOwner || $isAdminOrClerk) --}}

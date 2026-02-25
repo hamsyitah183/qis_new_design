@@ -38,6 +38,8 @@ return new class extends Migration
 
             $table->text('remark')->nullable();
 
+          
+
             $table->timestamps();
         });
     }
