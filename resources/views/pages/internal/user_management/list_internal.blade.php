@@ -14,8 +14,7 @@
 @push('scripts')
     <script>
         let userId = @json($userId);
-        // console.log('Current User ID:', userId);
-
+        let isAdminOrSuperadmin = @json($isAdminOrSuperadmin);
     </script>
 
     @vite(['resources/js/pages/internal/user_management/internal_list.js'])
@@ -130,6 +129,18 @@
                                 </select>
                             </div>
 
+                            @if ($isAdminOrSuperadmin)
+                            <div class="col-md-6" id="branchField">
+                                <label class="form-label text-default">Branch</label>
+                                <select class="form-select" id="branch" name="branch">
+                                    <option value="">Select Branch</option>
+                                    @foreach ($branches as $branch)
+                                        <option value="{{ $branch->name }}">{{ $branch->name }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="invalid-feedback" id="error-branch"></div>
+                            </div>
+                            @endif
 
                         </div>
                     </div>
