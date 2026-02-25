@@ -308,6 +308,7 @@ function acceptPermit() {
                                     );
                                     // Refresh table
                                     initApplicationDetails();
+                                    window.location.reload()
                                 },
                                 error: function (err) {
                                     Swal.fire({
@@ -395,10 +396,126 @@ function generatePermit() {
 
             const id = $(this).data("permit");
 
-            // ✅ Trigger browser download
-            // window.location.href = `/permit/generate/consignment/${id}`;
-            let url= `/consignment/generate/${id}`;
-            window.open(url, "_blank");
+             $.ajax({
+                url: `/permit/print`, // your route
+                method: "POST",
+                data: {
+                    _token: $("meta[name='csrf-token']").attr("content"), // CSRF token
+                    type: "Consignment",
+                    permit_number: id
+                },
+                success: function (res) {
+                    console.log('response', res)
+
+                    if(res.message == 'Need Response') {
+                        Swal.fire({
+                            title: "This Permit has been downloaded more than once",
+                            text: "Please provide a reason for download it:",
+                            icon: "warning",
+                            input: "textarea",
+                            inputPlaceholder: "Enter reason...",
+                            showCancelButton: true,
+                            confirmButtonText: "Submit",
+                            cancelButtonText: "Cancel",
+                            didOpen: () => {
+                                const textarea = Swal.getInput();
+                                textarea.style.fontSize = "12px";
+                                textarea.style.lineHeight = "1.5";
+                            },
+                            inputValidator: (value) => {
+                                if (!value || value.trim().length < 5) {
+                                    return "Reason is required (min 5 characters).";
+                                }
+                            },
+                        }).then((result) => {
+                            if (!result.isConfirmed) return;
+
+                            // ✅ Show processing/loading Swal
+                            Swal.fire({
+                                title: "Processing...",
+                                text: "Please wait.",
+                                allowOutsideClick: false,
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                },
+                            });
+
+                            $.ajax({
+                                url: `/permit/print`, // your route
+                                method: "POST",
+                                data: {
+                                    _token: $("meta[name='csrf-token']").attr("content"), // CSRF token
+                                    type: "Consignment",
+                                    permit_number: id,
+                                    reason: result.value
+                                },
+                                success: function () {
+                                    // Close loading Swal first
+                                    Swal.close();
+
+                                    // ✅ Show success Swal
+                                    Swal.fire({
+                                        icon: "success",
+                                        title: "Rejected!",
+                                        text: "The reason submitted successfully.",
+                                        timer: 2000,
+                                        showConfirmButton: false,
+                                    });
+
+                                    // Refresh table or UI
+                                    initApplicationDetails();
+
+                                     // Small delay so loading is visible
+                                    setTimeout(() => {
+                                        // ✅ Trigger browser download
+                                        // window.location.href = `/permit/generate/consignment/${id}`;
+                                        let url= `/consignment/generate/${id}`;
+                                        window.open(url, "_blank");
+                                        Swal.close();
+                                    }, 800);
+                    
+                                },
+                                error: function (err) {
+                                    // Close loading Swal first
+                                    Swal.close();
+
+                                    Swal.fire({
+                                        icon: "error",
+                                        title: "Error!",
+                                        text:
+                                            err.responseJSON?.message ||
+                                            "Something went wrong.",
+                                    });
+                                },
+                            });
+                        });
+                    } else {
+                        
+                         // Small delay so loading is visible
+                        setTimeout(() => {
+                            // ✅ Trigger browser download
+                            // window.location.href = `/permit/generate/consignment/${id}`;
+                            let url= `/consignment/generate/${id}`;
+                            window.open(url, "_blank");
+                            Swal.close();
+                        }, 800);
+                    }
+
+                  
+                },
+            
+                error: function (err) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error!",
+                        text:
+                            err.responseJSON?.message ||
+                            "Something went wrong.",
+                    });
+                },
+            });
+
+           
         });
 }
 
