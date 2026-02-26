@@ -110,6 +110,13 @@ async function open_internal_user_modal(mode = "add", userId = null) {
             $("#office").val(user.office || "");
             $("#no_ic").val(user.no_ic || "");
             $("#no_ic").prop("readonly", true);
+            // Populate branch if field exists (admin/superadmin only)
+            if ($("#branch").length) {
+                $("#branch").val(user.branch || "");
+            }
+            // Populate role
+            const role = user.roles && user.roles.length ? user.roles[0].name : "";
+            $("#role").val(role);
             Swal.close();
             new bootstrap.Modal("#internalUserModal").show();
         },

@@ -6,6 +6,17 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.12.1/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.3.0/css/responsive.bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.bootstrap5.min.css">
+    <style>
+        .filter-dropdown {
+            width: 420px;
+        }
+
+        @media (max-width: 768px) {
+            .filter-dropdown {
+                width: 100%;
+            }
+        }
+    </style>
 @endpush
 
 @push('scripts')
@@ -31,8 +42,57 @@
         <div class="col-xl-12">
             <div class="card custom-card">
                 <div class="card-header">
-                    <div class="ms-auto">
-                        <a type="button" href="{{ url('internal/permit_add_condition') }}" class="btn btn-success btn-sm">Add Permit Condition</a>
+                    <div class="card-title">Permit Condition List</div>
+                    <div class="ms-auto d-flex gap-2 align-items-center">
+
+                        <button class="btn btn-sm btn-primary filter dropdown-toggle" type="button"
+                            id="permitFilterDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                            aria-expanded="false">
+                            <span class="me-2"><i class="ti ti-adjustments-horizontal"></i></span>
+                            Filter
+                        </button>
+
+                        <ul class="dropdown-menu p-3 filter-dropdown" aria-labelledby="permitFilterDropdown">
+
+                            {{-- Item Name --}}
+                            <li class="mb-2">
+                                <label class="form-label fw-semibold mb-1">Item Name</label>
+                                <input type="text" class="form-control form-control-sm" id="filterPermitItemName"
+                                    placeholder="Search item name...">
+                            </li>
+
+                            {{-- Category --}}
+                            <li class="mb-2">
+                                <label class="form-label fw-semibold mb-1">Category</label>
+                                <select class="form-select form-select-sm" id="filterPermitCategory">
+                                    <option value="">All Categories</option>
+                                    <option value="animal">Animal</option>
+                                    <option value="plant">Plant</option>
+                                    <option value="fish">Fish</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </li>
+
+                            {{-- Usage --}}
+                            <li class="mb-2">
+                                <label class="form-label fw-semibold mb-1">Usage</label>
+                                <select class="form-select form-select-sm" id="filterPermitUsage">
+                                    <option value="">All Usage</option>
+                                    <option value="import">Import</option>
+                                    <option value="export">Export</option>
+                                    <option value="both">Both</option>
+                                </select>
+                            </li>
+
+                            <li class="d-flex justify-content-end gap-2 mt-2 pt-2 border-top">
+                                <button class="btn btn-sm btn-secondary" id="btnResetPermitFilter">Reset</button>
+                                <button class="btn btn-sm btn-primary" id="btnPermitFilter">Apply</button>
+                            </li>
+                        </ul>
+
+                        <a type="button" href="{{ url('internal/permit_add_condition') }}" class="btn btn-success btn-sm">
+                            <i class="ti ti-plus me-1"></i> Add Permit Condition
+                        </a>
                     </div>
                 </div>
 
@@ -41,7 +101,7 @@
                         <thead>
                             <tr>
                                 {{-- <th>#</th> --}}
-                                <th class = "text-wrap">Item Name</th>
+                                <th class="text-wrap">Item Name</th>
                                 <th>Category</th>
                                 <th>Usage</th>
                                 <th>Action</th>
