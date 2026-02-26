@@ -5,18 +5,23 @@ namespace App\Http\Controllers\internal;
 use App\Events\ApplicationDeleted;
 use App\Events\PublicUserEvent;
 use App\Http\Controllers\Controller;
+use App\Models\Country;
 use App\Models\InternalUser;
 use App\Models\IpApplication;
 use App\Models\IpCondition;
 use App\Models\IpConsignmentPermit;
 use App\Models\IpEntryPoint;
+use App\Models\News;
 use App\Models\PublicCode;
 use App\Models\PublicUser;
 use App\Notifications\ApplicationNotification;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\QISNewsMail;
 
 class MiscController extends Controller
 {
@@ -172,12 +177,15 @@ class MiscController extends Controller
             'category' => $request->itemCategory,
             'item_name' => $request->itemName,
             'addional_condition' => $request->permit_condition,
-            'quantity_limit' => $request->quanLimit ?: null,
-            'date_limit' => $request->spedate ?: null,
+            'quantity_limit' => $request->quanLimit ?: null  . ' ' .  $request->quanmunit ?: null ,
+            // 'date_limit' => $request->spedate ?: null,
+            'start_date' => $request->start_date ?: null,
+            'end_date' => $request->end_date ?: null, 
             'country' => $countryValues,
             'usage' => $usageValues,
+            'measurement_unit' => $request->quanmunit
         ];
-
+        // dd($data);
         // UPDATE
         if ($request->filled('id')) {
             $ipCondition = IpCondition::find($request->id);
@@ -215,8 +223,9 @@ class MiscController extends Controller
         $condition = IpCondition::with(['code'])->findOrFail($id);
 
         $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->where('cate_name', 'consignment_purpose')->where('is_del', false)->get();
+        $measurements = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->where('cate_name', 'unit_measurement')->where('is_del', false)->get();
 
-        return view('pages.internal.misc.permit_edit', compact('condition', 'pbdata'));
+        return view('pages.internal.misc.permit_edit', compact('condition', 'pbdata', 'measurements'));
     }
 
     public function getpermitconditiondata()
@@ -348,5 +357,89 @@ class MiscController extends Controller
             'status' => 'success',
             'message' => 'Entry points updated successfully.',
         ]);
+    }
+
+    public function shareNews(Request $request)
+    {
+        $item = IpCondition::where('id', $request['condition_id'])->first();
+
+
+
+        DB::beginTransaction();
+
+        try {
+
+            $title = 'Permit Condition News';
+
+            // Suppose $item is your consignment condition object
+            $itemName = $item->item_name; // "AVOCADO"
+
+            // Get the country names from the stored codes in JSON
+            $countryCodes =  $item['country'] ;// ["AU","KE","MX",...]
+            // dd($countryCodes);
+            $countries = Country::whereIn('code', $countryCodes)->pluck('name')->toArray();
+
+            // Convert country array to comma-separated string
+            $countryList = implode(', ', $countries);
+
+            // If you want HTML instead of plain text:
+            $detailsMessage = "A new permit condition for item <strong>{$itemName}</strong> has been released.<br>";
+            $detailsMessage .= "It applies to the following countries: <strong>{$countryList}</strong>.";
+
+            // Format dates
+            $startDate = Carbon::parse($item->start_date)->format('d M Y'); // 10 Mar 2026
+            $endDate = Carbon::parse($item->end_date)->format('d M Y'); // 28 Mar 2026
+
+            // Build second message
+            $detailsMessage .= "<br><span class = 'mt-2'>Additional Condition: 
+            
+                <span>{$item->addional_condition}</span>
+
+            </span><br>";
+
+            if($item->quantity_limit) {
+                $detailsMessage .= "Quantity Limit: {$item->quantity_limit} {$item->measurement_unit}<br>";
+            } 
+
+            if($item->start_date) {
+                $detailsMessage .= "Valid From: {$startDate} to {$endDate}";
+            }
+
+            
+            // dd($detailsMessage);
+
+            $news = new News();
+            $news->title = $title;
+            $news->news = $detailsMessage;
+            $news->expired_date = $item->end_date;
+            $news->show = 1;
+            $news->save();
+
+
+            $publicUserEmails = PublicUser::get(['email']);
+
+            // foreach($publicUserEmails as $email) {
+            //     Mail::to($email->email)->send(
+            //         new QISNewsMail($title, $detailsMessage) 
+            //     );
+            // }
+
+            Mail::to('hamsyitahnur@gmail.com')->send(
+                new QISNewsMail($title, $detailsMessage) 
+            );
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => $e->getMessage(),
+                ],
+                500,
+            );
+        }
+
+       
     }
 }

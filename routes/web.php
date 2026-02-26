@@ -265,6 +265,8 @@ Route::prefix('internal')
             // Admin dashboard - Restricted
             Route::get('/admin/dashboard/daily-volume', [AdminDashboardController::class, 'dailyVolume']);
             Route::get('/admin/dashboard/user-registration', [AdminDashboardController::class, 'userRegistration']);
+
+            Route::post('/news', [MiscController::class, 'shareNews'] );
         });
 
         // ======================= notifications ===========================

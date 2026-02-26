@@ -18,6 +18,9 @@ class IpCondition extends Model
         'date_limit',
         'country',
         'usage',
+        'start_date',
+        'end_date',
+        'measurement_unit'
     ];
 
     protected $casts = [

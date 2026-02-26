@@ -16,9 +16,11 @@ class NotificationController extends Controller
 
     //     $url = 'https://rest.moceanapi.com/rest/2/send-message/whatsapp';
     //     $bearerToken = 'apit-0NYiktzyYJO9bdPHcs7OQ3P9Rfl4tDJh-gxopQ'; 
+    //     // $bearerToken = 'apit-QMp24eA8HSNHsMgVRQZ2EpUmZX023tlJ-3ABXC'; 
 
     //     $payload = [
-    //         'mocean-from' => '60128083901',
+    //         // 'mocean-from' => '15557785030', //=> DOA
+    //         'mocean-from' => '60128083901', // => Temadigital
     //         'mocean-to' => $phoneNumber,
     //         'mocean-event-url' => '',
     //         'mocean-content' => [
@@ -62,6 +64,7 @@ class NotificationController extends Controller
     //         );
     //     }
     // }
+
     public function sendStatusMessage($fullname, $type, $applicationId, $status, $messageText, $phoneNumber)
     {
         
