@@ -29,3 +29,4 @@ class InspectionLog extends Model
 }
 
 
+

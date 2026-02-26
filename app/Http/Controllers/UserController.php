@@ -8,6 +8,7 @@ use App\Events\InternalUserDeleted;
 use App\Events\InternalUserEdited;
 use App\Events\PublicUser as EventsPublicUser;
 use App\Models\InternalUser;
+use App\Models\Branch;
 use App\Models\PublicUser;
 use App\Models\ApprovedPublic;
 use App\Models\Postcode;
@@ -434,16 +435,27 @@ class UserController extends Controller
 
     public function internal_list()
     {
-        // if (Auth::guard('internal')->check()) {
-        //     $user = Auth::guard('internal')->user();
-        //     dd('Internal user logged in:', $user);
-        // }
-        return view('pages.internal.user_management.list_internal');
+        $actor = authUser()['user'];
+        $actorRole = $actor->getRoleNames()->first();
+
+        if (!in_array($actorRole, ['admin', 'superadmin'])) {
+            abort(403, 'Unauthorized. Only admins can view the Internal User List.');
+        }
+
+        $isAdminOrSuperadmin = in_array($actorRole, ['admin', 'superadmin']);
+
+        // Load branches from branches master table (for dropdown)
+        $branches = Branch::orderBy('name')->get();
+
+        return view('pages.internal.user_management.list_internal', [
+            'isAdminOrSuperadmin' => $isAdminOrSuperadmin,
+            'branches' => $branches,
+        ]);
     }
 
     public function internal_list_data(Request $request)
     {
-        $query = InternalUser::select(['uuid', 'fullname', 'email', 'phone_number', 'position', 'office'])
+        $query = InternalUser::select(['uuid', 'fullname', 'email', 'phone_number', 'position', 'office', 'branch'])
             ->with('roles'); // Using Spatie roles
 
         $currentUser = Auth::guard('internal')->user();
@@ -501,7 +513,7 @@ class UserController extends Controller
 
     public function internal_user_data($id)
     {
-        $internal = InternalUser::where('uuid', $id)->first();
+        $internal = InternalUser::with('roles')->where('uuid', $id)->first();
 
         return response()->json([
             'user' => $internal
@@ -535,14 +547,22 @@ class UserController extends Controller
                     'role' => 'required|string',
                 ]);
 
-                $internalUser->update([
+                $updateData = [
                     'fullname' => $request->fullname,
                     'email' => $request->email,
                     'no_ic' => $request->no_ic,
                     'phone_number' => $request->phone_number,
                     'position' => $request->position,
                     'office' => $request->office,
-                ]);
+                ];
+
+                // Only admin/superadmin can set branch
+                $actorRole = $actor->getRoleNames()->first();
+                if (in_array($actorRole, ['admin', 'superadmin'])) {
+                    $updateData['branch'] = $request->branch;
+                }
+
+                $internalUser->update($updateData);
 
                 // Sync role
                 $internalUser->syncRoles([$request->role]);
@@ -592,7 +612,7 @@ class UserController extends Controller
                 'role' => 'required|string',
             ]);
 
-            $internalUser = InternalUser::create([
+            $createData = [
                 'uuid' => Str::uuid(),
                 'fullname' => $request->fullname,
                 'email' => $request->email,
@@ -601,7 +621,15 @@ class UserController extends Controller
                 'position' => $request->position,
                 'office' => $request->office,
                 'password' => Hash::make($request->no_ic),
-            ]);
+            ];
+
+            // Only admin/superadmin can set branch on creation
+            $actorRole = $actor->getRoleNames()->first();
+            if (in_array($actorRole, ['admin', 'superadmin'])) {
+                $createData['branch'] = $request->branch;
+            }
+
+            $internalUser = InternalUser::create($createData);
 
             $internalUser->assignRole($request->role);
 
