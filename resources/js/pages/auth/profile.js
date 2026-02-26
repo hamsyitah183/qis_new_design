@@ -75,6 +75,11 @@ function fillTheData(user, type) {
         .text(user.ic ?? user.no_ic)
         .prop("readonly", true);
     $(".position").val(user.position).text(user.position);
+    
+    // Set branch for internal users (display-only on profile)
+    if (type === "internal") {
+        $(".branch").text(user.branch || "");
+    }
     $(".address_1").val(user.address_1);
     $(".address_2").val(user.address_2);
     $(".office_number").val(user.office_number);
