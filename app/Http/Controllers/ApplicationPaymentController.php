@@ -19,7 +19,7 @@ class ApplicationPaymentController extends Controller
         ]);
     }
 
-    public function getAllOrderList()
+    public function getAllOrderList(Request $request)
     {
         $userUuid = authUser()['user']->uuid;
         $type = authUser()['type'];
@@ -29,6 +29,38 @@ class ApplicationPaymentController extends Controller
         // Apply filter for public users
         if ($type !== 'internal') {
             $query->where('public_user_uuid', $userUuid);
+        }
+
+        // Apply Order Status filter (filter by transaction_status since that's what's displayed)
+        if ($request->filled('order_status') && $request->order_status != '') {
+            $status = $request->input('order_status');
+            // Match exact transaction_status name from database (case-sensitive)
+            $query->where('transaction_status', $status);
+        }
+
+        // Apply Application Type filter
+        if ($request->filled('application_type')) {
+            $appType = $request->input('application_type');
+
+            $mappedType = match ($appType) {
+                'import_permit' => 'Import Permit',
+                'inspection' => 'Inspection Certificate',
+                'consignment' => 'Consignment Certificate',
+                default => null,
+            };
+
+            if ($mappedType) {
+                $query->where('application_type', $mappedType);
+            }
+        }
+
+        // Apply Date Range filter (created_at)
+        if ($request->filled('start_date')) {
+            $query->whereDate('created_at', '>=', $request->input('start_date'));
+        }
+
+        if ($request->filled('end_date')) {
+            $query->whereDate('created_at', '<=', $request->input('end_date'));
         }
 
         $dataTable = DataTables::eloquent($query)

@@ -63,10 +63,10 @@
                                 <label class="form-label fw-semibold mb-1">Order Status</label>
                                 <select class="form-select form-select-sm" id="filterOrderStatus">
                                     <option value="">All Status</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="paid">Paid</option>
-                                    <option value="failed">Failed</option>
-                                    <option value="cancelled">Cancelled</option>
+                                    <option value="SUCCESSFUL">Successful</option>
+                                    <option value="UNSUCCESSFUL">Unsuccessful</option>
+                                    <option value="PAYMENT PROCESSING">Payment Processing</option>
+                                    <option value="PENDING FOR AUTHORIZER TO APPROVE">Pending for Authorizer to Approve</option>
                                 </select>
                             </li>
 

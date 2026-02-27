@@ -50,7 +50,7 @@ class ConsignmentController extends Controller
 
         // Apply filters from request
         if ($request->has('status') && $request->status != '') {
-            $query->where('status', 'like', '%' . $request->status . '%');
+            $query->where('status', $request->status);
         }
 
         if ($request->has('start_date') && $request->start_date != '') {

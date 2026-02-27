@@ -84,12 +84,16 @@ function initAddImporterModal() {
 }
 
 $(document).ready(function () {
-    $("#importerTable").DataTable({
+    const table = $("#importerTable").DataTable({
         processing: true,
         responsive: true,
         ajax: {
             url: "/public/get_importers",
             type: "GET",
+            data: function (d) {
+                d.name = $("#filterImporterName").val() || "";
+                d.country = $("#filterImporterCountry").val() || "";
+            },
             dataSrc: "",
         },
         columns: [
@@ -119,6 +123,20 @@ $(document).ready(function () {
                 },
             },
         ],
+    });
+
+    // Apply filters
+    $("#btnImporterFilter").on("click", function (e) {
+        e.preventDefault();
+        table.ajax.reload();
+    });
+
+    // Reset filters
+    $("#btnResetImporterFilter").on("click", function (e) {
+        e.preventDefault();
+        $("#filterImporterName").val("");
+        $("#filterImporterCountry").val("");
+        table.ajax.reload();
     });
 
     // Initialize modal logic

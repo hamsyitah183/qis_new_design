@@ -200,21 +200,48 @@ class PermitApplicationController extends Controller
         ]);
     }
 
-    public function getExporters()
+    public function getExporters(Request $request)
     {
-        $exporters = \DB::table('exporter')
+        $query = \DB::table('exporter')
             ->leftJoin('country', 'exporter.country', '=', 'country.code')
-            ->where('registered_by', auth('public')->id())
-            ->select('exporter.id as id', 'exporter.name as name', 'exporter.phone_no as phone_no', 'exporter.address as address', 'exporter.country as ccode', 'country.name as country')
+            ->where('registered_by', auth('public')->id());
+
+        if ($request->filled('name')) {
+            $query->where('exporter.name', 'like', '%' . $request->input('name') . '%');
+        }
+
+        if ($request->filled('country')) {
+            $query->where('exporter.country', $request->input('country'));
+        }
+
+        $exporters = $query
+            ->select(
+                'exporter.id as id',
+                'exporter.name as name',
+                'exporter.phone_no as phone_no',
+                'exporter.address as address',
+                'exporter.country as ccode',
+                'country.name as country'
+            )
             ->orderBy('name', 'asc')
             ->get();
 
         return response()->json($exporters);
     }
 
-    public function getConsignmentImporters()
+    public function getConsignmentImporters(Request $request)
     {
-        $importers = ConsignmentImporter::with('countryInfo')->get();
+        $query = ConsignmentImporter::with('countryInfo');
+
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%' . $request->input('name') . '%');
+        }
+
+        if ($request->filled('country')) {
+            $query->where('country', $request->input('country'));
+        }
+
+        $importers = $query->get();
     
         return response()->json($importers);
     }
