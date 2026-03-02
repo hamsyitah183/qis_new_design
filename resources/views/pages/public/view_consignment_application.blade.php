@@ -13,7 +13,7 @@
 @section('breadcrumb')
     <x-breadcrumb :items="[
             ['label' => 'Dashboard', 'url' => '/'],
-            ['label' => 'Consignment Certificate List', 'url' => '/internal/view_all_consignment'],
+            ['label' => 'Consignment Certificate List', 'url' => '/internal/consignment_certificates_list'],
             ['label' => 'Application: ' . $application->application_id, 'url' => '#'],
         ]" title="View Application">
 
