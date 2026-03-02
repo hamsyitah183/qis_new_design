@@ -30,9 +30,6 @@ function initAddExporterModal() {
             return Swal.fire("⚠️ Please fill in all required fields.");
         }
 
-        // 🔐 FORCE HTTPS
-        const httpsUrl = `/public/store_exporter`;
-
         // 🔄 Loading Swal
         Swal.fire({
             title: "Saving exporter...",
@@ -43,7 +40,7 @@ function initAddExporterModal() {
         });
 
         $.ajax({
-            url: '/public/store_exporter', // ✅ always HTTPS
+            url: '/public/store_exporter',
             method: "POST",
             data: {
                 id,
@@ -56,7 +53,6 @@ function initAddExporterModal() {
                 "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
             },
             success: () => {
-                // fetchExporterList();
                 $("#exporterTable")
                     .DataTable()
                     .ajax.reload(null, false);
@@ -88,12 +84,16 @@ function initAddExporterModal() {
 }
 
 $(document).ready(function () {
-    $("#exporterTable").DataTable({
+    const table = $("#exporterTable").DataTable({
         processing: true,
         responsive: true,
         ajax: {
             url: "/public/get_exporters",
             type: "GET",
+            data: function (d) {
+                d.name = $("#filterExporterName").val() || "";
+                d.country = $("#filterExporterCountry").val() || "";
+            },
             dataSrc: "",
         },
         columns: [
@@ -123,6 +123,20 @@ $(document).ready(function () {
                 },
             },
         ],
+    });
+
+    // Apply filters
+    $("#btnExporterFilter").on("click", function (e) {
+        e.preventDefault();
+        table.ajax.reload();
+    });
+
+    // Reset filters
+    $("#btnResetExporterFilter").on("click", function (e) {
+        e.preventDefault();
+        $("#filterExporterName").val("");
+        $("#filterExporterCountry").val("");
+        table.ajax.reload();
     });
 
     $(document).on("click", "#addExporter", function () {

@@ -62,13 +62,16 @@
                                         <label class="form-label fw-semibold mb-1">Status</label>
                                         <select id="filterStatus" class="form-select form-select-sm">
                                             <option value="">All Statuses</option>
-                                            <option value="pending">Pending</option>
-                                            <option value="rejected">Rejected</option>
-                                            <option value="not approved">Not Approved</option>
-                                            <option value="accepted">Accepted</option>
-                                            <option value="officer verification completed">Officer Verification Completed</option>
-                                            <option value="clerk verified">Clerk Verified</option>
-                                            <option value="submitted">Submitted</option>
+                                            {{-- Match actual application status values --}}
+                                            <option value="Draft">Draft</option>
+                                            <option value="Application Submitted">Application Submitted</option>
+                                            <option value="Clerk Review In-Progress">Clerk Review In-Progress</option>
+                                            <option value="Clerk Verified">Clerk Verified</option>
+                                            <option value="Clerk Rejected">Rejected</option>
+                                            <option value="Officer Verification Completed">Officer Verification Completed</option>
+                                            <option value="Not Approved">Not Approved</option>
+                                            <option value="wait for company approval">Wait for Company Approval</option>
+                                            <option value="Completed">Completed</option>
                                         </select>
                                     </li>
                                 </div>

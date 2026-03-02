@@ -144,6 +144,8 @@ Route::prefix('public')
         // ==================== Filter API Endpoints ====================
         Route::get('/api/filters/my-exporters', [FilterController::class, 'getMyExporters'])->name('api.filters.myExporters');
         Route::get('/api/filters/my-importers', [FilterController::class, 'getMyImporters'])->name('api.filters.myImporters');
+        Route::get('/api/filters/my-consignment-exporters', [FilterController::class, 'getMyConsignmentExporters'])->name('api.filters.myConsignmentExporters');
+        Route::get('/api/filters/my-consignment-importers', [FilterController::class, 'getMyConsignmentImporters'])->name('api.filters.myConsignmentImporters');
     });
 
 Route::prefix('internal')
@@ -218,6 +220,11 @@ Route::prefix('internal')
         Route::get('/api/filters/public-users', [FilterController::class, 'getPublicUsers'])->name('api.filters.publicUsers');
         Route::get('/api/filters/user/{uuid}/exporters', [FilterController::class, 'getUserExporters'])->name('api.filters.userExporters');
         Route::get('/api/filters/user/{uuid}/importers', [FilterController::class, 'getUserImporters'])->name('api.filters.userImporters');
+        // Consignment-specific filter endpoints
+        Route::get('/api/filters/consignment/exporters', [FilterController::class, 'getAllConsignmentExporters'])->name('api.filters.consignmentExporters');
+        Route::get('/api/filters/consignment/importers', [FilterController::class, 'getAllConsignmentImporters'])->name('api.filters.consignmentImporters');
+        Route::get('/api/filters/user/{uuid}/consignment/exporters', [FilterController::class, 'getUserConsignmentExporters'])->name('api.filters.userConsignmentExporters');
+        Route::get('/api/filters/user/{uuid}/consignment/importers', [FilterController::class, 'getUserConsignmentImporters'])->name('api.filters.userConsignmentImporters');
 
         // Route::get('/application/exporter/get', [ApplicationController::class, 'get_exporter'])->name('application.exporter.get');
     

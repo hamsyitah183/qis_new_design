@@ -81,4 +81,94 @@ class FilterController extends Controller
 
         return response()->json($importers);
     }
+
+    /**
+     * Get all exporters for consignment (all PublicUsers who can be exporters)
+     * For internal users only
+     */
+    public function getAllConsignmentExporters()
+    {
+        $exporters = PublicUser::select('uuid as id', 'fullname as name')
+            ->orderBy('fullname')
+            ->get();
+
+        return response()->json($exporters);
+    }
+
+    /**
+     * Get all consignment importers
+     * For internal users only
+     */
+    public function getAllConsignmentImporters()
+    {
+        $importers = \App\Models\ConsignmentImporter::select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json($importers);
+    }
+
+    /**
+     * Get exporters for a specific user in consignment context
+     * For internal users only
+     */
+    public function getUserConsignmentExporters($userUuid)
+    {
+        // For consignment, exporter_id is a PublicUser UUID
+        // Return the selected user as an exporter option
+        $user = PublicUser::where('uuid', $userUuid)
+            ->select('uuid as id', 'fullname as name')
+            ->first();
+
+        return response()->json($user ? [$user] : []);
+    }
+
+    /**
+     * Get importers for a specific user in consignment context
+     * For internal users only
+     */
+    public function getUserConsignmentImporters($userUuid)
+    {
+        // For consignment, importers are ConsignmentImporter records
+        // We need to find importers associated with applications from this user
+        $importerIds = \App\Models\ConsignmentApplication::where('user_id', $userUuid)
+            ->orWhere('exporter_id', $userUuid)
+            ->distinct()
+            ->pluck('importer_id')
+            ->filter();
+
+        $importers = \App\Models\ConsignmentImporter::whereIn('id', $importerIds)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json($importers);
+    }
+
+    /**
+     * Get exporters for the logged-in public user in consignment context
+     */
+    public function getMyConsignmentExporters()
+    {
+        $user = authUser()['user'];
+        // For consignment, the public user is their own exporter
+        return response()->json([
+            ['id' => $user->uuid, 'name' => $user->fullname]
+        ]);
+    }
+
+    /**
+     * Get importers for the logged-in public user in consignment context
+     */
+    public function getMyConsignmentImporters()
+    {
+        $user = authUser()['user'];
+        // For consignment, importers are ConsignmentImporter records
+        $importers = \App\Models\ConsignmentImporter::where('registered_by', $user->uuid)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json($importers);
+    }
 }

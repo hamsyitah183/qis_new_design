@@ -18,13 +18,29 @@ class BoundaryOfficerController extends Controller
     }
 
 
-    public function data()
+    public function data(Request $request)
     {
-        $roles = BoundaryOfficer::with('user', 'entryPoint.districtCode')->get();
+        $query = BoundaryOfficer::with('user', 'entryPoint.districtCode');
 
-        return DataTables::of($roles)
-            ->addColumn('name', fn($role) => $role->user->fullname)       
-            ->addColumn('place', fn($role) => $role->entryPoint->entry_name ?? '')       
+        // Name filter (Boundary Officer name)
+        if ($request->filled('name')) {
+            $name = $request->input('name');
+            $query->whereHas('user', function ($q) use ($name) {
+                $q->where('fullname', 'like', '%' . $name . '%');
+            });
+        }
+
+        // Place / Entry Point filter
+        if ($request->filled('place')) {
+            $place = $request->input('place');
+            $query->whereHas('entryPoint', function ($q) use ($place) {
+                $q->where('entry_name', 'like', '%' . $place . '%');
+            });
+        }
+
+        return DataTables::eloquent($query)
+            ->addColumn('name', fn($role) => $role->user->fullname)
+            ->addColumn('place', fn($role) => $role->entryPoint->entry_name ?? '')
             ->addColumn('action', function ($role) {
 
                 $actionHtml = '
@@ -41,7 +57,7 @@ class BoundaryOfficerController extends Controller
                 $actionHtml .= '</div>';
 
                 return $actionHtml;
-            })       
+            })
             ->rawColumns(['action'])
             ->make(true);
     }

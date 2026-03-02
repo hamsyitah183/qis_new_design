@@ -63,13 +63,13 @@
                                         <label class="form-label fw-semibold mb-1">Status</label>
                                         <select id="filterStatus" class="form-select form-select-sm">
                                             <option value="">All Statuses</option>
-                                            <option value="pending">Pending</option>
-                                            <option value="clerk review in-progress">Clerk Review In-Progress</option>
-                                            <option value="clerk verified">Clerk Verified</option>
-                                            <option value="officer verification completed">Officer Verification Completed</option>
-                                            <option value="rejected">Rejected</option>
-                                            <option value="not approved">Not Approved</option>
-                                            <option value="draft">Draft</option>
+                                            <option value="Draft">Draft</option>
+                                            <option value="Clerk Review In-Progress">Clerk Review In-Progress</option>
+                                            <option value="Clerk Verified">Clerk Verified</option>
+                                            <option value="Clerk Rejected">Clerk Rejected</option>
+                                            <option value="Officer Verification Completed">Officer Verification Completed</option>
+                                            <option value="Not Approved">Not Approved</option>
+                                            <option value="wait for company approval">Wait for Company Approval</option>
                                         </select>
                                     </li>
                                 </div>

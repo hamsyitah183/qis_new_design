@@ -19,6 +19,7 @@ const startDateTimePicker = flatpickr("#startDateTime", {
     time_24hr: false,
     defaultHour: 0,
     defaultMinute: 0,
+    // appendTo removed to let it append to body instead, fixing position offsets
     onChange(selectedDates, dateStr) {
         if (selectedDates.length > 0) {
             const selected = selectedDates[0];
@@ -39,15 +40,6 @@ const startDateTimePicker = flatpickr("#startDateTime", {
                 "startTime",
                 startTime
             );
-
-            loadActivityTimeline(
-                start,
-                end,
-                startTime,
-                endTime,
-                userTypeVal,
-                userIds
-            );
         }
     },
 });
@@ -59,6 +51,7 @@ const endDateTimePicker = flatpickr("#endDateTime", {
     time_24hr: false,
     defaultHour: 11, // 11 PM
     defaultMinute: 59,
+    // appendTo removed to let it append to body instead, fixing position offsets
     onChange(selectedDates, dateStr) {
         if (selectedDates.length > 0) {
             const selected = selectedDates[0];
@@ -73,17 +66,15 @@ const endDateTimePicker = flatpickr("#endDateTime", {
             endTime = dateStr.split(" ")[1] + " " + dateStr.split(" ")[2];
 
             console.log("selected end", "end", end, "endTime", endTime);
-
-            loadActivityTimeline(
-                start,
-                end,
-                startTime,
-                endTime,
-                userTypeVal,
-                userIds
-            );
         }
     },
+});
+
+// ✅ Prevent Bootstrap Dropdown from closing when clicking inside Flatpickr calendar
+document.addEventListener("hide.bs.dropdown", function (e) {
+    if (e.clickEvent && e.clickEvent.target.closest(".flatpickr-calendar")) {
+        e.preventDefault();
+    }
 });
 
 // ✅ Load all activity logs when page loads
@@ -240,6 +231,10 @@ $("#userType").on("change", function (e) {
     // 🔸 Setup modal title & dropdowns
     setupUserModal(userTypeVal);
 
+    if (userTypeVal && userTypeVal != "0") {
+        $("#userAccountContainer").removeClass("d-none");
+    }
+
     // 🔸 Load user list separately
     loadUserList(userTypeVal);
 
@@ -250,16 +245,15 @@ $("#userType").on("change", function (e) {
 // 🔹 When user clicks the account button
 $("#userAccountBtn").on("click", function (e) {
     e.preventDefault();
-    const modal = new bootstrap.Modal("#accountUserModal");
-    modal.show();
+    if ($(this).css("opacity") == "0.6") return;
+    $("#userAccountContainer").toggleClass("d-none");
 });
 
-// 🔹 Setup modal interface (title + dropdown)
+// 🔹 Setup interface (title + dropdown)
 function setupUserModal(userTypeVal) {
-    const modal = $("#accountUserModal");
-    const modalTitle = modal.find("#accountUserModalLabel");
-    const dropdownButton = modal.find("#categoryDropdown");
-    const dropdownMenu = modal.find(".dropdown-menu");
+    const modalTitle = $("#accountUserModalLabel");
+    const dropdownButton = $("#categoryDropdown");
+    const dropdownMenu = $("#categoryDropdownMenu");
 
     dropdownButton.css("display", "block");
 
@@ -271,6 +265,7 @@ function setupUserModal(userTypeVal) {
             <li><a class="dropdown-item" href="#">Individual</a></li>
             <li><a class="dropdown-item" href="#">Company</a></li>
         `);
+        $("#userAccountBtn").css({ "pointer-events": "auto", "opacity": "1" });
     } else if (userTypeVal === "internal") {
         modalTitle.text("Choose Internal User Account");
         dropdownButton.text("User Role");
@@ -280,9 +275,12 @@ function setupUserModal(userTypeVal) {
             <li><a class="dropdown-item" href="#">Manager</a></li>
             <li><a class="dropdown-item" href="#">Staff</a></li>
         `);
+        $("#userAccountBtn").css({ "pointer-events": "auto", "opacity": "1" });
     } else {
-        modalTitle.text("Choose User Account");
+        modalTitle.text("User Account");
         dropdownButton.css("display", "none");
+        $("#userAccountBtn").css({ "pointer-events": "none", "opacity": "0.6" });
+        $("#userAccountContainer").addClass("d-none");
     }
 
     // 🔹 Handle dropdown click
@@ -360,26 +358,10 @@ function listUser(users) {
             } else {
                 window.selectedUserIds.delete(userId);
             }
-            console.log("Selected IDs:", Array.from(window.selectedUserIds));
+            userIds = Array.from(window.selectedUserIds);
+            console.log("Selected IDs:", userIds);
         });
 }
-
-$("#submitBtn").on("click", function (e) {
-    e.preventDefault();
-
-    const selectedIds = Array.from(window.selectedUserIds);
-    console.log("submit selected IDs:", selectedIds);
-
-    userIds = selectedIds;
-
-    // Pass user IDs as the correct 5th argument (userId)
-    loadActivityTimeline(start, end, startTime, endTime, userTypeVal, userIds);
-
-    // Hide modal properly
-    const modalEl = document.getElementById("accountUserModal");
-    const modalInstance = bootstrap.Modal.getInstance(modalEl);
-    if (modalInstance) modalInstance.hide();
-});
 
 $("#clearAll").on("click", function (e) {
     e.preventDefault();

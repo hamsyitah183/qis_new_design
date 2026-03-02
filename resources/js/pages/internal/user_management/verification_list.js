@@ -11,12 +11,34 @@ $(document).ready(function () {
     verificationTable = $('#verificationTable').DataTable({
         processing: true,
         serverSide: true,
-        ajax: "/internal/user_public/verification/data",
+        ajax: {
+            url: "/internal/user_public/verification/data",
+            data: function (d) {
+                d.name = $("#filterVerifyName").val() || "";
+                d.start_date = $("#filterVerifyStartDate").val() || "";
+                d.end_date = $("#filterVerifyEndDate").val() || "";
+            },
+        },
         columns: [
             { data: 'fullname', name: 'fullname' },
             { data: 'verification_attachment', name: 'verification_attachment', orderable: false, searchable: false },
             { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' }
         ]
+    });
+
+    // Apply filters
+    $("#btnVerifyFilter").on("click", function (e) {
+        e.preventDefault();
+        verificationTable.ajax.reload();
+    });
+
+    // Reset filters
+    $("#btnResetVerifyFilter").on("click", function (e) {
+        e.preventDefault();
+        $("#filterVerifyName").val("");
+        $("#filterVerifyStartDate").val("");
+        $("#filterVerifyEndDate").val("");
+        verificationTable.ajax.reload();
     });
 
     // View Attachment (Opens Modal)

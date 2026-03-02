@@ -16,6 +16,29 @@
                 width: 100%;
             }
         }
+
+        /* Ensure dropdown overlaps the card body */
+        .card.overflow-hidden {
+            overflow: visible !important;
+        }
+        
+        /* Make sure the header has a high z-index so dropdowns show above the table below */
+        /* Removed to keep buttons on the same layer as the table, while the dropdown menu naturally overlays */
+        .card-header {
+            position: relative;
+            /* z-index: 1050; */
+        }
+
+        /* Ensure flatpickr datepicker sits clearly above the filter dropdown */
+        .flatpickr-calendar {
+            z-index: 1060 !important;
+            position: absolute !important;
+        }
+
+        /* Allow dropdown menu to not clip out the calendar */
+        .filter-dropdown {
+            overflow: visible !important;
+        }
     </style>
 @endpush
 
@@ -66,10 +89,23 @@
                                 </li>
 
                                 {{-- User Account --}}
-                                <li class="mb-2">
-                                    <label class="form-label fw-semibold mb-1">User Account</label>
-                                    <div class="btn btn-sm btn-outline-primary w-100" id="userAccountBtn" disabled>
+                                <li class="mb-3">
+                                    <label class="form-label fw-semibold mb-1" id="accountUserModalLabel">User Account</label>
+                                    <div class="btn btn-sm btn-outline-primary w-100 mb-2" id="userAccountBtn" style="pointer-events: none; opacity: 0.6;">
                                         <i class="ti ti-user me-1"></i> Choose User
+                                    </div>
+                                    <div id="userAccountContainer" class="d-none border rounded p-2 bg-white mt-2">
+                                        <div class="input-group input-group-sm mb-2">
+                                            <input type="text" class="form-control" placeholder="Search Name...." id="searchUserInput">
+                                            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="categoryDropdown">Category</button>
+                                            <ul class="dropdown-menu dropdown-menu-end" id="categoryDropdownMenu">
+                                                <li><a class="dropdown-item" href="javascript:void(0);">All</a></li>
+                                                <li><a class="dropdown-item" href="javascript:void(0);">Individual</a></li>
+                                                <li><a class="dropdown-item" href="javascript:void(0);">Company</a></li>
+                                            </ul>
+                                        </div>
+                                        <div class="row g-2 scrollable-grey" id="userList" style="max-height: 150px; overflow-y: auto;">
+                                        </div>
                                     </div>
                                 </li>
 
@@ -82,7 +118,7 @@
                                                 <div class="input-group-text text-muted">
                                                     <i class="ri-calendar-line"></i>
                                                 </div>
-                                                <input type="text" id="startDateTime" class="form-control flatpickr"
+                                                <input type="text" id="startDateTime" class="form-control"
                                                     placeholder="Select start date &amp; time">
                                             </div>
                                         </div>
@@ -92,7 +128,7 @@
                                                 <div class="input-group-text text-muted">
                                                     <i class="ri-calendar-line"></i>
                                                 </div>
-                                                <input type="text" id="endDateTime" class="form-control flatpickr"
+                                                <input type="text" id="endDateTime" class="form-control"
                                                     placeholder="Select end date &amp; time">
                                             </div>
                                         </div>
@@ -156,36 +192,7 @@
     </div>
 
 
-    <x-modal id="accountUserModal" title="Choose User Account">
-        <form id="accountUserList">
-            <div class="input-group input-group-sm input-btn-outline mb-3">
-                <input type="text" class="form-control" aria-label="Text input with dropdown button"
-                    placeholder="Search Name...." id="searchUserInput">
 
-                <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"
-                    aria-expanded="false" id="categoryDropdown">Category</button>
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="javascript:void(0);">All</a></li>
-                    <li><a class="dropdown-item" href="javascript:void(0);">Individual</a></li>
-                    <li><a class="dropdown-item" href="javascript:void(0);">Company</a></li>
-                </ul>
-            </div>
-
-            <div>
-                <div class="px-0 py-3 pb-0">
-                    <div class="row g-2 scrollable-grey" id="userList">
-
-                    </div>
-                </div>
-
-            </div>
-        </form>
-
-        @slot('footer')
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="submit" form="userVerificationForm" class="btn btn-primary" id="submitBtn">Submit</button>
-        @endslot
-    </x-modal>
 
     {{-- Export Modal --}}
     <x-modal id="exportModal" title="Download Report" size="modal-dialog-centered">

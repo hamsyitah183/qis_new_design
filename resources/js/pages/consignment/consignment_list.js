@@ -112,8 +112,6 @@ async function data_table_init() {
             $('#filterPublicUser').select2('destroy');
         }
 
-        $("#filterExporter").html('<option value="">All Exporters</option>');
-        $("#filterImporter").html('<option value="">All Importers</option>');
         $("#filterPublicUser").val("");
         $("#filterUsername").val("");
 
@@ -123,6 +121,9 @@ async function data_table_init() {
             allowClear: true,
             width: '100%'
         }).trigger('change');
+
+        // Reload all exporters and importers
+        loadAllConsignmentFilters();
 
         consignmentListTable.ajax.reload();
     });
@@ -187,6 +188,9 @@ document.addEventListener("DOMContentLoaded", data_table_init);
 // Load filter data for internal users
 async function loadFilterData() {
     try {
+        // Load all exporters and importers initially (for consignment)
+        await loadAllConsignmentFilters();
+
         const response = await fetch('/internal/api/filters/public-users');
         const users = await response.json();
         const $select = $('#filterPublicUser');
@@ -217,39 +221,70 @@ async function loadFilterData() {
             $('#filterImporter').html('<option value="">All Importers</option>');
 
             if (selectedUser) {
-                const exportersResp = await fetch(`/internal/api/filters/user/${selectedUser}/exporters`);
+                // Load consignment-specific exporters and importers for selected user
+                const exportersResp = await fetch(`/internal/api/filters/user/${selectedUser}/consignment/exporters`);
                 const exporters = await exportersResp.json();
                 exporters.forEach(exp => $('#filterExporter').append(`<option value="${exp.id}">${exp.name}</option>`));
-                // Initialize Select2 on exporter dropdown
-                $('#filterExporter').select2({
-                    placeholder: 'Select exporter',
-                    allowClear: true,
-                    width: '100%'
-                }).trigger('change');
-                const importersResp = await fetch(`/internal/api/filters/user/${selectedUser}/importers`);
+                
+                const importersResp = await fetch(`/internal/api/filters/user/${selectedUser}/consignment/importers`);
                 const importers = await importersResp.json();
                 importers.forEach(imp => $('#filterImporter').append(`<option value="${imp.id}">${imp.name}</option>`));
-                // Initialize Select2 on importer dropdown
-                $('#filterImporter').select2({
-                    placeholder: 'Select importer',
-                    allowClear: true,
-                    width: '100%'
-                }).trigger('change');
             } else {
-                $('#filterExporter').select2({
-                    placeholder: 'Select exporter',
-                    allowClear: true,
-                    width: '100%'
-                }).trigger('change');
-                $('#filterImporter').select2({
-                    placeholder: 'Select importer',
-                    allowClear: true,
-                    width: '100%'
-                }).trigger('change');
+                // Load all exporters and importers when no user is selected
+                await loadAllConsignmentFilters();
             }
+
+            // Initialize Select2 on both dropdowns
+            $('#filterExporter').select2({
+                placeholder: 'Select exporter',
+                allowClear: true,
+                width: '100%'
+            }).trigger('change');
+            $('#filterImporter').select2({
+                placeholder: 'Select importer',
+                allowClear: true,
+                width: '100%'
+            }).trigger('change');
         });
     } catch (error) {
         console.error('Error loading public users:', error);
+    }
+}
+
+// Load all consignment exporters and importers
+async function loadAllConsignmentFilters() {
+    try {
+        // Load all exporters (PublicUsers)
+        const exportersResp = await fetch('/internal/api/filters/consignment/exporters');
+        const exporters = await exportersResp.json();
+        const $exporterSelect = $('#filterExporter');
+        $exporterSelect.html('<option value="">All Exporters</option>');
+        exporters.forEach(exp => {
+            $exporterSelect.append(`<option value="${exp.id}">${exp.name}</option>`);
+        });
+
+        // Load all importers (ConsignmentImporter)
+        const importersResp = await fetch('/internal/api/filters/consignment/importers');
+        const importers = await importersResp.json();
+        const $importerSelect = $('#filterImporter');
+        $importerSelect.html('<option value="">All Importers</option>');
+        importers.forEach(imp => {
+            $importerSelect.append(`<option value="${imp.id}">${imp.name}</option>`);
+        });
+
+        // Initialize Select2 on both dropdowns
+        $exporterSelect.select2({
+            placeholder: 'Select exporter',
+            allowClear: true,
+            width: '100%'
+        });
+        $importerSelect.select2({
+            placeholder: 'Select importer',
+            allowClear: true,
+            width: '100%'
+        });
+    } catch (error) {
+        console.error('Error loading consignment filters:', error);
     }
 }
 

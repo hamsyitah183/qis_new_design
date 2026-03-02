@@ -185,13 +185,34 @@ class UserController extends Controller
         // return $count;
     }
 
-    public function verification_list_data()
+    public function verification_list_data(Request $request)
     {
         $query = PublicUser::whereHas('approved', function ($query) {
             $query->whereNotNull('verification_attachment')
                 ->where('doa_verified', '!=', 1)
                 ->where('status', '!=', 'Verification is rejected');
         })->with('approved');
+
+        // Name search (Public user fullname)
+        if ($request->filled('name')) {
+            $name = $request->input('name');
+            $query->where('fullname', 'like', '%' . $name . '%');
+        }
+
+        // Date range filter based on verification record timestamps
+        if ($request->filled('start_date')) {
+            $startDate = $request->input('start_date');
+            $query->whereHas('approved', function ($q) use ($startDate) {
+                $q->whereDate('created_at', '>=', $startDate);
+            });
+        }
+
+        if ($request->filled('end_date')) {
+            $endDate = $request->input('end_date');
+            $query->whereHas('approved', function ($q) use ($endDate) {
+                $q->whereDate('created_at', '<=', $endDate);
+            });
+        }
 
         \Log::info('Verification List Data Query Result Count: ' . $query->count());
 
