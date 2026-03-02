@@ -3,13 +3,11 @@ import Swal from "sweetalert2";
 
 
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
 
-    
+    document.getElementById("submitConditionBtn").addEventListener("click", function () {
 
-    document.getElementById("submitConditionBtn").addEventListener("click", function() {
-
-        // Make sure quill syncs to hidden input
+        // Sync Quill content
         const conditionHtml = quill.root.innerHTML;
         document.getElementById("permit-condition-input").value = conditionHtml;
 
@@ -18,65 +16,98 @@ document.addEventListener("DOMContentLoaded", function() {
         formData.append("category", document.getElementById("itemCategory").value);
         formData.append("quantity_limit", document.getElementById("quanLimit").value);
         formData.append("quanmunit", document.getElementById("quanmunit").value);
-        formData.append("date_limit", document.getElementById("spedate").value);
-        formData.append('id', document.getElementById('id').value);
+        formData.append("id", document.getElementById("id").value);
+        formData.append("start_date", document.getElementById("start_date").value);
+        formData.append("end_date", document.getElementById("end_date").value);
 
-        // Tagify values → JSON strings
         formData.append("country", JSON.stringify(countryTagify ? countryTagify.value : []));
         formData.append("usage", JSON.stringify(usageTagify ? usageTagify.value : []));
-
-        // Quill HTML
         formData.append("addional_condition", conditionHtml);
 
-        // ✅ Show Swal loading
+        // ✅ Ask user first (3 buttons)
         Swal.fire({
-            title: 'Saving...',
-            text: 'Please wait while the condition is being saved.',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
+            title: "Submit Consignment Condition",
+            text: "Choose an action:",
+            icon: "question",
+            showCancelButton: true,
+            showDenyButton: true,
+            confirmButtonText: "Save & Share with Public",
+            denyButtonText: "Save Only",
+            cancelButtonText: "Cancel"
+        }).then((result) => {
+
+            if (result.isDismissed) {
+                return; // Cancel clicked
             }
+
+            // Show loading
+            Swal.fire({
+                title: "Saving...",
+                text: "Please wait while the condition is being saved.",
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            // ✅ Save AJAX
+            $.ajax({
+                url: "/internal/consignment_condition/save",
+                method: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content")
+                },
+                success: function (res) {
+
+                    // If Save & Share
+                    if (result.isConfirmed) {
+
+                        $.ajax({
+                            url: "/internal/news/",
+                            method: "POST",
+                            data: {
+                                _token: $('meta[name="csrf-token"]').attr("content"),
+                                condition_id: document.getElementById("id").value,
+                                type: "Consignment"
+                            },
+                            success: function () {
+                                Swal.fire({
+                                    icon: "success",
+                                    title: "Saved & Shared!",
+                                    text: "The consignment condition has been shared to all users."
+                                });
+                            },
+                            error: function (xhr) {
+                                Swal.fire({
+                                    icon: "error",
+                                    title: "Saved but Share Failed",
+                                    text: xhr.responseJSON?.message || "Condition saved but sharing failed."
+                                });
+                            }
+                        });
+
+                    } else {
+                        // Save Only
+                        Swal.fire({
+                            icon: "success",
+                            title: "Saved!",
+                            text: res.message || "Consignment condition saved successfully."
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: xhr.responseJSON?.message || "Failed to save consignment condition."
+                    });
+                }
+            });
+
         });
 
-        console.log("Form Data Prepared for Submission:", formData);
-
-        $.ajax({
-            url: `/internal/consignment_condition/save`,
-            method: "POST",
-            data: formData,
-            processData: false,
-            contentType: false,
-            headers: {
-                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content")
-            },
-            success: function(res) {
-                Swal.close(); // close loading
-
-                // Show success message
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Saved!',
-                    text: res.message || 'Permit condition saved successfully.',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-
-                // Optionally reset form or close modal
-                // document.getElementById("yourFormId").reset();
-            },
-            error: function(xhr) {
-                Swal.close(); // close loading
-
-                // Show error message
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: xhr.responseJSON?.message || 'Failed to save permit condition.',
-                });
-            }
-        });
     });
 
-   
-
 });
+

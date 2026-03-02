@@ -15,9 +15,11 @@ document.addEventListener("DOMContentLoaded", function() {
         formData.append("itemCategory", document.getElementById("itemCategory").value);
         formData.append("quanLimit", document.getElementById("quanLimit").value);
         formData.append("quanmunit", document.getElementById("quanmunit").value);
+        formData.append('measurement', document.getElementById("quanmunit"))
         formData.append('id', document.getElementById('id').value);
         formData.append('start_date', document.getElementById('start_date').value);
         formData.append('end_date', document.getElementById('end_date').value);
+        formData.append('type', 'Import Permit');
 
         // Tagify values → JSON strings
         formData.append("countryTag", JSON.stringify(countryTagify ? countryTagify.value : []));
@@ -78,7 +80,8 @@ document.addEventListener("DOMContentLoaded", function() {
                                 method: "POST",
                                 data: {
                                     _token: $('meta[name="csrf-token"]').attr("content"),
-                                    condition_id: document.getElementById('id').value
+                                    condition_id: document.getElementById('id').value,
+                                    type: 'Import Permit'
                                 },
                                 success: function(response) {
                                     Swal.fire('Sent!', 'The permit condition has been shared to all users.', 'success');

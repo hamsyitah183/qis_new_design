@@ -21,4 +21,9 @@ class PublicCode extends Model
     protected $casts = [
         'is_del' => 'boolean',
     ];
+
+    public function conversion()
+    {
+        
+    }    
 }

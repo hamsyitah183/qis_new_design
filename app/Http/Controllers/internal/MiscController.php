@@ -14,6 +14,7 @@ use App\Models\IpEntryPoint;
 use App\Models\News;
 use App\Models\PublicCode;
 use App\Models\PublicUser;
+use App\Models\ConsignmentCondition;
 use App\Notifications\ApplicationNotification;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -177,7 +178,7 @@ class MiscController extends Controller
             'category' => $request->itemCategory,
             'item_name' => $request->itemName,
             'addional_condition' => $request->permit_condition,
-            'quantity_limit' => $request->quanLimit ?: null  . ' ' .  $request->quanmunit ?: null ,
+            'quantity_limit' => $request->quanLimit ?: null  . ' ' .  $request->measurement ?: null ,
             // 'date_limit' => $request->spedate ?: null,
             'start_date' => $request->start_date ?: null,
             'end_date' => $request->end_date ?: null, 
@@ -361,15 +362,21 @@ class MiscController extends Controller
 
     public function shareNews(Request $request)
     {
-        $item = IpCondition::where('id', $request['condition_id'])->first();
+        if($request->type == 'Import Permit') {
+            $item = IpCondition::where('id', $request['condition_id'])->first();
+            $title = 'Permit Condition News';
+        } 
 
-
+        elseif($request->type == 'Consignment') {
+            $item = ConsignmentCondition::where('id', $request['condition_id'])->first();
+            $title = 'Consignment Condition News';
+        }
 
         DB::beginTransaction();
 
         try {
 
-            $title = 'Permit Condition News';
+            
 
             // Suppose $item is your consignment condition object
             $itemName = $item->item_name; // "AVOCADO"
@@ -385,10 +392,19 @@ class MiscController extends Controller
             // If you want HTML instead of plain text:
             $detailsMessage = "A new permit condition for item <strong>{$itemName}</strong> has been released.<br>";
             $detailsMessage .= "It applies to the following countries: <strong>{$countryList}</strong>.";
+            if($item->quantity_limit) {
+                $detailsMessage .= "<br>Quantity Limit: {$item->quantity_limit} {$item->measurement_unit}<br>";
+            } 
 
-            // Format dates
-            $startDate = Carbon::parse($item->start_date)->format('d M Y'); // 10 Mar 2026
-            $endDate = Carbon::parse($item->end_date)->format('d M Y'); // 28 Mar 2026
+            if($item->start_date) {
+                // Format dates
+                $startDate = Carbon::parse($item->start_date)->format('d M Y'); // 10 Mar 2026
+                $endDate = Carbon::parse($item->end_date)->format('d M Y'); // 28 Mar 2026
+                $detailsMessage .= "Valid From: {$startDate} to {$endDate}";
+            }
+
+
+          
 
             // Build second message
             $detailsMessage .= "<br><span class = 'mt-2'>Additional Condition: 
@@ -397,14 +413,7 @@ class MiscController extends Controller
 
             </span><br>";
 
-            if($item->quantity_limit) {
-                $detailsMessage .= "Quantity Limit: {$item->quantity_limit} {$item->measurement_unit}<br>";
-            } 
-
-            if($item->start_date) {
-                $detailsMessage .= "Valid From: {$startDate} to {$endDate}";
-            }
-
+            
             
             // dd($detailsMessage);
 
@@ -416,17 +425,39 @@ class MiscController extends Controller
             $news->save();
 
 
-            $publicUserEmails = PublicUser::get(['email']);
+            $publicUsers = PublicUser::get();
+            $internalUsers = InternalUser::get();
 
-            // foreach($publicUserEmails as $email) {
-            //     Mail::to($email->email)->send(
-            //         new QISNewsMail($title, $detailsMessage) 
-            //     );
-            // }
+            $url = '#';
+
+            foreach($publicUsers as $user) {
+                // Mail::to($user->email)->send(
+                //     new QISNewsMail($title, $detailsMessage) 
+                // );
+
+                Notification::send($user, new ApplicationNotification(
+                    'A new condition of item ' . $item->item_name . ' has been updated ',
+                    $title,
+                    $url
+                ));
+            }
+
+            foreach($internalUsers as $user) {
+                Notification::send($user, new ApplicationNotification(
+                    'A new condition of item ' . $item->item_name . ' has been updated ',
+                    $title,
+                    '/internal/permit_edit_condition/' . $item->id
+                ));
+            }
+
+            
 
             Mail::to('hamsyitahnur@gmail.com')->send(
                 new QISNewsMail($title, $detailsMessage) 
             );
+
+            
+
 
             DB::commit();
         } catch (\Throwable $e) {

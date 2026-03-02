@@ -42,12 +42,13 @@ class ConsignmentMiscController extends Controller
 
         // dd($condition);
         $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->where('cate_name', 'consignment_purpose')->where('is_del', false)->get();
+        $measurements = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->where('cate_name', 'unit_measurement')->where('is_del', false)->get();
 
         if (!$condition) {
             return response()->json(['error' => 'Consignment Condition not found'], 404);
         }
 
-        return view('pages.internal.misc.consignment_condition_edit', compact('condition', 'pbdata'));
+        return view('pages.internal.misc.consignment_condition_edit', compact('condition', 'pbdata', 'measurements'));
     }
 
     public function saveCondition(Request $request)
@@ -75,10 +76,13 @@ class ConsignmentMiscController extends Controller
         $condition->item_name = $data['item_name'];
         $condition->addional_condition = $data['addional_condition'];
         $condition->quantity_limit = $data['quantity_limit'];
-        $condition->date_limit = $data['date_limit'];
+        // $condition->date_limit = $data['date_limit'];
         $condition->country = $countryValues;
         $condition->usage = $usageValues;
         $condition->category = $data['category'];
+        $condition->start_date = $request['start_date'];
+        $condition->end_date = $request['end_date'];
+        $condition->measurement_unit =  $request->quanmunit;
 
         $condition->save();
 
