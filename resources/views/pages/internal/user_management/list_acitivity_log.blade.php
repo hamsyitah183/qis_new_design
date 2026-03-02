@@ -118,7 +118,7 @@
                                                 <div class="input-group-text text-muted">
                                                     <i class="ri-calendar-line"></i>
                                                 </div>
-                                                <input type="text" id="startDateTime" class="form-control flatpickr"
+                                                <input type="text" id="startDateTime" class="form-control"
                                                     placeholder="Select start date &amp; time">
                                             </div>
                                         </div>
@@ -128,7 +128,7 @@
                                                 <div class="input-group-text text-muted">
                                                     <i class="ri-calendar-line"></i>
                                                 </div>
-                                                <input type="text" id="endDateTime" class="form-control flatpickr"
+                                                <input type="text" id="endDateTime" class="form-control"
                                                     placeholder="Select end date &amp; time">
                                             </div>
                                         </div>

@@ -19,8 +19,7 @@ const startDateTimePicker = flatpickr("#startDateTime", {
     time_24hr: false,
     defaultHour: 0,
     defaultMinute: 0,
-    // static: true, Remove static to allow z-index layering
-    appendTo: document.querySelector(".filter-dropdown"),
+    // appendTo removed to let it append to body instead, fixing position offsets
     onChange(selectedDates, dateStr) {
         if (selectedDates.length > 0) {
             const selected = selectedDates[0];
@@ -41,15 +40,6 @@ const startDateTimePicker = flatpickr("#startDateTime", {
                 "startTime",
                 startTime
             );
-
-            loadActivityTimeline(
-                start,
-                end,
-                startTime,
-                endTime,
-                userTypeVal,
-                userIds
-            );
         }
     },
 });
@@ -61,8 +51,7 @@ const endDateTimePicker = flatpickr("#endDateTime", {
     time_24hr: false,
     defaultHour: 11, // 11 PM
     defaultMinute: 59,
-    // static: true, Remove static to allow z-index layering
-    appendTo: document.querySelector(".filter-dropdown"),
+    // appendTo removed to let it append to body instead, fixing position offsets
     onChange(selectedDates, dateStr) {
         if (selectedDates.length > 0) {
             const selected = selectedDates[0];
@@ -77,17 +66,15 @@ const endDateTimePicker = flatpickr("#endDateTime", {
             endTime = dateStr.split(" ")[1] + " " + dateStr.split(" ")[2];
 
             console.log("selected end", "end", end, "endTime", endTime);
-
-            loadActivityTimeline(
-                start,
-                end,
-                startTime,
-                endTime,
-                userTypeVal,
-                userIds
-            );
         }
     },
+});
+
+// ✅ Prevent Bootstrap Dropdown from closing when clicking inside Flatpickr calendar
+document.addEventListener("hide.bs.dropdown", function (e) {
+    if (e.clickEvent && e.clickEvent.target.closest(".flatpickr-calendar")) {
+        e.preventDefault();
+    }
 });
 
 // ✅ Load all activity logs when page loads
