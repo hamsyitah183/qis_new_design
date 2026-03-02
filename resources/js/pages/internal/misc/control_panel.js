@@ -261,9 +261,116 @@ $(document).ready(function () {
     }
     loadPBDataForAllCategories();
 
+
+    function loadBranches() {
+        $.ajax({
+            url: `/internal/branches`,
+            type: "GET",
+            success: function (response) {
+                let tbody = $("#tabletab_branch").find("tbody");
+                tbody.empty();
+
+                if (response.status === "success" && response.data.length > 0) {
+                    response.data.forEach((item) => {
+                        let row = `
+                        <tr>
+                            <td>${item.name}</td>
+                            <td>
+                                <div class="hstack gap-2 flex-wrap justify-content-center">
+                                    <a href="javascript:void(0);" class="text-info fs-14 lh-1"
+                                       onclick="editBranch(${item.id}, '${item.name.replace(/'/g, "\\'")}')"> 
+                                        <i class="ri-edit-line"></i>
+                                    </a>
+                                    <a href="javascript:void(0);" class="text-danger fs-14 lh-1"
+                                       onclick="deleteBranch(${item.id})">
+                                        <i class="ri-delete-bin-5-line"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        `;
+                        tbody.append(row);
+                    });
+                } else {
+                    tbody.append(`
+                    <tr>
+                        <td colspan="2" class="text-center text-danger">
+                            No branches found
+                        </td>
+                    </tr>
+                    `);
+                }
+            },
+            error: function (xhr) {
+                console.error("Error fetching branches:", xhr);
+            },
+        });
+    }
+
+    loadBranches();
+
+    function editBranch(id, name) {
+        document.getElementById("editItemId").value = id;
+        document.getElementById("editICOde").value = "";
+        document.getElementById("editDesc").value = name;
+        document.getElementById("editICOde").disabled = true;
+        $("#editItemModal .modal-title").html('<i class="ri-edit-line me-1"></i> Edit Branch');
+        cateName = "branch_entry";
+        modal.show();
+    }
+    window.editBranch = editBranch;
+
+    function deleteBranch(id) {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "This branch will be permanently deleted!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, delete it!",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `/internal/branch/delete/${id}`,
+                    type: "DELETE",
+                    headers: {
+                        "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+                    },
+                    success: function (response) {
+                        if (response.status === "success") {
+                            Swal.fire({
+                                icon: "success",
+                                title: "Deleted!",
+                                text: "The branch has been deleted.",
+                                timer: 2000,
+                                showConfirmButton: false,
+                            });
+                            loadBranches();
+                        } else {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                text: response.message || "Failed to delete the branch.",
+                            });
+                        }
+                    },
+                    error: function (xhr) {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: xhr.responseJSON?.message || "An error occurred while deleting.",
+                        });
+                    },
+                });
+            }
+        });
+    }
+    window.deleteBranch = deleteBranch;
+
     // fetch Public Code to modal
     function getspecificPBData(id) {
-        // 1️⃣ Show loading Swal
+        // Show loading Swal
         Swal.fire({
             title: "Loading data...",
             text: "Please wait",
@@ -278,7 +385,7 @@ $(document).ready(function () {
             type: "GET",
             success: function (response) {
                 if (response.status === "success" && response.data) {
-                    // 2️⃣ Populate form fields
+                    // Populate form fields
                     document.getElementById("editItemId").value =
                         response.data.id;
                     document.getElementById("editICOde").value =
@@ -286,10 +393,10 @@ $(document).ready(function () {
                     document.getElementById("editDesc").value =
                         response.data.description;
 
-                    // 3️⃣ Close loading Swal
+                    // Close loading Swal
                     Swal.close();
 
-                    // 4️⃣ Show modal AFTER data is ready
+                    // Show modal AFTER data is ready
                     modal.show();
                 } else {
                     Swal.fire({
@@ -322,6 +429,51 @@ $(document).ready(function () {
             const id = document.getElementById("editItemId").value;
             const code = document.getElementById("editICOde").value;
             const desc = document.getElementById("editDesc").value;
+
+            // Branch edit uses a different endpoint
+            if (cateName === "branch_entry") {
+                const fd = new FormData();
+                fd.append("id", id);
+                fd.append("name", desc);
+
+                $.ajax({
+                    url: `/internal/branch/update`,
+                    type: "POST",
+                    data: fd,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+                    },
+                    success: function (response) {
+                        if (response.status === "success") {
+                            Swal.fire({
+                                icon: "success",
+                                title: "Success",
+                                text: "Branch updated successfully.",
+                                timer: 2000,
+                                showConfirmButton: false,
+                            });
+                            loadBranches();
+                        } else {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                text: response.message || "Failed to update branch.",
+                            });
+                        }
+                    },
+                    error: function (xhr) {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: xhr.responseJSON?.message || "An error occurred while updating.",
+                        });
+                    },
+                });
+                modal.hide();
+                return;
+            }
 
             const fd = new FormData();
             fd.append("id", id);
@@ -465,6 +617,11 @@ $(document).ready(function () {
                 cateName = "reject_purpose";
                 $("#addCodev").prop("disabled", true);
                 break;
+            case "branch":
+                categoryTitle = "Branch";
+                cateName = "branch_entry";
+                $("#addCodev").prop("disabled", true);
+                break;
         }
 
         $("#addItemType").val(cateName);
@@ -485,6 +642,52 @@ $(document).ready(function () {
         const cate = cateName;
         const code = $("#addCodev").val();
         const desc = $("#addDescv").val();
+
+        // Branch add uses a different endpoint
+        if (cate === "branch_entry") {
+            const fd = new FormData();
+            fd.append("name", desc);
+
+            $.ajax({
+                url: `/internal/branch/add`,
+                type: "POST",
+                data: fd,
+                processData: false,
+                contentType: false,
+                headers: {
+                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+                },
+                success: function (response) {
+                    $("#addGenericModal").modal("hide");
+                    $("#addDescv").val("");
+
+                    if (response.status === "success") {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Success",
+                            text: "Branch added successfully.",
+                            timer: 2000,
+                            showConfirmButton: false,
+                        });
+                        loadBranches();
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: response.message || "Failed to add branch.",
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: xhr.responseJSON?.message || "An error occurred while adding the branch.",
+                    });
+                },
+            });
+            return;
+        }
 
         const fd = new FormData();
         fd.append("category", cate);
@@ -540,3 +743,4 @@ $(document).ready(function () {
         });
     });
 });
+                     
