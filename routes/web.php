@@ -196,11 +196,17 @@ Route::prefix('internal')
         Route::middleware(['not.boundary'])->group(function () {
             Route::get('/view_import_permit', [ApplicationController::class, 'showallapplicationlist'])->name('application.list');
             Route::delete('/application/delete/{id}', [ApplicationController::class, 'deleteApplication'])->name('application.delete');
+
+            // Exporter & Importer Lists (internal view-only)
+            Route::get('/exporter_list', [ApplicationController::class, 'showInternalExporterList'])->name('exporter.list');
+            Route::get('/exporter_list/data', [ApplicationController::class, 'getInternalExporterListData'])->name('exporter.list.data');
+            Route::get('/importer_list', [ApplicationController::class, 'showInternalImporterList'])->name('importer.list');
+            Route::get('/importer_list/data', [ApplicationController::class, 'getInternalImporterListData'])->name('importer.list.data');
         });
 
         // ======================= inspection certificates ========================
         Route::middleware(['not.boundary'])->group(function () {
-             Route::get('/inspection_certificates_list', [InspectionController::class, 'showAllInspectionList'])->name('inspection.list');
+            Route::get('/inspection_certificates_list', [InspectionController::class, 'showAllInspectionList'])->name('inspection.list');
         });
 
         Route::get('/view_inspection_certificate/{id}', [InspectionController::class, 'viewApplication'])->name('viewInspectionApplication');
@@ -248,7 +254,7 @@ Route::prefix('internal')
 
 
             // CONSIGNMENT CONDITION
-             Route::get('/consignment_condition', [ConsignmentMiscController::class, 'showConsignmentCondition']);
+            Route::get('/consignment_condition', [ConsignmentMiscController::class, 'showConsignmentCondition']);
             Route::get('/consignment_condition/data', [ConsignmentMiscController::class, 'getConsignmentConditionData']);
             Route::get('/consignment_condition/data/{id}', [ConsignmentMiscController::class, 'getConsignmentConditionDataById']);
             Route::get('/consignment_condition/edit/{id}', [ConsignmentMiscController::class, 'editConsignmentConditionDataById']);
@@ -288,7 +294,7 @@ Route::prefix('internal')
 
 
 
-      
+
 
     });
 
@@ -410,7 +416,7 @@ Route::middleware(['auth.any'])->group(function () {
     // Route::get('/paymentUpdate/{kod_transaksi}', [PaymentController::class, 'bounce']);
     Route::get('/paymentUpdate/{rn}', [PaymentController::class, 'paymentUpdate'])->name('payment.update');
 
-                  // count 
+    // count 
     Route::post('/permit/print', [PermitGenerateController::class, 'permitCount']);
 
 

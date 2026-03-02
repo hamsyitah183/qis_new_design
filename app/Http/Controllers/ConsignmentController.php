@@ -77,7 +77,7 @@ class ConsignmentController extends Controller
         }
 
         if ($type === 'internal' && $request->has('username') && $request->username != '') {
-            $query->whereHas('user', function($q) use ($request) {
+            $query->whereHas('user', function ($q) use ($request) {
                 $q->where('fullname', 'like', '%' . $request->username . '%');
             });
         }
@@ -92,16 +92,16 @@ class ConsignmentController extends Controller
         $applications = $query->get();
 
         $headers = array(
-            "Content-type"        => "text/csv",
+            "Content-type" => "text/csv",
             "Content-Disposition" => "attachment; filename=$fileName",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
         );
 
         $columns = array('App ID', 'Date', 'Importer', 'Exporter', 'Status');
 
-        $callback = function() use($applications, $columns) {
+        $callback = function () use ($applications, $columns) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns);
 
@@ -164,7 +164,14 @@ class ConsignmentController extends Controller
     {
         $userData = authUser();
         $type = $userData['type'];
+        $user = $userData['user'];
         $query = $this->getFilteredConsignmentQuery(request());
+
+        // Determine access level based on branch (pseudocode §4)
+        $accessLevel = 'VIEW_ONLY';
+        if ($type === 'internal' && isset($user->branch) && $user->branch === 'Sipitang') {
+            $accessLevel = 'FULL';
+        }
 
         $datatable = DataTables::eloquent($query)
             ->addIndexColumn()
@@ -233,7 +240,7 @@ class ConsignmentController extends Controller
 
                 return $boxesHtml;
             })
-            ->addColumn('action', function ($row) use ($type) {
+            ->addColumn('action', function ($row) use ($type, $accessLevel) {
                 $status = ucfirst($row->status);
                 $isPublic = $type === 'public';
                 $showEdit = $isPublic && ($status === 'Draft' || $status === 'Pending');
@@ -252,7 +259,8 @@ class ConsignmentController extends Controller
                     $buttons .= '<a class="btn btn-sm btn-primary me-1 viewApplication" href="' . $viewUrl . '" title="View"> <i class="ti ti-eye"></i> </a>';
                 }
 
-                if ($type === 'internal') {
+                // Only show delete button for internal users with FULL access (pseudocode §5)
+                if ($type === 'internal' && $accessLevel === 'FULL') {
                     $buttons .= '<button class="btn btn-sm btn-danger delete-consignment" data-id="' . $row->application_id . '" title="Delete"> <i class="ti ti-trash"></i> </button>';
                 }
 
@@ -313,6 +321,18 @@ class ConsignmentController extends Controller
     public function updateStatus($id, Request $request)
     {
         try {
+            // Branch guard: only Sipitang branch users can approve/reject (pseudocode §6)
+            $currentUser = authUser()['user'];
+            if (!isset($currentUser->branch) || $currentUser->branch !== 'Sipitang') {
+                return response()->json(
+                    [
+                        'status' => 'error',
+                        'message' => 'You are not authorized to approve/reject applications outside your branch.',
+                    ],
+                    403,
+                );
+            }
+
             $action = $request->input('status'); // 'Approved' or 'Rejected'
 
             if (!in_array($action, ['Approved', 'Rejected'], true)) {
@@ -433,6 +453,17 @@ class ConsignmentController extends Controller
                 );
             }
 
+            // Branch guard: only Sipitang branch users can delete (pseudocode §6)
+            if (!isset($user->branch) || $user->branch !== 'Sipitang') {
+                return response()->json(
+                    [
+                        'status' => 'error',
+                        'message' => 'You are not authorized to delete applications outside your branch.',
+                    ],
+                    403,
+                );
+            }
+
             $application = ConsignmentApplication::where('application_id', $id)->firstOrFail();
             $applicationId = $application->application_id;
             $userName = $user->fullname ?? 'Unknown User';
@@ -542,10 +573,18 @@ class ConsignmentController extends Controller
 
     public function verify_application_permit($id, Request $request)
     {
+        // Branch guard: only Sipitang branch users can verify/reject (pseudocode §6)
+        $currentUser = authUser()['user'];
+        if (!isset($currentUser->branch) || $currentUser->branch !== 'Sipitang') {
+            return response()->json(
+                [
+                    'message' => 'You are not authorized to verify/reject applications outside your branch.',
+                ],
+                403,
+            );
+        }
+
         $application = ConsignmentApplication::where('application_id', $id)->firstOrFail();
-
-
-        // dd($application, $request->all());
 
 
         // dd($application, $request->all());
@@ -679,7 +718,7 @@ class ConsignmentController extends Controller
             $status = 'Clerk Rejected';
 
 
-             $notificationController = new NotificationController();
+            $notificationController = new NotificationController();
 
             $notificationController->sendStatusMessage(
                 $application->importer_detail['fullname'] ?? 'User',
