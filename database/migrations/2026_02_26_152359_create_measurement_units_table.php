@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('measurement_units', function (Blueprint $table) {
             $table->id();
             $table->foreignId('measurement_id')->references('id')->on('public_code')->onDelete('cascade');
-            $table->float('conversion')->nullable();
+            $table->decimal('conversion', 12, 6)->nullable();
             $table->timestamps();
         });
     }

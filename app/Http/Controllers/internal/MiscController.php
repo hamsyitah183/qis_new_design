@@ -61,7 +61,9 @@ class MiscController extends Controller
 
     public function getspecificpbdata($id)
     {
-        $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->findorFail($id);
+        $pbdata = PublicCode::with(['conversion'])
+            ->select('id', 'cate_name', 'cate_code', 'description')
+            ->findorFail($id);
 
         return response()->json([
             'status' => 'success',
@@ -74,19 +76,36 @@ class MiscController extends Controller
         $id = $request->input('id');
         $code = $request->input('item_code');
         $desc = $request->input('item_desc');
+        $conversion = $request->input('conversion');
 
-        $pbdata = PublicCode::findorFail($id);
+        $pbdata = PublicCode::with('conversion')->findOrFail($id);
+
         $pbdata->cate_code = $code;
         $pbdata->description = $desc;
-        $pbdata->save();
+        $pbdata->save(); // save public_code first
+
+        // ✅ Only handle conversion if measurement unit
+        if ($pbdata->cate_name === 'unit_measurement') {
+            // If conversion record exists → update
+            if ($pbdata->conversion) {
+                $pbdata->conversion->update([
+                    'conversion' => $conversion,
+                ]);
+            }
+            // If not exists → create
+            else {
+                $pbdata->conversion()->create([
+                    'measurement_id' => $pbdata->id,
+                    'conversion' => $conversion,
+                ]);
+            }
+        }
 
         activity()
-        ->useLog('user_activity')
-        ->event('update data')
-        ->causedBy(authUser()['user'])
-        ->log(
-             authUser()['user']['fullname'] . ' is updated ' . $pbdata->description . ' of ' . $pbdata->cate_name
-        );
+            ->useLog('user_activity')
+            ->event('update data')
+            ->causedBy(authUser()['user'])
+            ->log(authUser()['user']['fullname'] . ' updated ' . $pbdata->description . ' of ' . $pbdata->cate_name);
 
         return response()->json([
             'status' => 'success',
@@ -101,12 +120,10 @@ class MiscController extends Controller
         $pbdata->save();
 
         activity()
-        ->useLog('user_activity')
-        ->event('delete data')
-        ->causedBy(authUser()['user'])
-        ->log(
-             authUser()['user']['fullname'] . ' is deleted ' . $pbdata->description . ' from ' . $pbdata->cate_name
-        );
+            ->useLog('user_activity')
+            ->event('delete data')
+            ->causedBy(authUser()['user'])
+            ->log(authUser()['user']['fullname'] . ' is deleted ' . $pbdata->description . ' from ' . $pbdata->cate_name);
 
         return response()->json([
             'status' => 'success',
@@ -134,12 +151,10 @@ class MiscController extends Controller
         $pbdata->save();
 
         activity()
-        ->useLog('user_activity')
-        ->event('add data')
-        ->causedBy(authUser()['user'])
-        ->log(
-            authUser()['user']['fullname'] . ' is added ' . $pbdata->description . ' to ' . $pbdata->cate_name
-        );
+            ->useLog('user_activity')
+            ->event('add data')
+            ->causedBy(authUser()['user'])
+            ->log(authUser()['user']['fullname'] . ' is added ' . $pbdata->description . ' to ' . $pbdata->cate_name);
 
         return response()->json([
             'status' => 'success',
@@ -178,13 +193,13 @@ class MiscController extends Controller
             'category' => $request->itemCategory,
             'item_name' => $request->itemName,
             'addional_condition' => $request->permit_condition,
-            'quantity_limit' => $request->quanLimit ?: null  . ' ' .  $request->measurement ?: null ,
+            'quantity_limit' => $request->quanLimit ?: null . ' ' . $request->measurement ?: null,
             // 'date_limit' => $request->spedate ?: null,
             'start_date' => $request->start_date ?: null,
-            'end_date' => $request->end_date ?: null, 
+            'end_date' => $request->end_date ?: null,
             'country' => $countryValues,
             'usage' => $usageValues,
-            'measurement_unit' => $request->quanmunit
+            'measurement_unit' => $request->quanmunit,
         ];
         // dd($data);
         // UPDATE
@@ -362,12 +377,10 @@ class MiscController extends Controller
 
     public function shareNews(Request $request)
     {
-        if($request->type == 'Import Permit') {
+        if ($request->type == 'Import Permit') {
             $item = IpCondition::where('id', $request['condition_id'])->first();
             $title = 'Permit Condition News';
-        } 
-
-        elseif($request->type == 'Consignment') {
+        } elseif ($request->type == 'Consignment') {
             $item = ConsignmentCondition::where('id', $request['condition_id'])->first();
             $title = 'Consignment Condition News';
         }
@@ -375,14 +388,11 @@ class MiscController extends Controller
         DB::beginTransaction();
 
         try {
-
-            
-
             // Suppose $item is your consignment condition object
             $itemName = $item->item_name; // "AVOCADO"
 
             // Get the country names from the stored codes in JSON
-            $countryCodes =  $item['country'] ;// ["AU","KE","MX",...]
+            $countryCodes = $item['country']; // ["AU","KE","MX",...]
             // dd($countryCodes);
             $countries = Country::whereIn('code', $countryCodes)->pluck('name')->toArray();
 
@@ -392,29 +402,24 @@ class MiscController extends Controller
             // If you want HTML instead of plain text:
             $detailsMessage = "A new permit condition for item <strong>{$itemName}</strong> has been released.<br>";
             $detailsMessage .= "It applies to the following countries: <strong>{$countryList}</strong>.";
-            if($item->quantity_limit) {
+            if ($item->quantity_limit) {
                 $detailsMessage .= "<br>Quantity Limit: {$item->quantity_limit} {$item->measurement_unit}<br>";
-            } 
+            }
 
-            if($item->start_date) {
+            if ($item->start_date) {
                 // Format dates
                 $startDate = Carbon::parse($item->start_date)->format('d M Y'); // 10 Mar 2026
                 $endDate = Carbon::parse($item->end_date)->format('d M Y'); // 28 Mar 2026
                 $detailsMessage .= "Valid From: {$startDate} to {$endDate}";
             }
 
-
-          
-
             // Build second message
-            $detailsMessage .= "<br><span class = 'mt-2'>Additional Condition: 
+            $detailsMessage .= "<br><span class = 'mt-2'>Additional Condition:
             
                 <span>{$item->addional_condition}</span>
 
             </span><br>";
 
-            
-            
             // dd($detailsMessage);
 
             $news = new News();
@@ -424,40 +429,24 @@ class MiscController extends Controller
             $news->show = 1;
             $news->save();
 
-
             $publicUsers = PublicUser::get();
             $internalUsers = InternalUser::get();
 
             $url = '#';
 
-            foreach($publicUsers as $user) {
+            foreach ($publicUsers as $user) {
                 // Mail::to($user->email)->send(
-                //     new QISNewsMail($title, $detailsMessage) 
+                //     new QISNewsMail($title, $detailsMessage)
                 // );
 
-                Notification::send($user, new ApplicationNotification(
-                    'A new condition of item ' . $item->item_name . ' has been updated ',
-                    $title,
-                    $url
-                ));
+                Notification::send($user, new ApplicationNotification('A new condition of item ' . $item->item_name . ' has been updated ', $title, $url));
             }
 
-            foreach($internalUsers as $user) {
-                Notification::send($user, new ApplicationNotification(
-                    'A new condition of item ' . $item->item_name . ' has been updated ',
-                    $title,
-                    '/internal/permit_edit_condition/' . $item->id
-                ));
+            foreach ($internalUsers as $user) {
+                Notification::send($user, new ApplicationNotification('A new condition of item ' . $item->item_name . ' has been updated ', $title, '/internal/permit_edit_condition/' . $item->id));
             }
 
-            
-
-            Mail::to('hamsyitahnur@gmail.com')->send(
-                new QISNewsMail($title, $detailsMessage) 
-            );
-
-            
-
+            Mail::to('hamsyitahnur@gmail.com')->send(new QISNewsMail($title, $detailsMessage));
 
             DB::commit();
         } catch (\Throwable $e) {
@@ -470,7 +459,5 @@ class MiscController extends Controller
                 500,
             );
         }
-
-       
     }
 }
