@@ -268,6 +268,12 @@ Route::prefix('internal')
             // Route::get('/control_panel', [MiscController::class, 'showcontrolpanel'])->name('controlpanel');
             Route::post('/district/entry-point/update', [MiscController::class, 'updateEntry']);
 
+            // BRANCH CRUD
+            Route::get('/branches', [MiscController::class, 'getBranches']);
+            Route::post('/branch/add', [MiscController::class, 'addBranch']);
+            Route::post('/branch/update', [MiscController::class, 'updateBranch']);
+            Route::delete('/branch/delete/{id}', [MiscController::class, 'deleteBranch']);
+
             // BOUNDARY OFFICER MANAGEMENT - Restricted
             Route::get("/boundary/list", [BoundaryOfficerController::class, 'view'])->name('boundary.list');
             Route::get("/boundary/list/data", [BoundaryOfficerController::class, 'data']);
@@ -279,7 +285,7 @@ Route::prefix('internal')
             Route::get('/admin/dashboard/daily-volume', [AdminDashboardController::class, 'dailyVolume']);
             Route::get('/admin/dashboard/user-registration', [AdminDashboardController::class, 'userRegistration']);
 
-            Route::post('/news', [MiscController::class, 'shareNews'] );
+            Route::post('/news', [MiscController::class, 'shareNews']);
         });
 
         // ======================= notifications ===========================

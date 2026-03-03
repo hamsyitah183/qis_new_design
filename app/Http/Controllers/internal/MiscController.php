@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Notification;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\QISNewsMail;
+use App\Models\Branch;
 
 class MiscController extends Controller
 {
@@ -102,10 +103,12 @@ class MiscController extends Controller
         }
 
         activity()
-            ->useLog('user_activity')
-            ->event('update data')
-            ->causedBy(authUser()['user'])
-            ->log(authUser()['user']['fullname'] . ' updated ' . $pbdata->description . ' of ' . $pbdata->cate_name);
+        ->useLog('user_activity')
+        ->event('update data')
+        ->causedBy(authUser()['user'])
+        ->log(
+             authUser()['user']['fullname'] . ' is updated ' . $pbdata->description . ' of ' . $pbdata->cate_name
+        );
 
         return response()->json([
             'status' => 'success',
@@ -120,10 +123,12 @@ class MiscController extends Controller
         $pbdata->save();
 
         activity()
-            ->useLog('user_activity')
-            ->event('delete data')
-            ->causedBy(authUser()['user'])
-            ->log(authUser()['user']['fullname'] . ' is deleted ' . $pbdata->description . ' from ' . $pbdata->cate_name);
+        ->useLog('user_activity')
+        ->event('delete data')
+        ->causedBy(authUser()['user'])
+        ->log(
+             authUser()['user']['fullname'] . ' is deleted ' . $pbdata->description . ' from ' . $pbdata->cate_name
+        );
 
         return response()->json([
             'status' => 'success',
@@ -151,10 +156,12 @@ class MiscController extends Controller
         $pbdata->save();
 
         activity()
-            ->useLog('user_activity')
-            ->event('add data')
-            ->causedBy(authUser()['user'])
-            ->log(authUser()['user']['fullname'] . ' is added ' . $pbdata->description . ' to ' . $pbdata->cate_name);
+        ->useLog('user_activity')
+        ->event('add data')
+        ->causedBy(authUser()['user'])
+        ->log(
+            authUser()['user']['fullname'] . ' is added ' . $pbdata->description . ' to ' . $pbdata->cate_name
+        );
 
         return response()->json([
             'status' => 'success',
@@ -388,11 +395,14 @@ class MiscController extends Controller
         DB::beginTransaction();
 
         try {
+
+            
+
             // Suppose $item is your consignment condition object
             $itemName = $item->item_name; // "AVOCADO"
 
             // Get the country names from the stored codes in JSON
-            $countryCodes = $item['country']; // ["AU","KE","MX",...]
+            $countryCodes =  $item['country'] ;// ["AU","KE","MX",...]
             // dd($countryCodes);
             $countries = Country::whereIn('code', $countryCodes)->pluck('name')->toArray();
 
@@ -413,6 +423,9 @@ class MiscController extends Controller
                 $detailsMessage .= "Valid From: {$startDate} to {$endDate}";
             }
 
+
+          
+
             // Build second message
             $detailsMessage .= "<br><span class = 'mt-2'>Additional Condition:
             
@@ -420,6 +433,8 @@ class MiscController extends Controller
 
             </span><br>";
 
+            
+            
             // dd($detailsMessage);
 
             $news = new News();
@@ -442,11 +457,22 @@ class MiscController extends Controller
                 Notification::send($user, new ApplicationNotification('A new condition of item ' . $item->item_name . ' has been updated ', $title, $url));
             }
 
-            foreach ($internalUsers as $user) {
-                Notification::send($user, new ApplicationNotification('A new condition of item ' . $item->item_name . ' has been updated ', $title, '/internal/permit_edit_condition/' . $item->id));
+            foreach($internalUsers as $user) {
+                Notification::send($user, new ApplicationNotification(
+                    'A new condition of item ' . $item->item_name . ' has been updated ',
+                    $title,
+                    '/internal/permit_edit_condition/' . $item->id
+                ));
             }
 
-            Mail::to('hamsyitahnur@gmail.com')->send(new QISNewsMail($title, $detailsMessage));
+            
+
+            Mail::to('hamsyitahnur@gmail.com')->send(
+                new QISNewsMail($title, $detailsMessage) 
+            );
+
+            
+
 
             DB::commit();
         } catch (\Throwable $e) {
@@ -459,5 +485,87 @@ class MiscController extends Controller
                 500,
             );
         }
+
+       
+    }
+
+    public function getBranches()
+    {
+        $branches = Branch::orderBy('name')->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $branches,
+        ]);
+    }
+
+    public function addBranch(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255|unique:branches,name',
+        ]);
+
+        $branch = Branch::create([
+            'name' => $request->input('name'),
+        ]);
+
+        activity()
+            ->useLog('user_activity')
+            ->event('add branch')
+            ->causedBy(authUser()['user'])
+            ->log(
+                authUser()['user']['fullname'] . ' added branch: ' . $branch->name
+            );
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Branch added successfully.',
+        ]);
+    }
+
+    public function updateBranch(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:branches,id',
+            'name' => 'required|string|max:255|unique:branches,name,' . $request->input('id'),
+        ]);
+
+        $branch = Branch::findOrFail($request->input('id'));
+        $branch->name = $request->input('name');
+        $branch->save();
+
+        activity()
+            ->useLog('user_activity')
+            ->event('update branch')
+            ->causedBy(authUser()['user'])
+            ->log(
+                authUser()['user']['fullname'] . ' updated branch: ' . $branch->name
+            );
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Branch updated successfully.',
+        ]);
+    }
+
+    public function deleteBranch($id)
+    {
+        $branch = Branch::findOrFail($id);
+        $branchName = $branch->name;
+        $branch->delete();
+
+        activity()
+            ->useLog('user_activity')
+            ->event('delete branch')
+            ->causedBy(authUser()['user'])
+            ->log(
+                authUser()['user']['fullname'] . ' deleted branch: ' . $branchName
+            );
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Branch deleted successfully.',
+        ]);
     }
 }
+
