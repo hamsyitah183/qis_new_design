@@ -747,7 +747,6 @@ function saveConsignmentAttachment() {
 
                 limitInKg = limit * selectedUnit.conversion.conversion;
 
-
             } else {
                 console.log("Measurement unit not found.");
             }
