@@ -259,7 +259,7 @@ function initAddExporterModal() {
             },
             success: () => {
                 fetchExporterList();
-            
+
                 Swal.fire({
                     icon: "success",
                     title: "Exporter Saved!",
@@ -270,20 +270,20 @@ function initAddExporterModal() {
                 });
 
                 modal.hide();
-            
+
                 // 🔥 CLEAR FORM FIELDS
                 $("#addexpName").val('');
                 $("#addexpfonno").val('');
                 $("#addexpaddress1").val('');
                 $("#addexpaddress2").val('');
                 $("#addexpcountry").val('').trigger('change'); // important if Select2
-            
+
                 // OR reset everything at once
                 $("#addExporterForm")[0].reset();
-            
-               
+
+
             },
-            
+
             error: (xhr) => {
                 console.error(xhr.responseText);
 
@@ -1113,49 +1113,49 @@ $(document).ready(async function () {
             saveapplication(false);
         });
 
-        // $(document).on(
-        //     "click",
-        //     `#logoutButton, 
-        //     .app-sidebar.sticky button, .app-sidebar.sticky a,
+        $(document).on(
+            "click",
+            `#logoutButton, 
+            .app-sidebar.sticky button, .app-sidebar.sticky a,
            
-        //     .breadcrumb .breadcrumb-item a
-        //     `,
-        //     function (e) {
-        //         if (!change) return;
+            .breadcrumb .breadcrumb-item a
+            `,
+            function (e) {
+                if (!change) return;
 
-        //         e.preventDefault();
-        //         const target = this;
+                e.preventDefault();
+                const target = this;
 
-        //         Swal.fire({
-        //             title: "Unsaved Changes",
-        //             text: "You have unsaved changes. What would you like to do?",
-        //             icon: "warning",
-        //             showCancelButton: true,
-        //             showDenyButton: true,
-        //             confirmButtonText: "Yes, leave",
-        //             denyButtonText: "Save as Draft",
-        //             cancelButtonText: "Stay",
-        //         }).then((result) => {
-        //             if (result.isConfirmed) {
-        //                 // Leave page
-        //                 change = false;
+                Swal.fire({
+                    title: "Unsaved Changes",
+                    text: "You have unsaved changes. What would you like to do?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    showDenyButton: true,
+                    confirmButtonText: "Yes, leave",
+                    denyButtonText: "Save as Draft",
+                    cancelButtonText: "Stay",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Leave page
+                        change = false;
 
-        //                 if (target.tagName === "A") {
-        //                     window.location.href = target.href;
-        //                 } else {
-        //                     target.click();
-        //                 }
-        //             }
+                        if (target.tagName === "A") {
+                            window.location.href = target.href;
+                        } else {
+                            target.click();
+                        }
+                    }
 
-        //             if (result.isDenied) {
-        //                 saveapplication(true);
-        //                 // window.location.href = "/public/inspection_certificates_list";
-        //             }
+                    if (result.isDenied) {
+                        saveapplication(true);
+                        // window.location.href = "/public/inspection_certificates_list";
+                    }
 
-        //             // result.isDismissed → user clicked "Stay"
-        //         });
-        //     }
-        // );
+                    // result.isDismissed → user clicked "Stay"
+                });
+            }
+        );
     } catch (error) {
         console.error("Error during initialization:", error);
         Swal.fire(
