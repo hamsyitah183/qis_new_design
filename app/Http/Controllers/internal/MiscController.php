@@ -70,6 +70,7 @@ class MiscController extends Controller
             'data' => $pbdata,
         ]);
     }
+    
 
     public function updatepbdata(Request $request)
     {
@@ -459,5 +460,24 @@ class MiscController extends Controller
                 500,
             );
         }
+    }
+
+    public function measurementUnit()
+    {
+        $measurement_unit = PublicCode::with(['conversion'])->where('cate_name', 'unit_measurement')->get();
+
+        return response()->json([
+            'unit' => $measurement_unit
+        ]);
+    }
+
+
+    public function getspecificitem($id)
+    {
+        $item = IpCondition::where('id', $id)->first();
+
+        return response()->json([
+            'data' => $item,
+        ]);
     }
 }

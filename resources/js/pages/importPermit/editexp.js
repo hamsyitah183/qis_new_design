@@ -38,6 +38,30 @@ existingIds = application.consignment_permits
     ? application.consignment_permits.map((p) => p.id)
     : [];
 
+
+let measurementUnits = null;
+
+function measurementUnit()
+{
+     return $.ajax({
+        url: '/measurement',
+        type: "GET",
+        dataType: "json",
+        cache: false,
+        success: (data) => {
+           measurementUnits = data;
+
+           console.log('measurement', measurementUnits)
+        },
+
+        error: (xhr) => {
+            console.error("Failed to load exporters:", xhr.responseText);
+           
+        },
+    });
+}
+
+
 function importerDetail() {
     // importer = JSON.parse(application.importer_detail);
     importer = application.importer_detail;
@@ -1001,6 +1025,8 @@ $(document).ready(async function () {
 
         importerDetail();
         loadExistingConsignments();
+
+        measurementUnit();
 
         $("#itemMeasure").select2({
             width: "100%",

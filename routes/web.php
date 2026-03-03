@@ -146,6 +146,8 @@ Route::prefix('public')
         Route::get('/api/filters/my-importers', [FilterController::class, 'getMyImporters'])->name('api.filters.myImporters');
         Route::get('/api/filters/my-consignment-exporters', [FilterController::class, 'getMyConsignmentExporters'])->name('api.filters.myConsignmentExporters');
         Route::get('/api/filters/my-consignment-importers', [FilterController::class, 'getMyConsignmentImporters'])->name('api.filters.myConsignmentImporters');
+
+       Route::get('/get_item_details/{id}', [MiscController::class, 'getspecificitem']);
     });
 
 Route::prefix('internal')
@@ -423,6 +425,8 @@ Route::middleware(['auth.any'])->group(function () {
 
     // dashboard
     Route::get('/application/count', [DashboardController::class, 'applicationCount']);
+
+    Route::get('/measurement', [MiscController::class, 'measurementUnit']);
 });
 
 // broadcast --dont kacau---
