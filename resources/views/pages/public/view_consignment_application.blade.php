@@ -41,7 +41,7 @@
                     <div class="ms-auto">
                         @if ($application->status == 'Draft' && $application->user_id == authUser()['user']->uuid)
                             <a class="btn btn-primary2 btn-wave btn-sm me-2" id="editButton"
-                                href="/edit_application/{{ $application->application_id }}">
+                                href="/edit_consignment/{{ $application->application_id }}">
                                 Edit
                             </a>
                         @endif
@@ -115,11 +115,13 @@
                             @endphp
                             {{-- @dd($isOwner || $isAdminOrClerk) --}}
                             {{-- @if (
-                                    ($application->status === 'Clerk Review In-Progress' && $isAdminOrClerk) ||
-                                    ($application->category_application == 1 && ($isOwner || $isAdminOrClerk))
-                                ) --}}
-                                @if ( (  str_contains(strtolower($application->status), 'clerk review in-progress') && $isAdminOrClerk) || 
-                                (  str_contains(strtolower($application->status), 'wait for company approval') && ( $isOwner || $isAdminOrClerk) )  )
+                            ($application->status === 'Clerk Review In-Progress' && $isAdminOrClerk) ||
+                            ($application->category_application == 1 && ($isOwner || $isAdminOrClerk))
+                            ) --}}
+                            @if (
+                                    (str_contains(strtolower($application->status), 'clerk review in-progress') && $isAdminOrClerk) ||
+                                    (str_contains(strtolower($application->status), 'wait for company approval') && ($isOwner || $isAdminOrClerk))
+                                )
                                 {{-- Step 4 --}}
                                 @include('pages.public.view_consignment.step4')
                             @endif
@@ -128,7 +130,7 @@
                             @if (authUser()['type'] == 'public' && $application->user_id == authUser()['user']->uuid && $value)
                                 @include('pages.public.view_consignment.step5')
                             @endif
-                    
+
 
 
                         </aside>

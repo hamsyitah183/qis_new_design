@@ -243,21 +243,8 @@ class ConsignmentController extends Controller
             ->addColumn('action', function ($row) use ($type, $accessLevel) {
                 $status = ucfirst($row->status);
                 $isPublic = $type === 'public';
-                $showEdit = $isPublic && ($status === 'Draft' || $status === 'Pending');
-
-                $buttons = '';
-
-                if ($showEdit) {
-                    if ($row->category_application == 1) {
-                        $url = route('public.consignmentOther.app', ['id' => $row->application_id]);
-                    } else {
-                        $url = route('public.consignment.app', ['id' => $row->application_id]);
-                    }
-                    $buttons .= '<a class="btn btn-sm btn-primary me-1" href="' . $url . '" title="Edit"> <i class="ti ti-edit"></i> </a>';
-                } else {
-                    $viewUrl = '/view_consignment/' . $row->application_id;
-                    $buttons .= '<a class="btn btn-sm btn-primary me-1 viewApplication" href="' . $viewUrl . '" title="View"> <i class="ti ti-eye"></i> </a>';
-                }
+                $viewUrl = '/view_consignment/' . $row->application_id;
+                $buttons = '<a class="btn btn-sm btn-primary me-1 viewApplication" href="' . $viewUrl . '" title="View"> <i class="ti ti-eye"></i> </a>';
 
                 // Only show delete button for internal users with FULL access (pseudocode §5)
                 if ($type === 'internal' && $accessLevel === 'FULL') {

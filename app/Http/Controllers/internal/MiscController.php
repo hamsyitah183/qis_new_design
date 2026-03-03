@@ -103,12 +103,12 @@ class MiscController extends Controller
         }
 
         activity()
-        ->useLog('user_activity')
-        ->event('update data')
-        ->causedBy(authUser()['user'])
-        ->log(
-             authUser()['user']['fullname'] . ' is updated ' . $pbdata->description . ' of ' . $pbdata->cate_name
-        );
+            ->useLog('user_activity')
+            ->event('update data')
+            ->causedBy(authUser()['user'])
+            ->log(
+                authUser()['user']['fullname'] . ' updated ' . $pbdata->description . ' of ' . $pbdata->cate_name
+            );
 
         return response()->json([
             'status' => 'success',
@@ -123,12 +123,12 @@ class MiscController extends Controller
         $pbdata->save();
 
         activity()
-        ->useLog('user_activity')
-        ->event('delete data')
-        ->causedBy(authUser()['user'])
-        ->log(
-             authUser()['user']['fullname'] . ' is deleted ' . $pbdata->description . ' from ' . $pbdata->cate_name
-        );
+            ->useLog('user_activity')
+            ->event('delete data')
+            ->causedBy(authUser()['user'])
+            ->log(
+                authUser()['user']['fullname'] . ' is deleted ' . $pbdata->description . ' from ' . $pbdata->cate_name
+            );
 
         return response()->json([
             'status' => 'success',
@@ -156,12 +156,12 @@ class MiscController extends Controller
         $pbdata->save();
 
         activity()
-        ->useLog('user_activity')
-        ->event('add data')
-        ->causedBy(authUser()['user'])
-        ->log(
-            authUser()['user']['fullname'] . ' is added ' . $pbdata->description . ' to ' . $pbdata->cate_name
-        );
+            ->useLog('user_activity')
+            ->event('add data')
+            ->causedBy(authUser()['user'])
+            ->log(
+                authUser()['user']['fullname'] . ' is added ' . $pbdata->description . ' to ' . $pbdata->cate_name
+            );
 
         return response()->json([
             'status' => 'success',
@@ -396,13 +396,13 @@ class MiscController extends Controller
 
         try {
 
-            
+
 
             // Suppose $item is your consignment condition object
             $itemName = $item->item_name; // "AVOCADO"
 
             // Get the country names from the stored codes in JSON
-            $countryCodes =  $item['country'] ;// ["AU","KE","MX",...]
+            $countryCodes = $item['country'];// ["AU","KE","MX",...]
             // dd($countryCodes);
             $countries = Country::whereIn('code', $countryCodes)->pluck('name')->toArray();
 
@@ -424,7 +424,7 @@ class MiscController extends Controller
             }
 
 
-          
+
 
             // Build second message
             $detailsMessage .= "<br><span class = 'mt-2'>Additional Condition:
@@ -433,8 +433,8 @@ class MiscController extends Controller
 
             </span><br>";
 
-            
-            
+
+
             // dd($detailsMessage);
 
             $news = new News();
@@ -457,7 +457,7 @@ class MiscController extends Controller
                 Notification::send($user, new ApplicationNotification('A new condition of item ' . $item->item_name . ' has been updated ', $title, $url));
             }
 
-            foreach($internalUsers as $user) {
+            foreach ($internalUsers as $user) {
                 Notification::send($user, new ApplicationNotification(
                     'A new condition of item ' . $item->item_name . ' has been updated ',
                     $title,
@@ -465,13 +465,13 @@ class MiscController extends Controller
                 ));
             }
 
-            
+
 
             Mail::to('hamsyitahnur@gmail.com')->send(
-                new QISNewsMail($title, $detailsMessage) 
+                new QISNewsMail($title, $detailsMessage)
             );
 
-            
+
 
 
             DB::commit();
@@ -486,7 +486,7 @@ class MiscController extends Controller
             );
         }
 
-       
+
     }
 
     public function getBranches()
