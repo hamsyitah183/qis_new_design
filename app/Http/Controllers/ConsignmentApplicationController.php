@@ -127,8 +127,10 @@ class ConsignmentApplicationController extends Controller
                     'importer_verify' => $importer_verify,
                 ]);
 
-                $application->status = $permit['applCate'] == 0 ? 'Clerk Review In-Progress' : 'wait for company approval';
-                $application->save();
+                if (!$isDraft) {
+                    $application->status = $permit['applCate'] == 0 ? 'Clerk Review In-Progress' : 'wait for company approval';
+                    $application->save();
+                }
 
                 try {
                     event(new InternalUserAdminEvent($isDraft ? 'Consignment certificate application saved as DRAFT by ' . ($exporterUser['fullname'] ?? 'Unknown Exporter') : 'Consignment certificate application submitted by ' . ($exporterUser['fullname'] ?? 'Unknown Exporter')));
@@ -171,9 +173,10 @@ class ConsignmentApplicationController extends Controller
                     'importer_verify' => $importer_verify,
                 ]);
 
-
-                $application->status = $permit['applCate'] == 0 ? 'Clerk Review In-Progress' : 'wait for company approval';
-                $application->save();
+                if (!$isDraft) {
+                    $application->status = $permit['applCate'] == 0 ? 'Clerk Review In-Progress' : 'wait for company approval';
+                    $application->save();
+                }
 
                 try {
                     event(new InternalUserAdminEvent($isDraft ? 'Consignment certificate application saved as DRAFT by ' . ($exporterUser['fullname'] ?? 'Unknown Exporter') : 'Consignment certificate application submitted by ' . ($exporterUser['fullname'] ?? 'Unknown Exporter')));

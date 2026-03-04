@@ -148,7 +148,7 @@ Route::prefix('public')
         Route::get('/api/filters/my-consignment-exporters', [FilterController::class, 'getMyConsignmentExporters'])->name('api.filters.myConsignmentExporters');
         Route::get('/api/filters/my-consignment-importers', [FilterController::class, 'getMyConsignmentImporters'])->name('api.filters.myConsignmentImporters');
 
-       Route::get('/get_item_details/{id}', [MiscController::class, 'getspecificitem']);
+        Route::get('/get_item_details/{id}', [MiscController::class, 'getspecificitem']);
     });
 
 Route::prefix('internal')
@@ -218,8 +218,8 @@ Route::prefix('internal')
         // ======================= consignment certificates ========================
         Route::middleware(['not.boundary'])->group(function () {
             Route::get('/consignment_certificates_list', [ConsignmentController::class, 'showInternalConsignmentList'])->name('consignment.list');
-            Route::delete('/consignment/delete/{id}', [ConsignmentController::class, 'deleteApplication'])->name('internal.consignment.delete');
         });
+        Route::delete('/consignment/delete/{id}', [ConsignmentController::class, 'deleteApplication'])->name('internal.consignment.delete');
 
         Route::post('/consignment/{id}/status', [ConsignmentController::class, 'updateStatus'])->name('consignment.status');
         Route::delete('/inspection/delete/{id}', [InspectionController::class, 'deleteApplication'])->name('inspection.delete');
