@@ -16,6 +16,8 @@
     @vite(['resources/js/pages/internal/user_management/role_list.js'])
 @endpush
 
+@section('pageName', ' List Role')
+
 @section('breadcrumb')
     <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/'], ['label' => 'List Role', 'url' => '#']]" title="List Role" />
 @endsection
@@ -82,6 +84,7 @@
         <form id="permissionModalForm">
             @csrf
             <input type="hidden" name="role" id="roleVal">
+          
             <div id="permissionListContainer"></div>
 
             <div class="modal-footer">

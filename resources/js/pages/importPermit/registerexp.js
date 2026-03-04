@@ -1191,7 +1191,7 @@ $(document).ready(async function () {
                         } else {
                             target.click();
                         }
-                    }
+                    } 
 
                     if (result.isDenied) {
                         saveapplication(true); // ✅ draft
