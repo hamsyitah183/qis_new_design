@@ -1,4 +1,4 @@
-<div class="wizard-step" data-title="SUMMARY" data-id="dOM0iRAyJXsLTr9b3KZfQ2jNv4pgn6Gu" data-limit="3" data-step="3">
+<div class="wizard-step" data-title="SUMMARY" data-id="dOM0iRAyJXsLTr9b3KZfQ2jNv4pgn6Gu" data-step="3">
     <div class="row">
         <div class="col-xl-6">
             <div class="border border-bottom-0 rounded-1 mb-3 ">
