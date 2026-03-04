@@ -922,13 +922,21 @@ async function loadApplicationData(id) {
             if (transportType) {
                 Swal.fire({ title: "Loading...", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
                 loadEntryPoints(transportType, route, () => {
-                    const savedEntryPoint = app.entry_point ? String(app.entry_point) : "";
-                    if (savedEntryPoint) {
-                        $("#entryPoint").val(savedEntryPoint).trigger("change");
-                        // update entryName for the summary panel
-                        entryName = $("#entryPoint").find("option:selected").data("entry_name") || "";
-                    }
-                    summarySubmit();
+                    setTimeout(() => {
+                        let entryPointVal = app.entry_point;
+                        if (typeof app.entry_point === 'object' && app.entry_point !== null) {
+                            entryPointVal = app.entry_point.id;
+                        }
+
+                        const savedEntryPoint = entryPointVal ? String(entryPointVal) : "";
+                        console.log("Setting entry point to:", savedEntryPoint, "Options available:", $("#entryPoint").html());
+                        if (savedEntryPoint) {
+                            $("#entryPoint").val(savedEntryPoint).trigger("change");
+                            // update entryName for the summary panel
+                            entryName = $("#entryPoint").find("option:selected").data("entry_name") || "";
+                        }
+                        summarySubmit();
+                    }, 50);
                 });
             }
 
