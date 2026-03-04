@@ -31,6 +31,48 @@ let tempItems = [];
 let tempAttachments = [];
 let itemPurpose = null;
 let temporaryItemsAttachment = [];
+let deleteIds = [];
+
+const isEditMode = typeof application !== 'undefined' && application !== null;
+if (isEditMode) console.log("Edit mode - loading application:", application);
+
+// Load Left side ("Me" / Exporter in UI, mapped to JS 'importer')
+function importerDetail() {
+    if (!isEditMode || !application.exporter) return;
+    importer = application.exporter; // The authenticated user
+    console.log('importer (Me) from draft', importer);
+    $("#impname").val(importer.fullname);
+    $("#impfonno").val(importer.phone_number);
+    $("#impaddress1").val(importer.address_1);
+    $("#impaddress2").val(importer.address_2 ?? "");
+}
+
+// Load existing consignment permits (edit mode)
+function loadExistingConsignments() {
+    if (!isEditMode || !application.consignment_permits) return;
+
+    tempItems = [];
+
+    application.consignment_permits.forEach((permit) => {
+        let detail = permit.consignment_detail;
+
+        tempItems.push({
+            id: detail.id || generateUUID(),
+            permit_id: permit.id,
+            item_id: detail.item_id,
+            item_name: detail.item_name,
+            value: detail.value,
+            quantity: detail.quantity,
+            measure: detail.measure,
+            purpose: detail.purpose,
+            uses: detail.uses,
+            existingAttachments: permit.attachments || [],
+            files: [], // Use new uploaded files only
+        });
+    });
+
+    renderAllItems();
+}
 
 // --------if self apply -----------
 async function selfImport() {
@@ -73,6 +115,12 @@ function fetchExporterList() {
                 // templateResult: formatExporterOption,
                 // escapeMarkup: (m) => m,
             });
+
+            // Auto-select exporter in edit mode
+            if (isEditMode && application.importer && application.importer.id) {
+                exporter = application.importer_detail;
+                $select.val(application.importer.id).trigger("change");
+            }
         },
         error: (xhr) => {
             console.error("Failed to load exporters:", xhr.responseText);
@@ -445,6 +493,35 @@ function permitDetails() {
                 this.classList.remove("is-invalid");
             }
         });
+    }
+
+    // Auto-set transport type and entry point in edit mode
+    if (isEditMode && application.transport_type) {
+        setTimeout(() => {
+            $(trnptType).val(application.transport_type).trigger("change");
+
+            // We need to wait for AJAX to finish before setting entry_point
+            let checkExist = setInterval(function() {
+                if ($('#entryPoint option').length > 1) {
+                    $('#entryPoint').val(application.entry_point).trigger("change");
+                    clearInterval(checkExist);
+                }
+            }, 100); 
+        }, 300);
+    }
+
+    if (isEditMode) {
+        if (application.eta) {
+            const etaDate = application.eta.split("T")[0];
+            const etaInput = document.getElementById("eta");
+            if(etaInput) {
+                etaInput.value = etaDate;
+            }
+        }
+        if (application.category_application) {
+            const catInput = document.getElementById("app_cate");
+            if(catInput) catInput.value = application.category_application;
+        }
     }
 }
 
@@ -827,6 +904,14 @@ function deleteItem() {
             return;
         }
 
+        // Track deleted permit IDs for edit mode
+        if (isEditMode && tempItems[index].permit_id) {
+            let itemId = tempItems[index].permit_id;
+            if (!deleteIds.includes(itemId)) {
+                deleteIds.push(itemId);
+            }
+        }
+
         // Remove from array
         tempItems.splice(index, 1);
 
@@ -862,6 +947,12 @@ function saveapplication(isDraft = false) {
     formData.append("exporterData", JSON.stringify(importer));
     formData.append("importerData", JSON.stringify(exporter));
     formData.append("permitDetails", JSON.stringify(currentPermitDetails));
+
+    // Include applicationId in edit mode so backend updates instead of creating
+    if (isEditMode) {
+        formData.append("applicationId", application.application_id);
+        formData.append("deleted_item_ids", deleteIds);
+    }
 
     tempItems.forEach((item, index) => {
         const { files, ...otherData } = item;
@@ -904,7 +995,7 @@ function saveapplication(isDraft = false) {
                     window.location.href = "/public/view_all_consignment";
                 }, 1500);
             } else {
-                     window.location.reload();
+                window.location.href = "/public/view_all_consignment";
             }
         },
         error: function (xhr) {
@@ -927,8 +1018,14 @@ function saveapplication(isDraft = false) {
         });
     
         try {
-            // Initialize self import
-            await selfImport();
+            // Load importer from draft if in edit mode
+            if (isEditMode) {
+                importerDetail();
+                loadExistingConsignments();
+            } else {
+                // Initialize self import (new application)
+                await selfImport();
+            }
     
             // Fetch exporter list and set change handler
             await fetchExporterList();

@@ -99,6 +99,7 @@ Route::prefix('public')
         Route::post('/save_application_inspection', [InspectionController::class, 'saveApplication'])->name('saveApplicationInspection');
 
         Route::post('/save_application_consignment', [ConsignmentApplicationController::class, 'saveApplication'])->name('saveApplicationConsignment');
+        Route::post('/save_draft_consignment', [ConsignmentApplicationController::class, 'saveDraft'])->name('saveDraftConsignment');
         // view application
         Route::get('/view_import_permit', [ApplicationController::class, 'showallapplicationlist'])->name('showallapplicationlist');
 
@@ -270,6 +271,12 @@ Route::prefix('internal')
             // Route::get('/control_panel', [MiscController::class, 'showcontrolpanel'])->name('controlpanel');
             Route::post('/district/entry-point/update', [MiscController::class, 'updateEntry']);
 
+            // BRANCH CRUD
+            Route::get('/branches', [MiscController::class, 'getBranches']);
+            Route::post('/branch/add', [MiscController::class, 'addBranch']);
+            Route::post('/branch/update', [MiscController::class, 'updateBranch']);
+            Route::delete('/branch/delete/{id}', [MiscController::class, 'deleteBranch']);
+
             // BOUNDARY OFFICER MANAGEMENT - Restricted
             Route::get("/boundary/list", [BoundaryOfficerController::class, 'view'])->name('boundary.list');
             Route::get("/boundary/list/data", [BoundaryOfficerController::class, 'data']);
@@ -281,7 +288,7 @@ Route::prefix('internal')
             Route::get('/admin/dashboard/daily-volume', [AdminDashboardController::class, 'dailyVolume']);
             Route::get('/admin/dashboard/user-registration', [AdminDashboardController::class, 'userRegistration']);
 
-            Route::post('/news', [MiscController::class, 'shareNews'] );
+            Route::post('/news', [MiscController::class, 'shareNews']);
         });
 
         // ======================= notifications ===========================
@@ -329,7 +336,8 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/view_application/{uuid}', [ApplicationController::class, 'viewapplication'])->name('viewApplication');
     Route::get('/edit_application/{uuid}', [ApplicationController::class, 'editApplication'])->name('editApplication');
 
-    Route::get('/view_consignment/{uuid}', [ConsignmentApplicationController::class, 'viewapplication'])->name('consignment.view'); // Removed name to avoid confusion, it's now in the group
+    Route::get('/view_consignment/{uuid}', [ConsignmentApplicationController::class, 'viewapplication'])->name('consignment.view');
+    Route::get('/edit_consignment/{uuid}', [ConsignmentApplicationController::class, 'editApplication'])->name('consignment.edit');
     Route::get('/consignment_application/{id}/data', [ConsignmentController::class, 'getApplicationDetails']);
     Route::get('/consignment/attachment/{id}', [ConsignmentApplicationController::class, 'viewAttachment'])->name('consignment.attachment.view');
     Route::get('/consignment/list/data', [ConsignmentController::class, 'getallconsignmentlist'])->name('consignment.data');

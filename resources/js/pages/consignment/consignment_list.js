@@ -136,7 +136,12 @@ function handleDelete() {
     $(document).on("click", ".delete-consignment", function (e) {
         e.preventDefault();
         const id = $(this).data("id");
-        const deleteUrl = `/public/consignment_application/delete/${id}`;
+        
+        // Determine correct route based on current URL
+        let deleteUrl = `/public/consignment_application/delete/${id}`;
+        if (window.location.pathname.includes('/internal/')) {
+            deleteUrl = `/internal/consignment/delete/${id}`;
+        }
 
         Swal.fire({
             title: "Are you sure?",
