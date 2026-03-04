@@ -24,7 +24,7 @@ let importer = null;
 let impAddrs = null;
 let itemDropzone = null;
 
-let change = null;
+let change = false;
 
 let tempItems = [];
 let tempAttachments = [];
@@ -922,9 +922,9 @@ async function loadApplicationData(id) {
             if (transportType) {
                 Swal.fire({ title: "Loading...", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
                 loadEntryPoints(transportType, route, () => {
-                    const savedEntryPoint = app.entry_point;
+                    const savedEntryPoint = app.entry_point ? String(app.entry_point) : "";
                     if (savedEntryPoint) {
-                        $("#entryPoint").val(savedEntryPoint);
+                        $("#entryPoint").val(savedEntryPoint).trigger("change");
                         // update entryName for the summary panel
                         entryName = $("#entryPoint").find("option:selected").data("entry_name") || "";
                     }
@@ -964,7 +964,7 @@ async function loadApplicationData(id) {
     }
 }
 
-function saveapplication(isDraft = false) {
+function saveapplication(isDraft = false, shouldRedirect = false) {
     const form = document.querySelector("#wizardForm") || document.querySelector("#wizardFormOthers");
     if (!form) return console.error("Form not found");
 
@@ -1026,7 +1026,7 @@ function saveapplication(isDraft = false) {
                 showConfirmButton: false,
             });
 
-            if (!isDraft) {
+            if (!isDraft || shouldRedirect) {
                 setTimeout(() => {
                     window.location.href = "/public/inspection_certificates_list";
                 }, 1500);
@@ -1123,6 +1123,16 @@ $(document).ready(async function () {
             await loadApplicationData(appId);
         }
 
+        const form = document.querySelector("#wizardForm");
+        if (form) {
+            form.addEventListener("input", () => {
+                change = true;
+            });
+            form.addEventListener("change", () => {
+                change = true;
+            });
+        }
+
         // Submit button handler
         $(document).on("click", "#submitApps", function (e) {
             e.preventDefault();
@@ -1165,8 +1175,8 @@ $(document).ready(async function () {
                     }
 
                     if (result.isDenied) {
-                        saveapplication(true);
-                        // window.location.href = "/public/inspection_certificates_list";
+                        // Save as draft and redirect
+                        saveapplication(true, true); // true = shouldRedirect
                     }
 
                     // result.isDismissed → user clicked "Stay"

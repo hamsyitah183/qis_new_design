@@ -284,17 +284,6 @@ class InspectionController extends Controller
                         <i class="ti ti-eye"></i>
                      </a>';
 
-                $edit = '';
-                $isDraft = strtolower($row->status ?? '') === 'draft';
-                $isOwner = authUser()['type'] === 'public' && authUser()['user']->uuid === $row->user_id;
-
-                if ($isDraft && $isOwner) {
-                    $editUrl = $row->category_application == 1
-                        ? '/public/inspection_certificates_application_others/' . $row->application_id
-                        : '/public/inspection_certificates_application_self/' . $row->application_id;
-                    $edit = ' <a class="btn btn-sm btn-warning" href="' . $editUrl . '"><i class="ti ti-edit"></i></a>';
-                }
-
                 $delete = '';
 
                 if (authUser()['type'] === 'internal') {
@@ -307,7 +296,7 @@ class InspectionController extends Controller
                            </button>';
                 }
 
-                return $view . $edit . $delete;
+                return $view . $delete;
             });
 
         if ($type === 'internal') {
