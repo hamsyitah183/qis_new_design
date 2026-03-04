@@ -160,6 +160,10 @@ class ApplicationController extends Controller
 
     public function showallapplicationlist()
     {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
+
         return view('pages.public.application_list');
     }
 
@@ -475,6 +479,10 @@ class ApplicationController extends Controller
 
     public function deleteApplication($id)
     {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
+
         return DB::transaction(function () use ($id) {
             $application = IpApplication::where('application_id', $id)->firstOrFail();
 

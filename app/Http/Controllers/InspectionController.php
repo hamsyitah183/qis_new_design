@@ -171,6 +171,10 @@ class InspectionController extends Controller
 
     public function showAllInspectionList()
     {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
+
         return view('pages.public.inspection_list');
     }
 
