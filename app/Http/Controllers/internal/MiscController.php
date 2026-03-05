@@ -37,6 +37,11 @@ class MiscController extends Controller
         return view('pages.internal.misc.state_district_management');
     }
 
+    public function showBranchManagement()
+    {
+        return view('pages.internal.misc.branch_management');
+    }
+
     public function getpbdata($cate)
     {
         if ($cate === 'district_entry') {
@@ -71,7 +76,7 @@ class MiscController extends Controller
             'data' => $pbdata,
         ]);
     }
-    
+
 
     public function updatepbdata(Request $request)
     {
