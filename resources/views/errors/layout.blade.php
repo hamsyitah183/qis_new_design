@@ -57,6 +57,11 @@
     <!-- Loader -->
 
     <div class="page error_page">
+        <!-- QIS Logo -->
+        <div style="position: absolute; top: 40px; left: 50%; transform: translateX(-50%); z-index: 10;">
+            <img src="{{ asset('asset/doa-logo-black.png') }}" alt="QIS Logo" style="height: 80px; object-fit: contain;">
+        </div>
+        
         @yield('content')
     </div>
 
