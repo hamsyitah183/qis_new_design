@@ -113,9 +113,9 @@ class ConsignmentApplicationController extends Controller
 
                 $application->update([
                     'eta' => !empty($permit['eta']) ? $permit['eta'] : null,
-                    'transport_type' => $permit['tranType'] ?? null,
-                    'entry_point' => $permit['entrypoint'] ?? null,
-                    'category_application' => $permit['applCate'] ?? null,
+                    'transport_type' => !empty($permit['tranType']) ? $permit['tranType'] : null,
+                    'entry_point' => !empty($permit['entrypoint']) ? $permit['entrypoint'] : null,
+                    'category_application' => isset($permit['applCate']) && $permit['applCate'] !== '' ? $permit['applCate'] : null,
                     'user_id' => authUser()['user']->uuid,
                     // exporter = User (uuid)
                     'exporter_id' => $exporterUser['uuid'] ?? null,

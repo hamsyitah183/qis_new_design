@@ -8,14 +8,15 @@
                         <label for="eta" class="form-label">Estimated Time
                             Arrival</label>
                         <input type="text" class="form-control " id="eta" name="eta"
-                            value="{{ \Carbon\Carbon::parse($application->eta)->format('d/m/Y') }}" disabled>
+                            value="{{ $application->eta ? \Carbon\Carbon::parse($application->eta)->format('d/m/Y') : '' }}"
+                            disabled>
                     </div>
                 </div>
                 <div class="row gy-3">
                     <div class="col-xl-6">
                         <label for="trnptType" class="form-label">Transport Type</label>
-                        <select class="form-select" id="trnptType" name="trnptType"
-                            data-route="/public/get_entry_point" disabled>
+                        <select class="form-select" id="trnptType" name="trnptType" data-route="/public/get_entry_point"
+                            disabled>
                             <option value="">{{ $application->transport_type }}</option>
                             <option value="Air">Air</option>
                             <option value="Sea">Sea</option>
@@ -25,7 +26,8 @@
                     </div>
                     <div class="col-xl-6">
                         <label for="entryPoint" class="form-label">Entry Point</label>
-                        <input type="text" id="entryPoint" disabled class="form-control" value = "{{ $application->entryPoint->entry_name }}">
+                        <input type="text" id="entryPoint" disabled class="form-control"
+                            value="{{ $application->entryPoint?->entry_name }}">
                         <input type="hidden" id="descEntryPoint">
                     </div>
                 </div>

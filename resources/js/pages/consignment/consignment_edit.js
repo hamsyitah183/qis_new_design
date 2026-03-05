@@ -938,10 +938,10 @@ function saveapplication(isDraft = false) {
 
     // Collect Step 1 details manually since permitDetails is a function name clash
     const currentPermitDetails = {
-        eta: $("#eta").val(),
-        tranType: $("#trnptType").val(),
-        entrypoint: $("#entryPoint").val(),
-        applCate: $("#app_cate").val()
+        eta: $("#eta").val() || null,
+        tranType: $("#trnptType").val() || null,
+        entrypoint: $("#entryPoint").val() || null,
+        applCate: $("#app_cate").val() || null
     };
 
     formData.append("exporterData", JSON.stringify(importer));
@@ -1027,9 +1027,25 @@ function saveapplication(isDraft = false) {
                 await selfImport();
             }
     
-            // Fetch exporter list and set change handler
-            await fetchExporterList();
             handleExporterChange();
+
+            await fetchExporterList();
+
+            if (isEditMode && application.importer_detail) {
+                const imp = application.importer_detail;
+                $("#expid").val(imp.id || "");
+                $("#expname").val(imp.name || "");
+                $("#expfonno").val(imp.phone_no || "");
+                $("#expaddress1").val(imp.address || "");
+                const matched = exporterListArray.find(e => e.id == imp.id);
+                if (matched && matched.country_info) {
+                    $("#expcountryCode").val(matched.country_info.code || "");
+                    $("#expcountry").val(matched.country_info.name || "");
+                } else {
+                    $("#expcountryCode").val(imp.country || "");
+                    $("#expcountry").val(imp.country || "");
+                }
+            }
     
             // Track unsaved changes
             $("#wizardForm").on("change input", "input, select, textarea", function() {
