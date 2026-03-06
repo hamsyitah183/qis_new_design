@@ -38,6 +38,36 @@ existingIds = application.consignment_permits
     ? application.consignment_permits.map((p) => p.id)
     : [];
 
+
+let measurementUnits = null;
+let news = null;
+let limit = null;
+let limitMeasurement = null;
+
+
+function measurementUnit()
+{
+     return $.ajax({
+        url: '/measurement',
+        type: "GET",
+        dataType: "json",
+        cache: false,
+        success: (data) => {
+           measurementUnits = data;
+
+           console.log('measurement', measurementUnits)
+        },
+
+        error: (xhr) => {
+            console.error("Failed to load exporters:", xhr.responseText);
+           
+        },
+    });
+}
+
+
+measurementUnit();
+
 function importerDetail() {
     // importer = JSON.parse(application.importer_detail);
     importer = application.importer_detail;
@@ -130,6 +160,12 @@ function clearExporterFields() {
 // ------------------------- Consignment / Uses -------------------------
 
 function loadConsignmentSelection() {
+
+    limitMeasurement = null;
+    limit = null;
+    $('#addItemModal .modal-body .news').find('.alert').remove();
+
+
     const countryCode = $("#expcountryCode").val();
     const $select = $("#itemSelect");
 
@@ -216,6 +252,65 @@ function loadUses(itemId) {
             console.error("Failed to load uses:", err);
         });
 }
+
+function formatDate(dateString) {
+    const options = { day: '2-digit', month: 'short', year: 'numeric' };
+    return new Date(dateString).toLocaleDateString('en-GB', options);
+}
+
+function loadDetails(itemId) {
+
+
+    fetch(`/public/get_item_details/${itemId}`)
+        .then((res) => res.json())
+        .then((data) => {
+            console.log('data in details', data)
+            let item = data.data;
+            let startDate = ``;
+
+            limit = item.quantity_limit;
+            limitMeasurement = item.measurement_unit;
+
+            if(item.start_date) {
+                startDate = 
+                `from <span class = "fw-bold">${formatDate(item.start_date)}</span> until 
+                <span class = "fw-bold">${formatDate(item.end_date)}</span>`
+            }
+
+            if(item.quantity_limit) {
+                const alertHtml = `
+                    <div class="col-12 alert alert-primary">
+                        <p class = "">
+                            The quantity allowed for ${item.item_name} is 
+                            <span class = "fw-bold"> ${item.quantity_limit} ${item.measurement_unit} </span> 
+                            ${startDate}
+                            .
+                        </p>
+                    </div>
+                `;
+
+                // Remove old alert first (important if dynamic)
+                $('#addItemModal .modal-body .news').find('.alert').remove();
+
+                // Insert at TOP of row
+                $('#addItemModal .modal-body .news').prepend(alertHtml);
+
+            } 
+
+            else {
+                // Remove old alert first (important if dynamic)
+                $('#addItemModal .modal-body .news').find('.alert').remove();
+            }
+
+       
+        })
+        .catch((err) => {
+            console.error("Failed to load uses:", err);
+        });
+
+    
+}
+
 
 // ------------------------- Add Exporter Modal -------------------------
 function initAddExporterModal() {
@@ -593,6 +688,59 @@ function saveConsignmentAttachment() {
             return;
         }
 
+        if(limitMeasurement) {
+            // convert the limit to kg first
+            let limitInKg = null;
+            let conversion = null;
+
+            const selectedUnit = measurementUnits.unit.find(unit =>
+                unit.cate_code.toLowerCase() === limitMeasurement.toLowerCase()
+                && unit.is_del === false
+            );
+
+            if (selectedUnit) {
+                console.log("Found:", selectedUnit);
+                console.log("Cate Code:", selectedUnit.cate_code);
+
+                limitInKg = limit * selectedUnit.conversion.conversion;
+
+            } else {
+                console.log("Measurement unit not found.");
+            }
+
+            console.log("limit in kg", limitInKg);
+
+            // convert the quantity of the selected item weight
+            let selectedItemInKg = null;
+            
+            const selectedItemUnit = measurementUnits.unit.find(unit =>
+                unit.cate_code.toLowerCase() === itemMeasure.toLowerCase()
+                && unit.is_del === false
+            );
+
+            if (selectedItemUnit) {
+                console.log("Found:", selectedItemUnit);
+                console.log("Cate Code:", selectedItemUnit.cate_code);
+
+                selectedItemInKg = itemQuantity * selectedItemUnit.conversion.conversion;
+
+
+            } else {
+                console.log("Measurement unit not found.");
+            }
+
+            console.log("selected limit in kg", selectedItemInKg);
+
+            if(selectedItemInKg > limitInKg) {
+                Swal.fire({
+                    icon: "error",
+                    title: "The item is over limit from",
+                    text: "Please fill in again.",
+                });
+                return;
+            }
+        }
+
         // ✅ Get Dropzone files
         const files = itemDropzone.getAcceptedFiles();
 
@@ -658,8 +806,7 @@ function renderAllItems() {
             `<tr id="item-row-${item.id}">
                 <td>${index + 1}</td>
                 <td>${item.item_name}</td>
-                <td>${item.quantity} ${item.measure}</td>
-                <td class = "text-wrap">${item.purpose}</td>
+               
                 <td class="text-center">
                     <div class="d-flex justify-content-center align-items-center gap-2">
                         <button class="btn btn-icon btn-success-light view-more-item"
@@ -1002,6 +1149,8 @@ $(document).ready(async function () {
         importerDetail();
         loadExistingConsignments();
 
+        measurementUnit();
+
         $("#itemMeasure").select2({
             width: "100%",
             placeholder: "-- Select Measurement Unit --",
@@ -1044,6 +1193,7 @@ $(document).ready(async function () {
 
             // Load uses for the selected item
             loadUses(itemId);
+            loadDetails(itemId)
         });
 
         // Expose loadConsignmentSelection globally if needed
@@ -1058,9 +1208,11 @@ $(document).ready(async function () {
         });
 
         $(document).on(
-            "click",
+             "click",
             `#logoutButton, 
-            .app-sidebar.sticky button, .app-sidebar.sticky a`,
+            .app-sidebar.sticky button, .app-sidebar.sticky a,
+            .breadcrumb .breadcrumb-item a`,
+            
             function (e) {
                 if (!change) return;
 

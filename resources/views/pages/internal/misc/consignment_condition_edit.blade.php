@@ -70,21 +70,54 @@
 
                         </div>
                     </div>
-                    <div class="row gy-3 mt-1">
+                     <div class="row gy-3 mt-1">
                         <div class="col-xl-3">
                             <label for="quanLimit" class="form-label">Quantity Limit (Special case)</label>
-                            <input type="text" class="form-control" id="quanLimit"
-                                value="{{ $condition->quantity_limit ?? null }}" name="quanLimit">
+                            <input type="number" class="form-control" id="quanLimit"
+                                value="{{ $condition->quantity_limit ?? null }}" name="quanLimit" min = '0'>
+                            
                         </div>
                         <div class="col-xl-3">
                             <label for="quanmunit" class="form-label">Measurement Unit (Special case)</label>
-                            <input type="text" class="form-control" id="quanmunit" name="quanmunit">
+                            {{-- <input type="text" class="form-control" id="quanmunit" name="quanmunit"> --}}
+                            <select class="form-select" name="quanmunit" id="quanmunit">
+                                @foreach ($measurements as $measurement)
+                                    <option 
+                                        value="{{ $measurement->cate_code }}"
+                                        {{ old('quanmunit', $condition->measurement_unit ?? '') == $measurement->cate_code ? 'selected' : '' }}
+                                    >
+                                        {{ $measurement->description }}
+                                    </option>
+                                @endforeach
+                            </select>
+
+
                         </div>
-                        <div class="col-xl-6">
-                            <label for="spedate" class="form-label">Date Limit (Special case)</label>
-                            <input type="date" class="form-control" id="spedate" value="{{ $condition->date_limit }}"
-                                name="spedate">
+                        {{-- @dd($condition) --}}
+                        <div class="col-xl-3">
+                            <label class="form-label">Start Date</label>
+                            <input 
+                                type="date"
+                                class="form-control"
+                                name="start_date"
+                                id = "start_date"
+                                value="{{ old('start_date', $condition->start_date) }}"
+                            >
                         </div>
+
+                        <div class="col-xl-3">
+                            <label class="form-label">End Date</label>
+                            <input 
+                                type="date"
+                                class="form-control"
+                                name="end_date"
+                                id = "end_date"
+                                value="{{ old('end_date', $condition->end_date) }}"
+                            >
+                        </div>
+
+
+
                         <div class="col-xl-12">
                             <label class="form-label">Country</label>
                             <input id="countryTag" name="countryTag" class="form-control"

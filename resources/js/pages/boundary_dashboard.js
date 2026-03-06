@@ -1,10 +1,12 @@
-
-import { formatTime, initTooltips } from "../app";
-import Swal from "sweetalert2";
+import { initTooltips } from "../app";
 
 console.log("boundary dashboard");
 
-let boundaryTable;
+const tableIds = [
+    "#importPermitTable",
+    "#inspectionCertTable",
+    "#consignmentCertTable",
+];
 
 async function data_table_init() {
     const [
@@ -26,29 +28,26 @@ async function data_table_init() {
         import("datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css"),
     ]);
 
-    boundaryTable = new DataTable("#boundaryApplicationsTable", {
-        // Client-side processing since data is rendered in Blade
-        processing: true,
-        stateSave: true, // Optional: save state (paging position etc)
-        columns: [
-            { width: "20%" }, // User Name
-            { width: "25%" }, // Application Type
-            { width: "15%" }, // Status
-            { width: "10%", orderable: false, searchable: false }, // Action
-        ],
-        autoWidth: false,
-        responsive: true,
-        pageLength: 10,
-        lengthMenu: [5, 10, 25, 50],
-        order: [[0, 'desc']], // Default sort undefined, let's say by User Name or keep HTML order? 
-        // If sorting by date is needed, the date isn't a column. 
-        // The controller sorts by Created At descending. 
-        // If we want to maintain that, we should disable initial sort or ensure HTML order is respected.
-        order: [], // Keep server-sent order
-    });
+    tableIds.forEach((id) => {
+        const table = new DataTable(id, {
+            processing: true,
+            stateSave: true,
+            columns: [
+                { width: "20%" }, // Application ID
+                { width: "30%" }, // User Name
+                { width: "20%" }, // Status
+                { width: "15%", orderable: false, searchable: false }, // Action
+            ],
+            autoWidth: false,
+            responsive: true,
+            pageLength: 10,
+            lengthMenu: [5, 10, 25, 50],
+            order: [], // Keep server-sent order
+        });
 
-    boundaryTable.on("draw.dt", function () {
-        initTooltips();
+        table.on("draw.dt", function () {
+            initTooltips();
+        });
     });
 }
 

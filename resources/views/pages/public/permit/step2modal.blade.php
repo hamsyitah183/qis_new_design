@@ -15,6 +15,7 @@
             <!-- <form id="addExporterForm"> -->
             <div class="modal-body">
                 <div class="row gy-4 mb-3 p-4">
+                    <div class="news"></div>
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
                         <label for="itemSelect" class="form-label">Item <a style="color:red"> * </a></label>
                         <select class="form-select" id="itemSelect" name="itemSelect">

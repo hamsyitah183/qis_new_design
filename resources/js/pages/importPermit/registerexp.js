@@ -32,6 +32,33 @@ let tempAttachments = [];
 let itemPurpose = null;
 let temporaryItemsAttachment = [];
 
+let measurementUnits = null;
+let news = null;
+let limit = null;
+let limitMeasurement = null;
+
+function measurementUnit()
+{
+     return $.ajax({
+        url: '/measurement',
+        type: "GET",
+        dataType: "json",
+        cache: false,
+        success: (data) => {
+           measurementUnits = data;
+
+           console.log('measurement', measurementUnits)
+        },
+
+        error: (xhr) => {
+            console.error("Failed to load exporters:", xhr.responseText);
+           
+        },
+    });
+}
+
+measurementUnit();
+
 // --------if self apply -----------
 async function selfImport() {
     if (window.location.pathname.includes("public/import_permit_application")) {
@@ -116,6 +143,12 @@ function clearExporterFields() {
 
 // ------------------------- Consignment / Uses -------------------------
 function loadConsignmentSelection() {
+
+    limitMeasurement = null;
+    limit = null;
+    // Remove old alert first (important if dynamic)
+    $('#addItemModal .modal-body .news').find('.alert').remove();
+
     const countryCode = $("#expcountryCode").val();
     const $select = $("#itemSelect");
 
@@ -204,6 +237,64 @@ function loadUses(itemId) {
         .catch((err) => {
             console.error("Failed to load uses:", err);
         });
+}
+
+function formatDate(dateString) {
+    const options = { day: '2-digit', month: 'short', year: 'numeric' };
+    return new Date(dateString).toLocaleDateString('en-GB', options);
+}
+
+function loadDetails(itemId) {
+
+
+    fetch(`/public/get_item_details/${itemId}`)
+        .then((res) => res.json())
+        .then((data) => {
+            console.log('data in details', data)
+            let item = data.data;
+            let startDate = ``;
+
+            limit = item.quantity_limit;
+            limitMeasurement = item.measurement_unit;
+
+            if(item.start_date) {
+                startDate = 
+                `from <span class = "fw-bold">${formatDate(item.start_date)}</span> until 
+                <span class = "fw-bold">${formatDate(item.end_date)}</span>`
+            }
+
+            if(item.quantity_limit) {
+                const alertHtml = `
+                    <div class="col-12 alert alert-primary">
+                        <p class = "">
+                            The quantity allowed for ${item.item_name} is 
+                            <span class = "fw-bold"> ${item.quantity_limit} ${item.measurement_unit} </span> 
+                            ${startDate}
+                            .
+                        </p>
+                    </div>
+                `;
+
+                // Remove old alert first (important if dynamic)
+                $('#addItemModal .modal-body .news').find('.alert').remove();
+
+                // Insert at TOP of row
+                $('#addItemModal .modal-body .news').prepend(alertHtml);
+
+            } 
+
+            else {
+                // Remove old alert first (important if dynamic)
+                $('#addItemModal .modal-body .news').find('.alert').remove();
+            }
+
+       
+        })
+        .catch((err) => {
+            console.error("Failed to load uses:", err);
+        });
+
+    
 }
 
 // ------------------------- Add Exporter Modal -------------------------
@@ -640,6 +731,60 @@ function saveConsignmentAttachment() {
             return;
         }
 
+        if(limitMeasurement) {
+            // convert the limit to kg first
+            let limitInKg = null;
+            let conversion = null;
+
+            const selectedUnit = measurementUnits.unit.find(unit =>
+                unit.cate_code.toLowerCase() === limitMeasurement.toLowerCase()
+                && unit.is_del === false
+            );
+
+            if (selectedUnit) {
+                console.log("Found:", selectedUnit);
+                console.log("Cate Code:", selectedUnit.cate_code);
+
+                limitInKg = limit * selectedUnit.conversion.conversion;
+
+            } else {
+                console.log("Measurement unit not found.");
+            }
+
+            console.log("limit in kg", limitInKg);
+
+            // convert the quantity of the selected item weight
+            let selectedItemInKg = null;
+            
+            const selectedItemUnit = measurementUnits.unit.find(unit =>
+                unit.cate_code.toLowerCase() === itemMeasure.toLowerCase()
+                && unit.is_del === false
+            );
+
+            if (selectedItemUnit) {
+                console.log("Found:", selectedItemUnit);
+                console.log("Cate Code:", selectedItemUnit.cate_code);
+
+                selectedItemInKg = itemQuantity * selectedItemUnit.conversion.conversion;
+
+
+            } else {
+                console.log("Measurement unit not found.");
+            }
+
+            console.log("selected limit in kg", selectedItemInKg);
+
+            if(selectedItemInKg > limitInKg) {
+                Swal.fire({
+                    icon: "error",
+                    title: "The item is over limit from",
+                    text: "Please fill in again.",
+                });
+                return;
+            }
+        }
+
+
         // ✅ Build new item
         const newItem = {
             // id: crypto.randomUUID(),
@@ -1000,6 +1145,7 @@ $(document).ready(async function () {
 
             // Load uses for the selected item
             loadUses(itemId);
+            loadDetails(itemId)
         });
 
         // Expose loadConsignmentSelection globally if needed
@@ -1045,7 +1191,7 @@ $(document).ready(async function () {
                         } else {
                             target.click();
                         }
-                    }
+                    } 
 
                     if (result.isDenied) {
                         saveapplication(true); // ✅ draft

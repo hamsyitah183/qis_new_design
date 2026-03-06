@@ -312,7 +312,7 @@ function listPermissionModal() {
     $(document).on("click", ".permissionModal", async function (e) {
         e.preventDefault();
 
-        roleName = $(this).data("role");
+        const roleName = $(this).data("role");
         console.log("Clicked role:", roleName);
 
         Swal.fire({
@@ -335,35 +335,47 @@ function listPermissionModal() {
 
         console.log("Role permissions from datatable:", rolePerms);
 
-        // Build modal content
+        // Build modal content with search input
         let html = `
-        <div class="fw-bold mb-2">Permission List for: ${roleName}</div>
-        <div class="list-group scrollable-grey" style = "max-height: 400px; overflow-y: scroll;">
-    `;
+            <div class="fw-bold mb-2">Permission List for: ${roleName}</div>
+
+            <!-- Search box -->
+            <input type="text" id="permissionSearch" class="form-control mb-2" placeholder="Search permission...">
+
+            <div class="list-group scrollable-grey" style="max-height: 400px; overflow-y: scroll;">
+        `;
 
         permissions.forEach((permission) => {
             const checked = rolePerms.includes(permission) ? "checked" : "";
 
             html += `
-            <label class="list-group-item d-flex align-items-center gap-2">
-                <input type="checkbox"
-                    class="form-check-input user-check"
-                    name="permission[]"
-                    value="${permission}"
-                    ${checked}>
-                <span>${permission}</span>
-            </label>
-        `;
+                <label class="list-group-item d-flex align-items-center gap-2">
+                    <input type="checkbox"
+                        class="form-check-input user-check"
+                        name="permission[]"
+                        value="${permission}"
+                        ${checked}>
+                    <span>${permission}</span>
+                </label>
+            `;
         });
 
         html += `</div>`;
 
         $("#permissionListContainer").html(html);
 
+        // Add search functionality
+        $("#permissionSearch").on("input", function () {
+            const query = $(this).val().toLowerCase();
+            $("#permissionListContainer .list-group-item").each(function () {
+                const text = $(this).text().toLowerCase();
+                $(this).toggle(text.includes(query));
+                console.log('search ', text)
+            });
+        });
+
         Swal.close();
-        bootstrap.Modal.getOrCreateInstance(
-            document.getElementById("permissionModal")
-        ).show();
+        modal.show();
     });
 }
 

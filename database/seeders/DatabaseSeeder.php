@@ -37,6 +37,8 @@ class DatabaseSeeder extends Seeder
                 ConsignmentSeeder::class,
                 CountryNoSeeder::class,
                 PostcodeSeeder::class,
+
+                MeasurementUnitSeeder::class,
             ]);
 
             DB::commit();

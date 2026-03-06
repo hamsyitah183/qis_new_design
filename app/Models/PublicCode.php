@@ -21,4 +21,13 @@ class PublicCode extends Model
     protected $casts = [
         'is_del' => 'boolean',
     ];
+
+   public function conversion()
+    {
+        return $this->hasOne(
+            MeasurementUnit::class,
+            'measurement_id', // foreign key on measurement_units table
+            'id'              // local key on public_code table
+        );
+    }   
 }

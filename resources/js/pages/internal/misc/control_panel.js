@@ -263,34 +263,59 @@ $(document).ready(function () {
 
     // fetch Public Code to modal
     function getspecificPBData(id) {
-        // 1️⃣ Show loading Swal
+
         Swal.fire({
             title: "Loading data...",
             text: "Please wait",
             allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            },
+            didOpen: () => Swal.showLoading(),
         });
 
         $.ajax({
             url: `/internal/getspecificpbdata/${id}`,
             type: "GET",
             success: function (response) {
+
                 if (response.status === "success" && response.data) {
-                    // 2️⃣ Populate form fields
-                    document.getElementById("editItemId").value =
-                        response.data.id;
-                    document.getElementById("editICOde").value =
-                        response.data.cate_code;
-                    document.getElementById("editDesc").value =
-                        response.data.description;
 
-                    // 3️⃣ Close loading Swal
+                    const data = response.data;
+
+                    // Populate basic fields
+                    $("#editItemId").val(data.id);
+                    $("#editICOde").val(data.cate_code);
+                    $("#editDesc").val(data.description);
+
+                    // 🔥 Always clear conversion container first
+                    $("#conversionContainer").html("");
+
+                    // ✅ Only show conversion if unit_measurement
+                    if (data.cate_name === "unit_measurement") {
+
+                        const conversionValue = data.conversion
+                            ? data.conversion.conversion
+                            : "";
+
+                        const conversionInput = `
+                            <div class="mb-3" id="conversionWrapper">
+                                <label class="form-label">
+                                    Conversion (1 ${data.cate_code} = ? KG)
+                                </label>
+                                <input 
+                                    type="number" 
+                                    step="0.000001"
+                                    name="conversion"
+                                    value="${conversionValue}"
+                                    id="conversion"
+                                    class="form-control">
+                            </div>
+                        `;
+
+                        $("#conversionContainer").html(conversionInput);
+                    }
+
                     Swal.close();
-
-                    // 4️⃣ Show modal AFTER data is ready
                     modal.show();
+
                 } else {
                     Swal.fire({
                         icon: "warning",
@@ -299,17 +324,14 @@ $(document).ready(function () {
                     });
                 }
             },
-            error: function (xhr) {
+            error: function () {
                 Swal.close();
-
-                console.error("Error fetching specific PB data:", xhr);
-
                 Swal.fire({
                     icon: "error",
                     title: "Error",
                     text: "Failed to load data. Please try again.",
                 });
-            },
+            }
         });
     }
 
@@ -322,11 +344,13 @@ $(document).ready(function () {
             const id = document.getElementById("editItemId").value;
             const code = document.getElementById("editICOde").value;
             const desc = document.getElementById("editDesc").value;
+            const conversion = document.getElementById("conversion").value;
 
             const fd = new FormData();
             fd.append("id", id);
             fd.append("item_code", code);
             fd.append("item_desc", desc);
+            fd.append('conversion',conversion )
 
             $.ajax({
                 url: `/internal/updatepbdata`,

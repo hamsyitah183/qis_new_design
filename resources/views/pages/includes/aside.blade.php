@@ -176,7 +176,6 @@
                                         Consignment Certificate
                                     </a>
                                 </li>
-
                             </ul>
                         </li>
 
@@ -241,6 +240,18 @@
                                         Users</a>
                                 </li>
 
+                                <li class="slide {{ $currentRoute === 'internal.exporter.list' ? 'active' : '' }}">
+                                    <a href="{{ route('internal.exporter.list') }}" class="side-menu__item">
+                                        Exporter List
+                                    </a>
+                                </li>
+
+                                <li class="slide {{ $currentRoute === 'internal.importer.list' ? 'active' : '' }}">
+                                    <a href="{{ route('internal.importer.list') }}" class="side-menu__item">
+                                        Importer List
+                                    </a>
+                                </li>
+
                                 <li class="slide {{ $currentRoute === 'internal.public.verification.list' ? 'active' : '' }}">
                                     <a href="{{ route('internal.public.verification.list') }}" class="side-menu__item"
                                         id="verificationCount">User
@@ -290,7 +301,8 @@
 
 
                                 <li class="slide {{ $currentRoute === '/internal/consignment_condition' ? 'active' : '' }}">
-                                    <a href="{{ url('/internal/consignment_condition') }}" class="side-menu__item">Consignment Item</a>
+                                    <a href="{{ url('/internal/consignment_condition') }}" class="side-menu__item">Consignment
+                                        Item</a>
                                 </li>
 
                                 <li class="slide {{ $currentRoute === 'internal.state-district-management' ? 'active' : '' }}">
