@@ -95,6 +95,8 @@
                             <label for="editDesc" class="form-label">Item Description</label>
                             <input type="text" id="editDesc" class="form-control">
                         </div>
+
+                        <div id="conversionContainer"></div>
                     </div>
                 </form>
                 <!-- Footer -->

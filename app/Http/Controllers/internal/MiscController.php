@@ -5,18 +5,24 @@ namespace App\Http\Controllers\internal;
 use App\Events\ApplicationDeleted;
 use App\Events\PublicUserEvent;
 use App\Http\Controllers\Controller;
+use App\Models\Country;
 use App\Models\InternalUser;
 use App\Models\IpApplication;
 use App\Models\IpCondition;
 use App\Models\IpConsignmentPermit;
 use App\Models\IpEntryPoint;
+use App\Models\News;
 use App\Models\PublicCode;
 use App\Models\PublicUser;
+use App\Models\ConsignmentCondition;
 use App\Notifications\ApplicationNotification;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\QISNewsMail;
 
 class MiscController extends Controller
 {
@@ -78,6 +84,7 @@ class MiscController extends Controller
             'data' => $pbdata,
         ]);
     }
+    
 
     public function updatepbdata(Request $request)
     {
@@ -88,19 +95,36 @@ class MiscController extends Controller
         $id = $request->input('id');
         $code = $request->input('item_code');
         $desc = $request->input('item_desc');
+        $conversion = $request->input('conversion');
 
-        $pbdata = PublicCode::findorFail($id);
+        $pbdata = PublicCode::with('conversion')->findOrFail($id);
+
         $pbdata->cate_code = $code;
         $pbdata->description = $desc;
-        $pbdata->save();
+        $pbdata->save(); // save public_code first
+
+        // ✅ Only handle conversion if measurement unit
+        if ($pbdata->cate_name === 'unit_measurement') {
+            // If conversion record exists → update
+            if ($pbdata->conversion) {
+                $pbdata->conversion->update([
+                    'conversion' => $conversion,
+                ]);
+            }
+            // If not exists → create
+            else {
+                $pbdata->conversion()->create([
+                    'measurement_id' => $pbdata->id,
+                    'conversion' => $conversion,
+                ]);
+            }
+        }
 
         activity()
-        ->useLog('user_activity')
-        ->event('update data')
-        ->causedBy(authUser()['user'])
-        ->log(
-             authUser()['user']['fullname'] . ' is updated ' . $pbdata->description . ' of ' . $pbdata->cate_name
-        );
+            ->useLog('user_activity')
+            ->event('update data')
+            ->causedBy(authUser()['user'])
+            ->log(authUser()['user']['fullname'] . ' updated ' . $pbdata->description . ' of ' . $pbdata->cate_name);
 
         return response()->json([
             'status' => 'success',
@@ -119,12 +143,10 @@ class MiscController extends Controller
         $pbdata->save();
 
         activity()
-        ->useLog('user_activity')
-        ->event('delete data')
-        ->causedBy(authUser()['user'])
-        ->log(
-             authUser()['user']['fullname'] . ' is deleted ' . $pbdata->description . ' from ' . $pbdata->cate_name
-        );
+            ->useLog('user_activity')
+            ->event('delete data')
+            ->causedBy(authUser()['user'])
+            ->log(authUser()['user']['fullname'] . ' is deleted ' . $pbdata->description . ' from ' . $pbdata->cate_name);
 
         return response()->json([
             'status' => 'success',
@@ -156,12 +178,10 @@ class MiscController extends Controller
         $pbdata->save();
 
         activity()
-        ->useLog('user_activity')
-        ->event('add data')
-        ->causedBy(authUser()['user'])
-        ->log(
-            authUser()['user']['fullname'] . ' is added ' . $pbdata->description . ' to ' . $pbdata->cate_name
-        );
+            ->useLog('user_activity')
+            ->event('add data')
+            ->causedBy(authUser()['user'])
+            ->log(authUser()['user']['fullname'] . ' is added ' . $pbdata->description . ' to ' . $pbdata->cate_name);
 
         return response()->json([
             'status' => 'success',
@@ -212,12 +232,15 @@ class MiscController extends Controller
             'category' => $request->itemCategory,
             'item_name' => $request->itemName,
             'addional_condition' => $request->permit_condition,
-            'quantity_limit' => $request->quanLimit ?: null,
-            'date_limit' => $request->spedate ?: null,
+            'quantity_limit' => $request->quanLimit ?: null . ' ' . $request->measurement ?: null,
+            // 'date_limit' => $request->spedate ?: null,
+            'start_date' => $request->start_date ?: null,
+            'end_date' => $request->end_date ?: null,
             'country' => $countryValues,
             'usage' => $usageValues,
+            'measurement_unit' => $request->quanmunit,
         ];
-
+        // dd($data);
         // UPDATE
         if ($request->filled('id')) {
             $ipCondition = IpCondition::find($request->id);
@@ -259,8 +282,9 @@ class MiscController extends Controller
         $condition = IpCondition::with(['code'])->findOrFail($id);
 
         $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->where('cate_name', 'consignment_purpose')->where('is_del', false)->get();
+        $measurements = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->where('cate_name', 'unit_measurement')->where('is_del', false)->get();
 
-        return view('pages.internal.misc.permit_edit', compact('condition', 'pbdata'));
+        return view('pages.internal.misc.permit_edit', compact('condition', 'pbdata', 'measurements'));
     }
 
     public function getpermitconditiondata()
@@ -403,6 +427,111 @@ class MiscController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Entry points updated successfully.',
+        ]);
+    }
+
+    public function shareNews(Request $request)
+    {
+        if ($request->type == 'Import Permit') {
+            $item = IpCondition::where('id', $request['condition_id'])->first();
+            $title = 'Permit Condition News';
+        } elseif ($request->type == 'Consignment') {
+            $item = ConsignmentCondition::where('id', $request['condition_id'])->first();
+            $title = 'Consignment Condition News';
+        }
+
+        DB::beginTransaction();
+
+        try {
+            // Suppose $item is your consignment condition object
+            $itemName = $item->item_name; // "AVOCADO"
+
+            // Get the country names from the stored codes in JSON
+            $countryCodes = $item['country']; // ["AU","KE","MX",...]
+            // dd($countryCodes);
+            $countries = Country::whereIn('code', $countryCodes)->pluck('name')->toArray();
+
+            // Convert country array to comma-separated string
+            $countryList = implode(', ', $countries);
+
+            // If you want HTML instead of plain text:
+            $detailsMessage = "A new permit condition for item <strong>{$itemName}</strong> has been released.<br>";
+            $detailsMessage .= "It applies to the following countries: <strong>{$countryList}</strong>.";
+            if ($item->quantity_limit) {
+                $detailsMessage .= "<br>Quantity Limit: {$item->quantity_limit} {$item->measurement_unit}<br>";
+            }
+
+            if ($item->start_date) {
+                // Format dates
+                $startDate = Carbon::parse($item->start_date)->format('d M Y'); // 10 Mar 2026
+                $endDate = Carbon::parse($item->end_date)->format('d M Y'); // 28 Mar 2026
+                $detailsMessage .= "Valid From: {$startDate} to {$endDate}";
+            }
+
+            // Build second message
+            $detailsMessage .= "<br><span class = 'mt-2'>Additional Condition:
+            
+                <span>{$item->addional_condition}</span>
+
+            </span><br>";
+
+            // dd($detailsMessage);
+
+            $news = new News();
+            $news->title = $title;
+            $news->news = $detailsMessage;
+            $news->expired_date = $item->end_date;
+            $news->show = 1;
+            $news->save();
+
+            $publicUsers = PublicUser::get();
+            $internalUsers = InternalUser::get();
+
+            $url = '#';
+
+            foreach ($publicUsers as $user) {
+                // Mail::to($user->email)->send(
+                //     new QISNewsMail($title, $detailsMessage)
+                // );
+
+                Notification::send($user, new ApplicationNotification('A new condition of item ' . $item->item_name . ' has been updated ', $title, $url));
+            }
+
+            foreach ($internalUsers as $user) {
+                Notification::send($user, new ApplicationNotification('A new condition of item ' . $item->item_name . ' has been updated ', $title, '/internal/permit_edit_condition/' . $item->id));
+            }
+
+            Mail::to('hamsyitahnur@gmail.com')->send(new QISNewsMail($title, $detailsMessage));
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => $e->getMessage(),
+                ],
+                500,
+            );
+        }
+    }
+
+    public function measurementUnit()
+    {
+        $measurement_unit = PublicCode::with(['conversion'])->where('cate_name', 'unit_measurement')->get();
+
+        return response()->json([
+            'unit' => $measurement_unit
+        ]);
+    }
+
+
+    public function getspecificitem($id)
+    {
+        $item = IpCondition::where('id', $id)->first();
+
+        return response()->json([
+            'data' => $item,
         ]);
     }
 }

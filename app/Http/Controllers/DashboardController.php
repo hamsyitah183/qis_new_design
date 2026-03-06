@@ -147,50 +147,59 @@ class DashboardController extends Controller
         $importPermits = \App\Models\IpApplication::with('user')
             ->where('status', 'Completed')
             ->get();
-           
+
         $inspectionCerts = \App\Models\InspectionApplication::with('user')
             ->where('status', 'Completed')
             ->get();
-           
+
 
         $consignmentCerts = \App\Models\ConsignmentApplication::with('user')
             ->where('status', 'Completed')
             ->get();
-           
+
 
         // Combine and sort all applications
-        if(authUser()['roles'][0] == 'boundary officer') {
+        if (authUser()['roles'][0] == 'boundary officer') {
             $boundary = InternalUser::with(['boundaryOfficer.entryPoint'])
                 ->where('uuid', authUser()['user']['uuid'])
                 ->first();
-            
+
             $entryPoint = $boundary?->boundaryOfficer?->ip_entry_id;
 
             // If entry point is set, filter by it; otherwise show all
             if ($entryPoint) {
-                $latestApplications = $importPermits
-                    ->concat($inspectionCerts)
-                    ->concat($consignmentCerts)
-                    ->filter(fn ($app) => $app->entry_point == $entryPoint) // Use loose comparison
-                    ->sortByDesc('created_at')
-                    ->values();
+                $importPermits = $importPermits->filter(fn($app) => $app->entry_point == $entryPoint)->sortByDesc('created_at')->values();
+                $inspectionCerts = $inspectionCerts->filter(fn($app) => $app->entry_point == $entryPoint)->sortByDesc('created_at')->values();
+                $consignmentCerts = $consignmentCerts->filter(fn($app) => $app->entry_point == $entryPoint)->sortByDesc('created_at')->values();
             } else {
-                // No entry point assigned, show all applications
-                $latestApplications = $importPermits
-                    ->concat($inspectionCerts)
-                    ->concat($consignmentCerts)
-                    ->sortByDesc('created_at')
-                    ->values();
+                $importPermits = $importPermits->sortByDesc('created_at')->values();
+                $inspectionCerts = $inspectionCerts->sortByDesc('created_at')->values();
+                $consignmentCerts = $consignmentCerts->sortByDesc('created_at')->values();
             }
+
+            // Pass counts and separated collections for boundary officer
+            $totalImportPermits = $importPermits->count();
+            $totalInspectionCerts = $inspectionCerts->count();
+            $totalConsignmentCerts = $consignmentCerts->count();
+
+            return view('dashboard.internal.main_dashboard', [
+                'latestApplications' => collect(), // empty, not used for boundary
+                'importPermits' => $importPermits,
+                'inspectionCerts' => $inspectionCerts,
+                'consignmentCerts' => $consignmentCerts,
+                'totalImportPermits' => $totalImportPermits,
+                'totalInspectionCerts' => $totalInspectionCerts,
+                'totalConsignmentCerts' => $totalConsignmentCerts,
+            ]);
         } else {
-            $latestApplications =  $importPermits
+            $latestApplications = $importPermits
                 ->concat($inspectionCerts)
                 ->concat($consignmentCerts)
                 ->sortByDesc('created_at')
                 ->take(5)
                 ->values();
         }
-        
+
 
         // Get statistics counts
         $totalImportPermits = \App\Models\IpApplication::count();
@@ -361,32 +370,32 @@ class DashboardController extends Controller
         $data['ipCount'] = IpApplication::count();
         $data['icCount'] = InspectionApplication::count();
         $data['ccCount'] = ConsignmentApplication::count();
-    
+
         // Verified
         $ipVerified = IpApplication::where('status', 'Clerk Approved')->count();
         $icVerified = InspectionApplication::where('status', 'Clerk Approved')->count();
         $ccVerified = ConsignmentApplication::where('status', 'Clerk Approved')->count();
-    
+
         // ✅ FIX: numeric sum
         $data['verified'] = $ipVerified + $icVerified + $ccVerified;
-    
+
         // ✅ Revenue (successful payments only)
         $data['total'] = Order::where('transaction_status', 'SUCCESSFUL')
             ->sum('payment_amount');
-    
+
         // Officers
         $data['ipOfficer'] = IpConsignmentPermit::count();
         $data['icOfficer'] = InspectionItem::count();
         $data['ccOfficer'] = ConsignmentPermit::count();
-    
+
         $data['officer'] = $data['ipOfficer'] + $data['icOfficer'] + $data['ccOfficer'];
-    
+
         // Review officer
         $data['totalReview'] = $data['verified'];
-    
+
         return $data;
     }
-    
+
 
     public function clerkCount()
     {

@@ -11,14 +11,14 @@
             {{-- Reusable status icon --}}
             @php
                 $statusIcon = '
-                    <span class="avatar avatar-xl avatar-rounded bg-warning-transparent svg-warning">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-                            <circle cx="128" cy="128" r="96" opacity="0.2"></circle>
-                            <line x1="128" y1="80" x2="128" y2="136" stroke="currentColor" stroke-linecap="round" stroke-width="16"></line>
-                            <circle cx="128" cy="172" r="12" fill="currentColor"></circle>
-                            <circle cx="128" cy="128" r="96" fill="none" stroke="currentColor" stroke-width="16"></circle>
-                        </svg>
-                    </span>';
+                                    <span class="avatar avatar-xl avatar-rounded bg-warning-transparent svg-warning">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+                                            <circle cx="128" cy="128" r="96" opacity="0.2"></circle>
+                                            <line x1="128" y1="80" x2="128" y2="136" stroke="currentColor" stroke-linecap="round" stroke-width="16"></line>
+                                            <circle cx="128" cy="172" r="12" fill="currentColor"></circle>
+                                            <circle cx="128" cy="128" r="96" fill="none" stroke="currentColor" stroke-width="16"></circle>
+                                        </svg>
+                                    </span>';
             @endphp
 
             <div class="text-center p-4">
@@ -27,31 +27,31 @@
 
                 {{-- Category 0 - Pending --}}
                 {{-- @if ($application->category_application == 0 && str_contains($status, 'clerk review in-progress'))
-                    {!! $statusIcon !!}
-                    <h3 class="mt-2">Pending</h3>
-                    @if (authUser()['type'] == 'public')
-                        <p>This permit application is currently pending verification by Clerk.</p>
-                    @else
-                        <p>Waiting for approval.</p>
-                        @if (authUser() && (authUser()['user']->hasRole('clerk') || authUser()['user']->hasRole('admin')) )
-                            <div class="d-flex justify-content-center gap-3 mt-3">
-                                <button id="acceptAppl" class="btn btn-sm btn-success">Accept Application</button>
-                                <button id="rejectAdminAppl" class="btn btn-sm btn-danger">Reject Application</button>
-                            </div>
-                        @endif
+                {!! $statusIcon !!}
+                <h3 class="mt-2">Pending</h3>
+                @if (authUser()['type'] == 'public')
+                <p>This permit application is currently pending verification by Clerk.</p>
+                @else
+                <p>Waiting for approval.</p>
+                @if (authUser() && (authUser()['user']->hasRole('clerk') || authUser()['user']->hasRole('admin')) )
+                <div class="d-flex justify-content-center gap-3 mt-3">
+                    <button id="acceptAppl" class="btn btn-sm btn-success">Accept Application</button>
+                    <button id="rejectAdminAppl" class="btn btn-sm btn-danger">Reject Application</button>
+                </div>
+                @endif
 
 
-                    @endif
+                @endif
                 @endif --}}
                 {{-- @dd($status, $application->importer_verify) --}}
-                @if ( str_contains($status, 'clerk review in-progress'))
+                @if (str_contains($status, 'clerk review in-progress'))
                     {!! $statusIcon !!}
                     <h3 class="mt-2">Pending</h3>
                     @if (authUser()['type'] == 'public')
                         <p>This permit application is currently pending verification by Clerk.</p>
                     @else
                         <p>Waiting for approval.</p>
-                        @if (authUser() && (authUser()['user']->hasRole('clerk') || authUser()['user']->hasRole('admin') || authUser()['user']->hasRole('superadmin')) && authUser()['user']->branch === 'Sipitang' )
+                        @if (authUser() && (authUser()['user']->hasRole('clerk') || authUser()['user']->hasRole('admin') || authUser()['user']->hasRole('superadmin')) && authUser()['user']->branch === 'Sipitang')
                             <div class="d-flex justify-content-center gap-3 mt-3">
                                 <button id="acceptAppl" class="btn btn-sm btn-success">Accept Application</button>
                                 <button id="rejectAdminAppl" class="btn btn-sm btn-danger">Reject Application</button>
@@ -89,10 +89,10 @@
 
                     {{-- compnay reject --}}
                     @if (str_contains($status, 'not approved'))
-                    {!! $statusIcon !!}
-                    <h3 class="mt-2">Rejected</h3>
-                    <p>This permit application has been rejected by the individual/company .</p>
-                @endif
+                        {!! $statusIcon !!}
+                        <h3 class="mt-2">Rejected</h3>
+                        <p>This permit application has been rejected by the individual/company .</p>
+                    @endif
 
                 @endif
 
@@ -101,10 +101,10 @@
                     <h3 class="mt-2">Rejected</h3>
                     @if (authUser()['type'] == 'public')
                         <p>This permit application has been rejected.</p>
-                        
+
                     @else
                         <p>Rejected</p>
-                        @if (authUser() &&(  authUser()['user']->hasRole('admin') || authUser()['user']->hasRole('superadmin')))
+                        @if (authUser() && (authUser()['user']->hasRole('admin') || authUser()['user']->hasRole('superadmin')))
                             {{-- <div class="d-flex justify-content-center gap-3 mt-3">
                                 <button id="acceptAppl" class="btn btn-sm btn-success">Accept Application</button>
                                 <button id="rejectAdminAppl" class="btn btn-sm btn-danger">Reject Application</button>
@@ -115,7 +115,7 @@
                     @endif
                 @endif
 
-               
+
 
             </div>
 

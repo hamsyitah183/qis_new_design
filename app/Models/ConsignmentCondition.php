@@ -19,6 +19,8 @@ class ConsignmentCondition extends Model
         'date_limit',
         'country',
         'usage',
+        'start_date',
+        'end_date'
     ];
 
     protected $casts = [
