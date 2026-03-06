@@ -69,8 +69,8 @@ async function attachmentTable() {
 
     const permits = application.consignment_permits;
     const applicationStatus = application.status;
-     // ❌ If any permit is rejected → block action
-     const hasRejectedPermit = permits.some(p =>
+    // ❌ If any permit is rejected → block action
+    const hasRejectedPermit = permits.some(p =>
         (p.status || '').toLowerCase() === 'rejected'
     );
 
@@ -97,15 +97,18 @@ async function attachmentTable() {
     console.log('roles', roles)
 
     // Determine if approve/reject buttons should be shown
+    // Only visible to internal users from the "Sipitang" branch
+    const isSipitangBranch = window.authUser.branch === "Sipitang";
     const showApproveReject = applicationStatus === "Clerk Verified" &&
         !hasRejectedPermit &&
         hasAllowedPermit &&
+        isSipitangBranch &&
         (roles.includes("admin") || roles.includes("officer") || roles.includes("superadmin"));
 
     const showDownloadPermit = applicationStatus === "Completed" &&
         (roles.includes("admin") || roles.includes("boundary officer") || roles.includes("superadmin"));
 
-    
+
     // Add approve/reject buttons for the first row only if conditions are met
     if (showApproveReject) {
         approveRejectButtons = `
@@ -147,8 +150,8 @@ async function attachmentTable() {
         selectedPermits.push(permit.id)
 
 
-        if( permit.status === "rejected" &&
-            (type.includes('public'))  &&  (application.user.uuid == window.authUser.uuid) ) {
+        if (permit.status === "rejected" &&
+            (type.includes('public')) && (application.user.uuid == window.authUser.uuid)) {
             reapplyAction = `<div class = "btn btn-sm btn-danger-light btn-wave reapply"  data-permit = "${permit.id}" >Reapply</div>`
         } else {
             reapplyAction = ``;
@@ -163,8 +166,8 @@ async function attachmentTable() {
             ${reapplyAction}
         `;
 
-       
-        
+
+
 
         let permitStatus = "";
 
@@ -176,11 +179,11 @@ async function attachmentTable() {
         if (s.includes("completed")) {
             text = '<span class="badge bg-success fs-11 p-1">Completed</span>';
 
-        }else if (s.includes("payment failed")) {
+        } else if (s.includes("payment failed")) {
             text = '<span class="badge bg-danger fs-11 p-1">Payment Failed</span>';
 
-        } 
-        
+        }
+
         else if (s.includes("payment processing")) {
             text = '<span class="badge bg-info fs-11 p-1">Payment Processing</span>';
 
@@ -249,7 +252,7 @@ async function pendingPaymentTable() {
     pendingPaymentPermits.forEach((permit, index) => {
         let detail = permit.consignment_detail || {};
 
-   
+
 
         tableBody.append(`
         <tr>
@@ -396,7 +399,7 @@ function generatePermit() {
 
             const id = $(this).data("permit");
 
-             $.ajax({
+            $.ajax({
                 url: `/permit/print`, // your route
                 method: "POST",
                 data: {
@@ -407,7 +410,7 @@ function generatePermit() {
                 success: function (res) {
                     console.log('response', res)
 
-                    if(res.message == 'Need Response') {
+                    if (res.message == 'Need Response') {
                         Swal.fire({
                             title: "This Permit has been downloaded more than once",
                             text: "Please provide a reason for download it:",
@@ -465,15 +468,15 @@ function generatePermit() {
                                     // Refresh table or UI
                                     initApplicationDetails();
 
-                                     // Small delay so loading is visible
+                                    // Small delay so loading is visible
                                     setTimeout(() => {
                                         // ✅ Trigger browser download
                                         // window.location.href = `/permit/generate/consignment/${id}`;
-                                        let url= `/consignment/generate/${id}`;
+                                        let url = `/consignment/generate/${id}`;
                                         window.open(url, "_blank");
                                         Swal.close();
                                     }, 800);
-                    
+
                                 },
                                 error: function (err) {
                                     // Close loading Swal first
@@ -490,20 +493,20 @@ function generatePermit() {
                             });
                         });
                     } else {
-                        
-                         // Small delay so loading is visible
+
+                        // Small delay so loading is visible
                         setTimeout(() => {
                             // ✅ Trigger browser download
                             // window.location.href = `/permit/generate/consignment/${id}`;
-                            let url= `/consignment/generate/${id}`;
+                            let url = `/consignment/generate/${id}`;
                             window.open(url, "_blank");
                             Swal.close();
                         }, 800);
                     }
 
-                  
+
                 },
-            
+
                 error: function (err) {
                     Swal.fire({
                         icon: "error",
@@ -515,7 +518,7 @@ function generatePermit() {
                 },
             });
 
-           
+
         });
 }
 
@@ -596,40 +599,34 @@ async function viewMore() {
     <div class="p-1 row">
         <div class = "col-12 col-md-6">
             <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
-                            class="fa-solid fa-tag"></i></span> Item Name:</strong> ${
-                                detail.item_name ?? "-"
-                            }</p>
+                            class="fa-solid fa-tag"></i></span> Item Name:</strong> ${detail.item_name ?? "-"
+            }</p>
         </div>
         <div class = "col-12 col-md-6">
             <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
-                            class="fa-solid fa-scale-balanced"></i></span> Quantity:</strong> ${
-                                detail.quantity ?? "-"
-                            } ${detail.measure ?? ""}</p>
+                            class="fa-solid fa-scale-balanced"></i></span> Quantity:</strong> ${detail.quantity ?? "-"
+            } ${detail.measure ?? ""}</p>
         </div>
         <div class = "col-12 col-md-6">
             <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
-                            class="fa-solid fa-money-bill"></i></span> Value:</strong> RM ${
-                                detail.value ?? "-"
-                            }</p>
+                            class="fa-solid fa-money-bill"></i></span> Value:</strong> RM ${detail.value ?? "-"
+            }</p>
         </div>
         <div class = "col-12 col-md-6">
             <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
-                            class="fa-solid fa-pen-fancy"></i></span> Purpose:</strong> ${
-                                detail.purpose ?? "-"
-                            }</p>
+                            class="fa-solid fa-pen-fancy"></i></span> Purpose:</strong> ${detail.purpose ?? "-"
+            }</p>
         </div>
         <div class = "col-12 col-md-6">
             <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
-                            class="fa-solid fa-gear"></i></span> Uses:</strong> ${
-                                detail.uses ?? "-"
-                            }</p>
+                            class="fa-solid fa-gear"></i></span> Uses:</strong> ${detail.uses ?? "-"
+            }</p>
         </div>
         <div class = "col-12 ">
             <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
                             class="fa-solid fa-gear"></i></span> Certificate No (MyGAP or myOrganic): 
-                            </strong> ${
-                                detail.certificateNo ?? "-"
-                            }</p>
+                            </strong> ${detail.certificateNo ?? "-"
+            }</p>
         </div>
 
         <p class="mt-3"><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i
@@ -959,7 +956,7 @@ function applicationLog() {
             cardBody.addClass('scroll-div');
 
             const html = activityLogDesign(activity_log);
-            
+
             cardBody.html(html);
 
             const modal = new bootstrap.Modal(modalEl);
@@ -970,11 +967,11 @@ let totalPermit = 0;
 // Function to sum selected permit values
 function updateTotalValue() {
     let total = 0;
-   
+
 
     // Update the totalValue element
     $("#totalValue").text(
-        "RM 30" 
+        "RM 30"
     );
 
     totalPermit = 30;
@@ -1010,7 +1007,7 @@ function reapply() {
             modalEl.addEventListener(
                 "shown.bs.modal",
                 async () => {
-                    
+
                     const $modal = $(modalEl);
                     itemConsigment($modal);
 
@@ -1127,7 +1124,7 @@ function itemConsigment($modal) {
             });
             groupPreview();
         },
-        
+
     });
 
     itemDropzone.on("addedfile", function (file) {
@@ -1199,12 +1196,12 @@ function saveConsignmentAttachment() {
             const id = $(this).data("id");
 
             const itemSelectValue = $modal.find("#itemSelect").val();
-            const itemSelectText  = $modal.find("#itemSelect option:selected").text();
-            const itemValue       = $modal.find("#itemValue").val().trim();
-            const itemQuantity    = $modal.find("#itemQuantity").val().trim();
-            const itemMeasure     = $modal.find("#itemMeasure").val();
-            const itemPurpose     = $modal.find("#itemPurpose  option:selected").text();
-            const itemUsesValue   = $modal.find("#itemUses").val();
+            const itemSelectText = $modal.find("#itemSelect option:selected").text();
+            const itemValue = $modal.find("#itemValue").val().trim();
+            const itemQuantity = $modal.find("#itemQuantity").val().trim();
+            const itemMeasure = $modal.find("#itemMeasure").val();
+            const itemPurpose = $modal.find("#itemPurpose  option:selected").text();
+            const itemUsesValue = $modal.find("#itemUses").val();
 
             if (
                 !itemSelectValue ||
@@ -1220,7 +1217,7 @@ function saveConsignmentAttachment() {
 
             const files = itemDropzone?.getAcceptedFiles() || [];
 
-      
+
             updateItem = {
                 item_id: itemSelectValue,
                 item_name: itemSelectText,
@@ -1350,18 +1347,18 @@ async function initApplicationDetails() {
 
     Swal.close(); // Close after data is loaded
 
-   
 
-   
+
+
     // Update total value
     updateTotalValue();
-   
+
 
     // When checkout button is clicked
     $(document).on("click", "#checkoutPage", function (e) {
         e.preventDefault();
 
-        
+
 
         Swal.fire({
             title: "Loading...",
@@ -1418,7 +1415,7 @@ async function loadConsignmentSelection(selectedItemId = null) {
     try {
         console.log('country code', countryCode)
         const res = await fetch(`${window.baseUrl}/public/get_consignment_certificate/${countryCode}`);
-        
+
         const data = await res.json();
 
         $select.prop("disabled", false);
@@ -1478,7 +1475,7 @@ $(document).on("change", "#itemSelect", async function () {
         const data = await res.json();
         let uses = data.data ?? [];
 
-       
+
         uses = [...new Set(uses)];
 
         // Append new options
@@ -1507,7 +1504,6 @@ $(document).on("change", "#itemSelect", async function () {
     }
 });
 
-export function consignment_application()
-{
+export function consignment_application() {
     initApplicationDetails();
 }
