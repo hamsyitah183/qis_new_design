@@ -226,6 +226,7 @@ Route::prefix('internal')
         //MISC - Restricted to non-boundary officers
         Route::get('/control_panel', [MiscController::class, 'showcontrolpanel']);
         Route::get('/state-district-management', [MiscController::class, 'showStateDistrictManagement'])->name('state-district-management');
+        Route::get('/branch-management', [MiscController::class, 'showBranchManagement'])->name('branch-management');
         Route::get('/get_pbdata/{cate}', [MiscController::class, 'getpbdata']);
         Route::get('/getspecificpbdata/{id}', [MiscController::class, 'getspecificpbdata']);
         Route::post('/updatepbdata', [MiscController::class, 'updatepbdata']);

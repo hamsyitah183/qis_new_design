@@ -45,6 +45,11 @@ class MiscController extends Controller
         return view('pages.internal.misc.state_district_management');
     }
 
+    public function showBranchManagement()
+    {
+        return view('pages.internal.misc.branch_management');
+    }
+
     public function getpbdata($cate)
     {
         if (auth()->user()->hasRole('boundary officer')) {
@@ -85,7 +90,7 @@ class MiscController extends Controller
             'data' => $pbdata,
         ]);
     }
-    
+
 
     public function updatepbdata(Request $request)
     {
@@ -586,8 +591,13 @@ class MiscController extends Controller
         ]);
 
         $branch = Branch::findOrFail($request->input('id'));
+        $oldBranchName = $branch->name;
         $branch->name = $request->input('name');
         $branch->save();
+
+        if ($oldBranchName !== $branch->name) {
+            InternalUser::where('branch', $oldBranchName)->update(['branch' => $branch->name]);
+        }
 
         activity()
             ->useLog('user_activity')
