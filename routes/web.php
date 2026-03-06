@@ -196,6 +196,12 @@ Route::prefix('internal')
         Route::get('/view_import_permit', [ApplicationController::class, 'showallapplicationlist'])->name('application.list');
         Route::delete('/application/delete/{id}', [ApplicationController::class, 'deleteApplication'])->name('application.delete');
 
+        // ======================= exporter and importer ========================
+        Route::get('/exporter_list', [ApplicationController::class, 'showInternalExporterList'])->name('exporter.list');
+        Route::get('/exporter_list/data', [ApplicationController::class, 'getInternalExporterListData'])->name('exporter.list.data');
+        Route::get('/importer_list', [ApplicationController::class, 'showInternalImporterList'])->name('importer.list');
+        Route::get('/importer_list/data', [ApplicationController::class, 'getInternalImporterListData'])->name('importer.list.data');
+
         // ======================= inspection certificates ========================
         Route::get('/inspection_certificates_list', [InspectionController::class, 'showAllInspectionList'])->name('inspection.list');
 

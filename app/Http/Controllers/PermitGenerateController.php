@@ -159,7 +159,7 @@ class PermitGenerateController extends Controller
         /* ===============================
         FOOTER
     =============================== */
-        $section->addText('Date of Issue: ' . now()->format('d/m/Y'), ['size' => 11]);
+        $section->addText('Date of Issue: ' . now()->format('d/M/Y'), ['size' => 11]);
         $section->addTextBreak(2);
         $section->addText('Director of Agriculture', ['bold' => true], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::END]);
         $section->addText('Sabah, Malaysia', [], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::END]);
@@ -302,7 +302,7 @@ class PermitGenerateController extends Controller
             $table->addCell(4000)->addText($consignmentText);
         }
 
-        $section->addText('Date of Issue: ' . now()->format('d/m/Y'), [], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::BOTH]);
+        $section->addText('Date of Issue: ' . now()->format('d/M/Y'), [], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::BOTH]);
         $section->addTextBreak(2);
         $section->addText('Director of Agriculture', ['bold' => true], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::END]);
         $section->addText('Sabah, Malaysia', [], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::END]);
@@ -483,7 +483,7 @@ class PermitGenerateController extends Controller
             $table->addCell(4000)->addText($consignmentText);
         }
 
-        $section->addText('Date of Issue: ' . now()->format('d/m/Y'), [], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::BOTH]);
+        $section->addText('Date of Issue: ' . now()->format('d/M/Y'), [], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::BOTH]);
         $section->addTextBreak(2);
         $section->addText('Director of Agriculture', ['bold' => true], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::END]);
         $section->addText('Sabah, Malaysia', [], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::END]);
