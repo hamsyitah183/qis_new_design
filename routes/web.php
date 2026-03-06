@@ -241,9 +241,20 @@ Route::prefix('internal')
         Route::post('/save_condition', [MiscController::class, 'saveCondition'])->name('saveCondition');
         Route::get('/permit_edit_condition/{id}', [MiscController::class, 'editCondition']);
 
+        // IMPORTER & EXPORTER LISTS
+        Route::get('/importer/list', [ApplicationController::class, 'showInternalImporterList'])->name('importer.list');
+        Route::get('/importer_list/data', [ApplicationController::class, 'getInternalImporterListData']);
+        Route::get('/exporter/list', [ApplicationController::class, 'showInternalExporterList'])->name('exporter.list');
+        Route::get('/exporter_list/data', [ApplicationController::class, 'getInternalExporterListData']);
+
+        // BRANCH MANAGEMENT
+        Route::get('/branches', [MiscController::class, 'getBranches']);
+        Route::post('/branch/add', [MiscController::class, 'addBranch']);
+        Route::post('/branch/update', [MiscController::class, 'updateBranch']);
+        Route::delete('/branch/delete/{id}', [MiscController::class, 'deleteBranch']);
 
         // CONSIGNMENT CONDITION
-         Route::get('/consignment_condition', [ConsignmentMiscController::class, 'showConsignmentCondition']);
+        Route::get('/consignment_condition', [ConsignmentMiscController::class, 'showConsignmentCondition']);
         Route::get('/consignment_condition/data', [ConsignmentMiscController::class, 'getConsignmentConditionData']);
         Route::get('/consignment_condition/data/{id}', [ConsignmentMiscController::class, 'getConsignmentConditionDataById']);
         Route::get('/consignment_condition/edit/{id}', [ConsignmentMiscController::class, 'editConsignmentConditionDataById']);
