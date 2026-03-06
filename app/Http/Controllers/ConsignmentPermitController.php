@@ -19,6 +19,10 @@ class ConsignmentPermitController extends Controller
 {
     public function getView()
     {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
+
         return view('pages.public.consignment.consignment_permit_list', [
             'title' => 'Consignment Certificate Permit List',
         ]);
@@ -26,6 +30,10 @@ class ConsignmentPermitController extends Controller
 
     public function getAllPermitList()
     {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
+
         $userUuid = authUser()['user']->uuid;
         $type = authUser()['type'];
 

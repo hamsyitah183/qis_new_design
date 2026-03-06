@@ -14,6 +14,10 @@ class ApplicationPaymentController extends Controller
     //
     public function getView()
     {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
+
         return view('pages.order.order_list', [
             'title' => 'Order List',
         ]);
@@ -152,6 +156,10 @@ class ApplicationPaymentController extends Controller
 
     public function orderDetails($order_number)
     {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
+
         $order = Order::with(['publicUser', 'ipApplication.importer', 'ipApplication.exporter', 'ipApplication.entryPoint', 'inspectionApplication.importer', 'inspectionApplication.exporter', 'inspectionApplication.entryPoint'])
             ->where('order_number', $order_number)
             ->firstOrFail();

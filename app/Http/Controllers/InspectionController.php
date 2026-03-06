@@ -171,6 +171,10 @@ class InspectionController extends Controller
 
     public function showAllInspectionList()
     {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
+
         return view('pages.public.inspection_list');
     }
 
@@ -284,7 +288,7 @@ class InspectionController extends Controller
 
                 if (authUser()['type'] === 'internal') {
                     $delete =
-                        '<button class="btn btn-sm btn-danger deleteApplication"
+                        ' <button class="btn btn-sm btn-danger deleteApplication"
                             data-id="' .
                         $row->application_id .
                         '">
@@ -292,7 +296,7 @@ class InspectionController extends Controller
                            </button>';
                 }
 
-                return $view . ' ' . $delete;
+                return $view . $delete;
             });
 
         if ($type === 'internal') {

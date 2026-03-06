@@ -157,6 +157,10 @@ class ConsignmentController extends Controller
      */
     public function showInternalConsignmentList()
     {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
+
         return view('pages.internal.consignment_list');
     }
 
@@ -437,6 +441,10 @@ class ConsignmentController extends Controller
      */
     public function deleteApplication($id)
     {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
+
         try {
             $userData = authUser();
             $type = $userData['type'];

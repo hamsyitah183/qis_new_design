@@ -13,11 +13,19 @@ class ConsignmentMiscController extends Controller
 
     public function showConsignmentCondition()
     {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
+
         return view('pages.internal.misc.consignment_condition_list');
     }
 
     public function getConsignmentConditionData()
     {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
+
         $query = ConsignmentCondition::with(['condcategory'])->select('id', 'item_name', 'category', 'usage', 'country');
 
         return DataTables::of($query)->make(true);
@@ -25,6 +33,10 @@ class ConsignmentMiscController extends Controller
 
     public function getConsignmentConditionDataById($id)
     {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
+
         $condition = ConsignmentCondition::with(['code', 'condcategory'])->find($id);
 
         if (!$condition) {
@@ -38,6 +50,10 @@ class ConsignmentMiscController extends Controller
 
     public function editConsignmentConditionDataById($id)
     {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
+
         $condition = ConsignmentCondition::find($id);
 
         // dd($condition);
@@ -53,6 +69,10 @@ class ConsignmentMiscController extends Controller
 
     public function saveCondition(Request $request)
     {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
+
         $data = $request->all();
         // dd($data);
 
@@ -91,6 +111,10 @@ class ConsignmentMiscController extends Controller
 
     public function addConsignmentConditionData()
     {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
+
         $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->where('cate_name', 'consignment_purpose')->where('is_del', false)->get();
 
         return view('pages.internal.misc.consignment_condition_add', compact('pbdata'));

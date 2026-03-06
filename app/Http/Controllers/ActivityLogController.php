@@ -16,6 +16,9 @@ class ActivityLogController extends Controller
     //
     public function log()
     {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
 
         return view('pages.internal.user_management.list_acitivity_log', [
             'title' => 'Activity Log'
@@ -24,12 +27,20 @@ class ActivityLogController extends Controller
 
     public function data(Request $request)
     {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
+
         $query = $this->getFilteredQuery($request);
         return response()->json($query->get());
     }
 
     public function exportExcel(Request $request)
     {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
+
         $fileName = 'activity_log_' . date('d_m_Y_H_i_s') . '.csv';
         $query = $this->getFilteredQuery($request);
         $activities = $query->get();
@@ -77,6 +88,10 @@ class ActivityLogController extends Controller
 
     public function exportPdf(Request $request) 
     {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
+
         $query = $this->getFilteredQuery($request);
         $activities = $query->get();
 

@@ -11,9 +11,14 @@
 
 
 @section('breadcrumb')
+    @php
+        $consignmentListUrl = auth()->guard('internal')->check()
+            ? '/internal/consignment_certificates_list'
+            : '/public/view_all_consignment';
+    @endphp
     <x-breadcrumb :items="[
             ['label' => 'Dashboard', 'url' => '/'],
-            ['label' => 'Consignment Certificate List', 'url' => '/internal/view_all_consignment'],
+            ['label' => 'Consignment Certificate List', 'url' => $consignmentListUrl],
             ['label' => 'Application: ' . $application->application_id, 'url' => '#'],
         ]" title="View Application">
 
