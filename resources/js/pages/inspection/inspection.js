@@ -24,7 +24,7 @@ let importer = null;
 let impAddrs = null;
 let itemDropzone = null;
 
-let change = null;
+let change = false;
 
 let tempItems = [];
 let tempAttachments = [];
@@ -259,7 +259,7 @@ function initAddExporterModal() {
             },
             success: () => {
                 fetchExporterList();
-            
+
                 Swal.fire({
                     icon: "success",
                     title: "Exporter Saved!",
@@ -270,20 +270,20 @@ function initAddExporterModal() {
                 });
 
                 modal.hide();
-            
+
                 // 🔥 CLEAR FORM FIELDS
                 $("#addexpName").val('');
                 $("#addexpfonno").val('');
                 $("#addexpaddress1").val('');
                 $("#addexpaddress2").val('');
                 $("#addexpcountry").val('').trigger('change'); // important if Select2
-            
+
                 // OR reset everything at once
                 $("#addExporterForm")[0].reset();
-            
-               
+
+
             },
-            
+
             error: (xhr) => {
                 console.error(xhr.responseText);
 
@@ -370,6 +370,44 @@ function handleImporterResponse(data) {
 }
 
 // -------------------------Permit details ------------------------
+
+/**
+ * Fetches entry-point options for a given transport type and populates #entryPoint.
+ * @param {string} type   - Transport type value (e.g. "Air", "Land", "Sea")
+ * @param {string} route  - The AJAX route URL from data-route on #trnptType
+ * @param {Function} [onLoaded] - Optional callback fired after options are inserted.
+ */
+function loadEntryPoints(type, route, onLoaded) {
+    if (!type || !route || route === "#") {
+        $("#entryPoint").html('<option value="">-- Select Entry Point --</option>');
+        if (onLoaded) onLoaded();
+        return;
+    }
+
+    const url = `${route}?type=${encodeURIComponent(type)}`;
+
+    $.ajax({
+        url: url,
+        type: "GET",
+        dataType: "json",
+        success: function (data) {
+            Swal.close();
+            let options = '<option value="">-- Select Entry Point --</option>';
+            data.forEach(function (item) {
+                options += `<option value="${item.id}" data-entry_name="${item.entry_display}">${item.entry_display}</option>`;
+            });
+            $("#entryPoint").html(options);
+
+            if (onLoaded) onLoaded();
+        },
+        error: function (xhr, status, error) {
+            console.error("AJAX Error loading entry points:", error);
+            Swal.close();
+            Swal.fire("Error", "Failed to load entry points.", "error");
+        },
+    });
+}
+
 function permitDetails() {
     // Call summarySubmit on these changes
     const inputs = ["#eta", "#trnptType"];
@@ -391,72 +429,30 @@ function permitDetails() {
             didOpen: () => Swal.showLoading(),
         });
 
-        const value = this.value; // Air / Sea / Land
-        const route = this.dataset.route; // /public/transport/options
+        const value = this.value;
+        const route = this.dataset.route;
 
-        if (!value || route === "#") {
-            detailsSelect.innerHTML =
-                '<option value="">-- Select Option --</option>';
-            return;
-        }
-
-        // build URL with the selected value as query param
-        const url = `${route}?type=${encodeURIComponent(value)}`;
-        console.log(url);
-        $.ajax({
-            url: url, // the same URL you built earlier: route + ?type=value
-            type: "GET",
-            dataType: "json",
-            success: function (data) {
-                console.log("something here");
-                console.log(data);
-                Swal.close();
-                // rebuild next dropdown
-                const detailsSelect = $("#entryPoint"); // if using jQuery
-                let options =
-                    '<option value="">-- Select Entry Point --</option>';
-                data.forEach(function (item) {
-                    options += `<option value="${item.id}" 
-                    data-entry_name = "${item.entry_display}" 
-                    
-                    >${item.entry_display}</option>`;
-                });
-                detailsSelect.html(options);
-            },
-            error: function (xhr, status, error) {
-                console.error("AJAX Error:", error);
-                console.log(xhr.responseText); // helpful for Laravel debug messages
-                Swal.close();
-                Swal.fire("Error", "Error", "error");
-                console.error("ERROR RESPONSE:");
-                console.error();
-            },
-        });
+        loadEntryPoints(value, route);
     });
 
     $("#entryPoint").on("change", function (e) {
         e.preventDefault();
 
-        // get the selected <option>
         entryName = $(this).find("option:selected").data("entry_name");
-
         console.log("I picked entry:", entryName);
-
         summarySubmit();
     });
 
     // ------------------- ETA Date Validation -------------------
     const etaInput = document.getElementById("eta");
     if (etaInput) {
-        // Set minimum date to today
         const today = new Date().toISOString().split("T")[0];
         etaInput.setAttribute("min", today);
 
-        // Validate on change
         etaInput.addEventListener("change", function () {
             const selectedDate = new Date(this.value);
             const todayDate = new Date();
-            todayDate.setHours(0, 0, 0, 0); // Reset time for accurate comparison
+            todayDate.setHours(0, 0, 0, 0);
 
             if (selectedDate < todayDate) {
                 Swal.fire({
@@ -464,7 +460,7 @@ function permitDetails() {
                     title: "Invalid Date",
                     text: "Expected Inspection Date cannot be a past date. Please select today or a future date.",
                 });
-                this.value = ""; // Clear the invalid date
+                this.value = "";
                 this.classList.add("is-invalid");
             } else {
                 this.classList.remove("is-invalid");
@@ -917,12 +913,32 @@ async function loadApplicationData(id) {
 
             // 3. Permit Details
             $("#eta").val(app.eta ? app.eta.split("T")[0] : "");
-            $("#trnptType").val(app.transport_type).trigger("change");
 
-            // wait slightly for transport options to load
-            setTimeout(() => {
-                $("#entryPoint").val(app.entry_point).trigger("change");
-            }, 1000);
+            const transportType = app.transport_type ?? "";
+            const route = document.getElementById("trnptType")?.dataset?.route ?? "#";
+            $("#trnptType").val(transportType);
+
+            // Load entry points first, then restore the saved entry point inside the callback
+            if (transportType) {
+                Swal.fire({ title: "Loading...", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                loadEntryPoints(transportType, route, () => {
+                    setTimeout(() => {
+                        let entryPointVal = app.entry_point;
+                        if (typeof app.entry_point === 'object' && app.entry_point !== null) {
+                            entryPointVal = app.entry_point.id;
+                        }
+
+                        const savedEntryPoint = entryPointVal ? String(entryPointVal) : "";
+                        console.log("Setting entry point to:", savedEntryPoint, "Options available:", $("#entryPoint").html());
+                        if (savedEntryPoint) {
+                            $("#entryPoint").val(savedEntryPoint).trigger("change");
+                            // update entryName for the summary panel
+                            entryName = $("#entryPoint").find("option:selected").data("entry_name") || "";
+                        }
+                        summarySubmit();
+                    }, 50);
+                });
+            }
 
             // 4. Items
             if (app.inspection_items && app.inspection_items.length > 0) {
@@ -956,7 +972,7 @@ async function loadApplicationData(id) {
     }
 }
 
-function saveapplication(isDraft = false) {
+function saveapplication(isDraft = false, shouldRedirect = false) {
     const form = document.querySelector("#wizardForm") || document.querySelector("#wizardFormOthers");
     if (!form) return console.error("Form not found");
 
@@ -972,7 +988,16 @@ function saveapplication(isDraft = false) {
 
     formData.append("exporterData", JSON.stringify(exporter));
     formData.append("importerData", JSON.stringify(importer));
-    formData.append("permitDetails", JSON.stringify(permitDetails));
+
+    // Always build permitDetails fresh from the DOM to ensure entry_point is captured,
+    // regardless of whether summarySubmit() has been called yet.
+    const livePermitDetails = {
+        applCate: document.getElementById("app_cate")?.value ?? "",
+        eta: document.getElementById("eta")?.value ?? "",
+        tranType: document.getElementById("trnptType")?.value ?? "",
+        entrypoint: document.getElementById("entryPoint")?.value ?? "",
+    };
+    formData.append("permitDetails", JSON.stringify(livePermitDetails));
 
     tempItems.forEach((item, index) => {
         const { files, existingFiles, ...otherData } = item;
@@ -1009,7 +1034,7 @@ function saveapplication(isDraft = false) {
                 showConfirmButton: false,
             });
 
-            if (!isDraft) {
+            if (!isDraft || shouldRedirect) {
                 setTimeout(() => {
                     window.location.href = "/public/inspection_certificates_list";
                 }, 1500);
@@ -1106,6 +1131,16 @@ $(document).ready(async function () {
             await loadApplicationData(appId);
         }
 
+        const form = document.querySelector("#wizardForm");
+        if (form) {
+            form.addEventListener("input", () => {
+                change = true;
+            });
+            form.addEventListener("change", () => {
+                change = true;
+            });
+        }
+
         // Submit button handler
         $(document).on("click", "#submitApps", function (e) {
             e.preventDefault();
@@ -1113,49 +1148,49 @@ $(document).ready(async function () {
             saveapplication(false);
         });
 
-        // $(document).on(
-        //     "click",
-        //     `#logoutButton, 
-        //     .app-sidebar.sticky button, .app-sidebar.sticky a,
+        $(document).on(
+            "click",
+            `#logoutButton, 
+            .app-sidebar.sticky button, .app-sidebar.sticky a,
            
-        //     .breadcrumb .breadcrumb-item a
-        //     `,
-        //     function (e) {
-        //         if (!change) return;
+            .breadcrumb .breadcrumb-item a
+            `,
+            function (e) {
+                if (!change) return;
 
-        //         e.preventDefault();
-        //         const target = this;
+                e.preventDefault();
+                const target = this;
 
-        //         Swal.fire({
-        //             title: "Unsaved Changes",
-        //             text: "You have unsaved changes. What would you like to do?",
-        //             icon: "warning",
-        //             showCancelButton: true,
-        //             showDenyButton: true,
-        //             confirmButtonText: "Yes, leave",
-        //             denyButtonText: "Save as Draft",
-        //             cancelButtonText: "Stay",
-        //         }).then((result) => {
-        //             if (result.isConfirmed) {
-        //                 // Leave page
-        //                 change = false;
+                Swal.fire({
+                    title: "Unsaved Changes",
+                    text: "You have unsaved changes. What would you like to do?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    showDenyButton: true,
+                    confirmButtonText: "Yes, leave",
+                    denyButtonText: "Save as Draft",
+                    cancelButtonText: "Stay",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Leave page
+                        change = false;
 
-        //                 if (target.tagName === "A") {
-        //                     window.location.href = target.href;
-        //                 } else {
-        //                     target.click();
-        //                 }
-        //             }
+                        if (target.tagName === "A") {
+                            window.location.href = target.href;
+                        } else {
+                            target.click();
+                        }
+                    }
 
-        //             if (result.isDenied) {
-        //                 saveapplication(true);
-        //                 // window.location.href = "/public/inspection_certificates_list";
-        //             }
+                    if (result.isDenied) {
+                        // Save as draft and redirect
+                        saveapplication(true, true); // true = shouldRedirect
+                    }
 
-        //             // result.isDismissed → user clicked "Stay"
-        //         });
-        //     }
-        // );
+                    // result.isDismissed → user clicked "Stay"
+                });
+            }
+        );
     } catch (error) {
         console.error("Error during initialization:", error);
         Swal.fire(
