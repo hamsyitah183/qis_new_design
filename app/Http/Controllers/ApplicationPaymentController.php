@@ -14,7 +14,7 @@ class ApplicationPaymentController extends Controller
     //
     public function getView()
     {
-        if (auth()->user()->hasRole('boundary officer')) {
+        if (auth()->check() && auth()->user()->hasRole('boundary officer')) {
             abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
         }
 
@@ -156,7 +156,7 @@ class ApplicationPaymentController extends Controller
 
     public function orderDetails($order_number)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
+        if (auth()->check() && auth()->user()->hasRole('boundary officer')) {
             abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
         }
 

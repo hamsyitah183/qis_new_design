@@ -95,20 +95,20 @@ class ApplicationController extends Controller
             "Expires"             => "0"
         );
 
-        $columns = array('App ID', 'Date', 'Importer', 'Exporter', 'Status');
+        $columns = array('Application ID', 'Date', 'Importer', 'Exporter', 'Status');
 
         $callback = function() use($applications, $columns) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns);
 
             foreach ($applications as $app) {
-                $row['App ID'] = $app->application_id;
+                $row['Application ID'] = $app->application_id;
                 $row['Date'] = $app->created_at->format('d-m-Y H:i');
                 $row['Importer'] = $app->importer->fullname ?? '-';
                 $row['Exporter'] = $app->exporter->name ?? '-';
                 $row['Status'] = strtoupper($app->status);
 
-                fputcsv($file, array($row['App ID'], $row['Date'], $row['Importer'], $row['Exporter'], $row['Status']));
+                fputcsv($file, array($row['Application ID'], $row['Date'], $row['Importer'], $row['Exporter'], $row['Status']));
             }
 
             fclose($file);
