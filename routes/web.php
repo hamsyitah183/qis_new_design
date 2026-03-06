@@ -99,6 +99,7 @@ Route::prefix('public')
         Route::post('/save_application_inspection', [InspectionController::class, 'saveApplication'])->name('saveApplicationInspection');
 
         Route::post('/save_application_consignment', [ConsignmentApplicationController::class, 'saveApplication'])->name('saveApplicationConsignment');
+        Route::post('/save_draft_consignment', [ConsignmentApplicationController::class, 'saveDraft'])->name('saveDraftConsignment');
         // view application
         Route::get('/view_import_permit', [ApplicationController::class, 'showallapplicationlist'])->name('showallapplicationlist');
 
@@ -147,7 +148,7 @@ Route::prefix('public')
         Route::get('/api/filters/my-consignment-exporters', [FilterController::class, 'getMyConsignmentExporters'])->name('api.filters.myConsignmentExporters');
         Route::get('/api/filters/my-consignment-importers', [FilterController::class, 'getMyConsignmentImporters'])->name('api.filters.myConsignmentImporters');
 
-       Route::get('/get_item_details/{id}', [MiscController::class, 'getspecificitem']);
+        Route::get('/get_item_details/{id}', [MiscController::class, 'getspecificitem']);
     });
 
 Route::prefix('internal')
@@ -311,7 +312,8 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/view_application/{uuid}', [ApplicationController::class, 'viewapplication'])->name('viewApplication');
     Route::get('/edit_application/{uuid}', [ApplicationController::class, 'editApplication'])->name('editApplication');
 
-    Route::get('/view_consignment/{uuid}', [ConsignmentApplicationController::class, 'viewapplication'])->name('consignment.view'); // Removed name to avoid confusion, it's now in the group
+    Route::get('/view_consignment/{uuid}', [ConsignmentApplicationController::class, 'viewapplication'])->name('consignment.view');
+    Route::get('/edit_consignment/{uuid}', [ConsignmentApplicationController::class, 'editApplication'])->name('consignment.edit');
     Route::get('/consignment_application/{id}/data', [ConsignmentController::class, 'getApplicationDetails']);
     Route::get('/consignment/attachment/{id}', [ConsignmentApplicationController::class, 'viewAttachment'])->name('consignment.attachment.view');
     Route::get('/consignment/list/data', [ConsignmentController::class, 'getallconsignmentlist'])->name('consignment.data');

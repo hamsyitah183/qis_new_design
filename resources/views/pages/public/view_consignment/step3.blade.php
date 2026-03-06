@@ -130,7 +130,7 @@
                                     </td>
                                     <td class="w-10">:</td>
                                     <td class="text-start  text-muted" id="sentryp">
-                                        {{ $application->entryPoint->entry_name }}
+                                        {{ $application->entryPoint?->entry_name }}
                                     </td>
                                 </tr>
                             </tbody>
@@ -224,34 +224,34 @@
                                                 </thead>
                                                 <tbody>
                                                     {{-- @forelse ($consignmentDetails as $index => $item)
-                                                        
-                                                        <tr>
-                                                            <td>{{ $index + 1 }}</td>
-                                                            <td>{{ $item['item_name'] ?? '—' }}
-                                                            </td>
-                                                            <td>{{ $item['quantity'] ?? '—' }}
-                                                                {{ $item['measure'] ?? '—' }}
-                                                            </td>
-                                                            <td>{{ $item['uses'] ?? '—' }}</td>
-                                                            <td>RM {{ $item['value'] ?? '—' }}
-                                                            </td>
-                                                        
-                                                            <td>
-                                                                <a type="button" data-bs-toggle="modal"
-                                                                    data-bs-target="#editIpItemModal"
-                                                                    class="btn btn-sm btn-info">Edit
-                                                                    Consignment Details
-                                                                </a><br>
-                                                                <a type="button"
-                                                                    class="btn btn-sm btn-danger mt-2">RemoveDetails</a>
-                                                            </td>
-                                                        </tr>
+
+                                                    <tr>
+                                                        <td>{{ $index + 1 }}</td>
+                                                        <td>{{ $item['item_name'] ?? '—' }}
+                                                        </td>
+                                                        <td>{{ $item['quantity'] ?? '—' }}
+                                                            {{ $item['measure'] ?? '—' }}
+                                                        </td>
+                                                        <td>{{ $item['uses'] ?? '—' }}</td>
+                                                        <td>RM {{ $item['value'] ?? '—' }}
+                                                        </td>
+
+                                                        <td>
+                                                            <a type="button" data-bs-toggle="modal"
+                                                                data-bs-target="#editIpItemModal"
+                                                                class="btn btn-sm btn-info">Edit
+                                                                Consignment Details
+                                                            </a><br>
+                                                            <a type="button"
+                                                                class="btn btn-sm btn-danger mt-2">RemoveDetails</a>
+                                                        </td>
+                                                    </tr>
                                                     @empty
-                                                        <tr>
-                                                            <td colspan="7" class="text-center text-muted">
-                                                                No consignment items found.
-                                                            </td>
-                                                        </tr>
+                                                    <tr>
+                                                        <td colspan="7" class="text-center text-muted">
+                                                            No consignment items found.
+                                                        </td>
+                                                    </tr>
                                                     @endforelse --}}
                                                 </tbody>
                                             </table>

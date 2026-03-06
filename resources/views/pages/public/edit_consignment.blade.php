@@ -52,10 +52,10 @@
                             @include('pages.public.consignment.step3')
                         </aside>
                         <!-- <aside class="wizard-buttons">
-                                                                        <button class="wizard-btn btn prev" disabled="true">Prev</button>
-                                                                        <button class="wizard-btn btn next">Next</button>
-                                                                        <button class="wizard-btn btn finish" style="display: none;">Submit</button>
-                                                                    </aside> -->
+                                                                            <button class="wizard-btn btn prev" disabled="true">Prev</button>
+                                                                            <button class="wizard-btn btn next">Next</button>
+                                                                            <button class="wizard-btn btn finish" style="display: none;">Submit</button>
+                                                                        </aside> -->
                     </form>
                     @include('pages.public.consignment.step2modal')
                 </div>
@@ -69,6 +69,7 @@
 @push('scripts')
     <script>
         window.baseUrl = "{{ url('/') }}";
+        const application = @json($application);
     </script>
     <script>
         // for form wizard next and prev button
@@ -97,5 +98,5 @@
 
 
 
-    @vite(['resources/js/pages/consignment/consignment.js'])
+    @vite(['resources/js/pages/consignment/consignment_edit.js'])
 @endpush
