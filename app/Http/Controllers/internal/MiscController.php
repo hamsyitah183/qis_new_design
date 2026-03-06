@@ -537,8 +537,13 @@ class MiscController extends Controller
         ]);
 
         $branch = Branch::findOrFail($request->input('id'));
+        $oldBranchName = $branch->name;
         $branch->name = $request->input('name');
         $branch->save();
+
+        if ($oldBranchName !== $branch->name) {
+            InternalUser::where('branch', $oldBranchName)->update(['branch' => $branch->name]);
+        }
 
         activity()
             ->useLog('user_activity')
