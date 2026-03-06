@@ -43,7 +43,7 @@
                                         <!-- Warning message -->
                                         <p style="margin: 0 0 30px 0; font-size: 14px; line-height: 1.6; color: #6c757d;">If
                                             you did not request a password reset, no further action is required. This link
-                                            will expire in 60 minutes.</p>
+                                            can only be used once.</p>
 
                                         <!-- Signature -->
                                         <div style="margin-bottom: 40px;">

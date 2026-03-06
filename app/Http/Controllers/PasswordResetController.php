@@ -22,7 +22,7 @@ class PasswordResetController extends Controller
             'title' => 'Forgot Password'
         ]);
     }
-    
+
     // Send reset email
     public function sendResetLink(Request $request)
     {
@@ -58,7 +58,23 @@ class PasswordResetController extends Controller
         $email = request('email');
         $type = request('type');
         $title = 'Reset Password';
-        return view('pages.authentication.reset_password', compact('token', 'email', 'type', 'title'));
+
+        // Check if the token exists and is valid for the given email
+        $resetRecord = DB::table('password_reset_tokens')
+            ->where('email', $email)
+            ->where('token', $token)
+            ->first();
+
+        if ($resetRecord) {
+            DB::table('password_reset_tokens')->where('email', $email)->delete();
+
+            session(['password_reset_auth_' . $token => $email]);
+
+            return view('pages.authentication.reset_password', compact('token', 'email', 'type', 'title'));
+        }
+
+        // used or expired
+        abort(403, 'This password reset link is invalid or has already been used.');
     }
 
     // Handle reset
@@ -71,12 +87,8 @@ class PasswordResetController extends Controller
             'type' => 'required|in:public,internal',
         ]);
 
-        $reset = DB::table('password_reset_tokens')
-            ->where('email', $request->email)
-            ->where('token', $request->token)
-            ->first();
-
-        if (!$reset) {
+        // Verify that this browser session is authorized to reset for this token
+        if (session('password_reset_auth_' . $request->token) !== $request->email) {
             return back()->withErrors(['email' => 'Invalid or expired token.']);
         }
 
@@ -91,7 +103,8 @@ class PasswordResetController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+        // Clean up the session authorization
+        session()->forget('password_reset_auth_' . $request->token);
 
         return redirect()->route('login')->with('status', 'Password reset successfully!');
     }

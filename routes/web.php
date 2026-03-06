@@ -44,9 +44,11 @@ Route::middleware(['multi.guest'])->group(function () {
 
     Route::get('/forgot-password', [PasswordResetController::class, 'resetPage'])->name('password.request');
     Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
-    Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
-    Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.update');
 });
+
+// Password Reset Routes
+Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
+Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.update');
 
 // Root route '/'
 Route::get('/', function () {
