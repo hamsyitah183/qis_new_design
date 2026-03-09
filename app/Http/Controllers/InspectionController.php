@@ -489,7 +489,7 @@ class InspectionController extends Controller
                     'Inspection Application',
                     $application->application_id,
                     'will be check by DOA',
-                    `Your application has been successfully submitted.`,
+                    'Your application has been successfully submitted.',
                     $application->importer->phone_number ?? '60143290092', // recipient number
                 );
 
@@ -562,7 +562,7 @@ class InspectionController extends Controller
                     'Inspection Application',
                     $application->application_id,
                     'will be check by DOA',
-                    `Your application has been successfully submitted.`,
+                    'Your application has been successfully submitted.',
                     $application->importer->phone_number ?? '60143290092', // recipient number
                 );
             }
@@ -706,7 +706,7 @@ class InspectionController extends Controller
                 'Inspection Application',
                 $application->application_id,
                 'has been rejected by DOA',
-                `Your application is rejected.`,
+                'Your application is rejected.',
                 $application->importer->phone_number ?? '60143290092', // recipient number
             );
         } elseif ($status === 'Clerk Verified') {
@@ -717,7 +717,7 @@ class InspectionController extends Controller
                 'Inspection Application',
                 $application->application_id,
                 'has been accepted by DOA',
-                `Your application is under review and will be processed shortly.`,
+                'Your application is under review and will be processed shortly.',
                 $application->importer->phone_number ?? '60143290092', // recipient number
             );
         }
@@ -788,29 +788,6 @@ class InspectionController extends Controller
 
         Notification::send($publicUser, new ApplicationNotification($messages['public'], authUser()['user']->fullname, $notificationUrl));
 
-        // activity log
-        $application->logActivity(action: $status, remark: "Inspection application {$status} by internal user", status: $status);
-
-        // notifications
-        $notificationUrl = route('public.viewInspectionApplication', ['id' => $application->application_id]);
-        $internalUsers = InternalUser::role(['admin', 'clerk', 'superadmin'])->get();
-        $internalMsg = "Inspection application {$application->application_id} has been {$status}";
-        Notification::send($internalUsers, new ApplicationNotification($internalMsg, authUser()['user']->fullname, $notificationUrl));
-
-        $applicant = PublicUser::where('uuid', $application->user_id)->first();
-        if ($applicant) {
-            $applicantMsg = "Your inspection application with id {$application->application_id} has been {$status}";
-            $applicant->notify(new ApplicationNotification($applicantMsg, 'QIS', $notificationUrl));
-            try {
-                event(new PublicUserEvent($applicantMsg, $applicant->uuid));
-            } catch (\Exception $e) {
-                Log::warning('Pusher connection failed but continuing: ' . $e->getMessage());
-            }
-        }
-
-        $application = InspectionApplication::where('application_id', $id)->firstOrFail();
-        $application->status = $status;
-        $application->save();
 
         activity()
             ->tap(function (Activity $activity) {
