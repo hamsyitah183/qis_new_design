@@ -397,6 +397,11 @@ function permitDetails() {
                     >${item.entry_display}</option>`;
                 });
                 detailsSelect.html(options);
+
+                // Auto-select the first available entry point
+                if (data.length > 0) {
+                    detailsSelect.val(data[0].id).trigger("change");
+                }
             },
             error: function (xhr, status, error) {
                 console.error("AJAX Error:", error);
@@ -445,6 +450,11 @@ function permitDetails() {
                 this.classList.remove("is-invalid");
             }
         });
+    }
+
+    // Trigger change event automatically if a transport type is pre-selected
+    if (trnptType.value) {
+        trnptType.dispatchEvent(new Event("change"));
     }
 }
 

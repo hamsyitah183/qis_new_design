@@ -445,6 +445,13 @@ function permitDetails() {
                     >${item.entry_display}</option>`;
                 });
                 detailsSelect.html(options);
+
+                // Auto-select drafted entry point or the first available option
+                if (isEditMode && application.entry_point) {
+                    detailsSelect.val(application.entry_point).trigger("change");
+                } else if (data.length > 0) {
+                    detailsSelect.val(data[0].id).trigger("change");
+                }
             },
             error: function (xhr, status, error) {
                 console.error("AJAX Error:", error);
@@ -495,21 +502,6 @@ function permitDetails() {
         });
     }
 
-    // Auto-set transport type and entry point in edit mode
-    if (isEditMode && application.transport_type) {
-        setTimeout(() => {
-            $(trnptType).val(application.transport_type).trigger("change");
-
-            // We need to wait for AJAX to finish before setting entry_point
-            let checkExist = setInterval(function() {
-                if ($('#entryPoint option').length > 1) {
-                    $('#entryPoint').val(application.entry_point).trigger("change");
-                    clearInterval(checkExist);
-                }
-            }, 100); 
-        }, 300);
-    }
-
     if (isEditMode) {
         if (application.eta) {
             const etaDate = application.eta.split("T")[0];
@@ -522,6 +514,11 @@ function permitDetails() {
             const catInput = document.getElementById("app_cate");
             if(catInput) catInput.value = application.category_application;
         }
+    }
+
+    // Automatically trigger change event for the fixed Land transport type
+    if (trnptType.value) {
+        trnptType.dispatchEvent(new Event("change"));
     }
 }
 
