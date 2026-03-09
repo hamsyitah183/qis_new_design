@@ -246,7 +246,7 @@
 
     <div class="footer">
         <div style="float: left;">
-            Date of Issue: {{ now()->format('d/m/Y') }}
+            Date of Issue: {{ now()->format('d/M/Y') }}
         </div>
         <div class="director-sign">
             <div style="font-weight: bold;">Director of Agriculture</div>

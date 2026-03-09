@@ -59,7 +59,7 @@
     <table>
         <thead>
             <tr>
-                <th>App ID</th>
+                <th>Application ID</th>
                 <th>Date</th>
                 <th>Importer</th>
                 <th>Exporter</th>

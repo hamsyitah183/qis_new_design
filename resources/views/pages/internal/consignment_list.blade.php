@@ -173,11 +173,11 @@
             <div class="p-3 text-center">
                 <p>Select the format for your exported report. The current filters will be applied.</p>
                 <div class="d-flex justify-content-center gap-3 mt-4">
-                    <button type="button" class="btn btn-success btn-lg" id="btnConfirmExportExcel">
-                        <i class="ti ti-file-spreadsheet fs-20"></i><br>Excel (CSV)
+                    <button type="button" class="btn btn-success btn-md d-flex align-items-center gap-2" id="btnConfirmExportExcel">
+                        <i class="ti ti-file-spreadsheet fs-20"></i> Excel (CSV)
                     </button>
-                    <button type="button" class="btn btn-danger btn-lg" id="btnConfirmExportPdf">
-                        <i class="ti ti-file-description fs-20"></i><br>PDF Document
+                    <button type="button" class="btn btn-danger btn-md d-flex align-items-center gap-2" id="btnConfirmExportPdf">
+                        <i class="ti ti-file-description fs-20"></i> PDF Document
                     </button>
                 </div>
             </div>

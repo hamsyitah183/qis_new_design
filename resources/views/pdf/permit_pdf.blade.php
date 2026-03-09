@@ -264,7 +264,7 @@
 
     <div class="footer" style="padding-top:30px;">
     <div style="float: left;">
-        Date of Issue: <span class="variable-value">{{ now()->format('d/m/Y') }}</span>
+        Date of Issue: <span class="variable-value">{{ now()->format('d/M/Y') }}</span>
     </div>
     <div class="director-sign">
         <div style="font-weight: bold;">Director of Agriculture</div>

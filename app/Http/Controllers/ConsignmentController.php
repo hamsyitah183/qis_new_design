@@ -99,7 +99,7 @@ class ConsignmentController extends Controller
             "Expires" => "0"
         );
 
-        $columns = array('App ID', 'Date', 'Importer', 'Exporter', 'Status');
+        $columns = array('Application ID', 'Date', 'Importer', 'Exporter', 'Status');
 
         $callback = function () use ($applications, $columns) {
             $file = fopen('php://output', 'w');
