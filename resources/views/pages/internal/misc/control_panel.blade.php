@@ -21,12 +21,7 @@
                                 aria-selected="false" tabindex="-1"><i
                                     class="ri-map-pin-line me-2 align-middle fs-14 lh-1 text-primary"></i>District Entry</a>
                         </li>
-                        <li class="nav-item me-0" role="presentation">
-                            <a class="nav-link" data-bs-toggle="tab" role="tab" aria-current="page" href="#branch-settings"
-                                aria-selected="false" tabindex="-1"><i
-                                    class="ri-map-pin-line me-2 align-middle fs-14 lh-1 text-primary"></i>Branch
-                                Management</a>
-                        </li>
+
                         <li class="nav-item me-0" role="presentation">
                             <a class="nav-link" data-bs-toggle="tab" role="tab" aria-current="page" href="#security"
                                 aria-selected="false" tabindex="-1"><i
@@ -68,8 +63,7 @@
                         @include('pages.internal.misc.cp_tab4')
                         <!-- tab5 -->
                         @include('pages.internal.misc.cp_tab5')
-                        <!-- tab branch -->
-                        @include('pages.internal.misc.cp_tab6')
+
                     </div>
                 </div>
 
