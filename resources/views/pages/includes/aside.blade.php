@@ -327,6 +327,11 @@
                                         District Management</a>
                                 </li>
 
+                                <li class="slide {{ $currentRoute === 'internal.branch-management' ? 'active' : '' }}">
+                                    <a href="{{ route('internal.branch-management') }}" class="side-menu__item">Branch
+                                        Management</a>
+                                </li>
+
                                 <li style="display:none"
                                     class="slide {{ $currentRoute === 'internal.activity_logs' ? 'active' : '' }} ">
                                     <a href="{{ route('internal.activity_logs') }}" class="side-menu__item">
