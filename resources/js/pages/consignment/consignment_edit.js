@@ -447,11 +447,18 @@ function permitDetails() {
                 detailsSelect.html(options);
 
                 // Auto-select drafted entry point or the first available option
-                if (isEditMode && application.entry_point) {
-                    detailsSelect.val(application.entry_point).trigger("change");
-                } else if (data.length > 0) {
-                    detailsSelect.val(data[0].id).trigger("change");
-                }
+                setTimeout(() => {
+                    if (isEditMode && application.entry_point != null) {
+                        detailsSelect.val(application.entry_point.toString()).trigger("change");
+                        
+                        // Fallback: if value didn't set (e.g. strict type issue)
+                        if (!detailsSelect.val() && data.length > 0) {
+                            detailsSelect.val(data[0].id.toString()).trigger("change");
+                        }
+                    } else if (data.length > 0) {
+                        detailsSelect.val(data[0].id.toString()).trigger("change");
+                    }
+                }, 100);
             },
             error: function (xhr, status, error) {
                 console.error("AJAX Error:", error);
