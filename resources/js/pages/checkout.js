@@ -8,6 +8,15 @@ function returnToApplication() {
         e.preventDefault();
         console.log('cancel payment')
         const applicationId = $(this).data('app-id');
+        const applicationType = $(this).data('app-type');
+
+        let baseUrl = '/view_application/';
+        if (applicationType === 'Inspection Certificate' || applicationType === 'Inspection') {
+            baseUrl = '/view_inspection/';
+        } else if (applicationType === 'Consignment Certificate' || applicationType === 'Consignment') {
+            baseUrl = '/view_consignment/';
+        }
+
 
         // Extract ONLY permit IDs
         const permitIds = window.PERMITS.map(p => p.id);
@@ -39,8 +48,7 @@ function returnToApplication() {
                 //     window.location.href =
                 //         '/view_application/' + applicationId + '#pending';
                 // });
-                window.location.href =
-                        '/view_application/' + applicationId + '#pending';
+                window.location.href = baseUrl + applicationId + '#pending';
             }
         });
     });
