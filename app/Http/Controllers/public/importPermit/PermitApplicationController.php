@@ -261,7 +261,14 @@ class PermitApplicationController extends Controller
     {
         $type = $request->query('type');
 
-        $entryp = \DB::table('ip_entry_point')->leftJoin('public_code', 'ip_entry_point.district', '=', 'public_code.cate_code')->where('public_code.cate_name', 'district_entry')->where('ip_entry_point.transport_type', $type)->select('ip_entry_point.id', \DB::raw('CONCAT(public_code.description, " - ", ip_entry_point.entry_name) AS entry_display'))->get();
+        $entryp = \DB::table('ip_entry_point')
+            ->leftJoin('public_code', 'ip_entry_point.district', '=', 'public_code.cate_code')
+            ->where('public_code.cate_name', 'district_entry')
+            ->where('public_code.is_del', false)
+            ->where('ip_entry_point.is_del', false)
+            ->where('ip_entry_point.transport_type', $type)
+            ->select('ip_entry_point.id', \DB::raw('CONCAT(public_code.description, " - ", ip_entry_point.entry_name) AS entry_display'))
+            ->get();
 
         return response()->json($entryp);
     }
