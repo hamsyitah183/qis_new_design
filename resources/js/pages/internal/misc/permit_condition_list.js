@@ -3,71 +3,71 @@ import Swal from "sweetalert2";
 
 
 
-    let internalListTable;
-    let countryLookup = {};
+let internalListTable;
+let countryLookup = {};
 
-    // Fetch country list & build lookup map
-    function initCountryLookup() {
-        return $.ajax({
-            url: '/get_country',
-            method: 'GET',
-            success: function(response) {
+// Fetch country list & build lookup map
+function initCountryLookup() {
+    return $.ajax({
+        url: '/get_country',
+        method: 'GET',
+        success: function (response) {
 
-                const list = response.data;
+            const list = response.data;
 
-                // Build lookup dictionary: { "AE": "United Arab Emirates", ... }
-                list.forEach(item => {
-                    countryLookup[item.value] = item.name;
-                });
+            // Build lookup dictionary: { "AE": "United Arab Emirates", ... }
+            list.forEach(item => {
+                countryLookup[item.value] = item.name;
+            });
 
-                console.log("Country lookup ready:", countryLookup);
-            },
-            error: function(error) {
-                console.error("Failed to load country list:", error);
-            }
-        });
-    } window.initCountryLookup = initCountryLookup;
+            console.log("Country lookup ready:", countryLookup);
+        },
+        error: function (error) {
+            console.error("Failed to load country list:", error);
+        }
+    });
+} window.initCountryLookup = initCountryLookup;
 
-    // Lookup helper function
-    function getCountryName(code) {
-        return countryLookup[code] || code; 
-    }window.getCountryName = getCountryName;
+// Lookup helper function
+function getCountryName(code) {
+    return countryLookup[code] || code;
+} window.getCountryName = getCountryName;
 
-    function normalizeToArray(value) {
-        if (Array.isArray(value)) return value;
+function normalizeToArray(value) {
+    if (Array.isArray(value)) return value;
 
-        try {
-            const parsed = JSON.parse(value);
-            if (Array.isArray(parsed)) return parsed;
-        } catch (e) {}
+    try {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed)) return parsed;
+    } catch (e) { }
 
-        return value ? [value] : [];
-    }window.normalizeToArray = normalizeToArray;
+    return value ? [value] : [];
+} window.normalizeToArray = normalizeToArray;
 
 
-    async function data_table_init() {        
-        console.log("DataTable initialized");
-        const [
-            { default: DataTable },
-            _bs5,
-            _responsive,
-            _buttons,
-            _buttonsHtml5,
-            _buttonsPrint,
-        ] = await Promise.all([
-            import("datatables.net-bs5"),
-            import("datatables.net-responsive-bs5"),
-            import("datatables.net-buttons-bs5"),
-            import("datatables.net-buttons/js/buttons.html5.mjs"),
-            import("datatables.net-buttons/js/buttons.print.mjs"),
-        ]);
+async function data_table_init() {
+    console.log("DataTable initialized");
+    const [
+        { default: DataTable },
+        _bs5,
+        _responsive,
+        _buttons,
+        _buttonsHtml5,
+        _buttonsPrint,
+    ] = await Promise.all([
+        import("datatables.net-bs5"),
+        import("datatables.net-responsive-bs5"),
+        import("datatables.net-buttons-bs5"),
+        import("datatables.net-buttons/js/buttons.html5.mjs"),
+        import("datatables.net-buttons/js/buttons.print.mjs"),
+    ]);
 
-        await Promise.all([
-            import("datatables.net-bs5/css/dataTables.bootstrap5.min.css"),
-            import("datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css"),
-        ]);
+    await Promise.all([
+        import("datatables.net-bs5/css/dataTables.bootstrap5.min.css"),
+        import("datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css"),
+    ]);
 
-        internalListTable = new DataTable("#conditionTable", {
+    internalListTable = new DataTable("#conditionTable", {
         processing: true,
         serverSide: false,
         ajax: {
@@ -75,14 +75,14 @@ import Swal from "sweetalert2";
             type: "GET",
             dataSrc: "data"
         },
-        columns: 
+        columns:
             [
-                { 
-                    data: "item_name", 
+                {
+                    data: "item_name",
                     title: "Item Name",
                     render: function (data) {
                         return `<span class = "text-wrap">${data}</span>` ?? "-";
-                    } 
+                    }
 
                 },
 
@@ -132,11 +132,11 @@ import Swal from "sweetalert2";
                     }
                 }
             ],
-            responsive: true,
-            pageLength: 10,
-        });
+        responsive: true,
+        pageLength: 10,
+    });
 
-    }
+}
 
 document.addEventListener("DOMContentLoaded", async function () {
     await initCountryLookup();
@@ -215,8 +215,50 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     window.condiModal = condiModal;
 
+    // Filter functionality
+    document.getElementById("btnPermitFilter").addEventListener("click", function () {
+        const itemName = document.getElementById("filterPermitItemName").value;
+        const category = document.getElementById("filterPermitCategory").options[document.getElementById("filterPermitCategory").selectedIndex].text;
+        const usage = document.getElementById("filterPermitUsage").options[document.getElementById("filterPermitUsage").selectedIndex].text;
 
-    
+        // Exact or partial match search using DataTables API
+        internalListTable.column(0).search(itemName);
+
+        // If "All Categories" is selected, clear search. Else search by text.
+        if (document.getElementById("filterPermitCategory").value === "") {
+            internalListTable.column(1).search("");
+        } else {
+            internalListTable.column(1).search(category);
+        }
+
+        // If "All Usage" is selected, clear search. Else search by text.
+        if (document.getElementById("filterPermitUsage").value === "") {
+            internalListTable.column(2).search("");
+        } else {
+            // For Usage = 'Both', the data might be 'Import, Export' or just 'Both'
+            // We search for the text selected ('Import', 'Export', or 'Both')
+            internalListTable.column(2).search(usage);
+        }
+
+        internalListTable.draw();
+
+        // Close the dropdown after applying
+        bootstrap.Dropdown.getInstance(document.getElementById('permitFilterDropdown')).hide();
+    });
+
+    // Reset filter
+    document.getElementById("btnResetPermitFilter").addEventListener("click", function () {
+        document.getElementById("filterPermitItemName").value = "";
+        document.getElementById("filterPermitCategory").value = "";
+        document.getElementById("filterPermitUsage").value = "";
+
+        internalListTable.search("").columns().search("").draw();
+
+        // Close the dropdown after resetting
+        bootstrap.Dropdown.getInstance(document.getElementById('permitFilterDropdown')).hide();
+    });
+
+
 });
 
 

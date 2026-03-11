@@ -50,9 +50,8 @@
 
                 <div class="card-header">
                     <div class="ms-auto d-flex gap-2 align-items-center">
-                        <button class="btn btn-sm btn-primary filter dropdown-toggle" type="button"
-                            id="filterDropdownBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside"
-                            aria-expanded="false">
+                        <button class="btn btn-sm btn-primary filter dropdown-toggle" type="button" id="filterDropdownBtn"
+                            data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                             <span class="me-2"><i class="ti ti-adjustments-horizontal"></i></span>Filter
                         </button>
 
@@ -67,9 +66,11 @@
                                             <option value="Clerk Review In-Progress">Clerk Review In-Progress</option>
                                             <option value="Clerk Verified">Clerk Verified</option>
                                             <option value="Clerk Rejected">Clerk Rejected</option>
-                                            <option value="Officer Verification Completed">Officer Verification Completed</option>
+                                            <option value="Officer Verification Completed">Officer Verification Completed
+                                            </option>
                                             <option value="Not Approved">Not Approved</option>
                                             <option value="wait for company approval">Wait for Company Approval</option>
+                                            <option value="Completed">Completed</option>
                                         </select>
                                     </li>
                                 </div>
@@ -103,7 +104,8 @@
                                     <div class="col-12 col-md-6">
                                         <li class="mb-3">
                                             <label class="form-label fw-semibold mb-1">Submitted By</label>
-                                            <input type="text" id="filterUsername" class="form-control form-control-sm" placeholder="Enter username">
+                                            <input type="text" id="filterUsername" class="form-control form-control-sm"
+                                                placeholder="Enter username">
                                         </li>
                                     </div>
                                 @endif
@@ -130,7 +132,7 @@
                             </li>
                         </ul>
 
-                        @if($type === 'internal')
+                        @if ($type === 'internal')
                             <button type="button" id="btnOpenExportModal" class="btn btn-sm btn-info">
                                 <i class="ti ti-download"></i> Download Report
                             </button>
@@ -202,16 +204,18 @@
 
     </x-modal>
 
-    @if($type === 'internal')
+    @if ($type === 'internal')
         {{-- 📑 Application Export Modal --}}
         <x-modal id="applicationExportModal" title="Download Report" size="modal-dialog-centered">
             <div class="p-3 text-center">
                 <p>Select the format for your exported report. The current filters will be applied.</p>
                 <div class="d-flex justify-content-center gap-3 mt-4">
-                    <button type="button" class="btn btn-success btn-md d-flex align-items-center gap-2" id="btnConfirmExportExcel">
+                    <button type="button" class="btn btn-success btn-md d-flex align-items-center gap-2"
+                        id="btnConfirmExportExcel">
                         <i class="ti ti-file-spreadsheet fs-20"></i> Excel (CSV)
                     </button>
-                    <button type="button" class="btn btn-danger btn-md d-flex align-items-center gap-2" id="btnConfirmExportPdf">
+                    <button type="button" class="btn btn-danger btn-md d-flex align-items-center gap-2"
+                        id="btnConfirmExportPdf">
                         <i class="ti ti-file-description fs-20"></i> PDF Document
                     </button>
                 </div>
