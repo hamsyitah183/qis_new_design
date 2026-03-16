@@ -244,6 +244,8 @@ function updateRole() {
             $(".form-control").removeClass("is-invalid");
             $(".invalid-feedback").text("");
 
+            console.log('rolename', roleName)
+
             // Use FormData to append extra data like role
             const formEl = this;
             const formData = new FormData(formEl);
@@ -312,7 +314,7 @@ function listPermissionModal() {
     $(document).on("click", ".permissionModal", async function (e) {
         e.preventDefault();
 
-        const roleName = $(this).data("role");
+        roleName = $(this).data("role");
         console.log("Clicked role:", roleName);
 
         Swal.fire({

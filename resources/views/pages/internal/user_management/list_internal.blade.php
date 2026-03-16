@@ -34,9 +34,11 @@
         <div class="col-xl-12">
             <div class="card custom-card">
                 <div class="card-header">
-                    <div class="ms-auto">
-                        <button class="btn btn-success btn-sm addInternalUser-modal">Add Internal User</button>
-                    </div>
+                    @can('create internal user')
+                        <div class="ms-auto">
+                            <button class="btn btn-success btn-sm addInternalUser-modal">Add Internal User</button>
+                        </div>
+                    @endcan
                 </div>
 
                 <div class="card-body">

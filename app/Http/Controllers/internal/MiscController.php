@@ -11,6 +11,7 @@ use App\Models\IpApplication;
 use App\Models\IpCondition;
 use App\Models\IpConsignmentPermit;
 use App\Models\IpEntryPoint;
+use App\Models\MeasurementUnit;
 use App\Models\News;
 use App\Models\PublicCode;
 use App\Models\PublicUser;
@@ -24,23 +25,25 @@ use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\QISNewsMail;
 use App\Models\Branch;
+use Illuminate\Support\Facades\Gate;
 
 class MiscController extends Controller
 {
     public function showcontrolpanel()
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        // if (auth()->user()->hasRole('boundary officer')) {
+        //     abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        // }
+        
+        Gate::authorize('manage settings');
+
 
         return view('pages.internal.misc.control_panel');
     }
 
     public function showStateDistrictManagement()
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        Gate::authorize('manage settings');
 
         return view('pages.internal.misc.state_district_management');
     }
@@ -52,9 +55,7 @@ class MiscController extends Controller
 
     public function getpbdata($cate)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        Gate::authorize('manage settings');
 
         if ($cate === 'district_entry') {
             $pbdata = PublicCode::where('cate_name', $cate)
@@ -79,11 +80,9 @@ class MiscController extends Controller
 
     public function getspecificpbdata($id)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
-
-        $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->findorFail($id);
+        $pbdata = PublicCode::with(['conversion'])
+            ->select('id', 'cate_name', 'cate_code', 'description')
+            ->findorFail($id);
 
         return response()->json([
             'status' => 'success',
@@ -94,10 +93,6 @@ class MiscController extends Controller
 
     public function updatepbdata(Request $request)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
-
         $id = $request->input('id');
         $code = $request->input('item_code');
         $desc = $request->input('item_desc');
@@ -130,9 +125,7 @@ class MiscController extends Controller
             ->useLog('user_activity')
             ->event('update data')
             ->causedBy(authUser()['user'])
-            ->log(
-                authUser()['user']['fullname'] . ' updated ' . $pbdata->description . ' of ' . $pbdata->cate_name
-            );
+            ->log(authUser()['user']['fullname'] . ' updated ' . $pbdata->description . ' of ' . $pbdata->cate_name);
 
         return response()->json([
             'status' => 'success',
@@ -142,9 +135,7 @@ class MiscController extends Controller
 
     public function deletepbdata($id)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        Gate::authorize('manage settings');
 
         $pbdata = PublicCode::findorFail($id);
         $pbdata->is_del = true;
@@ -166,9 +157,7 @@ class MiscController extends Controller
 
     public function addpbdata(Request $request)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        Gate::authorize('manage settings');
 
         // dd($request->all());
         $cate = $request->input('category');
@@ -180,12 +169,23 @@ class MiscController extends Controller
             $code = $getcode + 1;
         }
 
+        if ($cate === 'unit_measurement') {
+            $conversion = $request->input('conversion');
+        }
+
         $pbdata = new PublicCode();
         $pbdata->cate_name = $cate;
         $pbdata->cate_code = $code;
         $pbdata->description = $desc;
         $pbdata->is_del = false;
         $pbdata->save();
+
+        if ($cate === 'unit_measurement') {
+            $pbdata->conversion()->create([
+                'measurement_id' => $pbdata->id,
+                'conversion' => $conversion,
+            ]);
+        }
 
         activity()
             ->useLog('user_activity')
@@ -203,31 +203,27 @@ class MiscController extends Controller
 
     public function showpermitcondition()
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        Gate::authorize('manage settings');
 
         return view('pages.internal.misc.permit_list');
     }
 
     public function permitaddcondition()
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        Gate::authorize('manage settings');
 
         $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->where('cate_name', 'condition_category')->where('is_del', false)->get();
 
-        return view('pages.internal.misc.permit_add', compact('pbdata'));
+        $measurementUnit = MeasurementUnit::with('publicCode')->get();
+
+        return view('pages.internal.misc.permit_add', compact('pbdata', 'measurementUnit'));
     }
 
 
 
     public function saveCondition(Request $request)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        Gate::authorize('manage settings');
 
         $request->validate([
             'itemName' => 'required|string',
@@ -291,9 +287,7 @@ class MiscController extends Controller
 
     public function deleteCondition($id)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        Gate::authorize('manage settings');
 
         $condition = IpCondition::findOrFail($id);
 
@@ -360,7 +354,8 @@ class MiscController extends Controller
             }
 
             // same behavior as shareNews() (emails to Gmail)
-            Mail::to('rowanyee79@gmail.com')->send(new QISNewsMail($title, $detailsMessage));
+            // Mail::to('rowanyee79@gmail.com')->send(new QISNewsMail($title, $detailsMessage));
+            Mail::to('hamsyitahnur@gmail.com')->send(new QISNewsMail($title, $detailsMessage));
         } catch (\Throwable $e) {
             // Swallow errors so deletion still succeeds
         }
@@ -373,9 +368,7 @@ class MiscController extends Controller
 
     public function editCondition($id)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        Gate::authorize('manage settings');
 
         $condition = IpCondition::with(['code'])->findOrFail($id);
 
@@ -387,9 +380,7 @@ class MiscController extends Controller
 
     public function getpermitconditiondata()
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        Gate::authorize('manage settings');
 
         $query = IpCondition::with(['condcategory'])->select('id', 'item_name', 'category', 'usage', 'country');
 
@@ -398,9 +389,7 @@ class MiscController extends Controller
 
     public function getpermitconditionbyid($id)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        Gate::authorize('manage settings');
 
         $conditions = IpCondition::with(['code', 'condcategory'])
             ->select('id', 'item_name', 'category', 'usage', 'addional_condition', 'quantity_limit', 'start_date', 'end_date', 'country')
@@ -471,9 +460,7 @@ class MiscController extends Controller
     }
     public function updateEntry(Request $request)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        Gate::authorize('manage settings');
 
         $districtId = $request->input('district_id');
         $places = $request->input('places', []);

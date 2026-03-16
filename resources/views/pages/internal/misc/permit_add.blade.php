@@ -66,7 +66,12 @@
                         </div>
                         <div class="col-xl-3">
                             <label for="quanmunit" class="form-label">Measurement Unit (Special case)</label>
-                            <input type="text" class="form-control" id="quanmunit" name="quanmunit">
+                            {{-- <input type="text" class="form-control" id="quanmunit" name="quanmunit"> --}}
+                            <select name="quanmunit" id="quanmunit" class="form-select">
+                                @foreach ($measurementUnit as $item)
+                                    <option value="{{ $item->id }}">{{ $item->publicCode->description }}  ({{  $item->publicCode->cate_code }})</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div class="col-xl-3">
                             <label class="form-label">Start Date</label>

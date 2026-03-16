@@ -107,8 +107,10 @@
 
 
 
-                        <button class="btn btn-success btn-sm addPublicUser-modal"> <span class="me-2"><i
+                        @can('create public user')
+                            <button class="btn btn-success btn-sm addPublicUser-modal"> <span class="me-2"><i
                                     class="ti ti-plus"></i></span> Add Public User</button>
+                        @endcan
                     </div>
 
                     <div class="button-group">

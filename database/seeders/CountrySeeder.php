@@ -52,7 +52,7 @@ class CountrySeeder extends Seeder
             ['code' => 'MM', 'name' => 'Myanmar'],
             ['code' => 'MW', 'name' => 'Malawi'],
             ['code' => 'MX', 'name' => 'Mexico'],
-            ['code' => 'MY', 'name' => 'Malaysia'],
+            // ['code' => 'MY', 'name' => 'Malaysia'],
             ['code' => 'NL', 'name' => 'Netherlands'],
             ['code' => 'NZ', 'name' => 'New Zealand'],
             ['code' => 'PE', 'name' => 'Peru'],

@@ -22,6 +22,7 @@ use App\Services\ApplicationActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
@@ -965,6 +966,7 @@ class ApplicationController extends Controller
 
     public function showInternalExporterList()
     {
+        Gate::authorize('view exporter list');
         return view('pages.internal.exporter_list');
     }
 
@@ -988,6 +990,7 @@ class ApplicationController extends Controller
 
     public function showInternalImporterList()
     {
+        Gate::authorize('view importer list');
         return view('pages.internal.importer_list');
     }
 

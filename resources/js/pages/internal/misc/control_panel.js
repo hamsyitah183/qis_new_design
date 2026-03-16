@@ -369,6 +369,7 @@ $(document).ready(function () {
     window.deleteBranch = deleteBranch;
 
     // fetch Public Code to modal
+    // fetch Public Code to modal
     function getspecificPBData(id) {
 
         Swal.fire({
@@ -384,18 +385,43 @@ $(document).ready(function () {
             success: function (response) {
 
                 if (response.status === "success" && response.data) {
-                    // 2️⃣ Populate form fields
-                    document.getElementById("editItemId").value =
-                        response.data.id;
-                    document.getElementById("editICOde").value =
-                        response.data.cate_code;
-                    document.getElementById("editDesc").value =
-                        response.data.description;
 
-                    // 3️⃣ Close loading Swal
+                    const data = response.data;
+
+                    // Populate basic fields
+                    $("#editItemId").val(data.id);
+                    $("#editICOde").val(data.cate_code);
+                    $("#editDesc").val(data.description);
+
+                    // 🔥 Always clear conversion container first
+                    $("#conversionContainer").html("");
+
+                    // ✅ Only show conversion if unit_measurement
+                    if (data.cate_name === "unit_measurement") {
+
+                        const conversionValue = data.conversion
+                            ? data.conversion.conversion
+                            : "";
+
+                        const conversionInput = `
+                            <div class="mb-3" id="conversionWrapper">
+                                <label class="form-label">
+                                    Conversion (1 ${data.cate_code} = ? KG)
+                                </label>
+                                <input 
+                                    type="number" 
+                                    step="0.000001"
+                                    name="conversion"
+                                    value="${conversionValue}"
+                                    id="conversion"
+                                    class="form-control">
+                            </div>
+                        `;
+
+                        $("#conversionContainer").html(conversionInput);
+                    }
+
                     Swal.close();
-
-                    // 4️⃣ Show modal AFTER data is ready
                     modal.show();
 
                 } else {
@@ -567,7 +593,21 @@ $(document).ready(function () {
                 categoryTitle = "Unit Measurement";
                 cateName = "unit_measurement";
                 $("#addCodev").prop("disabled", false);
-                
+                const conversionInput = `
+                    <div class="mb-3" id="conversionWrapper">
+                        <label class="form-label">
+                            Conversion to KG (1 unit = ? KG)
+                        </label>
+                        <input 
+                            type="number" 
+                            step="0.000001"
+                            name="conversion"
+                            
+                            id="addConversion"
+                            class="form-control">
+                    </div>
+                `;
+                $('#addGenericModal #addGenericForm .modal-body').append(conversionInput)
                 break;
             case "reject":
                 categoryTitle = "Rejection Notes";
@@ -599,6 +639,8 @@ $(document).ready(function () {
         const cate = cateName;
         const code = $("#addCodev").val();
         const desc = $("#addDescv").val();
+
+        const conversionInput = document.getElementById("addConversion");
 
         // Branch add uses a different endpoint
         if (cate === "branch_entry") {
@@ -650,6 +692,7 @@ $(document).ready(function () {
         fd.append("category", cate);
         fd.append("item_code", code);
         fd.append("item_desc", desc);
+        fd.append('conversion', conversionInput ? conversionInput.value : "")
 
         $.ajax({
             url: `/internal/addpbdata`,

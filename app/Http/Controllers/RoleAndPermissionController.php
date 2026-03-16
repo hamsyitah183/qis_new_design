@@ -14,9 +14,9 @@ class RoleAndPermissionController extends Controller
 {
     public function role()
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        // if (auth()->user()->hasRole('boundary officer')) {
+        //     abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        // }
 
         return view('pages.internal.user_management.list_role', [
             'title' => 'List Role'
@@ -25,9 +25,9 @@ class RoleAndPermissionController extends Controller
 
     public function role_list_data(RoleService $roleService)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        // if (auth()->user()->hasRole('boundary officer')) {
+        //     abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        // }
 
         return $roleService->roleDataTable();
     }
@@ -60,9 +60,11 @@ class RoleAndPermissionController extends Controller
 
     public function update_permission(Request $request)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        // if (auth()->user()->hasRole('boundary officer')) {
+        //     abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        // }
+
+        // dd($request->all());
 
         $request->validate([
             'role' => 'required|string|exists:roles,name',

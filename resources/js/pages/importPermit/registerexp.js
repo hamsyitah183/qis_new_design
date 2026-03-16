@@ -116,25 +116,55 @@ function handleExporterChange() {
     const $select = $("#selectexp");
 
     $select.on("change", function () {
-        const selectedId = $(this).val();
-        console.log("select", selectedId);
+        const selectedId  = $(this).val();
+        const $selectRef  = $(this); // ✅ capture reference for use inside Swal callback
 
-        // Clear fields if no selection
-        if (!selectedId) return clearExporterFields();
-        exporter = null;
-        exporter = exporterListArray.find((e) => e.id == selectedId);
-        if (!exporter) return;
+        const applyExporter = (id) => {
+            if (!id) return clearExporterFields();
 
-        console.log("exporter details", exporter);
+            exporter = null;
+            exporter = exporterListArray.find((e) => e.id == id);
+            if (!exporter) return;
 
-        $("#expid").val(exporter.id || "");
-        $("#expname").val(exporter.name || "");
-        $("#expfonno").val(exporter.phone_no || "");
-        $("#expaddress1").val(exporter.address1 || exporter.address || "");
-        $("#expcountryCode").val(exporter.ccode || "");
-        $("#expcountry").val(exporter.country || "");
+            console.log("exporter details", exporter);
 
-        change = 1;
+            $("#expid").val(exporter.id       || "");
+            $("#expname").val(exporter.name   || "");
+            $("#expfonno").val(exporter.phone_no || "");
+            $("#expaddress1").val(exporter.address1 || exporter.address || "");
+            $("#expcountryCode").val(exporter.ccode    || "");
+            $("#expcountry").val(exporter.country  || "");
+
+            change = 1;
+        };
+
+        if (tempItems.length > 0) {
+            Swal.fire({
+                icon:              'warning',
+                title:             'Change Exporter?',
+                text:              'Want to change the exporter? All the items will be removed!',
+                showCancelButton:  true,
+                confirmButtonText: 'Yes, change it',
+                cancelButtonText:  'Cancel',
+                confirmButtonColor: '#d33',
+                cancelButtonColor:  '#6c757d',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // ✅ Clear all temp items and re-render
+                    tempItems.length = 0;
+                    renderAllItems();
+                    summarySubmit();
+                    applyExporter(selectedId);
+                } else {
+                    // ✅ Revert select back to previous exporter
+                    $selectRef.val(exporter?.id ?? "").trigger("change.select2");
+                }
+            });
+
+            return;
+        }
+
+        applyExporter(selectedId);
     });
 }
 
@@ -259,19 +289,23 @@ function loadDetails(itemId) {
         let startDateText = ``;
 
         // convert to Date objects
-        const today = new Date();
+        const today     = new Date();
         const startDate = item.start_date ? new Date(item.start_date) : null;
-        const endDate = item.end_date ? new Date(item.end_date) : null;
+        const endDate   = item.end_date   ? new Date(item.end_date)   : null;
 
-        console.log(startDate, today, endDate)
+        // ✅ Strip time — compare dates only
+        const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const startDay  = startDate ? new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate()) : null;
+        const endDay    = endDate   ? new Date(endDate.getFullYear(),   endDate.getMonth(),   endDate.getDate())   : null;
 
-        // check if today is within limit period
         const isWithinLimitPeriod =
             item.quantity_limit &&
-            startDate &&
-            endDate &&
-            today >= startDate &&
-            today <= endDate;
+            startDay &&
+            endDay &&
+            todayDate >= startDay &&
+            todayDate <= endDay;
+
+        console.log('is within limit period', isWithinLimitPeriod);
 
         if (isWithinLimitPeriod) {
 

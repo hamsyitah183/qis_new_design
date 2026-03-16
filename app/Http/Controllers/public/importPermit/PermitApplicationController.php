@@ -421,7 +421,7 @@ class PermitApplicationController extends Controller
                     // dd('is not draf', $application->category_application);
                     
 
-                    if($application->category_application = 1) {
+                    if($application->category_application == 1) {
                         $notificationController->sendStatusMessage(
                             $application->importer['fullname'] ?? 'User',
                             'Import Permit',

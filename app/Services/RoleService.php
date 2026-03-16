@@ -52,48 +52,7 @@ class RoleService
                 ';
             })
 
-            // ->editColumn('users', function ($role) {
-
-            //     $users = $role->users;
-            //     $maxDisplay = 5;
-            //     $count = $users->count();
-
-            //     $html = '<div class="avatar-list-stacked">';
-
-            //     foreach ($users->take($maxDisplay) as $user) {
-
-            //         $initials = collect(explode(' ', $user->fullname))
-            //             ->map(fn($w) => strtoupper(substr($w, 0, 1)))
-            //             ->join('');
-
-            //         $html .= '
-            //             <span class="avatar avatar-sm avatar-rounded border border-white bg-primary text-fixed-whiter"
-            //                 data-bs-toggle="tooltip"
-            //                 title="' . e($user->fullname) . '">
-            //                 ' . $initials . '
-            //             </span>';
-            //     }
-
-            //     if ($count > $maxDisplay) {
-            //         $extra = $count - $maxDisplay;
-            //         $html .= '
-            //             <a class="userModal avatar avatar-sm bg-secondary border border-white text-fixed-white avatar-rounded"
-            //                data-role="' . $role->name . '">
-            //                +' . $extra . '
-            //             </a>';
-            //     }
-
-            //     if ($count < $maxDisplay) {
-            //         $html .= '
-            //             <a class="userModal avatar avatar-sm bg-secondary border border-white text-fixed-white avatar-rounded"
-            //                data-role="' . $role->name . '">
-            //                <i class="ti ti-plus"></i>
-            //             </a>';
-            //     }
-
-            //     $html .= '</div>';
-            //     return $html;
-            // })
+            
 
             ->editColumn('permissions', function ($role) {
 
@@ -119,7 +78,7 @@ class RoleService
                 if ($count <= $maxDisplay) {
                     $html .= '
                         <span class="permissionModal badge bg-secondary-transparent p-1 d-flex align-items-center gap-1"
-                        data-role = ' . $role->name . '>
+                        data-role = "' . $role->name . '">
                             <i class="ti ti-pencil"></i>
                         </span>';
                 }
