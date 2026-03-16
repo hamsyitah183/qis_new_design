@@ -4,7 +4,7 @@ import Swal from "sweetalert2";
 import select2 from "select2";
 
 // Force Select2 to attach to THIS jQuery:
-select2(window.jQuery);
+select2($);
 
 import "select2/dist/css/select2.min.css";
 function fetchCountryList() {
@@ -125,113 +125,172 @@ function fetchUsageList() {
     });
 }
 export function one() {
-    document.addEventListener("DOMContentLoaded", function () {
-        // --- 2. Get usage list ---
-        fetchUsageList();
-        fetchCountryList();
-    });
+    // --- 2. Get usage list ---
+    fetchUsageList();
+    fetchCountryList();
 }
 one();
 
 export function three() {
-    let quill;
-
-    document.addEventListener("DOMContentLoaded", function () {
-        quill = new Quill("#permit-condition-editor", {
-            modules: {
-                toolbar: [
-                    [{ header: [1, 2, 3, false] }],
-                    ["bold", "italic", "underline", "strike"],
-                    [{ list: "ordered" }, { list: "bullet" }],
-                    ["link", "blockquote", "code-block"],
-                    [{ align: [] }],
-                    ["clean"],
-                ],
-            },
-            placeholder: "Write permit conditions here...",
-            theme: "snow",
-        });
+    let quill = new Quill("#permit-condition-editor", {
+        modules: {
+            toolbar: [
+                [{ header: [1, 2, 3, false] }],
+                ["bold", "italic", "underline", "strike"],
+                [{ list: "ordered" }, { list: "bullet" }],
+                ["link", "blockquote", "code-block"],
+                [{ align: [] }],
+                ["clean"],
+            ],
+        },
+        placeholder: "Write permit conditions here...",
+        theme: "snow",
     });
- 
-    document.addEventListener("DOMContentLoaded", function () {
-        document
-            .getElementById("submitConditionBtn")
-            .addEventListener("click", function () {
-                // Make sure quill syncs to hidden input
-                const conditionHtml = quill.root.innerHTML;
-                document.getElementById("permit-condition-input").value =
-                    conditionHtml;
 
-                const formData = new FormData();
-                formData.append(
-                    "itemName",
-                    document.getElementById("itemName").value
-                );
-                formData.append(
-                    "itemCategory",
-                    document.getElementById("itemCategory").value
-                );
-                formData.append(
-                    "quanLimit",
-                    document.getElementById("quanLimit").value
-                );
-                formData.append(
-                    "quanmunit",
-                    document.getElementById("quanmunit").value
-                );
-                formData.append(
-                    "spedate",
-                    document.getElementById("spedate").value
-                );
+    const submitBtn = document.getElementById("submitConditionBtn");
+    if (submitBtn) {
+        submitBtn.addEventListener("click", function (e) {
+            e.preventDefault();
 
-                // Tagify values → JSON strings
-                formData.append(
-                    "countryTag",
-                    JSON.stringify(countryTagify ? countryTagify.value : [])
-                );
-                formData.append(
-                    "usageTags",
-                    JSON.stringify(usageTagify ? usageTagify.value : [])
-                );
+            // Make sure quill syncs to hidden input
+            const conditionHtml = quill.root.innerHTML;
+            document.getElementById("permit-condition-input").value = conditionHtml;
 
-                // Quill HTML
-                formData.append("permit_condition", conditionHtml);
-                console.log("Submitting form data:", {
-                    itemName: document.getElementById("itemName").value,
-                    itemCategory: document.getElementById("itemCategory").value,
-                    quanLimit: document.getElementById("quanLimit").value,
-                    quanmunit: document.getElementById("quanmunit").value,
-                    spedate: document.getElementById("spedate").value,
-                    countryTag: countryTagify ? countryTagify.value : [],
-                    usageTags: usageTagify ? usageTagify.value : [],
-                    permit_condition: conditionHtml,
+            const formData = new FormData();
+            formData.append("itemName", document.getElementById("itemName").value);
+            formData.append("itemCategory", document.getElementById("itemCategory").value);
+            formData.append("quanLimit", document.getElementById("quanLimit").value);
+            formData.append("quanmunit", document.getElementById("quanmunit").value);
+            formData.append("start_date", document.getElementById("start_date").value);
+            formData.append("end_date", document.getElementById("end_date").value);
+
+            // Select2 values -> JSON strings containing array of objects with "value" key
+            const selectedCountries = $("#countrySelect").val() || [];
+            const countryTagData = selectedCountries.map((val) => ({ value: val }));
+            formData.append("countryTag", JSON.stringify(countryTagData));
+
+            const selectedUsages = $("#usageSelect").val() || [];
+            const usageTagData = selectedUsages.map((val) => ({ value: val }));
+            formData.append("usageTags", JSON.stringify(usageTagData));
+
+            // Quill HTML
+            formData.append("permit_condition", conditionHtml);
+
+            // Ask user which action to take (same UI as edit screen)
+            Swal.fire({
+                title: "Submit Permit Condition",
+                text: "Choose an action:",
+                icon: "question",
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonText: "Save & Share with Public",
+                denyButtonText: "Save Only",
+                cancelButtonText: "Cancel",
+            }).then((result) => {
+                if (result.isDismissed) {
+                    return; // User clicked Cancel or closed the dialog
+                }
+
+                // Show loading while saving
+                Swal.fire({
+                    title: "Saving...",
+                    text: "Please wait while the condition is being saved.",
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading(),
                 });
 
                 $.ajax({
                     url: `/internal/save_condition`,
                     method: "POST",
                     data: formData,
+                    dataType: "json",
                     processData: false,
                     contentType: false,
                     headers: {
-                        "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
-                            "content"
-                        ),
+                        "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
                     },
                     success: function (res) {
-                        Swal.fire(
-                            "Success",
-                            "Permit condition saved successfully!",
-                            "success"
-                        ).then(() => {
-                            window.location.href = `${window.baseUrl}/internal/permit_condition`;
+                        Swal.close(); // close loading
+
+                        Swal.fire({
+                            icon: "success",
+                            title: "Saved!",
+                            text:
+                                res.message ||
+                                "Permit condition saved successfully.",
+                            timer: 2000,
+                            showConfirmButton: false,
+                        }).then(() => {
+                            // If user chose "Save & Share with Public"
+                            const newConditionId =
+                                res.condition_id || res.data?.id;
+
+                            if (result.isConfirmed && newConditionId) {
+                                $.ajax({
+                                    url: "/internal/news/",
+                                    method: "POST",
+                                    dataType: "json",
+                                    data: {
+                                        _token: $(
+                                            'meta[name="csrf-token"]'
+                                        ).attr("content"),
+                                        condition_id: newConditionId,
+                                        type: "Import Permit",
+                                        action: "released",
+                                    },
+                                    success: function () {
+                                        Swal.fire(
+                                            "Sent!",
+                                            "The permit condition has been shared to all users.",
+                                            "success"
+                                        ).then(() => {
+                                            window.location.href = `${window.baseUrl}/internal/permit_condition`;
+                                        });
+                                    },
+                                    error: function (xhr) {
+                                        Swal.fire({
+                                            icon: "error",
+                                            title: "Error",
+                                            text:
+                                                xhr.responseJSON?.message ||
+                                                "Something went wrong while sharing.",
+                                        }).then(() => {
+                                            window.location.href = `${window.baseUrl}/internal/permit_condition`;
+                                        });
+                                    },
+                                });
+                            } else if (result.isConfirmed && !newConditionId) {
+                                Swal.fire({
+                                    icon: "warning",
+                                    title: "Saved, but not shared",
+                                    text: "The condition was saved but its ID couldn't be read, so the email/share step did not run.",
+                                }).then(() => {
+                                    window.location.href = `${window.baseUrl}/internal/permit_condition`;
+                                });
+                            } else {
+                                // Just redirect back to list
+                                window.location.href = `${window.baseUrl}/internal/permit_condition`;
+                            }
                         });
                     },
                     error: function (xhr) {
+                        Swal.close(); // close loading
                         console.error("Save Error:", xhr.responseText);
+                        let errMsg = "Failed to save permit condition.";
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errMsg = xhr.responseJSON.message;
+                        }
+                        Swal.fire("Error", errMsg, "error");
                     },
                 });
             });
-    });
+        });
+    }
 }
-three();
+
+// Check if document is already loaded, otherwise wait for it
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', three);
+} else {
+    three();
+}

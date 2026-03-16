@@ -68,9 +68,13 @@
                             <label for="quanmunit" class="form-label">Measurement Unit (Special case)</label>
                             <input type="text" class="form-control" id="quanmunit" name="quanmunit">
                         </div>
-                        <div class="col-xl-6">
-                            <label for="spedate" class="form-label">Date Limit (Special case)</label>
-                            <input type="date" class="form-control" id="spedate" name="spedate">
+                        <div class="col-xl-3">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date">
+                        </div>
+                        <div class="col-xl-3">
+                            <label class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date">
                         </div>
                         <div class="col-xl-12">
                             <label class="form-label">Country</label>
@@ -107,7 +111,7 @@
                     <button id="submitConditionBtn" type="submit" class="btn btn-primary">
                         <i class="ri-add-line me-1"></i> Add New Permit Condition
                     </button>
-                    <a class="btn btn-secondary">Cancel</a>
+                    <a href="{{ url('/internal/permit_condition') }}" class="btn btn-secondary">Cancel</a>
                 </div>
             </div>
         </div>

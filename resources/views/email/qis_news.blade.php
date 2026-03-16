@@ -29,7 +29,7 @@
                                             {!! $news !!}
                                         </p>
 
-                                       
+
 
 
                                         <!-- Signature -->
@@ -40,7 +40,7 @@
                                                 QIS System</p>
                                         </div>
 
-                                        
+
                                     </td>
                                 </tr>
                             </table>
