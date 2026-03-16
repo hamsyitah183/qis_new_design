@@ -240,18 +240,6 @@
                                         Users</a>
                                 </li>
 
-                                <li class="slide {{ $currentRoute === 'internal.exporter.list' ? 'active' : '' }}">
-                                    <a href="{{ route('internal.exporter.list') }}" class="side-menu__item">
-                                        Exporter List
-                                    </a>
-                                </li>
-
-                                <li class="slide {{ $currentRoute === 'internal.importer.list' ? 'active' : '' }}">
-                                    <a href="{{ route('internal.importer.list') }}" class="side-menu__item">
-                                        Importer List
-                                    </a>
-                                </li>
-
                                 <li class="slide {{ $currentRoute === 'internal.public.verification.list' ? 'active' : '' }}">
                                     <a href="{{ route('internal.public.verification.list') }}" class="side-menu__item"
                                         id="verificationCount">User
@@ -273,6 +261,35 @@
                                         <a href="{{ route('internal.boundary.list') }}" class="side-menu__item">Boundary Officer</a>
                                     </li>
                                 @endif
+                            </ul>
+                        </li>
+
+                        @php
+                            $isImporterExporterActive = in_array($currentRoute, ['internal.exporter.list', 'internal.importer.list']);
+                        @endphp
+
+                        <li class="slide has-sub {{ $isImporterExporterActive ? 'open active' : '' }}">
+                            <a href="javascript:void(0);" class="side-menu__item">
+                                <i class="ri-arrow-down-s-line side-menu__angle"></i>
+                                <i class="ti ti-user side-menu__icon"></i>
+                                <span class="side-menu__label">Importer &amp; Exporter</span>
+                            </a>
+
+                            <ul class="slide-menu child1">
+                                <li class="slide side-menu__label1"><a href="javascript:void(0)">Importer &amp; Exporter</a>
+                                </li>
+
+                                <li class="slide {{ $currentRoute === 'internal.importer.list' ? 'active' : '' }}">
+                                    <a href="{{ route('internal.importer.list') }}" class="side-menu__item">
+                                        Importer List
+                                    </a>
+                                </li>
+
+                                <li class="slide {{ $currentRoute === 'internal.exporter.list' ? 'active' : '' }}">
+                                    <a href="{{ route('internal.exporter.list') }}" class="side-menu__item">
+                                        Exporter List
+                                    </a>
+                                </li>
                             </ul>
                         </li>
 
@@ -308,6 +325,11 @@
                                 <li class="slide {{ $currentRoute === 'internal.state-district-management' ? 'active' : '' }}">
                                     <a href="{{ route('internal.state-district-management') }}" class="side-menu__item">State &
                                         District Management</a>
+                                </li>
+
+                                <li class="slide {{ $currentRoute === 'internal.branch-management' ? 'active' : '' }}">
+                                    <a href="{{ route('internal.branch-management') }}" class="side-menu__item">Branch
+                                        Management</a>
                                 </li>
 
                                 <li style="display:none"

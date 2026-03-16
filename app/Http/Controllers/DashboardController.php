@@ -32,6 +32,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Facades\Artisan;
 
 // use Illuminate\Support\Facades\Notification;
 
@@ -40,6 +41,7 @@ class DashboardController extends Controller
     //
     public function dashboard(LineUserChart $lineChart, OrderDonutChart $orderChart, PaymentMethodBarChart $paymentChart, ApplicationHorizontalChart $applicationChart, ClerkDailyVolumeChart $clerkVolumeChart, PermitDailyProcessChart $permitChart, ClerkApplicationStatusChart $clerkStatusChart, ClerkDailyWorkloadChart $clerkWorkloadChart)
     {
+        Artisan::call('bayupay:check-pending');
         // ✅ Check which guard is logged in
         if (Auth::guard('public')->check()) {
             return $this->public_dashboard(app(PublicApplicationStatusChart::class));

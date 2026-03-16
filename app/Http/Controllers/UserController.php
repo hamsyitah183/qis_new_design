@@ -268,13 +268,10 @@ class UserController extends Controller
 
     public function public_user_save(Request $request)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
 
         $uuid = $request->input('uuid');
 
-        // dd($request->all());
+
 
         if ($uuid) {
             // dd($request->all());

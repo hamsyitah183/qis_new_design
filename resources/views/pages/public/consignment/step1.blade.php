@@ -15,10 +15,7 @@
                         <label for="trnptType" class="form-label">Transport Type <a style="color:red"> * </a></label>
                         <select class="form-select" id="trnptType" name="trnptType" data-route="/public/get_entry_point"
                             required>
-                            <option value="">-- Select Transport --</option>
-                            <option value="Air">Air</option>
-                            <option value="Sea">Sea</option>
-                            <option value="Land">Land</option>
+                            <option value="Land" selected>Land</option>
                         </select>
                     </div>
                     <div class="col-xl-6">

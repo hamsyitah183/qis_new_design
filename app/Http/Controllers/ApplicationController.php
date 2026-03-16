@@ -632,7 +632,7 @@ class ApplicationController extends Controller
 
     public function viewapplication($uuid)
     {
-        // Artisan::call('bayupay:check-pending');
+        Artisan::call('bayupay:check-pending');
 
         $application = IpApplication::with([
             'user', // submitted by

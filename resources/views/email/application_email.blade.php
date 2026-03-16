@@ -22,28 +22,15 @@
                                     <td style="padding: 50px;">
                                         <!-- Title -->
                                         <h1 style="margin: 0 0 15px 0; font-size: 24px; font-weight: 600; color: #333333;">
-                                            Reset Password Request</h1>
+                                            QIS Application Update</h1>
 
                                         <!-- Message -->
                                         <p style="margin: 0 0 20px 0; font-size: 14px; line-height: 1.6; color: #6c757d;">
-                                            Hello, you recently requested to reset your password for your QIS account.
-                                            Please click the button below to proceed.</p>
+                                            {!! $news !!}
+                                        </p>
 
-                                        <!-- Button -->
-                                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
-                                            <tr>
-                                                <td align="center" style="padding: 20px 0 30px 0;">
-                                                    <a href="{{ $resetUrl }}"
-                                                        style="display: inline-block; padding: 12px 35px; background-color: #212529; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: 600; font-size: 14px;">Reset
-                                                        Password</a>
-                                                </td>
-                                            </tr>
-                                        </table>
+                                       
 
-                                        <!-- Warning message -->
-                                        <p style="margin: 0 0 30px 0; font-size: 14px; line-height: 1.6; color: #6c757d;">If
-                                            you did not request a password reset, no further action is required. This link
-                                            can only be used once.</p>
 
                                         <!-- Signature -->
                                         <div style="margin-bottom: 40px;">
@@ -53,16 +40,7 @@
                                                 QIS System</p>
                                         </div>
 
-                                        <!-- Divider -->
-                                        <div style="border-top: 1px solid #e9ecef; padding-top: 25px;">
-                                            <p style="margin: 0; font-size: 12px; line-height: 1.6; color: #6c757d;">
-                                                If you're having trouble clicking the "Reset Password" button, copy and
-                                                paste the URL below into your web browser:
-                                                <br><br>
-                                                <a href="{{ $resetUrl }}"
-                                                    style="color: #0d6efd; word-break: break-all;">{{ $resetUrl }}</a>
-                                            </p>
-                                        </div>
+                                        
                                     </td>
                                 </tr>
                             </table>

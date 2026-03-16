@@ -24,7 +24,7 @@ class IpConditionSeeder extends Seeder
                 'addional_condition' => '<pre>7) The issuance of Phytosanitary Certificate (PC) should be based on the Malaysian Permit Import (IP)  reference number :(IPXXXXX).
 8) Subject to quarantine inspection upon arrival in Kota Kinabalu.</pre>',
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['SMY', 'CN', 'IN', 'PK']),
                 'usage' => json_encode(['Fresh Produce', 'For Animal Consumption']),
                 'created_at' => $now,
@@ -36,7 +36,7 @@ class IpConditionSeeder extends Seeder
                 'addional_condition' => '<pre>7) The issuance of Phytosanitary Certificate (PC) should be based on the Malaysian Permit Import (IP)  reference number :(IPXXXXX).
 8) Subject to quarantine inspection upon arrival in Kota Kinabalu.</pre>',
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['SWK', 'SMY']),
                 'usage' => json_encode(['Fresh Produce']),
                 'created_at' => $now,
@@ -54,7 +54,7 @@ class IpConditionSeeder extends Seeder
 4. Subject to quarantine inspection upon arrival in Kota Kinabalu."
 </pre>',
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['SNP']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -66,7 +66,7 @@ class IpConditionSeeder extends Seeder
                 'item_name' => 'AVOCADO',
                 'addional_condition' => '',
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AU', 'KE', 'MX', 'NZ', 'KR', 'SWK', 'ES', 'TR', 'US', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -79,7 +79,7 @@ class IpConditionSeeder extends Seeder
                 'addional_condition' => "'7) The issuance of Phytosanitary Certificate (PC) should be based on the Malaysian Permit Import (IP)  reference number :(IPXXXXX).
 8) Subject to quarantine inspection upon arrival in Kota Kinabalu.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['SWK', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -135,7 +135,7 @@ POST ENTRY REQUIREMENT:
 OTHER REQUIREMENT:
 The consignment must be accompanied by a Phytosanitary Certificate from the country of origin and re-export Phytosanitary Certificate from the re-exporting country.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AU', 'CN', 'EG', 'ZA', 'TH', 'US', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -148,7 +148,7 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
                 'addional_condition' => "'7) The issuance of Phytosanitary Certificate (PC) should be based on the Malaysian Permit Import (IP)  reference number :(IPXXXXX).
 8) Subject to quarantine inspection upon arrival in Kota Kinabalu.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AR', 'CN', 'IN', 'PK', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -160,7 +160,7 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
                 'item_name' => 'DATES',
                 'addional_condition' => "",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['EG', 'IN', 'ZA', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -173,7 +173,7 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
                 'addional_condition' => "'7) The issuance of Phytosanitary Certificate (PC) should be based on the Malaysian Permit Import (IP)  reference number :(IPXXXXX).
 8) Subject to quarantine inspection upon arrival in Kota Kinabalu.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['TH', 'VN', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -185,7 +185,7 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
                 'addional_condition' => "'7) The issuance of Phytosanitary Certificate (PC) should be based on the Malaysian Permit Import (IP)  reference number :(IPXXXXX).
 8) Subject to quarantine inspection upon arrival in Kota Kinabalu.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['CN', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -229,7 +229,7 @@ Post Entry Requirement
 Other Requirement All re-export consignment must be accompanied by a PC from the country of origin and re-export PC from the re-exporting country.
 ",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AU', 'CN', 'ID', 'MM', 'PK', 'PH', 'SWK', 'ZA', 'LK', 'TW', 'TH', 'US', 'VN']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -240,7 +240,7 @@ Other Requirement All re-export consignment must be accompanied by a PC from the
                 'item_name' => 'MANGOSTEEN',
                 'addional_condition' => "",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AU', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -252,7 +252,7 @@ Other Requirement All re-export consignment must be accompanied by a PC from the
                 'addional_condition' => "'7) The issuance of Phytosanitary Certificate (PC) should be based on the Malaysian Permit Import (IP)  reference number :(IPXXXXX).
 8) Subject to quarantine inspection upon arrival in Kota Kinabalu.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['SWK', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -299,7 +299,7 @@ Post Entry Requirement
 Other Requirement All re-export consignment must be accompanied by a PC from the country of origin and re-export PC from the re-exporting country.
 ",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AU', 'NL', 'VN']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -310,7 +310,7 @@ Other Requirement All re-export consignment must be accompanied by a PC from the
                 'item_name' => 'BIRD EYE CHILI (CAPSICUM ANNUM)',
                 'addional_condition' => "",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AU', 'CN', 'JP', 'TH', 'VN']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -324,7 +324,7 @@ Other Requirement All re-export consignment must be accompanied by a PC from the
 1.  The phytosanitary certificate is to certify that the consignment is being processed and is free from pests and diseases, weed seeds or pathogenic organisms. 
 2.  Subject to quarantine inspection upon arrival in Sandakan.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['CN', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -337,7 +337,7 @@ Other Requirement All re-export consignment must be accompanied by a PC from the
 8) The PC to declare that the Cabbage is free from any insect, soil and it's taken from an accredited Good Agriculture Practice (GAP) Farm.
 9) Subject to quarantine inspection upon arrival in Kota Kinabalu.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['CN']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -384,7 +384,7 @@ Post Entry Requirement
 Other Requirement All re-export consignment must be accompanied by a PC from the country of origin and re-export PC from the re-exporting country.
 ",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['CN', 'JP', 'TH', 'VN']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -395,7 +395,7 @@ Other Requirement All re-export consignment must be accompanied by a PC from the
                 'item_name' => 'DRIED TEA LEAVES',
                 'addional_condition' => "",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AR', 'CN', 'IN', 'ID', 'KE', 'PG', 'SWK', 'VN', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -407,7 +407,7 @@ Other Requirement All re-export consignment must be accompanied by a PC from the
                 'addional_condition' => "'7) The issuance of Phytosanitary Certificate (PC) should be based on the Malaysian Permit Import (IP)  reference number :(IPXXXXX).
 8) Subject to quarantine inspection upon arrival in Kota Kinabalu.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AU', 'CN', 'DK', 'FI', 'DE', 'HU', 'IN', 'LT', 'NL', 'RO', 'TH', 'US', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -419,7 +419,7 @@ Other Requirement All re-export consignment must be accompanied by a PC from the
                 'addional_condition' => "'7) The issuance of Phytosanitary Certificate (PC) should be based on the Malaysian Permit Import (IP)  reference number :(IPXXXXX).
 8) Subject to quarantine inspection upon arrival in Kota Kinabalu.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AU', 'CA', 'ZA', 'CN', 'EG', 'IN', 'MM', 'NZ', 'SG', 'ZA', 'TH', 'US', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -468,7 +468,7 @@ POST ENTRY REQUIREMENT:
 OTHER REQUIREMENT:
 The consignment must be accompanied by a Phytosanitary Certificate from the country of origin and re-export Phytosanitary Certificate from the re-exporting country.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['ID', 'IT', 'SG', 'TW', 'VN', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -517,7 +517,7 @@ POST ENTRY REQUIREMENT:
 OTHER REQUIREMENT:
 The consignment must be accompanied by a Phytosanitary Certificate from the country of origin and re-export Phytosanitary Certificate from the re-exporting country.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['ID', 'IT', 'SG', 'TW', 'VN', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -529,7 +529,7 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
                 'addional_condition' => "'7) The issuance of Phytosanitary Certificate (PC) should be based on the Malaysian Permit Import (IP)  reference number :(IPXXXXX).
 8) Subject to quarantine inspection upon arrival in Kota Kinabalu.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AR', 'AU', 'BE', 'CA', 'IN', 'NZ', 'US', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -541,7 +541,7 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
                 'addional_condition' => "'7) The issuance of Phytosanitary Certificate (PC) should be based on the Malaysian Permit Import (IP)  reference number :(IPXXXXX).
 8) Subject to quarantine inspection upon arrival in Kota Kinabalu.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['MM', 'VN', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -590,7 +590,7 @@ POST ENTRY REQUIREMENT:
 OTHER REQUIREMENT:
 The consignment must be accompanied by a Phytosanitary Certificate from the country of origin and re-export Phytosanitary Certificate from the re-exporting country.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AU', 'CA']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -605,7 +605,7 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
 2.  The Consignment must be marked in accordance with the International Plant Protection (IPPC) standards.
 3.  Subject to quarantine inspection upon arrival in Kota Kinabalu.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AR', 'CM', 'CA', 'CN', 'ID', 'SWK', 'US', 'VN', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -616,7 +616,7 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
                 'item_name' => 'DOOR',
                 'addional_condition' => "",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AR', 'CM', 'CA', 'CN', 'ID', 'SWK', 'US', 'VN', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -631,7 +631,7 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
 2.  The Consignment must be marked in accordance with the International Plant Protection (IPPC) standards.
 3.  Subject to quarantine inspection upon arrival in Kota Kinabalu.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AR', 'CM', 'CA', 'CN', 'ID', 'SWK', 'US', 'VN', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -646,7 +646,7 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
 2.  The Consignment must be marked in accordance with the International Plant Protection (IPPC) standards.
 3.  Subject to quarantine inspection upon arrival in Kota Kinabalu.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AR', 'CM', 'CA', 'CN', 'ID', 'SWK', 'US', 'VN', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -661,7 +661,7 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
 2.  The Consignment must be marked in accordance with the International Plant Protection (IPPC) standards.
 3.  Subject to quarantine inspection upon arrival in Kota Kinabalu.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AR', 'CM', 'CA', 'CN', 'ID', 'SWK', 'US', 'VN', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -676,7 +676,7 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
 2.  The Consignment must be marked in accordance with the International Plant Protection (IPPC) standards.
 3.  Subject to quarantine inspection upon arrival in Kota Kinabalu.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AG', 'CM', 'CA', 'CN', 'ID', 'SWK', 'US', 'VN', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -691,7 +691,7 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
 2.  The Consignment must be marked in accordance with the International Plant Protection (IPPC) standards.
 3.  Subject to quarantine inspection upon arrival in Kota Kinabalu.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AR', 'CM', 'CA', 'CN', 'ID', 'SWK', 'US', 'VN', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -702,7 +702,7 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
                 'item_name' => 'BROKEN MAIZE',
                 'addional_condition' => "",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AR', 'IN', 'PK']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -750,7 +750,7 @@ POST ENTRY REQUIREMENT:
 OTHER REQUIREMENT:
 The consignment must be accompanied by a Phytosanitary Certificate from the country of origin and re-export Phytosanitary Certificate from the re-exporting country.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['MM', 'SWK', 'VN', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -799,7 +799,7 @@ POST ENTRY REQUIREMENT:
 OTHER REQUIREMENT:
 The consignment must be accompanied by a Phytosanitary Certificate from the country of origin and re-export Phytosanitary Certificate from the re-exporting country.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AU', 'US', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -813,7 +813,7 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
 2. The consignment to be fumigated with methyl bromide (MB) under normal atmospheric pressure (NAP) at 32g/mᶟ for 24 hours at or above 21°C or fumigated with Phosphine (PH3) at 3g/mᶾ for 120 hours prior to shipment. 
 3. Subject to quarantine inspection upon arrival in Kota Kinabalu.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AU']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -827,7 +827,7 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
 2. The consignment to be fumigated with methyl bromide (MB) under normal atmospheric pressure (NAP) at 32g/mᶟ for 24 hours at or above 21°C or fumigated with Phosphine (PH3) at 3g/mᶾ for 120 hours prior to shipment. 
 3. Subject to quarantine inspection upon arrival in Kota Kinabalu.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AU', 'CN', 'IN', 'NL', 'PK', 'TR', 'US', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -879,7 +879,7 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
                     The consignment must be accompanied by a Phytosanitary Certificate from the country of origin and re-export Phytosanitary Certificate from the re-exporting country.
                 ',
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['US']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -890,7 +890,7 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
                 'item_name' => 'FISH FEED',
                 'addional_condition' => "",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['CN', 'TH', 'VN', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -939,7 +939,7 @@ POST ENTRY REQUIREMENT:
 OTHER REQUIREMENT:
 The consignment must be accompanied by a Phytosanitary Certificate from the country of origin and re-export Phytosanitary Certificate from the re-exporting country.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AU', 'US', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -953,7 +953,7 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
 2. The consignment to be fumigated with methyl bromide (MB) under normal atmospheric pressure (NAP) at 32g/mᶟ for 24 hours at or above 21°C or fumigated with Phosphine (PH3) at 3g/mᶾ for 120 hours prior to shipment. 
 3. Subject to quarantine inspection upon arrival in Kota Kinabalu.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['PK']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -964,7 +964,7 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
                 'item_name' => 'SHIMP FEED',
                 'addional_condition' => "",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['CN', 'TH', 'VN', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -978,7 +978,7 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
 2. The consignment to be fumigated with methyl bromide (MB) under normal atmospheric pressure (NAP) at 32g/mᶟ for 24 hours at or above 21°C or fumigated with Phosphine (PH3) at 3g/mᶾ for 120 hours prior to shipment. 
 3. Subject to quarantine inspection upon arrival in Kota Kinabalu.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AR', 'IN', 'PK', 'SG', 'UA', 'US', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -1027,7 +1027,7 @@ POST ENTRY REQUIREMENT:
 OTHER REQUIREMENT:
 The consignment must be accompanied by a Phytosanitary Certificate from the country of origin and re-export Phytosanitary Certificate from the re-exporting country.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AU', 'CA', 'JP', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -1042,7 +1042,7 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
 2. The phytosanitary certificate is to certify that based on examination of the representative samples from each packing, all the seeds including the impurities analysed from the seeds are found not carrying any injurious pests or weed seeds including the Mimosa pigra & Rottboellia exaltata.
 3. Subject to quarantine inspection upon arrival in Tawau",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['IN', 'ID', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -1054,7 +1054,7 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
                 'addional_condition' => "'7) The issuance of Phytosanitary Certificate (PC) should be based on the Malaysian Permit Import (IP)  reference number :(IPXXXXX).
 8) Subject to quarantine inspection upon arrival in Kota Kinabalu.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['SWK', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -1065,7 +1065,7 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
                 'item_name' => 'JACKFRUIT SEEDLING',
                 'addional_condition' => "",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['SWK', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -1086,7 +1086,7 @@ f) Tanzania disease
 g)  Marchitez sorpresiva (Phytomonas staheli)
 3. Subject to quarantine inspection upon arrival in Kota Kinabalu.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['SWK', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -1101,7 +1101,7 @@ g)  Marchitez sorpresiva (Phytomonas staheli)
 2. All plants including planting media (peatmoss/cocopeat/sphagnum) are to be fumigated with Methyl Bromide (100%MB) at 32gm/cubic meter for 2 hours or dipped in 0.2% Malathion 80 E.C. + 0.4% Thiram + 0.3% Nemacur for 5 minutes (or any suitable insecticide, fungicide and Nematicide) prior to shipment.
 3. Subject to quarantine inspection upon arrival in Tawau",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['CN', 'SWK', 'VN', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -1117,7 +1117,7 @@ g)  Marchitez sorpresiva (Phytomonas staheli)
 3. Subject to Quarantine inspection upon arrival in Kota Kinabalu. Sample to be taken for Post Entry Quarantine (PEQ) screening prior to released of consignment.
 4. If  pest (s) and/or disease(s) or regulated articles found during the PEQ screening process, the whole batch of consignment to be confiscate and destroy and DOA Sabah has the right to suspend future importation unitl the cause of non-compliance is being idenfified to the satisfaction of DOA Sabah. All cost incurred during PEQ activites to be borne by the importer.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['SWK', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -1132,7 +1132,7 @@ g)  Marchitez sorpresiva (Phytomonas staheli)
 2.  A certificate of origin should be obtained from the producer certifiying the pollen is produced from their seed garden.
 3.  Subject to quarantine inspection upon arrival in Kota Kinabalu.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -1143,7 +1143,7 @@ g)  Marchitez sorpresiva (Phytomonas staheli)
                 'item_name' => 'RUZI GRASS',
                 'addional_condition' => "",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['LA']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -1154,7 +1154,7 @@ g)  Marchitez sorpresiva (Phytomonas staheli)
                 'item_name' => 'SIGNAL GRASS',
                 'addional_condition' => "",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AU']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -1171,7 +1171,7 @@ g)  Marchitez sorpresiva (Phytomonas staheli)
 
 ",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['AU', 'CL', 'DK', 'IT', 'JP', 'ES', 'TH', 'US', 'US', 'SMY']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -1186,7 +1186,7 @@ g)  Marchitez sorpresiva (Phytomonas staheli)
 2.  The consignment is to be fumigated with Phosphine gas at 2 gm/cubic metre for 72 hours or Methyl Bromide at the rate of 32 gm/cubic metre for 4 hours at normal atmospheric pressure (NAP) or heat treatment prior to shipment.
 3.  Subject to quarantine inspection upon arrival in Kota Kinabalu.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['CA', 'CN', 'DK', 'EE', 'FI', 'DE', 'IN', 'LV', 'LT', 'NL', 'NZ', 'PH', 'PL', 'TW']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -1201,7 +1201,7 @@ g)  Marchitez sorpresiva (Phytomonas staheli)
 2.  The consignment is to be fumigated with Phosphine gas at 2 gm/cubic metre for 72 hours or Methyl Bromide at the rate of 32 gm/cubic metre for 4 hours at normal atmospheric pressure (NAP) or heat treatment prior to shipment.
 3.  Subject to quarantine inspection upon arrival in Kota Kinabalu.",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['CA', 'CN', 'DK', 'EE', 'FI', 'DE', 'IN', 'LV', 'LT', 'NL', 'NZ', 'PH', 'PL', 'LK', 'TW']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,
@@ -1216,7 +1216,7 @@ g)  Marchitez sorpresiva (Phytomonas staheli)
 2. All plants including planting media (peatmoss/cocopeat/sphagnum) are to be fumigated with Methyl Bromide (100%MB) at 32gm/cubic meter for 2 hours or dipped in 0.2% Malathion 80 E.C. + 0.4% Thiram + 0.3% Nemacur for 5 minutes (or any suitable insecticide, fungicide and Nematicide) prior to shipment.
 3. Subject to quarantine inspection upon arrival in Tawau",
                 'quantity_limit' => null,
-                'date_limit' => null,
+                //'date_limit' => null,
                 'country' => json_encode(['CA', 'CN', 'DK', 'EE', 'FI', 'DE', 'IN', 'LV', 'LT', 'NL', 'NZ', 'PH', 'PL', 'LK', 'TW']),
                 'usage' => json_encode(['Planting Material']),
                 'created_at' => $now,

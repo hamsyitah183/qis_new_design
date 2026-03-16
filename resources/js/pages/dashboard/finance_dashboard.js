@@ -4,8 +4,7 @@ import Swal from "sweetalert2";
 
 console.log("finance dashboard");
 
-let orderListTable;
-// const isInternal = window.AUTH_TYPE === "internal";
+let tables = [];
 
 // Import modules including Buttons
 async function data_table_init() {
@@ -20,46 +19,59 @@ async function data_table_init() {
     // Expose JSZip globally for DataTables to use
     window.JSZip = (await import("jszip")).default;
 
-    orderListTable = new DataTable("#orderListTable", {
-        processing: true,
-        serverSide: true,
-        ajax: "/order/list/data",
-        dom: 'Bfrtip', // Enable Buttons
-        buttons: [
-            {
-                extend: 'excelHtml5',
-                text: '<i class="ti ti-file-spreadsheet"></i> Export Excel',
-                className: 'btn btn-success mb-3',
-                exportOptions: {
-                    columns: ':not(:last-child)' // Exclude action column
+    const tableConfigs = [
+        { id: "#importPermitOrderTable", type: "import_permit" },
+        { id: "#inspectionCertOrderTable", type: "inspection" },
+        { id: "#consignmentCertOrderTable", type: "consignment" },
+    ];
+
+    tableConfigs.forEach(({ id, type }) => {
+        const table = new DataTable(id, {
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: "/order/list/data",
+                data: function (d) {
+                    d.application_type = type;
+                },
+            },
+            dom: 'Bfrtip', // Enable Buttons
+            buttons: [
+                {
+                    extend: 'excelHtml5',
+                    text: '<i class="ti ti-file-spreadsheet"></i> Export Excel',
+                    className: 'btn btn-success mb-3',
+                    exportOptions: {
+                        columns: ':not(:last-child)' // Exclude action column
+                    }
                 }
-            }
-        ],
-        columns: [
-            { data: "order_number" },
-            { data: "transaction_date" },
-            { data: "fpx_reference" },
-            { data: "user_name" },
-            { data: "permit_number" },
-            { data: "status" },
-            { data: "application_type" },
-            { data: "transaction_data" },
-            // { data: "payment_amount" },
-            //  { data: "kod_transaksi" }, 
-            { data: "payment_amount" },
-            { data: "action", orderable: false, searchable: false },
-        ],
-        responsive: true,
-        autoWidth: false,
-        pageLength: 10,
-        order: [],
+            ],
+            columns: [
+                { data: "order_number" },
+                { data: "transaction_date" },
+                { data: "fpx_reference" },
+                { data: "user_name" },
+                { data: "permit_number" },
+                { data: "status" },
+                { data: "application_type" },
+                { data: "transaction_data" },
+                { data: "payment_amount" },
+                { data: "action", orderable: false, searchable: false },
+            ],
+            responsive: true,
+            autoWidth: false,
+            pageLength: 10,
+            order: [],
+        });
+
+        table.on("draw.dt", function () {
+            initTooltips();
+        });
+
+        tables.push(table);
     });
 
-    orderListTable.on("draw.dt", function () {
-        initTooltips();
-    });
-
-          // DELETE ORDER
+    // DELETE ORDER
     $(document).on("click", ".deleteApplication", async function () {
         const applicationId = $(this).data("id");
 
@@ -86,7 +98,7 @@ async function data_table_init() {
         });
 
         Swal.fire("Deleted!", "Order deleted successfully", "success");
-        orderListTable.ajax.reload(null, false);
+        tables.forEach((t) => t.ajax.reload(null, false));
     });
 
     initTooltips();

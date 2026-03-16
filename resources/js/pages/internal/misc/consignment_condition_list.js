@@ -168,6 +168,46 @@ document.addEventListener("DOMContentLoaded", async function () {
     initCategoryFilter();
     initUsageFilter();
 
+    function deleteCondition(id) {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "This consignment condition will be permanently deleted.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "Yes, delete it!",
+            cancelButtonText: "Cancel"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `/internal/consignment_condition/delete/${id}`,
+                    method: "DELETE",
+                    headers: {
+                        "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content")
+                    },
+                    success: function (res) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Deleted!",
+                            text: res.message || "Consignment condition has been deleted."
+                        });
+                        internalListTable.ajax.reload();
+                    },
+                    error: function (xhr) {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: xhr.responseJSON?.message || "Failed to delete consignment condition."
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    window.deleteCondition = deleteCondition;
+
     function condiModal(id) {
         const modalelement = document.getElementById("showConditionModal");
         const modal = new bootstrap.Modal(modalelement);

@@ -108,22 +108,28 @@ async function data_table_init() {
         if ($('#filterImporter').hasClass('select2-hidden-accessible')) {
             $('#filterImporter').select2('destroy');
         }
-        if ($('#filterPublicUser').hasClass('select2-hidden-accessible')) {
+        if (isInternal && $('#filterPublicUser').hasClass('select2-hidden-accessible')) {
             $('#filterPublicUser').select2('destroy');
         }
 
-        $("#filterPublicUser").val("");
-        $("#filterUsername").val("");
+        $("#filterExporter").html('<option value="">All Exporters</option>');
+        $("#filterImporter").html('<option value="">All Importers</option>');
 
-        // Reinitialize public user dropdown
-        $('#filterPublicUser').select2({
-            placeholder: 'Select a user',
-            allowClear: true,
-            width: '100%'
-        }).trigger('change');
+        if (isInternal) {
+            $("#filterPublicUser").val("");
+            $("#filterUsername").val("");
+            // Reinitialize public user dropdown
+            $('#filterPublicUser').select2({
+                placeholder: 'Select a user',
+                allowClear: true,
+                width: '100%'
+            }).trigger('change');
 
-        // Reload all exporters and importers
-        loadAllConsignmentFilters();
+            // Reload all exporters and importers
+            loadAllConsignmentFilters();
+        } else {
+            loadFilterData();
+        }
 
         consignmentListTable.ajax.reload();
     });
@@ -136,7 +142,12 @@ function handleDelete() {
     $(document).on("click", ".delete-consignment", function (e) {
         e.preventDefault();
         const id = $(this).data("id");
-        const deleteUrl = `/public/consignment_application/delete/${id}`;
+        
+        // Determine correct route based on current URL
+        let deleteUrl = `/public/consignment_application/delete/${id}`;
+        if (window.location.pathname.includes('/internal/')) {
+            deleteUrl = `/internal/consignment/delete/${id}`;
+        }
 
         Swal.fire({
             title: "Are you sure?",
@@ -187,67 +198,92 @@ document.addEventListener("DOMContentLoaded", data_table_init);
 
 // Load filter data for internal users
 async function loadFilterData() {
-    try {
-        // Load all exporters and importers initially (for consignment)
-        await loadAllConsignmentFilters();
+    if (isInternal) {
+        try {
+            // Load all exporters and importers initially (for consignment)
+            await loadAllConsignmentFilters();
 
-        const response = await fetch('/internal/api/filters/public-users');
-        const users = await response.json();
-        const $select = $('#filterPublicUser');
-        $select.html('<option value="">All Users</option>');
-        users.forEach(user => {
-            $select.append(`<option value="${user.uuid}">${user.fullname} (${user.email})</option>`);
-        });
-        // Initialize Select2 for searchable dropdown
-        $select.select2({
-            placeholder: 'Select a user',
-            allowClear: true,
-            width: '100%'
-        });
+            const response = await fetch('/internal/api/filters/public-users');
+            const users = await response.json();
+            const $select = $('#filterPublicUser');
+            $select.html('<option value="">All Users</option>');
+            users.forEach(user => {
+                $select.append(`<option value="${user.uuid}">${user.fullname} (${user.email})</option>`);
+            });
+            // Initialize Select2 for searchable dropdown
+            $select.select2({
+                placeholder: 'Select a user',
+                allowClear: true,
+                width: '100%'
+            });
 
-        // Use namespaced event to avoid removing Select2's internal handlers
-        $select.off('change.customFilter').on('change.customFilter', async function () {
-            const selectedUser = $(this).val();
+            // Use namespaced event to avoid removing Select2's internal handlers
+            $select.off('change.customFilter').on('change.customFilter', async function () {
+                const selectedUser = $(this).val();
 
-            // Destroy existing Select2 instances before repopulating
-            if ($('#filterExporter').hasClass('select2-hidden-accessible')) {
-                $('#filterExporter').select2('destroy');
-            }
-            if ($('#filterImporter').hasClass('select2-hidden-accessible')) {
-                $('#filterImporter').select2('destroy');
-            }
+                // Destroy existing Select2 instances before repopulating
+                if ($('#filterExporter').hasClass('select2-hidden-accessible')) {
+                    $('#filterExporter').select2('destroy');
+                }
+                if ($('#filterImporter').hasClass('select2-hidden-accessible')) {
+                    $('#filterImporter').select2('destroy');
+                }
 
+                $('#filterExporter').html('<option value="">All Exporters</option>');
+                $('#filterImporter').html('<option value="">All Importers</option>');
+
+                if (selectedUser) {
+                    // Load consignment-specific exporters and importers for selected user
+                    const exportersResp = await fetch(`/internal/api/filters/user/${selectedUser}/consignment/exporters`);
+                    const exporters = await exportersResp.json();
+                    exporters.forEach(exp => $('#filterExporter').append(`<option value="${exp.id}">${exp.name}</option>`));
+                    
+                    const importersResp = await fetch(`/internal/api/filters/user/${selectedUser}/consignment/importers`);
+                    const importers = await importersResp.json();
+                    importers.forEach(imp => $('#filterImporter').append(`<option value="${imp.id}">${imp.name}</option>`));
+                } else {
+                    // Load all exporters and importers when no user is selected
+                    await loadAllConsignmentFilters();
+                }
+
+                // Initialize Select2 on both dropdowns
+                $('#filterExporter').select2({
+                    placeholder: 'Select exporter',
+                    allowClear: true,
+                    width: '100%'
+                }).trigger('change');
+                $('#filterImporter').select2({
+                    placeholder: 'Select importer',
+                    allowClear: true,
+                    width: '100%'
+                }).trigger('change');
+            });
+        } catch (error) {
+            console.error('Error loading public users:', error);
+        }
+    } else {
+        try {
             $('#filterExporter').html('<option value="">All Exporters</option>');
-            $('#filterImporter').html('<option value="">All Importers</option>');
-
-            if (selectedUser) {
-                // Load consignment-specific exporters and importers for selected user
-                const exportersResp = await fetch(`/internal/api/filters/user/${selectedUser}/consignment/exporters`);
-                const exporters = await exportersResp.json();
-                exporters.forEach(exp => $('#filterExporter').append(`<option value="${exp.id}">${exp.name}</option>`));
-                
-                const importersResp = await fetch(`/internal/api/filters/user/${selectedUser}/consignment/importers`);
-                const importers = await importersResp.json();
-                importers.forEach(imp => $('#filterImporter').append(`<option value="${imp.id}">${imp.name}</option>`));
-            } else {
-                // Load all exporters and importers when no user is selected
-                await loadAllConsignmentFilters();
-            }
-
-            // Initialize Select2 on both dropdowns
+            const exportersResp = await fetch('/public/api/filters/my-consignment-exporters');
+            const exporters = await exportersResp.json();
+            exporters.forEach(exp => $('#filterExporter').append(`<option value="${exp.id}">${exp.name}</option>`));
             $('#filterExporter').select2({
                 placeholder: 'Select exporter',
                 allowClear: true,
                 width: '100%'
-            }).trigger('change');
+            });
+            $('#filterImporter').html('<option value="">All Importers</option>');
+            const importersResp = await fetch('/public/api/filters/my-consignment-importers');
+            const importers = await importersResp.json();
+            importers.forEach(imp => $('#filterImporter').append(`<option value="${imp.id}">${imp.name}</option>`));
             $('#filterImporter').select2({
                 placeholder: 'Select importer',
                 allowClear: true,
                 width: '100%'
-            }).trigger('change');
-        });
-    } catch (error) {
-        console.error('Error loading public users:', error);
+            });
+        } catch (error) {
+            console.error('Error loading filter data:', error);
+        }
     }
 }
 

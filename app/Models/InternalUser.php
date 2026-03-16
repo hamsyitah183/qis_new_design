@@ -68,6 +68,11 @@ class InternalUser extends Authenticatable implements MustVerifyEmail
         );
     }
 
+    public function routeNotificationForMail(): string
+    {
+        return $this->email;
+    }
+
     // public function roles()
     // {
     //     return $this->belongsToMany(Role::class, 'internal_user_roles', 'user_id', 'role_id');

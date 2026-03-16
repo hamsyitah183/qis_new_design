@@ -13,7 +13,7 @@ import select2 from "select2";
 select2(window.jQuery);
 
 import "select2/dist/css/select2.min.css";
-
+import { public_dashboard } from "../dashboard/public_dashboard";
 
 Dropzone.autoDiscover = false;
 
@@ -31,39 +31,52 @@ let tempItems = [];
 let tempAttachments = [];
 let itemPurpose = null;
 let temporaryItemsAttachment = [];
+let deleteIds = [];
 
-let measurementUnits = null;
-let news = null;
-let limit = null;
-let limitMeasurement = null;
-let startLimitDate = null;
-let endLimitDate = null;
+const isEditMode = typeof application !== 'undefined' && application !== null;
+if (isEditMode) console.log("Edit mode - loading application:", application);
 
-function measurementUnit()
-{
-     return $.ajax({
-        url: '/measurement',
-        type: "GET",
-        dataType: "json",
-        cache: false,
-        success: (data) => {
-           measurementUnits = data;
-
-           console.log('measurement', measurementUnits)
-        },
-
-        error: (xhr) => {
-            console.error("Failed to load exporters:", xhr.responseText);
-           
-        },
-    });
+// Load Left side ("Me" / Exporter in UI, mapped to JS 'importer')
+function importerDetail() {
+    if (!isEditMode || !application.exporter) return;
+    importer = application.exporter; // The authenticated user
+    console.log('importer (Me) from draft', importer);
+    $("#impname").val(importer.fullname);
+    $("#impfonno").val(importer.phone_number);
+    $("#impaddress1").val(importer.address_1);
+    $("#impaddress2").val(importer.address_2 ?? "");
 }
 
-measurementUnit();
+// Load existing consignment permits (edit mode)
+function loadExistingConsignments() {
+    if (!isEditMode || !application.consignment_permits) return;
+
+    tempItems = [];
+
+    application.consignment_permits.forEach((permit) => {
+        let detail = permit.consignment_detail;
+
+        tempItems.push({
+            id: detail.id || generateUUID(),
+            permit_id: permit.id,
+            item_id: detail.item_id,
+            item_name: detail.item_name,
+            value: detail.value,
+            quantity: detail.quantity,
+            measure: detail.measure,
+            purpose: detail.purpose,
+            uses: detail.uses,
+            existingAttachments: permit.attachments || [],
+            files: [], // Use new uploaded files only
+        });
+    });
+
+    renderAllItems();
+}
 
 // --------if self apply -----------
 async function selfImport() {
-    if (window.location.pathname.includes("public/import_permit_application")) {
+    if (window.location.pathname.includes("public/consignment_certificate_application")) {
         importer = await getAuthUser();
         console.log("importer", importer);
     }
@@ -72,7 +85,7 @@ async function selfImport() {
 // ------------------------- Exporter List -------------------------
 function fetchExporterList() {
     const $select = $("#selectexp");
-    const url = $select.data("route");
+    const url = '/public/get_consignment_importers';
 
     return $.ajax({
         url,
@@ -80,12 +93,14 @@ function fetchExporterList() {
         dataType: "json",
         cache: false,
         success: (data) => {
-            exporterListArray = data || [];
+            exporterListArray = data.data || [];
+
+            console.log('exporterListArray', exporterListArray)
 
             $select
                 .empty()
-                .append('<option value="">-- Select Exporter --</option>');
-            data.forEach((exp) =>
+                .append('<option value="">-- Select Importer --</option>');
+            exporterListArray.forEach((exp) =>
                 $select.append(`<option value="${exp.id}">${exp.name}</option>`)
             );
 
@@ -95,19 +110,25 @@ function fetchExporterList() {
 
             $select.select2({
                 width: "100%",
-                placeholder: "-- Select Exporter --",
+                placeholder: "-- Select Importer --",
                 allowClear: true,
                 // templateResult: formatExporterOption,
                 // escapeMarkup: (m) => m,
             });
+
+            // Auto-select exporter in edit mode
+            if (isEditMode && application.importer && application.importer.id) {
+                exporter = application.importer_detail;
+                $select.val(application.importer.id).trigger("change");
+            }
         },
         error: (xhr) => {
             console.error("Failed to load exporters:", xhr.responseText);
-            Swal.fire({
-                icon: "error",
-                title: "Failed to Load Exporters",
-                text: "Please try again or check your connection.",
-            });
+            // Swal.fire({
+            //     icon: "error",
+            //     title: "Failed to Load Exporters",
+            //     text: "Please try again or check your connection.",
+            // });
         },
     });
 }
@@ -131,8 +152,8 @@ function handleExporterChange() {
         $("#expname").val(exporter.name || "");
         $("#expfonno").val(exporter.phone_no || "");
         $("#expaddress1").val(exporter.address1 || exporter.address || "");
-        $("#expcountryCode").val(exporter.ccode || "");
-        $("#expcountry").val(exporter.country || "");
+        $("#expcountryCode").val(exporter.country_info.code || "");
+        $("#expcountry").val(exporter.country_info.name || "");
 
         change = 1;
     });
@@ -145,16 +166,14 @@ function clearExporterFields() {
 
 // ------------------------- Consignment / Uses -------------------------
 function loadConsignmentSelection() {
-
-    limitMeasurement = null;
-    limit = null;
-    // Remove old alert first (important if dynamic)
-    $('#addItemModal .modal-body .news').find('.alert').remove();
-
     const countryCode = $("#expcountryCode").val();
     const $select = $("#itemSelect");
 
+    console.log('the country code', countryCode);
+
     if (!countryCode) return;
+
+
 
     // Reset select options
     $select.empty().append('<option value="">-- Select Item --</option>');
@@ -170,20 +189,21 @@ function loadConsignmentSelection() {
     // Show loading Swal
     Swal.fire({
         title: "Loading...",
+        // html: "Please wait while items are loaded.",
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading(),
     });
 
-    $.ajax({
-        url: `/public/get_consignment/${countryCode}`,
-        method: "GET",
-        dataType: "json", // Ensure jQuery parses JSON automatically
-        success: function (data) {
+    fetch(`/public/get_consignment_certificate/${countryCode}`)
+        .then((res) => res.json())
+        .then((data) => {
             $select.prop("disabled", false);
 
-            data.forEach((row) => {
+            console.log('data', data)
+
+            data.data.forEach((row) => {
                 $select.append(
-                    `<option value="${row.id}">${row.entry_display}</option>`
+                    `<option value="${row.id}">${row.item_name}</option>`
                 );
             });
 
@@ -192,19 +212,17 @@ function loadConsignmentSelection() {
                 width: "100%",
                 placeholder: "-- Select Item --",
                 allowClear: true,
-                dropdownParent: $("#addItemModal"), // Important for modal
+                dropdownParent: $("#addItemModal"), // Important: for modal
             });
 
-            Swal.close();
-        },
-        error: function (xhr, status, error) {
-            console.error("Error loading items:", error);
+            Swal.close(); // Close loading
+        })
+        .catch((e) => {
+            console.error("Error loading items:", e);
             $select.prop("disabled", false);
             Swal.fire("Error", "Failed to load consignment items.", "error");
-        },
-    });
+        });
 }
-
 
 function loadUses(itemId) {
     const $select = $("#itemUses");
@@ -214,7 +232,6 @@ function loadUses(itemId) {
 
     Swal.fire({
         title: "Loading...",
-        // html: "Please wait while items are loaded.",
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading(),
     });
@@ -241,85 +258,9 @@ function loadUses(itemId) {
         });
 }
 
-function formatDate(dateString) {
-    const options = { day: '2-digit', month: 'short', year: 'numeric' };
-    return new Date(dateString).toLocaleDateString('en-GB', options);
-}
-
-function loadDetails(itemId) {
-
-
-    fetch(`/public/get_item_details/${itemId}`)
-    .then((res) => res.json())
-    .then((data) => {
-
-        console.log('data in details', data)
-
-        let item = data.data;
-        let startDateText = ``;
-
-        // convert to Date objects
-        const today = new Date();
-        const startDate = item.start_date ? new Date(item.start_date) : null;
-        const endDate = item.end_date ? new Date(item.end_date) : null;
-
-        console.log(startDate, today, endDate)
-
-        // check if today is within limit period
-        const isWithinLimitPeriod =
-            item.quantity_limit &&
-            startDate &&
-            endDate &&
-            today >= startDate &&
-            today <= endDate;
-
-        if (isWithinLimitPeriod) {
-
-            limit = item.quantity_limit;
-            limitMeasurement = item.measurement_unit;
-            startLimitDate = item.start_date;
-            endLimitDate = item.end_date;
-
-            startDateText = `
-                from <span class="fw-bold">${formatDate(item.start_date)}</span>
-                until <span class="fw-bold">${formatDate(item.end_date)}</span>
-            `;
-
-            const alertHtml = `
-                <div class="col-12 alert alert-primary">
-                    <p>
-                        The quantity allowed for ${item.item_name} is
-                        <span class="fw-bold">
-                            ${item.quantity_limit} ${item.measurement_unit}
-                        </span>
-                        ${startDateText}.
-                    </p>
-                </div>
-            `;
-
-            $('#addItemModal .modal-body .news').find('.alert').remove();
-            $('#addItemModal .modal-body .news').prepend(alertHtml);
-
-        } else {
-
-            // No limit if today is outside period
-            limit = null;
-            limitMeasurement = null;
-
-            $('#addItemModal .modal-body .news').find('.alert').remove();
-        }
-
-    })
-    .catch((err) => {
-        console.error("Failed to load uses:", err);
-    });
-    
-}
-
 // ------------------------- Add Exporter Modal -------------------------
 function initAddExporterModal() {
-    console.log("this is the exporter modal");
-
+    console.log('this is the exporter modal')
     const modalEl = document.getElementById("addExporterModal");
     const modal = new bootstrap.Modal(modalEl);
 
@@ -331,8 +272,7 @@ function initAddExporterModal() {
     $("#addExporterbtn").on("click", (e) => {
         e.preventDefault();
 
-        console.log("submit");
-
+        const routeUrl = $(e.currentTarget).data("route");
         const name = $("#addexpName").val().trim();
         const phone_no = $("#addexpfonno").val().trim();
         const address1 = $("#addexpaddress1").val().trim();
@@ -343,57 +283,50 @@ function initAddExporterModal() {
         if (!name || !phone_no || !country) {
             return Swal.fire("⚠️ Please fill in all required fields.");
         }
-
-        // 🔐 FORCE HTTPS
-        const httpsUrl = `${window.baseUrl}/public/store_exporter`;
-
-        // 🔄 Loading Swal
         Swal.fire({
             title: "Saving exporter...",
             text: "Please wait",
             allowOutsideClick: false,
             allowEscapeKey: false,
-            didOpen: () => Swal.showLoading()
+            didOpen: () => {
+                Swal.showLoading();
+            }
         });
 
-        console.log('add exporter')
-
         $.ajax({
-            url: '/public/store_exporter', // ✅ always HTTPS
-            method: "POST",
-            data: {
-                name,
-                phone_no,
-                address: full_address,
-                country
-            },
+            url: '/public/store_consignment_importer',
+            type: "POST",
+            data: { name, phone_no, address: full_address, country },
             headers: {
                 "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
             },
-            success: () => {
-                fetchExporterList();
-
-                Swal.fire({
-                    icon: "success",
-                    title: "Exporter Saved!",
-                    text: "The exporter has been successfully added to the list.",
-                    timer: 1800,
-                    showConfirmButton: false,
-                    timerProgressBar: true,
+            success: (response) => {
+                // response is the new importer object
+                fetchExporterList().then(() => {
+                    // Auto-select the new importer
+                    const newImporterId = response.id;
+                    const $select = $("#selectexp");
+                    
+                    // Set the value and trigger change
+                    $select.val(newImporterId).trigger('change');
+                    
+                    Swal.fire({
+                        icon: "success",
+                        title: "Importer Saved!",
+                        text: "The exporter has been successfully added to the list.",
+                        timer: 1800,
+                        showConfirmButton: false,
+                        timerProgressBar: true,
+                        position: "center",
+                    });
+                    $(modalEl).modal("hide");
+                    $("#addExporterForm")[0].reset();
                 });
-
-                modal.hide();
-                $("#addExporterForm")[0].reset();
             },
             error: (xhr) => {
                 console.error(xhr.responseText);
-
-                Swal.fire({
-                    icon: "error",
-                    title: "Failed!",
-                    text: "Failed to save exporter. Please try again."
-                });
-            }
+                Swal.fire("❌ Failed to save exporter. Please try again.");
+            },
         });
     });
 }
@@ -492,7 +425,7 @@ function permitDetails() {
 
         // build URL with the selected value as query param
         const url = `${route}?type=${encodeURIComponent(value)}`;
-        console.log('the url is', url);
+        console.log(url);
         $.ajax({
             url: url, // the same URL you built earlier: route + ?type=value
             type: "GET",
@@ -512,6 +445,20 @@ function permitDetails() {
                     >${item.entry_display}</option>`;
                 });
                 detailsSelect.html(options);
+
+                // Auto-select drafted entry point or the first available option
+                setTimeout(() => {
+                    if (isEditMode && application.entry_point != null) {
+                        detailsSelect.val(application.entry_point.toString()).trigger("change");
+                        
+                        // Fallback: if value didn't set (e.g. strict type issue)
+                        if (!detailsSelect.val() && data.length > 0) {
+                            detailsSelect.val(data[0].id.toString()).trigger("change");
+                        }
+                    } else if (data.length > 0) {
+                        detailsSelect.val(data[0].id.toString()).trigger("change");
+                    }
+                }, 100);
             },
             error: function (xhr, status, error) {
                 console.error("AJAX Error:", error);
@@ -542,13 +489,13 @@ function permitDetails() {
         const today = new Date().toISOString().split("T")[0];
         etaInput.setAttribute("min", today);
 
-        // Validation function
-        const validateETA = function () {
+        // Validate on change
+        etaInput.addEventListener("change", function () {
             const selectedDate = new Date(this.value);
             const todayDate = new Date();
             todayDate.setHours(0, 0, 0, 0); // Reset time for accurate comparison
 
-            if (this.value && selectedDate < todayDate) {
+            if (selectedDate < todayDate) {
                 Swal.fire({
                     icon: "warning",
                     title: "Invalid Date",
@@ -559,11 +506,26 @@ function permitDetails() {
             } else {
                 this.classList.remove("is-invalid");
             }
-        };
+        });
+    }
 
-        // Validate on change and blur
-        etaInput.addEventListener("change", validateETA);
-        etaInput.addEventListener("blur", validateETA);
+    if (isEditMode) {
+        if (application.eta) {
+            const etaDate = application.eta.split("T")[0];
+            const etaInput = document.getElementById("eta");
+            if(etaInput) {
+                etaInput.value = etaDate;
+            }
+        }
+        if (application.category_application) {
+            const catInput = document.getElementById("app_cate");
+            if(catInput) catInput.value = application.category_application;
+        }
+    }
+
+    // Automatically trigger change event for the fixed Land transport type
+    if (trnptType.value) {
+        trnptType.dispatchEvent(new Event("change"));
     }
 }
 
@@ -727,10 +689,7 @@ function saveConsignmentAttachment() {
         const itemMeasure = $("#itemMeasure").val();
         const itemPurpose = $("#itemPurpose").val();
         const itemUsesValue = $("#itemUses").val();
-
-        // ✅ Get files from Dropzone
-        const files = itemDropzone.getAcceptedFiles();
-        const itemPurposeDescription = $("#itemPurpose option:selected").data("description") || $("#itemPurpose").val();
+        const certificateNo = $("#certificateNo").val();
 
         // ✅ Validation
         if (
@@ -739,70 +698,19 @@ function saveConsignmentAttachment() {
             !itemQuantity ||
             !itemMeasure ||
             !itemPurpose ||
-            !itemUsesValue ||
-            files.length === 0
+            !itemUsesValue
         ) {
             Swal.fire({
                 icon: "error",
                 title: "Incomplete Data",
-                text: "Please fill in all required fields and upload an attachment before saving.",
+                text: "Please fill in all required fields before saving.",
             });
             return;
         }
 
-        if(limitMeasurement) {
-            // convert the limit to kg first
-            let limitInKg = null;
-            let conversion = null;
-
-            const selectedUnit = measurementUnits.unit.find(unit =>
-                unit.cate_code.toLowerCase() === limitMeasurement.toLowerCase()
-                && unit.is_del === false
-            );
-
-            if (selectedUnit) {
-                console.log("Found:", selectedUnit);
-                console.log("Cate Code:", selectedUnit.cate_code);
-
-                limitInKg = limit * selectedUnit.conversion.conversion;
-
-            } else {
-                console.log("Measurement unit not found.");
-            }
-
-            console.log("limit in kg", limitInKg);
-
-            // convert the quantity of the selected item weight
-            let selectedItemInKg = null;
-            
-            const selectedItemUnit = measurementUnits.unit.find(unit =>
-                unit.cate_code.toLowerCase() === itemMeasure.toLowerCase()
-                && unit.is_del === false
-            );
-
-            if (selectedItemUnit) {
-                console.log("Found:", selectedItemUnit);
-                console.log("Cate Code:", selectedItemUnit.cate_code);
-
-                selectedItemInKg = itemQuantity * selectedItemUnit.conversion.conversion;
-
-
-            } else {
-                console.log("Measurement unit not found.");
-            }
-
-            console.log("selected limit in kg", selectedItemInKg);
-
-            if(selectedItemInKg > limitInKg) {
-                Swal.fire({
-                    icon: "error",
-                    title: "The item is over limit from",
-                    text: "Please fill in again.",
-                });
-                return;
-            }
-        }
-
+        // ✅ Get files from Dropzone
+        const files = itemDropzone.getAcceptedFiles();
+        const itemPurposeDescription = $("#itemPurpose option:selected").data("description") || $("#itemPurpose").val();
 
         // ✅ Build new item
         const newItem = {
@@ -816,6 +724,7 @@ function saveConsignmentAttachment() {
             purpose: itemPurposeDescription,
             uses: itemUsesValue,
             files: files,
+            certificateNo: certificateNo,
         };
 
         // ✅ Add to temporary array
@@ -840,6 +749,7 @@ function resetAddItemModal() {
     // Reset plain input fields
     $("#itemValue").val("");
     $("#itemQuantity").val("");
+    $("#certificateNo").val("");
 
     // Reset Select2 fields
     $("#itemSelect").val(null).trigger("change");
@@ -856,31 +766,13 @@ function renderAllItems() {
     const tableBody = document.querySelector("#itemListTbl tbody");
     tableBody.innerHTML = ""; // Clear existing rows
 
-    // Update validation input
-    const countInput = document.getElementById("itemCountCheck");
-    if (countInput) {
-        countInput.value = tempItems.length > 0 ? "1" : "";
-        if (tempItems.length > 0) {
-            countInput.classList.remove('is-invalid');
-            countInput.style.border = '';
-
-            // Also remove red border from button
-            const addBtn = document.getElementById("mdlAddItemBtn");
-            if (addBtn) {
-                addBtn.classList.remove('is-invalid');
-                addBtn.style.setProperty('border', '', 'important');
-                addBtn.style.color = '';
-            }
-        }
-    }
-
     tempItems.forEach((item, index) => {
         tableBody.insertAdjacentHTML(
             "beforeend",
             `<tr id="item-row-${item.id}">
-              
-                <td class = "text-wrap">${item.item_name}</td>
-         
+                
+                <td>${item.item_name}</td>
+             
                 <td class = "text-wrap">${item.purpose}</td>
                 <td class="text-center">
                     <div class="d-flex justify-content-center align-items-center gap-2">
@@ -1016,6 +908,14 @@ function deleteItem() {
             return;
         }
 
+        // Track deleted permit IDs for edit mode
+        if (isEditMode && tempItems[index].permit_id) {
+            let itemId = tempItems[index].permit_id;
+            if (!deleteIds.includes(itemId)) {
+                deleteIds.push(itemId);
+            }
+        }
+
         // Remove from array
         tempItems.splice(index, 1);
 
@@ -1040,9 +940,23 @@ function saveapplication(isDraft = false) {
     // 🔑 tell backend this is draft or submit
     formData.append("is_draft", isDraft ? 1 : 0);
 
-    formData.append("exporterData", JSON.stringify(exporter));
-    formData.append("importerData", JSON.stringify(importer));
-    formData.append("permitDetails", JSON.stringify(permitDetails));
+    // Collect Step 1 details manually since permitDetails is a function name clash
+    const currentPermitDetails = {
+        eta: $("#eta").val() || null,
+        tranType: $("#trnptType").val() || null,
+        entrypoint: $("#entryPoint").val() || null,
+        applCate: $("#app_cate").val() || null
+    };
+
+    formData.append("exporterData", JSON.stringify(importer));
+    formData.append("importerData", JSON.stringify(exporter));
+    formData.append("permitDetails", JSON.stringify(currentPermitDetails));
+
+    // Include applicationId in edit mode so backend updates instead of creating
+    if (isEditMode) {
+        formData.append("applicationId", application.application_id);
+        formData.append("deleted_item_ids", deleteIds);
+    }
 
     tempItems.forEach((item, index) => {
         const { files, ...otherData } = item;
@@ -1063,7 +977,7 @@ function saveapplication(isDraft = false) {
     });
 
     $.ajax({
-        url: "/public/save-application",
+        url: "/public/save_application_consignment",
         type: "POST",
         data: formData,
         headers: {
@@ -1078,160 +992,192 @@ function saveapplication(isDraft = false) {
                 timer: 1500,
                 showConfirmButton: false,
             });
+            
 
-
-
-            setTimeout(() => {
-                window.location.href = "/public/view_import_permit";
-            }, 1500);
-
-
-
+            if (!isDraft) {
+                setTimeout(() => {
+                    window.location.href = "/public/view_all_consignment";
+                }, 1500);
+            } else {
+                window.location.href = "/public/view_all_consignment";
+            }
         },
         error: function (xhr) {
-            Swal.fire("Error", "Failed to save application", "error");
+            const errorMessage = xhr.responseJSON?.message || "Failed to save application. Please check your connection and try again.";
+            Swal.fire("Error", errorMessage, "error");
         },
     });
 }
 
 // ------------------------- Initialize -------------------------
 // ------------------------- Initialize -------------------------
-$(document).ready(async function () {
-    // Show loading swal
-    Swal.fire({
-        title: "Loading...",
-        html: "Please wait while the page initializes.",
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading(),
+
+    $(document).ready(async function () {
+        // Show loading swal
+        Swal.fire({
+            title: "Loading...",
+            html: "Please wait while the page initializes.",
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading(),
+        });
+    
+        try {
+            // Load importer from draft if in edit mode
+            if (isEditMode) {
+                importerDetail();
+                loadExistingConsignments();
+            } else {
+                // Initialize self import (new application)
+                await selfImport();
+            }
+    
+            handleExporterChange();
+
+            await fetchExporterList();
+
+            if (isEditMode && application.importer_detail) {
+                const imp = application.importer_detail;
+                $("#expid").val(imp.id || "");
+                $("#expname").val(imp.name || "");
+                $("#expfonno").val(imp.phone_no || "");
+                $("#expaddress1").val(imp.address || "");
+                const matched = exporterListArray.find(e => e.id == imp.id);
+                if (matched && matched.country_info) {
+                    $("#expcountryCode").val(matched.country_info.code || "");
+                    $("#expcountry").val(matched.country_info.name || "");
+                } else {
+                    $("#expcountryCode").val(imp.country || "");
+                    $("#expcountry").val(imp.country || "");
+                }
+            }
+    
+            // Track unsaved changes
+            $("#wizardForm").on("change input", "input, select, textarea", function() {
+                change = 1;
+            });
+
+            // Initialize modals and search
+            initAddExporterModal();
+            initImporterSearch();
+            permitDetails();
+            itemConsigment();
+            saveConsignmentAttachment();
+            viewMore();
+            deleteItem();
+    
+            $("#itemMeasure").select2({
+                width: "100%",
+                placeholder: "-- Select Measurement Unit --",
+                // allowClear: true,
+                dropdownParent: $("#addItemModal"), // Important: for modal
+            });
+    
+            $("#addexpcountry").select2({
+                width: "100%",
+                placeholder: "-- Select Country --",
+                // allowClear: true,
+                dropdownParent: $("#addExporterModal"), // Important: for modal
+            });
+    
+            $("#itemPurpose").select2({
+                width: "100%",
+                placeholder: "-- Select Purpose --",
+                // allowClear: true,
+                dropdownParent: $("#addItemModal"), // Important: for modal
+            });
+    
+            // ------------------- Item Purpose -------------------
+            $("#itemPurpose").on("change", function () {
+                const selectedOption = $(this).find("option:selected");
+                itemPurpose = selectedOption.data("description") || "";
+                console.log("Item purpose selected:", itemPurpose);
+            });
+    
+            // ------------------- Item Select (Consignment) -------------------
+            $("#itemSelect").on("change", function () {
+                const itemId = $(this).val();
+                const $itemUses = $("#itemUses");
+    
+                // Reset uses dropdown
+                $itemUses
+                    .empty()
+                    .append('<option value="">-- Select Uses --</option>');
+    
+                if (!itemId) return;
+    
+                // Load uses for the selected item
+                loadUses(itemId);
+            });
+    
+         
+            $("#mdlAddItemBtn").on("click", function(e) {
+                e.preventDefault();
+                console.log('hellooo ml item is cliked');
+                loadConsignmentSelection()
+            });
+    
+            // Submit button handler
+            $(document).on("click", "#submitApps", function (e) {
+                e.preventDefault();
+                console.log("Submit clicked!");
+                saveapplication(false);
+            });
+    
+            $(document).on(
+                "click",
+                `#logoutButton, 
+                .app-sidebar.sticky button, .app-sidebar.sticky a,
+             
+                .breadcrumb .breadcrumb-item a
+                `,
+                function (e) {
+                    if (!change) return;
+    
+                    e.preventDefault();
+                    const target = this;
+    
+                    Swal.fire({
+                        title: "Unsaved Changes",
+                        text: "You have unsaved changes. What would you like to do?",
+                        icon: "warning",
+                        showCancelButton: true,
+                        showDenyButton: true,
+                        confirmButtonText: "Yes, leave",
+                        denyButtonText: "Save as Draft",
+                        cancelButtonText: "Stay",
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Leave page
+                            change = false;
+    
+                            if (target.tagName === "A") {
+                                window.location.href = target.href;
+                            } else {
+                                target.click();
+                            }
+                        }
+    
+                        if (result.isDenied) {
+                            saveapplication(true);
+                        }
+    
+                        // result.isDismissed → user clicked "Stay"
+                    });
+                }
+            );
+        } catch (error) {
+            console.error("Error during initialization:", error);
+            Swal.fire(
+                "Error",
+                "Failed to initialize page. Check console for details.",
+                "error"
+            );
+        } finally {
+            Swal.close();
+        }
     });
 
-    try {
-        // Initialize self import
-        await selfImport();
 
-        // Fetch exporter list and set change handler
-        await fetchExporterList();
-        handleExporterChange();
-
-        // Initialize modals and search
-        initAddExporterModal();
-        initImporterSearch();
-        permitDetails();
-        itemConsigment();
-        saveConsignmentAttachment();
-        viewMore();
-        deleteItem();
-
-        $("#itemMeasure").select2({
-            width: "100%",
-            placeholder: "-- Select Measurement Unit --",
-            // allowClear: true,
-            dropdownParent: $("#addItemModal"), // Important: for modal
-        });
-
-        $("#addexpcountry").select2({
-            width: "100%",
-            placeholder: "-- Select Country --",
-            // allowClear: true,
-            dropdownParent: $("#addExporterModal"), // Important: for modal
-        });
-
-        $("#itemPurpose").select2({
-            width: "100%",
-            placeholder: "-- Select Purpose --",
-            // allowClear: true,
-            dropdownParent: $("#addItemModal"), // Important: for modal
-        });
-
-        // ------------------- Item Purpose -------------------
-        $("#itemPurpose").on("change", function () {
-            const selectedOption = $(this).find("option:selected");
-            itemPurpose = selectedOption.data("description") || "";
-            console.log("Item purpose selected:", itemPurpose);
-        });
-
-        // ------------------- Item Select (Consignment) -------------------
-        $("#itemSelect").on("change", function () {
-            const itemId = $(this).val();
-            const $itemUses = $("#itemUses");
-
-            // Reset uses dropdown
-            $itemUses
-                .empty()
-                .append('<option value="">-- Select Uses --</option>');
-
-            if (!itemId) return;
-
-            // Load uses for the selected item
-            loadUses(itemId);
-            loadDetails(itemId)
-        });
-
-        // Expose loadConsignmentSelection globally if needed
-        // loadConsignmentSelection();
-        $("#mdlAddItemBtn").on("click", loadConsignmentSelection);
-
-        // Submit button handler
-        $(document).on("click", "#submitApps", function (e) {
-            e.preventDefault();
-            console.log("Submit clicked!");
-            saveapplication(false);
-        });
-
-        $(document).on(
-            "click",
-            `#logoutButton, 
-            .app-sidebar.sticky button, .app-sidebar.sticky a,
-            .breadcrumb .breadcrumb-item a
-            `,
-
-            function (e) {
-                if (!change) return;
-
-                e.preventDefault();
-                const target = this;
-
-                Swal.fire({
-                    title: "Unsaved Changes",
-                    text: "You have unsaved changes. What would you like to do?",
-                    icon: "warning",
-                    showCancelButton: true,
-                    showDenyButton: true,
-                    confirmButtonText: "Yes, leave",
-                    denyButtonText: "Save as Draft",
-                    cancelButtonText: "Stay",
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // Leave page
-                        change = false;
-
-                        if (target.tagName === "A") {
-                            window.location.href = target.href;
-                        } else {
-                            target.click();
-                        }
-                    } 
-
-                    if (result.isDenied) {
-                        saveapplication(true); // ✅ draft
-                        window.location.href = "/public/view_import_permit";
-                    }
-
-                    // result.isDismissed → user clicked "Stay"
-                });
-            }
-        );
-    } catch (error) {
-        console.error("Error during initialization:", error);
-        Swal.fire(
-            "Error",
-            "Failed to initialize page. Check console for details.",
-            "error"
-        );
-    } finally {
-        Swal.close();
-    }
-});
 
 // ============= attachment =====================
 
@@ -1242,8 +1188,8 @@ export function summarySubmit() {
     // --- IMPORTER & EXPORTER SUMMARY ---
     impAddrs = importer
         ? [importer.address_1, importer.address_2]
-            .filter((x) => x && x.trim() !== "")
-            .join(", ")
+              .filter((x) => x && x.trim() !== "")
+              .join(", ")
         : "";
 
     permitDetails = {
@@ -1274,7 +1220,7 @@ export function summarySubmit() {
     targetTable.innerHTML = ""; // clear existing rows
 
     tempItems.forEach((item, index) => {
-        console.log("item summary", item);
+        console.log('item summary', item)
         // --- Build attachment list ---
         let attachmentHTML = "";
 
@@ -1290,7 +1236,7 @@ export function summarySubmit() {
             `
                 <tr>
                     <td>${index + 1}</td>
-                    <td class = "text-wrap">${item.item_name || ""}</td>
+                    <td>${item.item_name || ""}</td>
                     <td>${item.quantity || ""}  ${item.measure || ""}</td>
                     <td>${item.purpose || ""} </td>
                     <td>${item.uses || ""}</td>
@@ -1303,56 +1249,3 @@ export function summarySubmit() {
 }
 
 // ------------------------------summary details ---------------------
-
-// ─── Inactivity Timeout: Draft-Save Hook ─────────────────────────────────────
-// Registers a function that the inactivity timeout can call silently before
-// auto-logging out the user. Only active on import permit application pages.
-$(document).ready(function () {
-    const isPermitPage = window.location.pathname.includes('import_permit_application')
-        || window.location.pathname.includes('import_assign_application');
-    if (!isPermitPage) return;
-
-    window.qisDraftSaver = function () {
-        return new Promise((resolve, reject) => {
-            const form = document.querySelector('#wizardForm');
-            if (!form) return resolve(); // nothing to save
-
-            const formData = new FormData(form);
-            formData.append('is_draft', 1);
-            formData.append('exporterData', JSON.stringify(exporter));
-            formData.append('importerData', JSON.stringify(importer));
-
-            const livePermitDetails = {
-                applCate: document.getElementById('app_cate')?.value ?? '',
-                eta: document.getElementById('eta')?.value ?? '',
-                tranType: document.getElementById('trnptType')?.value ?? '',
-                entrypoint: document.getElementById('entryPoint')?.value ?? '',
-            };
-            formData.append('permitDetails', JSON.stringify(livePermitDetails));
-
-            tempItems.forEach((item, index) => {
-                const { files, ...otherData } = item;
-                formData.append(`items[${index}][data]`, JSON.stringify(otherData));
-                if (files && files.length > 0) {
-                    files.forEach((file) => {
-                        formData.append('files[]', file);
-                        formData.append('file_item_index[]', index);
-                    });
-                }
-            });
-
-            $.ajax({
-                url: '/public/save-application',
-                type: 'POST',
-                data: formData,
-                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                processData: false,
-                contentType: false,
-                success: () => resolve(),
-                error: (xhr) => reject(new Error(xhr.responseJSON?.message || 'Draft save failed')),
-            });
-        });
-    };
-
-    console.log('[QIS] Import permit draft saver registered.');
-});

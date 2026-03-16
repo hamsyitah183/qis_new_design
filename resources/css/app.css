@@ -95,12 +95,16 @@
 }
 
 #itemDropzone .dz-preview-group .dz-filename {
-    /* width: 70%; */
-    text-wrap: wrap;
+    width: 70%;
+    text-wrap: wrap !important;
     color: var(--text-muted) !important;
     margin-bottom: 15px;
     margin-top: 10px;
     font-size: 12px !important;
+}
+
+.dz-filename {
+    text-wrap: wrap !important;
 }
 
 #itemDropzone .dz-preview-group .dz-progress,
