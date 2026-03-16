@@ -31,12 +31,14 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Spatie\Activitylog\Models\Activity;
+use Illuminate\Support\Facades\Artisan;
 
 // use App\Notifications\ApplicationNotification;
 class PermitApplicationController extends Controller
 {
     public function show()
     {
+        Artisan::call('bayupay:check-pending');
         if(authUser()['user']['doa_verified'] == 0) {
             return view('pages.public.wait_for_verified');
         } 
