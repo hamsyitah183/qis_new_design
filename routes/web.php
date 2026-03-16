@@ -44,9 +44,11 @@ Route::middleware(['multi.guest'])->group(function () {
 
     Route::get('/forgot-password', [PasswordResetController::class, 'resetPage'])->name('password.request');
     Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
-    Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
-    Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.update');
 });
+
+// Password Reset Routes
+Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
+Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.update');
 
 // Root route '/'
 Route::get('/', function () {
@@ -99,6 +101,7 @@ Route::prefix('public')
         Route::post('/save_application_inspection', [InspectionController::class, 'saveApplication'])->name('saveApplicationInspection');
 
         Route::post('/save_application_consignment', [ConsignmentApplicationController::class, 'saveApplication'])->name('saveApplicationConsignment');
+        Route::post('/save_draft_consignment', [ConsignmentApplicationController::class, 'saveDraft'])->name('saveDraftConsignment');
         // view application
         Route::get('/view_import_permit', [ApplicationController::class, 'showallapplicationlist'])->name('showallapplicationlist');
 
@@ -147,7 +150,7 @@ Route::prefix('public')
         Route::get('/api/filters/my-consignment-exporters', [FilterController::class, 'getMyConsignmentExporters'])->name('api.filters.myConsignmentExporters');
         Route::get('/api/filters/my-consignment-importers', [FilterController::class, 'getMyConsignmentImporters'])->name('api.filters.myConsignmentImporters');
 
-       Route::get('/get_item_details/{id}', [MiscController::class, 'getspecificitem']);
+        Route::get('/get_item_details/{id}', [MiscController::class, 'getspecificitem']);
     });
 
 Route::prefix('internal')
@@ -231,6 +234,7 @@ Route::prefix('internal')
         //MISC - Restricted to non-boundary officers
         Route::get('/control_panel', [MiscController::class, 'showcontrolpanel']);
         Route::get('/state-district-management', [MiscController::class, 'showStateDistrictManagement'])->name('state-district-management');
+        Route::get('/branch-management', [MiscController::class, 'showBranchManagement'])->name('branch-management');
         Route::get('/get_pbdata/{cate}', [MiscController::class, 'getpbdata']);
         Route::get('/getspecificpbdata/{id}', [MiscController::class, 'getspecificpbdata']);
         Route::post('/updatepbdata', [MiscController::class, 'updatepbdata']);
@@ -245,9 +249,20 @@ Route::prefix('internal')
         Route::post('/save_condition', [MiscController::class, 'saveCondition'])->name('saveCondition');
         Route::get('/permit_edit_condition/{id}', [MiscController::class, 'editCondition']);
 
+        // IMPORTER & EXPORTER LISTS
+        Route::get('/importer/list', [ApplicationController::class, 'showInternalImporterList'])->name('importer.list');
+        Route::get('/importer_list/data', [ApplicationController::class, 'getInternalImporterListData']);
+        Route::get('/exporter/list', [ApplicationController::class, 'showInternalExporterList'])->name('exporter.list');
+        Route::get('/exporter_list/data', [ApplicationController::class, 'getInternalExporterListData']);
+
+        // BRANCH MANAGEMENT
+        Route::get('/branches', [MiscController::class, 'getBranches']);
+        Route::post('/branch/add', [MiscController::class, 'addBranch']);
+        Route::post('/branch/update', [MiscController::class, 'updateBranch']);
+        Route::delete('/branch/delete/{id}', [MiscController::class, 'deleteBranch']);
 
         // CONSIGNMENT CONDITION
-         Route::get('/consignment_condition', [ConsignmentMiscController::class, 'showConsignmentCondition']);
+        Route::get('/consignment_condition', [ConsignmentMiscController::class, 'showConsignmentCondition']);
         Route::get('/consignment_condition/data', [ConsignmentMiscController::class, 'getConsignmentConditionData']);
         Route::get('/consignment_condition/data/{id}', [ConsignmentMiscController::class, 'getConsignmentConditionDataById']);
         Route::get('/consignment_condition/edit/{id}', [ConsignmentMiscController::class, 'editConsignmentConditionDataById']);
@@ -317,7 +332,8 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/view_application/{uuid}', [ApplicationController::class, 'viewapplication'])->name('viewApplication');
     Route::get('/edit_application/{uuid}', [ApplicationController::class, 'editApplication'])->name('editApplication');
 
-    Route::get('/view_consignment/{uuid}', [ConsignmentApplicationController::class, 'viewapplication'])->name('consignment.view'); // Removed name to avoid confusion, it's now in the group
+    Route::get('/view_consignment/{uuid}', [ConsignmentApplicationController::class, 'viewapplication'])->name('consignment.view');
+    Route::get('/edit_consignment/{uuid}', [ConsignmentApplicationController::class, 'editApplication'])->name('consignment.edit');
     Route::get('/consignment_application/{id}/data', [ConsignmentController::class, 'getApplicationDetails']);
     Route::get('/consignment/attachment/{id}', [ConsignmentApplicationController::class, 'viewAttachment'])->name('consignment.attachment.view');
     Route::get('/consignment/list/data', [ConsignmentController::class, 'getallconsignmentlist'])->name('consignment.data');

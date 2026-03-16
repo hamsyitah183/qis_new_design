@@ -146,7 +146,8 @@
 
                             @endphp --}}
 
-                            @if (authUser()['type'] == 'public' && $application->user_id == authUser()['user']->uuid  )
+                     
+                            @if (authUser()['type'] == 'public' && $application->user_id == authUser()['user']->uuid && ($application->status != 'Completed' || $application->status == 'Officer Verification Completed'))
                                 @include('pages.public.view_permit.step5')
                             @endif
 

@@ -17,10 +17,11 @@
                 <div class="card-body">
                     <ul class="nav nav-tabs flex-column nav-tabs-header mb-0 mail-settings-tab" role="tablist">
                         <li class="nav-item me-0" role="presentation">
-                            <a class="nav-link" data-bs-toggle="tab" role="tab" aria-current="page"
-                                href="#email-settings" aria-selected="false" tabindex="-1"><i
+                            <a class="nav-link" data-bs-toggle="tab" role="tab" aria-current="page" href="#email-settings"
+                                aria-selected="false" tabindex="-1"><i
                                     class="ri-map-pin-line me-2 align-middle fs-14 lh-1 text-primary"></i>District Entry</a>
                         </li>
+
                         <li class="nav-item me-0" role="presentation">
                             <a class="nav-link" data-bs-toggle="tab" role="tab" aria-current="page" href="#security"
                                 aria-selected="false" tabindex="-1"><i
@@ -62,6 +63,7 @@
                         @include('pages.internal.misc.cp_tab4')
                         <!-- tab5 -->
                         @include('pages.internal.misc.cp_tab5')
+
                     </div>
                 </div>
 
@@ -164,12 +166,12 @@
             </div>
 
             @slot('footer')
-                <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">
-                    Cancel
-                </button>
-                <button type="button" id="saveEditBtn" class="btn btn-primary">
-                    Save Changes
-                </button>
+            <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">
+                Cancel
+            </button>
+            <button type="button" id="saveEditBtn" class="btn btn-primary">
+                Save Changes
+            </button>
             @endslot
         </form>
     </x-modal>
@@ -191,8 +193,8 @@
             </div>
 
             @slot('footer')
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-primary" id="saveGenericBtn">Save</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="saveGenericBtn">Save</button>
             @endslot
         </form>
     </x-modal>--}}
@@ -216,15 +218,15 @@
             </div>
 
             @slot('footer')
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    Cancel
-                </button>
-                <button type="button" id = "submitEntryPoint" class="btn btn-primary">
-                    Save
-                </button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                Cancel
+            </button>
+            <button type="button" id="submitEntryPoint" class="btn btn-primary">
+                Save
+            </button>
             @endslot
         </form>
-    </x-modal> 
+    </x-modal>
 
 
 @endsection

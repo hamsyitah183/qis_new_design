@@ -36,6 +36,8 @@ let measurementUnits = null;
 let news = null;
 let limit = null;
 let limitMeasurement = null;
+let startLimitDate = null;
+let endLimitDate = null;
 
 function measurementUnit()
 {
@@ -248,52 +250,69 @@ function loadDetails(itemId) {
 
 
     fetch(`/public/get_item_details/${itemId}`)
-        .then((res) => res.json())
-        .then((data) => {
-            console.log('data in details', data)
-            let item = data.data;
-            let startDate = ``;
+    .then((res) => res.json())
+    .then((data) => {
+
+        console.log('data in details', data)
+
+        let item = data.data;
+        let startDateText = ``;
+
+        // convert to Date objects
+        const today = new Date();
+        const startDate = item.start_date ? new Date(item.start_date) : null;
+        const endDate = item.end_date ? new Date(item.end_date) : null;
+
+        console.log(startDate, today, endDate)
+
+        // check if today is within limit period
+        const isWithinLimitPeriod =
+            item.quantity_limit &&
+            startDate &&
+            endDate &&
+            today >= startDate &&
+            today <= endDate;
+
+        if (isWithinLimitPeriod) {
 
             limit = item.quantity_limit;
             limitMeasurement = item.measurement_unit;
+            startLimitDate = item.start_date;
+            endLimitDate = item.end_date;
 
-            if(item.start_date) {
-                startDate = 
-                `from <span class = "fw-bold">${formatDate(item.start_date)}</span> until 
-                <span class = "fw-bold">${formatDate(item.end_date)}</span>`
-            }
+            startDateText = `
+                from <span class="fw-bold">${formatDate(item.start_date)}</span>
+                until <span class="fw-bold">${formatDate(item.end_date)}</span>
+            `;
 
-            if(item.quantity_limit) {
-                const alertHtml = `
-                    <div class="col-12 alert alert-primary">
-                        <p class = "">
-                            The quantity allowed for ${item.item_name} is 
-                            <span class = "fw-bold"> ${item.quantity_limit} ${item.measurement_unit} </span> 
-                            ${startDate}
-                            .
-                        </p>
-                    </div>
-                `;
+            const alertHtml = `
+                <div class="col-12 alert alert-primary">
+                    <p>
+                        The quantity allowed for ${item.item_name} is
+                        <span class="fw-bold">
+                            ${item.quantity_limit} ${item.measurement_unit}
+                        </span>
+                        ${startDateText}.
+                    </p>
+                </div>
+            `;
 
-                // Remove old alert first (important if dynamic)
-                $('#addItemModal .modal-body .news').find('.alert').remove();
+            $('#addItemModal .modal-body .news').find('.alert').remove();
+            $('#addItemModal .modal-body .news').prepend(alertHtml);
 
-                // Insert at TOP of row
-                $('#addItemModal .modal-body .news').prepend(alertHtml);
+        } else {
 
-            } 
+            // No limit if today is outside period
+            limit = null;
+            limitMeasurement = null;
 
-            else {
-                // Remove old alert first (important if dynamic)
-                $('#addItemModal .modal-body .news').find('.alert').remove();
-            }
+            $('#addItemModal .modal-body .news').find('.alert').remove();
+        }
 
-       
-        })
-        .catch((err) => {
-            console.error("Failed to load uses:", err);
-        });
-
+    })
+    .catch((err) => {
+        console.error("Failed to load uses:", err);
+    });
     
 }
 
