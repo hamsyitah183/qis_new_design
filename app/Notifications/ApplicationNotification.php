@@ -52,10 +52,16 @@ class ApplicationNotification extends Notification
      */
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
-            ->line('The introduction to the notification.')
-            ->action('Notification Action', url('/'))
-            ->line('Thank you for using our application!');
+        $mail = (new MailMessage)
+            ->subject('ORIS - Application Notification')
+            ->greeting('Hello, ' . ($notifiable->name ?? 'User') . '!')
+            ->line($this->message);
+
+        if ($this->url) {
+            $mail->action('View Application', $this->url);
+        }
+
+        return $mail->line('Thank you for using the Online Road Information System (ORIS).');
     }
 
     /**

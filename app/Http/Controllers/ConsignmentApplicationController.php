@@ -212,7 +212,7 @@ class ConsignmentApplicationController extends Controller
                         $application->exporter['fullname'] ?? 'User',
                         'Consignment Application',
                         $application->application_id,
-                        'will be check by DOA',
+                        'submitted',
                         'Your application has been successfully submitted.',
                         $application->exporter->phone_number  ?? '60143290092', // recipient number
                     );

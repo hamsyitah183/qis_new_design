@@ -16,6 +16,33 @@ class PublicCodeSeeder extends Seeder
     {
         $now = Carbon::now();
 
+        $purpose = [
+            'Commercial (Animal Feed)',
+            'Commercial (Decoration)',
+            'Commercial (Human consumption)',
+            'Commercial (Landscaping)',
+            'Commercial (Planting material)',
+            'Individual (Animal Feed)',
+            'Individual (Personal consumption)',
+            'Individual (Landscaping)',
+            'Individual (Planting material)',
+            'Individual (Decoration)',
+            'Material for product manufacturing',
+            'Research (Downstream product)',
+            'Research (Lab analysis)'
+        ];
+
+        foreach ($purpose as $index => $desc) {
+            DB::table('public_code')->insert([
+                'cate_name' => 'consignment_purpose',
+                'cate_code' => (string)($index + 1),
+                'description' => $desc,
+                'is_del' => false,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        };
+
         DB::table('public_code')->insert([
             // district_entry  consignment_purpose unit_measurement condition_category
             [
@@ -90,38 +117,39 @@ class PublicCodeSeeder extends Seeder
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
-            [
-                'cate_name' => 'consignment_purpose',
-                'cate_code' => '1',
-                'description' => 'Commercial (Trade)',
-                'is_del' => false,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-            [
-                'cate_name' => 'consignment_purpose',
-                'cate_code' => '2',
-                'description' => 'Research',
-                'is_del' => false,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-            [
-                'cate_name' => 'consignment_purpose',
-                'cate_code' => '3',
-                'description' => 'Planting/Production (Planting Material)',
-                'is_del' => false,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-            [
-                'cate_name' => 'consignment_purpose',
-                'cate_code' => '4',
-                'description' => 'Transit/Re-export',
-                'is_del' => false,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
+            // [
+            //     'cate_name' => 'consignment_purpose',
+            //     'cate_code' => '1',
+            //     'description' => 'Commercial (Trade)',
+            //     'is_del' => false,
+            //     'created_at' => $now,
+            //     'updated_at' => $now,
+            // ],
+            // [
+            //     'cate_name' => 'consignment_purpose',
+            //     'cate_code' => '2',
+            //     'description' => 'Research',
+            //     'is_del' => false,
+            //     'created_at' => $now,
+            //     'updated_at' => $now,
+            // ],
+            // [
+            //     'cate_name' => 'consignment_purpose',
+            //     'cate_code' => '3',
+            //     'description' => 'Planting/Production (Planting Material)',
+            //     'is_del' => false,
+            //     'created_at' => $now,
+            //     'updated_at' => $now,
+            // ],
+            // [
+            //     'cate_name' => 'consignment_purpose',
+            //     'cate_code' => '4',
+            //     'description' => 'Transit/Re-export',
+            //     'is_del' => false,
+            //     'created_at' => $now,
+            //     'updated_at' => $now,
+            // ],
+           
             [
                 'cate_name' => 'unit_measurement',
                 'cate_code' => 'KG',

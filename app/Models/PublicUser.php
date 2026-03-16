@@ -56,6 +56,11 @@ class PublicUser extends Authenticatable implements MustVerifyEmail
         });
     }
 
+    public function routeNotificationForMail(): string
+    {
+        return $this->email;
+    }
+
     public function approved()
     {
         return $this->hasOne(ApprovedPublic::class, 'user_id', 'uuid');

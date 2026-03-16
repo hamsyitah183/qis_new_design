@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 class CheckPendingPayments extends Command
 {
+    
     protected $signature = 'bayupay:check-pending';
     protected $description = 'Check pending and processing payments and update their status';
 
@@ -25,6 +26,11 @@ class CheckPendingPayments extends Command
 
     public function handle(): int
     {
+        Log::info('bayupay:check-pending started', [
+            'triggered_at' => now(),
+            'triggered_by' => 'dashboard or scheduler',
+        ]);
+
         /**
          * 1️⃣ Check: PENDING FOR AUTHORIZER TO APPROVE
          */
