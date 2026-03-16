@@ -63,14 +63,15 @@ document.addEventListener("DOMContentLoaded", function () {
                     // If Save & Share
                     if (result.isConfirmed) {
 
-                        $.ajax({
-                            url: "/internal/news/",
-                            method: "POST",
-                            data: {
-                                _token: $('meta[name="csrf-token"]').attr("content"),
-                                condition_id: res.id || document.getElementById("id").value,
-                                type: "Consignment"
-                            },
+                            $.ajax({
+                                url: "/internal/news/",
+                                method: "POST",
+                                data: {
+                                    _token: $('meta[name="csrf-token"]').attr("content"),
+                                    condition_id: res.id || document.getElementById("id").value,
+                                    type: "Consignment",
+                                    action: document.getElementById("id").value ? "edit" : "add"
+                                },
                             success: function () {
                                 Swal.fire({
                                     icon: "success",

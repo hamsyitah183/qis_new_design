@@ -80,8 +80,9 @@ document.addEventListener("DOMContentLoaded", function() {
                                 method: "POST",
                                 data: {
                                     _token: $('meta[name="csrf-token"]').attr("content"),
-                                    condition_id: document.getElementById('id').value,
-                                    type: 'Import Permit'
+                                    condition_id: res.id || document.getElementById('id').value,
+                                    type: 'Import Permit',
+                                    action: document.getElementById('id').value ? 'edit' : 'add'
                                 },
                                 success: function(response) {
                                     Swal.fire('Sent!', 'The permit condition has been shared to all users.', 'success');
