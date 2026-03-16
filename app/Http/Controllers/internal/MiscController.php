@@ -447,9 +447,11 @@ class MiscController extends Controller
         if ($request->type == 'Import Permit') {
             $item = IpCondition::where('id', $request['condition_id'])->first();
             $title = 'Permit Condition News';
+            $conditionTypeText = 'permit condition';
         } elseif ($request->type == 'Consignment') {
             $item = ConsignmentCondition::where('id', $request['condition_id'])->first();
             $title = 'Consignment Condition News';
+            $conditionTypeText = 'consignment condition';
         }
 
         DB::beginTransaction();
@@ -469,8 +471,10 @@ class MiscController extends Controller
             // Convert country array to comma-separated string
             $countryList = implode(', ', $countries);
 
+            $actionText = ($request->action === 'edit') ? 'has been updated' : 'has been released';
+
             // If you want HTML instead of plain text:
-            $detailsMessage = "A new permit condition for item <strong>{$itemName}</strong> has been released.<br>";
+            $detailsMessage = "A {$conditionTypeText} for item <strong>{$itemName}</strong> {$actionText}.<br>";
             $detailsMessage .= "It applies to the following countries: <strong>{$countryList}</strong>.";
             if ($item->quantity_limit) {
                 $detailsMessage .= "<br>Quantity Limit: {$item->quantity_limit} {$item->measurement_unit}<br>";
@@ -509,17 +513,19 @@ class MiscController extends Controller
 
             $url = '#';
 
+            $notificationActionText = ($request->action === 'edit') ? 'has been updated' : 'has been released';
+
             foreach ($publicUsers as $user) {
                 // Mail::to($user->email)->send(
                 //     new QISNewsMail($title, $detailsMessage)
                 // );
 
-                Notification::send($user, new ApplicationNotification('A new condition of item ' . $item->item_name . ' has been updated ', $title, $url));
+                Notification::send($user, new ApplicationNotification('A condition of item ' . $item->item_name . ' ' . $notificationActionText, $title, $url));
             }
 
             foreach ($internalUsers as $user) {
                 Notification::send($user, new ApplicationNotification(
-                    'A new condition of item ' . $item->item_name . ' has been updated ',
+                    'A condition of item ' . $item->item_name . ' ' . $notificationActionText,
                     $title,
                     '/internal/permit_edit_condition/' . $item->id
                 ));

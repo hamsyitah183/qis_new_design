@@ -49,9 +49,8 @@
                     <div class="card-title">Order List</div>
                     <div class="ms-auto d-flex gap-2 align-items-center">
 
-                        <button class="btn btn-sm btn-primary filter dropdown-toggle" type="button"
-                            id="orderFilterDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
-                            aria-expanded="false">
+                        <button class="btn btn-sm btn-primary filter dropdown-toggle" type="button" id="orderFilterDropdown"
+                            data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                             <span class="me-2"><i class="ti ti-adjustments-horizontal"></i></span>
                             Filter
                         </button>
@@ -66,7 +65,8 @@
                                     <option value="SUCCESSFUL">Successful</option>
                                     <option value="UNSUCCESSFUL">Unsuccessful</option>
                                     <option value="PAYMENT PROCESSING">Payment Processing</option>
-                                    <option value="PENDING FOR AUTHORIZER TO APPROVE">Pending for Authorizer to Approve</option>
+                                    <option value="PENDING FOR AUTHORIZER TO APPROVE">Pending for Authorizer to Approve
+                                    </option>
                                 </select>
                             </li>
 
@@ -118,11 +118,11 @@
                                             <th>Order Status</th>
                                             <th>Application Type</th>
                                             @if (authUser()['type'] == 'internal')
-                                              <th>Transaction Data</th>
+                                                <th>Transaction Data</th>
                                             @endif
-                                            
+
                                             <th>Payment Amount</th>
-                                           
+
 
                                             <th>Action</th>
                                         </tr>
@@ -144,7 +144,7 @@
     <x-modal id="activityLogModal" title="Activity Log">
 
         <!-- Your table goes here -->
-        <div class="table-responsive" style = "max-height: 400px;">
+        <div class="table-responsive" style="max-height: 400px;">
             <table class="table text-wrap table-hover" id="applicationLogTable">
                 <thead class="table-primary">
                     <tr>
@@ -162,11 +162,9 @@
         </div>
 
         @slot('footer')
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         @endslot
 
     </x-modal>
 
 @endsection
-
-
