@@ -1276,3 +1276,59 @@ export function summarySubmit() {
 }
 
 // ------------------------------summary details ---------------------
+
+// ─── Inactivity Timeout: Draft-Save Hook ─────────────────────────────────────
+// Registers a function that the inactivity timeout can call silently before
+// auto-logging out the user. Only active when on an inspection application page.
+$(document).ready(function () {
+    const isInspectionPage = window.location.pathname.includes('inspection_certificates_application');
+    if (!isInspectionPage) return;
+
+    window.qisDraftSaver = function () {
+        return new Promise((resolve, reject) => {
+            const form = document.querySelector('#wizardForm') || document.querySelector('#wizardFormOthers');
+            if (!form) return resolve(); // nothing to save
+
+            const formData = new FormData(form);
+            formData.append('is_draft', 1);
+
+            const appId = $('#applicationId').val();
+            if (appId) formData.append('applicationId', appId);
+
+            formData.append('exporterData', JSON.stringify(exporter));
+            formData.append('importerData', JSON.stringify(importer));
+
+            const livePermitDetails = {
+                applCate: document.getElementById('app_cate')?.value ?? '',
+                eta: document.getElementById('eta')?.value ?? '',
+                tranType: document.getElementById('trnptType')?.value ?? '',
+                entrypoint: document.getElementById('entryPoint')?.value ?? '',
+            };
+            formData.append('permitDetails', JSON.stringify(livePermitDetails));
+
+            tempItems.forEach((item, index) => {
+                const { files, existingFiles, ...otherData } = item;
+                formData.append(`items[${index}][data]`, JSON.stringify(otherData));
+                if (files && files.length > 0) {
+                    files.forEach((file) => {
+                        formData.append('files[]', file);
+                        formData.append('file_item_index[]', index);
+                    });
+                }
+            });
+
+            $.ajax({
+                url: '/public/save_application_inspection',
+                type: 'POST',
+                data: formData,
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                processData: false,
+                contentType: false,
+                success: () => resolve(),
+                error: (xhr) => reject(new Error(xhr.responseJSON?.message || 'Draft save failed')),
+            });
+        });
+    };
+
+    console.log('[QIS] Inspection draft saver registered.');
+});

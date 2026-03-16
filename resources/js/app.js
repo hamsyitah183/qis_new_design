@@ -1,4 +1,5 @@
 import "./bootstrap";
+import { initInactivityTimeout } from "./inactivity_timeout";
 import { IconHome, IconUser } from "tabler-icons";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
@@ -142,6 +143,7 @@ document.addEventListener('visibilitychange', () => {
 
 document.addEventListener('DOMContentLoaded', () => {
     startNotificationPolling();
+    initInactivityTimeout();
 });
 
 export function fetchVerificationCount() {

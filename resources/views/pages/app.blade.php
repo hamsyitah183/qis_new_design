@@ -277,6 +277,41 @@
 
     @stack('scripts')
 
+    {{-- ===== Inactivity Timeout Modal ===== --}}
+    <div class="modal fade" id="qisInactivityModal" tabindex="-1" aria-labelledby="qisInactivityModalLabel" aria-modal="true" role="dialog">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-primary text-white border-0">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="ti ti-clock-exclamation fs-4"></i>
+                        <h5 class="modal-title mb-0 fw-bold text-white" id="qisInactivityModalLabel">Session Expiring Soon</h5>
+                    </div>
+                </div>
+                <div class="modal-body py-4 px-4">
+                    <p class="mb-2 text-muted">Your session will be automatically logged out due to inactivity.</p>
+                    <div class="d-flex align-items-center justify-content-center my-3">
+                        <div class="text-center">
+                            <span id="qisCountdownDisplay" class="display-4 fw-bold text-warning">60</span>
+                            <p class="mb-0 text-muted small">seconds remaining</p>
+                        </div>
+                    </div>
+                    <div id="qisSavingMsg" class="alert alert-info d-none py-2 mb-0">
+                        <i class="ti ti-device-floppy me-1"></i> Saving your draft, please wait&hellip;
+                    </div>
+                </div>
+                <div class="modal-footer border-0 d-flex justify-content-between">
+                    <button type="button" id="qisLogoutNowBtn" class="btn btn-outline-danger">
+                        <i class="ti ti-logout me-1"></i>Logout Now
+                    </button>
+                    <button type="button" id="qisStayLoggedInBtn" class="btn btn-success">
+                        <i class="ti ti-refresh me-1"></i>Stay Logged In
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{-- ===== End Inactivity Timeout Modal ===== --}}
+
 </body>
 
 </html>

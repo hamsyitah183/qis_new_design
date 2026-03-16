@@ -208,8 +208,8 @@ class ConsignmentApplicationController extends Controller
                         'Consignment Application',
                         $application->application_id,
                         'will be check by DOA',
-                        `Your application has been successfully submitted.`,
-                        $application->exporter->phone_number ?? '60143290092', // recipient number
+                        'Your application has been successfully submitted.',
+                        $application->exporter->phone_number  ?? '60143290092', // recipient number
                     );
                 }
             }

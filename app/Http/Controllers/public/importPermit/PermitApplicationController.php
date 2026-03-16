@@ -427,7 +427,7 @@ class PermitApplicationController extends Controller
                             'Import Permit',
                             $application->application_id,
                             'submitted',
-                            `Your application has been successfully submitted and wait for approval from the respective importer.`,
+                            'Your application has been successfully submitted and wait for approval from the respective importer.',
                             $application->user->phone_number ?? '60143290092', // recipient number
                         );
                     } else {
@@ -436,7 +436,7 @@ class PermitApplicationController extends Controller
                             'Import Permit',
                             $application->application_id,
                             'submitted',
-                            `Your application has been successfully submitted.`,
+                            'Your application has been successfully submitted.',
                             $application->importer->phone_number ?? '60143290092', // recipient number
                         );
                     }
