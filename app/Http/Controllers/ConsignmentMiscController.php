@@ -119,4 +119,25 @@ class ConsignmentMiscController extends Controller
 
         return view('pages.internal.misc.consignment_condition_add', compact('pbdata'));
     }
+
+    public function getDistinctUsage()
+    {
+        $rows = ConsignmentCondition::whereNotNull('usage')->pluck('usage');
+
+        $usages = collect();
+        foreach ($rows as $row) {
+            $values = is_array($row) ? $row : json_decode($row, true);
+            if (is_array($values)) {
+                $usages = $usages->merge($values);
+            }
+        }
+
+        $distinct = $usages->map(fn($v) => trim($v))
+            ->filter()
+            ->unique()
+            ->values();
+
+        return response()->json(['data' => $distinct]);
+    }
 }
+

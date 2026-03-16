@@ -66,10 +66,6 @@
                                 <label class="form-label fw-semibold mb-1">Category</label>
                                 <select class="form-select form-select-sm" id="filterPermitCategory">
                                     <option value="">All Categories</option>
-                                    <option value="animal">Animal</option>
-                                    <option value="plant">Plant</option>
-                                    <option value="fish">Fish</option>
-                                    <option value="other">Other</option>
                                 </select>
                             </li>
 
@@ -78,9 +74,6 @@
                                 <label class="form-label fw-semibold mb-1">Usage</label>
                                 <select class="form-select form-select-sm" id="filterPermitUsage">
                                     <option value="">All Usage</option>
-                                    <option value="import">Import</option>
-                                    <option value="export">Export</option>
-                                    <option value="both">Both</option>
                                 </select>
                             </li>
 

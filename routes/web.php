@@ -246,8 +246,11 @@ Route::prefix('internal')
         Route::get('/permit_condition/data', [MiscController::class, 'getpermitconditiondata']);
         Route::get('/permit_condition/getdata/{id}', [MiscController::class, 'getpermitconditionbyid']);
         Route::get('/permit_add_condition', [MiscController::class, 'permitaddcondition'])->name('permitaddcondition');
+
         Route::post('/save_condition', [MiscController::class, 'saveCondition'])->name('saveCondition');
         Route::get('/permit_edit_condition/{id}', [MiscController::class, 'editCondition']);
+        Route::delete('/permit_condition/{id}', [MiscController::class, 'deleteCondition']);
+        Route::post('/news', [MiscController::class, 'shareNews']);
 
         // IMPORTER & EXPORTER LISTS
         Route::get('/importer/list', [ApplicationController::class, 'showInternalImporterList'])->name('importer.list');
@@ -268,6 +271,8 @@ Route::prefix('internal')
         Route::get('/consignment_condition/edit/{id}', [ConsignmentMiscController::class, 'editConsignmentConditionDataById']);
         Route::post('/consignment_condition/save', [ConsignmentMiscController::class, 'saveCondition']);
         Route::get('/consignment_condition/add', [ConsignmentMiscController::class, 'addConsignmentConditionData']);
+        Route::get('/permit_condition/usages', [MiscController::class, 'getDistinctUsage']);
+        Route::get('/consignment_condition/usages', [ConsignmentMiscController::class, 'getDistinctUsage']);
 
         Route::get('/permit_condition', [MiscController::class, 'showpermitcondition'])->name('permitcondition');
         // Route::get('/permit_add_condition', [MiscController::class, 'permitaddcondition']);

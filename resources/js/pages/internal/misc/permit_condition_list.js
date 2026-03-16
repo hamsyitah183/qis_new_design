@@ -1,8 +1,6 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
 
-
-
 let internalListTable;
 let countryLookup = {};
 
@@ -12,14 +10,10 @@ function initCountryLookup() {
         url: '/get_country',
         method: 'GET',
         success: function (response) {
-
             const list = response.data;
-
-            // Build lookup dictionary: { "AE": "United Arab Emirates", ... }
             list.forEach(item => {
                 countryLookup[item.value] = item.name;
             });
-
             console.log("Country lookup ready:", countryLookup);
         },
         error: function (error) {
@@ -28,22 +22,18 @@ function initCountryLookup() {
     });
 } window.initCountryLookup = initCountryLookup;
 
-// Lookup helper function
 function getCountryName(code) {
     return countryLookup[code] || code;
 } window.getCountryName = getCountryName;
 
 function normalizeToArray(value) {
     if (Array.isArray(value)) return value;
-
     try {
         const parsed = JSON.parse(value);
         if (Array.isArray(parsed)) return parsed;
     } catch (e) { }
-
     return value ? [value] : [];
 } window.normalizeToArray = normalizeToArray;
-
 
 async function data_table_init() {
     console.log("DataTable initialized");
@@ -75,75 +65,108 @@ async function data_table_init() {
             type: "GET",
             dataSrc: "data"
         },
-        columns:
-            [
-                {
-                    data: "item_name",
-                    title: "Item Name",
-                    render: function (data) {
-                        return `<span class = "text-wrap">${data}</span>` ?? "-";
+        columns: [
+            {
+                data: "item_name",
+                title: "Item Name",
+                render: function (data) {
+                    return `<span class="text-wrap">${data}</span>` ?? "-";
+                }
+            },
+            {
+                data: "condcategory.description",
+                title: "Category",
+                render: function (data) {
+                    return data ?? "-";
+                }
+            },
+            {
+                data: "usage",
+                title: "Usage",
+                render: function (data) {
+                    if (Array.isArray(data)) {
+                        return data.join(", ");
                     }
-
-                },
-
-                {
-                    data: "condcategory.description",
-                    title: "Category",
-                    render: function (data) {
+                    try {
+                        const parsed = JSON.parse(data);
+                        return Array.isArray(parsed) ? parsed.join(", ") : parsed;
+                    } catch {
                         return data ?? "-";
                     }
-                },
-
-                {
-                    data: "usage",
-                    title: "Usage",
-                    render: function (data) {
-                        if (Array.isArray(data)) {
-                            return data.join(", ");
-                        }
-
-                        try {
-                            const parsed = JSON.parse(data);
-                            return Array.isArray(parsed) ? parsed.join(", ") : parsed;
-                        } catch {
-                            return data ?? "-";
-                        }
-                    }
-                },
-
-                {
-                    data: "id",
-                    title: "Action",
-                    orderable: false,
-                    searchable: false,
-                    render: function (id) {
-                        return `
-                            <a href="/internal/permit_edit_condition/${id}" 
-                                class="btn btn-sm btn-primary">
-                                <i class="ri-edit-line"></i> Edit
-                            </a>
-
-                            <button type="button"
-                                onclick="condiModal(${id})"
-                                class="btn btn-sm btn-info">
-                                Show Condition
-                            </button>
-                        `;
-                    }
                 }
-            ],
+            },
+            {
+                data: "id",
+                title: "Action",
+                orderable: false,
+                searchable: false,
+                render: function (id) {
+                    return `
+                        <a href="/internal/permit_edit_condition/${id}"
+                            class="btn btn-sm btn-primary">
+                            <i class="ri-edit-line"></i> Edit
+                        </a>
+                        <button type="button"
+                            onclick="condiModal(${id})"
+                            class="btn btn-sm btn-info">
+                            Show Condition
+                        </button>
+                    `;
+                }
+            }
+        ],
         responsive: true,
         pageLength: 10,
     });
+}
 
+// Populate Category dropdown from public_code (condition_category)
+function initCategoryFilter() {
+    return $.ajax({
+        url: '/internal/get_pbdata/condition_category',
+        method: 'GET',
+        success: function (response) {
+            const select = document.getElementById('filterPermitCategory');
+            (response.data || []).forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.description;
+                opt.textContent = item.description;
+                select.appendChild(opt);
+            });
+        },
+        error: function () {
+            console.error('Failed to load category filter options.');
+        }
+    });
+}
+
+// Populate Usage dropdown from distinct values in ip_condition
+function initUsageFilter() {
+    return $.ajax({
+        url: '/internal/permit_condition/usages',
+        method: 'GET',
+        success: function (response) {
+            const select = document.getElementById('filterPermitUsage');
+            (response.data || []).forEach(usage => {
+                const opt = document.createElement('option');
+                opt.value = usage;
+                opt.textContent = usage;
+                select.appendChild(opt);
+            });
+        },
+        error: function () {
+            console.error('Failed to load usage filter options.');
+        }
+    });
 }
 
 document.addEventListener("DOMContentLoaded", async function () {
     await initCountryLookup();
     await data_table_init();
+    initCategoryFilter();
+    initUsageFilter();
 
     function condiModal(id) {
-
         const modalelement = document.getElementById("showConditionModal");
         const modal = new bootstrap.Modal(modalelement);
 
@@ -158,19 +181,14 @@ document.addEventListener("DOMContentLoaded", async function () {
                     allowOutsideClick: false,
                     allowEscapeKey: false,
                     showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
+                    didOpen: () => { Swal.showLoading(); }
                 });
             },
 
             success: function (response) {
-
-                Swal.close(); // Close loading popup
-
+                Swal.close();
                 const condition = response.data;
                 let usageList = condition.usage;
-
                 let countCode = [];
 
                 if (Array.isArray(condition.country)) {
@@ -190,13 +208,10 @@ document.addEventListener("DOMContentLoaded", async function () {
                 document.getElementById("itemNameCell").textContent = condition.item_name;
                 document.getElementById("categoryCell").textContent =
                     condition.condcategory ? condition.condcategory.description : "-";
-
                 document.getElementById("usageCell").textContent =
                     normalizeToArray(usageList).join(", ");
-
                 document.getElementById("countryCell").textContent =
                     countryNames.join(", ");
-
                 document.getElementById("conditionHtml").innerHTML =
                     condition.addional_condition || "<i>No condition provided</i>";
 
@@ -204,11 +219,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             },
 
             error: function () {
-                Swal.fire({
-                    icon: "error",
-                    title: "Error",
-                    text: "Failed to fetch permit condition data."
-                });
+                Swal.fire({ icon: "error", title: "Error", text: "Failed to fetch permit condition data." });
             }
         });
     }
@@ -218,31 +229,24 @@ document.addEventListener("DOMContentLoaded", async function () {
     // Filter functionality
     document.getElementById("btnPermitFilter").addEventListener("click", function () {
         const itemName = document.getElementById("filterPermitItemName").value;
-        const category = document.getElementById("filterPermitCategory").options[document.getElementById("filterPermitCategory").selectedIndex].text;
-        const usage = document.getElementById("filterPermitUsage").options[document.getElementById("filterPermitUsage").selectedIndex].text;
+        const category = document.getElementById("filterPermitCategory").value;
+        const usage = document.getElementById("filterPermitUsage").value;
 
-        // Exact or partial match search using DataTables API
         internalListTable.column(0).search(itemName);
 
-        // If "All Categories" is selected, clear search. Else search by text.
-        if (document.getElementById("filterPermitCategory").value === "") {
+        if (category === "") {
             internalListTable.column(1).search("");
         } else {
             internalListTable.column(1).search(category);
         }
 
-        // If "All Usage" is selected, clear search. Else search by text.
-        if (document.getElementById("filterPermitUsage").value === "") {
+        if (usage === "") {
             internalListTable.column(2).search("");
         } else {
-            // For Usage = 'Both', the data might be 'Import, Export' or just 'Both'
-            // We search for the text selected ('Import', 'Export', or 'Both')
             internalListTable.column(2).search(usage);
         }
 
         internalListTable.draw();
-
-        // Close the dropdown after applying
         bootstrap.Dropdown.getInstance(document.getElementById('permitFilterDropdown')).hide();
     });
 
@@ -253,13 +257,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         document.getElementById("filterPermitUsage").value = "";
 
         internalListTable.search("").columns().search("").draw();
-
-        // Close the dropdown after resetting
         bootstrap.Dropdown.getInstance(document.getElementById('permitFilterDropdown')).hide();
     });
-
-
 });
-
-
-
