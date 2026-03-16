@@ -97,12 +97,20 @@
                             <input type="text" class="form-control" id="quanmunit" name="quanmunit">
                         </div>
 
-                        <!-- Date -->
-                        <div class="col-xl-6">
+                        <!-- Start Date -->
+                        <div class="col-xl-3">
                             <label class="form-label">
-                                Date Limit (Special case)
+                                Start Date (Special case)
                             </label>
-                            <input type="date" class="form-control" id="spedate" name="spedate">
+                            <input type="date" class="form-control" id="start_date" name="start_date">
+                        </div>
+
+                        <!-- End Date -->
+                        <div class="col-xl-3">
+                            <label class="form-label">
+                                End Date (Special case)
+                            </label>
+                            <input type="date" class="form-control" id="end_date" name="end_date">
                         </div>
 
                         <!-- Country -->
@@ -165,6 +173,8 @@
 @push('scripts')
     <script>
         window.conditionData = null; // Explicitly empty for create
+        window.countryTagify = null;
+        window.usageTagify = null;
     </script>
 
     <script>
@@ -186,7 +196,7 @@
                         name: c.name
                     }));
 
-                    console.log('Country List:', countryList);
+
 
                     
 
@@ -203,7 +213,7 @@
                             mapValueTo: 'name',
                         },
 
-                        // 🔥 THIS enables searching by BOTH code & name
+                        // enables searching by BOTH code & name
                         dropdownFilter: (item, value) => {
                             const search = value.toLowerCase();
 
@@ -231,7 +241,7 @@
                         name: i.description
                     }));
 
-                    console.log('Usage List:', usageList);
+
 
                     usageTagify = new Tagify(document.getElementById("usageTags"), {
                         whitelist: usageList,

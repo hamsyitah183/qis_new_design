@@ -268,6 +268,10 @@ Route::prefix('internal')
         Route::get('/consignment_condition/edit/{id}', [ConsignmentMiscController::class, 'editConsignmentConditionDataById']);
         Route::post('/consignment_condition/save', [ConsignmentMiscController::class, 'saveCondition']);
         Route::get('/consignment_condition/add', [ConsignmentMiscController::class, 'addConsignmentConditionData']);
+        Route::delete('/consignment_condition/delete/{id}', [ConsignmentMiscController::class, 'deleteCondition']);
+
+        // SHARE NEWS
+        Route::post('/news', [MiscController::class, 'shareNews']);
 
         Route::get('/permit_condition', [MiscController::class, 'showpermitcondition'])->name('permitcondition');
         // Route::get('/permit_add_condition', [MiscController::class, 'permitaddcondition']);

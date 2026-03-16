@@ -106,7 +106,7 @@ class ConsignmentMiscController extends Controller
 
         $condition->save();
 
-        return response()->json(['success' => 'Consignment Condition updated successfully']);
+        return response()->json(['success' => 'Consignment Condition updated successfully', 'id' => $condition->id]);
     }
 
     public function addConsignmentConditionData()
@@ -118,5 +118,20 @@ class ConsignmentMiscController extends Controller
         $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->where('cate_name', 'consignment_purpose')->where('is_del', false)->get();
 
         return view('pages.internal.misc.consignment_condition_add', compact('pbdata'));
+    }
+
+    public function deleteCondition($id)
+    {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
+
+        $condition = ConsignmentCondition::findOrFail($id);
+        $condition->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Consignment condition deleted successfully.',
+        ]);
     }
 }

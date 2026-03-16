@@ -68,7 +68,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             method: "POST",
                             data: {
                                 _token: $('meta[name="csrf-token"]').attr("content"),
-                                condition_id: document.getElementById("id").value,
+                                condition_id: res.id || document.getElementById("id").value,
                                 type: "Consignment"
                             },
                             success: function () {
@@ -93,6 +93,8 @@ document.addEventListener("DOMContentLoaded", function () {
                             icon: "success",
                             title: "Saved!",
                             text: res.message || "Consignment condition saved successfully."
+                        }).then(() => {
+                            window.location.href = "/internal/consignment_condition";
                         });
                     }
                 },

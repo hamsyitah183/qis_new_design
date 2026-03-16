@@ -427,6 +427,10 @@ $(document).ready(function () {
             const code = document.getElementById("editICOde").value;
             const desc = document.getElementById("editDesc").value;
 
+            // Handle optional conversion for unit_measurement
+            const conversionInput = document.getElementById("editConversion");
+            const conversion = conversionInput ? conversionInput.value : "";
+
             const fd = new FormData();
             fd.append("id", id);
             fd.append("item_code", code);

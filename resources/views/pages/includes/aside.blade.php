@@ -279,13 +279,13 @@
                                 <li class="slide side-menu__label1"><a href="javascript:void(0)">Importer &amp; Exporter</a>
                                 </li>
 
-                                <li class="slide {{ $currentRoute === 'internal.exporter.list' ? 'active' : '' }}">
+                                <li class="slide {{ $currentRoute === 'internal.importer.list' ? 'active' : '' }}">
                                     <a href="{{ route('internal.importer.list') }}" class="side-menu__item">
                                         Importer List
                                     </a>
                                 </li>
 
-                                <li class="slide {{ $currentRoute === 'internal.importer.list' ? 'active' : '' }}">
+                                <li class="slide {{ $currentRoute === 'internal.exporter.list' ? 'active' : '' }}">
                                     <a href="{{ route('internal.exporter.list') }}" class="side-menu__item">
                                         Exporter List
                                     </a>
