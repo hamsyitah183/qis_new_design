@@ -554,12 +554,12 @@ $(document).ready(function () {
                 $("#addCodev").prop("disabled", true);
                 break;
             case "condition":
-                categoryTitle = "Condition Category";
+                categoryTitle = "Description Form";
                 cateName = "condition_category";
                 $("#addCodev").prop("disabled", true);
                 break;
             case "purpose":
-                categoryTitle = "Consignment Purpose";
+                categoryTitle = "Purpose of Import";
                 cateName = "consignment_purpose";
                 $("#addCodev").prop("disabled", true);
                 break;
