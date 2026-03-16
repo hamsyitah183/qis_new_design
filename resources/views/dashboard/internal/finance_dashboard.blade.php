@@ -30,46 +30,111 @@
 
 @section('content')
 
+    {{-- Import Permit Orders --}}
     <div class="row">
         <div class="col-xl-12">
             <div class="card custom-card">
                 <div class="card-header justify-content-between">
                     <div class="card-title">
-                        Order List
+                        Import Permit Orders
                     </div>
-
                 </div>
                 <div class="card-body">
-                    <div id="" class="dataTables_wrapper dt-bootstrap5 no-footer">
+                    <div class="table-responsive">
+                        <table id="importPermitOrderTable"
+                            class="table table-bordered text-nowrap w-100 dataTable no-footer dtr-inline"
+                            style="width: 100%;">
+                            <thead class="mt-3">
+                                <tr>
+                                    <th>Order Number</th>
+                                    <th>Transaction Date</th>
+                                    <th>FPX Reference</th>
+                                    <th>User Name</th>
+                                    <th>Permit Number</th>
+                                    <th>Order Status</th>
+                                    <th>Application Type</th>
+                                    <th>Transaction Data</th>
+                                    <th>Payment Amount</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <table id="orderListTable"
-                                    class="table table-bordered text-nowrap w-100 dataTable no-footer dtr-inline"
-                                    aria-describedby="responsiveDataTable_info" style="width: 100%;">
-                                    <thead class="mt-3">
-                                        <tr class="">
-                                            {{-- <th>#</th> --}}
-                                            <th>Order Number</th>
-                                            <th>Transaction Date</th>
-                                            <th>FPX Reference</th>
-                                            <th>User Name</th>
-                                            <th>Permit Number</th>
-                                            <th>Order Status</th>
-                                            <th>Application Type</th>
-                                            <th>Transaction Data</th>
-                                            <th>Payment Amount</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
+    {{-- Inspection Certificate Orders --}}
+    <div class="row mt-3">
+        <div class="col-xl-12">
+            <div class="card custom-card">
+                <div class="card-header justify-content-between">
+                    <div class="card-title">
+                        Inspection Certificate Orders
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="inspectionCertOrderTable"
+                            class="table table-bordered text-nowrap w-100 dataTable no-footer dtr-inline"
+                            style="width: 100%;">
+                            <thead class="mt-3">
+                                <tr>
+                                    <th>Order Number</th>
+                                    <th>Transaction Date</th>
+                                    <th>FPX Reference</th>
+                                    <th>User Name</th>
+                                    <th>Permit Number</th>
+                                    <th>Order Status</th>
+                                    <th>Application Type</th>
+                                    <th>Transaction Data</th>
+                                    <th>Payment Amount</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
+    {{-- Consignment Certificate Orders --}}
+    <div class="row mt-3">
+        <div class="col-xl-12">
+            <div class="card custom-card">
+                <div class="card-header justify-content-between">
+                    <div class="card-title">
+                        Consignment Certificate Orders
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="consignmentCertOrderTable"
+                            class="table table-bordered text-nowrap w-100 dataTable no-footer dtr-inline"
+                            style="width: 100%;">
+                            <thead class="mt-3">
+                                <tr>
+                                    <th>Order Number</th>
+                                    <th>Transaction Date</th>
+                                    <th>FPX Reference</th>
+                                    <th>User Name</th>
+                                    <th>Permit Number</th>
+                                    <th>Order Status</th>
+                                    <th>Application Type</th>
+                                    <th>Transaction Data</th>
+                                    <th>Payment Amount</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
