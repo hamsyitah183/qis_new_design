@@ -120,18 +120,24 @@ class ConsignmentMiscController extends Controller
         return view('pages.internal.misc.consignment_condition_add', compact('pbdata'));
     }
 
-    public function deleteCondition($id)
+    public function getDistinctUsage()
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        $rows = ConsignmentCondition::whereNotNull('usage')->pluck('usage');
+
+        $usages = collect();
+        foreach ($rows as $row) {
+            $values = is_array($row) ? $row : json_decode($row, true);
+            if (is_array($values)) {
+                $usages = $usages->merge($values);
+            }
         }
 
-        $condition = ConsignmentCondition::findOrFail($id);
-        $condition->delete();
+        $distinct = $usages->map(fn($v) => trim($v))
+            ->filter()
+            ->unique()
+            ->values();
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Consignment condition deleted successfully.',
-        ]);
+        return response()->json(['data' => $distinct]);
     }
 }
+

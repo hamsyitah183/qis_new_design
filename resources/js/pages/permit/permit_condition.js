@@ -2,9 +2,9 @@ import $ from "jquery";
 import Swal from "sweetalert2";
 
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
 
-    document.getElementById("submitConditionBtn").addEventListener("click", function() {
+    document.getElementById("submitConditionBtn").addEventListener("click", function () {
 
         // Make sure quill syncs to hidden input
         const conditionHtml = quill.root.innerHTML;
@@ -62,7 +62,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 headers: {
                     "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content")
                 },
-                success: function(res) {
+                success: function (res) {
                     Swal.close(); // close loading
 
                     // Show success message
@@ -80,14 +80,14 @@ document.addEventListener("DOMContentLoaded", function() {
                                 method: "POST",
                                 data: {
                                     _token: $('meta[name="csrf-token"]').attr("content"),
-                                    condition_id: res.id || document.getElementById('id').value,
+                                    condition_id: document.getElementById('id').value,
                                     type: 'Import Permit',
-                                    action: document.getElementById('id').value ? 'edit' : 'add'
+                                    action: 'updated'
                                 },
-                                success: function(response) {
+                                success: function (response) {
                                     Swal.fire('Sent!', 'The permit condition has been shared to all users.', 'success');
                                 },
-                                error: function(xhr) {
+                                error: function (xhr) {
                                     Swal.fire({
                                         icon: "error",
                                         title: "Error",
@@ -98,7 +98,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         }
                     });
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     Swal.close(); // close loading
                     Swal.fire({
                         icon: 'error',
@@ -111,6 +111,52 @@ document.addEventListener("DOMContentLoaded", function() {
         });
 
     });
+
+    const deleteBtn = document.getElementById('deleteConditionBtn');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function () {
+            const conditionId = document.getElementById('id').value;
+            Swal.fire({
+                title: 'Delete this permit condition?',
+                text: 'This action cannot be undone.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it',
+                cancelButtonText: 'Cancel',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/internal/permit_condition/${conditionId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json',
+                        }
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Deleted!',
+                                    text: 'The permit condition has been deleted.',
+                                    timer: 1500,
+                                    showConfirmButton: false,
+                                }).then(() => {
+                                    window.location.href = '/internal/permit_condition';
+                                });
+                            } else {
+                                Swal.fire('Error', data.message ?? 'Failed to delete.', 'error');
+                            }
+                        })
+                        .catch(() => {
+                            Swal.fire('Error', 'Something went wrong. Please try again.', 'error');
+                        });
+                }
+            });
+        });
+    }
 
 });
 

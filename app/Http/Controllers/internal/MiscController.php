@@ -221,6 +221,8 @@ class MiscController extends Controller
         return view('pages.internal.misc.permit_add', compact('pbdata'));
     }
 
+
+
     public function saveCondition(Request $request)
     {
         if (auth()->user()->hasRole('boundary officer')) {
@@ -272,6 +274,7 @@ class MiscController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'IP Condition updated successfully',
+                'condition_id' => $ipCondition->id,
             ]);
         }
 
@@ -282,6 +285,89 @@ class MiscController extends Controller
             'status' => 'success',
             'message' => 'IP Condition created successfully',
             'data' => $ipCondition,
+            'condition_id' => $ipCondition->id,
+        ]);
+    }
+
+    public function deleteCondition($id)
+    {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
+
+        $condition = IpCondition::findOrFail($id);
+
+        // Capture details BEFORE deleting so we can notify/email
+        $snapshot = [
+            'id' => $condition->id,
+            'item_name' => $condition->item_name,
+            'country' => is_array($condition->country) ? $condition->country : (json_decode($condition->country ?? '[]', true) ?? []),
+            'quantity_limit' => $condition->quantity_limit,
+            'measurement_unit' => $condition->measurement_unit,
+            'start_date' => $condition->start_date,
+            'end_date' => $condition->end_date,
+            'addional_condition' => $condition->addional_condition,
+        ];
+
+        $condition->delete();
+
+        // Notify + email that this permit condition was deleted (best-effort; don't block deletion)
+        try {
+            $title = 'Permit Condition News';
+            $itemName = $snapshot['item_name'] ?? 'Unknown Item';
+
+            $countryCodes = $snapshot['country'] ?? [];
+            $countries = Country::whereIn('code', $countryCodes)->pluck('name')->toArray();
+            $countryList = implode(', ', $countries);
+
+            $detailsMessage = "A permit condition for item <strong>{$itemName}</strong> has been deleted.<br>";
+            if (!empty($countryList)) {
+                $detailsMessage .= "It applied to the following countries: <strong>{$countryList}</strong>.";
+            }
+            if (!empty($snapshot['quantity_limit'])) {
+                $detailsMessage .= "<br>Quantity Limit: {$snapshot['quantity_limit']} {$snapshot['measurement_unit']}<br>";
+            }
+            if (!empty($snapshot['start_date'])) {
+                $startDate = Carbon::parse($snapshot['start_date'])->format('d M Y');
+                $endDate = !empty($snapshot['end_date']) ? Carbon::parse($snapshot['end_date'])->format('d M Y') : null;
+                if ($endDate) {
+                    $detailsMessage .= "Valid From: {$startDate} to {$endDate}";
+                } else {
+                    $detailsMessage .= "Valid From: {$startDate}";
+                }
+            }
+            if (!empty($snapshot['addional_condition'])) {
+                $detailsMessage .= "<br><span class='mt-2'>Additional Condition:<span>{$snapshot['addional_condition']}</span></span><br>";
+            }
+
+            $news = new News();
+            $news->title = $title;
+            $news->news = $detailsMessage;
+            $news->expired_date = now()->addDays(7); // keep message around briefly
+            $news->show = 1;
+            $news->save();
+
+            $publicUsers = PublicUser::get();
+            $internalUsers = InternalUser::get();
+            $url = '#';
+
+            foreach ($publicUsers as $user) {
+                Notification::send($user, new ApplicationNotification('A permit condition of item ' . $itemName . ' has been deleted', $title, $url));
+            }
+
+            foreach ($internalUsers as $user) {
+                Notification::send($user, new ApplicationNotification('A permit condition of item ' . $itemName . ' has been deleted', $title, '/internal/permit_condition'));
+            }
+
+            // same behavior as shareNews() (emails to Gmail)
+            Mail::to('rowanyee79@gmail.com')->send(new QISNewsMail($title, $detailsMessage));
+        } catch (\Throwable $e) {
+            // Swallow errors so deletion still succeeds
+        }
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Permit condition deleted successfully.',
         ]);
     }
 
@@ -317,7 +403,7 @@ class MiscController extends Controller
         }
 
         $conditions = IpCondition::with(['code', 'condcategory'])
-            ->select('id', 'item_name', 'category', 'usage', 'addional_condition', 'quantity_limit', 'date_limit', 'country')
+            ->select('id', 'item_name', 'category', 'usage', 'addional_condition', 'quantity_limit', 'start_date', 'end_date', 'country')
             ->findOrFail($id);
 
         return response()->json([
@@ -444,6 +530,9 @@ class MiscController extends Controller
 
     public function shareNews(Request $request)
     {
+        $action = $request->input('action'); // 'released' | 'updated' (optional)
+        $verb = $action === 'updated' ? 'updated' : 'released';
+
         if ($request->type == 'Import Permit') {
             $item = IpCondition::where('id', $request['condition_id'])->first();
             $title = 'Permit Condition News';
@@ -474,7 +563,7 @@ class MiscController extends Controller
             $actionText = ($request->action === 'edit') ? 'has been updated' : 'has been released';
 
             // If you want HTML instead of plain text:
-            $detailsMessage = "A {$conditionTypeText} for item <strong>{$itemName}</strong> {$actionText}.<br>";
+            $detailsMessage = "A permit condition for item <strong>{$itemName}</strong> has been {$verb}.<br>";
             $detailsMessage .= "It applies to the following countries: <strong>{$countryList}</strong>.";
             if ($item->quantity_limit) {
                 $detailsMessage .= "<br>Quantity Limit: {$item->quantity_limit} {$item->measurement_unit}<br>";
@@ -541,6 +630,11 @@ class MiscController extends Controller
 
 
             DB::commit();
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'News shared successfully.',
+            ]);
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json(
@@ -637,6 +731,26 @@ class MiscController extends Controller
             'status' => 'success',
             'message' => 'Branch deleted successfully.',
         ]);
+    }
+
+    public function getDistinctUsage()
+    {
+        $rows = IpCondition::whereNotNull('usage')->pluck('usage');
+
+        $usages = collect();
+        foreach ($rows as $row) {
+            $values = is_array($row) ? $row : json_decode($row, true);
+            if (is_array($values)) {
+                $usages = $usages->merge($values);
+            }
+        }
+
+        $distinct = $usages->map(fn($v) => trim($v))
+            ->filter()
+            ->unique()
+            ->values();
+
+        return response()->json(['data' => $distinct]);
     }
 
     public function measurementUnit()

@@ -4,15 +4,17 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '/'], ['label' => 'Permit Condition List', 'url' => '/internal/permit_condition'], ['label' => 'Edit Permit Condition', 'url' => '#']]" 
-        
-        title="Add New Permit Condition">
+    <x-breadcrumb :items="[
+        ['label' => 'Home', 'url' => '/'],
+        ['label' => 'Permit Condition List', 'url' => '/internal/permit_condition'],
+        ['label' => 'Edit Permit Condition', 'url' => '#'],
+    ]" title="Add New Permit Condition">
 
     </x-breadcrumb>
 @endsection
 
 @push('scripts')
-@vite(['resources/js/pages/permit/permit_condition.js'])
+    @vite(['resources/js/pages/permit/permit_condition.js'])
 @endpush
 
 @section('content')
@@ -49,7 +51,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <input type="hidden" name="id" value = {{ $condition->id }} id="id">
+                    <input type="hidden" name="id" value={{ $condition->id }} id="id">
                     <div class="row gy-3">
                         <div class="col-xl-12">
                             <label for="blog-title" class="form-label">Item Name</label>
@@ -73,17 +75,15 @@
                             <label for="quanLimit" class="form-label">Quantity Limit (Special case)</label>
                             <input type="number" class="form-control" id="quanLimit"
                                 value="{{ $condition->quantity_limit ?? null }}" name="quanLimit" min = '0'>
-                            
+
                         </div>
                         <div class="col-xl-3">
                             <label for="quanmunit" class="form-label">Measurement Unit (Special case)</label>
                             {{-- <input type="text" class="form-control" id="quanmunit" name="quanmunit"> --}}
                             <select class="form-select" name="quanmunit" id="quanmunit">
                                 @foreach ($measurements as $measurement)
-                                    <option 
-                                        value="{{ $measurement->cate_code }}"
-                                        {{ old('quanmunit', $condition->measurement_unit ?? '') == $measurement->cate_code ? 'selected' : '' }}
-                                    >
+                                    <option value="{{ $measurement->cate_code }}"
+                                        {{ old('quanmunit', $condition->measurement_unit ?? '') == $measurement->cate_code ? 'selected' : '' }}>
                                         {{ $measurement->description }}
                                     </option>
                                 @endforeach
@@ -94,24 +94,14 @@
                         {{-- @dd($condition) --}}
                         <div class="col-xl-3">
                             <label class="form-label">Start Date</label>
-                            <input 
-                                type="date"
-                                class="form-control"
-                                name="start_date"
-                                id = "start_date"
-                                value="{{ old('start_date', $condition->start_date) }}"
-                            >
+                            <input type="date" class="form-control" name="start_date" id = "start_date"
+                                value="{{ old('start_date', $condition->start_date) }}">
                         </div>
 
                         <div class="col-xl-3">
                             <label class="form-label">End Date</label>
-                            <input 
-                                type="date"
-                                class="form-control"
-                                name="end_date"
-                                id = "end_date"
-                                value="{{ old('end_date', $condition->end_date) }}"
-                            >
+                            <input type="date" class="form-control" name="end_date" id = "end_date"
+                                value="{{ old('end_date', $condition->end_date) }}">
                         </div>
 
 
@@ -143,11 +133,16 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-footer text-end">
-                    <button id="submitConditionBtn" type="submit" class="btn btn-primary">
-                        <i class="ri-add-line me-1"></i> Update Condition
+                <div class="card-footer d-flex justify-content-between align-items-center">
+                    <button id="deleteConditionBtn" type="button" class="btn btn-danger">
+                        <i class="ri-delete-bin-line me-1"></i> Delete
                     </button>
-                    <a class="btn btn-secondary">Cancel</a>
+                    <div class="d-flex gap-2">
+                        <button id="submitConditionBtn" type="submit" class="btn btn-primary">
+                            <i class="ri-add-line me-1"></i> Update Condition
+                        </button>
+                        <a href="{{ url('/internal/permit_condition') }}" class="btn btn-secondary">Cancel</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -199,7 +194,7 @@
             $.ajax({
                 url: '/get_country',
                 method: 'GET',
-                success: function (response) {
+                success: function(response) {
 
                     // ✅ normalized whitelist
                     const countryList = response.data.map(c => ({
@@ -212,29 +207,30 @@
                         .map(code => countryList.find(c => c.value === code))
                         .filter(Boolean); // remove nulls
 
-                        countryTagify = new Tagify(document.getElementById("countryTag"), {
-                                whitelist: countryList,
-                                tagTextProp: 'name',        // show country name in tag
-                                enforceWhitelist: true,
-                                editTags: false,
+                    countryTagify = new Tagify(document.getElementById("countryTag"), {
+                        whitelist: countryList,
+                        tagTextProp: 'name', // show country name in tag
+                        enforceWhitelist: true,
+                        editTags: false,
 
-                                dropdown: {
-                                    enabled: 1,
-                                    maxItems: 20,
-                                    highlightFirst: true,
-                                    mapValueTo: 'name',
-                                },
+                        dropdown: {
+                            enabled: 1,
+                            maxItems: 20,
+                            highlightFirst: true,
+                            mapValueTo: 'name',
+                        },
 
-                                // 🔥 THIS enables searching by BOTH code & name
-                                dropdownFilter: (item, value) => {
-                                    const search = value.toLowerCase();
+                        // 🔥 THIS enables searching by BOTH code & name
+                        dropdownFilter: (item, value) => {
+                            const search = value.toLowerCase();
 
-                                    return (
-                                        item.value.toLowerCase().includes(search) || // code (MY, CN)
-                                        item.name.toLowerCase().includes(search)     // country name
-                                    );
-                                }
-                            });
+                            return (
+                                item.value.toLowerCase().includes(search) ||
+                                // code (MY, CN)
+                                item.name.toLowerCase().includes(search) // country name
+                            );
+                        }
+                    });
 
 
                     // ✅ NOW it shows Malaysia instead of MY
@@ -308,8 +304,7 @@
             // Insert into Quill with formatting
             quill.clipboard.dangerouslyPasteHTML(longText);
         });
-
-
-       
     </script>
+
+
 @endpush
