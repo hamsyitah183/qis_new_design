@@ -599,6 +599,10 @@ class MiscController extends Controller
                 // );
 
                 Notification::send($user, new ApplicationNotification('A condition of item ' . $item->item_name . ' ' . $notificationActionText, $title, $url));
+                Mail::to($user->email)->send(
+                    new QISNewsMail($title, $detailsMessage)
+                );
+
             }
 
             foreach ($internalUsers as $user) {
@@ -611,9 +615,9 @@ class MiscController extends Controller
 
 
 
-            Mail::to('hamsyitahnur@gmail.com')->send(
-                new QISNewsMail($title, $detailsMessage)
-            );
+            // Mail::to('hamsyitahnur@gmail.com')->send(
+            //     new QISNewsMail($title, $detailsMessage)
+            // );
 
 
 

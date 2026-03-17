@@ -600,7 +600,7 @@ class UserController extends Controller
                 $request->validate([
                     'fullname' => 'required|string|max:255',
                     'email' => 'required|email|max:255|unique:internal_users,email,' . $internalUser->id,
-                    'no_ic' => 'required|digits:13|unique:internal_users,no_ic,' . $internalUser->id,
+                    'no_ic' => 'required|digits:12|unique:internal_users,no_ic,' . $internalUser->id,
                     'phone_number' => 'required|unique:internal_users,phone_number,' . $internalUser->id,
                     'position' => 'required|string|max:255',
                     'office' => 'required|string|max:255',
