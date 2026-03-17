@@ -92,6 +92,66 @@ class AuthenticationController extends Controller
             422,
         );
     }
+    public function loginActionApi(Request $request)
+    {
+        $credentials = $request->validate([
+            'userType' => 'required|in:public,internal',
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
+
+        $guard = $credentials['userType'];
+
+        // Retrieve user first
+        $user = ($guard === 'public' ? PublicUser::class : InternalUser::class)::where('email', $credentials['email'])->first();
+
+        if (!$user) {
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => 'User not found.',
+                ],
+                422,
+            );
+        }
+
+        // Attempt login first
+        if (
+            Auth::guard($guard)->attempt([
+                'email' => $credentials['email'],
+                'password' => $credentials['password'],
+            ])
+        ) {
+            $request->session()->regenerate();
+
+            // After login, check if email not verified
+            if (method_exists($user, 'hasVerifiedEmail') && !$user->hasVerifiedEmail()) {
+                // Send verification email
+                $user->notify(new VerifyEmailNotification());
+                return response()->json([
+                    'status' => 'unverified',
+                    'message' => 'Your email is not verified. A verification email has been sent.',
+                    'redirect' => route('verify.email'),
+                ]);
+            }
+
+            // Normal redirect if verified
+            $redirect = $guard === 'public' ? route('public.dashboard') : route('internal.dashboard');
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Login successful!',
+                'redirect' => $redirect,
+            ]);
+        }
+
+        return response()->json(
+            [
+                'status' => 'error',
+                'message' => 'Invalid credentials or user type.',
+            ],
+            422,
+        );
+    }
 
     // public function register()
     // {

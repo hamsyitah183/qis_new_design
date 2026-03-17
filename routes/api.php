@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\StateDistrictController;
+use App\Http\Controllers\AuthenticationController;
 
 Route::middleware('api')->group(function () {
     Route::get('/user', function (Request $request) {
@@ -19,3 +20,5 @@ Route::middleware('api')->group(function () {
     Route::delete('/districts/{districtId}', [StateDistrictController::class, 'destroyDistrict']);
     Route::delete('/states/{stateId}', [StateDistrictController::class, 'destroyState']);
 });
+
+Route::post('/login', [AuthenticationController::class, 'loginActionApi'])->name('login.action');
