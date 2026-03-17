@@ -455,7 +455,8 @@ $(document).ready(function () {
 
             // Handle optional conversion for unit_measurement
             const conversionInput = document.getElementById("editConversion");
-            const conversion = conversionInput ? conversionInput.value : "";
+            const newConversionInput = document.getElementById("conversion");
+            const conversion = conversionInput ? conversionInput.value : newConversionInput ? newConversionInput.value : "";
 
             const fd = new FormData();
             fd.append("id", id);

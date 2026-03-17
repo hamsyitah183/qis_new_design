@@ -121,6 +121,8 @@ class MiscController extends Controller
             }
         }
 
+        
+
         activity()
             ->useLog('user_activity')
             ->event('update data')
