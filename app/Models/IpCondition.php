@@ -12,7 +12,9 @@ class IpCondition extends Model
 
     protected $fillable = [
         'category',
+        'description_form',
         'item_name',
+        'scientific_name',
         'addional_condition',
         'quantity_limit',
         'date_limit',
@@ -24,6 +26,7 @@ class IpCondition extends Model
     ];
 
     protected $casts = [
+        'description_form' => 'array', // JSON
         'country' => 'array', // JSON
         'usage'   => 'array', // JSON
         'quantity_limit' => 'float',

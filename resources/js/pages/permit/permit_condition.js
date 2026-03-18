@@ -23,7 +23,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Tagify values → JSON strings
         formData.append("countryTag", JSON.stringify(countryTagify ? countryTagify.value : []));
-        formData.append("usageTags", JSON.stringify(usageTagify ? usageTagify.value : []));
+        formData.append("purposeTags", JSON.stringify(purposeTagify ? purposeTagify.value : []));
+        formData.append("descriptionFormTags", JSON.stringify(descriptionFormTagify ? descriptionFormTagify.value : []));
 
         // Quill HTML
         formData.append("permit_condition", conditionHtml);

@@ -70,9 +70,9 @@ function fetchCountryList() {
     });
 }
 
-function fetchUsageList() {
-    const $select = $("#usageSelect");
-    const url = $select.data("route");
+function fetchPurposeList() {
+    const $select = $("#purposeTags");
+    const url = "/internal/get_pbdata/consignment_purpose";
 
     return $.ajax({
         url,
@@ -96,10 +96,9 @@ function fetchUsageList() {
                 );
             });
 
-            // Initialize Select2
             $select.select2({
                 width: "100%",
-                placeholder: "-- Select Usage --",
+                placeholder: "-- Select Purpose --",
                 allowClear: true,
                 multiple: true,
                 matcher: function (params, data) {
@@ -115,19 +114,73 @@ function fetchUsageList() {
             });
         },
         error: (xhr) => {
-            console.error("Failed to load usage list:", xhr.responseText);
+            console.error("Failed to load purpose list:", xhr.responseText);
             Swal.fire({
                 icon: "error",
-                title: "Failed to Load Usage List",
+                title: "Failed to Load Purpose List",
+                text: "Please try again or check your connection.",
+            });
+        },
+    });
+}
+
+function fetchDescriptionFormList() {
+    const $select = $("#descriptionFormTags");
+    const url = "/internal/get_pbdata/condition_category";
+
+    return $.ajax({
+        url,
+        type: "GET",
+        dataType: "json",
+        cache: false,
+        success: (response) => {
+            const data = response.data || [];
+
+            // Clear existing options
+            $select.empty();
+
+            $select.append('<option value="">-- Select Description Form --</option>');
+
+            // Add options dynamically
+            data.forEach((item) => {
+                $select.append(
+                    `<option value="${item.description}">${item.description}</option>`
+                );
+            });
+
+            // Initialize Select2
+            $select.select2({
+                width: "100%",
+                placeholder: "-- Select Description Form --",
+                allowClear: true,
+                multiple: true,
+                matcher: function (params, data) {
+                    if ($.trim(params.term) === "") return data;
+
+                    const term = params.term.toLowerCase();
+                    if (data.text.toLowerCase().includes(term)) {
+                        return data;
+                    }
+
+                    return null;
+                },
+            });
+        },
+        error: (xhr) => {
+            console.error("Failed to load description form list:", xhr.responseText);
+            Swal.fire({
+                icon: "error",
+                title: "Failed to Load Description Form List",
                 text: "Please try again or check your connection.",
             });
         },
     });
 }
 export function one() {
-    // --- 2. Get usage list ---
-    fetchUsageList();
+    // --- 2. Get data lists ---
+    fetchPurposeList();
     fetchCountryList();
+    fetchDescriptionFormList();
 }
 one();
 
@@ -158,7 +211,7 @@ export function three() {
 
             const formData = new FormData();
             formData.append("itemName", document.getElementById("itemName").value);
-            formData.append("itemCategory", document.getElementById("itemCategory").value);
+            // formData.append("itemCategory", document.getElementById("itemCategory").value);
             formData.append("quanLimit", document.getElementById("quanLimit").value);
             formData.append("quanmunit", document.getElementById("quanmunit").value);
             formData.append("start_date", document.getElementById("start_date").value);
@@ -169,9 +222,13 @@ export function three() {
             const countryTagData = selectedCountries.map((val) => ({ value: val }));
             formData.append("countryTag", JSON.stringify(countryTagData));
 
-            const selectedUsages = $("#usageSelect").val() || [];
-            const usageTagData = selectedUsages.map((val) => ({ value: val }));
-            formData.append("usageTags", JSON.stringify(usageTagData));
+            const selectedPurposes = $("#purposeTags").val() || [];
+            const purposeTagData = selectedPurposes.map((val) => ({ value: val }));
+            formData.append("purposeTags", JSON.stringify(purposeTagData));
+
+            const selectedDescriptionForms = $("#descriptionFormTags").val() || [];
+            const descriptionFormTagData = selectedDescriptionForms.map((val) => ({ value: val }));
+            formData.append("descriptionFormTags", JSON.stringify(descriptionFormTagData));
 
             // Quill HTML
             formData.append("permit_condition", conditionHtml);
