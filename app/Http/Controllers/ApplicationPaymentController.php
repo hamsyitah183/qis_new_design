@@ -56,6 +56,16 @@ class ApplicationPaymentController extends Controller
             }
         }
 
+        // Apply Order Number filter
+        if ($request->filled('order_number')) {
+            $query->where('order_number', 'like', '%' . $request->input('order_number') . '%');
+        }
+
+        // Apply FPX Reference filter
+        if ($request->filled('fpx_reference')) {
+            $query->where('fpx_seller_reference', 'like', '%' . $request->input('fpx_reference') . '%');
+        }
+
         // Apply Date Range filter (created_at)
         if ($request->filled('start_date')) {
             $query->whereDate('created_at', '>=', $request->input('start_date'));
@@ -92,7 +102,23 @@ class ApplicationPaymentController extends Controller
             ->addColumn('permit_number', function ($row) {
                 $permits = $row->order_details['permits'] ?? [];
                 $numbers = collect($permits)->pluck('permit_number')->filter()->values();
-                return $numbers->isNotEmpty() ? $numbers->implode(', ') : ($row->application_id ?? '-');
+
+                if ($numbers->isEmpty()) {
+                    return e($row->application_id ?? '-');
+                }
+
+                $count = $numbers->count();
+                $list = $numbers->map(fn($n) => e($n))->implode('<br>');
+
+                return '<button type="button" class="btn btn-sm btn-outline-primary" '
+                    . 'data-bs-toggle="popover" '
+                    . 'data-bs-trigger="focus" '
+                    . 'data-bs-html="true" '
+                    . 'data-bs-title="Permit Numbers (' . $count . ')" '
+                    . 'data-bs-content="' . e($list) . '" '
+                    . 'data-permits="' . e($numbers->implode(', ')) . '">'
+                    . '<i class="ti ti-eye me-1"></i>' . $count . ' Permit(s)'
+                    . '</button>';
             })
             ->addColumn('transaction_data', function ($row) {
                 return $row->transaction_data ?? '-';
@@ -139,7 +165,7 @@ class ApplicationPaymentController extends Controller
 
         }
 
-        return $dataTable->rawColumns(['status', 'kod_transaksi', 'payment_amount', 'action'])
+        return $dataTable->rawColumns(['status', 'kod_transaksi', 'payment_amount', 'permit_number', 'action'])
             ->make(true);
     }
 
