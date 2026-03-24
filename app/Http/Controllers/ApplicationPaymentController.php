@@ -90,7 +90,9 @@ class ApplicationPaymentController extends Controller
                 return $row->publicUser->fullname ?? 'N/A';
             })
             ->addColumn('permit_number', function ($row) {
-                return $row->application_id ?? '-';
+                $permits = $row->order_details['permits'] ?? [];
+                $numbers = collect($permits)->pluck('permit_number')->filter()->values();
+                return $numbers->isNotEmpty() ? $numbers->implode(', ') : ($row->application_id ?? '-');
             })
             ->addColumn('transaction_data', function ($row) {
                 return $row->transaction_data ?? '-';
