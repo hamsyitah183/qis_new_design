@@ -85,6 +85,47 @@
             page-break-after: always;
         }
 
+        .qr-page {
+            text-align: center;
+            padding-top: 30px;
+        }
+
+        .qr-page-title {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .qr-page-subtitle {
+            font-size: 10pt;
+            color: #333;
+            margin-bottom: 18px;
+        }
+
+        .qr-frame {
+            display: inline-block;
+            border: 1px solid #000;
+            padding: 16px;
+        }
+
+        .qr-permit-no {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .qr-note {
+            margin-top: 10px;
+            font-size: 9pt;
+            line-height: 1.4;
+            display: inline-block;
+            text-align: left;
+        }
+
+        .qr-note-verification {
+            display: block;
+            padding-left: 2.12rem;
+        }
+
         .variable-value {
             font-family: "Courier New", monospace;
             font-size: 9pt;
@@ -272,6 +313,30 @@
     </div>
     <div style="clear: both;"></div>
 </div>
+
+
+    <div class="page-break"></div>
+
+    <div class="qr-page">
+        <div class="qr-page-title">PERMIT QR CODE</div>
+
+        @if (!empty($qrDataUri))
+            <div class="qr-frame">
+                <img src="{{ $qrDataUri }}" alt="Permit QR Code" style="width: 300px; height: 300px;">
+            </div>
+        @else
+            <p>QR code is unavailable.</p>
+        @endif
+
+        <div class="qr-permit-no">
+            Permit No.: <span class="variable-value">{{ $permits->permit_number ?? '-' }}</span>
+        </div>
+
+        <div class="qr-note">
+            <strong>Note:</strong> Please ensure both pages of this permit (form details and QR code page) are printed and brought together for
+            <span class="qr-note-verification">verification.</span>
+        </div>
+    </div>
 
 
 </body>

@@ -9,8 +9,10 @@ use App\Models\ConsignmentPermit;
 use App\Models\InspectionApplication;
 use App\Models\InspectionItem;
 use App\Models\ConsignmentApplication;
+use App\Services\PermitQrService;
 use App\Services\ApplicationActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -21,6 +23,10 @@ use Spatie\Activitylog\Models\Activity;
 
 class PermitGenerateController extends Controller
 {
+    public function __construct(private readonly PermitQrService $permitQrService)
+    {
+    }
+
     //
     // public function generateWord()
     // {
@@ -57,7 +63,16 @@ class PermitGenerateController extends Controller
         $importer = $application->importer_detail;
         $exporter = $application->exporter;
 
-        $pdf = Pdf::loadView('pdf.permit_pdf', compact('permits', 'detail', 'application', 'importer', 'exporter'))->setPaper('a4', 'portrait');
+        $qrDataUri = null;
+        try {
+            // Use the same encrypted payload format as the scanner flow.
+            $encryptedPayload = $this->permitQrService->createEncryptedPayload((string) ($permits->permit_number ?? ''));
+            $qrDataUri = $this->permitQrService->createQrDataUri($encryptedPayload);
+        } catch (\Throwable $e) {
+            Log::warning('Failed generating hardcopy permit QR: ' . $e->getMessage());
+        }
+
+        $pdf = Pdf::loadView('pdf.permit_pdf', compact('permits', 'detail', 'application', 'importer', 'exporter', 'qrDataUri'))->setPaper('a4', 'portrait');
 
         return $pdf->stream("Import_Permit_{$application->application_id}.pdf");
     }

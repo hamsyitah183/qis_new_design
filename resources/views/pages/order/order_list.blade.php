@@ -11,9 +11,9 @@
 
         .permit-cell {
             display: inline-grid;
-            grid-template-columns: minmax(0, 1fr) 2rem;
+            grid-template-columns: minmax(0, 1fr) 1.25rem 2rem;
             align-items: center;
-            column-gap: 0.25rem;
+            column-gap: 0.35rem;
             width: 13rem;
             max-width: 100%;
         }
@@ -31,6 +31,17 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
+        }
+
+        .permit-cell .permit-used-indicator {
+            width: 1.25rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .permit-cell .permit-used-indicator.is-hidden {
+            visibility: hidden;
         }
 
         @media (max-width: 768px) {
@@ -54,6 +65,7 @@
 @push('scripts')
     <script>
         window.AUTH_TYPE = @json($type);
+        window.ENCRYPTED_QR_PAYLOAD_URL = @json(url('/order/encrypted-qr-payload'));
     </script>
     @vite(['resources/js/pages/order/order_list.js'])
 @endpush

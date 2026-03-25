@@ -295,6 +295,8 @@ function activityLog() {
 
             // console.log("application", application.activity_log);
             let activity_log = json.activity_log
+            // QR scan entries are returned together with activity logs for timeline rendering.
+            let qr_scan_logs = json.qr_scan_logs || [];
 
 
 
@@ -306,7 +308,7 @@ function activityLog() {
             cardBody.empty();
             cardBody.addClass('scroll-div');
 
-            const html = activityLogDesign(activity_log);
+            const html = activityLogDesign(activity_log, qr_scan_logs);
             cardBody.html(html);
 
             const modal = new bootstrap.Modal(modalEl);

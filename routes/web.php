@@ -408,6 +408,8 @@ Route::middleware(['auth.any'])->group(function () {
     // VIEW PAYMENT - Restricted
     Route::get('/order/list', [ApplicationPaymentController::class, 'getView']);
     Route::get('/order/list/data', [ApplicationPaymentController::class, 'getAllOrderList']);
+    Route::get('/order/qr-scan-logs', [ApplicationPaymentController::class, 'getQrScanLogs']);
+    Route::get('/order/encrypted-qr-payload', [ApplicationPaymentController::class, 'getEncryptedPermitPayload']);
     Route::get('/order/{order_number}', [ApplicationPaymentController::class, 'orderDetails']);
 
     // PERMIT
