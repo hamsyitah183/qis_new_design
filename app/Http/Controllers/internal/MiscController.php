@@ -235,14 +235,18 @@ class MiscController extends Controller
 
         // Decode Tagify arrays
         $countryArr = json_decode($request->countryTag, true) ?? [];
-        $usageArr = json_decode($request->usageTags, true) ?? [];
+        $usageArr = json_decode($request->purposeTags, true) ?? [];
+        $descriptionFormArr = json_decode($request->descriptionFormTags, true) ?? [];
 
         $countryValues = array_map(fn($i) => $i['value'] ?? ($i['name'] ?? null), $countryArr);
         $usageValues = array_map(fn($i) => $i['value'] ?? ($i['name'] ?? null), $usageArr);
+        $descriptionFormValues = array_map(fn($i) => $i['value'] ?? ($i['name'] ?? null), $descriptionFormArr);
 
         $data = [
-            'category' => $request->itemCategory,
+            'category' => $request->itemCategory ?? 0, // Keeping 0 to avoid breaking changes if this is hidden
+            'description_form' => $descriptionFormValues,
             'item_name' => $request->itemName,
+            'scientific_name' => $request->scientificName ?: null,
             'addional_condition' => $request->permit_condition,
             'quantity_limit' => $request->quanLimit ?: null . ' ' . $request->measurement ?: null,
             // 'date_limit' => $request->spedate ?: null,
@@ -384,7 +388,7 @@ class MiscController extends Controller
     {
         Gate::authorize('manage settings');
 
-        $query = IpCondition::with(['condcategory'])->select('id', 'item_name', 'category', 'usage', 'country');
+        $query = IpCondition::with(['condcategory'])->select('id', 'item_name', 'scientific_name', 'category', 'description_form', 'usage', 'country');
 
         return DataTables::of($query)->make(true);
     }
@@ -394,7 +398,7 @@ class MiscController extends Controller
         Gate::authorize('manage settings');
 
         $conditions = IpCondition::with(['code', 'condcategory'])
-            ->select('id', 'item_name', 'category', 'usage', 'addional_condition', 'quantity_limit', 'start_date', 'end_date', 'country')
+            ->select('id', 'item_name', 'scientific_name', 'category', 'description_form', 'usage', 'addional_condition', 'quantity_limit', 'start_date', 'end_date', 'country')
             ->findOrFail($id);
 
         return response()->json([

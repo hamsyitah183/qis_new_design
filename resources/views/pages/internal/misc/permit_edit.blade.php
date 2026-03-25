@@ -59,15 +59,17 @@
                                 value="{{ $condition->item_name }}"
                                 placeholder="Citrus - Lemon, Chinese Mandarine, Limau Kasturi">
                         </div>
-                        <div class="col-xl-6">
-                            <label for="blog-category" class="form-label">Category</label>
-                            <select class="form-select" name="itemCategory" id="itemCategory">
-                                <option value="{{ $condition->category }}" selected>{{ $condition->code->description }}
-                                </option>
-                                @foreach ($pbdata as $cate)
-                                    <option value="{{ $cate->cate_code }}">{{ $cate->description }}</option>
-                                @endforeach
-                            </select>
+                        <div class="col-xl-12">
+                            <label for="scientificName" class="form-label">Scientific Name</label>
+                            <input type="text" class="form-control" id="scientificName" name="scientificName"
+                                value="{{ $condition->scientific_name }}"
+                                placeholder="e.g. Citrus limon">
+                        </div>
+                        <div class="col-xl-12">
+                            <label class="form-label d-block">Description Form</label>
+                            <!-- Tagify input -->
+                            <input id="descriptionFormTags" name="descriptionFormTags" class="form-control"
+                                placeholder="Select or type description form...">
                         </div>
                     </div>
                     <div class="row gy-3 mt-1">
@@ -112,11 +114,11 @@
                                 placeholder="Select or type countries...">
                         </div>
                         <div class="col-xl-12">
-                            <label class="form-label d-block">Consignment Application (Usage)</label>
+                            <label class="form-label d-block">Purpose of Import</label>
 
                             <!-- Your Tagify input -->
-                            <input id="usageTags" name="usageTags" class="form-control"
-                                placeholder="Select or type usage...">
+                            <input id="purposeTags" name="purposeTags" class="form-control"
+                                placeholder="Select or type purpose...">
                         </div>
                         <div class="col-xl-12"> <!-- style="display:none" -->
                             <label class="form-label d-block">Permit Condition</label>
@@ -156,7 +158,8 @@
     </script>
     <script>
         window.countryTagify = null;
-        window.usageTagify = null;
+        window.purposeTagify = null;
+        window.descriptionFormTagify = null;
     </script>
 
     <script>
@@ -187,6 +190,16 @@
                 JSON.parse(theusageraw ?? "[]");
 
             const conditionUsage = theusage.map(i => ({
+                value: i,
+                name: i
+            }));
+
+            const thedescriptionformraw = {!! json_encode($condition->description_form) !!};
+            const thedescriptionform = Array.isArray(thedescriptionformraw) ?
+                thedescriptionformraw :
+                JSON.parse(thedescriptionformraw ?? "[]");
+
+            const conditionDescriptionForm = thedescriptionform.map(i => ({
                 value: i,
                 name: i
             }));
@@ -239,18 +252,18 @@
             });
 
 
-            // --- 2. Get usage list ---
+            // --- 2. Get purpose list ---
             $.ajax({
-                url: `/internal/get_pbdata/consignment_application`,
+                url: `/internal/get_pbdata/consignment_purpose`,
                 method: 'GET',
                 success: function(response) {
-                    const usageList = response.data.map(i => ({
+                    const purposeList = response.data.map(i => ({
                         value: i.description,
                         name: i.description
                     }));
 
-                    usageTagify = new Tagify(document.getElementById("usageTags"), {
-                        whitelist: usageList,
+                    purposeTagify = new Tagify(document.getElementById("purposeTags"), {
+                        whitelist: purposeList,
                         enforceWhitelist: false,
                         editTags: false,
                         dropdown: {
@@ -262,9 +275,36 @@
                         dropdownFilter: (item, value) =>
                             item.name.toLowerCase().includes(value.toLowerCase())
                     });
-                    usageTagify.addTags(conditionUsage);
+                    purposeTagify.addTags(conditionUsage);
 
-                    // console.log("Usage loaded:", usageList);
+                    // console.log("Purpose loaded:", purposeList);
+                }
+            });
+
+            // --- 3. Get description form list ---
+            $.ajax({
+                url: `/internal/get_pbdata/condition_category`,
+                method: 'GET',
+                success: function(response) {
+                    const descriptionFormList = response.data.map(i => ({
+                        value: i.description,
+                        name: i.description
+                    }));
+
+                    descriptionFormTagify = new Tagify(document.getElementById("descriptionFormTags"), {
+                        whitelist: descriptionFormList,
+                        enforceWhitelist: false,
+                        editTags: false,
+                        dropdown: {
+                            enabled: 1,
+                            maxItems: 20,
+                            highlightFirst: true,
+                            mapValueTo: "name",
+                        },
+                        dropdownFilter: (item, value) =>
+                            item.name.toLowerCase().includes(value.toLowerCase())
+                    });
+                    descriptionFormTagify.addTags(conditionDescriptionForm);
                 }
             });
 

@@ -17,6 +17,11 @@ class RoleService
         $roles = Role::with('permissions', 'users')
             ->where('name', '!=', 'public');
 
+        // Non-superadmin users should not see the superadmin role
+        if (!auth()->user()->hasRole('superadmin')) {
+            $roles->where('name', '!=', 'superadmin');
+        }
+
         return DataTables::of($roles)
 
             ->addColumn('user_count', fn($role) => $role->users)
@@ -72,13 +77,13 @@ class RoleService
 
                 if ($count > $maxDisplay) {
                     $html .= '<a class="permissionModal badge bg-dark-transparent p-1"
-                    data-role = ' . $role->name . '>more...</a>';
+                    data-role="' . e($role->name) . '">more...</a>';
                 }
 
                 if ($count <= $maxDisplay) {
                     $html .= '
                         <span class="permissionModal badge bg-secondary-transparent p-1 d-flex align-items-center gap-1"
-                        data-role = "' . $role->name . '">
+                        data-role="' . e($role->name) . '">
                             <i class="ti ti-pencil"></i>
                         </span>';
                 }

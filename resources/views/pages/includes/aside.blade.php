@@ -169,7 +169,12 @@
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <i class="ri-arrow-down-s-line side-menu__angle"></i>
                                 <i class="ti ti-user side-menu__icon"></i>
-                                <span class="side-menu__label">User Management</span>
+                                <span class="side-menu__label">
+                                    User Management
+                                    <svg id="userMgmtParentBadge" style="display:none; position: relative; top: -5px; left: 2px;" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="4" cy="4" r="4" fill="#dc3545"/>
+                                    </svg>
+                                </span>
                             </a>
                             <ul class="slide-menu child1">
                                 <li class="slide side-menu__label1"><a href="javascript:void(0)">Users</a></li>
