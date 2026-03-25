@@ -28,7 +28,7 @@
     <div class="row">
         <form class="col-xl-12" method="POST" action="{{ url('/payment') }}" id="paymentForm">
             @csrf
-            <div class="btn btn-primary mb-2" id= "returnToApplication" data-app-id = "{{ $application->application_id }}">
+            <div class="btn btn-primary mb-2" id="returnToApplication" data-app-id="{{ $application->application_id }}" data-app-type="{{ $application->application_type }}">
                 Return to Application
             </div>
             {{-- <span id="applicationType" class="d-none"></span> --}}

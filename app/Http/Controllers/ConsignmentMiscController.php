@@ -106,7 +106,7 @@ class ConsignmentMiscController extends Controller
 
         $condition->save();
 
-        return response()->json(['success' => 'Consignment Condition updated successfully']);
+        return response()->json(['success' => 'Consignment Condition updated successfully', 'id' => $condition->id]);
     }
 
     public function addConsignmentConditionData()

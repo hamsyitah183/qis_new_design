@@ -522,6 +522,8 @@ class PermitGenerateController extends Controller
                     'role' => 'boundary officer',
                 ],
             );
+
+            $application->logActivity('Printed', 'Permit with id ' .  $permit->permit_number .  ' is Printed with reason: ' .   $reason, 'Printed');
         
 
         } elseif ($type == 'Consignment') {

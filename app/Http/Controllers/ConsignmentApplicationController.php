@@ -139,17 +139,22 @@ class ConsignmentApplicationController extends Controller
                     Log::warning('Pusher connection failed but continuing save: ' . $e->getMessage());
                 }
 
+                if (!$isDraft) {
+                    $application->logActivity('Submitted', 'Application submitted', 'Submitted');
+                    $permit['applCate'] == 0 ? $application->logActivity('Clerk Review In-Progress', 'Pending for clerk approval', 'Clerk Review In-Progress') : $application->logActivity('Awaiting Approval', 'Company approval required', 'Awaiting Company Approval');
+                }
+
                 activity()
                     ->tap(function (Activity $activity) {
                         $activity->log_name = 'user_activity';
                     })
-                    ->event($isDraft ? 'update draft application' : 'update consignment application')
+                    ->event($isDraft ? 'update draft application' : 'submit draft application')
                     ->causedBy(authUser()['user'])
                     ->performedOn($application)
                     ->withProperties([
                         'application' => $application,
                     ])
-                    ->log(authUser()['user']['fullname'] . ($isDraft ? ' has updated a consignment application draft (ID: ' : ' has updated a consignment application (ID: ') . $application->application_id . ')');
+                    ->log(authUser()['user']['fullname'] . ($isDraft ? ' has updated a consignment application draft (ID: ' : ' has submitted a drafted consignment application (ID: ') . $application->application_id . ')');
             } else {
                 // Create new application
                 // Status flow: Draft or Application Submitted
@@ -198,7 +203,7 @@ class ConsignmentApplicationController extends Controller
                     ->log(authUser()['user']['fullname'] . ($isDraft ? ' has created a new consignment application draft (ID: ' : ' has created a new consignment application (ID: ') . $application->application_id . ')');
 
                 if (!$isDraft) {
-                    $application->logActivity('Submiited', 'Application submitted', 'Submitted');
+                    $application->logActivity('Submitted', 'Application submitted', 'Submitted');
                     $application->logActivity('Clerk Review In-Progress', 'Pending for clerk approval', 'Clerk Review In-Progress');
 
                     $notificationController = new NotificationController();
@@ -207,7 +212,7 @@ class ConsignmentApplicationController extends Controller
                         $application->exporter['fullname'] ?? 'User',
                         'Consignment Application',
                         $application->application_id,
-                        'will be check by DOA',
+                        'submitted',
                         'Your application has been successfully submitted.',
                         $application->exporter->phone_number  ?? '60143290092', // recipient number
                     );

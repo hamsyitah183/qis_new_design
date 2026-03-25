@@ -14,13 +14,13 @@ class BayuPayService
     public function checkAndUpdatePayment(Order $order, string $kodTransaksi): array
     {
         $response = Http::withToken('test-api')
-        ->get('https://bayupay-dummy.geovidia.my/readdata.php', 
-        ['kod_transaksi' => $kodTransaksi]);
+            ->withoutVerifying() // Disable SSL verification for testing
+            ->get('https://bayupay-dummy.geovidia.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
         // $response = Http::withToken('test-api')
-        // ->get(' http://10.71.97.95/readdata.php', 
+        // ->get(' http://10.71.97.95/readdata.php',
         // ['kod_transaksi' => $kodTransaksi]);
         // $response = Http::withToken('test-api')
-        // ->get('https://hands-on5.sabah.gov.my/readdata.php', 
+        // ->get('https://hands-on5.sabah.gov.my/readdata.php',
         // ['kod_transaksi' => $kodTransaksi]);
 
         if (!$response->successful()) {
@@ -106,12 +106,49 @@ class BayuPayService
 
     public function checkAndUpdatePaymentWithoutTransactionCode(Order $order): array
     {
+        // $response = Http::withToken('test-api')
+        //  ->withoutVerifying() // Disable SSL verification for testing
+        // ->get('https://bayupay-dummy.geovidia.my/readtransaction.php', [
+        //     'sid' => $order->sid,
+        //     'itn' => $order->itn,
+        //     'rn' => $order->order_number,
+        // ]);
+
         $response = Http::withToken('test-api')
-        ->get('https://bayupay-dummy.geovidia.my/readtransaction.php', [
-            'sid' => $order->sid,
-            'itn' => $order->itn,
-            'rn' => $order->order_number,
+            ->withoutVerifying()
+            ->get('https://bayupay-dummy.geovidia.my/readtransaction.php', [
+                'sid' => $order->sid,
+                'itn' => $order->itn,
+                'rn' => $order->order_number,
+            ]);
+
+        Log::info('BayuPay request', [
+            'url' => 'readtransaction',
+            'params' => [
+                'sid' => $order->sid,
+                'itn' => $order->itn,
+                'rn' => $order->order_number,
+            ],
+            'status' => $response->status(),
+            'body' => $response->body(),
         ]);
+
+        /**
+         * Handle transaction not found
+         */
+        if ($response->status() === 404) {
+            Log::warning('BayuPay transaction not found. Marking as unsuccessful.', [
+                'order_number' => $order->order_number,
+            ]);
+
+            $this->markOrderUnsuccessful($order);
+
+            return [];
+        }
+
+        if (!$response->successful()) {
+            throw new \Exception('Failed to retrieve payment data');
+        }
         // $response = Http::withToken('test-api')
         // ->get('https://hands-on5.sabah.gov.my/readtransaction.php', [
         //     'sid' => $order->sid,
@@ -203,5 +240,42 @@ class BayuPayService
         $order->save();
 
         return $paymentData;
+    }
+
+    private function markOrderUnsuccessful(Order $order): void
+    {
+        $permits = $order->order_details['permits'] ?? [];
+        $application = $order->application;
+
+        $permitModel = match ($application?->application_type) {
+            'Import Permit' => IpConsignmentPermit::class,
+            'Inspection Certificate' => InspectionItem::class,
+            'Consignment Certificate' => ConsignmentPermit::class,
+            default => null,
+        };
+
+        if (!$permitModel) {
+            return;
+        }
+
+        /**
+         * Reset order
+         */
+        $order->update([
+            'status' => 'payment failed',
+            'transaction_status' => 'UNSUCCESSFUL',
+        ]);
+
+        /**
+         * Reset permits
+         */
+        foreach ($permits as $permit) {
+            $permitModel::where('id', $permit['permit_id'])->update(['status' => 'pending for payment']);
+        }
+
+        /**
+         * Log activity
+         */
+        $application?->logActivity(action: 'User Payment', remark: 'Transaction not found in BayuPay. Payment marked as unsuccessful.', status: 'Payment Failed');
     }
 }

@@ -488,7 +488,7 @@ class InspectionController extends Controller
                     $application->importer_detail['fullname'] ?? 'User',
                     'Inspection Application',
                     $application->application_id,
-                    'will be check by DOA',
+                    'submitted',
                     'Your application has been successfully submitted.',
                     $application->importer->phone_number ?? '60143290092', // recipient number
                 );
@@ -561,7 +561,7 @@ class InspectionController extends Controller
                     $application->importer_detail['fullname'] ?? 'User',
                     'Inspection Application',
                     $application->application_id,
-                    'will be check by DOA',
+                    'submitted',
                     'Your application has been successfully submitted.',
                     $application->importer->phone_number ?? '60143290092', // recipient number
                 );

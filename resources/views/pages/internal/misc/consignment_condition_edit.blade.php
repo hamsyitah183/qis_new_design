@@ -149,7 +149,7 @@
                     <button id="submitConditionBtn" type="submit" class="btn btn-primary">
                         <i class="ri-add-line me-1"></i> Update Condition
                     </button>
-                    <a class="btn btn-secondary">Cancel</a>
+                    <a href="/internal/consignment_condition" class="btn btn-secondary">Cancel</a>
                 </div>
             </div>
         </div>
@@ -229,7 +229,7 @@
                                     mapValueTo: 'name',
                                 },
 
-                                // 🔥 THIS enables searching by BOTH code & name
+                                // enables searching by BOTH code & name
                                 dropdownFilter: (item, value) => {
                                     const search = value.toLowerCase();
 
@@ -259,6 +259,7 @@
 
                     usageTagify = new Tagify(document.getElementById("usageTags"), {
                         whitelist: usageList,
+                        tagTextProp: 'name',
                         enforceWhitelist: false,
                         editTags: false,
                         dropdown: {

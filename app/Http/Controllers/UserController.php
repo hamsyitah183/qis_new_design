@@ -29,6 +29,7 @@ use App\Events\PublicUserEvent;
 use App\Models\BoundaryOfficer;
 use App\Notifications\ApplicationNotification;
 use App\Services\VerificationService;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
 
 class UserController extends Controller
@@ -46,25 +47,20 @@ class UserController extends Controller
 
     public function public_list()
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        Gate::authorize('read public user');
 
         $user = authUser()['user'];
 
         $countryNo = CountryNoPhone::get();
 
         return view('pages.internal.user_management.list_public', [
-            'countryNo' => $countryNo
+            'countryNo' => $countryNo,
         ]);
     }
 
-
     public function public_list_data(Request $request)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        Gate::authorize('read public user');
 
         $users = PublicUser::query();
 
@@ -76,7 +72,7 @@ class UserController extends Controller
         if ($request->has('email_verification') && $request->email_verification != '') {
             if ($request->email_verification == 'verified') {
                 $users->whereNotNull('email_verified_at');
-            } else if ($request->email_verification == 'not_verified') {
+            } elseif ($request->email_verification == 'not_verified') {
                 $users->whereNull('email_verified_at');
             }
         }
@@ -86,7 +82,7 @@ class UserController extends Controller
                 $users->whereHas('approved', function ($query) {
                     $query->where('doa_verified', true);
                 });
-            } else if ($request->account_verification == 'not_verified') {
+            } elseif ($request->account_verification == 'not_verified') {
                 $users->whereDoesntHave('approved', function ($query) {
                     $query->where('doa_verified', true);
                 });
@@ -96,32 +92,57 @@ class UserController extends Controller
         if ($request->has('sort_by') && $request->sort_by != '') {
             if ($request->sort_by == 'created_at') {
                 $users->orderBy('created_at', 'asc');
-            } else if ($request->sort_by == 'latest') {
+            } elseif ($request->sort_by == 'latest') {
                 $users->orderBy('created_at', 'desc');
             }
         }
         $currentUser = Auth::guard('public')->user();
 
+        $canApprove = Gate::allows('approve public user');
+
         return DataTables::of($users)
-            ->addColumn('action', function ($user) use ($currentUser) {
+            ->addColumn('action', function ($user) use ($currentUser, $canApprove) {
+                $canRead = Gate::allows('read public user');
+                $canUpdate = Gate::allows('update public user');
+                $canDelete = Gate::allows('delete public user');
 
-                $actionHtml = '
-                <div class="d-flex align-items-center gap-2">
-                    <button class="btn btn-sm btn-primary text-white viewPublicUser-modal" data-id="' . $user->uuid . '" title="View">
-                        <i class="ti ti-eye"></i>
-                    </button>
-                    <button class="btn btn-sm btn-secondary text-white editPublicUser-modal" data-id="' . $user->uuid . '" title="Edit">
-                        <i class="ti ti-pencil"></i>
-                    </button>
-            ';
+                $actionHtml = '<div class="d-flex align-items-center gap-2">';
 
-                // Only show delete button if not current user
-                if (!$currentUser || $currentUser->uuid !== $user->uuid) {
-                    $actionHtml .= '
-                    <button class="btn btn-sm btn-danger text-white deletePublicUser" data-id="' . $user->uuid . '" title="Delete">
-                        <i class="bx bx-trash-alt"></i>
-                    </button>
-                ';
+                if ($canRead) {
+                    $actionHtml .=
+                        '
+                        <button class="btn btn-sm btn-primary text-white viewPublicUser-modal"
+                                data-id="' .
+                        $user->uuid .
+                        '" title="View">
+                            <i class="ti ti-eye"></i>
+                        </button>
+                    ';
+                }
+
+                if ($canUpdate) {
+                    $actionHtml .=
+                        '
+                        <button class="btn btn-sm btn-secondary text-white editPublicUser-modal"
+                                data-id="' .
+                        $user->uuid .
+                        '" title="Edit">
+                            <i class="ti ti-pencil"></i>
+                        </button>
+                    ';
+                }
+
+                // ✅ Only show delete if user has permission AND it's not the current user
+                if ($canDelete && (!$currentUser || $currentUser->uuid !== $user->uuid)) {
+                    $actionHtml .=
+                        '
+                        <button class="btn btn-sm btn-danger text-white deletePublicUser"
+                                data-id="' .
+                        $user->uuid .
+                        '" title="Delete">
+                            <i class="bx bx-trash-alt"></i>
+                        </button>
+                    ';
                 }
 
                 $actionHtml .= '</div>';
@@ -130,50 +151,40 @@ class UserController extends Controller
             })
             ->editColumn('created_at', fn($user) => $user->created_at->format('d-m-Y H:i'))
             ->editColumn('account_type', fn($user) => ucfirst($user->account_type))
-            ->editColumn('doa_verified', function ($user) {
-                // Default icon is blank
+            // ✅ Only add doa_verified column if user has permission
+            ->editColumn('doa_verified', function ($user) use ($canApprove) {
                 $icon = '';
 
-                // Only show icon for NOT Verified with a verification attachment
                 if (!$user->approved?->doa_verified && !empty($user->approved?->verification_attachment)) {
-                    $icon = '<span class="text-warning fs-16 fw-bold ">
-                                <i class="bi bi-exclamation-circle"></i>
-                             </span>';
+                    $icon = '<span class="text-warning fs-16 fw-bold"><i class="bi bi-exclamation-circle"></i></span>';
                 }
 
-                // If no approved record, show Not Verified without icon
+                // ✅ badge class + data attributes depend on permission
+                $badgeClass = $canApprove ? 'badge-verification cursor-pointer' : '';
+                $dataAttribs = $canApprove ? 'data-id="' . $user->uuid . '" data-verified="no"' : '';
+                $dataYes = $canApprove ? 'data-id="' . $user->uuid . '" data-verified="yes"' : '';
+
                 if (!$user->approved) {
-                    return '<span class="badge bg-dark-transparent cursor-pointer badge-verification" data-id="'
-                        . $user->uuid . '" data-verified="no">Not Verified</span>';
+                    return '<span class="badge bg-dark-transparent ' . $badgeClass . '" ' . $dataAttribs . '>Not Verified</span>';
                 }
 
-                // Show Verified badge
                 if ($user->approved->doa_verified) {
-                    return '<span class="badge bg-success-transparent cursor-pointer badge-verification" data-id="'
-                        . $user->uuid . '" data-verified="yes">Verified</span>';
+                    return '<span class="badge bg-success-transparent ' . $badgeClass . '" ' . $dataYes . '>Verified</span>';
                 }
 
-                // Show Not Verified badge (with icon if attachment exists)
-                return '<span class="badge bg-dark-transparent cursor-pointer badge-verification" data-id="'
-                    . $user->uuid . '" data-verified="no">Not Verified ' . $icon . '</span>';
+                return '<span class="badge bg-dark-transparent ' . $badgeClass . '" ' . $dataAttribs . '>Not Verified ' . $icon . '</span>';
             })
-
-
-
+            // ✅ Only include doa_verified in rawColumns if user has permission
             ->rawColumns(['action', 'doa_verified'])
             ->make(true);
     }
 
     public function verification_list()
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        Gate::authorize('approve public user');
 
         $count = PublicUser::whereHas('approved', function ($query) {
-            $query->whereNotNull('verification_attachment')
-                ->where('doa_verified', '!=', 1)
-                ->where('status', '!=', 'Verification is rejected');
+            $query->whereNotNull('verification_attachment')->where('doa_verified', '!=', 1)->where('status', '!=', 'Verification is rejected');
         })->count();
 
         return view('pages.internal.user_management.verification_list', compact('count'));
@@ -181,32 +192,24 @@ class UserController extends Controller
 
     function verification_count()
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        Gate::authorize('approve public user');
 
         $count = PublicUser::whereHas('approved', function ($query) {
-            $query->whereNotNull('verification_attachment')
-                ->where('doa_verified', '!=', 1)
-                ->where('status', '!=', 'Verification is rejected');
+            $query->whereNotNull('verification_attachment')->where('doa_verified', '!=', 1)->where('status', '!=', 'Verification is rejected');
         })->count();
 
         return response()->json([
-            'count' => $count
+            'count' => $count,
         ]);
         // return $count;
     }
 
     public function verification_list_data(Request $request)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        Gate::authorize('approve public user');
 
         $query = PublicUser::whereHas('approved', function ($query) {
-            $query->whereNotNull('verification_attachment')
-                ->where('doa_verified', '!=', 1)
-                ->where('status', '!=', 'Verification is rejected');
+            $query->whereNotNull('verification_attachment')->where('doa_verified', '!=', 1)->where('status', '!=', 'Verification is rejected');
         })->with('approved');
 
         // Name search (Public user fullname)
@@ -242,8 +245,12 @@ class UserController extends Controller
             ->addColumn('action', function ($user) {
                 return '
                     <div class="d-flex gap-2">
-                         <button class="btn btn-sm btn-success accept-btn" data-id="' . $user->uuid . '">Accept</button>
-                         <button class="btn btn-sm btn-danger reject-btn" data-id="' . $user->uuid . '">Reject</button>
+                         <button class="btn btn-sm btn-success accept-btn" data-id="' .
+                    $user->uuid .
+                    '">Accept</button>
+                         <button class="btn btn-sm btn-danger reject-btn" data-id="' .
+                    $user->uuid .
+                    '">Reject</button>
                     </div>
                 ';
             })
@@ -251,36 +258,25 @@ class UserController extends Controller
             ->make(true);
     }
 
-
-
     public function user_data($id)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        Gate::authorize('read public user');
 
         $public = PublicUser::where('uuid', $id)->first();
 
         return response()->json([
-            'user' => $public
+            'user' => $public,
         ]);
     }
 
     public function public_user_save(Request $request)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
-
         $uuid = $request->input('uuid');
-
-        // dd($request->all());
 
         if ($uuid) {
             // dd($request->all());
             // UPDATE existing user
             $public = PublicUser::where('uuid', $uuid)->firstOrFail();
-
 
             $validated = $request->validate([
                 'fullname' => 'required|string|max:255',
@@ -311,41 +307,24 @@ class UserController extends Controller
                     'postcode' => $validated['postcode'],
                     'district' => $validated['district'],
                     'state' => $validated['state'],
-                    'office_number' => $request->office_number
+                    'office_number' => $request->office_number,
                 ]);
 
                 DB::commit();
 
                 try {
-                    event(new \App\Events\PublicUserEvent(
-                        'Your profile has been updated',
-                        $public->uuid
-                    ));
+                    event(new \App\Events\PublicUserEvent('Your profile has been updated', $public->uuid));
 
-
-                    event(new \App\Events\PublicUserUpdatedForInternal(
-                        'A public user updated their profile',
-                        $public->uuid
-                    ));
+                    event(new \App\Events\PublicUserUpdatedForInternal('A public user updated their profile', $public->uuid));
                 } catch (\Exception $e) {
                     \Log::info('Failed to broadcast event: ' . $e->getMessage());
                 }
 
                 $users = InternalUser::all(); // or filter by role/guard
 
-                Notification::send($users, new UserNotification(
-                    $public->fullname . ' account has been updated.',
-                    authUser()['user']->fullname,
-                    route('internal.public.list')
-                ));
+                Notification::send($users, new UserNotification($public->fullname . ' account has been updated.', authUser()['user']->fullname, route('internal.public.list')));
 
-                Notification::send($public, new UserNotification(
-                    'You update your account.',
-                    'QIS',
-                    '/profile'
-                ));
-
-
+                Notification::send($public, new UserNotification('You update your account.', 'QIS', '/profile'));
 
                 return response()->json([
                     'message' => 'Public User Updated',
@@ -354,10 +333,13 @@ class UserController extends Controller
             } catch (\Exception $e) {
                 DB::rollBack();
 
-                return response()->json([
-                    'message' => 'Update failed. Please try again.',
-                    'error' => $e->getMessage(),
-                ], 500);
+                return response()->json(
+                    [
+                        'message' => 'Update failed. Please try again.',
+                        'error' => $e->getMessage(),
+                    ],
+                    500,
+                );
             }
         } else {
             // CREATE new user
@@ -394,33 +376,17 @@ class UserController extends Controller
                 DB::commit();
 
                 try {
-                    event(new \App\Events\PublicUserUpdatedForInternal(
-                        'A public user created an account',
-                        $user->uuid
-                    ));
+                    event(new \App\Events\PublicUserUpdatedForInternal('A public user created an account', $user->uuid));
                 } catch (\Exception $e) {
                     \Log::info('Failed to broadcast event: ' . $e->getMessage());
                 }
 
                 $users = InternalUser::all(); // or filter by role/guard
 
-                Notification::send($users, new UserNotification(
-                    $user->fullname . ' account has been created.',
-                    authUser()['user']->fullname,
-                    route('internal.public.list')
-                ));
+                Notification::send($users, new UserNotification($user->fullname . ' account has been created.', authUser()['user']->fullname, route('internal.public.list')));
 
-                Notification::send($user, new UserNotification(
-                    'You created an account.',
-                    'QIS',
-                    '#'
-                ));
-                Notification::send($user, new UserNotification(
-                    'Upload your verification ID.',
-                    'QIS',
-                    '/profile'
-                ));
-
+                Notification::send($user, new UserNotification('You created an account.', 'QIS', '#'));
+                Notification::send($user, new UserNotification('Upload your verification ID.', 'QIS', '/profile'));
 
                 return response()->json([
                     'message' => 'Public User Created',
@@ -429,41 +395,43 @@ class UserController extends Controller
             } catch (\Exception $e) {
                 DB::rollBack();
 
-                return response()->json([
-                    'message' => 'Registration failed. Please try again.',
-                    'error' => $e->getMessage(),
-                ], 500);
+                return response()->json(
+                    [
+                        'message' => 'Registration failed. Please try again.',
+                        'error' => $e->getMessage(),
+                    ],
+                    500,
+                );
             }
         }
     }
 
     public function public_user_delete($id)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        Gate::authorize('delete public user');
 
         $public = PublicUser::where('uuid', $id)->first();
 
         $public->delete();
 
         return response()->json([
-            'user' => $public
+            'user' => $public,
         ]);
     }
 
     public function internal_user_delete($id)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        Gate::authorize('delete internal user');
 
         $user = InternalUser::where('uuid', $id)->first();
 
         if (!$user) {
-            return response()->json([
-                'message' => 'User not found'
-            ], 404);
+            return response()->json(
+                [
+                    'message' => 'User not found',
+                ],
+                404,
+            );
         }
 
         // Store user name before deletion for event message
@@ -479,25 +447,19 @@ class UserController extends Controller
         }
 
         return response()->json([
-            'message' => 'User deleted successfully'
+            'message' => 'User deleted successfully',
         ]);
     }
-
 
     // internal
 
     public function internal_list()
     {
+        Gate::authorize('read internal user');
+
         $actor = authUser()['user'];
         $actorRole = $actor->getRoleNames()->first();
-
-        if (!in_array($actorRole, ['admin', 'superadmin'])) {
-            abort(403, 'Unauthorized. Only admins can view the Internal User List.');
-        }
-
         $isAdminOrSuperadmin = in_array($actorRole, ['admin', 'superadmin']);
-
-        // Load branches from branches master table (for dropdown)
         $branches = Branch::orderBy('name')->get();
 
         return view('pages.internal.user_management.list_internal', [
@@ -508,8 +470,7 @@ class UserController extends Controller
 
     public function internal_list_data(Request $request)
     {
-        $query = InternalUser::select(['uuid', 'fullname', 'email', 'phone_number', 'position', 'office', 'branch'])
-            ->with('roles'); // Using Spatie roles
+        $query = InternalUser::select(['uuid', 'fullname', 'email', 'phone_number', 'position', 'office', 'branch'])->with('roles'); // Using Spatie roles
 
         $currentUser = Auth::guard('internal')->user();
 
@@ -519,24 +480,49 @@ class UserController extends Controller
             })
 
             ->addColumn('action', function ($user) use ($currentUser) {
-                $actionHtml = '
-                <button class="btn btn-sm btn-primary viewInternalUser-modal" data-id="' . $user->uuid . '" title="View">
-                    <i class="ti ti-eye"></i>
-                </button>
-                <button class="btn btn-sm btn-secondary editInternalUser-modal" data-id="' . $user->uuid . '" title="Edit">
-                    <i class="ti ti-edit"></i>
-                </button>
-            ';
+                $canRead = Gate::allows('read internal user');
+                $canUpdate = Gate::allows('update internal user');
+                $canDelete = Gate::allows('delete internal user');
 
-                if (!$currentUser || $currentUser->uuid !== $user->uuid) {
-                    $actionHtml .= '
-                    <button class="btn btn-sm btn-danger text-white deleteBtn" data-id="' . $user->uuid . '" title="Delete">
-                        <i class="bx bx-trash-alt"></i>
-                    </button>
-                ';
+                $actionHtml = '';
+
+                if ($canRead) {
+                    $actionHtml .=
+                        '
+            <button class="btn btn-sm btn-primary viewInternalUser-modal"
+                    data-id="' .
+                        $user->uuid .
+                        '" title="View">
+                <i class="ti ti-eye"></i>
+            </button>
+        ';
                 }
 
-                return $actionHtml; // <-- Must return the HTML
+                if ($canUpdate) {
+                    $actionHtml .=
+                        '
+            <button class="btn btn-sm btn-secondary editInternalUser-modal"
+                    data-id="' .
+                        $user->uuid .
+                        '" title="Edit">
+                <i class="ti ti-edit"></i>
+            </button>
+        ';
+                }
+
+                if ($canDelete && (!$currentUser || $currentUser->uuid !== $user->uuid)) {
+                    $actionHtml .=
+                        '
+            <button class="btn btn-sm btn-danger text-white deleteBtn"
+                    data-id="' .
+                        $user->uuid .
+                        '" title="Delete">
+                <i class="bx bx-trash-alt"></i>
+            </button>
+        ';
+                }
+
+                return $actionHtml;
             })
             ->rawColumns(['action'])
             ->make(true);
@@ -569,23 +555,26 @@ class UserController extends Controller
         $internal = InternalUser::with('roles')->where('uuid', $id)->first();
 
         return response()->json([
-            'user' => $internal
+            'user' => $internal,
         ]);
     }
 
     public function internal_user_save(Request $request)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        $uuid = $request->input('uuid');
+
+        if ($uuid) {
+            Gate::authorize('update internal user');
+        } else {
+            Gate::authorize('create internal user');
         }
 
         $actor = authUser()['user'];
         $url = route('internal.internal.list');
-        
+
         // dd('internal user save', $request->all());
 
         return DB::transaction(function () use ($request, $actor, $url) {
-
             $uuid = $request->input('uuid');
 
             if ($uuid) {
@@ -626,33 +615,22 @@ class UserController extends Controller
 
                 // Notify edited user (if not self)
                 if ($internalUser->uuid !== $actor->uuid) {
-                    $internalUser->notify(new InternalUserEditedNotification(
-                        'Your account was updated',
-                        'Your account details were updated by ' . $actor->fullname,
-                        $url
-                    ));
+                    $internalUser->notify(new InternalUserEditedNotification('Your account was updated', 'Your account details were updated by ' . $actor->fullname, $url));
                 }
 
                 // Notify actor
-                $actor->notify(new InternalUserEditedNotification(
-                    'Account updated',
-                    'You updated ' . $internalUser->fullname . '\'s account',
-                    $url
-                ));
+                $actor->notify(new InternalUserEditedNotification('Account updated', 'You updated ' . $internalUser->fullname . '\'s account', $url));
 
                 // Broadcast
                 try {
-                    event(new InternalUserEdited(
-                        $internalUser->fullname . ' account was edited by ' . $actor->fullname,
-                        $internalUser->uuid
-                    ));
+                    event(new InternalUserEdited($internalUser->fullname . ' account was edited by ' . $actor->fullname, $internalUser->uuid));
                 } catch (\Exception $e) {
                     \Log::info('Broadcast failed: ' . $e->getMessage());
                 }
 
                 return response()->json([
                     'used_id' => $uuid,
-                    'message' => 'User Updated'
+                    'message' => 'User Updated',
                 ]);
             }
 
@@ -692,7 +670,7 @@ class UserController extends Controller
 
             if ($request->role === 'boundary officer') {
                 BoundaryOfficer::create([
-                    'user_id' => $internalUser->uuid
+                    'user_id' => $internalUser->uuid,
                 ]);
 
                 activity()
@@ -704,11 +682,7 @@ class UserController extends Controller
             }
 
             // Notify creator
-            $actor->notify(new InternalUserEditedNotification(
-                'User created',
-                'You created a new user: ' . $internalUser->fullname,
-                $url
-            ));
+            $actor->notify(new InternalUserEditedNotification('User created', 'You created a new user: ' . $internalUser->fullname, $url));
 
             try {
                 event(new InternalUserAdded('A new internal user has been added'));
@@ -718,17 +692,14 @@ class UserController extends Controller
 
             return response()->json([
                 'used_id' => $internalUser->uuid,
-                'message' => 'User Created'
+                'message' => 'User Created',
             ]);
         });
     }
 
-
     public function user_list($type)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        Gate::authorize('read internal user');
 
         if ($type === 'public') {
             $users = PublicUser::select(['fullname', 'id', 'uuid'])->get();
@@ -737,7 +708,7 @@ class UserController extends Controller
         }
 
         return response()->json([
-            'users' => $users
+            'users' => $users,
         ]);
     }
 
@@ -751,7 +722,7 @@ class UserController extends Controller
 
         return view('pages.authentication.profile', [
             'title' => 'Profile',
-            'states' => State::all()
+            'states' => State::all(),
         ]);
     }
 
@@ -784,22 +755,25 @@ class UserController extends Controller
         ]);
 
         // Select correct user model
-        $user = $request['type'] === 'public'
-            ? PublicUser::where('uuid', $request['uuid'])->first()
-            : InternalUser::where('uuid', $request['uuid'])->first();
+        $user = $request['type'] === 'public' ? PublicUser::where('uuid', $request['uuid'])->first() : InternalUser::where('uuid', $request['uuid'])->first();
 
         if (!$user) {
-            return response()->json([
-                'message' => 'User not found.',
-            ], 404);
+            return response()->json(
+                [
+                    'message' => 'User not found.',
+                ],
+                404,
+            );
         }
 
         // Verify old password before allowing change
         if (!Hash::check($validated['old_password'], $user->password)) {
-            return response()->json([
-                'message' => 'Old password is incorrect.',
-
-            ], 400);
+            return response()->json(
+                [
+                    'message' => 'Old password is incorrect.',
+                ],
+                400,
+            );
         }
 
         // Update password
@@ -887,37 +861,21 @@ class UserController extends Controller
 
         $result = $verificationService->uploadVerificationAttachment($userId, $file);
 
-        $user = PublicUser::where("uuid", $userId)->first();
-
-
+        $user = PublicUser::where('uuid', $userId)->first();
 
         try {
-            event(new InternalUserAdminEvent(
-                $user->fullname . ' is uploaded a verification attachement.'
-            ));
+            event(new InternalUserAdminEvent($user->fullname . ' is uploaded a verification attachement.'));
 
-            event(new PublicUserEvent(
-                'You Upload a verification attachment',
-                $user->uuid
-            ));
+            event(new PublicUserEvent('You Upload a verification attachment', $user->uuid));
         } catch (\Exception $e) {
             \Log::info('Failed to broadcast event: ' . $e->getMessage());
         }
 
         $users = InternalUser::role(['admin', 'superadmin'])->get();
         $notificationUrl = route('internal.public.list');
-        Notification::send($users, new ApplicationNotification(
-            'A user upload a verification attachment',
-            $user->fullname,
-            $notificationUrl
-        ));
+        Notification::send($users, new ApplicationNotification('A user upload a verification attachment', $user->fullname, $notificationUrl));
 
-
-        $user->notify(new ApplicationNotification(
-            'You Upload a verification attachment',
-            'QIS',
-            '/profile'
-        ));
+        $user->notify(new ApplicationNotification('You Upload a verification attachment', 'QIS', '/profile'));
 
         activity()
             ->useLog('user_activity')
@@ -925,7 +883,6 @@ class UserController extends Controller
             ->performedOn($user)
             ->causedBy(authUser()['user'])
             ->log("{$user->fullname} is uploading an attachment to get verification.");
-
 
         return response()->json($result, $result['success'] ? 200 : 500);
     }
@@ -948,14 +905,9 @@ class UserController extends Controller
         return response()->json($postcodes);
     }
 
-
-
-
     public function verification_attachment($id)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        Gate::authorize('approve public user');
 
         \Log::info("Fetching verification for user: {$id}");
 
@@ -973,9 +925,7 @@ class UserController extends Controller
 
     public function save_attachment($id, Request $request)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+        Gate::authorize('approve public user');
 
         $internal = authUser()['user'];
 
@@ -1013,7 +963,6 @@ class UserController extends Controller
                 $verification->reason = $request->input('reason');
             }
 
-
             // 🔹 Save both models
             $verification->save();
             $user->save();
@@ -1022,68 +971,50 @@ class UserController extends Controller
             DB::commit();
 
             try {
-                event(new InternalUserAdminEvent(
-                    $isApproved ? $user->fullname . ' account is verified' :
-                    $user->fullname . ' account verification is rejected'
-                ));
+                event(new InternalUserAdminEvent($isApproved ? $user->fullname . ' account is verified' : $user->fullname . ' account verification is rejected'));
 
-                event(new PublicUserEvent(
-                    $isApproved ? 'Your Account is verified by DOA' :
-                    'Your Account is not verified by DOA',
-                    $user->uuid
-                ));
+                event(new PublicUserEvent($isApproved ? 'Your Account is verified by DOA' : 'Your Account is not verified by DOA', $user->uuid));
             } catch (\Exception $e) {
                 \Log::info('Failed to broadcast event: ' . $e->getMessage());
             }
 
             $users = InternalUser::role(['admin', 'superadmin'])->get();
             $notificationUrl = route('internal.public.list');
-            Notification::send($users, new ApplicationNotification(
-                $isApproved ? $user->fullname . ' account is verified' : $user->fullname . ' account verification is rejected',
-                $user->fullname,
-                $notificationUrl
-            ));
+            Notification::send($users, new ApplicationNotification($isApproved ? $user->fullname . ' account is verified' : $user->fullname . ' account verification is rejected', $user->fullname, $notificationUrl));
 
             activity()
                 ->useLog('user_activity')
                 ->event('verified')
                 ->performedOn($user)
                 ->causedBy(authUser()['user'])
-                ->log(
-                    $isApproved ? "{$user->fullname} was verified by " . authUser()['user']['fullname'] :
-                    "{$user->fullname}'s verification is rejected by " . authUser()['user']['fullname']
-                );
-            $user->notify(new ApplicationNotification(
-                $isApproved ? 'Your account is verified' : 'Your account verification is rejected',
-                'QIS',
-                '/profile'
-            ));
+                ->log($isApproved ? "{$user->fullname} was verified by " . authUser()['user']['fullname'] : "{$user->fullname}'s verification is rejected by " . authUser()['user']['fullname']);
+            $user->notify(new ApplicationNotification($isApproved ? 'Your account is verified' : 'Your account verification is rejected', 'QIS', '/profile'));
 
             if ($isApproved) {
-                $user->notify(new ApplicationNotification(
-                    'Start apply new application',
-                    'QIS',
-                    '/public/new_application'
-                ));
+                $user->notify(new ApplicationNotification('Start apply new application', 'QIS', '/public/new_application'));
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => $request->input('approved') === 'yes'
-                    ? 'User successfully verified.'
-                    : 'User verification has been rejected.',
-            ], 200);
+            return response()->json(
+                [
+                    'success' => true,
+                    'message' => $request->input('approved') === 'yes' ? 'User successfully verified.' : 'User verification has been rejected.',
+                ],
+                200,
+            );
         } catch (\Exception $e) {
             // 🔹 Rollback on failure
             DB::rollBack();
 
             Log::error('Verification update failed: ' . $e->getMessage());
 
-            return response()->json([
-                'success' => false,
-                'message' => 'An error occurred while saving verification status.',
-                'error' => $e->getMessage(),
-            ], 500);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'An error occurred while saving verification status.',
+                    'error' => $e->getMessage(),
+                ],
+                500,
+            );
         }
     }
 }

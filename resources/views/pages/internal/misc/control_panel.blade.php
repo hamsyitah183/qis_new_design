@@ -25,8 +25,7 @@
                         <li class="nav-item me-0" role="presentation">
                             <a class="nav-link" data-bs-toggle="tab" role="tab" aria-current="page" href="#security"
                                 aria-selected="false" tabindex="-1"><i
-                                    class="ri-flag-2-line me-2 align-middle fs-14 lh-1 text-primary"></i> Consignment
-                                Purpose</a>
+                                    class="ri-flag-2-line me-2 align-middle fs-14 lh-1 text-primary"></i>Purpose of Import</a>
                         </li>
                         <li class="nav-item me-0" role="presentation">
                             <a class="nav-link" data-bs-toggle="tab" role="tab" aria-current="page"
@@ -36,8 +35,7 @@
                         <li class="nav-item me-0" role="presentation">
                             <a class="nav-link active" data-bs-toggle="tab" role="tab" aria-current="page"
                                 href="#account-settings" aria-selected="true"><i
-                                    class="ri-folders-line me-2 align-middle fs-14 lh-1 text-primary"></i>Condition
-                                Category</a>
+                                    class="ri-folders-line me-2 align-middle fs-14 lh-1 text-primary"></i>Description Form</a>
                         </li>
                         <li class="nav-item me-0" role="presentation">
                             <a class="nav-link " data-bs-toggle="tab" role="tab" aria-current="page"
