@@ -136,9 +136,17 @@ function getIcon(status) {
         iconHtml = `<span class="avatar avatar-sm avatar-rounded track-order-icon backdrop-blur border border-warning border-opacity-10 bg-warning-transparent">
                        <i class="bi bi-cash fs-14"></i>
                     </span>`;
-    } 
-    
-    else {
+    } else if (s === 'completed') {
+
+        iconHtml = `<span class="avatar avatar-sm avatar-rounded track-order-icon backdrop-blur border border-success border-opacity-10 bg-success-transparent">
+                       <i class="bi bi-check-circle-fill fs-14"></i>
+                    </span>`;
+    } else if (s === 'printed') {
+
+        iconHtml = `<span class="avatar avatar-sm avatar-rounded track-order-icon backdrop-blur border border-info border-opacity-10 bg-info-transparent">
+                       <i class="bi bi-printer-fill fs-14"></i>
+                    </span>`;
+    } else {
         iconHtml = defaultIcon();
     }
 
