@@ -245,7 +245,7 @@
                     @can('manage settings')
                         <li class="slide__category"><span class="category-name">Misc</span></li>
 
-                        <li class="slide has-sub {{ Str::startsWith($currentRoute, 'internal.') ? 'open active' : '' }}">
+                        <li class="slide has-sub">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <i class="ri-arrow-down-s-line side-menu__angle"></i>
                                 <i class="bi bi-gear-wide side-menu__icon"></i>
