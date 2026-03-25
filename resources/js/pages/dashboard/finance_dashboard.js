@@ -4,7 +4,7 @@ import Swal from "sweetalert2";
 
 console.log("finance dashboard");
 
-let tables = [];
+let table;
 
 // Import modules including Buttons
 async function data_table_init() {
@@ -19,56 +19,114 @@ async function data_table_init() {
     // Expose JSZip globally for DataTables to use
     window.JSZip = (await import("jszip")).default;
 
-    const tableConfigs = [
-        { id: "#importPermitOrderTable", type: "import_permit" },
-        { id: "#inspectionCertOrderTable", type: "inspection" },
-        { id: "#consignmentCertOrderTable", type: "consignment" },
-    ];
+    let hasFilters = false;
 
-    tableConfigs.forEach(({ id, type }) => {
-        const table = new DataTable(id, {
-            processing: true,
-            serverSide: true,
-            ajax: {
-                url: "/order/list/data",
-                data: function (d) {
-                    d.application_type = type;
+    table = new DataTable("#financeOrderTable", {
+        processing: true,
+        serverSide: true,
+        deferLoading: 0, // Start with empty table
+        ajax: {
+            url: "/order/list/data",
+            data: function (d) {
+                d.order_number = document.getElementById("filterOrderNumber")?.value || "";
+
+                d.start_date = document.getElementById("filterStartDate")?.value || "";
+                d.end_date = document.getElementById("filterEndDate")?.value || "";
+                d.fpx_reference = document.getElementById("filterFpxReference")?.value || "";
+                d.application_type = document.getElementById("filterApplicationType")?.value || "";
+                d.order_status = document.getElementById("filterOrderStatus")?.value || "";
+            },
+            beforeSend: function (xhr) {
+                if (!hasFilters) {
+                    xhr.abort();
+                    return false;
+                }
+            },
+        },
+        dom: "Bfrtip", // Enable Buttons
+        buttons: [
+            {
+                extend: "excelHtml5",
+                text: '<i class="ti ti-file-spreadsheet"></i> Export Excel',
+                className: "btn btn-success mb-3",
+                exportOptions: {
+                    columns: ":not(:last-child)", // Exclude action column
+                    format: {
+                        body: function (data, row, column, node) {
+                            // For permit_number column, extract raw permits from data attribute
+                            const wrapper = document.createElement("div");
+                            wrapper.innerHTML = data;
+                            const btn = wrapper.querySelector("[data-permits]");
+                            if (btn) {
+                                return btn.getAttribute("data-permits");
+                            }
+                            // Strip HTML tags for other columns like badges (Order Status)
+                            return data ? data.replace(/<[^>]*>?/gm, '').trim() : data;
+                        },
+                    },
                 },
             },
-            dom: 'Bfrtip', // Enable Buttons
-            buttons: [
-                {
-                    extend: 'excelHtml5',
-                    text: '<i class="ti ti-file-spreadsheet"></i> Export Excel',
-                    className: 'btn btn-success mb-3',
-                    exportOptions: {
-                        columns: ':not(:last-child)' // Exclude action column
-                    }
-                }
-            ],
-            columns: [
-                { data: "order_number" },
-                { data: "transaction_date" },
-                { data: "fpx_reference" },
-                { data: "user_name" },
-                { data: "permit_number" },
-                { data: "status" },
-                { data: "application_type" },
-                { data: "transaction_data" },
-                { data: "payment_amount" },
-                { data: "action", orderable: false, searchable: false },
-            ],
-            responsive: true,
-            autoWidth: false,
-            pageLength: 10,
-            order: [],
-        });
+        ],
+        columns: [
+            { data: "order_number" },
+            { data: "transaction_date" },
+            { data: "fpx_reference" },
+            { data: "user_name" },
+            { data: "permit_number" },
+            { data: "status" },
+            { data: "application_type" },
+            { data: "transaction_data" },
+            { data: "payment_amount" },
+            { data: "action", orderable: false, searchable: false },
+        ],
+        responsive: true,
+        autoWidth: false,
+        pageLength: 10,
+        order: [],
+    });
 
-        table.on("draw.dt", function () {
-            initTooltips();
-        });
+    table.on("draw.dt", function () {
+        initTooltips();
+        // Initialize Bootstrap popovers for permit number buttons
+        const popoverTriggerList = document.querySelectorAll('#financeOrderTable [data-bs-toggle="popover"]');
+        popoverTriggerList.forEach(el => new bootstrap.Popover(el));
+    });
 
-        tables.push(table);
+    // Filter button
+    document.getElementById("btnFilter")?.addEventListener("click", function () {
+        const orderNum = document.getElementById("filterOrderNumber")?.value || "";
+
+        const startDate = document.getElementById("filterStartDate")?.value || "";
+        const endDate = document.getElementById("filterEndDate")?.value || "";
+        const fpxRef = document.getElementById("filterFpxReference")?.value || "";
+        const appType = document.getElementById("filterApplicationType")?.value || "";
+        const orderStatus = document.getElementById("filterOrderStatus")?.value || "";
+
+        if (!orderNum && !startDate && !endDate && !fpxRef && !appType && !orderStatus) {
+            alert("Please fill in at least one filter before searching.");
+            return;
+        }
+
+        hasFilters = true;
+        table.ajax.reload(null, true);
+    });
+
+    // Reset button
+    document.getElementById("btnReset")?.addEventListener("click", function () {
+        document.getElementById("filterOrderNumber").value = "";
+
+        document.getElementById("filterStartDate").value = "";
+        document.getElementById("filterEndDate").value = "";
+        document.getElementById("filterFpxReference").value = "";
+        document.getElementById("filterApplicationType").value = "";
+        document.getElementById("filterOrderStatus").value = "";
+        hasFilters = false;
+
+        // Temporarily disable serverSide so clear+draw doesn't trigger an AJAX call
+        const settings = table.settings()[0];
+        settings.oFeatures.bServerSide = false;
+        table.clear().draw();
+        settings.oFeatures.bServerSide = true;
     });
 
     // DELETE ORDER
@@ -98,7 +156,7 @@ async function data_table_init() {
         });
 
         Swal.fire("Deleted!", "Order deleted successfully", "success");
-        tables.forEach((t) => t.ajax.reload(null, false));
+        table.ajax.reload(null, false);
     });
 
     initTooltips();
