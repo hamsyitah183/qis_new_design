@@ -21,6 +21,133 @@ class ApplicationPaymentController extends Controller
         ]);
     }
 
+    public function validatePermitApi(Request $request)
+    {
+        $rawPermit = (string) $request->query('permit_number', '');
+        $rawPermit = trim($rawPermit);
+
+        if ($rawPermit === '') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'permit_number is required.',
+            ], 422);
+        }
+
+        // Normalize permit_number: handle IPO/123 and IPO123 formats
+        $normalized = strtoupper(preg_replace('/\s+/', '', $rawPermit));
+        $withoutSlash = str_replace('/', '', $normalized);
+
+        // Try each permit table to find the matching permit
+        $permitId = null;
+        $applicationType = null;
+
+        // Check Import Permit
+        $ipPermit = IpConsignmentPermit::where(function ($query) use ($normalized, $withoutSlash) {
+            $query->whereRaw('UPPER(permit_number) = ?', [$normalized])
+                ->orWhereRaw('UPPER(REPLACE(permit_number, "/", "")) = ?', [$withoutSlash]);
+        })->first();
+
+        if ($ipPermit) {
+            $permitId = $ipPermit->id;
+            $applicationType = 'Import Permit';
+        }
+
+        // Check Inspection Certificate
+        if (!$permitId) {
+            $inspectionItem = InspectionItem::where(function ($query) use ($normalized, $withoutSlash) {
+                $query->whereRaw('UPPER(permit_number) = ?', [$normalized])
+                    ->orWhereRaw('UPPER(REPLACE(permit_number, "/", "")) = ?', [$withoutSlash]);
+            })->first();
+
+            if ($inspectionItem) {
+                $permitId = $inspectionItem->id;
+                $applicationType = 'Inspection Certificate';
+            }
+        }
+
+        // Check Consignment Certificate
+        if (!$permitId) {
+            $consignmentPermit = ConsignmentPermit::where(function ($query) use ($normalized, $withoutSlash) {
+                $query->whereRaw('UPPER(permit_number) = ?', [$normalized])
+                    ->orWhereRaw('UPPER(REPLACE(permit_number, "/", "")) = ?', [$withoutSlash]);
+            })->first();
+
+            if ($consignmentPermit) {
+                $permitId = $consignmentPermit->id;
+                $applicationType = 'Consignment Certificate';
+            }
+        }
+
+        // If no permit found in any table, return invalid
+        if (!$permitId) {
+            return response()->json([
+                'status' => 'success',
+                'valid' => false,
+                'message' => 'Not listed',
+                'permit_number' => '-',
+            ]);
+        }
+
+        // Find the order containing this permit
+        $order = Order::where('application_type', $applicationType)
+            ->latest()
+            ->get()
+            ->first(function ($ord) use ($permitId) {
+                $permits = $ord->order_details['permits'] ?? [];
+                foreach ($permits as $perm) {
+                    if ((int) $perm['permit_id'] === (int) $permitId) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+
+        if (!$order) {
+            return response()->json([
+                'status' => 'success',
+                'valid' => false,
+                'message' => 'Not listed',
+                'permit_number' => '-',
+            ]);
+        }
+
+        // Fallback: also search by permit_number directly in order_details if not found by ID
+        if (!$order) {
+            $order = Order::where('application_type', $applicationType)
+                ->latest()
+                ->get()
+                ->first(function ($ord) use ($normalized, $withoutSlash) {
+                    $permits = $ord->order_details['permits'] ?? [];
+                    foreach ($permits as $perm) {
+                        $permNum = strtoupper($perm['permit_number'] ?? '');
+                        $permNumNoSlash = str_replace('/', '', $permNum);
+                        if ($permNum === $normalized || $permNumNoSlash === $withoutSlash) {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+        }
+
+        if (!$order) {
+            return response()->json([
+                'status' => 'success',
+                'valid' => false,
+                'message' => 'Not listed',
+                'permit_number' => '-',
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'valid' => true,
+            'message' => 'Valid',
+            'permit_number' => $rawPermit,
+            'order_number' => $order->order_number,
+            'application_type' => $order->application_type,
+        ]);
+    }
+
     public function getAllOrderList(Request $request)
     {
         $userUuid = authUser()['user']->uuid;
@@ -90,7 +217,7 @@ class ApplicationPaymentController extends Controller
                 return $row->publicUser->fullname ?? 'N/A';
             })
             ->addColumn('permit_number', function ($row) {
-                return $row->application_id ?? '-';
+                return $this->resolvePermitNumbersForOrder($row);
             })
             ->addColumn('transaction_data', function ($row) {
                 return $row->transaction_data ?? '-';
@@ -150,6 +277,32 @@ class ApplicationPaymentController extends Controller
             e($label) .
             '</span>
         ';
+    }
+
+    private function resolvePermitNumbersForOrder(Order $order): string
+    {
+        $permitIds = collect($order->order_details['permits'] ?? [])
+            ->pluck('permit_id')
+            ->filter()
+            ->values()
+            ->all();
+
+        if (empty($permitIds)) {
+            return '-';
+        }
+
+        $permitNumbers = match ($order->application_type) {
+            'Import Permit' => IpConsignmentPermit::whereIn('id', $permitIds)->pluck('permit_number'),
+            'Inspection Certificate' => InspectionItem::whereIn('id', $permitIds)->pluck('permit_number'),
+            'Consignment Certificate' => ConsignmentPermit::whereIn('id', $permitIds)->pluck('permit_number'),
+            default => collect(),
+        };
+
+        $formatted = $permitNumbers
+            ->filter(fn($permitNumber) => !empty($permitNumber))
+            ->implode(', ');
+
+        return $formatted !== '' ? $formatted : '-';
     }
 
     public function orderDetails($order_number)

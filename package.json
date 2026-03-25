@@ -36,6 +36,7 @@
         "jquery": "^3.7.1",
         "jszip": "^3.10.1",
         "laravel-echo": "^2.2.7",
+        "qrcode": "^1.5.4",
         "select2": "^4.1.0-rc.0",
         "sweetalert2": "^11.26.3",
         "tabler-icons": "^1.35.0",

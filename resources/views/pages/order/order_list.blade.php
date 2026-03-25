@@ -9,9 +9,37 @@
             width: 500px;
         }
 
+        .permit-cell {
+            display: inline-grid;
+            grid-template-columns: minmax(0, 1fr) 2rem;
+            align-items: center;
+            column-gap: 0.25rem;
+            width: 13rem;
+            max-width: 100%;
+        }
+
+        .permit-cell .permit-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .permit-cell .permit-qr-btn {
+            width: 2rem;
+            height: 2rem;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         @media (max-width: 768px) {
             .filter-dropdown {
                 width: 100%;
+            }
+
+            .permit-cell {
+                width: 11rem;
             }
         }
     </style>
@@ -115,6 +143,7 @@
                                         <tr class="">
                                             {{-- <th>#</th> --}}
                                             <th>Order Number</th>
+                                            <th>Permit Number</th>
                                             <th>Order Status</th>
                                             <th>Application Type</th>
                                             @if (authUser()['type'] == 'internal')
@@ -165,6 +194,17 @@
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         @endslot
 
+    </x-modal>
+
+    <x-modal id="permitQrModal" title="Permit QR Code" size="modal-sm">
+        <div class="text-center">
+            <img id="permitQrImage" alt="Permit QR Code" class="img-fluid border rounded p-2 bg-white" />
+            <div class="mt-2 fw-semibold" id="permitQrValue">-</div>
+        </div>
+
+        @slot('footer')
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        @endslot
     </x-modal>
 
 @endsection
