@@ -58,10 +58,17 @@
                     <div class="row gy-3">
 
                         <!-- Item Name -->
-                        <div class="col-xl-12">
+                        <div class="col-xl-6">
                             <label class="form-label">Item Name</label>
                             <input type="text" class="form-control" id="itemName" name="itemName"
                                 placeholder="Citrus - Lemon, Chinese Mandarine, Limau Kasturi">
+                        </div>
+
+                        <!-- Scientific Name -->
+                        <div class="col-xl-6">
+                            <label class="form-label">Scientific Name</label>
+                            <input type="text" class="form-control" id="scientificName" name="scientificName"
+                                placeholder="e.g. Citrus limon">
                         </div>
 
                         <!-- Category -->

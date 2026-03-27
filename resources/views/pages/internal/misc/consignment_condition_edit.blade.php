@@ -51,11 +51,17 @@
                 <div class="card-body">
                     <input type="hidden" name="id" value = {{ $condition->id }} id="id">
                     <div class="row gy-3">
-                        <div class="col-xl-12">
+                        <div class="col-xl-6">
                             <label for="blog-title" class="form-label">Item Name</label>
                             <input type="text" class="form-control" id="itemName" name="itemName"
                                 value="{{ $condition->item_name }}"
                                 placeholder="Citrus - Lemon, Chinese Mandarine, Limau Kasturi">
+                        </div>
+                        <div class="col-xl-6">
+                            <label class="form-label">Scientific Name</label>
+                            <input type="text" class="form-control" id="scientificName" name="scientificName"
+                                value="{{ $condition->scientific_name }}"
+                                placeholder="e.g. Citrus limon">
                         </div>
                         <div class="col-xl-6">
                             <label for="blog-category" class="form-label">Category</label>

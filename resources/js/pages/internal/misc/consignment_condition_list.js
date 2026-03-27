@@ -76,6 +76,13 @@ async function data_table_init() {
                 }
             },
             {
+                data: "scientific_name",
+                title: "Scientific Name",
+                render: function (data) {
+                    return `<span class="text-wrap"><i>${data || '-'}</i></span>`;
+                }
+            },
+            {
                 data: "condcategory.description",
                 title: "Category",
                 render: function (data) {
@@ -248,6 +255,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
                 document.getElementById("modalTitle").textContent = namoong;
                 document.getElementById("itemNameCell").textContent = condition.item_name;
+                document.getElementById("scientificNameCell").textContent = condition.scientific_name || "-";
                 document.getElementById("categoryCell").textContent =
                     condition.condcategory ? condition.condcategory.description : "-";
                 document.getElementById("usageCell").textContent =
