@@ -21,4 +21,4 @@ Route::middleware('api')->group(function () {
     Route::delete('/states/{stateId}', [StateDistrictController::class, 'destroyState']);
 });
 
-Route::post('/login', [AuthenticationController::class, 'loginActionApi'])->name('login.action');
+// Route::post('/login', [AuthenticationController::class, 'loginActionApi'])->name('login.action');

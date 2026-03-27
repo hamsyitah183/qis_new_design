@@ -197,7 +197,7 @@
         <li>A copy of this Import Permit must accompany the consignment.</li>
         <li>The regulated articles are subject to inspection prior to clearance.</li>
         <li>
-            This permit is valid until <span class="underline-dots" style="width: 150px;"> <span class="variable-value">{{ $validUntil ?? '' }}</span></span> for one consignment only.
+            This permit is valid until <span class="underline-dots" style="width: 150px;"> <span class="variable-value">{{ $validityDate ?? '' }}</span></span> for one consignment only.
         </li>
         <li>
     The consignment must be accompanied by a Phytosanitary Certificate or a statement from the official Plant Protection Service of the country of origin bearing the following certificate:

@@ -57,7 +57,9 @@ class PermitGenerateController extends Controller
         $importer = $application->importer_detail;
         $exporter = $application->exporter;
 
-        $pdf = Pdf::loadView('pdf.permit_pdf', compact('permits', 'detail', 'application', 'importer', 'exporter'))->setPaper('a4', 'portrait');
+        $validityDate = $permits->validity_date ? \Carbon\Carbon::parse($permits->validity_date)->format('d/M/Y') : '-';
+
+        $pdf = Pdf::loadView('pdf.permit_pdf', compact('permits', 'detail', 'application', 'importer', 'exporter', 'validityDate'))->setPaper('a4', 'portrait');
 
         return $pdf->stream("Import_Permit_{$application->application_id}.pdf");
     }
@@ -331,7 +333,12 @@ class PermitGenerateController extends Controller
         $exporter = $application->exporter;
         $entry = $application->entryPoint;
 
-        $pdf = Pdf::loadView('pdf.permit_inspection', compact('application', 'items', 'importer', 'exporter', 'entry'))->setPaper('a4', 'portrait');
+        $permit = $application->InspectionItems;
+        $permit = $permit->first(); // Assuming you want to get the first permit for validity date
+
+        $validityDate = $permit->validity_date ? \Carbon\Carbon::parse($permit->validity_date)->format('d/M/Y') : '-';
+
+        $pdf = Pdf::loadView('pdf.permit_inspection', compact('application', 'items', 'importer', 'exporter', 'entry', 'validityDate'))->setPaper('a4', 'portrait');
 
         return $pdf->stream("Inspection_Certificate_{$application->application_id}.pdf");
     }

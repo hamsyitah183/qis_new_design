@@ -11,7 +11,7 @@ class IpConsignmentPermit extends Model
 
     protected $table = 'ip_consignment_permit';
 
-    protected $fillable = ['application_id', 'permit_number', 'consignment_detail', 'quantity', 'unit_measurement', 'value', 'purpose', 'status'];
+    protected $fillable = ['application_id', 'permit_number', 'consignment_detail', 'quantity', 'unit_measurement', 'value', 'purpose', 'status', 'remark', 'validity_date'];
 
     protected $casts = [
         'consignment_detail' => 'array', // JSON (id, category, item_name, usage)
