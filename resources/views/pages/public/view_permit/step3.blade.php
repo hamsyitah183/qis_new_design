@@ -214,6 +214,8 @@
                                                       
 
 
+                                                        <th scope="col">Permit ID</th>
+
                                                         <th scope="col">Permit Status</th>
 
 

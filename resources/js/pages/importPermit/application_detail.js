@@ -183,7 +183,9 @@ async function attachmentTable() {
     <td class = "text-wrap">${detail.item_name ?? "—"}</td>
 
     <td class="text-wrap">${detail.purpose ?? "—"}</td>
- 
+
+    <td>${permit.permit_number ?? "—"}</td>
+
     ${permitStatus}
     <td>
         <div class="d-flex gap-2 align-items-center">
