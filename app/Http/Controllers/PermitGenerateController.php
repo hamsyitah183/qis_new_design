@@ -358,7 +358,9 @@ class PermitGenerateController extends Controller
         $exporter = $application->exporter;
         $entry = $application->entryPoint;
 
-        $pdf = Pdf::loadView('pdf.permit_consignment', compact('application', 'items', 'importer', 'exporter', 'entry'))->setPaper('a4', 'portrait');
+        $validUntil = optional($items->first())->validity_date ? \Carbon\Carbon::parse($items->first()->validity_date)->format('d/M/Y') : '-';
+
+        $pdf = Pdf::loadView('pdf.permit_consignment', compact('application', 'items', 'importer', 'exporter', 'entry', 'validUntil'))->setPaper('a4', 'portrait');
 
         return $pdf->stream("Inspection_Certificate_{$application->application_id}.pdf");
     }

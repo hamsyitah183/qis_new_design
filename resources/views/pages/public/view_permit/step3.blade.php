@@ -215,6 +215,7 @@
 
 
                                                         <th scope="col">Permit ID</th>
+                                                        <th scope="col">Validity Date</th>
 
                                                         <th scope="col">Permit Status</th>
 
