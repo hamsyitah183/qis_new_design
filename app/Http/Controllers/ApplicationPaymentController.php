@@ -22,10 +22,15 @@ class ApplicationPaymentController extends Controller
     {
     }
 
+    public function __construct(private readonly PermitQrService $permitQrService)
+    {
+    }
+
     //
     public function getView()
     {
         Artisan::call('bayupay:check-pending');
+
 
         return view('pages.order.order_list', [
             'title' => 'Order List',

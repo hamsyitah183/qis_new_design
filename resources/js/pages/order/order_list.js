@@ -1,9 +1,13 @@
 import { initTooltips } from "../../app";
 import Swal from "sweetalert2";
+import QRCode from "qrcode";
 
 console.log("order list");
 
 let orderListTable;
+let permitQrModal;
+let isOrderListRefreshing = false;
+let hasQrRealtimeListener = false;
 
 const isInternal = window.AUTH_TYPE === "internal";
 
@@ -75,6 +79,11 @@ async function data_table_init() {
         initTooltips();
     });
 
+    const permitQrModalElement = document.getElementById("permitQrModal");
+    if (permitQrModalElement && window.bootstrap?.Modal) {
+        permitQrModal = new window.bootstrap.Modal(permitQrModalElement);
+    }
+
     // Apply Filters
     $("#btnOrderFilter").on("click", function (e) {
         e.preventDefault();
@@ -134,7 +143,78 @@ async function data_table_init() {
         orderListTable.ajax.reload(null, false);
     });
 
+    // GENERATE PERMIT QR
+    $(document).on("click", ".generatePermitQr", async function () {
+        const encodedPermit = $(this).data("permit-number");
+        const permitNumber = decodeURIComponent(encodedPermit || "");
+
+        if (!permitNumber || permitNumber === "-") {
+            return;
+        }
+
+        const qrImage = document.getElementById("permitQrImage");
+        const qrLabel = document.getElementById("permitQrValue");
+
+        if (!qrImage || !qrLabel) {
+            return;
+        }
+
+        try {
+            let qrPayload = permitNumber;
+
+            // Internal users get encrypted QR payload, public users can still view plain QR.
+            if (isInternal) {
+                const encryptedEndpoint = window.ENCRYPTED_QR_PAYLOAD_URL;
+                if (!encryptedEndpoint) {
+                    throw new Error("Encrypted QR endpoint is not configured.");
+                }
+
+                const response = await fetch(
+                    `${encryptedEndpoint}?permit_number=${encodeURIComponent(permitNumber)}`,
+                    {
+                        headers: {
+                            Accept: "application/json",
+                        },
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error("Failed to get encrypted QR payload.");
+                }
+
+                const payload = await response.json();
+                if (payload?.status !== "success" || !payload?.payload) {
+                    throw new Error(payload?.message || "Invalid encrypted QR payload response.");
+                }
+
+                qrPayload = payload.payload;
+            }
+
+            const qrDataUrl = await QRCode.toDataURL(qrPayload, {
+                width: 260,
+                margin: 1,
+            });
+
+            qrImage.src = qrDataUrl;
+            qrLabel.textContent = permitNumber;
+
+            if (permitQrModal) {
+                permitQrModal.show();
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: "error",
+                title: "QR Generation Failed",
+                text: "Unable to generate QR code for this permit number.",
+            });
+        }
+    });
+
     initTooltips();
+
+    if (isInternal) {
+        setupQrRealtimeListener();
+    }
 }
 
 document.addEventListener("DOMContentLoaded", data_table_init);

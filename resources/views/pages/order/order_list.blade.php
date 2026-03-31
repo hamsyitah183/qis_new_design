@@ -9,9 +9,48 @@
             width: 500px;
         }
 
+        .permit-cell {
+            display: inline-grid;
+            grid-template-columns: minmax(0, 1fr) 1.25rem 2rem;
+            align-items: center;
+            column-gap: 0.35rem;
+            width: 13rem;
+            max-width: 100%;
+        }
+
+        .permit-cell .permit-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .permit-cell .permit-qr-btn {
+            width: 2rem;
+            height: 2rem;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .permit-cell .permit-used-indicator {
+            width: 1.25rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .permit-cell .permit-used-indicator.is-hidden {
+            visibility: hidden;
+        }
+
         @media (max-width: 768px) {
             .filter-dropdown {
                 width: 100%;
+            }
+
+            .permit-cell {
+                width: 11rem;
             }
         }
     </style>
@@ -26,6 +65,7 @@
 @push('scripts')
     <script>
         window.AUTH_TYPE = @json($type);
+        window.ENCRYPTED_QR_PAYLOAD_URL = @json(url('/order/encrypted-qr-payload'));
     </script>
     @vite(['resources/js/pages/order/order_list.js'])
 @endpush
@@ -166,6 +206,17 @@
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         @endslot
 
+    </x-modal>
+
+    <x-modal id="permitQrModal" title="Permit QR Code" size="modal-sm">
+        <div class="text-center">
+            <img id="permitQrImage" alt="Permit QR Code" class="img-fluid border rounded p-2 bg-white" />
+            <div class="mt-2 fw-semibold" id="permitQrValue">-</div>
+        </div>
+
+        @slot('footer')
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        @endslot
     </x-modal>
 
 @endsection
