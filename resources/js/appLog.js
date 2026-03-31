@@ -82,18 +82,25 @@ function buildTimelineEntries(activityLogs, qrScanLogs) {
         })
     );
 
-    const qrEntries = (Array.isArray(qrScanLogs) ? qrScanLogs : []).map((log) => {
-        const resultText = log?.result || (log?.is_valid ? "Valid" : "Invalid");
-        return {
-            kind: "qr",
-            status: `QR Scan ${resultText}`,
-            createdAt: log?.scanned_at || null,
-            user: log?.internal_user_name || "-",
-            position: log?.internal_user_position || "-",
-            scannedValue: log?.scanned_value || "-",
-            result: resultText,
-        };
-    });
+    const qrEntries = (Array.isArray(qrScanLogs) ? qrScanLogs : [])
+        .filter((log) => {
+            const normalizedResult = String(log?.result || "").toLowerCase();
+            return normalizedResult === "approved" || normalizedResult === "valid" || (normalizedResult === "" && !!log?.is_valid);
+        })
+        .map((log) => {
+            const resultText = "Valid";
+            const statusLabel = "QR Permit Approved";
+
+            return {
+                kind: "qr",
+                status: statusLabel,
+                createdAt: log?.scanned_at || null,
+                user: log?.internal_user_name || "-",
+                position: log?.internal_user_position || "-",
+                scannedValue: log?.scanned_value || "-",
+                result: resultText,
+            };
+        });
 
     return [...activityEntries, ...qrEntries].sort((a, b) => {
         const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -104,10 +111,7 @@ function buildTimelineEntries(activityLogs, qrScanLogs) {
 
 function renderTimelineEntryDetails(entry) {
     if (entry.kind === "qr") {
-        const resultBadgeClass =
-            String(entry.result).toLowerCase() === "valid"
-                ? "badge bg-success"
-                : "badge bg-danger";
+        const resultBadgeClass = "badge bg-success";
 
         return `
             <p class="mb-0 fs-12">
@@ -149,7 +153,7 @@ function getIcon(status, kind = "activity") {
 
     if (kind === "qr") {
         const qrStatus = status.toLowerCase();
-        const isValid = qrStatus.includes("valid") && !qrStatus.includes("invalid");
+        const isValid = qrStatus.includes("approved") || (qrStatus.includes("valid") && !qrStatus.includes("invalid"));
         const badgeClass = isValid
             ? "border border-success border-opacity-10 bg-success-transparent"
             : "border border-danger border-opacity-10 bg-danger-transparent";

@@ -736,6 +736,13 @@ class ApplicationController extends Controller
             $qrScanLogs = QrScanLog::query()
                 ->where('application_type', 'Import Permit')
                 ->whereIn('order_number', $orderNumbers)
+                ->where(function ($query) {
+                    $query->whereRaw("LOWER(COALESCE(result, '')) IN (?, ?)", ['approved', 'valid'])
+                        ->orWhere(function ($legacyQuery) {
+                            $legacyQuery->whereNull('result')
+                                ->where('is_valid', true);
+                        });
+                })
                 ->latest('scanned_at')
                 ->get()
                 ->map(function ($log) {
@@ -743,8 +750,8 @@ class ApplicationController extends Controller
                         'internal_user_name' => $log->internal_user_name ?? '-',
                         'internal_user_position' => $log->internal_user_position ?? '-',
                         'scanned_value' => $log->scanned_value ?? '-',
-                        'is_valid' => (bool) $log->is_valid,
-                        'result' => $log->is_valid ? 'Valid' : 'Invalid',
+                        'is_valid' => true,
+                        'result' => 'Valid',
                         'scanned_at' => optional($log->scanned_at)->toIso8601String(),
                     ];
                 })

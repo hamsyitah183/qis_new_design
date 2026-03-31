@@ -24,4 +24,5 @@ Route::middleware('api')->group(function () {
 
 Route::post('/login', [AuthenticationController::class, 'loginActionApi'])->name('login.action');
 Route::get('/permit/validate', [ApplicationPaymentController::class, 'validatePermitApi']);
+Route::post('/qr-scan/complete-scan', [ApplicationPaymentController::class, 'completeQrScan']);
 Route::get('/order/details/{order_number}', [ApplicationPaymentController::class, 'orderDetailsApi']);

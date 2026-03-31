@@ -44,6 +44,13 @@ class ApplicationPaymentController extends Controller
         }
 
         $logs = QrScanLog::query()
+            ->where(function ($query) {
+                $query->whereRaw("LOWER(COALESCE(result, '')) IN (?, ?)", ['approved', 'valid'])
+                    ->orWhere(function ($legacyQuery) {
+                        $legacyQuery->whereNull('result')
+                            ->where('is_valid', true);
+                    });
+            })
             ->latest('scanned_at')
             ->limit(100)
             ->get()
@@ -52,8 +59,8 @@ class ApplicationPaymentController extends Controller
                     'internal_user_name' => $log->internal_user_name ?? '-',
                     'internal_user_position' => $log->internal_user_position ?? '-',
                     'scanned_value' => $log->scanned_value ?? '-',
-                    'is_valid' => (bool) $log->is_valid,
-                    'result' => $log->is_valid ? 'Valid' : 'Invalid',
+                    'is_valid' => true,
+                    'result' => 'Valid',
                     'scanned_at' => optional($log->scanned_at)->format('d-m-Y h:i:s A') ?? '-',
                 ];
             })
@@ -102,6 +109,8 @@ class ApplicationPaymentController extends Controller
 
     public function validatePermitApi(Request $request)
     {
+        $enforceOneTime = $this->isQrOneTimeEnforced();
+
         $rawPermit = (string) $request->query('permit_number', '');
         $rawPermit = trim($rawPermit);
 
@@ -120,6 +129,8 @@ class ApplicationPaymentController extends Controller
         $permitId = null;
         $applicationType = null;
 
+        $itemName = '-';
+
         // Check Import Permit
         $ipPermit = IpConsignmentPermit::where(function ($query) use ($normalized, $withoutSlash) {
             $query->whereRaw('UPPER(permit_number) = ?', [$normalized])
@@ -129,6 +140,7 @@ class ApplicationPaymentController extends Controller
         if ($ipPermit) {
             $permitId = $ipPermit->id;
             $applicationType = 'Import Permit';
+            $itemName = (string) data_get($ipPermit->consignment_detail, 'item_name', '-');
         }
 
         // Check Inspection Certificate
@@ -141,6 +153,7 @@ class ApplicationPaymentController extends Controller
             if ($inspectionItem) {
                 $permitId = $inspectionItem->id;
                 $applicationType = 'Inspection Certificate';
+                $itemName = (string) data_get($inspectionItem->consignment_detail, 'item_name', '-');
             }
         }
 
@@ -154,6 +167,7 @@ class ApplicationPaymentController extends Controller
             if ($consignmentPermit) {
                 $permitId = $consignmentPermit->id;
                 $applicationType = 'Consignment Certificate';
+                $itemName = (string) data_get($consignmentPermit->consignment_detail, 'item_name', '-');
             }
         }
 
@@ -164,6 +178,7 @@ class ApplicationPaymentController extends Controller
                 'valid' => false,
                 'message' => 'Not listed',
                 'permit_number' => '-',
+                'item_name' => '-',
                 'is_used' => false,
             ]);
         }
@@ -188,6 +203,7 @@ class ApplicationPaymentController extends Controller
                 'valid' => false,
                 'message' => 'Not listed',
                 'permit_number' => '-',
+                'item_name' => '-',
                 'is_used' => false,
             ]);
         }
@@ -239,45 +255,43 @@ class ApplicationPaymentController extends Controller
                 'permit_number' => $rawPermit,
                 'order_number' => $order->order_number,
                 'application_type' => $order->application_type,
+                'item_name' => $itemName,
                 'is_used' => false,
             ]);
         }
 
-        // Check if QR code has already been used
-        if ($order->qr_used_at !== null) {
-            return response()->json([
-                'status' => 'success',
-                'valid' => false,
-                'message' => 'QR code has already been used',
-                'permit_number' => $rawPermit,
-                'order_number' => $order->order_number,
-                'is_used' => true,
+        if ($enforceOneTime) {
+            // Check if QR code has already been used
+            if ($order->qr_used_at !== null) {
+                return response()->json([
+                    'status' => 'success',
+                    'valid' => false,
+                    'message' => 'QR code has already been used',
+                    'permit_number' => $rawPermit,
+                    'order_number' => $order->order_number,
+                    'application_type' => $order->application_type,
+                    'item_name' => $itemName,
+                    'is_used' => true,
+                ]);
+            }
+
+            // Mark QR as used
+            $order->update([
+                'qr_used_at' => now(),
+                'qr_used_by_uuid' => $internalScanner->uuid,
             ]);
         }
 
-        // Mark QR as used
-        $order->update([
-            'qr_used_at' => now(),
-            'qr_used_by_uuid' => $internalScanner->uuid,
-        ]);
-
-        $this->recordQrScanLog($request, [
-            'is_valid' => true,
-            'result' => 'valid',
-            'scanned_value' => $rawPermit,
-            'permit_number' => $rawPermit,
-            'order_number' => $order->order_number,
-            'application_type' => $order->application_type,
-        ]);
-
-        try {
-            event(new OrderQrUsed(
-                orderNumber: (string) $order->order_number,
-                permitNumber: $rawPermit,
-                usedAt: now()->format('d-m-Y h:i:s A'),
-            ));
-        } catch (\Throwable $e) {
-            Log::warning('Failed to broadcast OrderQrUsed event: ' . $e->getMessage());
+        if ($enforceOneTime) {
+            try {
+                event(new OrderQrUsed(
+                    orderNumber: (string) $order->order_number,
+                    permitNumber: $rawPermit,
+                    usedAt: now()->format('d-m-Y h:i:s A'),
+                ));
+            } catch (\Throwable $e) {
+                Log::warning('Failed to broadcast OrderQrUsed event: ' . $e->getMessage());
+            }
         }
 
         return response()->json([
@@ -287,8 +301,15 @@ class ApplicationPaymentController extends Controller
             'permit_number' => $rawPermit,
             'order_number' => $order->order_number,
             'application_type' => $order->application_type,
-            'is_used' => false,
+            'item_name' => $itemName,
+            'is_used' => $enforceOneTime && $order->qr_used_at !== null,
         ]);
+    }
+
+    private function isQrOneTimeEnforced(): bool
+    {
+        // Default true to enforce one-time QR usage in production behavior.
+        return filter_var((string) env('QIS_QR_ENFORCE_ONE_TIME', 'true'), FILTER_VALIDATE_BOOL);
     }
 
     private function recordQrScanLog(Request $request, array $payload): void
@@ -685,5 +706,88 @@ class ApplicationPaymentController extends Controller
             'permits' => $permits,
             'application' => $application,
         ]);
+    }
+
+    public function completeQrScan(Request $request)
+    {
+        try {
+            $permitNumber = trim((string) $request->input('permit_number', ''));
+            $orderNumber = trim((string) $request->input('order_number', ''));
+            $applicationType = trim((string) $request->input('application_type', ''));
+            $inspectionStatus = trim((string) $request->input('inspection_status', ''));
+            $scannerUserUuid = trim((string) $request->query('scanner_user_uuid', ''));
+            $scannerUserType = trim((string) $request->query('scanner_user_type', ''));
+
+            if ($permitNumber === '' || $orderNumber === '' || $applicationType === '') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'permit_number, order_number, and application_type are required.',
+                ], 422);
+            }
+
+            if ($inspectionStatus === '' || !in_array($inspectionStatus, ['approved', 'rejected'])) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'inspection_status must be either "approved" or "rejected".',
+                ], 422);
+            }
+
+            if ($scannerUserType !== 'internal' || $scannerUserUuid === '') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Internal scanner identity is required.',
+                ], 403);
+            }
+
+            $internalUser = InternalUser::query()
+                ->where('uuid', $scannerUserUuid)
+                ->first();
+
+            if (!$internalUser) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid scanner user.',
+                ], 403);
+            }
+
+            // Verify the order exists
+            $order = Order::where('order_number', $orderNumber)
+                ->where('application_type', $applicationType)
+                ->first();
+
+            if (!$order) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Order not found.',
+                ], 404);
+            }
+
+            // Only log to Application Log if inspection was approved
+            if ($inspectionStatus === 'approved') {
+                QrScanLog::create([
+                    'internal_user_uuid' => $internalUser->uuid,
+                    'internal_user_name' => $internalUser->fullname ?? '-',
+                    'internal_user_position' => $internalUser->position ?? '-',
+                    'scanned_value' => $permitNumber,
+                    'permit_number' => $permitNumber,
+                    'order_number' => $orderNumber,
+                    'application_type' => $applicationType,
+                    'is_valid' => true,
+                    'result' => 'approved',
+                    'scanned_at' => now(),
+                ]);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Inspection result recorded.',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Error in completeQrScan: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to log scan completion.',
+            ], 500);
+        }
     }
 }
