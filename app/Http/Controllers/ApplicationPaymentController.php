@@ -22,10 +22,6 @@ class ApplicationPaymentController extends Controller
     {
     }
 
-    public function __construct(private readonly PermitQrService $permitQrService)
-    {
-    }
-
     //
     public function getView()
     {
