@@ -2,23 +2,491 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\OrderQrUsed;
 use App\Models\ConsignmentPermit;
+use App\Models\InternalUser;
 use App\Models\InspectionItem;
 use App\Models\IpConsignmentPermit;
 use App\Models\Order;
+use App\Models\QrScanLog;
+use App\Services\PermitQrService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Artisan;
 
 class ApplicationPaymentController extends Controller
 {
+    public function __construct(private readonly PermitQrService $permitQrService)
+    {
+    }
+
     //
     public function getView()
     {
         Artisan::call('bayupay:check-pending');
+
         return view('pages.order.order_list', [
             'title' => 'Order List',
         ]);
+    }
+
+    public function getQrScanLogs(Request $request)
+    {
+        $type = authUser()['type'] ?? null;
+
+        if ($type !== 'internal') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized.',
+            ], 403);
+        }
+
+        $logs = QrScanLog::query()
+            ->latest('scanned_at')
+            ->limit(100)
+            ->get()
+            ->map(function ($log) {
+                return [
+                    'internal_user_name' => $log->internal_user_name ?? '-',
+                    'internal_user_position' => $log->internal_user_position ?? '-',
+                    'scanned_value' => $log->scanned_value ?? '-',
+                    'is_valid' => (bool) $log->is_valid,
+                    'result' => $log->is_valid ? 'Valid' : 'Invalid',
+                    'scanned_at' => optional($log->scanned_at)->format('d-m-Y h:i:s A') ?? '-',
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'status' => 'success',
+            'logs' => $logs,
+        ]);
+    }
+
+    public function getEncryptedPermitPayload(Request $request)
+    {
+        $type = authUser()['type'] ?? null;
+        if ($type !== 'internal') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized.',
+            ], 403);
+        }
+
+        $permitNumber = trim((string) $request->query('permit_number', ''));
+        if ($permitNumber === '') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'permit_number is required.',
+            ], 422);
+        }
+
+        try {
+            $encrypted = $this->permitQrService->createEncryptedPayload($permitNumber);
+
+            return response()->json([
+                'status' => 'success',
+                'payload' => $encrypted,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Failed generating encrypted permit payload: ' . $e->getMessage());
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unable to encrypt permit QR payload.',
+            ], 500);
+        }
+    }
+
+    public function validatePermitApi(Request $request)
+    {
+        $rawPermit = (string) $request->query('permit_number', '');
+        $rawPermit = trim($rawPermit);
+
+        if ($rawPermit === '') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'permit_number is required.',
+            ], 422);
+        }
+
+        // Normalize permit_number: handle IPO/123 and IPO123 formats
+        $normalized = strtoupper(preg_replace('/\s+/', '', $rawPermit));
+        $withoutSlash = str_replace('/', '', $normalized);
+
+        // Try each permit table to find the matching permit
+        $permitId = null;
+        $applicationType = null;
+
+        // Check Import Permit
+        $ipPermit = IpConsignmentPermit::where(function ($query) use ($normalized, $withoutSlash) {
+            $query->whereRaw('UPPER(permit_number) = ?', [$normalized])
+                ->orWhereRaw('UPPER(REPLACE(permit_number, "/", "")) = ?', [$withoutSlash]);
+        })->first();
+
+        if ($ipPermit) {
+            $permitId = $ipPermit->id;
+            $applicationType = 'Import Permit';
+        }
+
+        // Check Inspection Certificate
+        if (!$permitId) {
+            $inspectionItem = InspectionItem::where(function ($query) use ($normalized, $withoutSlash) {
+                $query->whereRaw('UPPER(permit_number) = ?', [$normalized])
+                    ->orWhereRaw('UPPER(REPLACE(permit_number, "/", "")) = ?', [$withoutSlash]);
+            })->first();
+
+            if ($inspectionItem) {
+                $permitId = $inspectionItem->id;
+                $applicationType = 'Inspection Certificate';
+            }
+        }
+
+        // Check Consignment Certificate
+        if (!$permitId) {
+            $consignmentPermit = ConsignmentPermit::where(function ($query) use ($normalized, $withoutSlash) {
+                $query->whereRaw('UPPER(permit_number) = ?', [$normalized])
+                    ->orWhereRaw('UPPER(REPLACE(permit_number, "/", "")) = ?', [$withoutSlash]);
+            })->first();
+
+            if ($consignmentPermit) {
+                $permitId = $consignmentPermit->id;
+                $applicationType = 'Consignment Certificate';
+            }
+        }
+
+        // If no permit found in any table, return invalid
+        if (!$permitId) {
+            return response()->json([
+                'status' => 'success',
+                'valid' => false,
+                'message' => 'Not listed',
+                'permit_number' => '-',
+                'is_used' => false,
+            ]);
+        }
+
+        // Find the order containing this permit
+        $order = Order::where('application_type', $applicationType)
+            ->latest()
+            ->get()
+            ->first(function ($ord) use ($permitId) {
+                $permits = $ord->order_details['permits'] ?? [];
+                foreach ($permits as $perm) {
+                    if ((int) $perm['permit_id'] === (int) $permitId) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+
+        if (!$order) {
+            return response()->json([
+                'status' => 'success',
+                'valid' => false,
+                'message' => 'Not listed',
+                'permit_number' => '-',
+                'is_used' => false,
+            ]);
+        }
+
+        // Fallback: also search by permit_number directly in order_details if not found by ID
+        if (!$order) {
+            $order = Order::where('application_type', $applicationType)
+                ->latest()
+                ->get()
+                ->first(function ($ord) use ($normalized, $withoutSlash) {
+                    $permits = $ord->order_details['permits'] ?? [];
+                    foreach ($permits as $perm) {
+                        $permNum = strtoupper($perm['permit_number'] ?? '');
+                        $permNumNoSlash = str_replace('/', '', $permNum);
+                        if ($permNum === $normalized || $permNumNoSlash === $withoutSlash) {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+        }
+
+        if (!$order) {
+            return response()->json([
+                'status' => 'success',
+                'valid' => false,
+                'message' => 'Not listed',
+                'permit_number' => '-',
+                'is_used' => false,
+            ]);
+        }
+
+        // One-time consume is restricted to known internal scanner users only.
+        $scannerUserType = trim((string) $request->query('scanner_user_type', ''));
+        $scannerUserUuid = trim((string) $request->query('scanner_user_uuid', ''));
+
+        $internalScanner = null;
+        if ($scannerUserType === 'internal' && $scannerUserUuid !== '') {
+            $internalScanner = InternalUser::query()
+                ->where('uuid', $scannerUserUuid)
+                ->first();
+        }
+
+        if (!$internalScanner) {
+            return response()->json([
+                'status' => 'success',
+                'valid' => false,
+                'message' => 'Internal scanner identity is required.',
+                'permit_number' => $rawPermit,
+                'order_number' => $order->order_number,
+                'application_type' => $order->application_type,
+                'is_used' => false,
+            ]);
+        }
+
+        // Check if QR code has already been used
+        if ($order->qr_used_at !== null) {
+            return response()->json([
+                'status' => 'success',
+                'valid' => false,
+                'message' => 'QR code has already been used',
+                'permit_number' => $rawPermit,
+                'order_number' => $order->order_number,
+                'is_used' => true,
+            ]);
+        }
+
+        // Mark QR as used
+        $order->update([
+            'qr_used_at' => now(),
+            'qr_used_by_uuid' => $internalScanner->uuid,
+        ]);
+
+        $this->recordQrScanLog($request, [
+            'is_valid' => true,
+            'result' => 'valid',
+            'scanned_value' => $rawPermit,
+            'permit_number' => $rawPermit,
+            'order_number' => $order->order_number,
+            'application_type' => $order->application_type,
+        ]);
+
+        try {
+            event(new OrderQrUsed(
+                orderNumber: (string) $order->order_number,
+                permitNumber: $rawPermit,
+                usedAt: now()->format('d-m-Y h:i:s A'),
+            ));
+        } catch (\Throwable $e) {
+            Log::warning('Failed to broadcast OrderQrUsed event: ' . $e->getMessage());
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'valid' => true,
+            'message' => 'Valid',
+            'permit_number' => $rawPermit,
+            'order_number' => $order->order_number,
+            'application_type' => $order->application_type,
+            'is_used' => false,
+        ]);
+    }
+
+    private function recordQrScanLog(Request $request, array $payload): void
+    {
+        try {
+            $userType = (string) $request->query('scanner_user_type', '');
+            $scannerUserUuid = trim((string) $request->query('scanner_user_uuid', ''));
+
+            if ($userType !== 'internal' || $scannerUserUuid === '') {
+                return;
+            }
+
+            $internalUser = InternalUser::query()
+                ->where('uuid', $scannerUserUuid)
+                ->first();
+
+            if (!$internalUser) {
+                return;
+            }
+
+            QrScanLog::create([
+                'internal_user_uuid' => $internalUser->uuid,
+                'internal_user_name' => $internalUser->fullname ?? '-',
+                'internal_user_position' => $internalUser->position ?? '-',
+                'scanned_value' => $payload['scanned_value'] ?? '-',
+                'permit_number' => $payload['permit_number'] ?? '-',
+                'order_number' => $payload['order_number'] ?? null,
+                'application_type' => $payload['application_type'] ?? null,
+                'is_valid' => (bool) ($payload['is_valid'] ?? false),
+                'result' => $payload['result'] ?? 'invalid',
+                'scanned_at' => now(),
+            ]);
+        } catch (\Throwable $e) {
+            // Keep scan validation resilient even when logging fails.
+            return;
+        }
+    }
+
+    public function orderDetailsApi(Request $request, $order_number)
+    {
+        try {
+            $order = Order::with([
+                'publicUser',
+                'ipApplication.importer',
+                'ipApplication.exporter.countryInfo',
+                'inspectionApplication.importer',
+                'inspectionApplication.exporter.countryInfo',
+                'consignmentApplication.importer.countryInfo',
+                'consignmentApplication.exporter',
+            ])
+                ->where('order_number', $order_number)
+                ->firstOrFail();
+
+            $permitsArray = $order->order_details['permits'] ?? [];
+            $permitIds = collect($permitsArray)->pluck('permit_id')->toArray();
+
+            $permits = match ($order->application_type) {
+                'Import Permit' => IpConsignmentPermit::whereIn('id', $permitIds)->get(),
+                'Inspection Certificate' => InspectionItem::whereIn('id', $permitIds)->get(),
+                'Consignment Certificate' => ConsignmentPermit::whereIn('id', $permitIds)->get(),
+                default => collect(),
+            };
+
+            $application = match ($order->application_type) {
+                'Import Permit' => $order->ipApplication,
+                'Inspection Certificate' => $order->inspectionApplication,
+                'Consignment Certificate' => $order->consignmentApplication,
+                default => null,
+            };
+
+            $applicationId = data_get($order->order_details, 'application.application_id', $application?->application_id ?? '-');
+
+            $permitNumberList = $permits
+                ->pluck('permit_number')
+                ->filter(fn($permitNumber) => !empty($permitNumber))
+                ->implode(', ');
+
+            $permitDetails = $permits->map(function ($permit) {
+                return [
+                    'permit_number' => $permit->permit_number ?? '-',
+                    'item_name' => data_get($permit->consignment_detail, 'item_name', '-'),
+                ];
+            })->values()->all();
+
+            [$exporterName, $exporterPhone, $exporterAddress, $exporterCountry] = $this->resolveExporterData($order, $application);
+            [$importerName, $importerAddress] = $this->resolveImporterData($order, $application);
+
+            return response()->json([
+                'status' => 'success',
+                'header' => [
+                    'order_number' => $order->order_number,
+                ],
+                'order_details' => [
+                    'order_number' => $order->order_number ?? '-',
+                    'order_status' => $order->status ?? '-',
+                    'application_id' => $applicationId ?? '-',
+                    'permit_id' => $permitNumberList !== '' ? $permitNumberList : '-',
+                ],
+                'payment_details' => [
+                    'seller_ref' => $order->seller_ref ?? '-',
+                    'fpx_seller_reference' => $order->fpx_seller_reference ?? '-',
+                    'name' => $order->name ?? '-',
+                    'email' => $order->email ?? '-',
+                    'phone' => $order->phone ?? '-',
+                    'payment_amount' => $order->payment_amount !== null
+                        ? 'RM ' . number_format((float) $order->payment_amount, 2)
+                        : '-',
+                    'transaction_data' => $order->transaction_data ?? '-',
+                    'transaction_status' => $order->transaction_status ?? '-',
+                ],
+                'application_details' => [
+                    'application_id' => $applicationId ?? '-',
+                    'exporter_name' => $exporterName,
+                    'exporter_number_phone' => $exporterPhone,
+                    'exporter_address' => $exporterAddress,
+                    'exporter_country' => $exporterCountry,
+                    'importer_name' => $importerName,
+                    'importer_address' => $importerAddress,
+                ],
+                'permit_details' => $permitDetails,
+                'qr_info' => [
+                    'is_used' => $order->qr_used_at !== null,
+                    'used_at' => $order->qr_used_at?->format('d-m-Y h:i:s A'),
+                    'used_by_uuid' => $order->qr_used_by_uuid,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Order not found.',
+            ], 404);
+        }
+    }
+
+    private function resolveExporterData(Order $order, $application): array
+    {
+        if (!$application) {
+            return ['-', '-', '-', '-'];
+        }
+
+        if (in_array($order->application_type, ['Import Permit', 'Inspection Certificate'])) {
+            return [
+                $application->exporter?->name ?? '-',
+                $application->exporter?->phone_no ?? '-',
+                $application->exporter?->address ?? '-',
+                $application->exporter?->countryInfo?->name ?? '-',
+            ];
+        }
+
+        if ($order->application_type === 'Consignment Certificate') {
+            $addressParts = array_filter([
+                $application->exporter?->address_1 ?? null,
+                $application->exporter?->address_2 ?? null,
+                $application->exporter?->postcode ?? null,
+                $application->exporter?->district ?? null,
+                $application->exporter?->state ?? null,
+            ]);
+
+            return [
+                $application->exporter?->fullname ?? '-',
+                $application->exporter?->phone_number ?? '-',
+                !empty($addressParts) ? implode(', ', $addressParts) : '-',
+                '-',
+            ];
+        }
+
+        return ['-', '-', '-', '-'];
+    }
+
+    private function resolveImporterData(Order $order, $application): array
+    {
+        if (!$application) {
+            return ['-', '-'];
+        }
+
+        if (in_array($order->application_type, ['Import Permit', 'Inspection Certificate'])) {
+            $addressParts = array_filter([
+                $application->importer?->address_1 ?? null,
+                $application->importer?->address_2 ?? null,
+                $application->importer?->postcode ?? null,
+                $application->importer?->district ?? null,
+                $application->importer?->state ?? null,
+            ]);
+
+            return [
+                $application->importer?->fullname ?? '-',
+                !empty($addressParts) ? implode(', ', $addressParts) : '-',
+            ];
+        }
+
+        if ($order->application_type === 'Consignment Certificate') {
+            return [
+                $application->importer?->name ?? '-',
+                $application->importer?->address ?? '-',
+            ];
+        }
+
+        return ['-', '-'];
     }
 
     public function getAllOrderList(Request $request)
@@ -90,7 +558,18 @@ class ApplicationPaymentController extends Controller
                 return $row->publicUser->fullname ?? 'N/A';
             })
             ->addColumn('permit_number', function ($row) {
-                return $row->application_id ?? '-';
+                return $this->resolvePermitNumbersForOrder($row);
+            })
+            ->addColumn('qr_used_at', function ($row) {
+                if (empty($row->qr_used_at)) {
+                    return null;
+                }
+
+                if ($row->qr_used_at instanceof \DateTimeInterface) {
+                    return $row->qr_used_at->format('d-m-Y h:i:s A');
+                }
+
+                return Carbon::parse((string) $row->qr_used_at)->format('d-m-Y h:i:s A');
             })
             ->addColumn('transaction_data', function ($row) {
                 return $row->transaction_data ?? '-';
@@ -150,6 +629,32 @@ class ApplicationPaymentController extends Controller
             e($label) .
             '</span>
         ';
+    }
+
+    private function resolvePermitNumbersForOrder(Order $order): string
+    {
+        $permitIds = collect($order->order_details['permits'] ?? [])
+            ->pluck('permit_id')
+            ->filter()
+            ->values()
+            ->all();
+
+        if (empty($permitIds)) {
+            return '-';
+        }
+
+        $permitNumbers = match ($order->application_type) {
+            'Import Permit' => IpConsignmentPermit::whereIn('id', $permitIds)->pluck('permit_number'),
+            'Inspection Certificate' => InspectionItem::whereIn('id', $permitIds)->pluck('permit_number'),
+            'Consignment Certificate' => ConsignmentPermit::whereIn('id', $permitIds)->pluck('permit_number'),
+            default => collect(),
+        };
+
+        $formatted = $permitNumbers
+            ->filter(fn($permitNumber) => !empty($permitNumber))
+            ->implode(', ');
+
+        return $formatted !== '' ? $formatted : '-';
     }
 
     public function orderDetails($order_number)
