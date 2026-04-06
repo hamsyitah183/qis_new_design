@@ -210,6 +210,9 @@
                                     <li class="slide">
                                         <a href="{{ route('internal.boundary.list') }}" class="side-menu__item">Boundary Officer</a>
                                     </li>
+                                    <li class="slide {{ $currentRoute === 'internal.branch-management' ? 'active' : '' }}">
+                                        <a href="{{ route('internal.branch-management') }}" class="side-menu__item">Branch Management</a>
+                                    </li>
                                 @endif
                             </ul>
                         </li>
@@ -267,9 +270,7 @@
                                 <li class="slide {{ $currentRoute === 'internal.state-district-management' ? 'active' : '' }}">
                                     <a href="{{ route('internal.state-district-management') }}" class="side-menu__item">State &amp; District Management</a>
                                 </li>
-                                <li class="slide {{ $currentRoute === 'internal.branch-management' ? 'active' : '' }}">
-                                    <a href="{{ route('internal.branch-management') }}" class="side-menu__item">Branch Management</a>
-                                </li>
+
                             </ul>
                         </li>
                     @endcan
