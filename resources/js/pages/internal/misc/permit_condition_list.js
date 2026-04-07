@@ -74,15 +74,30 @@ async function data_table_init() {
                 }
             },
             {
-                data: "condcategory.description",
-                title: "Category",
+                data: "scientific_name",
+                title: "Scientific Name",
                 render: function (data) {
-                    return data ?? "-";
+                    return data ? `<span class="text-wrap fst-italic">${data}</span>` : "-";
+                }
+            },
+            {
+                data: "description_form",
+                title: "Description Form",
+                render: function (data) {
+                    if (Array.isArray(data)) {
+                        return data.join(", ");
+                    }
+                    try {
+                        const parsed = JSON.parse(data);
+                        return Array.isArray(parsed) ? parsed.join(", ") : parsed;
+                    } catch {
+                        return data ?? "-";
+                    }
                 }
             },
             {
                 data: "usage",
-                title: "Usage",
+                title: "Purpose of Import",
                 render: function (data) {
                     if (Array.isArray(data)) {
                         return data.join(", ");
@@ -140,10 +155,10 @@ function initCategoryFilter() {
     });
 }
 
-// Populate Usage dropdown from distinct values in ip_condition
-function initUsageFilter() {
+// Populate Purpose dropdown from distinct values in ip_condition
+function initPurposeFilter() {
     return $.ajax({
-        url: '/internal/permit_condition/usages',
+        url: '/internal/permit_condition/usages', // Assuming this endpoint returns distinct usages/purposes
         method: 'GET',
         success: function (response) {
             const select = document.getElementById('filterPermitUsage');
@@ -155,7 +170,7 @@ function initUsageFilter() {
             });
         },
         error: function () {
-            console.error('Failed to load usage filter options.');
+            console.error('Failed to load purpose filter options.');
         }
     });
 }
@@ -164,7 +179,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     await initCountryLookup();
     await data_table_init();
     initCategoryFilter();
-    initUsageFilter();
+    initPurposeFilter();
 
     function condiModal(id) {
         const modalelement = document.getElementById("showConditionModal");
@@ -206,10 +221,11 @@ document.addEventListener("DOMContentLoaded", async function () {
 
                 document.getElementById("modalTitle").textContent = namoong;
                 document.getElementById("itemNameCell").textContent = condition.item_name;
+                document.getElementById("scientificNameCell").textContent = condition.scientific_name || "-";
                 document.getElementById("categoryCell").textContent =
-                    condition.condcategory ? condition.condcategory.description : "-";
+                    normalizeToArray(condition.description_form).join(", ") || "-";
                 document.getElementById("usageCell").textContent =
-                    normalizeToArray(usageList).join(", ");
+                    normalizeToArray(usageList).join(", ") || "-";
                 document.getElementById("countryCell").textContent =
                     countryNames.join(", ");
                 document.getElementById("conditionHtml").innerHTML =
@@ -235,15 +251,15 @@ document.addEventListener("DOMContentLoaded", async function () {
         internalListTable.column(0).search(itemName);
 
         if (category === "") {
-            internalListTable.column(1).search("");
+            internalListTable.column(2).search("");
         } else {
-            internalListTable.column(1).search(category);
+            internalListTable.column(2).search(category);
         }
 
         if (usage === "") {
-            internalListTable.column(2).search("");
+            internalListTable.column(3).search("");
         } else {
-            internalListTable.column(2).search(usage);
+            internalListTable.column(3).search(usage);
         }
 
         internalListTable.draw();

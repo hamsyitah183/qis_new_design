@@ -14,6 +14,7 @@ class ConsignmentCondition extends Model
     protected $fillable = [
         'category',
         'item_name',
+        'scientific_name',
         'addional_condition',
         'quantity_limit',
         'date_limit',

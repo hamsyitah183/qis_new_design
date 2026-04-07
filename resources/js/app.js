@@ -157,8 +157,12 @@ export function fetchVerificationCount() {
                 $('#verificationCount').html(`
                     <span class = "d-flex justify-content-between"><span>User Verification</span>   <span class = "ms-4 badge bg-success p-2"> ${data.count} </span> </span>
                     `)
+                // Show badge on the parent "User Management" item
+                $('#userMgmtParentBadge').show();
             } else {
                 $('#verificationCount').text(`User Verification`)
+                // Hide the parent badge when count is 0
+                $('#userMgmtParentBadge').hide();
             }
         }
     });
