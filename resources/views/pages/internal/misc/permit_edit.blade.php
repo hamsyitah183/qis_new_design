@@ -122,6 +122,19 @@
                         </div>
                         <div class="col-xl-12"> <!-- style="display:none" -->
                             <label class="form-label d-block">Permit Condition</label>
+
+                            {{-- variables --}}
+                            <div class="d-flex gap-2 my-2">
+                                <span class="fw-bold">Variables: </span>
+
+                                <span class="badge bg-primary-transparent p-2 fs-13 cursor-pointer" id="importPermitNumber">
+                                    Import Permit Number
+                                </span>
+
+                                <span class="badge bg-primary-transparent p-2 fs-13 cursor-pointer" id="year">
+                                    Year
+                                </span>
+                            </div>
                             <!-- Quill editor -->
                             <!-- <div id="permit-condition-editor" style="min-height:150px; border:1px solid var(--bs-border-color); border-radius:.5rem; background:var(--bs-body-bg);"></div> -->
                             <div class="quill-wrapper">
@@ -343,6 +356,34 @@
 
             // Insert into Quill with formatting
             quill.clipboard.dangerouslyPasteHTML(longText);
+
+            function insertVariable(variableText) {
+                const range = quill.getSelection(true);
+
+                if (range) {
+                    quill.insertText(range.index, variableText, {
+                        // bold: true,
+                        // color: '#0d6efd'
+                    });
+
+                    quill.setSelection(range.index + variableText.length);
+                } else {
+                    quill.insertText(quill.getLength(), variableText, {
+                        // bold: true,
+                        // color: '#0d6efd'
+                    });
+                }
+            }
+
+
+            // ✅ CLICK EVENTS
+            document.getElementById('importPermitNumber').addEventListener('click', function () {
+                insertVariable('@{{import_permit_number}}');
+            });
+
+            document.getElementById('year').addEventListener('click', function () {
+                insertVariable('@{{year}}');
+            });
         });
     </script>
 

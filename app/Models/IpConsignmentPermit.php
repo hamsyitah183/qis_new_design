@@ -52,4 +52,13 @@ class IpConsignmentPermit extends Model
     {
         return data_get($this->consignment_detail, 'item_name', '-');
     }
+
+    public function condition()
+    {
+        $itemId = data_get($this->consignment_detail, 'item_id');
+
+        return $itemId 
+            ? IpCondition::find($itemId)
+            : null;
+    }
 }

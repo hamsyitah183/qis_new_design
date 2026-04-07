@@ -4,15 +4,17 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '/'], ['label' => 'Consignment List', 'url' => '/internal/consignment_condition'], ['label' => 'Edit Consignment Item', 'url' => '#']]" 
-        
-        title="Edit Consignment Item">
+    <x-breadcrumb :items="[
+        ['label' => 'Home', 'url' => '/'],
+        ['label' => 'Consignment List', 'url' => '/internal/consignment_condition'],
+        ['label' => 'Edit Consignment Item', 'url' => '#'],
+    ]" title="Edit Consignment Item">
 
     </x-breadcrumb>
 @endsection
 
 @push('scripts')
-@vite(['resources/js/pages/internal/misc/consignment_condition_edit.js'])
+    @vite(['resources/js/pages/internal/misc/consignment_condition_edit.js'])
 @endpush
 
 @section('content')
@@ -49,7 +51,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <input type="hidden" name="id" value = {{ $condition->id }} id="id">
+                    <input type="hidden" name="id" value={{ $condition->id }} id="id">
                     <div class="row gy-3">
                         <div class="col-xl-6">
                             <label for="blog-title" class="form-label">Item Name</label>
@@ -60,8 +62,7 @@
                         <div class="col-xl-6">
                             <label class="form-label">Scientific Name</label>
                             <input type="text" class="form-control" id="scientificName" name="scientificName"
-                                value="{{ $condition->scientific_name }}"
-                                placeholder="e.g. Citrus limon">
+                                value="{{ $condition->scientific_name }}" placeholder="e.g. Citrus limon">
                         </div>
                         <div class="col-xl-6">
                             <label for="blog-category" class="form-label">Category</label>
@@ -76,22 +77,20 @@
 
                         </div>
                     </div>
-                     <div class="row gy-3 mt-1">
+                    <div class="row gy-3 mt-1">
                         <div class="col-xl-3">
                             <label for="quanLimit" class="form-label">Quantity Limit (Special case)</label>
                             <input type="number" class="form-control" id="quanLimit"
                                 value="{{ $condition->quantity_limit ?? null }}" name="quanLimit" min = '0'>
-                            
+
                         </div>
                         <div class="col-xl-3">
                             <label for="quanmunit" class="form-label">Measurement Unit (Special case)</label>
                             {{-- <input type="text" class="form-control" id="quanmunit" name="quanmunit"> --}}
                             <select class="form-select" name="quanmunit" id="quanmunit">
                                 @foreach ($measurements as $measurement)
-                                    <option 
-                                        value="{{ $measurement->cate_code }}"
-                                        {{ old('quanmunit', $condition->measurement_unit ?? '') == $measurement->cate_code ? 'selected' : '' }}
-                                    >
+                                    <option value="{{ $measurement->cate_code }}"
+                                        {{ old('quanmunit', $condition->measurement_unit ?? '') == $measurement->cate_code ? 'selected' : '' }}>
                                         {{ $measurement->description }}
                                     </option>
                                 @endforeach
@@ -102,24 +101,14 @@
                         {{-- @dd($condition) --}}
                         <div class="col-xl-3">
                             <label class="form-label">Start Date</label>
-                            <input 
-                                type="date"
-                                class="form-control"
-                                name="start_date"
-                                id = "start_date"
-                                value="{{ old('start_date', $condition->start_date) }}"
-                            >
+                            <input type="date" class="form-control" name="start_date" id = "start_date"
+                                value="{{ old('start_date', $condition->start_date) }}">
                         </div>
 
                         <div class="col-xl-3">
                             <label class="form-label">End Date</label>
-                            <input 
-                                type="date"
-                                class="form-control"
-                                name="end_date"
-                                id = "end_date"
-                                value="{{ old('end_date', $condition->end_date) }}"
-                            >
+                            <input type="date" class="form-control" name="end_date" id = "end_date"
+                                value="{{ old('end_date', $condition->end_date) }}">
                         </div>
 
 
@@ -138,6 +127,18 @@
                         </div>
                         <div class="col-xl-12"> <!-- style="display:none" -->
                             <label class="form-label d-block">Permit Condition</label>
+                            {{-- variables --}}
+                            <div class="d-flex gap-2 my-2">
+                                <span class="fw-bold">Variables: </span>
+
+                                <span class="badge bg-primary-transparent p-2 fs-13 cursor-pointer" id="importPermitNumber">
+                                    Import Permit Number
+                                </span>
+
+                                <span class="badge bg-primary-transparent p-2 fs-13 cursor-pointer" id="year">
+                                    Year
+                                </span>
+                            </div>
                             <!-- Quill editor -->
                             <!-- <div id="permit-condition-editor" style="min-height:150px; border:1px solid var(--bs-border-color); border-radius:.5rem; background:var(--bs-body-bg);"></div> -->
                             <div class="quill-wrapper">
@@ -170,7 +171,6 @@
     <script>
         window.countryTagify = null;
         window.usageTagify = null;
-
     </script>
 
     <script>
@@ -204,12 +204,12 @@
                 value: i,
                 name: i
             }));
-            
+
 
             $.ajax({
                 url: '/get_country',
                 method: 'GET',
-                success: function (response) {
+                success: function(response) {
 
                     // ✅ normalized whitelist
                     const countryList = response.data.map(c => ({
@@ -222,29 +222,30 @@
                         .map(code => countryList.find(c => c.value === code))
                         .filter(Boolean); // remove nulls
 
-                        countryTagify = new Tagify(document.getElementById("countryTag"), {
-                                whitelist: countryList,
-                                tagTextProp: 'name',        // show country name in tag
-                                enforceWhitelist: true,
-                                editTags: false,
+                    countryTagify = new Tagify(document.getElementById("countryTag"), {
+                        whitelist: countryList,
+                        tagTextProp: 'name', // show country name in tag
+                        enforceWhitelist: true,
+                        editTags: false,
 
-                                dropdown: {
-                                    enabled: 1,
-                                    maxItems: 20,
-                                    highlightFirst: true,
-                                    mapValueTo: 'name',
-                                },
+                        dropdown: {
+                            enabled: 1,
+                            maxItems: 20,
+                            highlightFirst: true,
+                            mapValueTo: 'name',
+                        },
 
-                                // enables searching by BOTH code & name
-                                dropdownFilter: (item, value) => {
-                                    const search = value.toLowerCase();
+                        // enables searching by BOTH code & name
+                        dropdownFilter: (item, value) => {
+                            const search = value.toLowerCase();
 
-                                    return (
-                                        item.value.toLowerCase().includes(search) || // code (MY, CN)
-                                        item.name.toLowerCase().includes(search)     // country name
-                                    );
-                                }
-                            });
+                            return (
+                                item.value.toLowerCase().includes(search) ||
+                                // code (MY, CN)
+                                item.name.toLowerCase().includes(search) // country name
+                            );
+                        }
+                    });
 
 
                     // ✅ NOW it shows Malaysia instead of MY
@@ -318,9 +319,35 @@
 
             // Insert into Quill with formatting
             quill.clipboard.dangerouslyPasteHTML(longText);
+
+
+            function insertVariable(variableText) {
+                const range = quill.getSelection(true);
+
+                if (range) {
+                    quill.insertText(range.index, variableText, {
+                        // bold: true,
+                        // color: '#0d6efd'
+                    });
+
+                    quill.setSelection(range.index + variableText.length);
+                } else {
+                    quill.insertText(quill.getLength(), variableText, {
+                        // bold: true,
+                        // color: '#0d6efd'
+                    });
+                }
+            }
+
+
+            // ✅ CLICK EVENTS
+            document.getElementById('importPermitNumber').addEventListener('click', function() {
+                insertVariable('@{{ import_permit_number }}');
+            });
+
+            document.getElementById('year').addEventListener('click', function() {
+                insertVariable('@{{ year }}');
+            });
         });
-
-
-       
     </script>
 @endpush
