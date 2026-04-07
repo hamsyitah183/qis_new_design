@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\StateDistrictController;
 use App\Http\Controllers\AuthenticationController;
+use App\Http\Controllers\ApplicationPaymentController;
 
 Route::middleware('api')->group(function () {
     Route::get('/user', function (Request $request) {
@@ -21,4 +22,8 @@ Route::middleware('api')->group(function () {
     Route::delete('/states/{stateId}', [StateDistrictController::class, 'destroyState']);
 });
 
+Route::post('/login', [AuthenticationController::class, 'loginActionApi'])->name('login.action');
+Route::get('/permit/validate', [ApplicationPaymentController::class, 'validatePermitApi']);
+Route::post('/qr-scan/complete-scan', [ApplicationPaymentController::class, 'completeQrScan']);
+Route::get('/order/details/{order_number}', [ApplicationPaymentController::class, 'orderDetailsApi']);
 // Route::post('/login', [AuthenticationController::class, 'loginActionApi'])->name('login.action');
