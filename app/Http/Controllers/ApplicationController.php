@@ -14,7 +14,9 @@ use App\Models\InspectionApplication;
 use App\Models\InternalUser;
 use App\Models\IpApplication;
 use App\Models\IpConsignmentAttachment;
+use App\Models\InspectionItem;
 use App\Models\IpConsignmentPermit;
+use App\Models\ConsignmentPermit;
 use App\Models\PublicCode;
 use App\Models\PublicUser;
 use App\Notifications\ApplicationNotification;
@@ -22,7 +24,6 @@ use App\Services\ApplicationActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
@@ -74,7 +75,7 @@ class ApplicationController extends Controller
 
         // Filter by "Submitted By" username (for internal)
         if ($type === 'internal' && $request->has('username') && $request->username != '') {
-            $query->whereHas('user', function ($q) use ($request) {
+            $query->whereHas('user', function($q) use ($request) {
                 $q->where('fullname', 'like', '%' . $request->username . '%');
             });
         }
@@ -89,27 +90,27 @@ class ApplicationController extends Controller
         $applications = $query->get();
 
         $headers = array(
-            "Content-type" => "text/csv",
+            "Content-type"        => "text/csv",
             "Content-Disposition" => "attachment; filename=$fileName",
-            "Pragma" => "no-cache",
-            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
-            "Expires" => "0"
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
         );
 
-        $columns = array('Application ID', 'Date', 'Importer', 'Exporter', 'Status');
+        $columns = array('App ID', 'Date', 'Importer', 'Exporter', 'Status');
 
-        $callback = function () use ($applications, $columns) {
+        $callback = function() use($applications, $columns) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns);
 
             foreach ($applications as $app) {
-                $row['Application ID'] = $app->application_id;
+                $row['App ID'] = $app->application_id;
                 $row['Date'] = $app->created_at->format('d-m-Y H:i');
                 $row['Importer'] = $app->importer->fullname ?? '-';
                 $row['Exporter'] = $app->exporter->name ?? '-';
                 $row['Status'] = strtoupper($app->status);
 
-                fputcsv($file, array($row['Application ID'], $row['Date'], $row['Importer'], $row['Exporter'], $row['Status']));
+                fputcsv($file, array($row['App ID'], $row['Date'], $row['Importer'], $row['Exporter'], $row['Status']));
             }
 
             fclose($file);
@@ -161,10 +162,6 @@ class ApplicationController extends Controller
 
     public function showallapplicationlist()
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
-
         return view('pages.public.application_list');
     }
 
@@ -209,7 +206,7 @@ class ApplicationController extends Controller
                 // Map statuses to colors
                 $statusColors = [
                     'processing' => 'bg-info', // blue
-    
+
                     'pending for payment' => 'bg-warning', // green
                     'rejected' => 'bg-danger', // red
                     // 'completed'  => 'bg-success', // green
@@ -314,57 +311,57 @@ class ApplicationController extends Controller
 
         // Import Permit
         $ip = IpApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode'])
-            ->whereIn('status', [
-                'awaiting approval',
-                'wait for company approval',
-            ])
-            ->when($type === 'public', function ($q) use ($userUuid) {
-                $q->where('category_application', 1)
-                    ->where('importer_id', $userUuid);
-            })
-            ->get()
-            ->map(function ($item) {
-                $item->application_source = 'import_permit';
-                $item->url = '/view_application/' . $item->application_id;
-                return $item;
-            });
-
+        ->whereIn('status', [
+            'awaiting approval',
+            'wait for company approval',
+        ])
+        ->when($type === 'public', function ($q) use ($userUuid) {
+            $q->where('category_application', 1)
+              ->where('importer_id', $userUuid);
+        })
+        ->get()
+        ->map(function ($item) {
+            $item->application_source = 'import_permit';
+            $item->url = '/view_application/' . $item->application_id;
+            return $item;
+        });
+    
 
         // Consignment
         $consignment = ConsignmentApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode'])
-            ->whereIn('status', [
-                'awaiting approval',
-                'wait for company approval',
-            ])
-            ->when($type === 'public', function ($q) use ($userUuid) {
-                $q->where('category_application', 1)
-                    ->where('exporter_id', $userUuid);
-            })
-            ->get()
-            ->map(function ($item) {
-                $item->application_source = 'consignment';
-                $item->url = '/view_consignment/' . $item->application_id;
-                return $item;
-            });
-
+        ->whereIn('status', [
+            'awaiting approval',
+            'wait for company approval',
+        ])
+        ->when($type === 'public', function ($q) use ($userUuid) {
+            $q->where('category_application', 1)
+              ->where('exporter_id', $userUuid);
+        })
+        ->get()
+        ->map(function ($item) {
+            $item->application_source = 'consignment';
+            $item->url = '/view_consignment/' . $item->application_id;
+            return $item;
+        });
+    
 
         // Inspection
         $inspection = InspectionApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode'])
-            ->whereIn('status', [
-                'awaiting approval',
-                'wait for company approval',
-            ])
-            ->when($type === 'public', function ($q) use ($userUuid) {
-                $q->where('category_application', 1)
-                    ->where('importer_id', $userUuid);
-            })
-            ->get()
-            ->map(function ($item) {
-                $item->application_source = 'inspection';
-                $item->url = '/view_inspection_certificates/' . $item->application_id;
-                return $item;
-            });
-
+        ->whereIn('status', [
+            'awaiting approval',
+            'wait for company approval',
+        ])
+        ->when($type === 'public', function ($q) use ($userUuid) {
+            $q->where('category_application', 1)
+              ->where('importer_id', $userUuid);
+        })
+        ->get()
+        ->map(function ($item) {
+            $item->application_source = 'inspection';
+            $item->url = '/view_inspection_certificates/' . $item->application_id;
+            return $item;
+        });
+    
 
         // ✅ Merge everything
         $applications = collect()->merge($ip)->merge($consignment)->merge($inspection)->sortByDesc('created_at')->values();
@@ -382,7 +379,7 @@ class ApplicationController extends Controller
 
             ->addColumn('importer', fn($row) => $row->importer?->fullname ?? ($row->importer?->name ?? '-'))
 
-            ->addColumn('exporter', fn($row) => $row->exporter?->name ?? ($row->exporter?->fullname ?? '-'))
+            ->addColumn('exporter', fn($row) => $row->exporter?->name ??( $row->exporter?->fullname ?? '-'))
             ->addColumn('submitted_by', fn($row) => $row->user?->fullname ?? '-')
 
             // ->addColumn('importer_type', function ($row) {
@@ -421,30 +418,12 @@ class ApplicationController extends Controller
         $userUuid = authUser()['user']->uuid;
         $type = authUser()['type'];
 
-        $ip = IpApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode'])->when($type === 'public', function ($q) use ($userUuid) {
-            $q->where('category_application', 1)->where('importer_id', $userUuid);
-        })->get()->map(function ($item) {
-            $item->application_source = 'import_permit';
-            $item->url = '/view_application/' . $item->application_id;
-            return $item;
-        });
+        $ip = IpApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode']) ->when($type === 'public', function ($q) use ($userUuid) { $q->where('category_application', 1)->where('importer_id', $userUuid); }) ->get() ->map(function ($item) { $item->application_source = 'import_permit'; $item->url = '/view_application/' . $item->application_id; return $item; }); 
         // Consignment $consignment = 
-        $consignment = ConsignmentApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode'])->when($type === 'public', function ($q) use ($userUuid) {
-            $q->where('category_application', 1)->where('exporter_id', $userUuid);
-        })->get()->map(function ($item) {
-            $item->application_source = 'consignment';
-            $item->url = '/view_consignment/' . $item->application_id;
-            return $item;
-        });
+        $consignment = ConsignmentApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode']) ->when($type === 'public', function ($q) use ($userUuid) { $q->where('category_application', 1)->where('exporter_id', $userUuid); }) ->get() ->map(function ($item) { $item->application_source = 'consignment'; $item->url = '/view_consignment/' . $item->application_id; return $item; }); 
         // Inspection $inspection = 
-        $inspection = InspectionApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode'])->when($type === 'public', function ($q) use ($userUuid) {
-            $q->where('category_application', 1)->where('importer_id', $userUuid);
-        })->get()->map(function ($item) {
-            $item->application_source = 'inspection';
-            $item->url = '/view_inspection_certificates/' . $item->application_id;
-            return $item;
-        });
-
+        $inspection = InspectionApplication::with(['user', 'importer', 'exporter', 'entryPoint.districtCode']) ->when($type === 'public', function ($q) use ($userUuid) { $q->where('category_application', 1)->where('importer_id', $userUuid); }) ->get() ->map(function ($item) { $item->application_source = 'inspection'; $item->url = '/view_inspection_certificates/' . $item->application_id; return $item; });
+    
 
         // ✅ Merge everything
         $applications = collect()->merge($ip)->merge($consignment)->merge($inspection)->sortByDesc('created_at')->values();
@@ -462,7 +441,7 @@ class ApplicationController extends Controller
 
             ->addColumn('importer', fn($row) => $row->importer?->fullname ?? ($row->importer?->name ?? '-'))
 
-            ->addColumn('exporter', fn($row) => $row->exporter?->name ?? ($row->exporter?->fullname ?? '-'))
+            ->addColumn('exporter', fn($row) => $row->exporter?->name ??( $row->exporter?->fullname ?? '-'))
             ->addColumn('submitted_by', fn($row) => $row->user?->fullname ?? '-')
 
             // ->addColumn('importer_type', function ($row) {
@@ -498,10 +477,6 @@ class ApplicationController extends Controller
 
     public function deleteApplication($id)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
-
         return DB::transaction(function () use ($id) {
             $application = IpApplication::where('application_id', $id)->firstOrFail();
 
@@ -633,7 +608,7 @@ class ApplicationController extends Controller
 
     public function viewapplication($uuid)
     {
-        Artisan::call('bayupay:check-pending');
+        // Artisan::call('bayupay:check-pending');
 
         $application = IpApplication::with([
             'user', // submitted by
@@ -962,53 +937,21 @@ class ApplicationController extends Controller
         ]);
     }
 
-    // ======================= Internal Exporter & Importer Lists =======================
-
-    public function showInternalExporterList()
+    public function application_count()
     {
-        Gate::authorize('view exporter list');
-        return view('pages.internal.exporter_list');
+        $reviewStatuses = ['processing', 'submitted', 'reapplied'];
+
+        return response()->json([
+            'permit'      => $this->countPermitLineItemsAwaitingReview(IpConsignmentPermit::class, $reviewStatuses),
+            'inspection'  => $this->countPermitLineItemsAwaitingReview(InspectionItem::class, $reviewStatuses),
+            'consignment' => $this->countPermitLineItemsAwaitingReview(ConsignmentPermit::class, $reviewStatuses),
+        ]);
     }
 
-    public function getInternalExporterListData()
+    private function countPermitLineItemsAwaitingReview(string $modelClass, array $reviewStatuses): int
     {
-        $query = Exporter::with(['countryInfo', 'registeredBy']);
-
-        if (request('name')) {
-            $query->where('name', 'like', '%' . request('name') . '%');
-        }
-        if (request('country')) {
-            $query->where('country', request('country'));
-        }
-
-        return DataTables::eloquent($query)
-            ->addIndexColumn()
-            ->addColumn('country_name', fn($row) => $row->countryInfo->name ?? '-')
-            ->addColumn('registered_by_name', fn($row) => $row->registeredBy->fullname ?? '-')
-            ->make(true);
-    }
-
-    public function showInternalImporterList()
-    {
-        Gate::authorize('view importer list');
-        return view('pages.internal.importer_list');
-    }
-
-    public function getInternalImporterListData()
-    {
-        $query = ConsignmentImporter::with(['countryInfo', 'registeredBy']);
-
-        if (request('name')) {
-            $query->where('name', 'like', '%' . request('name') . '%');
-        }
-        if (request('country')) {
-            $query->where('country', request('country'));
-        }
-
-        return DataTables::eloquent($query)
-            ->addIndexColumn()
-            ->addColumn('country_name', fn($row) => $row->countryInfo->name ?? '-')
-            ->addColumn('registered_by_name', fn($row) => $row->registeredBy->fullname ?? '-')
-            ->make(true);
+        return $modelClass::query()
+            ->whereRaw('LOWER(TRIM(COALESCE(status, ""))) IN (?, ?, ?)', $reviewStatuses)
+            ->count();
     }
 }

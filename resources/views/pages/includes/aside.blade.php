@@ -143,20 +143,25 @@
                         <a href="javascript:void(0);" class="side-menu__item">
                             <i class="ri-arrow-down-s-line side-menu__angle"></i>
                             <i class="bi bi-journal side-menu__icon"></i>
-                            <span class="side-menu__label">Application List</span>
+                            <span class="side-menu__label">
+                                Application List
+                                <svg id="appListParentBadge" style="display:none; position: relative; top: -5px; left: 2px;" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                    <circle cx="4" cy="4" r="4" fill="#dc3545"/>
+                                </svg>
+                            </span>
                         </a>
                         <ul class="slide-menu child1">
                             <li class="slide side-menu__label1"><a href="javascript:void(0)">Application List</a></li>
                     
                                 <li class="slide {{ $currentRoute === 'internal.application.list' ? 'active' : '' }}">
-                                    <a href="{{ route('internal.application.list') }}" class="side-menu__item">Import Permit</a>
+                                    <a href="{{ route('internal.application.list') }}" class="side-menu__item" id="importPermitCount">Import Permit</a>
                                 </li>
                                 <li class="slide {{ $currentRoute === 'internal.inspection.list' ? 'active' : '' }}">
-                                    <a href="{{ route('internal.inspection.list') }}" class="side-menu__item">Inspection Certificate</a>
+                                    <a href="{{ route('internal.inspection.list') }}" class="side-menu__item" id="inspectionAppCount">Inspection Certificate</a>
                                 </li>
                         
                             <li class="slide {{ $currentRoute === 'internal.consignment.list' ? 'active' : '' }}">
-                                <a href="{{ route('internal.consignment.list') }}" class="side-menu__item">Consignment Certificate</a>
+                                <a href="{{ route('internal.consignment.list') }}" class="side-menu__item" id="consignmentAppCount">Consignment Certificate</a>
                             </li>
                         </ul>
                     </li>

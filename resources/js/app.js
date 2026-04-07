@@ -119,11 +119,20 @@ export function notifyUser(message, editor = null) {
 
 let notificationInterval = null;
 
+function refreshApplicationSidebarCounts() {
+    if (window.authUser?.type !== "internal") return;
+    fetchApplicationCount();
+}
+
 export function startNotificationPolling() {
     if (notificationInterval) return; // prevent duplicates
 
     notification(); // run immediately
-    notificationInterval = setInterval(notification, 10000);
+    refreshApplicationSidebarCounts();
+    notificationInterval = setInterval(() => {
+        notification();
+        refreshApplicationSidebarCounts();
+    }, 10000);
 }
 
 export function stopNotificationPolling() {
@@ -144,38 +153,78 @@ document.addEventListener('visibilitychange', () => {
 document.addEventListener('DOMContentLoaded', () => {
     startNotificationPolling();
     initInactivityTimeout();
+    if (window.authUser?.type === 'internal') {
+        fetchVerificationCount();
+    }
 });
 
 export function fetchVerificationCount() {
-   
+    if (!$("#verificationCount").length) return;
+
     $.ajax({
         url: `/internal/verification_count`,
         method: "GET",
-        success: function(data) {
-            console.log('data', data)
-            if(data.count > 0) {
-                $('#verificationCount').html(`
-                    <span class = "d-flex justify-content-between"><span>User Verification</span>   <span class = "ms-4 badge bg-success p-2"> ${data.count} </span> </span>
-                    `)
-                // Show badge on the parent "User Management" item
-                $('#userMgmtParentBadge').show();
+        success: function (data) {
+            if (data.count > 0) {
+                $("#verificationCount").html(
+                    `<span class="sidebar-count-row"><span>User Verification</span><span class="badge bg-success text-white sidebar-nav-count-badge">${data.count}</span></span>`
+                );
+                $("#userMgmtParentBadge").show();
             } else {
-                $('#verificationCount').text(`User Verification`)
-                // Hide the parent badge when count is 0
-                $('#userMgmtParentBadge').hide();
+                $("#verificationCount").text("User Verification");
+                $("#userMgmtParentBadge").hide();
             }
-        }
+        },
     });
-  
 }
 
-if(window.authUser.type == 'internal') {
-    fetchVerificationCount();
+export function fetchApplicationCount() {
+    if (!$("#importPermitCount").length) return;
+
+    $.ajax({
+        url: `/internal/application_count`,
+        method: "GET",
+        success: function (data) {
+            const total =
+                (data.permit || 0) +
+                (data.inspection || 0) +
+                (data.consignment || 0);
+
+            if (data.permit > 0) {
+                $("#importPermitCount").html(
+                    `<span class="sidebar-count-row"><span>Import Permit</span><span class="badge bg-success text-white sidebar-nav-count-badge">${data.permit}</span></span>`
+                );
+            } else {
+                $("#importPermitCount").text("Import Permit");
+            }
+
+            if (data.inspection > 0) {
+                $("#inspectionAppCount").html(
+                    `<span class="sidebar-count-row"><span>Inspection Certificate</span><span class="badge bg-success text-white sidebar-nav-count-badge">${data.inspection}</span></span>`
+                );
+            } else {
+                $("#inspectionAppCount").text("Inspection Certificate");
+            }
+
+            if (data.consignment > 0) {
+                $("#consignmentAppCount").html(
+                    `<span class="sidebar-count-row"><span>Consignment Certificate</span><span class="badge bg-success text-white sidebar-nav-count-badge">${data.consignment}</span></span>`
+                );
+            } else {
+                $("#consignmentAppCount").text("Consignment Certificate");
+            }
+
+            if (total > 0) {
+                $("#appListParentBadge").show();
+            } else {
+                $("#appListParentBadge").hide();
+            }
+        },
+    });
 }
 
-if(window.authUser.type == 'public') {
-
-    public_dashboard()
+if (window.authUser?.type === "public") {
+    public_dashboard();
 }
 
 
