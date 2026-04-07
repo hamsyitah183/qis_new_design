@@ -224,7 +224,11 @@ async function attachmentTable() {
 `);
     });
 
-    table.append(approveRejectButtons)
+    // Remove any previously appended action buttons to prevent duplicates on re-render
+    table.find('.action-buttons-row').remove();
+    if (approveRejectButtons) {
+        table.append(`<div class="action-buttons-row">${approveRejectButtons}</div>`);
+    }
 }
 async function pendingPaymentTable() {
     console.log("Running attachment table...");
