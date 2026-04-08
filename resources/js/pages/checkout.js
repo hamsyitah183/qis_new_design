@@ -148,14 +148,18 @@ function payMent() {
 
 $(document).on('change', 'input[name="paymentMethod"]', function() {
     $('input[name="paymentMethod"]').each(function() {
+        $(this).parent().removeClass('selected-payment');
         $(this).next('label').find('img').removeClass('selected');
     });
     
+    $(this).parent().addClass('selected-payment');
     $(this).next('label').find('img').addClass('selected');
 });
 
-
-
+// Trigger change on page load to highlight the default payment method
+$(document).ready(function() {
+    $('input[name="paymentMethod"]:checked').trigger('change');
+});
 
 
 payMent();
