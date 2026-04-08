@@ -26,6 +26,7 @@ use App\Services\ApplicationActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
@@ -992,5 +993,55 @@ class ApplicationController extends Controller
         return $modelClass::query()
             ->whereRaw('LOWER(TRIM(COALESCE(status, ""))) IN (?, ?, ?)', $reviewStatuses)
             ->count();
+    }
+
+     // ======================= Internal Exporter & Importer Lists =======================
+
+    public function showInternalExporterList()
+    {
+        Gate::authorize('view exporter list');
+        return view('pages.internal.exporter_list');
+    }
+
+    public function getInternalExporterListData()
+    {
+        $query = Exporter::with(['countryInfo', 'registeredBy']);
+
+        if (request('name')) {
+            $query->where('name', 'like', '%' . request('name') . '%');
+        }
+        if (request('country')) {
+            $query->where('country', request('country'));
+        }
+
+        return DataTables::eloquent($query)
+            ->addIndexColumn()
+            ->addColumn('country_name', fn($row) => $row->countryInfo->name ?? '-')
+            ->addColumn('registered_by_name', fn($row) => $row->registeredBy->fullname ?? '-')
+            ->make(true);
+    }
+
+    public function showInternalImporterList()
+    {
+        Gate::authorize('view importer list');
+        return view('pages.internal.importer_list');
+    }
+
+    public function getInternalImporterListData()
+    {
+        $query = ConsignmentImporter::with(['countryInfo', 'registeredBy']);
+
+        if (request('name')) {
+            $query->where('name', 'like', '%' . request('name') . '%');
+        }
+        if (request('country')) {
+            $query->where('country', request('country'));
+        }
+
+        return DataTables::eloquent($query)
+            ->addIndexColumn()
+            ->addColumn('country_name', fn($row) => $row->countryInfo->name ?? '-')
+            ->addColumn('registered_by_name', fn($row) => $row->registeredBy->fullname ?? '-')
+            ->make(true);
     }
 }
