@@ -17,8 +17,10 @@ use App\Models\IpConsignmentAttachment;
 use App\Models\InspectionItem;
 use App\Models\IpConsignmentPermit;
 use App\Models\ConsignmentPermit;
+use App\Models\Order;
 use App\Models\PublicCode;
 use App\Models\PublicUser;
+use App\Models\QrScanLog;
 use App\Notifications\ApplicationNotification;
 use App\Services\ApplicationActivityLogger;
 use Illuminate\Http\Request;
@@ -695,6 +697,43 @@ class ApplicationController extends Controller
         $application = IpApplication::where('application_id', $id)
             ->with(['user', 'importer', 'exporter.countryInfo', 'entryPoint.districtCode', 'consignmentPermits.attachments', 'activity_log.causer'])
             ->firstOrFail();
+
+        // Collect QR scan logs linked to this import permit application via its order numbers.
+        $orderNumbers = Order::query()
+            ->where('application_id', $application->application_id)
+            ->where('application_type', 'Import Permit')
+            ->pluck('order_number')
+            ->filter()
+            ->values();
+
+        $qrScanLogs = collect();
+        if ($orderNumbers->isNotEmpty()) {
+            $qrScanLogs = QrScanLog::query()
+                ->where('application_type', 'Import Permit')
+                ->whereIn('order_number', $orderNumbers)
+                ->where(function ($query) {
+                    $query->whereRaw("LOWER(COALESCE(result, '')) IN (?, ?)", ['approved', 'valid'])
+                        ->orWhere(function ($legacyQuery) {
+                            $legacyQuery->whereNull('result')
+                                ->where('is_valid', true);
+                        });
+                })
+                ->latest('scanned_at')
+                ->get()
+                ->map(function ($log) {
+                    return [
+                        'internal_user_name' => $log->internal_user_name ?? '-',
+                        'internal_user_position' => $log->internal_user_position ?? '-',
+                        'scanned_value' => $log->scanned_value ?? '-',
+                        'is_valid' => true,
+                        'result' => 'Valid',
+                        'scanned_at' => optional($log->scanned_at)->toIso8601String(),
+                    ];
+                })
+                ->values();
+        }
+
+        $application->setAttribute('qr_scan_logs', $qrScanLogs);
 
         if ($type === 'internal') {
             return response()->json($application);

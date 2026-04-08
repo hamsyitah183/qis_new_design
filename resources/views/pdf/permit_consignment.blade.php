@@ -267,5 +267,37 @@
         <div style="clear: both;"></div>
     </div>
 
+    <div class="page-break"></div>
+
+
+    @foreach($conditions as $condition)
+
+        <div style="font-family: Arial, sans-serif; font-size: 10pt;">
+
+            <div style="text-align:center; font-weight:bold; font-size:14pt; margin-bottom:20px;">
+                PERMIT CONDITIONS
+            </div>
+
+            <div style="margin-bottom:10px;">
+                Permit No: <strong>{{ $condition['permit_number'] }}</strong>
+            </div>
+
+            <div style="margin-bottom:10px;">
+                Item: <strong>{{ $condition['item_name'] }}</strong>
+            </div>
+
+            <hr style="margin-bottom:15px;">
+
+            <div style="line-height:1.5;">
+                {!! $condition['text'] !!}
+            </div>
+
+        </div>
+
+        {{-- ✅ NEW PAGE AFTER EACH CONDITION --}}
+        <div class="page-break"></div>
+
+    @endforeach
+
 </body>
 </html>

@@ -1,26 +1,28 @@
-export function activityLogDesign(activityLogs) {
-    if (!activityLogs || activityLogs.length === 0) {
+export function activityLogDesign(activityLogs, qrScanLogs = []) {
+    // Merge activity logs and QR scan logs into a single timeline.
+    const timelineEntries = buildTimelineEntries(activityLogs, qrScanLogs);
+
+    if (timelineEntries.length === 0) {
         return `<p class="text-muted">No activity logs found.</p>`;
     }
 
     let html = `<div class="order-track mt-1 position-relative">`;
 
-    activityLogs.forEach((log, index) => {
+    timelineEntries.forEach((entry, index) => {
         const headingId = `heading-${index}`;
         const collapseId = `collapse-${index}`;
+        const title = entry.status || "-";
+        const time = entry.createdAt ? formatTime(entry.createdAt) : "-";
+        const iconHtml = getIcon(title, entry.kind);
 
-        const action = log.action || '-';
-        const remark = log.remark || '-';
-        const causer = log.causer ? log.causer.fullname : 'System';
-        const time = log.created_at ? formatTime(log.created_at) : '-';
-
-             // icon mapping
-        let iconHtml = getIcon(log.status);
-
-        // Open first and last accordion by default
-        const isOpen = index === 0 || index === activityLogs.length - 1;
-        const collapseClass = isOpen ? 'accordion-collapse border-top-0 collapse show' : 'accordion-collapse border-top-0 collapse';
-        const buttonClass = isOpen ? 'px-0 pt-0 accordion-button-custom active-accordion' : 'px-0 pt-0 collapsed accordion-button-custom';
+        // Open first and last accordion by default.
+        const isOpen = index === 0 || index === timelineEntries.length - 1;
+        const collapseClass = isOpen
+            ? "accordion-collapse border-top-0 collapse show"
+            : "accordion-collapse border-top-0 collapse";
+        const buttonClass = isOpen
+            ? "px-0 pt-0 accordion-button-custom active-accordion"
+            : "px-0 pt-0 collapsed accordion-button-custom";
 
         html += `
         <div class="accordion position-relative" id="accordion-${index}">
@@ -32,11 +34,9 @@ export function activityLogDesign(activityLogs) {
                         <div class="d-flex mb-0 lh-1">
                             <div class="me-2 position-relative">
                                 ${iconHtml}
-
-                             
                             </div>
                             <div class="flex-fill d-flex align-items-center justify-content-between">
-                                <p class="fw-medium mb-0 fs-14 text-wrap">${log.status}</p>
+                                <p class="fw-medium mb-0 fs-14 text-wrap">${escapeHtml(title)}</p>
                                 <span class="fs-12">${time}</span>
                             </div>
                         </div>
@@ -44,11 +44,7 @@ export function activityLogDesign(activityLogs) {
                 </div>
                 <div id="${collapseId}" class="${collapseClass}" aria-labelledby="${headingId}" data-bs-parent="#accordion-${index}">
                     <div class="accordion-body pt-0 ps-5 mb-0 pb-0">
-                        <p class="mb-0 fs-12">
-                           <span class="fw-bold text-muted fs-12"> User: </span> <span class="text-primary fs-12">${causer}</span> <br>
-                           <span class="fw-bold text-muted mt-1"> Log: </span> ${remark} <br>
-                           
-                        </p>
+                        ${renderTimelineEntryDetails(entry)}
                     </div>
                 </div>
             </div>
@@ -75,8 +71,97 @@ export function activityLogDesign(activityLogs) {
     return html;
 }
 
-function getIcon(status) {
+function buildTimelineEntries(activityLogs, qrScanLogs) {
+    const activityEntries = (Array.isArray(activityLogs) ? activityLogs : []).map(
+        (log) => ({
+            kind: "activity",
+            status: log?.status || "-",
+            createdAt: log?.created_at || null,
+            causer: log?.causer?.fullname || "System",
+            remark: log?.remark || "-",
+        })
+    );
+
+    const qrEntries = (Array.isArray(qrScanLogs) ? qrScanLogs : [])
+        .filter((log) => {
+            const normalizedResult = String(log?.result || "").toLowerCase();
+            return normalizedResult === "approved" || normalizedResult === "valid" || (normalizedResult === "" && !!log?.is_valid);
+        })
+        .map((log) => {
+            const resultText = "Valid";
+            const statusLabel = "QR Permit Approved";
+
+            return {
+                kind: "qr",
+                status: statusLabel,
+                createdAt: log?.scanned_at || null,
+                user: log?.internal_user_name || "-",
+                position: log?.internal_user_position || "-",
+                scannedValue: log?.scanned_value || "-",
+                result: resultText,
+            };
+        });
+
+    return [...activityEntries, ...qrEntries].sort((a, b) => {
+        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return timeA - timeB;
+    });
+}
+
+function renderTimelineEntryDetails(entry) {
+    if (entry.kind === "qr") {
+        const resultBadgeClass = "badge bg-success";
+
+        return `
+            <p class="mb-0 fs-12">
+                <span class="fw-bold text-muted fs-12">User:</span>
+                <span class="text-primary fs-12">${escapeHtml(entry.user)}</span><br>
+                <span class="fw-bold text-muted fs-12">Position:</span>
+                <span class="fs-12">${escapeHtml(entry.position)}</span><br>
+                <span class="fw-bold text-muted fs-12">Scanned Value:</span>
+                <span class="fs-12">${escapeHtml(entry.scannedValue)}</span><br>
+                <span class="fw-bold text-muted fs-12">Result:</span>
+                <span class="${resultBadgeClass}">${escapeHtml(entry.result)}</span><br>
+                <span class="fw-bold text-muted fs-12">Date & Time:</span>
+                <span class="fs-12">${entry.createdAt ? formatTime(entry.createdAt) : "-"}</span>
+            </p>
+        `;
+    }
+
+    return `
+        <p class="mb-0 fs-12">
+            <span class="fw-bold text-muted fs-12">User:</span>
+            <span class="text-primary fs-12">${escapeHtml(entry.causer)}</span><br>
+            <span class="fw-bold text-muted mt-1">Log:</span>
+            <span class="fs-12">${escapeHtml(entry.remark)}</span>
+        </p>
+    `;
+}
+
+function escapeHtml(value) {
+    return String(value ?? "-")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+}
+
+function getIcon(status, kind = "activity") {
     if (!status) return defaultIcon();
+
+    if (kind === "qr") {
+        const qrStatus = status.toLowerCase();
+        const isValid = qrStatus.includes("approved") || (qrStatus.includes("valid") && !qrStatus.includes("invalid"));
+        const badgeClass = isValid
+            ? "border border-success border-opacity-10 bg-success-transparent"
+            : "border border-danger border-opacity-10 bg-danger-transparent";
+        const iconClass = isValid ? "ti ti-scan fs-14" : "ti ti-alert-triangle fs-14";
+        return `<span class="avatar avatar-sm avatar-rounded track-order-icon backdrop-blur ${badgeClass}">
+                    <i class="${iconClass}"></i>
+                </span>`;
+    }
 
     const s = status.toLowerCase(); // make sure it's lowercase
     let iconHtml = '';

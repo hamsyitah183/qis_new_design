@@ -62,7 +62,9 @@ class AuthenticationController extends Controller
                 'password' => $credentials['password'],
             ])
         ) {
-            $request->session()->regenerate();
+            if ($request->hasSession()) {
+                $request->session()->regenerate();
+            }
 
             // After login, check if email not verified
             if (method_exists($user, 'hasVerifiedEmail') && !$user->hasVerifiedEmail()) {
@@ -92,6 +94,7 @@ class AuthenticationController extends Controller
             422,
         );
     }
+    
     public function loginActionApi(Request $request)
     {
         $credentials = $request->validate([
@@ -115,42 +118,38 @@ class AuthenticationController extends Controller
             );
         }
 
-        // Attempt login first
-        if (
-            Auth::guard($guard)->attempt([
-                'email' => $credentials['email'],
-                'password' => $credentials['password'],
-            ])
-        ) {
-            $request->session()->regenerate();
+        // API login is stateless: verify credentials without creating a session.
+        if (!Hash::check($credentials['password'], $user->password)) {
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => 'Invalid credentials.',
+                ],
+                422,
+            );
+        }
 
-            // After login, check if email not verified
-            if (method_exists($user, 'hasVerifiedEmail') && !$user->hasVerifiedEmail()) {
-                // Send verification email
-                $user->notify(new VerifyEmailNotification());
-                return response()->json([
-                    'status' => 'unverified',
-                    'message' => 'Your email is not verified. A verification email has been sent.',
-                    'redirect' => route('verify.email'),
-                ]);
-            }
-
-            // Normal redirect if verified
-            $redirect = $guard === 'public' ? route('public.dashboard') : route('internal.dashboard');
+        // After login, check if email not verified
+        if (method_exists($user, 'hasVerifiedEmail') && !$user->hasVerifiedEmail()) {
+            $user->notify(new VerifyEmailNotification());
             return response()->json([
-                'status' => 'success',
-                'message' => 'Login successful!',
-                'redirect' => $redirect,
+                'status' => 'unverified',
+                'message' => 'Your email is not verified. A verification email has been sent.',
+                'redirect' => route('verify.email'),
             ]);
         }
 
-        return response()->json(
-            [
-                'status' => 'error',
-                'message' => 'Invalid credentials or user type.',
+        // Return user payload expected by mobile app.
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Login successful!',
+            'user' => [
+                'uuid' => $user->uuid,
+                'name' => $user->name ?? $user->fullname,
+                'email' => $user->email,
+                'userType' => $guard,
             ],
-            422,
-        );
+        ]);
     }
 
     // public function register()

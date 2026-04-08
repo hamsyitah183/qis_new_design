@@ -961,6 +961,8 @@ function applicationLog() {
 
             console.log("application", application.activity_log);
             let activity_log = application.activity_log;
+            // QR scan entries are loaded from the application details endpoint.
+            let qr_scan_logs = application.qr_scan_logs || [];
 
             const modalEl = document.getElementById("activityLogModal");
             modalEl.querySelector(".modal-title").textContent =
@@ -970,7 +972,7 @@ function applicationLog() {
             cardBody.empty();
             cardBody.addClass('scroll-div');
 
-            const html = activityLogDesign(activity_log);
+            const html = activityLogDesign(activity_log, qr_scan_logs);
             
             cardBody.html(html);
            
