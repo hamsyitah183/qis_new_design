@@ -15,7 +15,7 @@
         "dompdf/dompdf": "^3.1",
         "endroid/qr-code": "5.0",
         "laravel/framework": "^12.0",
-        "laravel/reverb": "^1.6",
+        "laravel/reverb": "^1.10",
         "laravel/tinker": "^2.10.1",
         "phpoffice/phpword": "^1.4",
         "pusher/pusher-php-server": "*",
