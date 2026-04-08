@@ -385,9 +385,9 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/application/importer', [ApplicationController::class, 'show_importer'])->name('application.importer');
     Route::get('/application/importer/{id}', [ApplicationController::class, 'get_importer']);
 
-    Route::get('/permit/generate/{id}', [PermitGenerateController::class, 'generatePermitWord']);
-    Route::get('/permit/generate/pdf/{id}', [PermitGenerateController::class, 'generatePermitPdf']);
-    Route::get('/permit/generate/consignment/{id}', [PermitGenerateController::class, 'generateConsignmentPermitWord']);
+    Route::get('/permit/generate/{permit_number}', [PermitGenerateController::class, 'generatePermitWord']);
+    Route::get('/permit/generate/pdf/{permit_number}', [PermitGenerateController::class, 'generatePermitPdf']);
+    Route::get('/permit/generate/consignment/{permit_number}', [PermitGenerateController::class, 'generateConsignmentPermitWord']);
 
 
 

@@ -15,7 +15,7 @@
                                     <i class="bx bx-package fs-2 text-primary icon"></i>
                                 </h6>
                                 <span class="fs-15 fw-bold">Import Permit</span>
-                                <p class="text-muted fs-12 text-center mt-2">Authorization for external exporters to bring goods.</p>
+                                <p class="text-muted fs-12 text-center mt-2">An official authorization granted to importers for the importation of regulated agricultural goods into Sabah.</p>
                             </div>
                         </div>
                     </div>
@@ -55,7 +55,7 @@
                                     <i class="bx bx-search fs-2 text-primary icon"></i>
                                 </h6>
                                 <span class="fs-15 fw-bold">Inspection Certificate</span>
-                                <p class="text-muted fs-12 text-center mt-2">Register and inspect new items that are not yet listed in the system.</p>
+                                <p class="text-muted fs-12 text-center mt-2">An authorization required for importing agricultural goods that are not covered under the standard Import Permit list into Sabah.</p>
                             </div>
                         </div>
                     </div>
@@ -94,7 +94,7 @@
                                     <i class="bx bx-file fs-2 text-primary icon"></i>
                                 </h6>
                                 <span class="fs-15 fw-bold">Consignment Certificate</span>
-                                <p class="text-muted fs-12 text-center mt-2">For land shipments originating from Brunei.</p>
+                                <p class="text-muted fs-12 text-center mt-2">A specific export authorization dedicated exclusively for the movement of agricultural goods to Brunei.</p>
                             </div>
                         </div>
                     </div>
