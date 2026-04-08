@@ -63,16 +63,23 @@ class PermitGenerateController extends Controller
         $importer = $application->importer_detail;
         $exporter = $application->exporter;
 
-        $qrDataUri = null;
-        try {
-            // Use the same encrypted payload format as the scanner flow.
-            $encryptedPayload = $this->permitQrService->createEncryptedPayload((string) ($permits->permit_number ?? ''));
-            $qrDataUri = $this->permitQrService->createQrDataUri($encryptedPayload);
-        } catch (\Throwable $e) {
-            Log::warning('Failed generating hardcopy permit QR: ' . $e->getMessage());
-        }
+        $itemDetails = $permits->condition();
+        $conditionText = $itemDetails->addional_condition;
 
-        $pdf = Pdf::loadView('pdf.permit_pdf', compact('permits', 'detail', 'application', 'importer', 'exporter', 'qrDataUri'))->setPaper('a4', 'portrait');
+        $conditionText = str_replace(['{{ import_permit_number }}', '{{ year }}'], [$application->application_id, now()->year], $conditionText);
+
+        $validityDate = $permits->validity_date ? \Carbon\Carbon::parse($permits->validity_date)->format('d/M/Y') : '-';
+      
+         $qrDataUri = null;
+          try {
+              // Use the same encrypted payload format as the scanner flow.
+              $encryptedPayload = $this->permitQrService->createEncryptedPayload((string) ($permits->permit_number ?? ''));
+              $qrDataUri = $this->permitQrService->createQrDataUri($encryptedPayload);
+          } catch (\Throwable $e) {
+              Log::warning('Failed generating hardcopy permit QR: ' . $e->getMessage());
+          }
+
+        $pdf = Pdf::loadView('pdf.permit_pdf', compact('permits', 'detail', 'application', 'importer', 'exporter', 'validityDate', 'conditionText', 'qrDataUri'))->setPaper('a4', 'portrait');
 
         return $pdf->stream("Import_Permit_{$application->application_id}.pdf");
     }
@@ -346,14 +353,18 @@ class PermitGenerateController extends Controller
         $exporter = $application->exporter;
         $entry = $application->entryPoint;
 
-        $pdf = Pdf::loadView('pdf.permit_inspection', compact('application', 'items', 'importer', 'exporter', 'entry'))->setPaper('a4', 'portrait');
+        $permit = $application->InspectionItems;
+        $permit = $permit->first(); // Assuming you want to get the first permit for validity date
+
+        $validityDate = $permit->validity_date ? \Carbon\Carbon::parse($permit->validity_date)->format('d/M/Y') : '-';
+
+        $pdf = Pdf::loadView('pdf.permit_inspection', compact('application', 'items', 'importer', 'exporter', 'entry', 'validityDate'))->setPaper('a4', 'portrait');
 
         return $pdf->stream("Inspection_Certificate_{$application->application_id}.pdf");
     }
 
     public function generateConsignmentApplication($id)
     {
-        // $id = inspection application id
         $application = ConsignmentApplication::where('application_id', $id)->first();
 
         if (!$application) {
@@ -361,12 +372,46 @@ class PermitGenerateController extends Controller
         }
 
         $items = $application->consignmentPermits;
-        // dd( $items );
         $importer = $application->importer;
         $exporter = $application->exporter;
         $entry = $application->entryPoint;
 
-        $pdf = Pdf::loadView('pdf.permit_consignment', compact('application', 'items', 'importer', 'exporter', 'entry'))->setPaper('a4', 'portrait');
+        $validUntil = optional($items->first())->validity_date ? \Carbon\Carbon::parse($items->first()->validity_date)->format('d/M/Y') : '-';
+
+        // ✅ BUILD CONDITIONS ARRAY
+        $conditions = [];
+
+        foreach ($items as $permit) {
+            $conditionModel = $permit->condition();
+
+            if (!$conditionModel) {
+                continue;
+            }
+
+            $text = $conditionModel->addional_condition;
+
+            // replace variables
+            $text = str_replace(['{{ import_permit_number }}', '{{ year }}'], [$permit->permit_number, now()->year], $text);
+
+            $conditions[] = [
+                'permit_number' => $permit->permit_number,
+                'item_name' => data_get($permit->consignment_detail, 'item_name'),
+                'text' => $text,
+            ];
+        }
+
+        $pdf = Pdf::loadView(
+            'pdf.permit_consignment',
+            compact(
+                'application',
+                'items',
+                'importer',
+                'exporter',
+                'entry',
+                'validUntil',
+                'conditions', 
+            ),
+        )->setPaper('a4', 'portrait');
 
         return $pdf->stream("Inspection_Certificate_{$application->application_id}.pdf");
     }
@@ -520,10 +565,7 @@ class PermitGenerateController extends Controller
 
         $reason = $request->reason;
 
-      
-
         if ($type == 'Import Permit') {
-
             $permit = IpConsignmentPermit::where('id', $id)->first();
             $flag = $this->countReason($permit, $reason);
 
@@ -532,40 +574,31 @@ class PermitGenerateController extends Controller
             ApplicationActivityLogger::log(
                 application: $application,
                 event: 'boundary_officer',
-                description: 'A permit with id '  . $permit->permit_number .  ' is downloaded by ' . authUser()['user']->fullname .  '. (Reason:' . $reason . ') .' ,
-                properties: [ 
+                description: 'A permit with id ' . $permit->permit_number . ' is downloaded by ' . authUser()['user']->fullname . '. (Reason:' . $reason . ') .',
+                properties: [
                     'role' => 'boundary officer',
                 ],
             );
 
-            $application->logActivity('Printed', 'Permit with id ' .  $permit->permit_number .  ' is Printed with reason: ' .   $reason, 'Printed');
-        
-
+            $application->logActivity('Printed', 'Permit with id ' . $permit->permit_number . ' is Printed with reason: ' . $reason, 'Printed');
         } elseif ($type == 'Consignment') {
-
             $application = ConsignmentApplication::where('application_id', $id)->first();
             $permits = $application->consignmentPermits;
-      
-            foreach($permits as $permit) {
-   
+
+            foreach ($permits as $permit) {
                 $flag = $this->countReason($permit, $reason);
             }
-
-        } elseif($type == 'Inspection') {
- 
+        } elseif ($type == 'Inspection') {
             $application = InspectionApplication::where('application_id', $id)->first();
             $permits = $application->inspectionItems;
 
             // dd($id, $permits);
 
-            foreach($permits as $permit) {
+            foreach ($permits as $permit) {
                 $flag = $this->countReason($permit, $reason);
             }
-
         }
-       
 
-       
         return $flag;
     }
 
@@ -573,39 +606,25 @@ class PermitGenerateController extends Controller
     {
         $count = $permit->print_calc;
 
-      
-
         if ($count == 0 || $count == null) {
-
             $permit->print_calc = 1;
             $permit->save();
 
-      
-
             return 'yes';
-
         } else {
-
-            if($reason) {
+            if ($reason) {
                 $permit->print_calc = $count + 1;
                 $permit->print_reason = $reason;
                 $permit->save();
 
-
                 return response()->json([
-                    'message' => 'Add response'
+                    'message' => 'Add response',
                 ]);
-            } 
-
-            else {
-                 
+            } else {
                 return response()->json([
                     'message' => 'Need Response',
                 ]);
-        
             }
-            
         }
     }
-
 }

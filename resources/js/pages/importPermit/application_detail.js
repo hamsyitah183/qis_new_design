@@ -183,7 +183,10 @@ async function attachmentTable() {
     <td class = "text-wrap">${detail.item_name ?? "—"}</td>
 
     <td class="text-wrap">${detail.purpose ?? "—"}</td>
- 
+
+    <td>${permit.permit_number ?? "—"}</td>
+    <td>${permit.validity_date ? new Date(permit.validity_date).toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}) : "—"}</td>
+
     ${permitStatus}
     <td>
         <div class="d-flex gap-2 align-items-center">

@@ -95,6 +95,7 @@
                             <tr>
                                 {{-- <th>#</th> --}}
                                 <th class="text-wrap">Item Name</th>
+                                <th class="text-wrap">Scientific Name</th>
                                 <th>Category</th>
                                 <th>Usage</th>
                                 <th>Action</th>
@@ -126,6 +127,10 @@
                                 <tr>
                                     <th width="25%">Item Name</th>
                                     <td id="itemNameCell"></td>
+                                </tr>
+                                <tr>
+                                    <th>Scientific Name</th>
+                                    <td id="scientificNameCell"></td>
                                 </tr>
                                 <tr>
                                     <th>Category</th>
