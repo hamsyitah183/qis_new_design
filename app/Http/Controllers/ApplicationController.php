@@ -1024,7 +1024,8 @@ class ApplicationController extends Controller
     public function showInternalImporterList()
     {
         Gate::authorize('view importer list');
-        return view('pages.internal.importer_list');
+        $country = Country::where('is_del', false)->get();
+        return view('pages.internal.importer_list', compact('country'));
     }
 
     public function getInternalImporterListData()
