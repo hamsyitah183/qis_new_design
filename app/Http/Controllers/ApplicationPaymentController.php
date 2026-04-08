@@ -8,6 +8,7 @@ use App\Models\InternalUser;
 use App\Models\InspectionItem;
 use App\Models\IpConsignmentPermit;
 use App\Models\Order;
+use App\Models\QrPermitUsage;
 use App\Models\QrScanLog;
 use App\Services\PermitQrService;
 use Carbon\Carbon;
@@ -129,6 +130,7 @@ class ApplicationPaymentController extends Controller
         // Try each permit table to find the matching permit
         $permitId = null;
         $applicationType = null;
+        $resolvedPermitNumber = $rawPermit;
 
         $itemName = '-';
 
@@ -142,6 +144,7 @@ class ApplicationPaymentController extends Controller
             $permitId = $ipPermit->id;
             $applicationType = 'Import Permit';
             $itemName = (string) data_get($ipPermit->consignment_detail, 'item_name', '-');
+            $resolvedPermitNumber = (string) ($ipPermit->permit_number ?: $rawPermit);
         }
 
         // Check Inspection Certificate
@@ -155,6 +158,7 @@ class ApplicationPaymentController extends Controller
                 $permitId = $inspectionItem->id;
                 $applicationType = 'Inspection Certificate';
                 $itemName = (string) data_get($inspectionItem->consignment_detail, 'item_name', '-');
+                $resolvedPermitNumber = (string) ($inspectionItem->permit_number ?: $rawPermit);
             }
         }
 
@@ -169,6 +173,7 @@ class ApplicationPaymentController extends Controller
                 $permitId = $consignmentPermit->id;
                 $applicationType = 'Consignment Certificate';
                 $itemName = (string) data_get($consignmentPermit->consignment_detail, 'item_name', '-');
+                $resolvedPermitNumber = (string) ($consignmentPermit->permit_number ?: $rawPermit);
             }
         }
 
@@ -253,7 +258,7 @@ class ApplicationPaymentController extends Controller
                 'status' => 'success',
                 'valid' => false,
                 'message' => 'Internal scanner identity is required.',
-                'permit_number' => $rawPermit,
+                'permit_number' => $resolvedPermitNumber,
                 'order_number' => $order->order_number,
                 'application_type' => $order->application_type,
                 'item_name' => $itemName,
@@ -261,14 +266,21 @@ class ApplicationPaymentController extends Controller
             ]);
         }
 
+        $permitNumberKey = strtoupper(str_replace('/', '', preg_replace('/\s+/', '', $resolvedPermitNumber)));
+
         if ($enforceOneTime) {
-            // Check if QR code has already been used
-            if ($order->qr_used_at !== null) {
+            // Check if this permit_number has already been used.
+            $existingUsage = QrPermitUsage::query()
+                ->where('application_type', $applicationType)
+                ->where('permit_number_key', $permitNumberKey)
+                ->first();
+
+            if ($existingUsage) {
                 return response()->json([
                     'status' => 'success',
                     'valid' => false,
                     'message' => 'QR code has already been used',
-                    'permit_number' => $rawPermit,
+                    'permit_number' => $resolvedPermitNumber,
                     'order_number' => $order->order_number,
                     'application_type' => $order->application_type,
                     'item_name' => $itemName,
@@ -276,10 +288,13 @@ class ApplicationPaymentController extends Controller
                 ]);
             }
 
-            // Mark QR as used
-            $order->update([
-                'qr_used_at' => now(),
-                'qr_used_by_uuid' => $internalScanner->uuid,
+            QrPermitUsage::query()->create([
+                'application_type' => $applicationType,
+                'permit_number' => $resolvedPermitNumber,
+                'permit_number_key' => $permitNumberKey,
+                'order_number' => $order->order_number,
+                'used_by_uuid' => $internalScanner->uuid,
+                'used_at' => now(),
             ]);
         }
 
@@ -287,7 +302,7 @@ class ApplicationPaymentController extends Controller
             try {
                 event(new OrderQrUsed(
                     orderNumber: (string) $order->order_number,
-                    permitNumber: $rawPermit,
+                    permitNumber: $resolvedPermitNumber,
                     usedAt: now()->format('d-m-Y h:i:s A'),
                 ));
             } catch (\Throwable $e) {
@@ -299,11 +314,11 @@ class ApplicationPaymentController extends Controller
             'status' => 'success',
             'valid' => true,
             'message' => 'Valid',
-            'permit_number' => $rawPermit,
+            'permit_number' => $resolvedPermitNumber,
             'order_number' => $order->order_number,
             'application_type' => $order->application_type,
             'item_name' => $itemName,
-            'is_used' => $enforceOneTime && $order->qr_used_at !== null,
+            'is_used' => false,
         ]);
     }
 
