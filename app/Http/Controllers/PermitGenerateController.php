@@ -66,7 +66,11 @@ class PermitGenerateController extends Controller
         $itemDetails = $permits->condition();
         $conditionText = $itemDetails->addional_condition;
 
-        $conditionText = str_replace(['{{ import_permit_number }}', '{{ year }}'], [$application->application_id, now()->year], $conditionText);
+        $conditionText = str_replace(
+            ['{{import_permit_number}}', '{{ import_permit_number }}', '{{year}}', '{{ year }}'],
+            [$permits->permit_number, $permits->permit_number, now()->year, now()->year],
+            $conditionText
+        );
 
         $validityDate = $permits->validity_date ? \Carbon\Carbon::parse($permits->validity_date)->format('d/M/Y') : '-';
       
@@ -391,7 +395,11 @@ class PermitGenerateController extends Controller
             $text = $conditionModel->addional_condition;
 
             // replace variables
-            $text = str_replace(['{{ import_permit_number }}', '{{ year }}'], [$permit->permit_number, now()->year], $text);
+            $text = str_replace(
+                ['{{import_permit_number}}', '{{ import_permit_number }}', '{{year}}', '{{ year }}'],
+                [$permit->permit_number, $permit->permit_number, now()->year, now()->year],
+                $text
+            );
 
             $conditions[] = [
                 'permit_number' => $permit->permit_number,
@@ -409,7 +417,7 @@ class PermitGenerateController extends Controller
                 'exporter',
                 'entry',
                 'validUntil',
-                'conditions', 
+                'conditions',
             ),
         )->setPaper('a4', 'portrait');
 
