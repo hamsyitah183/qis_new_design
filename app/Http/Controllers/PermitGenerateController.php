@@ -27,6 +27,33 @@ class PermitGenerateController extends Controller
     {
     }
 
+    /**
+     * Decode URL-safe permit slug back to stored permit_number.
+     *
+     * Examples:
+     * - IPO_260... -> IPO/260...
+     * - IPO260...  -> IPO/260...
+     */
+    private function decodePermitNumberSlug(string $slug): string
+    {
+        $decoded = $slug;
+
+        // Backward compatibility for the older scheme (underscore instead of slash).
+        if (str_contains($decoded, '_')) {
+            $decoded = str_replace('_', '/', $decoded);
+        }
+
+        // New scheme: remove '/' entirely (e.g. IPO260...).
+        if (!str_contains($decoded, '/')) {
+            // Insert '/' between letter prefix and digit suffix.
+            if (preg_match('/^([A-Za-z]+)(\d+)$/', $decoded, $m) === 1) {
+                $decoded = $m[1] . '/' . $m[2];
+            }
+        }
+
+        return $decoded;
+    }
+
     //
     // public function generateWord()
     // {
@@ -46,14 +73,21 @@ class PermitGenerateController extends Controller
     //     exit;
     // }
 
-    public function generatePermitWord($id)
+    public function generatePermitWord($permit_number)
     {
-        return $this->generatePermitPdf($id);
+        return $this->generatePermitPdf($permit_number);
     }
 
-    public function generatePermitPdf($id)
+    public function generatePermitPdf($permit_number)
     {
-        $permits = IpConsignmentPermit::where('id', $id)->first();
+        $decodedPermitNumber = $this->decodePermitNumberSlug((string) $permit_number);
+
+        $permits = IpConsignmentPermit::where('permit_number', $decodedPermitNumber)->first();
+
+        // Backward compatibility: if an older frontend still passes numeric DB id.
+        if (!$permits && is_numeric($permit_number)) {
+            $permits = IpConsignmentPermit::where('id', $permit_number)->first();
+        }
         if (!$permits) {
             abort(404, 'Permit not found');
         }
@@ -88,11 +122,20 @@ class PermitGenerateController extends Controller
         return $pdf->stream("Import_Permit_{$application->application_id}.pdf");
     }
 
-    public function generateConsignmentPermitWord($id)
+    public function generateConsignmentPermitWord($permit_number)
     {
+        $decodedPermitNumber = $this->decodePermitNumberSlug((string) $permit_number);
+
         $permits = ConsignmentPermit::with(['application.user', 'application.entryPoint'])
-            ->where('id', $id)
+            ->where('permit_number', $decodedPermitNumber)
             ->first();
+
+        // Backward compatibility: if an older frontend still passes numeric DB id.
+        if (!$permits && is_numeric($permit_number)) {
+            $permits = ConsignmentPermit::with(['application.user', 'application.entryPoint'])
+                ->where('id', $permit_number)
+                ->first();
+        }
 
         if (!$permits) {
             abort(404, 'Permit not found');
@@ -574,7 +617,23 @@ class PermitGenerateController extends Controller
         $reason = $request->reason;
 
         if ($type == 'Import Permit') {
-            $permit = IpConsignmentPermit::where('id', $id)->first();
+            // UI passes permit_number using a URL-safe slug format (e.g. IPO_2604086439).
+            // Decode back to the stored format (e.g. IPO/2604086439) before querying.
+            $decodedPermitNumber = is_string($id) ? $this->decodePermitNumberSlug($id) : (string) $id;
+
+            $permit = IpConsignmentPermit::where('permit_number', $decodedPermitNumber)->first();
+
+            // Backward compatibility: if an older frontend sends numeric DB id.
+            if (!$permit && is_numeric($id)) {
+                $permit = IpConsignmentPermit::where('id', $id)->first();
+            }
+
+            if (!$permit) {
+                return response()->json([
+                    'message' => 'Permit not found',
+                ], 404);
+            }
+
             $flag = $this->countReason($permit, $reason);
 
             $application = $permit->application;

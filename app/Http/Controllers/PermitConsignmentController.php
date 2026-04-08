@@ -169,12 +169,15 @@ class PermitConsignmentController extends Controller
                 $downloadPermit = '';
 
                 if ($type === 'internal') {
+                    // URL-safe slug: remove '/' entirely (e.g. IPO/260... -> IPO260...)
+                    $slugPermitNumber = str_replace('/', '', $row->permit_number);
+
                     $downloadPermit =
                         '
                     <button
                         class="btn btn-sm btn-success btn-wave generatePermit ms-2"
                         data-permit="' .
-                        $row->id .
+                        $slugPermitNumber .
                         '">
                         Download Permit
                     </button>

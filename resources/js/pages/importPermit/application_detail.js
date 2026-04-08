@@ -133,8 +133,11 @@ async function attachmentTable() {
         } 
 
         if (permit.status === "paid" && (roles.includes("admin") || roles.includes("officer") || roles.includes("superadmin") || roles.includes('boundary officer'))) {
+            // URL-safe slug: remove '/' entirely (e.g. IPO/260... -> IPO260...)
+            const slugPermitNumber = (permit.permit_number || "").replaceAll("/", "");
+
             permitAction = `
-<div class="btn btn-sm btn btn-teal-light btn-wave generatePermit" data-permit="${permit.id}">
+<div class="btn btn-sm btn btn-teal-light btn-wave generatePermit" data-permit="${slugPermitNumber}">
     Download Permit ${count}
 </div>
 `;
