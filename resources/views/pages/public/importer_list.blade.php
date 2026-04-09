@@ -69,8 +69,9 @@
                                 <label class="form-label fw-semibold mb-1">Country</label>
                                 <select class="form-select form-select-sm" id="filterImporterCountry">
                                     <option value="">All Countries</option>
-                                    <option value="SWK">Sarawak, Malaysia</option>
-                                    <option value="BN">Brunei Darussalam</option>
+                                    @foreach ($country as $coun)
+                                        <option value="{{ $coun->code }}">{{ $coun->name }}</option>
+                                    @endforeach
                                 </select>
                             </li>
 
@@ -140,11 +141,9 @@
                 <label for="addimpcountry" class="form-label">Country</label>
                 <select class="form-select" id="addimpcountry" name="country">
                     <option value="">-- Select Country --</option>
-                    {{-- @foreach ($country as $coun)
-                    <option value="{{ $coun->code }}">{{ $coun->name }}</option>
-                    @endforeach --}}
-                    <option value="SWK">Sarawak, Malaysia</option>
-                    <option value="BN">Brunei Darussalam</option>
+                    @foreach ($country as $coun)
+                        <option value="{{ $coun->code }}">{{ $coun->name }}</option>
+                    @endforeach
                 </select>
             </div>
 

@@ -167,6 +167,7 @@ Route::prefix('internal')
         Route::get('/user_public/verification', [UserController::class, 'verification_list'])->name('public.verification.list');
         Route::get('/user_public/verification/data', [UserController::class, 'verification_list_data'])->name('public.verification.list.data');
         Route::get('/verification_count', [UserController::class, 'verification_count']);
+        Route::get('/application_count', [ApplicationController::class, 'application_count']);
 
         Route::get('/user_public/user/data/{id}', [UserController::class, 'user_data']);
         Route::post('/user_public/save', [UserController::class, 'public_user_save']);
@@ -384,9 +385,9 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/application/importer', [ApplicationController::class, 'show_importer'])->name('application.importer');
     Route::get('/application/importer/{id}', [ApplicationController::class, 'get_importer']);
 
-    Route::get('/permit/generate/{id}', [PermitGenerateController::class, 'generatePermitWord']);
-    Route::get('/permit/generate/pdf/{id}', [PermitGenerateController::class, 'generatePermitPdf']);
-    Route::get('/permit/generate/consignment/{id}', [PermitGenerateController::class, 'generateConsignmentPermitWord']);
+    Route::get('/permit/generate/{permit_number}', [PermitGenerateController::class, 'generatePermitWord']);
+    Route::get('/permit/generate/pdf/{permit_number}', [PermitGenerateController::class, 'generatePermitPdf']);
+    Route::get('/permit/generate/consignment/{permit_number}', [PermitGenerateController::class, 'generateConsignmentPermitWord']);
 
 
 

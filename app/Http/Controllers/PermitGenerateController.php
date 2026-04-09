@@ -27,6 +27,33 @@ class PermitGenerateController extends Controller
     {
     }
 
+    /**
+     * Decode URL-safe permit slug back to stored permit_number.
+     *
+     * Examples:
+     * - IPO_260... -> IPO/260...
+     * - IPO260...  -> IPO/260...
+     */
+    private function decodePermitNumberSlug(string $slug): string
+    {
+        $decoded = $slug;
+
+        // Backward compatibility for the older scheme (underscore instead of slash).
+        if (str_contains($decoded, '_')) {
+            $decoded = str_replace('_', '/', $decoded);
+        }
+
+        // New scheme: remove '/' entirely (e.g. IPO260...).
+        if (!str_contains($decoded, '/')) {
+            // Insert '/' between letter prefix and digit suffix.
+            if (preg_match('/^([A-Za-z]+)(\d+)$/', $decoded, $m) === 1) {
+                $decoded = $m[1] . '/' . $m[2];
+            }
+        }
+
+        return $decoded;
+    }
+
     //
     // public function generateWord()
     // {
@@ -46,14 +73,21 @@ class PermitGenerateController extends Controller
     //     exit;
     // }
 
-    public function generatePermitWord($id)
+    public function generatePermitWord($permit_number)
     {
-        return $this->generatePermitPdf($id);
+        return $this->generatePermitPdf($permit_number);
     }
 
-    public function generatePermitPdf($id)
+    public function generatePermitPdf($permit_number)
     {
-        $permits = IpConsignmentPermit::where('id', $id)->first();
+        $decodedPermitNumber = $this->decodePermitNumberSlug((string) $permit_number);
+
+        $permits = IpConsignmentPermit::where('permit_number', $decodedPermitNumber)->first();
+
+        // Backward compatibility: if an older frontend still passes numeric DB id.
+        if (!$permits && is_numeric($permit_number)) {
+            $permits = IpConsignmentPermit::where('id', $permit_number)->first();
+        }
         if (!$permits) {
             abort(404, 'Permit not found');
         }
@@ -63,25 +97,45 @@ class PermitGenerateController extends Controller
         $importer = $application->importer_detail;
         $exporter = $application->exporter;
 
-        $qrDataUri = null;
-        try {
-            // Use the same encrypted payload format as the scanner flow.
-            $encryptedPayload = $this->permitQrService->createEncryptedPayload((string) ($permits->permit_number ?? ''));
-            $qrDataUri = $this->permitQrService->createQrDataUri($encryptedPayload);
-        } catch (\Throwable $e) {
-            Log::warning('Failed generating hardcopy permit QR: ' . $e->getMessage());
-        }
+        $itemDetails = $permits->condition();
+        $conditionText = $itemDetails->addional_condition;
+
+        $conditionText = str_replace(
+            ['{{import_permit_number}}', '{{ import_permit_number }}', '{{year}}', '{{ year }}'],
+            [$permits->permit_number, $permits->permit_number, now()->year, now()->year],
+            $conditionText
+        );
+
+        $validityDate = $permits->validity_date ? \Carbon\Carbon::parse($permits->validity_date)->format('d/M/Y') : '-';
+      
+         $qrDataUri = null;
+          try {
+              // Use the same encrypted payload format as the scanner flow.
+              $encryptedPayload = $this->permitQrService->createEncryptedPayload((string) ($permits->permit_number ?? ''));
+              $qrDataUri = $this->permitQrService->createQrDataUri($encryptedPayload);
+          } catch (\Throwable $e) {
+              Log::warning('Failed generating hardcopy permit QR: ' . $e->getMessage());
+          }
 
         $pdf = Pdf::loadView('pdf.permit_pdf', compact('permits', 'detail', 'application', 'importer', 'exporter', 'qrDataUri'))->setPaper('a4', 'portrait');
 
         return $pdf->stream("Import_Permit_{$application->application_id}.pdf");
     }
 
-    public function generateConsignmentPermitWord($id)
+    public function generateConsignmentPermitWord($permit_number)
     {
+        $decodedPermitNumber = $this->decodePermitNumberSlug((string) $permit_number);
+
         $permits = ConsignmentPermit::with(['application.user', 'application.entryPoint'])
-            ->where('id', $id)
+            ->where('permit_number', $decodedPermitNumber)
             ->first();
+
+        // Backward compatibility: if an older frontend still passes numeric DB id.
+        if (!$permits && is_numeric($permit_number)) {
+            $permits = ConsignmentPermit::with(['application.user', 'application.entryPoint'])
+                ->where('id', $permit_number)
+                ->first();
+        }
 
         if (!$permits) {
             abort(404, 'Permit not found');
@@ -366,7 +420,46 @@ class PermitGenerateController extends Controller
         $exporter = $application->exporter;
         $entry = $application->entryPoint;
 
-        $pdf = Pdf::loadView('pdf.permit_consignment', compact('application', 'items', 'importer', 'exporter', 'entry'))->setPaper('a4', 'portrait');
+        $validUntil = optional($items->first())->validity_date ? \Carbon\Carbon::parse($items->first()->validity_date)->format('d/M/Y') : '-';
+
+        // ✅ BUILD CONDITIONS ARRAY
+        $conditions = [];
+
+        foreach ($items as $permit) {
+            $conditionModel = $permit->condition();
+
+            if (!$conditionModel) {
+                continue;
+            }
+
+            $text = $conditionModel->addional_condition;
+
+            // replace variables
+            $text = str_replace(
+                ['{{import_permit_number}}', '{{ import_permit_number }}', '{{year}}', '{{ year }}'],
+                [$permit->permit_number, $permit->permit_number, now()->year, now()->year],
+                $text
+            );
+
+            $conditions[] = [
+                'permit_number' => $permit->permit_number,
+                'item_name' => data_get($permit->consignment_detail, 'item_name'),
+                'text' => $text,
+            ];
+        }
+
+        $pdf = Pdf::loadView(
+            'pdf.permit_consignment',
+            compact(
+                'application',
+                'items',
+                'importer',
+                'exporter',
+                'entry',
+                'validUntil',
+                'conditions',
+            ),
+        )->setPaper('a4', 'portrait');
 
         return $pdf->stream("Inspection_Certificate_{$application->application_id}.pdf");
     }
@@ -523,8 +616,23 @@ class PermitGenerateController extends Controller
       
 
         if ($type == 'Import Permit') {
+            // UI passes permit_number using a URL-safe slug format (e.g. IPO_2604086439).
+            // Decode back to the stored format (e.g. IPO/2604086439) before querying.
+            $decodedPermitNumber = is_string($id) ? $this->decodePermitNumberSlug($id) : (string) $id;
 
-            $permit = IpConsignmentPermit::where('id', $id)->first();
+            $permit = IpConsignmentPermit::where('permit_number', $decodedPermitNumber)->first();
+
+            // Backward compatibility: if an older frontend sends numeric DB id.
+            if (!$permit && is_numeric($id)) {
+                $permit = IpConsignmentPermit::where('id', $id)->first();
+            }
+
+            if (!$permit) {
+                return response()->json([
+                    'message' => 'Permit not found',
+                ], 404);
+            }
+
             $flag = $this->countReason($permit, $reason);
 
             $application = $permit->application;
