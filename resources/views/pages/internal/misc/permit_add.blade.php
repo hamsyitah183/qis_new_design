@@ -49,16 +49,14 @@
                             <input type="text" class="form-control" id="itemName" name="itemName"
                                 placeholder="Citrus - Lemon, Chinese Mandarine, Limau Kasturi">
                         </div>
-                        <div class="col-xl-12">
-                            <label for="scientificName" class="form-label">Scientific Name</label>
-                            <input type="text" class="form-control" id="scientificName" name="scientificName"
-                                placeholder="e.g. Citrus limon">
-                        </div>
-                        <div class="col-xl-12">
-                            <label class="form-label d-block">Description Form</label>
-                            <!-- Tagify input -->
-                            <input id="descriptionFormTags" name="descriptionFormTags" class="form-control"
-                                placeholder="Select or type description form...">
+                        <div class="col-xl-6">
+                            <label for="blog-category" class="form-label">Category</label>
+                            <select class="form-select" name="itemCategory" id="itemCategory">
+                                <option value="">Select Category</option>
+                                @foreach ($pbdata as $cate)
+                                    <option value="{{ $cate->cate_code }}">{{ $cate->description }}</option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
                     <div class="row gy-3 mt-1">
@@ -92,10 +90,11 @@
                         </div>
 
                         <div class="col-xl-12">
-                            <label class="form-label d-block">Purpose of Import</label>
-                            <!-- Tagify input -->
-                            <input id="purposeTags" name="purposeTags" class="form-control"
-                                placeholder="Select or type purpose...">
+                            <label class="form-label d-block">Consignment Application (Usage)</label>
+                            <select id="usageSelect" name="usageSelect[]" class="form-control xintra-select2" multiple
+                                data-route="/internal/get_pbdata/consignment_application" style="width: 100%;">
+                                <!-- Options will be loaded dynamically -->
+                            </select>
                         </div>
 
                         <div class="col-xl-12"> <!-- style="display:none" -->

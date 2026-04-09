@@ -12,10 +12,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const formData = new FormData();
         formData.append("itemName", document.getElementById("itemName").value);
-        // formData.append("itemCategory", document.getElementById("itemCategory").value);
+        formData.append("itemCategory", document.getElementById("itemCategory").value);
         formData.append("quanLimit", document.getElementById("quanLimit").value);
         formData.append("quanmunit", document.getElementById("quanmunit").value);
-        formData.append('measurement', document.getElementById("quanmunit").value)
+        formData.append('measurement', document.getElementById("quanmunit"))
         formData.append('id', document.getElementById('id').value);
         formData.append('start_date', document.getElementById('start_date').value);
         formData.append('end_date', document.getElementById('end_date').value);
@@ -23,13 +23,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Tagify values → JSON strings
         formData.append("countryTag", JSON.stringify(countryTagify ? countryTagify.value : []));
-        formData.append("purposeTags", JSON.stringify(purposeTagify ? purposeTagify.value : []));
-        formData.append("descriptionFormTags", JSON.stringify(descriptionFormTagify ? descriptionFormTagify.value : []));
+        formData.append("usageTags", JSON.stringify(usageTagify ? usageTagify.value : []));
 
         // Quill HTML
         formData.append("permit_condition", conditionHtml);
-
-        formData.append('scientificName', document.getElementById('scientificName').value);
 
         // Ask user which action to take
         Swal.fire({

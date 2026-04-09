@@ -227,32 +227,24 @@ class MiscController extends Controller
     {
         Gate::authorize('manage settings');
 
-        // dd($request->scientificName);
-
         $request->validate([
             'itemName' => 'required|string',
-            // 'itemCategory' => 'required|integer',
+            'itemCategory' => 'required|integer',
             'permit_condition' => 'required|string',
         ]);
 
-        // dd($request->measurement, $request->quanLimit, $request->quanmunit);
-
         // Decode Tagify arrays
         $countryArr = json_decode($request->countryTag, true) ?? [];
-        $usageArr = json_decode($request->purposeTags, true) ?? [];
-        $descriptionFormArr = json_decode($request->descriptionFormTags, true) ?? [];
+        $usageArr = json_decode($request->usageTags, true) ?? [];
 
         $countryValues = array_map(fn($i) => $i['value'] ?? ($i['name'] ?? null), $countryArr);
         $usageValues = array_map(fn($i) => $i['value'] ?? ($i['name'] ?? null), $usageArr);
-        $descriptionFormValues = array_map(fn($i) => $i['value'] ?? ($i['name'] ?? null), $descriptionFormArr);
 
         $data = [
-            // 'category' => $request->itemCategory ?? 0, // Keeping 0 to avoid breaking changes if this is hidden
-            'description_form' => $descriptionFormValues,
+            'category' => $request->itemCategory,
             'item_name' => $request->itemName,
-            'scientific_name' => $request->scientificName ?: null,
             'addional_condition' => $request->permit_condition,
-            'quantity_limit' => $request->quanLimit ?: null,
+            'quantity_limit' => $request->quanLimit ?: null . ' ' . $request->measurement ?: null,
             // 'date_limit' => $request->spedate ?: null,
             'start_date' => $request->start_date ?: null,
             'end_date' => $request->end_date ?: null,
@@ -392,7 +384,7 @@ class MiscController extends Controller
     {
         Gate::authorize('manage settings');
 
-        $query = IpCondition::with(['condcategory'])->select('id', 'item_name', 'scientific_name', 'category', 'description_form', 'usage', 'country');
+        $query = IpCondition::with(['condcategory'])->select('id', 'item_name', 'category', 'usage', 'country');
 
         return DataTables::of($query)->make(true);
     }
@@ -402,7 +394,7 @@ class MiscController extends Controller
         Gate::authorize('manage settings');
 
         $conditions = IpCondition::with(['code', 'condcategory'])
-            ->select('id', 'item_name', 'scientific_name', 'category', 'description_form', 'usage', 'addional_condition', 'quantity_limit', 'start_date', 'end_date', 'country')
+            ->select('id', 'item_name', 'category', 'usage', 'addional_condition', 'quantity_limit', 'start_date', 'end_date', 'country')
             ->findOrFail($id);
 
         return response()->json([

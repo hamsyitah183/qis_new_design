@@ -11,7 +11,7 @@ class IpConsignmentPermit extends Model
 
     protected $table = 'ip_consignment_permit';
 
-    protected $fillable = ['application_id', 'permit_number', 'consignment_detail', 'quantity', 'unit_measurement', 'value', 'purpose', 'status', 'remark', 'validity_date'];
+    protected $fillable = ['application_id', 'permit_number', 'consignment_detail', 'quantity', 'unit_measurement', 'value', 'purpose', 'status'];
 
     protected $casts = [
         'consignment_detail' => 'array', // JSON (id, category, item_name, usage)
@@ -51,14 +51,5 @@ class IpConsignmentPermit extends Model
     public function getItemNameAttribute()
     {
         return data_get($this->consignment_detail, 'item_name', '-');
-    }
-
-    public function condition()
-    {
-        $itemId = data_get($this->consignment_detail, 'item_id');
-
-        return $itemId 
-            ? IpCondition::find($itemId)
-            : null;
     }
 }

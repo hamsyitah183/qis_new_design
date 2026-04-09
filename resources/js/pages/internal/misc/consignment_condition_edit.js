@@ -13,7 +13,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const formData = new FormData();
         formData.append("item_name", document.getElementById("itemName").value);
-        formData.append("scientific_name", document.getElementById("scientificName").value);
         formData.append("category", document.getElementById("itemCategory").value);
         formData.append("quantity_limit", document.getElementById("quanLimit").value);
         formData.append("quanmunit", document.getElementById("quanmunit").value);

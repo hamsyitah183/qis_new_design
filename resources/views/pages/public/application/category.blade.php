@@ -16,7 +16,6 @@
                                     <i class="bi bi-person-fill fs-2 text-primary icon"></i>
                                 </h6>
                                 <span class="fs-15 fw-bold">Self Apply</span>
-                                <p class="text-muted fs-12 text-center mt-2">Submit an application directly for yourself or your own registered business.</p>
                             </div>
                         </div>
                     </div>
@@ -34,7 +33,6 @@
                                     <i class="bi bi-people-fill fs-2 text-primary icon"></i>
                                 </h6>
                                 <span class="fs-15 fw-bold">Apply For Others</span>
-                                <p class="text-muted fs-12 text-center mt-2">Submit an application as an authorized agent or representative on behalf of a client or third party.</p>
                             </div>
                         </div>
                     </div>

@@ -174,12 +174,7 @@
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <i class="ri-arrow-down-s-line side-menu__angle"></i>
                                 <i class="ti ti-user side-menu__icon"></i>
-                                <span class="side-menu__label">
-                                    User Management
-                                    <svg id="userMgmtParentBadge" style="display:none; position: relative; top: -5px; left: 2px;" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg">
-                                        <circle cx="4" cy="4" r="4" fill="#dc3545"/>
-                                    </svg>
-                                </span>
+                                <span class="side-menu__label">User Management</span>
                             </a>
                             <ul class="slide-menu child1">
                                 <li class="slide side-menu__label1"><a href="javascript:void(0)">Users</a></li>
@@ -214,9 +209,6 @@
                                     </li>
                                     <li class="slide">
                                         <a href="{{ route('internal.boundary.list') }}" class="side-menu__item">Boundary Officer</a>
-                                    </li>
-                                    <li class="slide {{ $currentRoute === 'internal.branch-management' ? 'active' : '' }}">
-                                        <a href="{{ route('internal.branch-management') }}" class="side-menu__item">Branch Management</a>
                                     </li>
                                 @endif
                             </ul>
@@ -253,7 +245,7 @@
                     @can('manage settings')
                         <li class="slide__category"><span class="category-name">Misc</span></li>
 
-                        <li class="slide has-sub">
+                        <li class="slide has-sub {{ Str::startsWith($currentRoute, 'internal.') ? 'open active' : '' }}">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <i class="ri-arrow-down-s-line side-menu__angle"></i>
                                 <i class="bi bi-gear-wide side-menu__icon"></i>
@@ -275,7 +267,9 @@
                                 <li class="slide {{ $currentRoute === 'internal.state-district-management' ? 'active' : '' }}">
                                     <a href="{{ route('internal.state-district-management') }}" class="side-menu__item">State &amp; District Management</a>
                                 </li>
-
+                                <li class="slide {{ $currentRoute === 'internal.branch-management' ? 'active' : '' }}">
+                                    <a href="{{ route('internal.branch-management') }}" class="side-menu__item">Branch Management</a>
+                                </li>
                             </ul>
                         </li>
                     @endcan

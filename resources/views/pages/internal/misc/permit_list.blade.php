@@ -61,19 +61,19 @@
                                     placeholder="Search item name...">
                             </li>
 
-                            {{-- Description Form --}}
+                            {{-- Category --}}
                             <li class="mb-2">
-                                <label class="form-label fw-semibold mb-1">Description Form</label>
+                                <label class="form-label fw-semibold mb-1">Category</label>
                                 <select class="form-select form-select-sm" id="filterPermitCategory">
-                                    <option value="">All Description Forms</option>
+                                    <option value="">All Categories</option>
                                 </select>
                             </li>
 
-                            {{-- Purpose of Import --}}
+                            {{-- Usage --}}
                             <li class="mb-2">
-                                <label class="form-label fw-semibold mb-1">Purpose of Import</label>
+                                <label class="form-label fw-semibold mb-1">Usage</label>
                                 <select class="form-select form-select-sm" id="filterPermitUsage">
-                                    <option value="">All Purposes</option>
+                                    <option value="">All Usage</option>
                                 </select>
                             </li>
 
@@ -95,9 +95,8 @@
                             <tr>
                                 {{-- <th>#</th> --}}
                                 <th class="text-wrap">Item Name</th>
-                                <th class="text-wrap">Scientific Name</th>
-                                <th>Description Form</th>
-                                <th>Purpose of Import</th>
+                                <th>Category</th>
+                                <th>Usage</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -129,15 +128,11 @@
                                     <td id="itemNameCell"></td>
                                 </tr>
                                 <tr>
-                                    <th>Scientific Name</th>
-                                    <td id="scientificNameCell"></td>
-                                </tr>
-                                <tr>
-                                    <th>Description Form</th>
+                                    <th>Category</th>
                                     <td id="categoryCell"></td>
                                 </tr>
                                 <tr>
-                                    <th>Purpose of Import</th>
+                                    <th>Usage / Consignment Application</th>
                                     <td id="usageCell"></td>
                                 </tr>
                                 <tr>

@@ -47,6 +47,10 @@ class UserController extends Controller
 
     public function public_list()
     {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
+
         Gate::authorize('read public user');
 
         $user = authUser()['user'];
@@ -60,7 +64,9 @@ class UserController extends Controller
 
     public function public_list_data(Request $request)
     {
-        Gate::authorize('read public user');
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
 
         $users = PublicUser::query();
 
@@ -181,7 +187,9 @@ class UserController extends Controller
 
     public function verification_list()
     {
-        Gate::authorize('approve public user');
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
 
         $count = PublicUser::whereHas('approved', function ($query) {
             $query->whereNotNull('verification_attachment')->where('doa_verified', '!=', 1)->where('status', '!=', 'Verification is rejected');
@@ -192,7 +200,9 @@ class UserController extends Controller
 
     function verification_count()
     {
-        Gate::authorize('approve public user');
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
 
         $count = PublicUser::whereHas('approved', function ($query) {
             $query->whereNotNull('verification_attachment')->where('doa_verified', '!=', 1)->where('status', '!=', 'Verification is rejected');
@@ -206,7 +216,9 @@ class UserController extends Controller
 
     public function verification_list_data(Request $request)
     {
-        Gate::authorize('approve public user');
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
 
         $query = PublicUser::whereHas('approved', function ($query) {
             $query->whereNotNull('verification_attachment')->where('doa_verified', '!=', 1)->where('status', '!=', 'Verification is rejected');
@@ -260,7 +272,9 @@ class UserController extends Controller
 
     public function user_data($id)
     {
-        Gate::authorize('read public user');
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
 
         $public = PublicUser::where('uuid', $id)->first();
 
@@ -408,7 +422,9 @@ class UserController extends Controller
 
     public function public_user_delete($id)
     {
-        Gate::authorize('delete public user');
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
 
         $public = PublicUser::where('uuid', $id)->first();
 
@@ -421,7 +437,9 @@ class UserController extends Controller
 
     public function internal_user_delete($id)
     {
-        Gate::authorize('delete internal user');
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
 
         $user = InternalUser::where('uuid', $id)->first();
 
@@ -561,12 +579,8 @@ class UserController extends Controller
 
     public function internal_user_save(Request $request)
     {
-        $uuid = $request->input('uuid');
-
-        if ($uuid) {
-            Gate::authorize('update internal user');
-        } else {
-            Gate::authorize('create internal user');
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
         }
 
         $actor = authUser()['user'];
@@ -699,7 +713,9 @@ class UserController extends Controller
 
     public function user_list($type)
     {
-        Gate::authorize('read internal user');
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
 
         if ($type === 'public') {
             $users = PublicUser::select(['fullname', 'id', 'uuid'])->get();
@@ -907,7 +923,9 @@ class UserController extends Controller
 
     public function verification_attachment($id)
     {
-        Gate::authorize('approve public user');
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
 
         \Log::info("Fetching verification for user: {$id}");
 
@@ -925,7 +943,9 @@ class UserController extends Controller
 
     public function save_attachment($id, Request $request)
     {
-        Gate::authorize('approve public user');
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
 
         $internal = authUser()['user'];
 

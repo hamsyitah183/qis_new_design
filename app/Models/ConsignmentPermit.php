@@ -21,8 +21,7 @@ class ConsignmentPermit extends Model
         'purpose',
         'status',
         'remark',
-        'mygap_myorganic_no',
-        'validity_date',
+        'mygap_myorganic_no'
     ];
 
     protected $casts = [
@@ -60,14 +59,5 @@ class ConsignmentPermit extends Model
     public function attachments()
     {
         return $this->hasMany(ConsignmentAttachment::class, 'permit_id', 'id');
-    }
-
-    public function condition()
-    {
-        $itemId = data_get($this->consignment_detail, 'item_id');
-
-        return $itemId 
-            ? ConsignmentCondition::find($itemId)
-            : null;
     }
 }

@@ -40,9 +40,6 @@ class RoleAndPermissionSeeder extends Seeder
 
             // settings
             'manage settings',
-
-            // role and permission management
-            'manage role and permission',
         ];
 
         foreach ($internalPermissions as $permission) {
@@ -51,9 +48,6 @@ class RoleAndPermissionSeeder extends Seeder
                 'guard_name' => 'internal',
             ]);
         }
-
-        // Flush cache again so syncPermissions() sees the newly created permissions
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         // Public guard only needs view dashboard
         Permission::firstOrCreate([
@@ -74,13 +68,13 @@ class RoleAndPermissionSeeder extends Seeder
 
         $roles = [
 
-            // ✅ Superadmin — everything (including manage role and permission)
+            // ✅ Superadmin — everything
             'superadmin' => [
                 'guard_name'  => 'internal',
                 'permissions' => $allInternal,
             ],
 
-            // ✅ Admin — everything except activity log and manage role
+            // ✅ Admin — everything except activity log
             'admin' => [
                 'guard_name'  => 'internal',
                 'permissions' => $perms([
@@ -97,7 +91,6 @@ class RoleAndPermissionSeeder extends Seeder
                     'view importer list',
                     'view exporter list',
                     'manage settings',
-                    // 'manage role and permission' intentionally excluded — superadmin only
                 ]),
             ],
 

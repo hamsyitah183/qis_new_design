@@ -59,17 +59,15 @@
                                 value="{{ $condition->item_name }}"
                                 placeholder="Citrus - Lemon, Chinese Mandarine, Limau Kasturi">
                         </div>
-                        <div class="col-xl-12">
-                            <label for="scientificName" class="form-label">Scientific Name</label>
-                            <input type="text" class="form-control" id="scientificName" name="scientificName"
-                                value="{{ $condition->scientific_name }}"
-                                placeholder="e.g. Citrus limon">
-                        </div>
-                        <div class="col-xl-12">
-                            <label class="form-label d-block">Description Form</label>
-                            <!-- Tagify input -->
-                            <input id="descriptionFormTags" name="descriptionFormTags" class="form-control"
-                                placeholder="Select or type description form...">
+                        <div class="col-xl-6">
+                            <label for="blog-category" class="form-label">Category</label>
+                            <select class="form-select" name="itemCategory" id="itemCategory">
+                                <option value="{{ $condition->category }}" selected>{{ $condition->code->description }}
+                                </option>
+                                @foreach ($pbdata as $cate)
+                                    <option value="{{ $cate->cate_code }}">{{ $cate->description }}</option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
                     <div class="row gy-3 mt-1">
@@ -114,27 +112,14 @@
                                 placeholder="Select or type countries...">
                         </div>
                         <div class="col-xl-12">
-                            <label class="form-label d-block">Purpose of Import</label>
+                            <label class="form-label d-block">Consignment Application (Usage)</label>
 
                             <!-- Your Tagify input -->
-                            <input id="purposeTags" name="purposeTags" class="form-control"
-                                placeholder="Select or type purpose...">
+                            <input id="usageTags" name="usageTags" class="form-control"
+                                placeholder="Select or type usage...">
                         </div>
                         <div class="col-xl-12"> <!-- style="display:none" -->
                             <label class="form-label d-block">Permit Condition</label>
-
-                            {{-- variables --}}
-                            <div class="d-flex gap-2 my-2">
-                                <span class="fw-bold">Variables: </span>
-
-                                <span class="badge bg-primary-transparent p-2 fs-13 cursor-pointer" id="importPermitNumber">
-                                    Import Permit Number
-                                </span>
-
-                                <span class="badge bg-primary-transparent p-2 fs-13 cursor-pointer" id="year">
-                                    Year
-                                </span>
-                            </div>
                             <!-- Quill editor -->
                             <!-- <div id="permit-condition-editor" style="min-height:150px; border:1px solid var(--bs-border-color); border-radius:.5rem; background:var(--bs-body-bg);"></div> -->
                             <div class="quill-wrapper">
@@ -171,8 +156,7 @@
     </script>
     <script>
         window.countryTagify = null;
-        window.purposeTagify = null;
-        window.descriptionFormTagify = null;
+        window.usageTagify = null;
     </script>
 
     <script>
@@ -203,16 +187,6 @@
                 JSON.parse(theusageraw ?? "[]");
 
             const conditionUsage = theusage.map(i => ({
-                value: i,
-                name: i
-            }));
-
-            const thedescriptionformraw = {!! json_encode($condition->description_form) !!};
-            const thedescriptionform = Array.isArray(thedescriptionformraw) ?
-                thedescriptionformraw :
-                JSON.parse(thedescriptionformraw ?? "[]");
-
-            const conditionDescriptionForm = thedescriptionform.map(i => ({
                 value: i,
                 name: i
             }));
@@ -265,18 +239,18 @@
             });
 
 
-            // --- 2. Get purpose list ---
+            // --- 2. Get usage list ---
             $.ajax({
-                url: `/internal/get_pbdata/consignment_purpose`,
+                url: `/internal/get_pbdata/consignment_application`,
                 method: 'GET',
                 success: function(response) {
-                    const purposeList = response.data.map(i => ({
+                    const usageList = response.data.map(i => ({
                         value: i.description,
                         name: i.description
                     }));
 
-                    purposeTagify = new Tagify(document.getElementById("purposeTags"), {
-                        whitelist: purposeList,
+                    usageTagify = new Tagify(document.getElementById("usageTags"), {
+                        whitelist: usageList,
                         enforceWhitelist: false,
                         editTags: false,
                         dropdown: {
@@ -288,36 +262,9 @@
                         dropdownFilter: (item, value) =>
                             item.name.toLowerCase().includes(value.toLowerCase())
                     });
-                    purposeTagify.addTags(conditionUsage);
+                    usageTagify.addTags(conditionUsage);
 
-                    // console.log("Purpose loaded:", purposeList);
-                }
-            });
-
-            // --- 3. Get description form list ---
-            $.ajax({
-                url: `/internal/get_pbdata/condition_category`,
-                method: 'GET',
-                success: function(response) {
-                    const descriptionFormList = response.data.map(i => ({
-                        value: i.description,
-                        name: i.description
-                    }));
-
-                    descriptionFormTagify = new Tagify(document.getElementById("descriptionFormTags"), {
-                        whitelist: descriptionFormList,
-                        enforceWhitelist: false,
-                        editTags: false,
-                        dropdown: {
-                            enabled: 1,
-                            maxItems: 20,
-                            highlightFirst: true,
-                            mapValueTo: "name",
-                        },
-                        dropdownFilter: (item, value) =>
-                            item.name.toLowerCase().includes(value.toLowerCase())
-                    });
-                    descriptionFormTagify.addTags(conditionDescriptionForm);
+                    // console.log("Usage loaded:", usageList);
                 }
             });
 
@@ -356,34 +303,6 @@
 
             // Insert into Quill with formatting
             quill.clipboard.dangerouslyPasteHTML(longText);
-
-            function insertVariable(variableText) {
-                const range = quill.getSelection(true);
-
-                if (range) {
-                    quill.insertText(range.index, variableText, {
-                        // bold: true,
-                        // color: '#0d6efd'
-                    });
-
-                    quill.setSelection(range.index + variableText.length);
-                } else {
-                    quill.insertText(quill.getLength(), variableText, {
-                        // bold: true,
-                        // color: '#0d6efd'
-                    });
-                }
-            }
-
-
-            // ✅ CLICK EVENTS
-            document.getElementById('importPermitNumber').addEventListener('click', function () {
-                insertVariable('@{{import_permit_number}}');
-            });
-
-            document.getElementById('year').addEventListener('click', function () {
-                insertVariable('@{{year}}');
-            });
         });
     </script>
 

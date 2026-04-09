@@ -15,7 +15,6 @@ class InspectionItem extends Model
         'value',
         'purpose',
         'status',
-        'validity_date',
     ];
 
     protected $casts = [

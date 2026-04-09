@@ -195,38 +195,38 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
                 'category' => 1,
                 'item_name' => 'MANGO',
                 'addional_condition' => "Status Revised Conditions (14042016)
-                    Common Name Mango
-                    Scientific Name   Mangifera indica
-                    Description Form Fresh fruit for consumption
+Common Name Mango
+Scientific Name   Mangifera indica
+Description Form Fresh fruit for consumption
 
-                    Import Condition 1.Import License is to be sought from the relevant Ministry if required.
+Import Condition 1.Import License is to be sought from the relevant Ministry if required.
 
-                    2.A copy of this Import Permit (IP) must be sent to the consignor.
+2.A copy of this Import Permit (IP) must be sent to the consignor.
 
-                    3.Consignment must be accompanied with:
-                    i.Import Permit (IP)
-                    ii.Phytosanitary Certificate (PC) which has the Malaysian Import Permit (IP) reference number and/or reference number of the quarantine treatment certificate (if related) printed at the additional declaration column. 
+3.Consignment must be accompanied with:
+i.Import Permit (IP)
+ii.Phytosanitary Certificate (PC) which has the Malaysian Import Permit (IP) reference number and/or reference number of the quarantine treatment certificate (if related) printed at the additional declaration column. 
 
-                    4.Consignment must be inspected and tested according to appropriate official procedures and are considered to be free from soil, pests, diseases, weed seeds contaminants and regulated articles by National Plant Protection Organization (NPPO) of exporting country.
+4.Consignment must be inspected and tested according to appropriate official procedures and are considered to be free from soil, pests, diseases, weed seeds contaminants and regulated articles by National Plant Protection Organization (NPPO) of exporting country.
 
-                    5.Consignment is subjected to visual inspection, examination or analysis prior to clearance by Quarantine inspector/officer upon arrival at the point of entry into Sabah, Malaysia.
+5.Consignment is subjected to visual inspection, examination or analysis prior to clearance by Quarantine inspector/officer upon arrival at the point of entry into Sabah, Malaysia.
 
-                    Additional Declaration For CHINA, INDONESIA, MYANMAR, PAKISTAN, PHILIPPINES, SARAWAK, SOUTH AFRICA, SRI LANKA, TAIWAN POC, UNITED STATES, VIETNAM, THAILAND:
-                    NPPO must include this Additional Declaration in the PC:
-                    i.The issuance of this PC is based on the Malaysia IP reference number: IPxxxxxxxxxxxxx, and
+Additional Declaration For CHINA, INDONESIA, MYANMAR, PAKISTAN, PHILIPPINES, SARAWAK, SOUTH AFRICA, SRI LANKA, TAIWAN POC, UNITED STATES, VIETNAM, THAILAND:
+NPPO must include this Additional Declaration in the PC:
+i.The issuance of this PC is based on the Malaysia IP reference number: IPxxxxxxxxxxxxx, and
 
-                    ii.The mango fruits were obtained from production area which are free from Mango Seed Weevil (Sternochetus mangiferae).
+ii.The mango fruits were obtained from production area which are free from Mango Seed Weevil (Sternochetus mangiferae).
 
-                    Treatment
-                    Nil 
-                    Post Entry Requirement
-                    1.Quarantine officer(s) will take the samples at the point of entry and send to Plant Quarantine Post Entry Station (PEQ) Kinarut, Sabah, Malaysia for screening of pests, diseases and other regulated articles.
+Treatment
+ Nil 
+Post Entry Requirement
+ 1.Quarantine officer(s) will take the samples at the point of entry and send to Plant Quarantine Post Entry Station (PEQ) Kinarut, Sabah, Malaysia for screening of pests, diseases and other regulated articles.
 
-                    2.If any pests, diseases and other regulated articles are present during the post-entry quarantine screening process, Department of Agriculture (DOA) Sabah have the right to suspend future importation, until the cause of the non-compliance is investigated, identified and rectified to the satisfaction of DOA Sabah, Malaysia.
+2.If any pests, diseases and other regulated articles are present during the post-entry quarantine screening process, Department of Agriculture (DOA) Sabah have the right to suspend future importation, until the cause of the non-compliance is investigated, identified and rectified to the satisfaction of DOA Sabah, Malaysia.
 
-                    3.All cost incurred during PEQ activities will be borne by the importer.
+3.All cost incurred during PEQ activities will be borne by the importer.
 
-                    Other Requirement All re-export consignment must be accompanied by a PC from the country of origin and re-export PC from the re-exporting country.
+Other Requirement All re-export consignment must be accompanied by a PC from the country of origin and re-export PC from the re-exporting country.
 ",
                 'quantity_limit' => null,
                 //'date_limit' => null,
@@ -262,41 +262,41 @@ The consignment must be accompanied by a Phytosanitary Certificate from the coun
                 'category' => 3,
                 'item_name' => 'BELL PEPPER (CAPSICUM ANNUM)',
                 'addional_condition' => "
-                **other than the above listed countries, please submit application for consideration of import approval to Plant Biosecurity & Quarantine Division, Department of Agriculture Sabah, Locked Bag,  2050,  Wisma Pertanian Sabah, 88632 KOTA KINABALU.
+**other than the above listed countries, please submit application for consideration of import approval to Plant Biosecurity & Quarantine Division, Department of Agriculture Sabah, Locked Bag,  2050,  Wisma Pertanian Sabah, 88632 KOTA KINABALU.
 
-                Import Condition 
-                1.Import License is to be sought from the relevant Ministry if required.
-                2.A copy of this Import Permit (IP) must be sent to the consignor.
-                3.Consignment must be accompanied with:
-                i.Import Permit (IP)
-                ii.Phytosanitary Certificate (PC) which has the Malaysian Import Permit (IP) reference number and/or reference number of the quarantine treatment certificate (if related) printed at the additional declaration column. 
+Import Condition 
+1.Import License is to be sought from the relevant Ministry if required.
+2.A copy of this Import Permit (IP) must be sent to the consignor.
+3.Consignment must be accompanied with:
+i.Import Permit (IP)
+ii.Phytosanitary Certificate (PC) which has the Malaysian Import Permit (IP) reference number and/or reference number of the quarantine treatment certificate (if related) printed at the additional declaration column. 
 
-                4.Consignment must be inspected and tested according to appropriate official procedures and are considered to be free from soil, pests, diseases, weed seeds contaminants and regulated articles by National Plant Protection Organization (NPPO) of exporting country.
-                5.Consignment is subjected to visual inspection, examination or analysis prior to clearance by Quarantine inspector/officer upon arrival at the point of entry into Sabah, Malaysia.
+4.Consignment must be inspected and tested according to appropriate official procedures and are considered to be free from soil, pests, diseases, weed seeds contaminants and regulated articles by National Plant Protection Organization (NPPO) of exporting country.
+5.Consignment is subjected to visual inspection, examination or analysis prior to clearance by Quarantine inspector/officer upon arrival at the point of entry into Sabah, Malaysia.
 
 
 
-                Additional Declaration ALL COUNTRIES : 
-                NPPO must include this Additional Declaration in the PC:
-                i.The issuance of this PC is based on the Malaysia IP reference number : IPxxxxxxxxxxxxx
-                For THAILAND :
-                NPPO must include this Additional Declaration in the PC:
-                i.The issuance of this PC is based on the Malaysia IP reference number : IPxxxxxxxxxxxxx
-                ii.The fresh fruit must be free from following pests and diseases :
-                Insect :
-                i. Bactrocera spp.
-                Bacteria :
-                ii. Xanthomonas vesicatoria (bacterial spot of tomato and pepper)
-                Fungi :
-                iii. Sclerotinia sclerotiorum (cottony soft rot)
+Additional Declaration ALL COUNTRIES : 
+NPPO must include this Additional Declaration in the PC:
+i.The issuance of this PC is based on the Malaysia IP reference number : IPxxxxxxxxxxxxx
+For THAILAND :
+NPPO must include this Additional Declaration in the PC:
+i.The issuance of this PC is based on the Malaysia IP reference number : IPxxxxxxxxxxxxx
+ii.The fresh fruit must be free from following pests and diseases :
+Insect :
+i. Bactrocera spp.
+Bacteria :
+ii. Xanthomonas vesicatoria (bacterial spot of tomato and pepper)
+Fungi :
+iii. Sclerotinia sclerotiorum (cottony soft rot)
 
-                Treatment Nil
-                Post Entry Requirement
-                1.Quarantine officer(s) will take the samples of consignment based on symptoms/ signs of infestation at the point of entry and send to Plant Quarantine Post Entry Station (PEQ) Kinarut, Sabah, Malaysia for screening of pests, diseases and other regulated articles.
-                2.If any pests, diseases and other regulated articles are present during the post-entry quarantine screening process, Department of Agriculture (DOA) Sabah have the right to suspend future importation, until the cause of the non-compliance is investigated, identified and rectified to the satisfaction of DOA Sabah, Malaysia.
-                3.All cost incurred during PEQ activities will be borne by the importer.
+Treatment Nil
+Post Entry Requirement
+ 1.Quarantine officer(s) will take the samples of consignment based on symptoms/ signs of infestation at the point of entry and send to Plant Quarantine Post Entry Station (PEQ) Kinarut, Sabah, Malaysia for screening of pests, diseases and other regulated articles.
+2.If any pests, diseases and other regulated articles are present during the post-entry quarantine screening process, Department of Agriculture (DOA) Sabah have the right to suspend future importation, until the cause of the non-compliance is investigated, identified and rectified to the satisfaction of DOA Sabah, Malaysia.
+3.All cost incurred during PEQ activities will be borne by the importer.
 
-                Other Requirement All re-export consignment must be accompanied by a PC from the country of origin and re-export PC from the re-exporting country.
+Other Requirement All re-export consignment must be accompanied by a PC from the country of origin and re-export PC from the re-exporting country.
 ",
                 'quantity_limit' => null,
                 //'date_limit' => null,

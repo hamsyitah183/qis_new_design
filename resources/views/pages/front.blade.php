@@ -16,9 +16,6 @@
     <!-- Title-->
     <title> {{ $title }} </title>
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/gif" href="{{ asset('images/tab-logo.png') }}">
-
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <!-- Main Theme JS -->
@@ -76,7 +73,7 @@
 
     <div class="page">
         <span id="year"></span>
-        @yield('content')
+        @yield('content')   
 
 
 
@@ -117,16 +114,14 @@
     <script src="{{ asset('build2/assets/form-wizard.js') }}"></script>
 
     <!-- Form Wizard Init -->
-    {{--  --}}
-    <link rel="modulepreload" href="{{ asset('build2/assets/form-wizard-init-iKT7VXTT.js') }}" />
+    {{--  --}}<link rel="modulepreload" href="{{ asset('build2/assets/form-wizard-init-iKT7VXTT.js') }}" />
     <script type="module" src="{{ asset('build2/assets/form-wizard-init-iKT7VXTT.js') }}"></script>
 
     <!-- Sticky JS -->
     <script src="{{ asset('build2/assets/sticky.js') }}"></script>
 
     <!-- Custom Switcher JS -->
-    {{--  --}}
-    <link rel="modulepreload" href="{{ asset('build2/assets/custom-switcher-BayzdO2G.js') }}" />
+    {{--  --}}<link rel="modulepreload" href="{{ asset('build2/assets/custom-switcher-BayzdO2G.js') }}" />
     <script type="module" src="{{ asset('build2/assets/custom-switcher-BayzdO2G.js') }}"></script>
 
     <!-- APP JS -->

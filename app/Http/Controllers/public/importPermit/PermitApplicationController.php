@@ -405,6 +405,17 @@ class PermitApplicationController extends Controller
                     Log::warning('Pusher connection failed but continuing application creation: ' . $e->getMessage());
                 }
 
+                activity()
+                    ->tap(function (Activity $activity) {
+                        $activity->log_name = 'user_activity';
+                    })
+                    ->event('create application')
+                    ->causedBy(authUser()['user'])
+                    ->performedOn(authUser()['user'])
+                    ->withProperties([
+                        'application' => $application
+                    ])
+                    ->log(authUser()['user']['fullname'] . ' has created an application (ID: ' . $application->application_id . ')');
                 $notificationController = new NotificationController();
                 if (!$isDraft) {
                     // dd('is not draf', $application->category_application);

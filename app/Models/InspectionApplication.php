@@ -24,7 +24,6 @@ class InspectionApplication extends Model
         'status',
         'importer_verify',
         'date_importer_verify',
-    
     ];
 
     protected $casts = [
