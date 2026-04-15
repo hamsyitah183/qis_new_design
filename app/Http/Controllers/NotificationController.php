@@ -28,53 +28,66 @@ class NotificationController extends Controller
 
     private function sendWhatsapp($fullname, $type, $applicationId, $status, $messageText, $phoneNumber)
     {
-        $phoneNumber = preg_replace('/^\+/', '', $phoneNumber);
+        try {
+            $phoneNumber = preg_replace('/^\+/', '', $phoneNumber);
 
-        $url = 'https://rest.moceanapi.com/rest/2/send-message/whatsapp';
+            $url = 'https://rest.moceanapi.com/rest/2/send-message/whatsapp';
 
-        $bearerToken = config('services.mocean.token');
-        $fromNumber = config('services.mocean.from');
+            $bearerToken = config('services.mocean.token');
+            $fromNumber = config('services.mocean.from');
 
-        $payload = [
-            'mocean-from' => $fromNumber,
-            'mocean-to' => $phoneNumber,
-            'mocean-event-url' => '',
-            'mocean-content' => [
-                'type' => 'template',
-                'wa_template' => [
-                    'name' => 'qisapplicationstatus',
-                    'language' => 'en',
-                    'body_params' => [
-                        ['type' => 'text', 'text' => $fullname],
-                        ['type' => 'text', 'text' => $type],
-                        ['type' => 'text', 'text' => $applicationId],
-                        ['type' => 'text', 'text' => $status],
-                        ['type' => 'text', 'text' => $messageText],
-                    ],
-                    'wa_buttons' => [
-                        [
-                            'type' => 'url',
-                            'index' => 0,
-                            'url_parameter' => $applicationId,
+            $payload = [
+                'mocean-from' => $fromNumber,
+                'mocean-to' => $phoneNumber,
+                'mocean-event-url' => '',
+                'mocean-content' => [
+                    'type' => 'template',
+                    'wa_template' => [
+                        'name' => 'qisapplicationstatus',
+                        'language' => 'en',
+                        'body_params' => [
+                            ['type' => 'text', 'text' => $fullname],
+                            ['type' => 'text', 'text' => $type],
+                            ['type' => 'text', 'text' => $applicationId],
+                            ['type' => 'text', 'text' => $status],
+                            ['type' => 'text', 'text' => $messageText],
+                        ],
+                        'wa_buttons' => [
+                            [
+                                'type' => 'url',
+                                'index' => 0,
+                                'url_parameter' => $applicationId,
+                            ],
                         ],
                     ],
                 ],
-            ],
-        ];
+            ];
 
-        $response = Http::withToken($bearerToken)
-            ->post($url, $payload);
+            $response = Http::withToken($bearerToken)
+                ->timeout(10)           // Give up after 10 seconds
+                ->retry(2, 1000)        // Retry 2 times, 1 second apart
+                ->post($url, $payload);
 
-        if ($response->successful()) {
-            return response()->json([
-                'status' => 'success',
-                'response' => $response->json(),
+            if ($response->successful()) {
+                Log::info('WhatsApp sent successfully', [
+                    'phone_number' => $phoneNumber,
+                    'application_id' => $applicationId,
+                ]);
+                return true;
+            } else {
+                Log::warning('WhatsApp API returned error', [
+                    'phone_number' => $phoneNumber,
+                    'application_id' => $applicationId,
+                    'response' => $response->body(),
+                ]);
+                return false;
+            }
+        } catch (\Exception $e) {
+            Log::error('WhatsApp exception: ' . $e->getMessage(), [
+                'phone_number' => $phoneNumber,
+                'application_id' => $applicationId,
             ]);
-        } else {
-            return response()->json([
-                'status' => 'error',
-                'response' => $response->body(),
-            ], $response->status());
+            return false;
         }
     }
 
