@@ -324,7 +324,7 @@ class PaymentController extends Controller
 
         // Call BayuPay API
         $response = Http::withToken('test-api')
-         ->withoutVerifying() // Disable SSL verification for testing
+        //  ->withoutVerifying() // Disable SSL verification for testing
         ->get('https://bayupay-dummy.geovidia.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
         // $response = Http::withToken('test-api')->get('https://hands-on5.sabah.gov.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
 

@@ -29,15 +29,14 @@ class NotificationController extends Controller
     private function sendWhatsapp($fullname, $type, $applicationId, $status, $messageText, $phoneNumber)
     {
         $phoneNumber = preg_replace('/^\+/', '', $phoneNumber);
-        // dd($fullname, $type, $applicationId, $status, $messageText, $phoneNumber);
 
         $url = 'https://rest.moceanapi.com/rest/2/send-message/whatsapp';
-        $bearerToken = 'apit-0NYiktzyYJO9bdPHcs7OQ3P9Rfl4tDJh-gxopQ';
-        // $bearerToken = 'apit-QMp24eA8HSNHsMgVRQZ2EpUmZX023tlJ-3ABXC';
+
+        $bearerToken = config('services.mocean.token');
+        $fromNumber = config('services.mocean.from');
 
         $payload = [
-            // 'mocean-from' => '15557785030', //=> DOA
-            'mocean-from' => '60128083901', // => Temadigital
+            'mocean-from' => $fromNumber,
             'mocean-to' => $phoneNumber,
             'mocean-event-url' => '',
             'mocean-content' => [
@@ -45,8 +44,13 @@ class NotificationController extends Controller
                 'wa_template' => [
                     'name' => 'qisapplicationstatus',
                     'language' => 'en',
-                    'body_params' => [['type' => 'text', 'text' => $fullname], ['type' => 'text', 'text' => $type], ['type' => 'text', 'text' => $applicationId], ['type' => 'text', 'text' => $status], ['type' => 'text', 'text' => $messageText]],
-
+                    'body_params' => [
+                        ['type' => 'text', 'text' => $fullname],
+                        ['type' => 'text', 'text' => $type],
+                        ['type' => 'text', 'text' => $applicationId],
+                        ['type' => 'text', 'text' => $status],
+                        ['type' => 'text', 'text' => $messageText],
+                    ],
                     'wa_buttons' => [
                         [
                             'type' => 'url',
@@ -59,8 +63,7 @@ class NotificationController extends Controller
         ];
 
         $response = Http::withToken($bearerToken)
-        ->withoutVerifying() // Disable SSL verification for testing
-        ->post($url, $payload);
+            ->post($url, $payload);
 
         if ($response->successful()) {
             return response()->json([
@@ -68,13 +71,10 @@ class NotificationController extends Controller
                 'response' => $response->json(),
             ]);
         } else {
-            return response()->json(
-                [
-                    'status' => 'error',
-                    'response' => $response->body(),
-                ],
-                $response->status(),
-            );
+            return response()->json([
+                'status' => 'error',
+                'response' => $response->body(),
+            ], $response->status());
         }
     }
 
@@ -101,7 +101,7 @@ class NotificationController extends Controller
             return;
         }
 
-       try {
+        try {
             $message = "Dear {$fullname}, your {$type} application (ID: {$applicationId}) status has been updated to {$status}. {$messageText}";
 
             $title = "QIS Application Update - {$type} #{$applicationId}";

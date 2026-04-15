@@ -14,7 +14,7 @@ class BayuPayService
     public function checkAndUpdatePayment(Order $order, string $kodTransaksi): array
     {
         $response = Http::withToken('test-api')
-            ->withoutVerifying() // Disable SSL verification for testing
+            // ->withoutVerifying() // Disable SSL verification for testing
             ->get('https://bayupay-dummy.geovidia.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
         // $response = Http::withToken('test-api')
         // ->get(' http://10.71.97.95/readdata.php',
@@ -115,7 +115,7 @@ class BayuPayService
         // ]);
 
         $response = Http::withToken('test-api')
-            ->withoutVerifying()
+            // ->withoutVerifying()
             ->get('https://bayupay-dummy.geovidia.my/readtransaction.php', [
                 'sid' => $order->sid,
                 'itn' => $order->itn,

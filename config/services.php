@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'mocean' => [
+        'token' => env('MOCEAN_API_TOKEN'),
+        'from' => env('MOCEAN_WHATSAPP_FROM'),
+    ],
+
 ];
