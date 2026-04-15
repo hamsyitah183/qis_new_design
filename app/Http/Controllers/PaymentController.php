@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\URL;
 use Spatie\Activitylog\Models\Activity;
 use App\Models\PublicUser;
 use App\Notifications\ApplicationNotification;
+use Carbon\Carbon;
 
 class PaymentController extends Controller
 {
@@ -390,11 +391,23 @@ class PaymentController extends Controller
             // Update permits first
             foreach ($permits as $permit) {
                 match ($application['application_type']) {
-                    'Import Permit' => IpConsignmentPermit::where('id', $permit['permit_id'])->update(['status' => $config['permit_status']]),
+                    'Import Permit' => IpConsignmentPermit::where('id', $permit['permit_id'])
+                        ->update([
+                            'status' => $config['permit_status'],
+                            'validity_date' => Carbon::now()->addMonth(), // ✅ add 1 month
+                        ]),
 
-                    'Inspection Certificate' => InspectionItem::where('id', $permit['permit_id'])->update(['status' => $config['permit_status']]),
+                    'Inspection Certificate' => InspectionItem::where('id', $permit['permit_id'])
+                        ->update([
+                            'status' => $config['permit_status'],
+                            'validity_date' => Carbon::now()->addMonth(),
+                        ]),
 
-                    'Consignment Certificate' => ConsignmentPermit::where('id', $permit['permit_id'])->update(['status' => $config['permit_status']]),
+                    'Consignment Certificate' => ConsignmentPermit::where('id', $permit['permit_id'])
+                        ->update([
+                            'status' => $config['permit_status'],
+                            'validity_date' => Carbon::now()->addMonth(),
+                        ]),
 
                     default => null,
                 };
