@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Inspection Permit</title>
+    <title>Consignment Permit</title>
     <style>
         @page {
             margin: 1.54cm 1.54cm; /* A4 standard margin */
@@ -219,7 +219,12 @@
     </ol>
 </li>
 
-        <li>Further conditions</li>
+        <li style="margin-bottom:100px;">Further conditions</li>
+
+            <span style="font-family: 'Courier New', monospace; font-size:8pt; word-break: break-word;">
+                Check Next Page for futher condition
+            </span>
+
     </ol>
 
     <br>
