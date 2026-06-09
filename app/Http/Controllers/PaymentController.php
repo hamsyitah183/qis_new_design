@@ -248,7 +248,7 @@ class PaymentController extends Controller
         // Pad running number to 3 digits
         $runningNumber = str_pad($runningNumber, 3, '0', STR_PAD_LEFT);
 
-         // dd($application['application_type']);
+        // dd($application['application_type']);
         if ($application['application_type'] == 'Import Permit') {
             $itn = 'IT037962';
             // $itn = 'ITN10001';
@@ -270,13 +270,13 @@ class PaymentController extends Controller
         // Build order number
         $orderNumber = 'QIS-' . $application_name . '-' . $runningNumber;
 
-       
+
         // $sid = 'QIS123';
 
 
         $sid = 'SE13001C';
 
-     
+
 
         $order = Order::create([
             'order_number' => $orderNumber,
@@ -325,15 +325,18 @@ class PaymentController extends Controller
 
         // Call BayuPay API
         $response = Http::withToken('test-api')
-         ->withoutVerifying() // Disable SSL verification for testing
-        ->get('https://bayupay-dummy.geovidia.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
+            ->withoutVerifying() // Disable SSL verification for testing
+            ->get('https://bayupay-dummy.geovidia.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
         // $response = Http::withToken('test-api')->get('https://hands-on5.sabah.gov.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
 
 
         // $response = Http::withToken('test-api')->get('https://hands-on11.sabah.gov.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
 
         if (!$response->successful()) {
-            abort(500, 'Failed to retrieve payment data');
+            // abort(500, 'Failed to retrieve payment data');
+            throw new \Exception(
+                "BayuPay error ({$response->status()}): " . $response->body()
+            );
         }
 
         $paymentData = $response->json();
@@ -431,26 +434,25 @@ class PaymentController extends Controller
                 $order->status = $allPaid ? 'payment complete' : 'payment partial';
 
                 $notificationController->sendStatusMessage(
-                    $application->importer_detail['fullname'] ?? 'User' ,
+                    $application->importer_detail['fullname'] ?? 'User',
                     $application['application_type'],
                     $application->application_id,
                     'paid',
                     'Your application is successfully paid.',
                     $application->importer->phone_number ?? '60143290092' // recipient number
                 );
-
             } else {
                 $order->status = $transactionStatus === 'unsuccessful' ? 'payment failed' : 'pending authorization';
-            
-                $notificationController->sendStatusMessage(
-                $application->importer_detail['fullname'] ?? 'User' ,
-                $application['application_type'],
-                $application->application_id,
-                $transactionStatus === 'unsuccessful' ? 'failed' : 'pending authorization',
-                'Your application payment is ' . $transactionStatus . '.',
 
-                $application->importer->phone_number ?? '60143290092' // recipient number
-            );
+                $notificationController->sendStatusMessage(
+                    $application->importer_detail['fullname'] ?? 'User',
+                    $application['application_type'],
+                    $application->application_id,
+                    $transactionStatus === 'unsuccessful' ? 'failed' : 'pending authorization',
+                    'Your application payment is ' . $transactionStatus . '.',
+
+                    $application->importer->phone_number ?? '60143290092' // recipient number
+                );
             }
 
             $order->save();
