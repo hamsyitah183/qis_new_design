@@ -117,7 +117,7 @@ class BayuPayService
         // ]);
         try {
             $response = Http::withToken('test-api')
-                // ->withoutVerifying()
+                ->withoutVerifying()
                 ->get('https://bayupay-dummy.geovidia.my/readtransaction.php', [
                     'sid' => $order->sid,
                     'itn' => $order->itn,
