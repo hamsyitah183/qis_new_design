@@ -16,7 +16,9 @@ class BayuPayService
 
         try {
             $response = Http::withToken('test-api')
+            ->withoutVerifying()
                 ->get('https://bayupay-dummy.geovidia.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
+
 
 
             if (!$response->successful()) {
