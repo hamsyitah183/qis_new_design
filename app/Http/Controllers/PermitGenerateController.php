@@ -461,7 +461,7 @@ class PermitGenerateController extends Controller
             ),
         )->setPaper('a4', 'portrait');
 
-        return $pdf->stream("Inspection_Certificate_{$application->application_id}.pdf");
+        return $pdf->stream("Consignment_Permit_{$application->application_id}.pdf");
     }
 
     function generateConsignment($id)
