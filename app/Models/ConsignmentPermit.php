@@ -60,4 +60,14 @@ class ConsignmentPermit extends Model
     {
         return $this->hasMany(ConsignmentAttachment::class, 'permit_id', 'id');
     }
+
+      
+    public function condition()
+    {
+        $itemId = data_get($this->consignment_detail, 'item_id');
+
+        return $itemId 
+            ? IpCondition::find($itemId)
+            : null;
+    }
 }
