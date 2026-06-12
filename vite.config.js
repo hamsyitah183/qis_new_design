@@ -27,9 +27,10 @@ export default defineConfig({
                 "resources/css/app.css",
                 "resources/css/errors.css",
 
-                // 🔹 Automatically include all JS under `resources/js/pages/**`
+                  ...globSync(
+                    path.resolve(__dirname, "resources/js/pages/**/*.js")
+                ),
                 ...globSync(
-                    path.resolve(__dirname, "resources/js/pages/**/*.js"),
                     path.resolve(__dirname, "resources/js/*.js")
                 ),
             ],
