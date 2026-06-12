@@ -30,6 +30,7 @@ export default defineConfig({
                 // 🔹 Automatically include all JS under `resources/js/pages/**`
                 ...globSync(
                     path.resolve(__dirname, "resources/js/pages/**/*.js")
+                    path.resolve(__dirname, "resources/js/*.js")
                 ),
             ],
             refresh: true,
