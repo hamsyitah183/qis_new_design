@@ -3,9 +3,13 @@ import $ from "jquery";
 import Swal from "sweetalert2";
 import Tagify from '@yaireo/tagify';
 import '@yaireo/tagify/dist/tagify.css';
+import Quill from 'quill';
+import 'quill/dist/quill.snow.css';
+
 
 // Make Tagify available globally so your blade script can use it
 window.Tagify = Tagify;
+window.Quill = Quill;
 
 
 document.addEventListener("DOMContentLoaded", function () {
