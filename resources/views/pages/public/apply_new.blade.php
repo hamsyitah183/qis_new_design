@@ -52,7 +52,7 @@
 
 @section('content')
 
-    <div class="col-11">
+    <div class="col-12">
         <div class="d-flex justify-content-center align-items-center">
             <div class="card custom-card my-auto border">
                 <div class="card-body p-4">

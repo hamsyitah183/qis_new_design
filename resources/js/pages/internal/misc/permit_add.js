@@ -2,6 +2,15 @@ import $ from "jquery";
 import Swal from "sweetalert2";
 // Import Select2 module
 import select2 from "select2";
+import Tagify from '@yaireo/tagify';
+import '@yaireo/tagify/dist/tagify.css';
+import Quill from 'quill';
+import 'quill/dist/quill.snow.css';
+
+
+// Make Tagify available globally so your blade script can use it
+window.Tagify = Tagify;
+window.Quill = Quill;
 
 // Force Select2 to attach to THIS jQuery:
 select2($);
@@ -158,6 +167,7 @@ export function three() {
 
             const formData = new FormData();
             formData.append("itemName", document.getElementById("itemName").value);
+            formData.append("scientificName", document.getElementById("scientificName").value);
             formData.append("itemCategory", document.getElementById("itemCategory").value);
             formData.append("quanLimit", document.getElementById("quanLimit").value);
             formData.append("quanmunit", document.getElementById("quanmunit").value);

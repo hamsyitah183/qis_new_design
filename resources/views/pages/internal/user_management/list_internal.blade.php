@@ -114,7 +114,7 @@
                                 <div class="invalid-feedback" id="error-position"></div>
                             </div>
 
-                            <div class="col-md-6">
+                            <div class="col-md-6 d-none">
                                 <label class="form-label text-default">Office <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="office" name="office" required>
                                 <div class="invalid-feedback" id="error-office"></div>
@@ -123,6 +123,7 @@
                             <div class="col-md-6">
                                 <label class="form-label text-default">Role <span class="text-danger">*</span></label>
                                 <select class="form-select" id="role" name="role" required>
+                                    <option value="superadmin">Superadmin</option>
                                     <option value="admin">Admin</option>
                                     <option value="officer">Officer</option>
                                     <option value="clerk">Clerk</option>

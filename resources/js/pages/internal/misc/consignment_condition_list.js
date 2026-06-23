@@ -76,6 +76,13 @@ async function data_table_init() {
                 }
             },
             {
+                data: "scientific_name",
+                title: "Scientific Name",
+                render: function (data) {
+                    return `<span class="text-wrap">${data ?? ''}</span>` ?? "-";
+                }
+            },
+            {
                 data: "condcategory.description",
                 title: "Category",
                 render: function (data) {

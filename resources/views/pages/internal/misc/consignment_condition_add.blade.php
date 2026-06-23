@@ -64,6 +64,12 @@
                                 placeholder="Citrus - Lemon, Chinese Mandarine, Limau Kasturi">
                         </div>
 
+                        <div class="col-xl-12">
+                            <label class="form-label">Scientific Name</label>
+                            <input type="text" class="form-control" id="scientificName" name="scientificName"
+                                placeholder="">
+                        </div>
+
                         <!-- Category -->
                         <div class="col-xl-6">
                             <label class="form-label">Category</label>

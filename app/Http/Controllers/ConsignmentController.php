@@ -570,10 +570,31 @@ class ConsignmentController extends Controller
     {
         // Branch guard: only Sipitang branch users can verify/reject (pseudocode §6)
         $currentUser = authUser()['user'];
-        if (!isset($currentUser->branch) || $currentUser->branch !== 'Sipitang') {
+
+        // Check if user is authenticated
+        if (!$currentUser) {
             return response()->json(
                 [
-                    'message' => 'You are not authorized to verify/reject applications outside your branch.',
+                    'message' => 'Unauthorized access.',
+                ],
+                401,
+            );
+        }
+
+        // Get user role and branch
+        $userRole = $currentUser->roles->first()->name ?? null;
+        $userBranch = $currentUser->branch ?? null;
+
+        // Allow access if:
+        // 1. User is superadmin (regardless of branch), OR
+        // 2. User is from Sipitang branch (clerk or admin)
+        $isSuperAdmin = $userRole === 'superadmin';
+        $isSipitangStaff = in_array($userRole, ['clerk', 'admin']) && $userBranch === 'Sipitang';
+
+        if (!$isSuperAdmin && !$isSipitangStaff) {
+            return response()->json(
+                [
+                    'message' => 'You are not authorized to verify/reject applications. Only Sipitang branch staff or Super Admin can perform this action.',
                 ],
                 403,
             );
@@ -634,10 +655,6 @@ class ConsignmentController extends Controller
             $application->status = 'Clerk Review In-Progress';
             $application->importer_verify = 'Verified';
             $status = 'Clerk Review In-Progress';
-
-
-
-
         } elseif ($request->input('not_verified')) {
             $application->logActivity(action: 'Importer Rejected', remark: 'Application rejected by importer', status: 'Not Approved');
 
@@ -657,8 +674,6 @@ class ConsignmentController extends Controller
             $application->status = 'Not Approved';
             $application->importer_verify = 'Not Approved';
             $status = 'Not Approved';
-
-
         } elseif ($request->accepted) {
             $application->logActivity(action: 'Clerk Approved', remark: 'Application approved by clerk', status: 'Clerk Verified');
 
@@ -691,7 +706,6 @@ class ConsignmentController extends Controller
                 'Your application is under review and will be processed shortly',
                 $application->importer->phone_number ?? '+60143290092', // recipient number
             );
-
         } elseif ($request->rejected) {
             $application->logActivity(action: 'Clerk Rejected', remark: $request->input('reason'), status: 'Clerk Rejected');
 
@@ -723,7 +737,6 @@ class ConsignmentController extends Controller
                 'Your application is rejected.',
                 $application->importer->phone_number ?? '+60143290092', // recipient number
             );
-
         }
 
         // Save application state

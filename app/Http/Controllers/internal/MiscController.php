@@ -243,6 +243,7 @@ class MiscController extends Controller
         $data = [
             'category' => $request->itemCategory,
             'item_name' => $request->itemName,
+            'scientific_name' => $request->scientificName,
             'addional_condition' => $request->permit_condition,
             'quantity_limit' => $request->quanLimit ?: null . ' ' . $request->measurement ?: null,
             // 'date_limit' => $request->spedate ?: null,
@@ -384,7 +385,7 @@ class MiscController extends Controller
     {
         Gate::authorize('manage settings');
 
-        $query = IpCondition::with(['condcategory'])->select('id', 'item_name', 'category', 'usage', 'country');
+        $query = IpCondition::with(['condcategory'])->select('id', 'item_name', 'scientific_name', 'category', 'usage', 'country');
 
         return DataTables::of($query)->make(true);
     }

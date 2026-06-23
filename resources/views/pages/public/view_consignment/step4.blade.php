@@ -33,7 +33,7 @@
                 <p>This permit application is currently pending verification by Clerk.</p>
                 @else
                 <p>Waiting for approval.</p>
-                @if (authUser() && (authUser()['user']->hasRole('clerk') || authUser()['user']->hasRole('admin')) )
+                @if (authUser() && (authUser()['user']->hasRole('clerk') || authUser()['user']->hasRole('admin')))
                 <div class="d-flex justify-content-center gap-3 mt-3">
                     <button id="acceptAppl" class="btn btn-sm btn-success">Accept Application</button>
                     <button id="rejectAdminAppl" class="btn btn-sm btn-danger">Reject Application</button>
@@ -51,7 +51,27 @@
                         <p>This permit application is currently pending verification by Clerk.</p>
                     @else
                         <p>Waiting for approval.</p>
-                        @if (authUser() && (authUser()['user']->hasRole('clerk') || authUser()['user']->hasRole('admin') || authUser()['user']->hasRole('superadmin')) && authUser()['user']->branch === 'Sipitang')
+                        @php
+                            $user = authUser()['user'] ?? null;
+                            $userBranch = $user->branch ?? null;
+                            $userRole = $user->roles->first()->name ?? null;
+
+                            // Check if user is from Sipitang branch
+                            $isSipitang = $userBranch === 'Sipitang';
+
+                            // Check if user has required roles (clerk, admin, or superadmin)
+                            $hasRequiredRole = in_array($userRole, ['clerk', 'admin', 'superadmin']);
+
+                            // Superadmin can access regardless of branch
+                            $isSuperAdmin = $userRole === 'superadmin';
+
+                            // Show buttons if:
+                            // 1. User is superadmin (any branch), OR
+                            // 2. User has required role AND is from Sipitang branch
+                            $showButtons = $isSuperAdmin || ($hasRequiredRole && $isSipitang);
+                        @endphp
+
+                        @if ($showButtons)
                             <div class="d-flex justify-content-center gap-3 mt-3">
                                 <button id="acceptAppl" class="btn btn-sm btn-success">Accept Application</button>
                                 <button id="rejectAdminAppl" class="btn btn-sm btn-danger">Reject Application</button>
@@ -101,7 +121,6 @@
                     <h3 class="mt-2">Rejected</h3>
                     @if (authUser()['type'] == 'public')
                         <p>This permit application has been rejected.</p>
-
                     @else
                         <p>Rejected</p>
                         @if (authUser() && (authUser()['user']->hasRole('admin') || authUser()['user']->hasRole('superadmin')))

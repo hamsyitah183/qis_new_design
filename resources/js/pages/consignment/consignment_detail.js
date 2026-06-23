@@ -65,10 +65,11 @@ async function attachmentTable() {
     console.log("Running attachment table...");
     const tableBody = $("#summaryTable3 tbody");
     tableBody.empty();
-    const table = $('#summaryTable3')
+    const table = $('#summaryTable3');
 
     const permits = application.consignment_permits;
     const applicationStatus = application.status;
+    
     // ❌ If any permit is rejected → block action
     const hasRejectedPermit = permits.some(p =>
         (p.status || '').toLowerCase() === 'rejected'
@@ -79,82 +80,102 @@ async function attachmentTable() {
         ['reapplied', 'processing'].includes((p.status || '').toLowerCase())
     );
 
-
     if (!permits || permits.length === 0) {
         tableBody.append(`
-<tr>
-    <td colspan="7" class="text-center text-muted">
-        No consignment items found.
-    </td>
-</tr>
-`);
+            <tr>
+                <td colspan="7" class="text-center text-muted">
+                    No consignment items found.
+                </td>
+            </tr>
+        `);
         return;
     }
 
-    let roles = window.authUser.roles.map((role) => role.name);
-    let approveRejectButtons = '';
+    // Get user data
+    const authUser = window.authUser || {};
+    const userRoles = authUser.roles?.map((role) => role.name) || [];
+    const userBranch = authUser.branch || null;
+    const userType = authUser.type || [];
+    const userUuid = authUser.uuid || null;
+    const applicationUserUuid = application.user?.uuid || null;
 
-    console.log('roles', roles)
+    console.log('User Roles:', userRoles);
+    console.log('User Branch:', userBranch);
 
+    // Check if user is superadmin
+    const isSuperAdmin = userRoles.includes("superadmin");
+    
+    // Check if user is from Sipitang branch
+    const isSipitangBranch = userBranch === "Sipitang";
+    
+    // Check if user has required roles (admin or officer)
+    const hasRequiredRole = userRoles.some(role => ["admin", "officer"].includes(role));
+    
     // Determine if approve/reject buttons should be shown
-    // Only visible to internal users from the "Sipitang" branch
-    const isSipitangBranch = window.authUser.branch === "Sipitang";
+    // Superadmin can access regardless of branch
+    // Other roles (admin, officer) must be from Sipitang branch
     const showApproveReject = applicationStatus === "Clerk Verified" &&
         !hasRejectedPermit &&
         hasAllowedPermit &&
-        isSipitangBranch &&
-        (roles.includes("admin") || roles.includes("officer") || roles.includes("superadmin"));
+        (isSuperAdmin || (isSipitangBranch && hasRequiredRole));
 
+    // Determine if download permit button should be shown
     const showDownloadPermit = applicationStatus === "Completed" &&
-        (roles.includes("admin") || roles.includes("boundary officer") || roles.includes("superadmin"));
+        (isSuperAdmin || (isSipitangBranch && userRoles.some(role => ["admin", "boundary officer"].includes(role))));
 
+    // Determine if user can reapply (only for public users)
+    const canReapply = userType.includes('public') && 
+        applicationUserUuid === userUuid;
 
-    // Add approve/reject buttons for the first row only if conditions are met
+    console.log('Authorization Check:', {
+        isSuperAdmin,
+        isSipitangBranch,
+        hasRequiredRole,
+        showApproveReject,
+        showDownloadPermit,
+        canReapply
+    });
+
+    // Build approve/reject buttons if conditions are met
+    let approveRejectButtons = '';
     if (showApproveReject) {
         approveRejectButtons = `
-        <div class="btn btn-sm btn-primary-light btn-wave accept ms-2"
-            data-application="${application.application_id}">
-            Approved
-        </div>
-        <div class="btn btn-sm btn-danger-light btn-wave reject ms-2"
-            data-application="${application.application_id}">
-            Rejected
-        </div>
+            <div class="btn btn-sm btn-primary-light btn-wave accept ms-2"
+                data-application="${application.application_id}">
+                Approved
+            </div>
+            <div class="btn btn-sm btn-danger-light btn-wave reject ms-2"
+                data-application="${application.application_id}">
+                Rejected
+            </div>
         `;
-    }
-
-    // Add download permit button for the first row only if conditions are met
-    else if (showDownloadPermit) {
+    } else if (showDownloadPermit) {
         approveRejectButtons = `
-        <div class="btn btn-sm btn-teal-light btn-wave generatePermit ms-2" 
-            data-permit="${application.application_id}" data-type="${application.application_type}">
-            Download Permit
-        </div>
+            <div class="btn btn-sm btn-teal-light btn-wave generatePermit ms-2" 
+                data-permit="${application.application_id}" data-type="${application.application_type}">
+                Download Permit
+            </div>
         `;
-    } else {
-        approveRejectButtons = ``;
     }
 
+    // Track selected permits
+    selectedPermits = [];
 
     permits.forEach((permit, index) => {
         let detail = permit.consignment_detail || {};
         let attachmentCount = permit.attachments?.length || 0;
 
-        console.log("user role?", window.authUser);
-
-
-        let type = window.authUser.type;
-        console.log("is it", roles);
+        // Check if this specific permit can be reapplied
+        const isRejected = (permit.status || '').toLowerCase() === 'rejected';
+        const canReapplyThisPermit = isRejected && canReapply;
 
         let reapplyAction = '';
-        selectedPermits.push(permit.id)
-
-
-        if (permit.status === "rejected" &&
-            (type.includes('public')) && (application.user.uuid == window.authUser.uuid)) {
-            reapplyAction = `<div class = "btn btn-sm btn-danger-light btn-wave reapply"  data-permit = "${permit.id}" >Reapply</div>`
-        } else {
-            reapplyAction = ``;
+        if (canReapplyThisPermit) {
+            reapplyAction = `
+                <div class="btn btn-sm btn-danger-light btn-wave reapply" data-permit="${permit.id}">
+                    Reapply
+                </div>
+            `;
         }
 
         // Build action buttons
@@ -166,67 +187,59 @@ async function attachmentTable() {
             ${reapplyAction}
         `;
 
+        // Selected permits tracking
+        if (permit.id) {
+            selectedPermits.push(permit.id);
+        }
 
-
-
-        let permitStatus = "";
-
-        let statuses = permit.status;
-        let text = "";
-
-        const s = statuses.toLowerCase();
+        // Generate status badge
+        let statusText = '';
+        const s = (permit.status || '').toLowerCase();
 
         if (s.includes("completed")) {
-            text = '<span class="badge bg-success fs-11 p-1">Completed</span>';
-
+            statusText = '<span class="badge bg-success fs-11 p-1">Completed</span>';
         } else if (s.includes("payment failed")) {
-            text = '<span class="badge bg-danger fs-11 p-1">Payment Failed</span>';
-
-        }
-
-        else if (s.includes("payment processing")) {
-            text = '<span class="badge bg-info fs-11 p-1">Payment Processing</span>';
-
+            statusText = '<span class="badge bg-danger fs-11 p-1">Payment Failed</span>';
+        } else if (s.includes("payment processing")) {
+            statusText = '<span class="badge bg-info fs-11 p-1">Payment Processing</span>';
         } else if (s.includes("paid")) {
-            text = '<span class="badge bg-success fs-11 p-1">Paid</span>';
-
+            statusText = '<span class="badge bg-success fs-11 p-1">Paid</span>';
         } else if (s.includes("processing")) {
-            text = '<span class="badge bg-info fs-11 p-1">Processing</span>';
-
+            statusText = '<span class="badge bg-info fs-11 p-1">Processing</span>';
         } else if (s.includes("rejected")) {
-            text = '<span class="badge bg-danger fs-11 p-1">Rejected</span>';
-
+            statusText = '<span class="badge bg-danger fs-11 p-1">Rejected</span>';
         } else if (s.includes("payment")) {
-            text = '<span class="badge bg-warning fs-11 p-1">Pending For Payment</span>';
-
+            statusText = '<span class="badge bg-warning fs-11 p-1">Pending For Payment</span>';
         } else if (s.includes("reapplied")) {
-            text = '<span class="badge bg-info fs-11 p-1">Reapply</span>';
-
+            statusText = '<span class="badge bg-info fs-11 p-1">Reapplied</span>';
+        } else {
+            statusText = `<span class="badge bg-secondary fs-11 p-1">${permit.status || 'Unknown'}</span>`;
         }
 
-        permitStatus = `<td>${text}</td>`;
-
+        // Add row to table
         tableBody.append(`
-<tr>
-    <td class = "text-wrap">${detail.item_name ?? "—"}</td>
-    <td>${detail.quantity ?? "—"} ${detail.measure ?? ""}</td>
-    <td class="text-wrap">${detail.purpose ?? "—"}</td>
-    <td>RM ${detail.value ?? "—"}</td>
-    ${permitStatus}
-    <td>
-        <div class="d-flex gap-2 align-items-center">
-            ${actionButtons}
-        </div>
-    </td>
-</tr>
-`);
+            <tr>
+                <td class="text-wrap">${detail.item_name ?? "—"}</td>
+                <td>${detail.quantity ?? "—"} ${detail.measure || ""}</td>
+                <td class="text-wrap">${detail.purpose ?? "—"}</td>
+                <td>RM ${detail.value ?? "—"}</td>
+                <td>${statusText}</td>
+                <td>
+                    <div class="d-flex gap-2 align-items-center">
+                        ${actionButtons}
+                    </div>
+                </td>
+            </tr>
+        `);
     });
 
     // Remove any previously appended action buttons to prevent duplicates on re-render
     table.find('.action-buttons-row').remove();
     if (approveRejectButtons) {
-        table.append(`<div class="action-buttons-row">${approveRejectButtons}</div>`);
+        table.append(`<div class="action-buttons-row mt-3 text-end">${approveRejectButtons}</div>`);
     }
+
+    console.log("Attachment table rendered successfully.");
 }
 async function pendingPaymentTable() {
     console.log("Running attachment table...");

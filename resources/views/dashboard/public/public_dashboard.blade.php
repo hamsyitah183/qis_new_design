@@ -274,7 +274,7 @@
 
 @push('scripts')
     {{-- ApexCharts Library --}}
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/5.3.5/apexcharts.min.js"></script>
     {{-- Chart Scripts --}}
     {!! $statusChart->script() !!}
 

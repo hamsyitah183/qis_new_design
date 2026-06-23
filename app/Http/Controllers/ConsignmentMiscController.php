@@ -26,7 +26,7 @@ class ConsignmentMiscController extends Controller
             abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
         }
 
-        $query = ConsignmentCondition::with(['condcategory'])->select('id', 'item_name', 'category', 'usage', 'country');
+        $query = ConsignmentCondition::with(['condcategory'])->select('id', 'scientific_name' , 'item_name', 'category', 'usage', 'country');
 
         return DataTables::of($query)->make(true);
     }
@@ -103,6 +103,7 @@ class ConsignmentMiscController extends Controller
         $condition->start_date = $request['start_date'];
         $condition->end_date = $request['end_date'];
         $condition->measurement_unit =  $request->quanmunit;
+        $condition->scientific_name =  $data['scientific_name'];
 
         $condition->save();
 

@@ -95,6 +95,7 @@
                             <tr>
                                 {{-- <th>#</th> --}}
                                 <th class="text-wrap">Item Name</th>
+                                <th class="text-wrap">Scientific Name</th>
                                 <th>Category</th>
                                 <th>Usage</th>
                                 <th>Action</th>
