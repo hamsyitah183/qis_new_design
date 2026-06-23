@@ -146,6 +146,8 @@
                         <div class="">
                             <h6 class="mt-4 fw-semibold">Application Details</h6>
 
+                            
+
                             <table class="table table-sm table-bordered mt-2">
                                 <tbody>
                                     <tr>
@@ -188,6 +190,7 @@
 
                                     </tr>
                                     <tr>
+                                        
                                         <th class="fs-14 p-2" style="width: 160px;">Importer Address</th>
                                         <td class="fs-14 p-2 text-muted text-wrap">
                                             {{ $application->importer->address_1 ?? '-' }}

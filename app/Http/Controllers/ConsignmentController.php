@@ -568,42 +568,50 @@ class ConsignmentController extends Controller
 
     public function verify_application_permit($id, Request $request)
     {
-        // Branch guard: only Sipitang branch users can verify/reject (pseudocode §6)
-        $currentUser = authUser()['user'];
+        // Get current user
+        $currentUser = authUser()['user'] ?? null;
 
         // Check if user is authenticated
         if (!$currentUser) {
-            return response()->json(
-                [
-                    'message' => 'Unauthorized access.',
-                ],
-                401,
-            );
+            return response()->json([
+                'message' => 'Unauthorized access.',
+            ], 401);
         }
+
+        // Get the application first to check exporter_id
+        $application = ConsignmentApplication::where('application_id', $id)->firstOrFail();
 
         // Get user role and branch
         $userRole = $currentUser->roles->first()->name ?? null;
         $userBranch = $currentUser->branch ?? null;
+        $authUuid = $currentUser->uuid ?? null;
 
-        // Allow access if:
-        // 1. User is superadmin (regardless of branch), OR
-        // 2. User is from Sipitang branch (clerk or admin)
+        // ✅ Check if user is the exporter
+        $isExporter = $application->exporter_id === $authUuid;
+
+        // ✅ FIX: Allow access if:
+        // 1. User is the exporter, OR
+        // 2. User is superadmin (regardless of branch), OR
+        // 3. User is from Sipitang branch (clerk or admin)
         $isSuperAdmin = $userRole === 'superadmin';
         $isSipitangStaff = in_array($userRole, ['clerk', 'admin']) && $userBranch === 'Sipitang';
 
-        if (!$isSuperAdmin && !$isSipitangStaff) {
-            return response()->json(
-                [
-                    'message' => 'You are not authorized to verify/reject applications. Only Sipitang branch staff or Super Admin can perform this action.',
-                ],
-                403,
-            );
+        // ❌ Block access if not exporter, not superadmin, and not Sipitang staff
+        if (!$isExporter && !$isSuperAdmin && !$isSipitangStaff) {
+            Log::warning('Unauthorized verify/reject attempt', [
+                'user_id' => $currentUser->id,
+                'user_email' => $currentUser->email,
+                'user_role' => $userRole,
+                'user_branch' => $userBranch,
+                'is_exporter' => $isExporter,
+                'application_id' => $id,
+                'exporter_id' => $application->exporter_id,
+            ]);
+
+            return response()->json([
+                'message' => 'You are not authorized to verify/reject this application. Only the exporter, Sipitang branch staff (Clerk/Admin), or Super Admin can perform this action.',
+            ], 403);
         }
-
-        $application = ConsignmentApplication::where('application_id', $id)->firstOrFail();
-
-
-        // dd($application, $request->all());
 
         // Centralized messages per status
         $statusMessages = [
@@ -637,7 +645,19 @@ class ConsignmentController extends Controller
          * =====================
          */
         if ($request->input('verified')) {
-            $application->logActivity(action: 'Importer Verified', remark: 'Application verified by importer', status: 'Clerk Review In-Progress');
+            // ✅ IMPORTER VERIFIED
+            // Only exporter or Sipitang staff can verify
+            if (!$isExporter && !$isSipitangStaff && !$isSuperAdmin) {
+                return response()->json([
+                    'message' => 'You are not authorized to verify this application.',
+                ], 403);
+            }
+
+            $application->logActivity(
+                action: 'Importer Verified',
+                remark: 'Application verified by importer',
+                status: 'Clerk Review In-Progress'
+            );
 
             activity()
                 ->tap(function (Activity $activity) {
@@ -656,7 +676,19 @@ class ConsignmentController extends Controller
             $application->importer_verify = 'Verified';
             $status = 'Clerk Review In-Progress';
         } elseif ($request->input('not_verified')) {
-            $application->logActivity(action: 'Importer Rejected', remark: 'Application rejected by importer', status: 'Not Approved');
+            // ❌ IMPORTER REJECTED
+            // Only exporter or Sipitang staff can reject
+            if (!$isExporter && !$isSipitangStaff && !$isSuperAdmin) {
+                return response()->json([
+                    'message' => 'You are not authorized to reject this application.',
+                ], 403);
+            }
+
+            $application->logActivity(
+                action: 'Importer Rejected',
+                remark: 'Application rejected by importer',
+                status: 'Not Approved'
+            );
 
             activity()
                 ->tap(function (Activity $activity) {
@@ -675,7 +707,18 @@ class ConsignmentController extends Controller
             $application->importer_verify = 'Not Approved';
             $status = 'Not Approved';
         } elseif ($request->accepted) {
-            $application->logActivity(action: 'Clerk Approved', remark: 'Application approved by clerk', status: 'Clerk Verified');
+            // ✅ CLERK APPROVED (Only Sipitang staff or SuperAdmin can do this)
+            if (!$isSipitangStaff && !$isSuperAdmin) {
+                return response()->json([
+                    'message' => 'You are not authorized to approve this application. Only Sipitang branch staff or Super Admin can approve.',
+                ], 403);
+            }
+
+            $application->logActivity(
+                action: 'Clerk Approved',
+                remark: 'Application approved by clerk',
+                status: 'Clerk Verified'
+            );
 
             activity()
                 ->tap(function (Activity $activity) {
@@ -694,20 +737,29 @@ class ConsignmentController extends Controller
             $application->importer_verify = 'Accepted';
             $status = 'Clerk Verified';
 
-            //    dd('accepted');
-
+            // Send notification
             $notificationController = new NotificationController();
-
             $notificationController->sendStatusMessage(
                 $application->importer_detail['fullname'] ?? 'User',
                 'Consignment Application',
                 $application->application_id,
                 'accepted by DOA',
                 'Your application is under review and will be processed shortly',
-                $application->importer->phone_number ?? '+60143290092', // recipient number
+                $application->importer->phone_number ?? '+60143290092',
             );
         } elseif ($request->rejected) {
-            $application->logActivity(action: 'Clerk Rejected', remark: $request->input('reason'), status: 'Clerk Rejected');
+            // ❌ CLERK REJECTED (Only Sipitang staff or SuperAdmin can do this)
+            if (!$isSipitangStaff && !$isSuperAdmin) {
+                return response()->json([
+                    'message' => 'You are not authorized to reject this application. Only Sipitang branch staff or Super Admin can reject.',
+                ], 403);
+            }
+
+            $application->logActivity(
+                action: 'Clerk Rejected',
+                remark: $request->input('reason', 'No reason provided'),
+                status: 'Clerk Rejected'
+            );
 
             activity()
                 ->tap(function (Activity $activity) {
@@ -726,16 +778,15 @@ class ConsignmentController extends Controller
             $application->status = 'Clerk Rejected';
             $status = 'Clerk Rejected';
 
-
+            // Send notification
             $notificationController = new NotificationController();
-
             $notificationController->sendStatusMessage(
                 $application->importer_detail['fullname'] ?? 'User',
                 'Consignment Application',
                 $application->application_id,
                 'rejected by DOA',
-                'Your application is rejected.',
-                $application->importer->phone_number ?? '+60143290092', // recipient number
+                'Your application has been rejected. Reason: ' . ($request->input('reason') ?? 'Not specified'),
+                $application->importer->phone_number ?? '+60143290092',
             );
         }
 
@@ -744,12 +795,9 @@ class ConsignmentController extends Controller
 
         // Safety check
         if (!$status || !isset($statusMessages[$status])) {
-            return response()->json(
-                [
-                    'message' => 'Invalid application status.',
-                ],
-                400,
-            );
+            return response()->json([
+                'message' => 'Invalid application status.',
+            ], 400);
         }
 
         $messages = $statusMessages[$status];
@@ -767,7 +815,11 @@ class ConsignmentController extends Controller
         }
 
         $internalUsers = InternalUser::all();
-        Notification::send($internalUsers, new ApplicationNotification($messages['notify'], authUser()['user']->fullname, $notificationUrl));
+        Notification::send($internalUsers, new ApplicationNotification(
+            $messages['notify'],
+            authUser()['user']->fullname,
+            $notificationUrl
+        ));
 
         /**
          * =====================
@@ -776,31 +828,42 @@ class ConsignmentController extends Controller
          */
         $publicUser = PublicUser::where('uuid', $application->user_id)->first();
 
-        try {
-            event(new ApplicationCreatedPublicUser($messages['public'], $publicUser->uuid));
-        } catch (\Exception $e) {
-            Log::warning('Pusher connection failed but continuing public notification: ' . $e->getMessage());
-        }
+        if ($publicUser) {
+            try {
+                event(new ApplicationCreatedPublicUser($messages['public'], $publicUser->uuid));
+            } catch (\Exception $e) {
+                Log::warning('Pusher connection failed but continuing public notification: ' . $e->getMessage());
+            }
 
-        Notification::send($publicUser, new ApplicationNotification($messages['public'], authUser()['user']->fullname, $notificationUrl));
+            Notification::send($publicUser, new ApplicationNotification(
+                $messages['public'],
+                authUser()['user']->fullname,
+                $notificationUrl
+            ));
+        }
 
         /**
          * =====================
          * IMPORTER (IF DIFFERENT USER)
          * =====================
          */
-        // if ($application->importer_id !== $application->user_id) {
-        //     $importerUser = PublicUser::where('uuid', $application->importer_id)->first();
+        if ($application->importer_id !== $application->user_id) {
+            $importerUser = PublicUser::where('uuid', $application->importer_id)->first();
 
-        //     try {
-        //         event(new ApplicationCreatedPublicUser($messages['public'], $importerUser->uuid));
-        //     } catch (\Exception $e) {
-        //         Log::warning('Pusher connection failed but continuing importer notification: ' . $e->getMessage());
-        //     }
+            if ($importerUser) {
+                try {
+                    event(new ApplicationCreatedPublicUser($messages['public'], $importerUser->uuid));
+                } catch (\Exception $e) {
+                    Log::warning('Pusher connection failed but continuing importer notification: ' . $e->getMessage());
+                }
 
-        //     Notification::send($importerUser, new ApplicationNotification($messages['public'], authUser()['user']->fullname, $notificationUrl));
-
-        // }
+                Notification::send($importerUser, new ApplicationNotification(
+                    $messages['public'],
+                    authUser()['user']->fullname,
+                    $notificationUrl
+                ));
+            }
+        }
 
         /**
          * =====================
@@ -810,6 +873,7 @@ class ConsignmentController extends Controller
         return response()->json([
             'message' => 'Application status updated successfully.',
             'status' => $status,
+            'application_id' => $application->application_id,
         ]);
     }
 }

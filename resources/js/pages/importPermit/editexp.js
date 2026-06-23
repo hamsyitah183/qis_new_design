@@ -764,7 +764,7 @@ function saveConsignmentAttachment() {
             if(selectedItemInKg > limitInKg) {
                 Swal.fire({
                     icon: "error",
-                    title: "The item is over limit from",
+                    title: "The item is over limit",
                     text: "Please fill in again.",
                 });
                 return;
