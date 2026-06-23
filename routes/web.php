@@ -195,7 +195,7 @@ Route::prefix('internal')
         Route::get('/permission/data', [RoleAndPermissionController::class, 'get_permission']);
         Route::post('/permission/update', [RoleAndPermissionController::class, 'update_permission']);
         // ==================== user managemet =================
-    
+
         // ======================= application ========================
         Route::get('/view_import_permit', [ApplicationController::class, 'showallapplicationlist'])->name('application.list');
         Route::delete('/application/delete/{id}', [ApplicationController::class, 'deleteApplication'])->name('application.delete');
@@ -211,7 +211,7 @@ Route::prefix('internal')
 
         Route::get('/view_inspection_certificate/{id}', [InspectionController::class, 'viewApplication'])->name('viewInspectionApplication');
         // Route::delete('/inspection/delete/{id}', [InspectionController::class, 'deleteApplication'])->name('inspection.delete');
-    
+
         // ======================= consignment certificates ========================
         Route::get('/consignment_certificates_list', [ConsignmentController::class, 'showInternalConsignmentList'])->name('consignment.list');
         Route::delete('/consignment/delete/{id}', [ConsignmentController::class, 'deleteApplication'])->name('internal.consignment.delete');
@@ -231,7 +231,7 @@ Route::prefix('internal')
         Route::get('/api/filters/user/{uuid}/consignment/importers', [FilterController::class, 'getUserConsignmentImporters'])->name('api.filters.userConsignmentImporters');
 
         // Route::get('/application/exporter/get', [ApplicationController::class, 'get_exporter'])->name('application.exporter.get');
-    
+
         //MISC - Restricted to non-boundary officers
         Route::get('/control_panel', [MiscController::class, 'showcontrolpanel']);
         Route::get('/state-district-management', [MiscController::class, 'showStateDistrictManagement'])->name('state-district-management');
@@ -306,11 +306,6 @@ Route::prefix('internal')
         Route::post('/inspection/{id}/status', [InspectionController::class, 'updateStatus'])->name('inspection.status');
 
         Route::post('/consignment/{id}', [ConsignmentApplicationController::class, 'accept_permit']);
-
-
-
-
-
     });
 
 // Publicly accessible location routes
@@ -366,18 +361,85 @@ Route::middleware(['auth.any'])->group(function () {
         $user = authUser()['user'];
 
         // Get the latest 10 notifications (same as what you display in header)
-        $notifications = DatabaseNotification::where('notifiable_type', $type)->where('notifiable_id', $user->uuid)->latest()->take(10)->get();
+        $notifications = DatabaseNotification::where('notifiable_type', $type)
+            ->where('notifiable_id', $user->uuid)
+            ->latest()
+            ->take(10)
+            ->get();
 
-        // Mark only these notifications as read
+        $markedCount = 0;
         foreach ($notifications as $notification) {
             /** @var \Illuminate\Notifications\DatabaseNotification $notification */
             if (!$notification->read_at) {
                 $notification->markAsRead();
+                $markedCount++;
             }
         }
 
-        return response()->json(['status' => 'success']);
+        return response()->json([
+            'status' => 'success',
+            'message' => "{$markedCount} notification(s) marked as read.",
+            'marked_count' => $markedCount
+        ]);
     })->name('notifications.mark-read');
+
+    // ✅ Mark ALL notifications as read (from notification page)
+    Route::post('/notifications/mark-read-all', function () {
+        $type = authUser()['type'];
+        $user = authUser()['user'];
+
+        // Get ALL unread notifications for this user
+        $unreadNotifications = DatabaseNotification::where('notifiable_type', $type)
+            ->where('notifiable_id', $user->uuid)
+            ->whereNull('read_at')
+            ->get();
+
+        $markedCount = 0;
+        foreach ($unreadNotifications as $notification) {
+            /** @var \Illuminate\Notifications\DatabaseNotification $notification */
+            $notification->markAsRead();
+            $markedCount++;
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "All {$markedCount} unread notification(s) marked as read.",
+            'marked_count' => $markedCount
+        ]);
+    })->name('notifications.mark-read-all');
+
+    // ✅ Mark single notification as read
+    Route::post('/notifications/mark-read-single', function (Request $request) {
+        $notification = DatabaseNotification::find($request->notification_id);
+
+        if (!$notification) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Notification not found.'
+            ], 404);
+        }
+
+        $type = authUser()['type'];
+        $user = authUser()['user'];
+
+        // Ensure the notification belongs to the current user
+        if ($notification->notifiable_type !== $type || $notification->notifiable_id !== $user->uuid) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized to mark this notification as read.'
+            ], 403);
+        }
+
+        if (!$notification->read_at) {
+            $notification->markAsRead();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notification marked as read.'
+        ]);
+    })->name('notifications.mark-read-single');
+
     Route::get('/notifications', [DashboardController::class, 'notifications_page'])->name('notifications.page');
     Route::delete('/inspection/delete/{id}', [InspectionController::class, 'deleteApplication'])->name('inspection.delete');
     Route::get('/application/exporter', [ApplicationController::class, 'show_exporter'])->name('application.exporter');
