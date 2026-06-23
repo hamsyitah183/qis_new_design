@@ -1,5 +1,11 @@
+// resources/js/pages/permit/permit_condition.js
 import $ from "jquery";
 import Swal from "sweetalert2";
+import Tagify from '@yaireo/tagify';
+import '@yaireo/tagify/dist/tagify.css';
+
+// Make Tagify available globally so your blade script can use it
+window.Tagify = Tagify;
 
 
 document.addEventListener("DOMContentLoaded", function () {
