@@ -17,11 +17,37 @@ class CheckPendingPayments extends Command
     protected $description = 'Check pending and processing payments and update their status';
 
     protected BayuPayService $bayuPay;
+    
+    // Define invalid kod_transaksi values
+    protected array $invalidKodTransaksi = [
+        null,
+        '',
+        'backend update',
+        'manual',
+        'N/A',
+        'unknown',
+    ];
 
     public function __construct(BayuPayService $bayuPay)
     {
         parent::__construct();
         $this->bayuPay = $bayuPay;
+    }
+
+    /**
+     * Check if kod_transaksi is valid (not empty and not a placeholder)
+     */
+    private function isValidKodTransaksi(?string $kodTransaksi): bool
+    {
+        return !empty($kodTransaksi) && !in_array($kodTransaksi, $this->invalidKodTransaksi);
+    }
+
+    /**
+     * Check if kod_transaksi is empty or should be treated as empty
+     */
+    private function isEmptyKodTransaksi(?string $kodTransaksi): bool
+    {
+        return empty($kodTransaksi) || in_array($kodTransaksi, $this->invalidKodTransaksi);
     }
 
     public function handle(): int
@@ -41,14 +67,20 @@ class CheckPendingPayments extends Command
         } else {
             foreach ($pendingOrders as $order) {
                 try {
-                    if (empty($order->kod_transaksi)) {
-                        Log::warning('Order missing kod_transaksi, skipping.', [
+                    // Check if kod_transaksi is valid
+                    if ($this->isValidKodTransaksi($order->kod_transaksi)) {
+                        // Normal flow: use kod_transaksi
+                        $this->bayuPay->checkAndUpdatePayment($order, $order->kod_transaksi);
+                    } else {
+                        // Invalid kod_transaksi: use alternative method
+                        Log::info('Using fallback payment check for order with invalid kod_transaksi.', [
                             'order_number' => $order->order_number,
+                            'kod_transaksi' => $order->kod_transaksi ?? 'null',
                         ]);
-                        continue;
+                        
+                        $this->bayuPay->checkAndUpdatePaymentWithoutTransactionCode($order);
                     }
-
-                    $this->bayuPay->checkAndUpdatePayment($order, $order->kod_transaksi);
+                    
                     $this->completeApplicationIfAllPermitsPaid($order);
 
                     Log::info('Pending authorization order checked.', [
@@ -65,7 +97,7 @@ class CheckPendingPayments extends Command
         }
 
         /**
-         * 2️⃣ Check: PAYMENT PROCESSING (no transaction code)
+         * 2️⃣ Check: PAYMENT PROCESSING (no transaction code or backend update)
          */
         $processingOrders = Order::where('transaction_status', 'PAYMENT PROCESSING')->get();
 
@@ -104,11 +136,17 @@ class CheckPendingPayments extends Command
         }
 
         $allPaid = match ($order->application_type) {
-            'Import Permit' => IpConsignmentPermit::where('application_id', $application->id)->where('status', '!=', 'paid')->doesntExist(),
+            'Import Permit' => IpConsignmentPermit::where('application_id', $application->id)
+                ->where('status', '!=', 'paid')
+                ->doesntExist(),
 
-            'Inspection Certificate' => InspectionItem::where('application_id', $application->id)->where('status', '!=', 'paid')->doesntExist(),
+            'Inspection Certificate' => InspectionItem::where('application_id', $application->id)
+                ->where('status', '!=', 'paid')
+                ->doesntExist(),
 
-            'Consignment Certificate' => ConsignmentPermit::where('application_id', $application->id)->where('status', '!=', 'paid')->doesntExist(),
+            'Consignment Certificate' => ConsignmentPermit::where('application_id', $application->id)
+                ->where('status', '!=', 'paid')
+                ->doesntExist(),
 
             default => false,
         };
@@ -116,7 +154,11 @@ class CheckPendingPayments extends Command
         if ($allPaid && $application->status !== 'Completed') {
             $application->update(['status' => 'Completed']);
 
-            $application->logActivity(action: 'Application Completed', remark: 'All permits under this application have been fully paid', status: 'Completed');
+            $application->logActivity(
+                action: 'Application Completed', 
+                remark: 'All permits under this application have been fully paid', 
+                status: 'Completed'
+            );
 
             Log::info('Application marked as completed.', [
                 'application_id' => $application->id,
