@@ -238,7 +238,7 @@ class BayuPayService
                 'payment_amount' => $paymentData['payment_amount'] ?? null,
                 'transaction_data' => $paymentData['transaction_data'] ?? null,
                 'transaction_status' => $paymentData['transaction_status'] ?? null,
-                'kod_transaksi' => 'backend update',
+                'kod_transaksi' => ' ',
             ]);
 
             $order->save();
