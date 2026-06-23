@@ -5,7 +5,7 @@
 @endpush
 
 @php
-    $user = authUser(); 
+    $user = authUser();
     $name = $user['user'] ? $user['user']->fullname : 'Guest';
     $initials = collect(explode(' ', $name))
         ->map(fn($word) => strtoupper(Str::substr($word, 0, 1)))
@@ -46,13 +46,15 @@
                                             <h5 class="fw-semibold mb-1  "> <span class="fullname"></span> </h5>
 
                                             <p class = "fs-13 mainFullName"></p>
-                                           
-                                            <p class="fs-12 mb-0 text-muted"> 
-                                                <span>
-                                                    <i class="ri-map-pin-line me-1 align-middle " ></i>
-                                                    <span class="address"></span>
-                                                </span>
-                                            </p>
+
+                                            @if ($user['type'] == 'public')
+                                                <p class="fs-12 mb-0 text-muted">
+                                                    <span>
+                                                        <i class="ri-map-pin-line me-1 align-middle "></i>
+                                                        <span class="address"></span>
+                                                    </span>
+                                                </p>
+                                            @endif
                                         </div>
                                     </div>
 
@@ -67,21 +69,29 @@
                                                 <div><span class="fw-medium me-2">Name :</span><span
                                                         class="text-muted fullname"></span></div>
                                             </li>
-                                           
+
                                             <li class="list-group-item pt-2 border-0">
                                                 <div><span class="fw-medium me-2">Email :</span><span
                                                         class="text-muted email"></span></div>
                                             </li>
                                             <li class="list-group-item pt-2 border-0">
                                                 <div><span class="fw-medium me-2">Phone :</span>
-                                                    <span class="text-muted phone_number"></span></div>
+                                                    <span class="text-muted phone_number"></span>
+                                                </div>
                                             </li>
                                             <li class="list-group-item pt-2 border-0">
                                                 <div><span class="fw-medium me-2">IC :</span>
                                                     <span class="text-muted ic"></span>
                                                 </div>
                                             </li>
-                                            
+                                            @if ($user['type'] == 'internal')
+                                                <li class="list-group-item pt-2 border-0">
+                                                    <div><span class="fw-medium me-2">Role :</span>
+                                                        <span class="text-muted role">{{ $user['roles'][0] }}</span>
+                                                    </div>
+                                                </li>
+                                            @endif
+
                                         </ul>
                                     </div>
 

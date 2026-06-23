@@ -25,14 +25,8 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb 
-        :items="[
-            ['label' => 'Home', 'url' => '#'],
-          
-        ]" 
-        title="Consignment List"
-    >
-     
+    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="Consignment List">
+
     </x-breadcrumb>
 @endsection
 
@@ -83,7 +77,8 @@
                             </li>
                         </ul>
 
-                        <a type="button" href="{{ url('internal/consignment_condition/add') }}" class="btn btn-success btn-sm">
+                        <a type="button" href="{{ url('internal/consignment_condition/add') }}"
+                            class="btn btn-success btn-sm">
                             <i class="ti ti-plus me-1"></i> Add Consignment Item
                         </a>
                     </div>
@@ -129,6 +124,10 @@
                                     <td id="itemNameCell"></td>
                                 </tr>
                                 <tr>
+                                    <th width="25%">Scientific Name</th>
+                                    <td id="scientificNameCell"></td>
+                                </tr>
+                                <tr>
                                     <th>Category</th>
                                     <td id="categoryCell"></td>
                                 </tr>
@@ -140,6 +139,14 @@
                                     <th>Country</th>
                                     <td id="countryCell"></td>
                                 </tr>
+                                <tr>
+                                    <th>Quantity Limit</th>
+                                    <td id="quantityLimit"></td>
+                                </tr>
+                                <tr>
+                                    <th>Date</th>
+                                    <td id="date"></td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -147,9 +154,7 @@
                     <!-- PERMIT CONDITION -->
                     <div class="mt-4">
                         <h5 class="fw-bold text-muted">Consignment Condition</h5>
-                        <div id="conditionHtml" 
-                            class="border rounded p-3 bg-light"
-                            style="min-height: 150px;">
+                        <div id="conditionHtml" class="border rounded p-3 bg-light" style="min-height: 150px;">
                         </div>
                     </div>
                 </div>

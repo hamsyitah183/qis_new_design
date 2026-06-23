@@ -59,6 +59,12 @@
                                 value="{{ $condition->item_name }}"
                                 placeholder="Citrus - Lemon, Chinese Mandarine, Limau Kasturi">
                         </div>
+                        <div class="col-xl-12">
+                            <label for="blog-title" class="form-label">Scientific Name</label>
+                            <input type="text" class="form-control" id="scientificName" name="scientificName"
+                            value="{{ $condition->scientific_name }}"
+                                placeholder=" ">
+                        </div>
                         <div class="col-xl-6">
                             <label for="blog-category" class="form-label">Category</label>
                             <select class="form-select" name="itemCategory" id="itemCategory">
@@ -305,6 +311,4 @@
             quill.clipboard.dangerouslyPasteHTML(longText);
         });
     </script>
-
-
 @endpush

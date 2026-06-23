@@ -36,7 +36,7 @@ async function data_table_init() {
             { data: "phone_number", name: "phone_number" },
             { data: "position", name: "position" },
             { data: "role", name: "role", orderable: false, searchable: false },
-            { data: "office", name: "office" },
+            { data: "branch", name: "branch" },
             {
                 data: "action",
                 name: "action",
@@ -58,72 +58,193 @@ async function getSwal() {
  * ✅ Open modal for Add / Edit / View
  */
 async function open_internal_user_modal(mode = "add", userId = null) {
-    const Swal = await getSwal();
-    const isAdd = mode === "add";
-    const isView = mode === "view";
-    const isEdit = mode === "edit";
+    try {
+        const Swal = await getSwal();
+        const isAdd = mode === "add";
+        const isView = mode === "view";
+        const isEdit = mode === "edit";
 
-    const title = isAdd
-        ? "Add Internal User"
-        : isView
-        ? "View Internal User"
-        : "Edit Internal User";
-    $("#internalUserModalLabel").text(title);
-    $("#internalUserForm")[0].reset();
-    $(".form-control").removeClass("is-invalid");
-    $(".invalid-feedback").text("");
+        const title = isAdd
+            ? "Add Internal User"
+            : isView
+              ? "View Internal User"
+              : "Edit Internal User";
+        
+        $("#internalUserModalLabel").text(title);
+        $("#internalUserForm")[0].reset();
+        $(".form-control").removeClass("is-invalid");
+        $(".invalid-feedback").text("");
 
-    $("#internalUserForm input, #internalUserForm select").prop(
-        "readonly",
-        isView
-    );
-    $("#internalUserForm select").prop("disabled", isView);
-    if (isView) $("#internalUserModal .modal-footer").hide();
-    else $("#internalUserModal .modal-footer").show();
+        $("#internalUserForm input, #internalUserForm select").prop(
+            "readonly",
+            isView,
+        );
+        $("#internalUserForm select").prop("disabled", isView);
+        
+        if (isView) {
+            $("#internalUserModal .modal-footer").hide();
+        } else {
+            $("#internalUserModal .modal-footer").show();
+        }
 
-    if (isAdd) {
-        $("#userUuid").val("");
-        new bootstrap.Modal("#internalUserModal").show();
-        return;
-    }
-
-    if (isEdit) {
-        $("#email").prop("readonly", true);
-    }
-
-    Swal.fire({
-        title: "Loading...",
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading(),
-    });
-
-    $.ajax({
-        url: `/internal/user_internal/user/data/${userId}`,
-        type: "GET",
-        success: function (response) {
-            const user = response.user;
-            $("#userUuid").val(user.uuid);
-            $("#fullname").val(user.fullname);
-            $("#email").val(user.email);
-            $("#phone_number").val(user.phone_number);
-            $("#position").val(user.position || "");
-            $("#office").val(user.office || "");
-            $("#no_ic").val(user.no_ic || "");
-            $("#no_ic").prop("readonly", true);
-            // Populate branch if field exists (admin/superadmin only)
-            if ($("#branch").length) {
-                $("#branch").val(user.branch || "");
-            }
-            // Populate role
-            const role = user.roles && user.roles.length ? user.roles[0].name : "";
-            $("#role").val(role);
-            Swal.close();
+        if (isAdd) {
+            $("#userUuid").val("");
             new bootstrap.Modal("#internalUserModal").show();
-        },
-        error: function () {
-            Swal.fire("Error", "Unable to load user details", "error");
-        },
-    });
+            return;
+        }
+
+        if (isEdit) {
+            $("#email").prop("readonly", true);
+        }
+
+        // Show loading
+        Swal.fire({
+            title: "Loading...",
+            text: "Please wait while we fetch the user details.",
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading(),
+        });
+
+        // Make AJAX request
+        $.ajax({
+            url: `/internal/user_internal/user/data/${userId}`,
+            type: "GET",
+            dataType: "json",
+            timeout: 30000, // 30 second timeout
+            success: function (response) {
+                try {
+                    // Validate response
+                    if (!response || !response.user) {
+                        throw new Error("Invalid response format");
+                    }
+
+                    const user = response.user;
+                    const currentUser = window.authUser || {};
+
+                    // Extract role names
+                    const userRoles = currentUser.roles || [];
+                    const roleNames = userRoles.map((role) => role.name);
+                    const isSuperAdmin = roleNames.includes("superadmin");
+
+                    console.log("Current User:", currentUser);
+                    console.log("Role Names:", roleNames);
+                    console.log("Is Super Admin:", isSuperAdmin);
+
+                    // Populate form fields
+                    $("#userUuid").val(user.uuid || "");
+                    $("#fullname").val(user.fullname || "");
+                    $("#email").val(user.email || "");
+                    $("#phone_number").val(user.phone_number || "");
+                    $("#position").val(user.position || "");
+                    $("#office").val(user.office || "");
+                    $("#no_ic").val(user.no_ic || "");
+
+                    // Handle no_ic readonly for non-superadmin in edit mode
+                    if (isEdit) {
+                        if (!isSuperAdmin) {
+                            $("#no_ic")
+                                .prop("readonly", true)
+                                .addClass("bg-light")
+                                .attr("title", "Only Super Admin can edit this field")
+                                .css("cursor", "not-allowed");
+                        } else {
+                            $("#no_ic")
+                                .prop("readonly", false)
+                                .removeClass("bg-light")
+                                .removeAttr("title")
+                                .css("cursor", "default");
+                        }
+                    }
+
+                    // Populate branch if field exists
+                    if ($("#branch").length) {
+                        $("#branch").val(user.branch || "");
+                    }
+
+                    // Populate role
+                    const role = user.roles && user.roles.length 
+                        ? user.roles[0].name 
+                        : "";
+                    $("#role").val(role);
+
+                    // Close loading and show modal
+                    Swal.close();
+                    new bootstrap.Modal("#internalUserModal").show();
+                    
+                } catch (error) {
+                    console.error("Error processing user data:", error);
+                    Swal.close();
+                    Swal.fire({
+                        icon: "error",
+                        title: "Data Processing Error",
+                        text: "An error occurred while processing the user data. Please try again.",
+                        confirmButtonText: "OK"
+                    });
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error("AJAX Error Details:", {
+                    xhr: xhr,
+                    status: status,
+                    error: error,
+                    responseText: xhr.responseText
+                });
+                
+                Swal.close();
+                
+                // Determine error message based on response
+                let errorTitle = "Error";
+                let errorMessage = "Unable to load user details. Please try again.";
+                let errorIcon = "error";
+                
+                if (xhr.status === 0) {
+                    errorTitle = "Connection Error";
+                    errorMessage = "Unable to connect to the server. Please check your internet connection.";
+                } else if (xhr.status === 404) {
+                    errorTitle = "User Not Found";
+                    errorMessage = "The requested user could not be found. They may have been deleted.";
+                } else if (xhr.status === 403) {
+                    errorTitle = "Access Denied";
+                    errorMessage = "You do not have permission to view this user's details.";
+                } else if (xhr.status === 401) {
+                    errorTitle = "Session Expired";
+                    errorMessage = "Your session has expired. Please refresh the page and try again.";
+                } else if (xhr.status === 500) {
+                    errorTitle = "Server Error";
+                    errorMessage = "An internal server error occurred. Please contact support.";
+                } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                } else if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMessage = xhr.responseJSON.error;
+                }
+                
+                // Show error with retry option
+                Swal.fire({
+                    icon: errorIcon,
+                    title: errorTitle,
+                    text: errorMessage,
+                    confirmButtonText: "OK",
+                    showCancelButton: true,
+                    cancelButtonText: "Retry",
+                }).then((result) => {
+                    if (result.dismiss === Swal.DismissReason.cancel) {
+                        // Retry loading
+                        open_internal_user_modal(mode, userId);
+                    }
+                });
+            },
+        });
+        
+    } catch (error) {
+        console.error("Function error:", error);
+        const Swal = await getSwal();
+        Swal.fire({
+            icon: "error",
+            title: "Unexpected Error",
+            text: "An unexpected error occurred. Please try again.",
+            confirmButtonText: "OK"
+        });
+    }
 }
 
 /**
@@ -132,55 +253,145 @@ async function open_internal_user_modal(mode = "add", userId = null) {
 function handle_internal_user_submit() {
     $(document).on("submit", "#internalUserForm", async function (e) {
         e.preventDefault();
-        const Swal = await import("sweetalert2").then((m) => m.default);
+        
+        try {
+            const Swal = await import("sweetalert2").then((m) => m.default);
 
-        $(".form-control").removeClass("is-invalid");
-        $(".invalid-feedback").text("");
+            $(".form-control").removeClass("is-invalid");
+            $(".invalid-feedback").text("");
 
-        const formData = $(this).serialize();
-        const uuid = $("#userUuid").val();
-        const isEdit = Boolean(uuid);
+            const formData = $(this).serialize();
+            const uuid = $("#userUuid").val();
+            const isEdit = Boolean(uuid);
 
-        Swal.fire({
-            title: isEdit ? "Updating user..." : "Saving user...",
-            allowOutsideClick: false,
-            didOpen: () => Swal.showLoading(),
-        });
+            // Show loading
+            Swal.fire({
+                title: isEdit ? "Updating user..." : "Saving user...",
+                text: "Please wait while we process your request.",
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading(),
+            });
 
-        $.ajax({
-            url: `/internal/user_internal/save`,
-            method: "POST",
-            data: formData,
-            headers: {
-                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
-            },
-            success: function (response) {
-                Swal.fire({
-                    icon: "success",
-                    title: isEdit ? "User Updated!" : "User Added!",
-                    text: response.message,
-                });
-                bootstrap.Modal.getInstance("#internalUserModal").hide();
-                internalListTable.ajax.reload();
-            },
-            error: function (xhr) {
-                Swal.close();
-                if (xhr.status === 422) {
-                    const errors = xhr.responseJSON.errors;
-                    Object.keys(errors).forEach((key) => {
-                        const input = $(`#${key}`);
-                        input.addClass("is-invalid");
-                        $(`#error-${key}`).text(errors[key][0]);
-                    });
-                } else {
+            $.ajax({
+                url: `/internal/user_internal/save`,
+                method: "POST",
+                data: formData,
+                headers: {
+                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+                },
+                timeout: 30000, // 30 second timeout
+                success: function (response) {
+                    Swal.close();
+                    
+                    // Show success message
                     Swal.fire({
-                        icon: "error",
-                        title: "Failed!",
-                        text: "Something went wrong while saving the user.",
+                        icon: "success",
+                        title: isEdit ? "User Updated!" : "User Added!",
+                        text: response.message || (isEdit ? "User has been updated successfully." : "User has been added successfully."),
+                        timer: 3000,
+                        timerProgressBar: true,
+                        showConfirmButton: true,
+                    }).then(() => {
+                        // Close modal and reload table
+                        const modal = bootstrap.Modal.getInstance("#internalUserModal");
+                        if (modal) {
+                            modal.hide();
+                        }
+                        if (typeof internalListTable !== 'undefined' && internalListTable) {
+                            internalListTable.ajax.reload();
+                        } else {
+                            // Fallback: reload page if table not found
+                            location.reload();
+                        }
+                    });
+                },
+                error: function (xhr, status, error) {
+                    console.error("AJAX Error:", {
+                        xhr: xhr,
+                        status: status,
+                        error: error,
+                        responseText: xhr.responseText
+                    });
+                    
+                    Swal.close();
+
+                    // Handle validation errors (422)
+                    if (xhr.status === 422) {
+                        const errors = xhr.responseJSON.errors;
+                        let errorMessage = "Please fix the following errors:";
+                        
+                        // Show validation errors on form
+                        Object.keys(errors).forEach((key) => {
+                            const input = $(`#${key}`);
+                            input.addClass("is-invalid");
+                            $(`#error-${key}`).text(errors[key][0]);
+                            errorMessage += `\n• ${errors[key][0]}`;
+                        });
+
+                        // Show validation error in Swal
+                        Swal.fire({
+                            icon: "warning",
+                            title: "Validation Error",
+                            html: errorMessage.replace(/\n/g, '<br>'),
+                            confirmButtonText: "OK"
+                        });
+                        return;
+                    }
+
+                    // Handle other errors
+                    let errorTitle = "Error";
+                    let errorMessage = "Something went wrong while saving the user.";
+                    let errorIcon = "error";
+
+                    if (xhr.status === 0) {
+                        errorTitle = "Connection Error";
+                        errorMessage = "Unable to connect to the server. Please check your internet connection and try again.";
+                    } else if (xhr.status === 403) {
+                        errorTitle = "Access Denied";
+                        errorMessage = "You do not have permission to perform this action.";
+                    } else if (xhr.status === 401) {
+                        errorTitle = "Session Expired";
+                        errorMessage = "Your session has expired. Please refresh the page and try again.";
+                    } else if (xhr.status === 409) {
+                        errorTitle = "Conflict";
+                        errorMessage = "A user with this email or IC number already exists.";
+                    } else if (xhr.status === 500) {
+                        errorTitle = "Server Error";
+                        errorMessage = "An internal server error occurred. Please contact support.";
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    } else if (xhr.responseJSON && xhr.responseJSON.error) {
+                        errorMessage = xhr.responseJSON.error;
+                    }
+
+                    // Show error with retry option
+                    Swal.fire({
+                        icon: errorIcon,
+                        title: errorTitle,
+                        text: errorMessage,
+                        confirmButtonText: "Try Again",
+                        showCancelButton: true,
+                        cancelButtonText: "Cancel",
+                        reverseButtons: true,
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Retry submission
+                            $(document).find("#internalUserForm").trigger("submit");
+                        }
                     });
                 }
-            },
-        });
+            });
+            
+        } catch (error) {
+            console.error("Function error:", error);
+            const Swal = await import("sweetalert2").then((m) => m.default);
+            Swal.fire({
+                icon: "error",
+                title: "Unexpected Error",
+                text: "An unexpected error occurred. Please try again.",
+                confirmButtonText: "OK"
+            });
+        }
     });
 }
 
@@ -208,14 +419,14 @@ async function delete_internal_user() {
                     type: "DELETE",
                     headers: {
                         "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
-                            "content"
+                            "content",
                         ),
                     },
                     success: function () {
                         Swal.fire(
                             "Deleted!",
                             "User deleted successfully.",
-                            "success"
+                            "success",
                         );
                         internalListTable.ajax.reload();
                     },
@@ -254,7 +465,7 @@ async function internal_user_list() {
         $("#internalUserForm")[0].reset();
         $("#internalUserForm input, #internalUserForm select").prop(
             "readonly",
-            false
+            false,
         );
         $("#internalUserForm select").prop("disabled", false);
         $(".form-control").removeClass("is-invalid");
@@ -268,7 +479,7 @@ async function internal_user_list() {
             "InternalUserAdded",
             (e) => {
                 console.log(e.message);
-            }
+            },
         );
 
         window.Echo.private(`internal-user-edited.${userId}`).listen(
@@ -277,16 +488,14 @@ async function internal_user_list() {
                 console.log("✅ YOU were edited:", e.message);
                 showToast(`${e.message} (by ${e.editor})`);
                 notifyUser(e.message, e.editor);
-                
-            
-            }
+            },
         );
 
         window.Echo.channel("internal-user-deleted").listen(
             "InternalUserDeleted",
             (e) => {
                 console.log(e.message);
-            }
+            },
         );
     }, 100);
 }

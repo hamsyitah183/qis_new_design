@@ -11,13 +11,15 @@
                 <span class="email"></span>
             </p>
 
-            <p class="mb-3">
-                <span class="avatar avatar-sm avatar-rounded text-primary2 p-1 bg-primary2-transparent me-2">
-                    <i class="ri-building-line align-middle fs-15"></i>
-                </span>
-                <span class="fw-medium text-default">Location : </span>
-                <span class="address"></span>
-            </p>
+            @if ($user['type'] === 'public')
+                <p class="mb-3">
+                    <span class="avatar avatar-sm avatar-rounded text-primary2 p-1 bg-primary2-transparent me-2">
+                        <i class="ri-building-line align-middle fs-15"></i>
+                    </span>
+                    <span class="fw-medium text-default">Location : </span>
+                    <span class="address"></span>
+                </p>
+            @endif
             <p class="mb-3">
                 <span class="avatar avatar-sm avatar-rounded text-primary3 p-1 bg-primary3-transparent me-2">
                     <i class="ri-phone-line align-middle fs-15"></i>
@@ -26,13 +28,13 @@
                 <span class="phone_number"></span>
             </p>
             @if ($user['type'] === 'internal')
-            <p class="mb-0 branch-info">
-                <span class="avatar avatar-sm avatar-rounded text-primary p-1 bg-primary-transparent me-2">
-                    <i class="ri-map-2-line align-middle fs-15"></i>
-                </span>
-                <span class="fw-medium text-default">Branch : </span>
-                <span class="branch"></span>
-            </p>
+                <p class="mb-0 branch-info">
+                    <span class="avatar avatar-sm avatar-rounded text-primary p-1 bg-primary-transparent me-2">
+                        <i class="ri-map-2-line align-middle fs-15"></i>
+                    </span>
+                    <span class="fw-medium text-default">Branch : </span>
+                    <span class="branch"></span>
+                </p>
             @endif
         </div>
     </li>

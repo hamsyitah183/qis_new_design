@@ -14,9 +14,15 @@ class RoleAndPermissionController extends Controller
 {
     public function role()
     {
-        // if (auth()->user()->hasRole('boundary officer')) {
-        //     abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        // }
+        // Get the authenticated user
+        $user = auth()->user();
+
+        // Check if user has 'manage role and permission' permission
+        if (!$user->hasPermissionTo('manage role and permission')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+
+
 
         return view('pages.internal.user_management.list_role', [
             'title' => 'List Role'

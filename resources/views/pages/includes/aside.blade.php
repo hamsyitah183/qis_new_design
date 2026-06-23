@@ -30,26 +30,33 @@
                 $isBoundary    = $internalUser?->hasRole('boundary officer')  ?? false;
                 $isRestricted  = $isFinance || $isBoundary;
 
-                
                 $isSipitang = $internalUser?->branch === 'Sipitang';
 
                 // ── User Management visibility ──────────────────────────────────
-                $canSeeUserManagement = $isSuperadmin || ($internalUser?->canAny([
-                    'read public user',
-                    'read internal user',
-                    'approve public user',
-                    'read activity log',
-                ]) ?? false);
+                // Check each permission individually
+                $canReadPublicUser = $internalUser?->can('read public user') ?? false;
+                $canReadInternalUser = $internalUser?->can('read internal user') ?? false;
+                $canApprovePublicUser = $internalUser?->can('approve public user') ?? false;
+                $canReadActivityLog = $internalUser?->can('read activity log') ?? false;
+                $canManageRolePermission = $internalUser?->hasRole('superadmin') ?? false;
+
+                // Show User Management if user has at least one of these permissions
+                $canSeeUserManagement = $isSuperadmin || 
+                    $canReadPublicUser || 
+                    $canReadInternalUser || 
+                    $canApprovePublicUser || 
+                    $canReadActivityLog;
 
                 // ── Active state helpers ────────────────────────────────────────
                 $isApplicationActive = Str::contains($currentRoute, ['application', 'inspection', 'consignment']);
 
                 $isUserManagementActive = collect([
-                    'internal.public.',
-                    'internal.internal.',
-                    'activity_logs',
+                    'internal.public.list',
+                    'internal.internal.list',
+                    'internal.public.verification.list',
+                    'internal.activity_logs',
                     'internal.internal.role',
-                ])->contains(fn($prefix) => Str::startsWith($currentRoute, $prefix));
+                ])->contains(fn($prefix) => Str::startsWith($currentRoute, $prefix) || $currentRoute === $prefix);
 
                 $isImporterExporterActive = in_array($currentRoute, [
                     'internal.exporter.list',
@@ -153,12 +160,12 @@
                         <ul class="slide-menu child1">
                             <li class="slide side-menu__label1"><a href="javascript:void(0)">Application List</a></li>
                     
-                                <li class="slide {{ $currentRoute === 'internal.application.list' ? 'active' : '' }}">
-                                    <a href="{{ route('internal.application.list') }}" class="side-menu__item" id="importPermitCount">Import Permit</a>
-                                </li>
-                                <li class="slide {{ $currentRoute === 'internal.inspection.list' ? 'active' : '' }}">
-                                    <a href="{{ route('internal.inspection.list') }}" class="side-menu__item" id="inspectionAppCount">Inspection Certificate</a>
-                                </li>
+                            <li class="slide {{ $currentRoute === 'internal.application.list' ? 'active' : '' }}">
+                                <a href="{{ route('internal.application.list') }}" class="side-menu__item" id="importPermitCount">Import Permit</a>
+                            </li>
+                            <li class="slide {{ $currentRoute === 'internal.inspection.list' ? 'active' : '' }}">
+                                <a href="{{ route('internal.inspection.list') }}" class="side-menu__item" id="inspectionAppCount">Inspection Certificate</a>
+                            </li>
                         
                             <li class="slide {{ $currentRoute === 'internal.consignment.list' ? 'active' : '' }}">
                                 <a href="{{ route('internal.consignment.list') }}" class="side-menu__item" id="consignmentAppCount">Consignment Certificate</a>
@@ -179,29 +186,29 @@
                             <ul class="slide-menu child1">
                                 <li class="slide side-menu__label1"><a href="javascript:void(0)">Users</a></li>
 
-                                @can('read public user')
+                                @if($canReadPublicUser)
                                     <li class="slide {{ $currentRoute === 'internal.public.list' ? 'active' : '' }}">
                                         <a href="{{ route('internal.public.list') }}" class="side-menu__item">Public Users</a>
                                     </li>
-                                @endcan
+                                @endif
 
-                                @can('read internal user')
+                                @if($canReadInternalUser)
                                     <li class="slide {{ $currentRoute === 'internal.internal.list' ? 'active' : '' }}">
                                         <a href="{{ route('internal.internal.list') }}" class="side-menu__item">Internal Users</a>
                                     </li>
-                                @endcan
+                                @endif
 
-                                @can('approve public user')
+                                @if($canApprovePublicUser)
                                     <li class="slide {{ $currentRoute === 'internal.public.verification.list' ? 'active' : '' }}">
                                         <a href="{{ route('internal.public.verification.list') }}" class="side-menu__item" id="verificationCount">User Verification</a>
                                     </li>
-                                @endcan
+                                @endif
 
-                                @can('read activity log')
+                                @if($canReadActivityLog)
                                     <li class="slide {{ $currentRoute === 'internal.activity_logs' ? 'active' : '' }}">
                                         <a href="{{ route('internal.activity_logs') }}" class="side-menu__item">Activity Log</a>
                                     </li>
-                                @endcan
+                                @endif
 
                                 @if($isSuperadmin)
                                     <li class="slide {{ $currentRoute === 'internal.internal.role' ? 'active' : '' }}">
@@ -216,7 +223,12 @@
                     @endif
 
                     {{-- Importer & Exporter --}}
-                    @canany(['view importer list', 'view exporter list'])
+                    @php
+                        $canViewImporter = $internalUser?->can('view importer list') ?? false;
+                        $canViewExporter = $internalUser?->can('view exporter list') ?? false;
+                    @endphp
+                    
+                    @if($canViewImporter || $canViewExporter)
                         <li class="slide has-sub {{ $isImporterExporterActive ? 'open active' : '' }}">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <i class="ri-arrow-down-s-line side-menu__angle"></i>
@@ -226,23 +238,27 @@
                             <ul class="slide-menu child1">
                                 <li class="slide side-menu__label1"><a href="javascript:void(0)">Importer &amp; Exporter</a></li>
 
-                                @can('view importer list')
+                                @if($canViewImporter)
                                     <li class="slide {{ $currentRoute === 'internal.importer.list' ? 'active' : '' }}">
                                         <a href="{{ route('internal.importer.list') }}" class="side-menu__item">Importer List</a>
                                     </li>
-                                @endcan
+                                @endif
 
-                                @can('view exporter list')
+                                @if($canViewExporter)
                                     <li class="slide {{ $currentRoute === 'internal.exporter.list' ? 'active' : '' }}">
                                         <a href="{{ route('internal.exporter.list') }}" class="side-menu__item">Exporter List</a>
                                     </li>
-                                @endcan
+                                @endif
                             </ul>
                         </li>
-                    @endcanany
+                    @endif
 
                     {{-- System Configuration --}}
-                    @can('manage settings')
+                    @php
+                        $canManageSettings = $internalUser?->can('manage settings') ?? false;
+                    @endphp
+                    
+                    @if($canManageSettings)
                         <li class="slide__category"><span class="category-name">Misc</span></li>
 
                         <li class="slide has-sub {{ Str::startsWith($currentRoute, 'internal.') ? 'open active' : '' }}">
@@ -272,7 +288,7 @@
                                 </li>
                             </ul>
                         </li>
-                    @endcan
+                    @endif
 
                 @endif
 

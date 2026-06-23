@@ -26,12 +26,12 @@
                         value="">
                 </div>
 
-                <div class="col-xl-3">
+                <div class="col-xl-3 d-none">
                     <div class="lh-1">
                         <span class="fw-medium">Office :</span>
                     </div>
                 </div>
-                <div class="col-xl-9">
+                <div class="col-xl-9 d-none">
                     <input type="text" name="office" class="form-control address" placeholder="Office"
                         value="">
                 </div>

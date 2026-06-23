@@ -603,7 +603,7 @@ class UserController extends Controller
                     'no_ic' => 'required|digits:12|unique:internal_users,no_ic,' . $internalUser->id,
                     'phone_number' => 'required|unique:internal_users,phone_number,' . $internalUser->id,
                     'position' => 'required|string|max:255',
-                    'office' => 'required|string|max:255',
+                    // 'office' => 'required|string|max:255',
                     'role' => 'required|string',
                 ]);
 
@@ -655,9 +655,9 @@ class UserController extends Controller
                 'fullname' => 'required|string|max:255',
                 'email' => 'required|email|max:255|unique:internal_users,email',
                 'no_ic' => 'required|digits:12|unique:internal_users,no_ic',
-                'phone_number' => 'required|digits_between:7,15|unique:internal_users,phone_number',
+                'phone_number' => 'required|unique:internal_users,phone_number',
                 'position' => 'required|string|max:255',
-                'office' => 'required|string|max:255',
+                // 'office' => 'required|string|max:255',
                 'role' => 'required|string',
             ]);
 
@@ -669,6 +669,7 @@ class UserController extends Controller
                 'phone_number' => $request->phone_number,
                 'position' => $request->position,
                 'office' => $request->office,
+                'branch' => $request->branch,
                 'password' => Hash::make($request->no_ic),
             ];
 

@@ -7,33 +7,36 @@ let countryLookup = {};
 // Fetch country list & build lookup map
 function initCountryLookup() {
     return $.ajax({
-        url: '/get_country',
-        method: 'GET',
+        url: "/get_country",
+        method: "GET",
         success: function (response) {
             const list = response.data;
-            list.forEach(item => {
+            list.forEach((item) => {
                 countryLookup[item.value] = item.name;
             });
             console.log("Country lookup ready:", countryLookup);
         },
         error: function (error) {
             console.error("Failed to load country list:", error);
-        }
+        },
     });
-} window.initCountryLookup = initCountryLookup;
+}
+window.initCountryLookup = initCountryLookup;
 
 function getCountryName(code) {
     return countryLookup[code] || code;
-} window.getCountryName = getCountryName;
+}
+window.getCountryName = getCountryName;
 
 function normalizeToArray(value) {
     if (Array.isArray(value)) return value;
     try {
         const parsed = JSON.parse(value);
         if (Array.isArray(parsed)) return parsed;
-    } catch (e) { }
+    } catch (e) {}
     return value ? [value] : [];
-} window.normalizeToArray = normalizeToArray;
+}
+window.normalizeToArray = normalizeToArray;
 
 async function data_table_init() {
     console.log("DataTable initialized");
@@ -63,7 +66,7 @@ async function data_table_init() {
         ajax: {
             url: "/internal/permit_condition/data",
             type: "GET",
-            dataSrc: "data"
+            dataSrc: "data",
         },
         columns: [
             {
@@ -71,21 +74,23 @@ async function data_table_init() {
                 title: "Item Name",
                 render: function (data) {
                     return `<span class="text-wrap">${data}</span>` ?? "-";
-                }
+                },
             },
             {
                 data: "scientific_name",
                 title: "Scientific Name",
                 render: function (data) {
-                    return `<span class="text-wrap">${data ?? ' '}</span>` ?? "-";
-                }
+                    return (
+                        `<span class="text-wrap">${data ?? " "}</span>` ?? "-"
+                    );
+                },
             },
             {
                 data: "condcategory.description",
                 title: "Category",
                 render: function (data) {
                     return data ?? "-";
-                }
+                },
             },
             {
                 data: "usage",
@@ -96,11 +101,13 @@ async function data_table_init() {
                     }
                     try {
                         const parsed = JSON.parse(data);
-                        return Array.isArray(parsed) ? parsed.join(", ") : parsed;
+                        return Array.isArray(parsed)
+                            ? parsed.join(", ")
+                            : parsed;
                     } catch {
                         return data ?? "-";
                     }
-                }
+                },
             },
             {
                 data: "id",
@@ -119,8 +126,8 @@ async function data_table_init() {
                             Show Condition
                         </button>
                     `;
-                }
-            }
+                },
+            },
         ],
         responsive: true,
         pageLength: 10,
@@ -130,40 +137,40 @@ async function data_table_init() {
 // Populate Category dropdown from public_code (condition_category)
 function initCategoryFilter() {
     return $.ajax({
-        url: '/internal/get_pbdata/condition_category',
-        method: 'GET',
+        url: "/internal/get_pbdata/condition_category",
+        method: "GET",
         success: function (response) {
-            const select = document.getElementById('filterPermitCategory');
-            (response.data || []).forEach(item => {
-                const opt = document.createElement('option');
+            const select = document.getElementById("filterPermitCategory");
+            (response.data || []).forEach((item) => {
+                const opt = document.createElement("option");
                 opt.value = item.description;
                 opt.textContent = item.description;
                 select.appendChild(opt);
             });
         },
         error: function () {
-            console.error('Failed to load category filter options.');
-        }
+            console.error("Failed to load category filter options.");
+        },
     });
 }
 
 // Populate Usage dropdown from distinct values in ip_condition
 function initUsageFilter() {
     return $.ajax({
-        url: '/internal/permit_condition/usages',
-        method: 'GET',
+        url: "/internal/permit_condition/usages",
+        method: "GET",
         success: function (response) {
-            const select = document.getElementById('filterPermitUsage');
-            (response.data || []).forEach(usage => {
-                const opt = document.createElement('option');
+            const select = document.getElementById("filterPermitUsage");
+            (response.data || []).forEach((usage) => {
+                const opt = document.createElement("option");
                 opt.value = usage;
                 opt.textContent = usage;
                 select.appendChild(opt);
             });
         },
         error: function () {
-            console.error('Failed to load usage filter options.');
-        }
+            console.error("Failed to load usage filter options.");
+        },
     });
 }
 
@@ -188,7 +195,9 @@ document.addEventListener("DOMContentLoaded", async function () {
                     allowOutsideClick: false,
                     allowEscapeKey: false,
                     showConfirmButton: false,
-                    didOpen: () => { Swal.showLoading(); }
+                    didOpen: () => {
+                        Swal.showLoading();
+                    },
                 });
             },
 
@@ -197,6 +206,8 @@ document.addEventListener("DOMContentLoaded", async function () {
                 const condition = response.data;
                 let usageList = condition.usage;
                 let countCode = [];
+
+                console.log("rresponse", response);
 
                 if (Array.isArray(condition.country)) {
                     countCode = condition.country;
@@ -208,62 +219,136 @@ document.addEventListener("DOMContentLoaded", async function () {
                     }
                 }
 
-                const countryNames = countCode.map(code => getCountryName(code));
+                const countryNames = countCode.map((code) =>
+                    getCountryName(code),
+                );
                 const namoong = "PERMIT CONDITION : " + condition.item_name;
 
                 document.getElementById("modalTitle").textContent = namoong;
-                document.getElementById("itemNameCell").textContent = condition.item_name;
+                document.getElementById("itemNameCell").textContent =
+                    condition.item_name;
                 document.getElementById("categoryCell").textContent =
-                    condition.condcategory ? condition.condcategory.description : "-";
+                    condition.condcategory
+                        ? condition.condcategory.description
+                        : "-";
                 document.getElementById("usageCell").textContent =
                     normalizeToArray(usageList).join(", ");
                 document.getElementById("countryCell").textContent =
                     countryNames.join(", ");
+
+                // ✅ FIX: Display quantity limit with measurement unit
+                let quantityDisplay = "-";
+                if (condition.quantity_limit) {
+                    quantityDisplay = condition.quantity_limit;
+                    if (condition.measurement_unit) {
+                        quantityDisplay += " " + condition.measurement_unit;
+                    }
+                } else if (condition.measurement_unit) {
+                    quantityDisplay = condition.measurement_unit;
+                }
+                document.getElementById("quantityLimit").textContent =
+                    quantityDisplay;
+
+                // ✅ FIX: Display date range
+                let dateDisplay = "-";
+                if (condition.start_date && condition.end_date) {
+                    // Format dates nicely
+                    const start = new Date(condition.start_date);
+                    const end = new Date(condition.end_date);
+                    const startFormatted = start.toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                    });
+                    const endFormatted = end.toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                    });
+                    dateDisplay = startFormatted + " until " + endFormatted;
+                } else if (condition.start_date) {
+                    const start = new Date(condition.start_date);
+                    dateDisplay =
+                        "From: " +
+                        start.toLocaleDateString("en-GB", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                        });
+                } else if (condition.end_date) {
+                    const end = new Date(condition.end_date);
+                    dateDisplay =
+                        "Until: " +
+                        end.toLocaleDateString("en-GB", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                        });
+                }
+                document.getElementById("date").textContent = dateDisplay;
+
                 document.getElementById("conditionHtml").innerHTML =
-                    condition.addional_condition || "<i>No condition provided</i>";
+                    condition.addional_condition ||
+                    "<i>No condition provided</i>";
 
                 modal.show();
             },
 
             error: function () {
-                Swal.fire({ icon: "error", title: "Error", text: "Failed to fetch permit condition data." });
-            }
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "Failed to fetch permit condition data.",
+                });
+            },
         });
     }
 
     window.condiModal = condiModal;
 
     // Filter functionality
-    document.getElementById("btnPermitFilter").addEventListener("click", function () {
-        const itemName = document.getElementById("filterPermitItemName").value;
-        const category = document.getElementById("filterPermitCategory").value;
-        const usage = document.getElementById("filterPermitUsage").value;
+    document
+        .getElementById("btnPermitFilter")
+        .addEventListener("click", function () {
+            const itemName = document.getElementById(
+                "filterPermitItemName",
+            ).value;
+            const category = document.getElementById(
+                "filterPermitCategory",
+            ).value;
+            const usage = document.getElementById("filterPermitUsage").value;
 
-        internalListTable.column(0).search(itemName);
+            internalListTable.column(0).search(itemName);
 
-        if (category === "") {
-            internalListTable.column(1).search("");
-        } else {
-            internalListTable.column(1).search(category);
-        }
+            if (category === "") {
+                internalListTable.column(1).search("");
+            } else {
+                internalListTable.column(1).search(category);
+            }
 
-        if (usage === "") {
-            internalListTable.column(2).search("");
-        } else {
-            internalListTable.column(2).search(usage);
-        }
+            if (usage === "") {
+                internalListTable.column(2).search("");
+            } else {
+                internalListTable.column(2).search(usage);
+            }
 
-        internalListTable.draw();
-        bootstrap.Dropdown.getInstance(document.getElementById('permitFilterDropdown')).hide();
-    });
+            internalListTable.draw();
+            bootstrap.Dropdown.getInstance(
+                document.getElementById("permitFilterDropdown"),
+            ).hide();
+        });
 
     // Reset filter
-    document.getElementById("btnResetPermitFilter").addEventListener("click", function () {
-        document.getElementById("filterPermitItemName").value = "";
-        document.getElementById("filterPermitCategory").value = "";
-        document.getElementById("filterPermitUsage").value = "";
+    document
+        .getElementById("btnResetPermitFilter")
+        .addEventListener("click", function () {
+            document.getElementById("filterPermitItemName").value = "";
+            document.getElementById("filterPermitCategory").value = "";
+            document.getElementById("filterPermitUsage").value = "";
 
-        internalListTable.search("").columns().search("").draw();
-        bootstrap.Dropdown.getInstance(document.getElementById('permitFilterDropdown')).hide();
-    });
+            internalListTable.search("").columns().search("").draw();
+            bootstrap.Dropdown.getInstance(
+                document.getElementById("permitFilterDropdown"),
+            ).hide();
+        });
 });

@@ -395,7 +395,7 @@ class MiscController extends Controller
         Gate::authorize('manage settings');
 
         $conditions = IpCondition::with(['code', 'condcategory'])
-            ->select('id', 'item_name', 'category', 'usage', 'addional_condition', 'quantity_limit', 'start_date', 'end_date', 'country')
+            ->select('id', 'scientific_name', 'item_name', 'category', 'usage', 'addional_condition', 'quantity_limit', 'start_date', 'end_date', 'country', 'measurement_unit')
             ->findOrFail($id);
 
         return response()->json([

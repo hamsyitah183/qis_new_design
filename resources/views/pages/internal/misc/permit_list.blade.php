@@ -140,6 +140,14 @@
                                     <th>Country</th>
                                     <td id="countryCell"></td>
                                 </tr>
+                                <tr>
+                                    <th>Quantity Limit</th>
+                                    <td id="quantityLimit"></td>
+                                </tr>
+                                <tr>
+                                    <th>Date</th>
+                                    <td id="date"></td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>

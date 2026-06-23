@@ -52,7 +52,7 @@
                                 <th>Phone Number</th>
                                 <th>Position</th>
                                 <th>Role</th>
-                                <th>Office</th>
+                                <th>Branch</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -116,7 +116,7 @@
 
                             <div class="col-md-6 d-none">
                                 <label class="form-label text-default">Office <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="office" name="office" required>
+                                <input type="text" class="form-control" id="office" name="office">
                                 <div class="invalid-feedback" id="error-office"></div>
                             </div>
 
