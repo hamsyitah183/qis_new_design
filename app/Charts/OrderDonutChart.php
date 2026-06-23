@@ -28,6 +28,7 @@ class OrderDonutChart
         // Optional: default colors if you want consistent mapping
         $statusColors = [
             'payment pending' => '#FFC658',   // yellow
+            'payment authorization' => '#58d0ff',   // yellow
             'payment complete'             => '#21CE9E',   // green
             'payment failed'      => '#FB4242',   // red
         ];
