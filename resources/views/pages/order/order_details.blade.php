@@ -190,7 +190,7 @@
 
                                     </tr>
                                     <tr>
-                                        
+                                        {{-- @dd($application->importer, $application->exporter) --}}
                                         <th class="fs-14 p-2" style="width: 160px;">Importer Address</th>
                                         <td class="fs-14 p-2 text-muted text-wrap">
                                             {{ $application->importer->address_1 ?? '-' }}
@@ -200,11 +200,11 @@
                                             @if (!empty($application->importer->postcode))
                                                 , {{ $application->importer->postcode }}
                                             @endif
-                                            @if (!empty($application->importer->district))
-                                                , {{ $application->importer->district }}
+                                            @if (!empty($application->importer->districtInfo))
+                                                , {{ $application->importer->districtInfo->name }}
                                             @endif
-                                            @if (!empty($application->importer->state))
-                                                , {{ $application->importer->state }}
+                                            @if (!empty($application->importer->stateInfo))
+                                                , {{ $application->importer->stateInfo->name }}
                                             @endif
                                         </td>
                                     </tr>

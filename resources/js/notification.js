@@ -43,7 +43,7 @@ export function notification() {
                 const listItem = document.createElement("li");
                 listItem.className = "dropdown-item";
 
-                const url = notification.data.url || "#";
+                const url = notification.data.url ? notification.data.url : "#";
 
                 listItem.innerHTML = `
                     <a href="${url}" class="d-flex align-items-center">
@@ -75,7 +75,7 @@ export function notification() {
     messageDropdown.addEventListener("click", () => {
         const unreadItems = document.querySelectorAll(
             "#notificationContent li a"
-        );
+        ); // only shown notifications
         if (unreadItems.length === 0) return;
 
         fetch("/notifications/mark-read", {
@@ -91,8 +91,9 @@ export function notification() {
                 pulse.className = "";
                 notificationCount.textContent = "0 Unread";
 
+                // Mark visually all the items as read (optional)
                 unreadItems.forEach((item) => {
-                    item.classList.remove("fw-medium");
+                    item.classList.remove("fw-medium"); // example: remove bold
                 });
             })
             .catch((err) =>
@@ -125,17 +126,24 @@ function formatTime(dateString) {
     });
 }
 
-// ✅ Time-based filtering for notifications
+document.querySelectorAll('.dropdown-item-notification').forEach(item => {
+    item.addEventListener('click', function (e) {
+        e.preventDefault();
+        const hours = this.dataset.time;
+        notificationContent(hours);
+    });
+});
+
+
 export function notificationContent(hours = null) {
     const notificationList = document.getElementById("notificationList");
 
-    // Show loading
-    Swal.fire({
-        title: 'Loading...',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        didOpen: () => Swal.showLoading()
-    });
+    // Swal.fire({
+    //     title: 'Loading...',
+    //     allowOutsideClick: false,
+    //     allowEscapeKey: false,
+    //     didOpen: () => Swal.showLoading()
+    // });
 
     let url = "/notifications/data/get";
 
@@ -154,268 +162,47 @@ export function notificationContent(hours = null) {
             if (!data.length) {
                 notificationList.innerHTML = `
                     <li class="list-group-item border-bottom-0 text-center">
-                        <span class="fw-medium text-muted">No notifications found</span>
+                        <span class="fw-medium">No notification</span>
                     </li>
                 `;
-                Swal.close();
                 return;
-            }
-
-            // Update read count
-            const unread = data.filter((n) => !n.read_at);
-            const readCount = document.getElementById("readCount");
-            if (readCount) {
-                const total = data.length;
-                const unreadCount = unread.length;
-                readCount.textContent = `Notifications (${total} total, ${unreadCount} unread)`;
-            }
-
-            // ✅ Add "Mark All as Read" button if there are unread notifications
-            if (unread.length > 0) {
-                const markAllRow = document.createElement("li");
-                markAllRow.className = "list-group-item border-bottom-0 text-center bg-primary bg-opacity-10";
-                markAllRow.innerHTML = `
-                    <button id="markAllReadBtn" class="btn btn-sm btn-primary">
-                        <i class="ri-check-double-line me-1"></i> Mark All as Read
-                    </button>
-                `;
-                notificationList.appendChild(markAllRow);
             }
 
             data.forEach((notification) => {
                 const listItem = document.createElement("a");
                 listItem.className =
-                    "list-group-item border-bottom-0 d-flex gap-2 align-items-start pb-2 border-bottom text-decoration-none";
-                listItem.dataset.notificationId = notification.id;
-                
-                // Add class for unread notifications
-                if (!notification.read_at) {
-                    listItem.classList.add("bg-light");
-                }
+                    "list-group-item border-bottom-0 d-flex gap-2 align-items-start pb-2 border-bottom";
 
-                const url = notification.data.url || "#";
-
-                listItem.href = url;
-                listItem.style.cursor = "pointer";
-
-                // Get icon based on notification type
-                let iconHtml = `<i class="ri-notification-3-line"></i>`;
-                if (notification.data.icon) {
-                    iconHtml = `<i class="${notification.data.icon}"></i>`;
-                }
+                listItem.href = notification.data.url ?? "#";
 
                 listItem.innerHTML = `
                     <div class="pe-2">
                         <span class="avatar avatar-md bg-primary avatar-rounded">
-                            ${iconHtml}
+                            <i class="ri-notification-3-line"></i>
                         </span>
                     </div>
 
-                    <div class="text-wrap flex-grow-1">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <span class="fw-medium">${notification.data.user || 'System'}</span>
-                            ${!notification.read_at ? '<span class="badge bg-primary rounded-pill fs-10">New</span>' : ''}
-                        </div>
+                    <div class="text-wrap">
+                        <span class="fw-medium">${notification.data.user}</span>
                         <p class="text-muted mb-0 fs-12 w-100 text-wrap">
-                            ${notification.data.message || 'No message'}
+                            ${notification.data.message}
                         </p>
-                        <small class="text-muted fs-10">
-                            ${formatTime(notification.created_at)}
-                        </small>
                     </div>
+
+                    <span class="text-muted ms-auto fs-12">
+                        ${formatTime(notification.created_at)}
+                    </span>
                 `;
 
                 notificationList.appendChild(listItem);
             });
-
-            Swal.close();
-
-            // ✅ Event listener for "Mark All as Read" button
-            const markAllBtn = document.getElementById("markAllReadBtn");
-            if (markAllBtn) {
-                markAllBtn.addEventListener("click", function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    markAllNotificationsRead();
-                });
-            }
         })
-        .catch((error) => {
-            console.error('Error fetching notifications:', error);
-            notificationList.innerHTML = `
-                <li class="list-group-item border-bottom-0 text-center text-danger">
-                    <span class="fw-medium">Failed to load notifications. Please try again.</span>
-                </li>
-            `;
-            Swal.close();
-        });
+        .catch(() => {
+            console.log('error fetch notification');
+        })
+        .finally(() => Swal.close());
 }
 
-// ✅ Function to mark all notifications as read
-function markAllNotificationsRead() {
-    Swal.fire({
-        title: 'Mark All as Read?',
-        text: 'This will mark all notifications as read.',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, mark all as read',
-        cancelButtonText: 'Cancel'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            Swal.fire({
-                title: 'Marking as read...',
-                allowOutsideClick: false,
-                didOpen: () => Swal.showLoading()
-            });
 
-            fetch("/notifications/mark-read-all", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": document
-                        .querySelector('meta[name="csrf-token"]')
-                        .getAttribute("content"),
-                },
-            })
-            .then((response) => {
-                if (!response.ok) throw new Error("Network response was not ok");
-                return response.json();
-            })
-            .then((data) => {
-                Swal.close();
-                
-                // Update pulse and count
-                const pulse = document.getElementById("pulse");
-                const notificationCount = document.getElementById("notifiation-data");
-                if (pulse) pulse.className = "";
-                if (notificationCount) notificationCount.textContent = "0 Unread";
-                
-                // Update read count
-                const readCount = document.getElementById("readCount");
-                if (readCount) {
-                    const currentText = readCount.textContent;
-                    // Update to show 0 unread
-                    readCount.textContent = currentText.replace(/\d+ unread/, '0 unread');
-                }
 
-                // Remove "New" badges and light background from all notifications
-                document.querySelectorAll('#notificationList .list-group-item').forEach(item => {
-                    item.classList.remove('bg-light');
-                    const badge = item.querySelector('.badge.bg-primary');
-                    if (badge) badge.remove();
-                });
-
-                // Remove the "Mark All as Read" button
-                const markAllRow = document.querySelector('#notificationList .list-group-item.bg-primary');
-                if (markAllRow) markAllRow.remove();
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success!',
-                    text: data.message || 'All notifications marked as read.',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-            })
-            .catch((error) => {
-                console.error('Error marking all notifications as read:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Failed to mark notifications as read. Please try again.'
-                });
-            });
-        }
-    });
-}
-
-// ✅ Event listeners for time filter
-document.addEventListener('DOMContentLoaded', function() {
-    // Initial load
-    notificationContent();
-
-    // Time filter click handlers
-    document.querySelectorAll('.dropdown-item-notification').forEach(item => {
-        item.addEventListener('click', function (e) {
-            e.preventDefault();
-            const hours = this.dataset.time;
-            
-            // Update active state
-            document.querySelectorAll('.dropdown-item-notification').forEach(el => {
-                el.classList.remove('active');
-            });
-            this.classList.add('active');
-            
-            // Reload with filter
-            notificationContent(hours);
-        });
-    });
-});
-
-// ✅ Mark single notification as read when clicked
-document.addEventListener('click', function(e) {
-    const notificationLink = e.target.closest('.list-group-item');
-    if (notificationLink && notificationLink.classList.contains('list-group-item') && notificationLink.id !== 'markAllReadBtn') {
-        // Find the notification data
-        const notificationId = notificationLink.dataset.notificationId;
-        if (notificationId) {
-            fetch('/notifications/mark-read-single', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                },
-                body: JSON.stringify({ notification_id: notificationId })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Update the UI
-                    notificationLink.classList.remove('bg-light');
-                    const badge = notificationLink.querySelector('.badge.bg-primary');
-                    if (badge) badge.remove();
-                    
-                    // Update counts
-                    updateNotificationCounts();
-                }
-            })
-            .catch(err => console.error('Failed to mark notification read:', err));
-        }
-    }
-});
-
-// ✅ Function to update notification counts
-function updateNotificationCounts() {
-    const unreadItems = document.querySelectorAll('#notificationList .list-group-item.bg-light');
-    const unreadCount = unreadItems.length;
-    
-    const pulse = document.getElementById("pulse");
-    const notificationCount = document.getElementById("notifiation-data");
-    const readCount = document.getElementById("readCount");
-    
-    if (unreadCount > 0) {
-        if (pulse) pulse.className = "header-icon-pulse bg-primary2 rounded pulse pulse-secondary";
-        if (notificationCount) notificationCount.textContent = `${unreadCount} Unread`;
-    } else {
-        if (pulse) pulse.className = "";
-        if (notificationCount) notificationCount.textContent = "0 Unread";
-        
-        // Remove "Mark All as Read" button if no unread
-        const markAllRow = document.querySelector('#notificationList .list-group-item.bg-primary');
-        if (markAllRow) markAllRow.remove();
-    }
-    
-    if (readCount) {
-        const total = document.querySelectorAll('#notificationList .list-group-item:not(.bg-primary)').length;
-        readCount.textContent = `Notifications (${total} total, ${unreadCount} unread)`;
-    }
-}
-
-// Call the notification function when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', notification);
-} else {
-    notification();
-}
+notificationContent();

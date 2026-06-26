@@ -72,11 +72,7 @@
     {{-- <link rel="stylesheet" href="https://laravelui.spruko.com/xintra/build/assets/libs/dropzone/dropzone.css"> --}}
     <link rel="stylesheet" href="{{ asset('build2/assets/libs/dropzone/dropzone.css') }}">
 
-    <!-- Tagify CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css">
-
-    <!-- Quill CSS -->
-    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+   
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -273,7 +269,7 @@
     </script>
 
     <!-- Tagify JS -->
-    <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
+
 
     @stack('scripts')
 

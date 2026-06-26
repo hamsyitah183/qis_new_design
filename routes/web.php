@@ -335,6 +335,7 @@ Route::middleware(['auth.any'])->group(function () {
 
     Route::get('/application/{id}/data', [ApplicationController::class, 'getApplicationDetails']);
     Route::get('/view_application/{uuid}', [ApplicationController::class, 'viewapplication'])->name('viewApplication');
+    Route::get('/view_application/test/{uuid}', [ApplicationController::class, 'viewapplicationTest']);
     Route::get('/edit_application/{uuid}', [ApplicationController::class, 'editApplication'])->name('editApplication');
 
     Route::get('/view_consignment/{uuid}', [ConsignmentApplicationController::class, 'viewapplication'])->name('consignment.view');

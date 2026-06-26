@@ -65,4 +65,14 @@ class PublicUser extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasOne(ApprovedPublic::class, 'user_id', 'uuid');
     }
+
+    public function districtInfo()
+    {
+        return $this->hasOne(District::class, 'id', 'district');
+    }
+
+    public function stateInfo()
+    {
+        return $this->hasOne(State::class, 'id', 'state');
+    }
 }
