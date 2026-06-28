@@ -1,0 +1,302 @@
+/* ============================================================
+   Officer Technical Review — new classes only
+   ============================================================ */
+
+/* Sidebar progress box */
+.otr-progress-box {
+    background: var(--gray-1);
+    border: 1px solid var(--default-border);
+    border-radius: 0.75rem;
+    padding: 0.9rem 1rem;
+    margin-bottom: 1.1rem;
+}
+
+.otr-progress-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 0.75rem;
+}
+
+.otr-progress-counts {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.otr-count-cell { text-align: center; }
+
+.otr-count-num {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--default-text-color);
+    line-height: 1.2;
+}
+
+.otr-count-num.is-pending  { color: var(--text-muted); }
+.otr-count-num.is-approved { color: rgb(var(--success-rgb)); }
+.otr-count-num.is-rejected { color: rgb(var(--danger-rgb)); }
+
+.otr-count-label {
+    font-size: 0.66rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-top: 0.1rem;
+}
+
+.otr-progress-track {
+    height: 6px;
+    background: var(--gray-3);
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    margin-bottom: 0.5rem;
+}
+
+.otr-progress-fill {
+    height: 100%;
+    transition: width .35s ease;
+}
+
+.otr-progress-fill.is-approved { background: rgb(var(--success-rgb)); }
+.otr-progress-fill.is-rejected { background: rgb(var(--danger-rgb)); }
+
+.otr-progress-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.otr-progress-hint.is-ready    { color: rgb(var(--success-rgb)); font-weight: 600; }
+.otr-progress-hint.is-rejected { color: rgb(var(--danger-rgb));  font-weight: 600; }
+
+/* Review hint banner */
+.otr-review-hint {
+    background: var(--primary005, rgba(var(--primary-rgb), .04));
+    border: 1px solid var(--primary03);
+    border-radius: 0.65rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.82rem;
+    color: var(--default-text-color);
+    display: flex;
+    gap: 0.55rem;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.otr-review-hint i {
+    color: var(--primary-color);
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+}
+
+/* ============================================================
+   Decision zone — lives at bottom of each permit body
+   ============================================================ */
+
+.otr-decision-zone {
+    margin-top: 1.1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--default-border);
+}
+
+/* Pending: action bar with approve + reject buttons */
+.otr-action-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.otr-action-bar-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.otr-action-btns {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.otr-btn-approve,
+.otr-btn-reject-open {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: none;
+    border-radius: 30px;
+    padding: 0.5rem 1.1rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s;
+}
+
+.otr-btn-approve {
+    background: rgba(var(--success-rgb), .12);
+    color: rgb(var(--success-rgb));
+    border: 1px solid rgba(var(--success-rgb), .3);
+}
+
+.otr-btn-approve:hover {
+    background: rgba(var(--success-rgb), .2);
+}
+
+.otr-btn-reject-open {
+    background: rgba(var(--danger-rgb), .08);
+    color: rgb(var(--danger-rgb));
+    border: 1px solid rgba(var(--danger-rgb), .25);
+}
+
+.otr-btn-reject-open:hover {
+    background: rgba(var(--danger-rgb), .15);
+}
+
+/* Decided state chip */
+.otr-decision-chip {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    border-radius: 0.65rem;
+    padding: 0.8rem 1rem;
+    font-size: 0.84rem;
+    font-weight: 600;
+}
+
+.otr-decision-chip.is-approved {
+    background: rgba(var(--success-rgb), .08);
+    border: 1px solid rgba(var(--success-rgb), .3);
+    color: rgb(var(--success-rgb));
+}
+
+.otr-decision-chip.is-rejected {
+    background: rgba(var(--danger-rgb), .08);
+    border: 1px solid rgba(var(--danger-rgb), .25);
+    color: rgb(var(--danger-rgb));
+}
+
+.otr-decision-chip i { font-size: 1.1rem; flex-shrink: 0; margin-top: 0.05rem; }
+
+.otr-rejection-reason {
+    font-size: 0.76rem;
+    font-weight: 400;
+    opacity: 0.85;
+    margin-top: 0.15rem;
+    font-style: italic;
+}
+
+.otr-undo-btn {
+    margin-left: auto;
+    flex-shrink: 0;
+    background: none;
+    border: 1px solid currentColor;
+    border-radius: 20px;
+    padding: 0.25rem 0.65rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: inherit;
+    opacity: 0.75;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    transition: opacity .15s;
+}
+
+.otr-undo-btn:hover { opacity: 1; }
+
+/* ============================================================
+   Finalise bar
+   ============================================================ */
+
+.otr-finalise-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+    background: var(--custom-white);
+    border: 2px solid var(--primary03);
+    border-radius: 0.85rem;
+    padding: 1rem 1.25rem;
+    box-shadow: 0 4px 16px rgba(var(--primary-rgb), .08);
+}
+
+.otr-finalise-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+}
+
+.otr-finalise-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.84rem;
+    font-weight: 700;
+}
+
+.otr-finalise-stat.is-approved { color: rgb(var(--success-rgb)); }
+.otr-finalise-stat.is-rejected { color: rgb(var(--danger-rgb)); }
+
+.otr-finalise-note {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.otr-finalise-note.is-warning { color: rgb(var(--warning-rgb)); font-weight: 600; }
+
+.otr-btn-finalise {
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 30px;
+    padding: 0.6rem 1.3rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: opacity .15s;
+}
+
+.otr-btn-finalise:hover { opacity: 0.88; }
+
+/* Finalised decided state */
+.otr-finalised-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(var(--success-rgb), .07);
+    border: 1px solid rgba(var(--success-rgb), .3);
+    border-radius: 0.75rem;
+    padding: 0.9rem 1.1rem;
+    color: rgb(var(--success-rgb));
+    width: 100%;
+}
+
+.otr-finalised-chip i { font-size: 1.3rem; flex-shrink: 0; }
+
+.otr-finalised-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+.otr-finalised-sub {
+    font-size: 0.76rem;
+    opacity: 0.8;
+    margin-top: 0.1rem;
+}

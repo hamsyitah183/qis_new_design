@@ -1,0 +1,284 @@
+/* ============================================================
+   Clerk Document Verification
+   Reuses .ipv-* / .pd-nav / .ipv-badge etc. from view_permit.css —
+   only the genuinely new pieces (clerk panel, reject modal, the
+   per-attachment verify toggle) are styled here. Colors resolve to
+   the existing root tokens, no new hex values.
+   ============================================================ */
+
+/* ----- Clerk Verification panel ----- */
+.ipv-clerk-panel {
+    border: 1px solid rgba(var(--primary-rgb), .25);
+    background: var(--primary005);
+    border-radius: 0.85rem;
+    padding: 1.1rem 1.25rem;
+    margin-bottom: 1.3rem;
+}
+
+.ipv-clerk-panel-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.ipv-clerk-panel-header i {
+    font-size: 1.3rem;
+    color: var(--primary-color);
+    margin-top: 0.1rem;
+}
+
+.ipv-clerk-panel-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--default-text-color);
+}
+
+.ipv-clerk-panel-sub {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.15rem;
+}
+
+.ipv-clerk-checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    margin-bottom: 1.1rem;
+}
+
+.ipv-clerk-check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    font-size: 0.85rem;
+    color: var(--default-text-color);
+    cursor: pointer;
+}
+
+.ipv-clerk-check-item input {
+    margin-top: 0.2rem;
+    accent-color: var(--primary-color);
+    cursor: pointer;
+}
+
+.ipv-clerk-actions {
+    display: flex;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+}
+
+.ipv-btn-reject {
+    background: var(--custom-white);
+    border: 1px solid rgba(var(--danger-rgb), .35);
+    color: rgb(var(--danger-rgb));
+    border-radius: 30px;
+    padding: 0.55rem 1.1rem;
+    font-size: 0.84rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.ipv-btn-reject:hover {
+    background: rgba(var(--danger-rgb), .06);
+}
+
+.ipv-btn-verify {
+    background: rgb(var(--success-rgb));
+    color: #fff;
+    border: none;
+    border-radius: 30px;
+    padding: 0.55rem 1.2rem;
+    font-size: 0.84rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.ipv-btn-verify:disabled {
+    background: var(--gray-3);
+    color: var(--gray-6);
+    cursor: not-allowed;
+}
+
+.ipv-btn-verify:not(:disabled):hover {
+    opacity: 0.88;
+}
+
+/* ----- Decided state (replaces the panel after a decision) ----- */
+.ipv-clerk-decided {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.ipv-clerk-decided i {
+    font-size: 1.4rem;
+    margin-top: 0.1rem;
+}
+
+.ipv-clerk-decided.is-verified i { color: rgb(var(--success-rgb)); }
+.ipv-clerk-decided.is-rejected i { color: rgb(var(--danger-rgb)); }
+
+.ipv-clerk-decided-title {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--default-text-color);
+}
+
+.ipv-clerk-decided-sub {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.15rem;
+}
+
+.ipv-clerk-panel.is-decided {
+    background: var(--gray-1);
+    border-color: var(--default-border);
+}
+
+/* ----- Reject modal ----- */
+.ipv-reject-modal-content {
+    border-radius: 1rem;
+    border: none;
+}
+
+.ipv-reject-modal-intro {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+
+.ipv-reject-quick-reasons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.ipv-reject-chip {
+    background: var(--gray-1);
+    border: 1px solid var(--default-border);
+    border-radius: 20px;
+    padding: 0.35rem 0.8rem;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--default-text-color);
+    cursor: pointer;
+}
+
+.ipv-reject-chip:hover {
+    background: var(--gray-2);
+}
+
+.ipv-reject-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--default-text-color);
+    margin-bottom: 0.4rem;
+}
+
+.ipv-required {
+    color: rgb(var(--danger-rgb));
+}
+
+.ipv-reject-textarea {
+    width: 100%;
+    border: 1px solid var(--input-border);
+    background: var(--form-control-bg);
+    border-radius: 0.55rem;
+    padding: 0.65rem 0.8rem;
+    font-size: 0.85rem;
+    color: var(--default-text-color);
+    resize: vertical;
+}
+
+.ipv-reject-textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary01);
+}
+
+.ipv-btn-secondary {
+    background: var(--custom-white);
+    border: 1px solid var(--default-border);
+    border-radius: 30px;
+    padding: 0.5rem 1.1rem;
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: var(--default-text-color);
+    cursor: pointer;
+}
+
+.ipv-btn-secondary:hover {
+    background: var(--gray-1);
+}
+
+.ipv-btn-reject-confirm {
+    background: rgb(var(--danger-rgb));
+    color: #fff;
+    border: none;
+    border-radius: 30px;
+    padding: 0.5rem 1.2rem;
+    font-size: 0.83rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.ipv-btn-reject-confirm:disabled {
+    background: var(--gray-3);
+    color: var(--gray-6);
+    cursor: not-allowed;
+}
+
+.ipv-btn-reject-confirm:not(:disabled):hover {
+    opacity: 0.88;
+}
+
+/* ----- Per-attachment verify toggle (inside attachmentDetails) ----- */
+.ipv-verify-toggle-btn {
+    margin-top: 1rem;
+    width: 100%;
+    background: var(--gray-1);
+    border: 1px solid var(--default-border);
+    border-radius: 0.6rem;
+    padding: 0.6rem;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--default-text-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+}
+
+.ipv-verify-toggle-btn:hover {
+    background: var(--gray-2);
+}
+
+/* ----- Permit detail offcanvas section labels (used by openPermitDetail) ----- */
+.pd-section-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 0.6rem;
+}
+
+@media (max-width: 575.98px) {
+    .ipv-clerk-actions {
+        flex-direction: column;
+    }
+    .ipv-clerk-actions button {
+        width: 100%;
+        justify-content: center;
+    }
+}

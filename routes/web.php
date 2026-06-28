@@ -335,8 +335,17 @@ Route::middleware(['auth.any'])->group(function () {
 
     Route::get('/application/{id}/data', [ApplicationController::class, 'getApplicationDetails']);
     Route::get('/view_application/{uuid}', [ApplicationController::class, 'viewapplication'])->name('viewApplication');
-    Route::get('/view_application/test/{uuid}', [ApplicationController::class, 'viewapplicationTest']);
+
     Route::get('/edit_application/{uuid}', [ApplicationController::class, 'editApplication'])->name('editApplication');
+
+    // TEST NEW DESIGN
+    Route::get('/apply_import/test', [ApplicationController::class, 'applyTest']);
+    Route::get('/view_import/test', [ApplicationController::class, 'viewapplicationTest']);
+    Route::get('/summary_import/test', [ApplicationController::class, 'summaryTest']);
+    Route::get('/list_import/test', [ApplicationController::class, 'listTest']);
+    Route::get('/verify_import/test', [ApplicationController::class, 'verifyTest']);
+    Route::get('/approve_permit/test', [ApplicationController::class, 'approveTest']);
+    Route::get('/payment_permit/test', [ApplicationController::class, 'paymentTest']);
 
     Route::get('/view_consignment/{uuid}', [ConsignmentApplicationController::class, 'viewapplication'])->name('consignment.view');
     Route::get('/edit_consignment/{uuid}', [ConsignmentApplicationController::class, 'editApplication'])->name('consignment.edit');

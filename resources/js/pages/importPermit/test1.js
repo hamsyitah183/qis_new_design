@@ -16,6 +16,9 @@
  *   import '../../../css/pages/importPermit/importPermitView.css'; // adjust path
  */
 
+import { initPermitDetailOffcanvas, openPermitDetail } from "./test2";
+import { initScheduleCalendar } from "./test3";
+
 // ---------------------------------------------------------------
 // Config — label + color lookups. Color keys map to
 // .ipv-badge.is-*, .ipv-stage-step.is-*, .ipv-timeline-icon.is-*
@@ -27,7 +30,7 @@ const STAGE_ORDER = [
     'awaiting_payment', 'payment_processing', 'completed',
 ];
 
-const STAGE_CONFIG = {
+export const STAGE_CONFIG = {
     submitted:           { en: 'Submitted',              bm: 'Dihantar',                  icon: 'bi-send-check',         color: 'info' },
     doc_verification:    { en: 'Document Verification',  bm: 'Semakan Dokumen',           icon: 'bi-file-earmark-check', color: 'secondary' },
     returned:            { en: 'Returned / Rejected',     bm: 'Dikembalikan / Ditolak',    icon: 'bi-arrow-return-left',  color: 'danger' },
@@ -41,7 +44,7 @@ const STAGE_CONFIG = {
     email:               { en: 'Notification Sent',       bm: 'Notifikasi Dihantar',       icon: 'bi-envelope-check',     color: 'gray' },
 };
 
-const PERMIT_STATUS_CONFIG = {
+export const PERMIT_STATUS_CONFIG = {
     queued:          { en: 'Queued for Review',            bm: 'Dalam Proses Semakan',         color: 'info' },
     approved:        { en: 'Approved',                      bm: 'Diluluskan',                   color: 'success' },
     rejected:        { en: 'Rejected',                      bm: 'Ditolak',                      color: 'danger' },
@@ -95,7 +98,7 @@ const APPLICATION = {
     ],
 };
 
-const PERMITS = [
+export const PERMITS = [
     {
         permit_number: 'PMT-1201',
         consignment_detail: { category: 'Fresh Produce', item_name: 'Fresh Fruit — Corn', usage: 'Commercial Sale' },
@@ -201,17 +204,17 @@ const ACTIVITY_LOG = [
 // Helpers
 // ---------------------------------------------------------------
 
-function escapeHtml(value) {
+export function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, (c) => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
     }[c]));
 }
 
-function money(n) {
+export function money(n) {
     return Number(n || 0).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function fileMeta(filename) {
+export function fileMeta(filename) {
     const ext = (filename.split('.').pop() || '').toLowerCase();
     if (ext === 'pdf') return { icon: 'bi-file-earmark-pdf-fill', cls: 'is-pdf' };
     if (['xlsx', 'xls', 'csv'].includes(ext)) return { icon: 'bi-file-earmark-excel-fill', cls: 'is-excel' };
@@ -264,9 +267,14 @@ function initOffcanvas() {
             keyboard: true,
             scroll: false
         });
-        // When hidden, reset state if needed
+        // When hidden, ensure backdrop is removed
         el.addEventListener('hidden.bs.offcanvas', function () {
-            // optionally reset viewer content
+            // Force-remove any leftover backdrop elements
+            document.querySelectorAll('.offcanvas-backdrop').forEach(backdrop => {
+                backdrop.remove();
+            });
+            // Also ensure body classes are removed
+            document.body.classList.remove('offcanvas-open');
         });
     }
 }
@@ -406,7 +414,7 @@ document.addEventListener('click', (e) => {
 
 
 
-function renderAttachmentList(containerEl, files, visibleCount) {
+export function renderAttachmentList(containerEl, files, visibleCount) {
     if (!containerEl) return;
     if (!files || !files.length) {
         containerEl.innerHTML = '<span class="ipv-attach-size" style="padding:0.4rem 0;">No attachments.</span>';
@@ -560,7 +568,7 @@ function renderPermitAccordion() {
         const detail = permit.consignment_detail;
         return `
             <div class="ipv-permit-item" data-permit="${escapeHtml(permit.permit_number)}">
-                <div class="ipv-permit-header">
+                 <div class="ipv-permit-header">
                     <div class="ipv-permit-icon"><i class="bi bi-box-seam"></i></div>
                     <div class="ipv-permit-id-group">
                         <div class="ipv-permit-id">#${escapeHtml(permit.permit_number)}</div>
@@ -568,6 +576,9 @@ function renderPermitAccordion() {
                     </div>
                     <span class="ipv-badge is-${cfg.color}">${escapeHtml(cfg.en)}</span>
                     <div class="ipv-permit-value">RM ${money(permit.value)}</div>
+                    <button type="button" class="ipv-view-detail-btn" data-permit-number="${escapeHtml(permit.permit_number)}" title="View full details">
+                        <i class="bi bi-arrow-up-right-square"></i>
+                    </button>
                     <i class="bi bi-chevron-down ipv-chevron"></i>
                 </div>
                 <div class="ipv-permit-body">
@@ -605,11 +616,48 @@ function renderPermitAccordion() {
 }
 
 function initAccordionToggle() {
-    document.getElementById('ipvPermitAccordion').addEventListener('click', (e) => {
+    const accordion = document.getElementById('ipvPermitAccordion');
+    if (!accordion) {
+        console.error('❌ Accordion container (#ipvPermitAccordion) not found');
+        return;
+    }
+
+    // Remove any previous listener to avoid duplicates (just in case)
+    accordion.removeEventListener('click', accordion._toggleHandler);
+    
+    // Define the handler
+    const handler = function(e) {
+        // 1. "View full details" button → open offcanvas, don't toggle
+        const viewBtn = e.target.closest('.ipv-view-detail-btn');
+        if (viewBtn) {
+            e.stopPropagation();
+            const permitNumber = viewBtn.dataset.permitNumber;
+            if (permitNumber) {
+                try {
+                    openPermitDetail(permitNumber);
+                } catch (err) {
+                    console.error('Error opening permit detail:', err);
+                }
+            }
+            return;
+        }
+
+        // 2. Anywhere else on the header → toggle the row
         const header = e.target.closest('.ipv-permit-header');
         if (!header) return;
-        header.closest('.ipv-permit-item').classList.toggle('is-open');
-    });
+
+        const item = header.closest('.ipv-permit-item');
+        if (item) {
+            // Toggle the 'is-open' class
+            const isOpen = item.classList.toggle('is-open');
+            console.log(`Toggled ${item.dataset.permit} – now ${isOpen ? 'open' : 'closed'}`);
+        }
+    };
+
+    // Store the handler so we can remove it later if needed
+    accordion._toggleHandler = handler;
+    accordion.addEventListener('click', handler);
+    console.log('✅ Accordion toggle listener attached');
 }
 
 // ---------------------------------------------------------------
@@ -802,6 +850,9 @@ function init() {
     initTabs();
     initOffcanvas();          // for attachment viewer
     initPermitOffcanvas();    // for permit list (now hidden)
+    initPermitDetailOffcanvas()
+
+    initScheduleCalendar()
 
     // Download badge click
     const badge = document.getElementById('ipvPrintPermitBtn');
@@ -820,7 +871,13 @@ function init() {
     } else {
         console.error('ipvDownloadBadge not found');
     }
-}
+
+    // Initialize Bootstrap tooltips for the permit detail tabs
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (el) {
+        return new bootstrap.Tooltip(el);
+    });
+    }
 
 document.addEventListener('DOMContentLoaded', init);
 

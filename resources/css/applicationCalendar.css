@@ -1,0 +1,221 @@
+/* ============================================================
+   Schedule Calendar Popover
+   Colors resolve to the existing root tokens — no new hex values.
+   ============================================================ */
+.schedule {
+    position: relative;
+}
+.ipv-icon-btn.is-active {
+    background: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+}
+
+.ipv-cal-popover {
+    position: absolute;
+    z-index: 1080;
+    width: 320px;
+    max-width: 90vw;
+    background: var(--custom-white);
+    border: 1px solid var(--default-border);
+    border-radius: 0.85rem;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.12);
+    padding: 1rem;
+
+    left: 10px !important;
+    top: 28px !important;
+    display: none;
+}
+
+.ipv-cal-popover.is-open {
+    display: block;
+}
+ 
+.ipv-cal-popover-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    font-size: 0.88rem;
+    color: var(--default-text-color);
+}
+ 
+.ipv-cal-popover-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+ 
+.ipv-cal-popover-close:hover {
+    color: var(--default-text-color);
+}
+ 
+.ipv-cal-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.6rem;
+}
+ 
+.ipv-cal-nav-btn {
+    background: var(--gray-1);
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    color: var(--gray-6);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+ 
+.ipv-cal-nav-btn:hover {
+    background: var(--gray-2);
+}
+ 
+.ipv-cal-month-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--default-text-color);
+}
+ 
+.ipv-cal-weekdays,
+.ipv-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+}
+ 
+.ipv-cal-weekdays span {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    padding-bottom: 0.4rem;
+}
+ 
+.ipv-cal-cell {
+    position: relative;
+    min-height: 38px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    font-size: 0.78rem;
+    color: var(--default-text-color);
+}
+ 
+.ipv-cal-cell.is-empty {
+    visibility: hidden;
+}
+ 
+.ipv-cal-cell.is-weekend {
+    color: var(--gray-5);
+}
+ 
+.ipv-cal-cell.is-holiday {
+    background: rgba(var(--danger-rgb), .07);
+}
+ 
+.ipv-cal-cell.has-event {
+    font-weight: 700;
+}
+ 
+.ipv-cal-daynum {
+    line-height: 1.2;
+}
+ 
+.ipv-cal-dots {
+    display: flex;
+    gap: 2px;
+    margin-top: 2px;
+    min-height: 5px;
+}
+ 
+.ipv-cal-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    display: inline-block;
+}
+ 
+.ipv-cal-dot.is-info      { background: rgb(var(--info-rgb)); }
+.ipv-cal-dot.is-secondary { background: rgb(var(--secondary-rgb)); }
+.ipv-cal-dot.is-primary   { background: var(--primary-color); }
+.ipv-cal-dot.is-success   { background: rgb(var(--success-rgb)); }
+.ipv-cal-dot.is-danger    { background: rgb(var(--danger-rgb)); }
+.ipv-cal-dot.is-warning   { background: rgb(var(--warning-rgb)); }
+.ipv-cal-dot.is-orange    { background: rgb(var(--orange-rgb)); }
+.ipv-cal-dot.is-teal      { background: rgb(var(--teal-rgb)); }
+ 
+.ipv-cal-legend {
+    margin-top: 0.9rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--default-border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+ 
+.ipv-cal-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.76rem;
+    color: var(--default-text-color);
+}
+ 
+.ipv-cal-legend-item .ipv-cal-dot {
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+}
+ 
+/* ----- Public holidays for the month currently in view ----- */
+.ipv-cal-holidays {
+    margin-top: 0.9rem;
+    padding: 0.7rem 0.8rem;
+    background: rgba(var(--danger-rgb), .06);
+    border: 1px solid rgba(var(--danger-rgb), .15);
+    border-radius: 0.6rem;
+}
+ 
+.ipv-cal-holidays-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: rgb(var(--danger-rgb));
+    margin-bottom: 0.45rem;
+}
+ 
+.ipv-cal-holiday-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    color: var(--default-text-color);
+    padding: 0.15rem 0;
+}
+ 
+.ipv-cal-holiday-item .ipv-cal-dot {
+    width: 6px;
+    height: 6px;
+    background: rgb(var(--danger-rgb));
+    flex-shrink: 0;
+}
+ 
+.ipv-cal-holidays-empty {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+}
+ 
+@media (max-width: 575.98px) {
+    .ipv-cal-popover {
+        width: 280px;
+    }
+}

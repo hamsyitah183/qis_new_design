@@ -1,0 +1,135 @@
+<div class="row">
+    <div class="col-xl-12">
+        <!-- ===== Consignment Card ===== -->
+        <div class="customer-card">
+            <!-- Card Header -->
+            <div class="card-header-custom">
+                <div class="avatar" style="background: var(--gray-5);">
+                    <i class="bi bi-box-seam" style="font-size: 1.2rem;"></i>
+                </div>
+                <div class="title-group">
+                    <div class="name">Consignment Details</div>
+                    <div class="sub-label">
+                        <i class="bi bi-list-ul me-1"></i> Items in this application
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card Body (keeps all original content) -->
+            <div class="card-body-custom" style="padding: 0 1.5rem 1.5rem 1.5rem;">
+                <!-- Original table wrapper - classes unchanged -->
+                <div class="table-responsive">
+                    <table class="table text-nowrap">
+                        <thead>
+                            <tr class="bg-light">
+                                <!-- Removed the "Consignment Details" heading because it's now in the card header -->
+                                <th scope="col"></th>
+                                <th scope="col"></th>
+                                <th scope="col"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="3">
+                                    <div class="table-responsive">
+                                        <table id="summaryTable3" class="table text-nowrap">
+                                            <thead class="table-primary">
+                                                <tr>
+                                                    <th scope="col">Item Name</th>
+                                                    <th scope="col">Purpose</th>
+                                                    <th scope="col">Permit Status</th>
+                                                    <th scope="col">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {{-- @forelse ($consignmentDetails as $index => $item)
+                                                    <tr>
+                                                        <td>{{ $index + 1 }}</td>
+                                                        <td>{{ $item['item_name'] ?? '—' }}</td>
+                                                        <td>{{ $item['quantity'] ?? '—' }} {{ $item['measure'] ?? '—' }}</td>
+                                                        <td>{{ $item['uses'] ?? '—' }}</td>
+                                                        <td>RM {{ $item['value'] ?? '—' }}</td>
+                                                        <td>
+                                                            <a type="button" data-bs-toggle="modal" data-bs-target="#editIpItemModal" class="btn btn-sm btn-info">Edit Consignment Details</a><br>
+                                                            <a type="button" class="btn btn-sm btn-danger mt-2">RemoveDetails</a>
+                                                        </td>
+                                                    </tr>
+                                                @empty
+                                                    <tr>
+                                                        <td colspan="7" class="text-center text-muted">No consignment items found.</td>
+                                                    </tr>
+                                                @endforelse --}}
+                                            </tbody>
+                                        </table>
+
+                                        <!-- Modal (unchanged) -->
+                                        <div class="modal fade" id="editIpItemModal" tabindex="-1">
+                                            <div class="modal-dialog modal-xl">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Edit Consignment Details</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="row gy-4 mb-3">
+                                                            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                                                                <label for="itemSelect" class="form-label">Item</label>
+                                                                <input type="text" class="form-control" value="Fresh Fruit - CORN" disabled>
+                                                                <small style="color:red">Item referring to the exporter's Country</small>
+                                                            </div>
+                                                            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                                                                <label for="itemValue" class="form-label">Value (RM)</label>
+                                                                <input type="text" class="form-control" id="itemValue" name="itemValue" placeholder="RM ...">
+                                                            </div>
+                                                            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                                                                <label for="itemQuantity" class="form-label">Quantity</label>
+                                                                <input type="text" class="form-control" id="itemQuantity" name="itemQuantity">
+                                                            </div>
+                                                            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                                                                <label for="itemMeasure" class="form-label">Measurement Unit</label>
+                                                                <select class="form-select" id="itemMeasure" name="itemMeasure">
+                                                                    <option value="">-- Select Measurement Unit --</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                                                                <label for="itemPurpose" class="form-label">Purpose</label>
+                                                                <select class="form-select" id="itemPurpose" name="itemPurpose">
+                                                                    <option value="">-- Select Purpose --</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                                                                <label for="itemUses" class="form-label">Uses</label>
+                                                                <select class="form-select" id="itemUses" name="itemUses">
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12" style="display:none">
+                                                                <label for="itemUses" class="form-label">Attachments</label>
+                                                                <select class="form-select" id="itemUses" name="itemUses">
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button class="btn btn-info btn-md">Update Details</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons (unchanged) -->
+<div class="row justify-content-center" style="display:none">
+    <div class="col-auto d-flex gap-3">
+        <button id="generateSummary" type="button" class="btn btn-md btn-warning">Generate Summary</button>
+        <button id="submitApps" type="button" class="btn btn-md btn-info">Submit Application</button>
+    </div>
+</div>

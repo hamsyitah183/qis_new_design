@@ -1,0 +1,134 @@
+/* ============================================================
+   Permit Detail Offcanvas
+   ============================================================ */
+
+/* "View Details" button on permit accordion header */
+.ipv-view-detail-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 0.45rem;
+    border: 1px solid var(--default-border);
+    background: var(--custom-white);
+    color: var(--primary-color);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.ipv-view-detail-btn:hover {
+    background: var(--primary01);
+    border-color: var(--primary03);
+}
+
+/* Offcanvas header icon */
+.ipv-permit-detail-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 0.6rem;
+    background: var(--primary01);
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.ipv-permit-detail-eyebrow {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* Vertical nav */
+.pd-nav {
+    width: 60px;
+    min-width: 60px;
+    background: var(--gray-1);
+    border-right: 1px solid var(--default-border);
+    padding: 1rem 0;
+}
+.pd-nav .nav-pills .nav-link {
+    /* existing styles */
+    border-radius: 50%; /* make it circular */
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0.5rem auto; /* center horizontally */
+    border-left: none; /* remove border-left */
+    border: 1px solid transparent; /* optional border */
+    transition: all 0.15s ease;
+}
+
+.pd-nav .nav-pills .nav-link i {
+    font-size: 1rem;
+    margin: 0;
+}
+
+.pd-nav .nav-pills .nav-link:hover {
+    background: var(--gray-2);
+    border-color: var(--default-border);
+}
+
+.pd-nav .nav-pills .nav-link.active {
+    background: var(--primary-color) !important;
+    color: #fff;
+    border-color: var(--primary-color);
+    font-weight: normal;
+    box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.3);
+}
+
+/* Details content */
+.pd-section-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 0.75rem;
+}
+
+.pd-info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    background: var(--gray-1);
+    border: 1px solid var(--default-border);
+    border-radius: 0.75rem;
+    padding: 1rem 1.1rem;
+}
+
+.pd-info-cell {}
+
+.pd-cell-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 0.2rem;
+}
+
+.pd-cell-value {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--default-text-color);
+}
+
+@media (max-width: 767.98px) {
+    #permitDetailOffcanvas { width: 100% !important; }
+    .pd-nav { min-width: 150px; width: 150px; }
+    .pd-info-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+    .pd-info-grid { grid-template-columns: 1fr; }
+}

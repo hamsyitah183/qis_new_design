@@ -1,0 +1,966 @@
+/* ============================================================
+   Apply Import Permit
+   Colors resolve to the existing root tokens — no new hex values.
+   ============================================================ */
+
+.ipa-wrapper {
+    font-family: var(--default-font-family);
+    color: var(--default-text-color);
+    max-width: 920px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+/* ----- Header ----- */
+.ipa-header-card,
+.ipa-card {
+    background: var(--custom-white);
+    border: 1px solid var(--default-border);
+    border-radius: 1rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    padding: 1.5rem;
+}
+
+.ipa-header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.ipa-header-eyebrow {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.ipa-header-title {
+    font-weight: 700;
+    margin: 0.1rem 0 0 0;
+    color: var(--default-text-color);
+}
+
+.ipa-header-sub {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 0.9rem 0 0 0;
+}
+
+.ipa-draft-status,
+.ipa-footer-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.ipa-draft-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.ipa-draft-dot.is-unsaved   { background: var(--gray-4); }
+.ipa-draft-dot.is-saved     { background: rgb(var(--success-rgb)); }
+.ipa-draft-dot.is-submitted { background: var(--primary-color); }
+
+/* ----- Generic card ----- */
+.ipa-card-title {
+    font-weight: 600;
+    font-size: 0.98rem;
+    color: var(--default-text-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ipa-card-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.ipa-card-hint {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin: 0.5rem 0 1.1rem 0;
+}
+
+/* ----- Form fields ----- */
+.ipa-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem 1.25rem;
+}
+
+.ipa-field label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--default-text-color);
+    margin-bottom: 0.35rem;
+}
+
+.ipa-required {
+    color: rgb(var(--danger-rgb));
+}
+
+.ipa-input {
+    width: 100%;
+    border: 1px solid var(--input-border);
+    background: var(--form-control-bg);
+    border-radius: 0.55rem;
+    padding: 0.55rem 0.8rem;
+    font-size: 0.85rem;
+    color: var(--default-text-color);
+}
+
+.ipa-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary01);
+}
+
+/* ----- Add button ----- */
+.ipa-btn-add {
+    background: var(--primary01);
+    color: var(--primary-color);
+    border: none;
+    border-radius: 30px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+}
+
+.ipa-btn-add:hover {
+    background: var(--primary02);
+}
+
+/* ----- Item list / cards ----- */
+.ipa-item-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.ipa-item-card {
+    border: 1px solid var(--default-border);
+    border-radius: 0.85rem;
+    padding: 1.1rem 1.25rem;
+    background: var(--gray-1);
+}
+
+.ipa-item-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.9rem;
+}
+
+.ipa-item-card-index {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--default-text-color);
+}
+
+.ipa-item-remove-btn {
+    background: none;
+    border: none;
+    color: rgb(var(--danger-rgb));
+    cursor: pointer;
+    font-size: 0.95rem;
+    padding: 0.2rem 0.4rem;
+}
+
+.ipa-item-remove-btn:hover {
+    opacity: 0.75;
+}
+
+.ipa-item-uploader-title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin: 1.1rem 0 0.6rem 0;
+}
+
+/* ----- Empty state ----- */
+.ipa-empty-state {
+    text-align: center;
+    padding: 2.25rem 1rem;
+    color: var(--text-muted);
+}
+
+.ipa-empty-state i {
+    font-size: 1.7rem;
+    color: var(--gray-4);
+    margin-bottom: 0.6rem;
+    display: block;
+}
+
+.ipa-empty-state p { margin: 0; font-size: 0.85rem; }
+
+/* ============================================================
+   Uploader widget
+   ============================================================ */
+/* ============================================================
+   Add Attachment button
+   ============================================================ */
+
+.ipa-btn-add-attachment {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: none;
+    border: 1.5px dashed var(--gray-4);
+    border-radius: 0.65rem;
+    padding: 0.6rem 1rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    width: 100%;
+    justify-content: center;
+    transition: border-color .15s, color .15s, background .15s;
+    margin-top: 0.25rem;
+}
+
+.ipa-btn-add-attachment:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: var(--primary005, rgba(var(--primary-rgb), .03));
+}
+
+/* ============================================================
+   Attachment cards list
+   ============================================================ */
+
+.ipa-attachment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.ipa-attachment-card {
+    border: 1px solid var(--default-border);
+    border-radius: 0.75rem;
+    background: var(--custom-white);
+    overflow: hidden;
+    transition: border-color .15s;
+}
+
+.ipa-attachment-card.has-file {
+    border-color: var(--primary03);
+}
+
+/* Card header — name + type + remove button */
+.ipa-attachment-card-head {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    align-items: end;
+    gap: 0.75rem 1rem;
+    padding: 0.9rem 1rem 0.85rem 1rem;
+    background: var(--gray-1);
+    border-bottom: 1px solid var(--default-border);
+}
+
+.ipa-attachment-card-head .ipa-field {
+    margin: 0;
+}
+
+.ipa-attachment-card-head .ipa-field label {
+    font-size: 0.74rem;
+}
+
+.ipa-attachment-card-remove {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: none;
+    color: rgb(var(--danger-rgb));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    margin-bottom: 0.1rem;
+    transition: background .15s;
+}
+
+.ipa-attachment-card-remove:hover {
+    background: rgba(var(--danger-rgb), .08);
+}
+
+/* Dropzone inside a card — compact */
+.ipa-attachment-card-body {
+    padding: 0.85rem 1rem;
+}
+
+.ipa-dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    border: 1.5px dashed var(--gray-4);
+    border-radius: 0.65rem;
+    padding: 1.1rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    background: var(--gray-1);
+    transition: border-color .15s ease, background .15s ease;
+}
+
+.ipa-dropzone:hover,
+.ipa-dropzone.is-dragover {
+    border-color: var(--primary-color);
+    background: var(--primary005, rgba(var(--primary-rgb), .03));
+}
+
+.ipa-dropzone i {
+    font-size: 1.3rem;
+    color: var(--gray-5);
+    margin-bottom: 0.15rem;
+}
+
+.ipa-dropzone-title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--default-text-color);
+}
+
+.ipa-dropzone-sub {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+.ipa-dropzone-browse {
+    margin-top: 0.45rem;
+    border: 1px solid var(--default-border);
+    background: var(--custom-white);
+    border-radius: 30px;
+    padding: 0.28rem 0.85rem;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--default-text-color);
+}
+
+/* File row — shown once a file is picked */
+.ipa-attachment-file-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+}
+
+.ipa-file-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    flex-shrink: 0;
+    font-size: 0.9rem;
+}
+
+.ipa-file-icon.is-pdf     { background: rgb(var(--danger-rgb)); }
+.ipa-file-icon.is-excel   { background: rgb(var(--success-rgb)); }
+.ipa-file-icon.is-word    { background: rgb(var(--info-rgb)); }
+.ipa-file-icon.is-image   { background: rgb(var(--warning-rgb)); }
+.ipa-file-icon.is-zip     { background: var(--gray-6); }
+.ipa-file-icon.is-default { background: var(--gray-5); }
+
+.ipa-file-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.ipa-file-name {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--default-text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ipa-file-meta {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    margin-top: 0.1rem;
+}
+
+.ipa-file-progress-track {
+    height: 5px;
+    background: var(--gray-2);
+    border-radius: 4px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+}
+
+.ipa-file-progress-fill {
+    height: 100%;
+    background: var(--primary-color);
+    border-radius: 4px;
+    transition: width .25s ease;
+}
+
+.ipa-file-status-done {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: rgb(var(--success-rgb));
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 0.3rem;
+}
+
+.ipa-file-status-progress {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-top: 0.3rem;
+}
+
+.ipa-file-replace-btn {
+    background: none;
+    border: none;
+    font-size: 0.74rem;
+    color: var(--primary-color);
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    margin-top: 0.2rem;
+    display: inline-block;
+}
+
+.ipa-file-replace-btn:hover { text-decoration: underline; }
+/* ============================================================
+   Footer actions
+   ============================================================ */
+
+.ipa-footer-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    background: var(--custom-white);
+    border: 1px solid var(--default-border);
+    border-radius: 1rem;
+    padding: 1.1rem 1.5rem;
+    position: sticky;
+    bottom: 1rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.ipa-footer-buttons {
+    display: flex;
+    gap: 0.7rem;
+}
+
+.ipa-btn-secondary {
+    background: var(--custom-white);
+    border: 1px solid var(--default-border);
+    border-radius: 30px;
+    padding: 0.55rem 1.2rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--default-text-color);
+    cursor: pointer;
+}
+
+.ipa-btn-secondary:hover {
+    background: var(--gray-1);
+}
+
+.ipa-btn-primary {
+    background: var(--dark-rgb, #0a0a0a);
+    background: rgb(var(--dark-rgb));
+    color: #fff;
+    border: none;
+    border-radius: 30px;
+    padding: 0.55rem 1.3rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.ipa-btn-primary:hover {
+    opacity: 0.88;
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 575.98px) {
+    .ipa-header-card, .ipa-card { padding: 1.1rem; }
+    .ipa-form-grid, .ipa-uploader-meta-row { grid-template-columns: 1fr; }
+    .ipa-footer-actions { flex-direction: column; align-items: stretch; }
+    .ipa-footer-buttons { justify-content: stretch; }
+    .ipa-footer-buttons button { flex: 1; }
+}
+
+/* ============================================================
+   Added Items List
+   ============================================================ */
+
+.ipa-item-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 0.4rem;
+    border-radius: 20px;
+    background: var(--primary-color);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    margin-left: 0.4rem;
+}
+
+.ipa-added-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.ipa-added-row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    border: 1px solid var(--default-border);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--custom-white);
+    transition: border-color .15s;
+}
+
+.ipa-added-row:hover {
+    border-color: var(--primary03);
+}
+
+.ipa-added-row-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 0.55rem;
+    background: var(--primary01);
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1rem;
+}
+
+.ipa-added-row-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.ipa-added-row-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--default-text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ipa-added-row-meta {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    margin-top: 0.1rem;
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.ipa-added-row-meta .sep {
+    color: var(--gray-4);
+}
+
+.ipa-added-row-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.ipa-row-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 0.45rem;
+    border: 1px solid var(--default-border);
+    background: var(--custom-white);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+}
+
+.ipa-row-btn.is-view {
+    color: var(--primary-color);
+}
+
+.ipa-row-btn.is-view:hover {
+    background: var(--primary01);
+    border-color: var(--primary03);
+}
+
+.ipa-row-btn.is-delete {
+    color: rgb(var(--danger-rgb));
+}
+
+.ipa-row-btn.is-delete:hover {
+    background: rgba(var(--danger-rgb), .08);
+    border-color: rgba(var(--danger-rgb), .3);
+}
+
+/* ============================================================
+   Item form footer
+   ============================================================ */
+
+.ipa-item-form-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.65rem;
+    margin-top: 1.5rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--default-border);
+}
+
+.ipa-btn-reset {
+    background: none;
+    border: 1px solid var(--default-border);
+    border-radius: 30px;
+    padding: 0.5rem 1.1rem;
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.ipa-btn-reset:hover {
+    background: var(--gray-1);
+    color: var(--default-text-color);
+}
+
+.ipa-btn-add-confirm {
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 30px;
+    padding: 0.55rem 1.3rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    transition: opacity .15s;
+}
+
+.ipa-btn-add-confirm:hover {
+    opacity: 0.88;
+}
+
+/* ============================================================
+   Condition Modal
+   ============================================================ */
+
+.ipa-modal-item-summary {
+    background: var(--gray-1);
+    border: 1px solid var(--default-border);
+    border-radius: 0.75rem;
+    padding: 0.9rem 1.1rem;
+    margin-bottom: 1.25rem;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.7rem 1rem;
+}
+
+.ipa-modal-summary-cell {}
+
+.ipa-modal-summary-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 0.15rem;
+}
+
+.ipa-modal-summary-value {
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--default-text-color);
+}
+
+.ipa-modal-section-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 0.65rem;
+}
+
+.ipa-modal-condition-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    padding: 0.45rem 0;
+    font-size: 0.84rem;
+    color: var(--default-text-color);
+    border-bottom: 1px solid var(--gray-1);
+}
+
+.ipa-modal-condition-item:last-child {
+    border-bottom: none;
+}
+
+.ipa-modal-condition-item i {
+    color: rgb(var(--success-rgb));
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+}
+
+.ipa-modal-declaration {
+    background: rgba(var(--warning-rgb), .07);
+    border: 1px solid rgba(var(--warning-rgb), .25);
+    border-radius: 0.65rem;
+    padding: 0.9rem 1rem;
+    font-size: 0.83rem;
+    color: var(--default-text-color);
+}
+
+.ipa-modal-declaration p {
+    margin: 0 0 0.8rem 0;
+    color: var(--text-muted);
+    line-height: 1.55;
+}
+
+.ipa-agree-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.84rem;
+}
+
+.ipa-agree-check {
+    width: 16px;
+    height: 16px;
+    margin-top: 0.1rem;
+    flex-shrink: 0;
+    accent-color: var(--primary-color);
+    cursor: pointer;
+}
+
+.ipa-btn-confirm {
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 30px;
+    padding: 0.55rem 1.3rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    transition: opacity .15s;
+}
+
+.ipa-btn-confirm:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.ipa-btn-confirm:not(:disabled):hover {
+    opacity: 0.88;
+}
+
+/* ============================================================
+   Item Detail Offcanvas
+   ============================================================ */
+
+.ipa-offcanvas-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 0.6rem;
+    background: var(--primary01);
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.ipa-offcanvas-eyebrow {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.ipa-oc-nav {
+    width: 180px;
+    min-width: 180px;
+    background: var(--gray-1);
+    border-right: 1px solid var(--default-border);
+    padding: 1rem 0;
+}
+
+.ipa-oc-nav .nav-pills .nav-link {
+    border-radius: 0;
+    padding: 0.75rem 1.1rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 0.87rem;
+    border-left: 3px solid transparent;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.ipa-oc-nav .nav-pills .nav-link i {
+    width: 1.2rem;
+    text-align: center;
+}
+
+.ipa-oc-nav .nav-pills .nav-link:hover {
+    background: var(--gray-2);
+    color: var(--default-text-color);
+}
+
+.ipa-oc-nav .nav-pills .nav-link.active {
+    background: var(--custom-white);
+    color: var(--primary-color);
+    border-left-color: var(--primary-color);
+    font-weight: 600;
+}
+
+.ipa-oc-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    background: var(--gray-1);
+    border: 1px solid var(--default-border);
+    border-radius: 0.75rem;
+    padding: 1rem 1.1rem;
+    margin-bottom: 1.25rem;
+}
+
+.ipa-oc-cell-label {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 0.2rem;
+    font-weight: 600;
+}
+
+.ipa-oc-cell-value {
+    font-size: 0.87rem;
+    font-weight: 600;
+    color: var(--default-text-color);
+}
+
+.ipa-oc-section-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 0.7rem;
+}
+
+.ipa-oc-doc-item {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    border: 1px solid var(--default-border);
+    border-radius: 0.65rem;
+    padding: 0.65rem 0.9rem;
+    margin-bottom: 0.55rem;
+    background: var(--custom-white);
+}
+
+.ipa-oc-doc-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 0.45rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.ipa-oc-doc-icon.is-pdf    { background: rgb(var(--danger-rgb)); }
+.ipa-oc-doc-icon.is-excel  { background: rgb(var(--success-rgb)); }
+.ipa-oc-doc-icon.is-word   { background: rgb(var(--info-rgb)); }
+.ipa-oc-doc-icon.is-image  { background: rgb(var(--warning-rgb)); }
+.ipa-oc-doc-icon.is-zip    { background: var(--gray-6); }
+.ipa-oc-doc-icon.is-default{ background: var(--gray-5); }
+
+.ipa-oc-doc-name {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--default-text-color);
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ipa-oc-doc-meta {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+.ipa-oc-doc-type {
+    background: var(--primary01);
+    color: var(--primary-color);
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.1rem 0.5rem;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+@media (max-width: 767.98px) {
+    #ipaItemDetailOffcanvas { width: 100% !important; }
+    .ipa-oc-nav { min-width: 150px; width: 150px; }
+    .ipa-oc-info-grid { grid-template-columns: 1fr; }
+    .ipa-modal-item-summary { grid-template-columns: 1fr; }
+}
