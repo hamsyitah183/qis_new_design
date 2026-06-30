@@ -685,6 +685,13 @@ class ApplicationController extends Controller
             // 'consignmentDetails' => $consignment[0]->attachments
         ]); //, 'consignment', 'attachment'
     }
+    public function applyTestBahasa()
+    {
+        return view('pages.public.view_permit_test.applyImportBm', [
+
+            // 'consignmentDetails' => $consignment[0]->attachments
+        ]); //, 'consignment', 'attachment'
+    }
     public function summaryTest()
     {
         return view('pages.public.view_permit_test.application_summary', [
@@ -717,6 +724,27 @@ class ApplicationController extends Controller
     public function paymentTest()
     {
         return view('pages.public.view_permit_test.application_payment', [
+
+            // 'consignmentDetails' => $consignment[0]->attachments
+        ]); //, 'consignment', 'attachment'
+    }
+    public function orderTest()
+    {
+        return view('pages.public.view_permit_test.order_payment', [
+
+            // 'consignmentDetails' => $consignment[0]->attachments
+        ]); //, 'consignment', 'attachment'
+    }
+    public function receiptTest()
+    {
+        return view('pages.public.view_permit_test.receipt', [
+
+            // 'consignmentDetails' => $consignment[0]->attachments
+        ]); //, 'consignment', 'attachment'
+    }
+    public function controlPanelTest()
+    {
+        return view('pages.public.view_permit_test.control_panel_test', [
 
             // 'consignmentDetails' => $consignment[0]->attachments
         ]); //, 'consignment', 'attachment'

@@ -1,0 +1,407 @@
+/* ============================================================
+   Control Panel — District Entry Points
+   Reuses .ipv-summary-card, .ipv-table, .ipv-action-btn,
+   .ipv-toolbar, .ipv-table-container from applicationList.css
+   ============================================================ */
+
+.cp-wrapper {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    padding: 20px;
+    background: #f5f7fb;
+    min-height: 100vh;
+}
+
+/* ----- Left nav ----- */
+.cp-nav {
+    width: 240px;
+    min-width: 240px;
+    background: #ffffff;
+    border: 1px solid #e9edf4;
+    border-radius: 16px;
+    padding: 16px;
+    position: sticky;
+    top: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+
+.cp-nav-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #8a9aa8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0 8px 12px 8px;
+}
+
+.cp-nav-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cp-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 0.86rem;
+    font-weight: 500;
+    color: #4a5a72;
+    text-decoration: none;
+    transition: 0.15s ease;
+}
+
+.cp-nav-item i {
+    font-size: 1rem;
+    width: 20px;
+    text-align: center;
+    color: #8a9aa8;
+}
+
+.cp-nav-item:hover {
+    background: #f0f3f8;
+    color: #1a2b3e;
+}
+
+.cp-nav-item.is-active {
+    background: #e8edfe;
+    color: #2d4bc0;
+    font-weight: 600;
+}
+
+.cp-nav-item.is-active i {
+    color: #2d4bc0;
+}
+
+.cp-nav-item.is-disabled {
+    color: #b6c0cc;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.cp-nav-item.is-disabled i {
+    color: #d5dce4;
+}
+
+.cp-nav-soon {
+    margin-left: auto;
+    font-size: 0.62rem;
+    font-weight: 700;
+    background: #f0f3f8;
+    color: #8a9aa8;
+    padding: 2px 7px;
+    border-radius: 10px;
+    text-transform: uppercase;
+}
+
+/* ----- Main content ----- */
+.cp-main {
+    flex: 1;
+    min-width: 0;
+}
+
+/* ----- District code under name ----- */
+.cp-district-code {
+    font-size: 0.72rem;
+    color: #8a9aa8;
+    margin-top: 2px;
+}
+
+/* ----- Entry point chips inside the table ----- */
+.cp-entry-chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.cp-entry-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f8fafc;
+    border: 1px solid #e9edf4;
+    border-radius: 20px;
+    padding: 4px 10px 4px 10px;
+    font-size: 0.76rem;
+    color: #2d3f57;
+    max-width: 260px;
+}
+
+.cp-entry-chip i {
+    color: #8a9aa8;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.cp-entry-chip-badge {
+    font-size: 0.62rem;
+    padding: 2px 6px;
+    margin-left: 2px;
+}
+
+.cp-no-entry {
+    font-size: 0.8rem;
+    color: #b6c0cc;
+    font-style: italic;
+}
+
+/* ----- Offcanvas: add/edit district ----- */
+.cp-offcanvas {
+    width: 480px !important;
+    max-width: 92vw;
+}
+
+.cp-offcanvas .offcanvas-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.cp-offcanvas .offcanvas-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding-bottom: 100px; /* room above sticky footer */
+}
+
+.cp-form-group {
+    margin-bottom: 0;
+}
+
+.cp-form-label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #2d3f57;
+    margin-bottom: 6px;
+}
+
+.cp-required {
+    color: #c0392b;
+}
+
+.cp-form-hint {
+    font-size: 0.74rem;
+    color: #8a9aa8;
+    margin-top: 6px;
+}
+
+.cp-divider {
+    border-top: 1px solid #f0f3f8;
+    margin: 22px 0;
+}
+
+.cp-section-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.cp-btn-add-entry {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #e8edfe;
+    color: #2d4bc0;
+    border: none;
+    border-radius: 30px;
+    padding: 6px 14px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.15s ease;
+}
+
+.cp-btn-add-entry:hover {
+    background: #d6e0fd;
+}
+
+/* ----- Entry point rows ----- */
+.cp-entry-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.cp-entry-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fafcff;
+    border: 1px solid #e9edf4;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.cp-entry-row-fields {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 110px;
+    gap: 8px;
+}
+
+.cp-entry-row-fields .form-control,
+.cp-entry-row-fields .form-select {
+    font-size: 0.82rem;
+    border-color: #e2e8f0;
+    border-radius: 8px;
+    padding: 7px 10px;
+    background: #ffffff;
+}
+
+.cp-entry-row-fields .form-control:focus,
+.cp-entry-row-fields .form-select:focus {
+    border-color: #4a6cf7;
+    box-shadow: 0 0 0 3px rgba(74,108,247,0.1);
+}
+
+.cp-entry-remove-btn {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    border: 1px solid #f0d6d6;
+    background: #fef5f5;
+    color: #c0392b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.15s ease;
+}
+
+.cp-entry-remove-btn:hover {
+    background: #fde3e3;
+    border-color: #f5c6c6;
+}
+
+/* ----- Empty entry point state ----- */
+.cp-entry-empty {
+    text-align: center;
+    padding: 32px 16px;
+    border: 1.5px dashed #e2e8f0;
+    border-radius: 12px;
+    color: #b6c0cc;
+}
+
+.cp-entry-empty i {
+    font-size: 1.6rem;
+    display: block;
+    margin-bottom: 8px;
+    color: #d5dce4;
+}
+
+.cp-entry-empty p {
+    margin: 0;
+    font-size: 0.82rem;
+}
+
+/* ----- Sticky offcanvas footer ----- */
+.cp-offcanvas .offcanvas-footer {
+    position: sticky;
+    bottom: 0;
+    background: #ffffff;
+    border-top: 1px solid #f0f3f8;
+    padding: 16px 22px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* ----- Responsive ----- */
+@media (max-width: 992px) {
+    .cp-wrapper {
+        flex-direction: column;
+    }
+    .cp-nav {
+        width: 100%;
+        min-width: 0;
+        position: static;
+    }
+    .cp-nav-list {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .cp-nav-item {
+        flex: 1 1 auto;
+        justify-content: center;
+        text-align: center;
+    }
+    .cp-nav-soon {
+        margin-left: 6px;
+    }
+}
+
+@media (max-width: 576px) {
+    .cp-wrapper {
+        padding: 12px;
+    }
+    .cp-entry-row-fields {
+        grid-template-columns: 1fr;
+    }
+    .cp-offcanvas {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    .cp-entry-chip {
+        max-width: 100%;
+    }
+}
+
+/* ============================================================
+   Panel switching
+   ============================================================ */
+
+.cp-panel {
+    display: none;
+}
+
+.cp-panel.is-active {
+    display: block;
+}
+
+/* ----- Nav items now buttons, not links — reset default button look ----- */
+.cp-nav-item {
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
+/* ============================================================
+   Simple list table extras
+   ============================================================ */
+
+.cp-simple-code {
+    display: inline-block;
+    background: #f0f3f8;
+    color: #4a5a72;
+    font-family: 'SFMono-Regular', Consolas, monospace;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 6px;
+    letter-spacing: 0.3px;
+}
+
+/* ============================================================
+   Smaller offcanvas variant for simple lists
+   ============================================================ */
+
+.cp-offcanvas-sm {
+    width: 520px !important;
+    max-width: 92vw;
+}
+
+@media (max-width: 576px) {
+    .cp-offcanvas-sm {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}

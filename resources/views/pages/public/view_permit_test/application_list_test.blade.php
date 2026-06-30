@@ -195,8 +195,7 @@
 
                     <div class="mb-4">
                         <label class="form-label fw-semibold">Transport</label>
-                        <select class="form-select" id="filterTransport">
-                            <option value="All">All</option>
+                        <select class="form-select ipv-multi-select" id="filterTransport" multiple>
                             <option value="Air">Air</option>
                             <option value="Sea">Sea</option>
                             <option value="Land">Land</option>
@@ -205,12 +204,25 @@
 
                     <div class="mb-4">
                         <label class="form-label fw-semibold">Entry Point</label>
-                        <select class="form-select" id="filterEntryPoint">
-                            <option value="All">All</option>
+                        <select class="form-select ipv-multi-select" id="filterEntryPoint" multiple>
                             <option value="Kota Kinabalu">Kota Kinabalu</option>
                             <option value="Tawau">Tawau</option>
                             <option value="Sandakan">Sandakan</option>
                         </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Submission Date</label>
+                        <div class="d-flex flex-column gap-2">
+                            <div>
+                                <label class="ipv-date-sublabel">From</label>
+                                <input type="date" class="form-control" id="filterDateFrom">
+                            </div>
+                            <div>
+                                <label class="ipv-date-sublabel">To</label>
+                                <input type="date" class="form-control" id="filterDateTo">
+                            </div>
+                        </div>
                     </div>
 
                     <div class="d-grid gap-2">
@@ -238,26 +250,34 @@
                     <div class="d-flex align-items-center gap-2">
 
                         <button class="btn btn-light border" id="openFilter">
-
                             <i class="bi bi-funnel"></i>
-
                             Filter
-
                         </button>
 
                         <div class="input-group">
-
                             <span class="input-group-text bg-white">
-
                                 <i class="bi bi-search"></i>
-
                             </span>
-
                             <input type="text" class="form-control" id="searchApplication"
                                 placeholder="Search application...">
-
                         </div>
 
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="ipv-sort-label" for="sortSelect">
+                            <i class="bi bi-arrow-down-up"></i> Sort by
+                        </label>
+                        <select class="form-select ipv-sort-select" id="sortSelect">
+                            <option value="created_desc">Date Created (Newest)</option>
+                            <option value="created_asc">Date Created (Oldest)</option>
+                            <option value="eta_asc">ETA (Earliest)</option>
+                            <option value="eta_desc">ETA (Latest)</option>
+                            <option value="value_desc">Value (Highest)</option>
+                            <option value="value_asc">Value (Lowest)</option>
+                            <option value="permits_desc">Permits (Most)</option>
+                            <option value="permits_asc">Permits (Fewest)</option>
+                        </select>
                     </div>
 
                 </div>

@@ -1,18 +1,17 @@
 @extends('pages.app')
 
-@section('pageName', 'Apply Import Permit')
+@section('pageName', 'Mohon Permit Import')
 
 @push('scripts')
     @vite(['resources/js/pages/importPermit/applyImportPermit.js'])
-    @vite(['resources/js/pages/importPermit/exporterImportPermit.js'])
 @endpush
 
 @section('breadcrumb')
     <x-breadcrumb :items="[
         ['label' => 'Dashboard', 'url' => '/'],
-        ['label' => 'Application List', 'url' => '/public/view_import_permit'],
-        ['label' => 'New Application', 'url' => '#'],
-    ]" title="Apply Import Permit">
+        ['label' => 'Senarai Permohonan', 'url' => '/public/view_import_permit'],
+        ['label' => 'Permohonan Baru', 'url' => '#'],
+    ]" title="Mohon Permit Import">
     </x-breadcrumb>
 @endsection
 
@@ -28,16 +27,15 @@
                 <i class="bi bi-file-earmark-text"></i>
             </div>
             <div>
-                <div class="ips-hero-eyebrow">Import Permit Application</div>
-                <h3 class="ips-hero-title">Application</h3>
+                <div class="ips-hero-eyebrow">Permohonan Permit Import</div>
+                <h3 class="ips-hero-title">Permohonan</h3>
                 <p class="ips-hero-sub text-wrap">
-                    An official authorization granted to importers for the importation of regulated agricultural goods into
-                    Sabah.
+                    Kebenaran rasmi yang diberikan kepada pengimport untuk mengimport barangan pertanian terkawal ke Sabah.
                 </p>
             </div>
             <div class="ipa-draft-status" id="ipaDraftStatus">
                 <span class="ipa-draft-dot is-unsaved"></span>
-                <span>Not saved yet</span>
+                <span>Belum disimpan</span>
             </div>
         </div>
 
@@ -46,32 +44,32 @@
             <div class="ips-card-head">
                 <div class="ips-card-head-icon"><i class="bi bi-truck"></i></div>
                 <div>
-                    <div class="ips-card-title">Transportation Details</div>
-                    <div class="ips-card-sub">Entry route and logistics information</div>
+                    <div class="ips-card-title">Butiran Pengangkutan</div>
+                    <div class="ips-card-sub">Maklumat laluan masuk dan logistik</div>
                 </div>
             </div>
             <div class="ipa-form-grid">
                 <div class="ipa-field">
-                    <label>Estimated Time Arrival <span class="ipa-required">*</span></label>
+                    <label>Masa Ketibaan <span class="ipa-required">*</span></label>
                     <input type="date" class="ipa-input" id="ipaEta">
                 </div>
                 <div class="ipa-field">
-                    <label>Transport Type <span class="ipa-required">*</span></label>
+                    <label>Jenis Pengangkutan <span class="ipa-required">*</span></label>
                     <select class="ipa-input" id="ipaTransportType">
-                        <option value="">-- Select transport type --</option>
-                        <option>Sea</option>
-                        <option>Air</option>
-                        <option>Land / Road</option>
+                        <option value="">-- Pilih jenis pengangkutan --</option>
+                        <option>Pengangkutan Laut</option>
+                        <option>Pengangkutan Udara</option>
+                        <option>Pengangkutan Darat</option>
                     </select>
                 </div>
                 <div class="ipa-field">
-                    <label>Entry Point <span class="ipa-required">*</span></label>
+                    <label>Tempat Masuk <span class="ipa-required">*</span></label>
                     <select class="ipa-input" id="ipaEntryPoint">
-                        <option value="">-- Select entry point --</option>
-                        <option>Kota Kinabalu Port</option>
-                        <option>Sandakan Port</option>
-                        <option>Tawau Port</option>
-                        <option>Kota Kinabalu International Airport</option>
+                        <option value="">-- Pilih tempat masuk --</option>
+                        <option>Pelabuhan Kota Kinabalu</option>
+                        <option>Pelabuhan Sandakan</option>
+                        <option>Pelabuhan Tawau</option>
+                        <option>Lapangan Terbang Antarabangsa Kota Kinabalu</option>
                     </select>
                 </div>
             </div>
@@ -82,51 +80,28 @@
             <div class="ips-card-head">
                 <div class="ips-card-head-icon"><i class="bi bi-people"></i></div>
                 <div>
-                    <div class="ips-card-title">Importer &amp; Exporter Details</div>
-                    <div class="ips-card-sub">Parties involved in this consignment</div>
+                    <div class="ips-card-title">Butiran Pengimport &amp; Pengeksport</div>
+                    <div class="ips-card-sub">Pihak yang terlibat dalam penghantaran ini</div>
                 </div>
             </div>
 
             <div class="ipa-form-grid">
-
-                <!-- Importer -->
                 <div class="ipa-field">
-                    <label>Importer <span class="ipa-required">*</span></label>
-                    <input type="text" id="importerName" class="ipa-input" value="Sabah Agro Trading Sdn Bhd" readonly>
+                    <label>Nama Pengimport <span class="ipa-required">*</span></label>
+                    <input type="text" class="ipa-input" placeholder="Cari atau masukkan nama pengimport">
                 </div>
-
                 <div class="ipa-field">
-                    <label>Importer Phone</label>
-                    <input type="text" id="importerPhone" class="ipa-input" value="(088) 244 511" readonly>
+                    <label>Nombor Telefon Pengimport</label>
+                    <input type="text" class="ipa-input" placeholder="cth. (088) 244 511">
                 </div>
-
-                <!-- Exporter -->
-                <div class="ipa-field ipa-search-wrapper">
-
-                    <label>Exporter <span class="ipa-required">*</span></label>
-
-                    <input type="text" id="exporterSearch" class="ipa-input" autocomplete="off"
-                        placeholder="Search exporter...">
-
-                    <input type="hidden" id="exporterId">
-
-                    <div id="exporterSuggestion" class="ipa-search-result"></div>
-
-                </div>
-
                 <div class="ipa-field">
-                    <label>Exporter Country <span class="ipa-required">*</span></label>
-
-                    <input type="text" id="exporterCountry" class="ipa-input" readonly
-                        placeholder="E.g Singapore">
+                    <label>Nama Pengeksport <span class="ipa-required">*</span></label>
+                    <input type="text" class="ipa-input" placeholder="Cari atau masukkan nama pengeksport">
                 </div>
-
-               
-
-            </div>
-            <div class="ipa-field ipa-field-fullrow mt-3">
-                <label>Exporter Address <span class="ipa-required">*</span></label>
-                <textarea class="ipa-input" rows="2" placeholder="Taman Cahaya" id="exporterAddress"></textarea>
+                <div class="ipa-field">
+                    <label>Negara Pengeksport</label>
+                    <input type="text" class="ipa-input" placeholder="cth. Singapura">
+                </div>
             </div>
         </div>
 
@@ -138,12 +113,12 @@
             <div class="ips-card-head">
                 <div class="ips-card-head-icon"><i class="bi bi-list-check"></i></div>
                 <div>
-                    <div class="ips-card-title">Added Items <span class="ipa-item-count-badge ms-2"
+                    <div class="ips-card-title">Item Ditambah <span class="ipa-item-count-badge ms-2"
                             id="ipaItemCountBadge">0</span></div>
 
                 </div>
             </div>
-            <p class="ipa-card-hint">Items confirmed and added to this application.</p>
+            <p class="ipa-card-hint">Item yang telah disahkan dan ditambah ke permohonan ini.</p>
             <div class="ipa-added-list" id="ipaAddedList"></div>
         </div>
 
@@ -154,10 +129,9 @@
             <div class="ips-card-head">
                 <div class="ips-card-head-icon"><i class="bi bi-box-seam"></i> </div>
                 <div>
-                    <div class="ips-card-title">Permit Item Details <span id="ipsItemsSubtitle"></span></div>
-                    <div class="ips-card-sub" id="">Each item requires its own set of supporting documents. After
-                        confirming the
-                        conditions, the item will be added to the list above.</div>
+                    <div class="ips-card-title">Butiran Item Permit <span id="ipsItemsSubtitle"></span></div>
+                    <div class="ips-card-sub" id="">Setiap item memerlukan set dokumen sokongan sendiri. Selepas
+                        mengesahkan syarat-syarat, item akan ditambah ke senarai di atas.</div>
                 </div>
             </div>
 
@@ -165,45 +139,45 @@
 
             <div class="ipa-form-grid" id="ipaItemFields">
                 <div class="ipa-field">
-                    <label>Category <span class="ipa-required">*</span></label>
+                    <label>Kategori <span class="ipa-required">*</span></label>
                     <select class="ipa-input" id="ipaItemCategory">
-                        <option value="">-- Select category --</option>
+                        <option value="">-- Pilih kategori --</option>
                     </select>
                 </div>
                 <div class="ipa-field">
-                    <label>Item Name <span class="ipa-required">*</span></label>
+                    <label>Nama Barang <span class="ipa-required">*</span></label>
                     <select class="ipa-input" id="ipaItemName" disabled>
-                        <option value="">-- Select category first --</option>
+                        <option value="">-- Pilih kategori dahulu --</option>
                     </select>
                 </div>
                 <div class="ipa-field">
-                    <label>Usage</label>
-                    <input type="text" class="ipa-input" id="ipaItemUsage" placeholder="e.g. Commercial Sale">
+                    <label>Kegunaan Barang</label>
+                    <input type="text" class="ipa-input" id="ipaItemUsage" placeholder="cth. Jualan Komersial">
                 </div>
                 <div class="ipa-field">
-                    <label>Purpose <span class="ipa-required">*</span></label>
+                    <label>Tujuan Barang <span class="ipa-required">*</span></label>
                     <select class="ipa-input" id="ipaItemPurpose">
-                        <option value="">-- Select purpose --</option>
+                        <option value="">-- Pilih tujuan --</option>
                     </select>
                 </div>
                 <div class="ipa-field">
-                    <label>Quantity <span class="ipa-required">*</span></label>
+                    <label>Kuantiti Barang <span class="ipa-required">*</span></label>
                     <input type="number" min="0" class="ipa-input" id="ipaItemQty" placeholder="0">
                 </div>
                 <div class="ipa-field">
                     <label>Unit <span class="ipa-required">*</span></label>
                     <select class="ipa-input" id="ipaItemUnit">
-                        <option value="">-- Select unit --</option>
+                        <option value="">-- Pilih unit --</option>
                     </select>
                 </div>
                 <div class="ipa-field">
-                    <label>Declared Value (RM) <span class="ipa-required">*</span></label>
+                    <label>Nilai Barang (RM) <span class="ipa-required">*</span></label>
                     <input type="number" min="0" step="0.01" class="ipa-input" id="ipaItemValue"
                         placeholder="0.00">
                 </div>
             </div>
 
-            <div class="ipa-item-uploader-title">Supporting Documents for this Item</div>
+            <div class="ipa-item-uploader-title">Lampiran Barang</div>
             <div id="ipaItemUploaderContainer"></div>
 
             <div class="ipa-item-form-footer">
@@ -211,7 +185,7 @@
                     <i class="bi bi-arrow-counterclockwise"></i> Reset
                 </button>
                 <button type="button" class="ipa-btn-add-confirm" id="ipaAddItemBtn">
-                    <i class="bi bi-plus-circle"></i> Add Item to Application
+                    <i class="bi bi-plus-circle"></i> Tambah Item ke Permohonan
                 </button>
             </div>
         </div>
@@ -222,9 +196,8 @@
             <div class="ips-card-head">
                 <div class="ips-card-head-icon"><i class="bi bi-paperclip"></i></div>
                 <div>
-                    <div class="ips-card-title">Application Documents</div>
-                    <div class="ips-card-sub">Upload supporting documents for the application as a whole — invoice, packing
-                        list, authorization letter, and so on.</div>
+                    <div class="ips-card-title">Lampiran Permohonan</div>
+                    <div class="ips-card-sub">Muat naik dokumen sokongan untuk permohonan secara keseluruhan — invois, senarai pembungkusan, surat kebenaran, dan sebagainya.</div>
                 </div>
             </div>
 
@@ -235,12 +208,11 @@
         <div class="ipa-footer-actions">
             <div class="ipa-footer-status" id="ipaFooterStatus">
                 <span class="ipa-draft-dot is-unsaved"></span>
-                <span>Not saved yet</span>
+                <span>Belum disimpan</span>
             </div>
             <div class="ipa-footer-buttons">
-                <button type="button" class="ipa-btn-secondary" id="ipaSaveDraftBtn">Save as Draft</button>
-                <button type="button" class="ips-btn-submit" id="ipaSubmitBtn"><i class="bi bi-file-earmark-text"></i>
-                    Review Application</button>
+                <button type="button" class="ipa-btn-secondary" id="ipaSaveDraftBtn">Simpan sebagai Draf</button>
+                <button type="button" class="ips-btn-submit" id="ipaSubmitBtn"><i class="bi bi-file-earmark-text"></i> Semak Permohonan</button>
             </div>
         </div>
 
@@ -257,14 +229,14 @@
                     <div>
                         <div
                             style="font-size:0.72rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:0.2rem;">
-                            Import Permit
+                            Permit Import
                         </div>
                         <h5 class="modal-title fw-bold mb-0" id="ipaConditionModalLabel">
-                            Item Conditions &amp; Declaration
+                            Syarat-syarat &amp; Pengakuan Item
                         </h5>
                     </div>
                     <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
+                        aria-label="Tutup"></button>
                 </div>
                 <div class="modal-body" style="padding: 1.5rem;">
 
@@ -272,28 +244,28 @@
                     <div class="ipa-modal-item-summary" id="ipaModalItemSummary"></div>
 
                     <!-- Conditions list -->
-                    <div class="ipa-modal-section-label">Import Conditions</div>
+                    <div class="ipa-modal-section-label">Syarat-syarat Import</div>
                     <div id="ipaModalConditions"></div>
 
                     <!-- Declaration -->
-                    <div class="ipa-modal-section-label mt-3">Declaration</div>
+                    <div class="ipa-modal-section-label mt-3">Pengakuan</div>
                     <div class="ipa-modal-declaration">
                         <p>
-                            By checking the box below, I confirm that I have read and understood all
-                            import conditions applicable to this item. I declare that the information
-                            provided is accurate and complete to the best of my knowledge.
+                            Dengan menandakan kotak di bawah, saya mengesahkan bahawa saya telah membaca dan memahami
+                            semua syarat import yang berkenaan untuk item ini. Saya mengaku bahawa maklumat yang diberikan
+                            adalah tepat dan lengkap setahu saya.
                         </p>
                         <label class="ipa-agree-label" id="ipaAgreeLabel">
                             <input type="checkbox" id="ipaAgreeCheck" class="ipa-agree-check">
-                            <span>I have read and agree to all conditions stated above.</span>
+                            <span>Saya telah membaca dan bersetuju dengan semua syarat yang dinyatakan di atas.</span>
                         </label>
                     </div>
 
                 </div>
                 <div class="modal-footer border-top" style="padding: 1rem 1.5rem;">
-                    <button type="button" class="ipa-btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="ipa-btn-secondary" data-bs-dismiss="modal">Batal</button>
                     <button type="button" class="ipa-btn-confirm" id="ipaConfirmAddBtn" disabled>
-                        <i class="bi bi-check-circle me-1"></i> Confirm &amp; Add Item
+                        <i class="bi bi-check-circle me-1"></i> Sahkan &amp; Tambah Item
                     </button>
                 </div>
             </div>
@@ -311,11 +283,11 @@
                     <i class="bi bi-box-seam"></i>
                 </div>
                 <div>
-                    <div class="ipa-offcanvas-eyebrow">Permit Item</div>
+                    <div class="ipa-offcanvas-eyebrow">Item Permit</div>
                     <h5 class="offcanvas-title mb-0 fw-bold" id="ipaItemDetailOffcanvasLabel">—</h5>
                 </div>
             </div>
-            <button type="button" class="btn-close ms-auto" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="offcanvas" aria-label="Tutup"></button>
         </div>
         <div class="offcanvas-body p-0 d-flex" style="height: calc(100% - 72px); overflow: hidden;">
             <!-- Vertical Nav -->
@@ -324,13 +296,13 @@
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active" id="ipa-oc-details-tab" data-bs-toggle="tab"
                             data-bs-target="#ipa-oc-details" type="button" role="tab">
-                            <i class="bi bi-file-text me-2"></i> Details
+                            <i class="bi bi-file-text me-2"></i> Butiran
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="ipa-oc-docs-tab" data-bs-toggle="tab" data-bs-target="#ipa-oc-docs"
                             type="button" role="tab">
-                            <i class="bi bi-paperclip me-2"></i> Documents
+                            <i class="bi bi-paperclip me-2"></i> Dokumen
                         </button>
                     </li>
                 </ul>

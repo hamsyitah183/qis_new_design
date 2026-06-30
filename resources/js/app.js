@@ -156,13 +156,13 @@ document.addEventListener('visibilitychange', () => {
     }
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-    startNotificationPolling();
-    initInactivityTimeout();
-    if (window.authUser?.type === 'internal') {
-        fetchVerificationCount();
-    }
-});
+// document.addEventListener('DOMContentLoaded', () => {
+//     startNotificationPolling();
+//     initInactivityTimeout();
+//     if (window.authUser?.type === 'internal') {
+//         fetchVerificationCount();
+//     }
+// });
 
 export function fetchVerificationCount() {
     if (!$("#verificationCount").length) return;

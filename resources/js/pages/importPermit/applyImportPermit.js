@@ -461,7 +461,9 @@ function renderAddedList() {
 
     listEl.innerHTML = addedItems.map((item, idx) => `
         <div class="ipa-added-row" data-item-id="${item.id}">
-            <div class="ipa-added-row-icon"><i class="bi bi-box-seam"></i></div>
+            <div class="ipa-added ips-item-num">
+                ${idx + 1}
+            </div>
             <div class="ipa-added-row-info">
                 <div class="ipa-added-row-name">${escapeHtml(item.itemName)}</div>
                 <div class="ipa-added-row-meta">

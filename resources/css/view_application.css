@@ -5,7 +5,11 @@
 @import './list_application.css';
 @import './verify_application.css';
 @import './verify_item.css';
+@import './permit_payment2.css';
 @import './permit_payment.css';
+@import './receipt.css';
+@import './district_entry.css';
+
 /* ============================================================
    Import Permit — Application View
    Every color below resolves to the existing root tokens

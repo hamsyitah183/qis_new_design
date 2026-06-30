@@ -18,7 +18,7 @@
 
 @section('content')
 
-    <div class="ips-wrapper">
+    <div class="ips-wrapper apy-wrapper">
 
         <!-- ============================================================ -->
         <!-- Page header                                                    -->
@@ -142,6 +142,7 @@
                         <div>
                             <div class="ips-contact-label">Address</div>
                             <div class="ips-contact-value">
+                                Plant Biosecurity & Quarantine Division, Department of Agriculture Sabah,
                                 Wisma Pertanian, Jalan Tasik, Beg Berkunci No. 2050,<br>
                                 88632 Kota Kinabalu, Sabah
                             </div>

@@ -3,6 +3,13 @@
  * Import Permit Application Page – Full Functionality
  * ============================================================
  */
+// Import Select2 module
+import select2 from "select2";
+
+// Force Select2 to attach to THIS jQuery:
+select2(window.jQuery);
+
+import "select2/dist/css/select2.min.css";
 
 // ---- DATA ----
 let applications = [];
@@ -11,6 +18,7 @@ let filteredApps = [];
 // ---- DOM refs (safe) ----
 const tableBody = document.getElementById('applicationTableBody');
 const searchInput = document.getElementById('searchApplication');
+const sortSelect = document.getElementById('sortSelect');
 
 const summaryTotal = document.getElementById('summaryTotal');
 const summarySubmitted = document.getElementById('summarySubmitted');
@@ -29,6 +37,8 @@ const closeFilterBtn = document.getElementById('closeFilter');
 // These must have IDs in the Blade – add them if missing
 const transportSelect = document.getElementById('filterTransport');
 const entryPointSelect = document.getElementById('filterEntryPoint');
+const dateFromInput = document.getElementById('filterDateFrom');
+const dateToInput = document.getElementById('filterDateTo');
 const applyFilterBtn = document.getElementById('applyFilterBtn');
 const clearFilterBtn = document.getElementById('clearFilterBtn');
 
@@ -37,11 +47,17 @@ const previewOffcanvas = document.getElementById('applicationPreview');
 let offcanvasInstance = null;
 
 // ---- FILTER STATE ----
+// transport / entryPoint are now arrays — empty array means "no filter applied"
 let filterState = {
     status: [],
-    transport: 'All',
-    entryPoint: 'All'
+    transport: [],
+    entryPoint: [],
+    dateFrom: '',
+    dateTo: ''
 };
+
+// ---- SORT STATE ----
+let sortState = 'created_desc';
 
 let searchTimeout = null;
 
@@ -55,6 +71,7 @@ function loadDummyData() {
             applicant: 'Ahmad Rahman',
             importer: 'Borneo Trade Sdn Bhd',
             eta: '2026-07-02',
+            createdAt: '2026-06-20',
             transport: 'Sea',
             entryPoint: 'Kota Kinabalu',
             permits: 3,
@@ -66,6 +83,7 @@ function loadDummyData() {
             applicant: 'Siti Nurhaliza',
             importer: 'Sabah Agro Importers',
             eta: '2026-07-10',
+            createdAt: '2026-06-22',
             transport: 'Air',
             entryPoint: 'Tawau',
             permits: 1,
@@ -77,6 +95,7 @@ function loadDummyData() {
             applicant: 'John Tan',
             importer: 'East Malaysia Logistics',
             eta: '2026-06-30',
+            createdAt: '2026-06-18',
             transport: 'Land',
             entryPoint: 'Sandakan',
             permits: 5,
@@ -88,6 +107,7 @@ function loadDummyData() {
             applicant: 'Nur Aisyah',
             importer: 'Kota Import Export',
             eta: '2026-07-15',
+            createdAt: '2026-06-25',
             transport: 'Sea',
             entryPoint: 'Kota Kinabalu',
             permits: 2,
@@ -99,6 +119,7 @@ function loadDummyData() {
             applicant: 'Michael Lee',
             importer: 'Sabah Marine Supply',
             eta: '2026-07-05',
+            createdAt: '2026-06-21',
             transport: 'Air',
             entryPoint: 'Tawau',
             permits: 4,
@@ -110,6 +131,7 @@ function loadDummyData() {
             applicant: 'Roslina Hassan',
             importer: 'Borneo Agri Sdn Bhd',
             eta: '2026-07-18',
+            createdAt: '2026-06-15',
             transport: 'Sea',
             entryPoint: 'Sandakan',
             permits: 6,
@@ -121,6 +143,7 @@ function loadDummyData() {
             applicant: 'Kevin Ng',
             importer: 'Sarawak Trading Co',
             eta: '2026-06-28',
+            createdAt: '2026-06-27',
             transport: 'Land',
             entryPoint: 'Kota Kinabalu',
             permits: 2,
@@ -179,7 +202,95 @@ function renderSummary() {
 }
 
 // ============================================================
-// 4. TABLE RENDER
+// 4. SORTING
+// ============================================================
+function sortApplications(data, sortKey) {
+    const sorted = [...data];
+
+    switch (sortKey) {
+        case 'created_desc':
+            sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            break;
+        case 'created_asc':
+            sorted.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+            break;
+        case 'eta_asc':
+            sorted.sort((a, b) => new Date(a.eta) - new Date(b.eta));
+            break;
+        case 'eta_desc':
+            sorted.sort((a, b) => new Date(b.eta) - new Date(a.eta));
+            break;
+        case 'value_desc':
+            sorted.sort((a, b) => b.value - a.value);
+            break;
+        case 'value_asc':
+            sorted.sort((a, b) => a.value - b.value);
+            break;
+        case 'permits_desc':
+            sorted.sort((a, b) => b.permits - a.permits);
+            break;
+        case 'permits_asc':
+            sorted.sort((a, b) => a.permits - b.permits);
+            break;
+        default:
+            break;
+    }
+
+    return sorted;
+}
+
+function bindSort() {
+    if (!sortSelect) return;
+    sortSelect.addEventListener('change', function(e) {
+        sortState = e.target.value;
+        applyFiltersSilent();
+    });
+}
+
+// ============================================================
+// 5. SELECT2 INIT
+// ============================================================
+function initSelect2() {
+    if (typeof $ === 'undefined' || !$.fn.select2) {
+        console.warn('Select2 / jQuery not loaded — falling back to native multi-select.');
+        return;
+    }
+
+    $('#filterTransport').select2({
+        placeholder: 'All transport types',
+        allowClear: true,
+        width: '100%',
+        dropdownParent: $('#filterPanel'),
+    });
+
+    $('#filterEntryPoint').select2({
+        placeholder: 'All entry points',
+        allowClear: true,
+        width: '100%',
+        dropdownParent: $('#filterPanel'),
+    });
+}
+
+function getSelect2Values(selectEl) {
+    if (typeof $ !== 'undefined' && $.fn.select2 && selectEl) {
+        return $(selectEl).val() || [];
+    }
+    // Fallback: native multi-select
+    return selectEl
+        ? Array.from(selectEl.selectedOptions).map(opt => opt.value)
+        : [];
+}
+
+function resetSelect2(selectEl) {
+    if (typeof $ !== 'undefined' && $.fn.select2 && selectEl) {
+        $(selectEl).val(null).trigger('change');
+    } else if (selectEl) {
+        Array.from(selectEl.options).forEach(opt => opt.selected = false);
+    }
+}
+
+// ============================================================
+// 6. TABLE RENDER
 // ============================================================
 function renderTable(data) {
     if (!tableBody) return;
@@ -252,7 +363,7 @@ function renderTable(data) {
 }
 
 // ============================================================
-// 5. DELETE
+// 7. DELETE
 // ============================================================
 function deleteApplication(id) {
     if (!confirm(`Delete application ${id}? This action cannot be undone.`)) return;
@@ -264,30 +375,20 @@ function deleteApplication(id) {
 }
 
 // ============================================================
-// 6. SEARCH (debounced)
+// 8. SEARCH (debounced)
 // ============================================================
 function bindSearch() {
     if (!searchInput) return;
     searchInput.addEventListener('input', function(e) {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => {
-            const keyword = e.target.value.toLowerCase().trim();
-            if (!keyword) {
-                filteredApps = [...applications];
-            } else {
-                filteredApps = applications.filter(app =>
-                    app.id.toLowerCase().includes(keyword) ||
-                    app.applicant.toLowerCase().includes(keyword) ||
-                    app.importer.toLowerCase().includes(keyword)
-                );
-            }
             applyFiltersSilent();
         }, 250);
     });
 }
 
 // ============================================================
-// 7. FILTERS
+// 9. FILTERS
 // ============================================================
 function getSelectedStatuses() {
     return Array.from(document.querySelectorAll('.status-filter:checked'))
@@ -305,35 +406,108 @@ function applyFiltersSilent() {
             if (!match) return false;
         }
         if (filterState.status.length > 0 && !filterState.status.includes(app.status)) return false;
-        if (filterState.transport !== 'All' && app.transport !== filterState.transport) return false;
-        if (filterState.entryPoint !== 'All' && app.entryPoint !== filterState.entryPoint) return false;
+
+        // Multi-select transport — empty array means no filter
+        if (filterState.transport.length > 0 && !filterState.transport.includes(app.transport)) return false;
+
+        // Multi-select entry point — empty array means no filter
+        if (filterState.entryPoint.length > 0 && !filterState.entryPoint.includes(app.entryPoint)) return false;
+
+        // Submission date range filter
+        if (filterState.dateFrom) {
+            const created = new Date(app.createdAt);
+            const from = new Date(filterState.dateFrom);
+            if (created < from) return false;
+        }
+        if (filterState.dateTo) {
+            const created = new Date(app.createdAt);
+            const to = new Date(filterState.dateTo);
+            to.setHours(23, 59, 59, 999);
+            if (created > to) return false;
+        }
+
         return true;
     });
+
+    result = sortApplications(result, sortState);
 
     filteredApps = result;
     renderTable(filteredApps);
 }
 
+// ============================================================
+// 9b. ACTIVE-FILTER BADGE ON THE "Filter" TOOLBAR BUTTON
+// ============================================================
+// Counts how many distinct filter *criteria* are currently applied
+// (a multi-select with 3 values still only counts as "1 active
+// filter group", which matches how the panel is organized — status /
+// transport / entry point / date range). Recomputed every time
+// applyFilters() or resetFilters() runs, so it can never drift out of
+// sync with filterState.
+function countActiveFilterGroups() {
+    let count = 0;
+    if (filterState.status.length > 0) count++;
+    if (filterState.transport.length > 0) count++;
+    if (filterState.entryPoint.length > 0) count++;
+    if (filterState.dateFrom || filterState.dateTo) count++;
+    return count;
+}
+
+function renderFilterBadge() {
+    if (!openFilterBtn) return;
+
+    const count = countActiveFilterGroups();
+    let badge = openFilterBtn.querySelector('.ipv-filter-badge');
+
+    if (count === 0) {
+        badge?.remove();
+        openFilterBtn.classList.remove('has-active-filters');
+        return;
+    }
+
+    openFilterBtn.classList.add('has-active-filters');
+
+    if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'ipv-filter-badge';
+        openFilterBtn.appendChild(badge);
+    }
+    badge.textContent = count;
+}
+
 function applyFilters() {
     filterState.status = getSelectedStatuses();
-    if (transportSelect) filterState.transport = transportSelect.value;
-    if (entryPointSelect) filterState.entryPoint = entryPointSelect.value;
+    filterState.transport = getSelect2Values(transportSelect);
+    filterState.entryPoint = getSelect2Values(entryPointSelect);
+    if (dateFromInput) filterState.dateFrom = dateFromInput.value;
+    if (dateToInput) filterState.dateTo = dateToInput.value;
+
+    if (filterState.dateFrom && filterState.dateTo && filterState.dateFrom > filterState.dateTo) {
+        alert('"From" date cannot be later than "To" date.');
+        return;
+    }
+
     applyFiltersSilent();
+    renderFilterBadge();
     if (window.innerWidth <= 992) closeFilterPanel();
 }
 
 function resetFilters() {
     document.querySelectorAll('.status-filter').forEach(cb => cb.checked = false);
-    if (transportSelect) transportSelect.value = 'All';
-    if (entryPointSelect) entryPointSelect.value = 'All';
-    filterState = { status: [], transport: 'All', entryPoint: 'All' };
+    resetSelect2(transportSelect);
+    resetSelect2(entryPointSelect);
+    if (dateFromInput) dateFromInput.value = '';
+    if (dateToInput) dateToInput.value = '';
+    filterState = { status: [], transport: [], entryPoint: [], dateFrom: '', dateTo: '' };
     filteredApps = [...applications];
+    filteredApps = sortApplications(filteredApps, sortState);
     renderTable(filteredApps);
+    renderFilterBadge();
     if (window.innerWidth <= 992) closeFilterPanel();
 }
 
 // ============================================================
-// 8. FILTER PANEL TOGGLE
+// 10. FILTER PANEL TOGGLE
 // ============================================================
 function toggleFilterPanel() {
     if (filterPanel.classList.contains('show')) {
@@ -348,6 +522,13 @@ function openFilterPanel() {
     if (filterOverlay && window.innerWidth <= 992) {
         filterOverlay.classList.add('show');
     }
+    // Select2 mis-measures width when initialized inside a collapsed/hidden
+    // panel — re-trigger a resize-safe refresh once it's visible.
+    if (typeof $ !== 'undefined' && $.fn.select2) {
+        setTimeout(() => {
+            $('#filterTransport, #filterEntryPoint').trigger('change.select2');
+        }, 50);
+    }
 }
 
 function closeFilterPanel() {
@@ -356,21 +537,17 @@ function closeFilterPanel() {
 }
 
 // ============================================================
-// 9. OFFCANVAS PREVIEW (simple)
+// 11. OFFCANVAS PREVIEW (simple)
 // ============================================================
 function openPreview(id) {
     const app = applications.find(a => a.id === id);
     if (!app) return;
 
-    // Update offcanvas header
     const headerTitle = document.querySelector('#applicationPreview .offcanvas-header h5');
     const headerSmall = document.querySelector('#applicationPreview .offcanvas-header small.text-muted');
     if (headerTitle) headerTitle.innerHTML = `Application <small class="text-muted">${app.id}</small>`;
     if (headerSmall) headerSmall.innerText = app.id;
 
-  
-
-    // Show offcanvas
     if (!offcanvasInstance) {
         offcanvasInstance = new bootstrap.Offcanvas(previewOffcanvas);
     }
@@ -378,23 +555,25 @@ function openPreview(id) {
 }
 
 // ============================================================
-// 10. INIT
+// 12. INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', function() {
     loadDummyData();
     renderSummary();
-    filteredApps = [...applications];
+    filteredApps = sortApplications([...applications], sortState);
     renderTable(filteredApps);
 
-    // Filter panel events (safely)
+    initSelect2();
+    renderFilterBadge(); // starts at 0 active filters
+
     if (openFilterBtn) openFilterBtn.addEventListener('click', toggleFilterPanel);
     if (closeFilterBtn) closeFilterBtn.addEventListener('click', closeFilterPanel);
     if (filterOverlay) filterOverlay.addEventListener('click', closeFilterPanel);
     if (applyFilterBtn) applyFilterBtn.addEventListener('click', applyFilters);
     if (clearFilterBtn) clearFilterBtn.addEventListener('click', resetFilters);
 
-    // Search
     bindSearch();
+    bindSort();
 
     console.log('✅ Import Permit Application UI ready.');
 });

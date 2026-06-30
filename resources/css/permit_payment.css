@@ -1,265 +1,791 @@
-/* ---------------------------------------------------------------
-   paymentSelection.css — custom styles for the payment selection view
-   Extends the existing ipv-* classes from the main app.
-   --------------------------------------------------------------- */
+/* ============================================================
+   Applicant Payment Page
+   ============================================================ */
 
-/* ---- Sticky footer bar ---- */
-.ps-sticky-bar {
-    position: sticky;
-    bottom: 0;
-    z-index: 50;
-    background: #fff;
-    border-top: 1px solid var(--gray-3, #e2e8f0);
-    padding: 0.75rem 1.5rem;
+.apy-wrapper {
+    font-family: var(--default-font-family);
+    color: var(--default-text-color);
+    max-width: 1100px;
+    margin: 0 auto;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.75rem 1.5rem;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
-    border-radius: 0 0 12px 12px;
-    margin-top: 1.5rem;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding-bottom: 3rem;
+    position: relative;
 }
 
-.ps-sticky-bar .ps-summary {
+/* ============================================================
+   Hero
+   ============================================================ */
+
+.apy-hero {
     display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 1.1rem;
+    background: var(--custom-white);
+    border: 1px solid var(--default-border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,.04);
 }
 
-.ps-sticky-bar .ps-stat {
-    display: flex;
-    align-items: baseline;
-    gap: 0.25rem;
-    font-size: 0.95rem;
-    color: var(--gray-6, #475569);
-}
-
-.ps-sticky-bar .ps-stat strong {
-    font-weight: 700;
-    color: var(--gray-8, #0f172a);
-    font-size: 1.1rem;
-}
-
-.ps-sticky-bar .ps-total {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: #0f172a;
-}
-
-.ps-sticky-bar .ps-total .currency {
-    font-weight: 400;
-    color: var(--gray-5, #94a3b8);
-    font-size: 0.9rem;
-    margin-right: 0.1rem;
-}
-
-.ps-sticky-bar .ps-btn-pay {
-    background: #0f172a;
-    color: #fff;
-    border: none;
-    padding: 0.6rem 2rem;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 0.95rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: background 0.2s, opacity 0.2s;
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-.ps-sticky-bar .ps-btn-pay:hover:not(:disabled) {
-    background: #1e293b;
-}
-
-.ps-sticky-bar .ps-btn-pay:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-.ps-sticky-bar .ps-btn-pay i {
-    font-size: 1.1rem;
-}
-
-/* ---- Custom checkbox inside permit header ---- */
-.ps-check {
-    flex-shrink: 0;
+.apy-hero-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 0.75rem;
+    background: rgba(var(--warning-rgb), .12);
+    color: rgb(var(--warning-rgb));
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 22px;
-    height: 22px;
-    border: 2px solid var(--gray-4, #cbd5e1);
-    border-radius: 6px;
-    background: #fff;
-    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
-    cursor: pointer;
-    font-size: 14px;
-    color: #fff;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
 }
 
-.ps-check.is-checked {
-    background: #0f172a;
-    border-color: #0f172a;
-    box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.15);
-}
-
-.ps-check.is-checked::after {
-    content: "✓";
+.apy-hero-eyebrow {
+    font-size: 0.72rem;
     font-weight: 700;
-    line-height: 1;
+    color: rgb(var(--warning-rgb));
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 0.2rem;
 }
 
-.ps-check-wrapper {
+.apy-hero-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin: 0 0 0.35rem 0;
+    color: var(--default-text-color);
+}
+
+.apy-hero-sub {
+    font-size: 0.84rem;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.55;
+}
+
+/* ============================================================
+   Reference strip
+   ============================================================ */
+
+.apy-ref-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    background: var(--custom-white);
+    border: 1px solid var(--default-border);
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,.04);
+}
+
+.apy-ref-cell {
+    padding: 0.9rem 1.1rem;
+    border-right: 1px solid var(--default-border);
+}
+
+.apy-ref-cell:last-child { border-right: none; }
+
+.apy-ref-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 0.25rem;
+}
+
+.apy-ref-value {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--default-text-color);
+}
+
+/* ============================================================
+   Generic card shell (Importer/Exporter, Order Items, Payment Method)
+   ============================================================ */
+
+.apy-card {
+    background: var(--custom-white);
+    border: 1px solid var(--default-border);
+    border-radius: 1rem;
+    padding: 1.25rem 1.4rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,.04);
+}
+
+.apy-card-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--default-text-color);
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    margin-bottom: 0.4rem;
+}
+
+.apy-card-hint {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin: 0 0 1rem 0;
+}
+
+/* ============================================================
+   Importer / Exporter
+   ============================================================ */
+
+.apy-parties {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 0.75rem;
+}
+
+.apy-party-card {
+    border: 1px solid var(--default-border);
+    border-radius: 0.85rem;
+    padding: 1rem 1.1rem;
+}
+
+.apy-party-header {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-bottom: 0.7rem;
+}
+
+.apy-party-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--gray-6);
+    color: #fff;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
-    cursor: pointer;
 }
 
-.ps-check-wrapper input[type="checkbox"] {
-    display: none;
+.apy-party-card:nth-child(2) .apy-party-avatar { background: rgb(var(--secondary-rgb)); }
+
+.apy-party-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--default-text-color);
 }
 
-/* ---- Permit header adjustments ---- */
-.ipv-permit-header {
+.apy-party-sub {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.apy-party-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--default-text-color);
+    padding: 0.25rem 0;
+}
+
+.apy-party-row i {
+    color: var(--gray-5);
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   Two-column layout
+   ============================================================ */
+
+.apy-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.apy-left-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+
+/* ============================================================
+   Order items (read-only)
+   ============================================================ */
+
+.apy-order-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.apy-order-row {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    background: var(--gray-1);
+    border: 1px solid var(--default-border);
+    border-radius: 0.85rem;
+    padding: 0.85rem 1rem;
+}
+
+.apy-order-row-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 0.5rem;
+    background: var(--primary01);
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+.apy-order-row-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.apy-order-row-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--default-text-color);
+    margin-bottom: 0.2rem;
+}
+
+.apy-order-row-meta {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.apy-permit-no {
+    font-weight: 700;
+    color: var(--default-text-color);
+}
+
+.apy-meta-sep {
+    color: var(--gray-4);
+}
+
+.apy-order-row-fee {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--default-text-color);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   Payment method selector (main card, not the sticky summary)
+   ============================================================ */
+
+.apy-payment-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.apy-pm-option {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    border: 1px solid var(--default-border);
+    border-radius: 0.85rem;
     padding: 0.75rem 1rem;
+    transition: border-color .15s, background .15s, box-shadow .15s;
+}
+
+.apy-pm-option:hover {
+    border-color: var(--primary03);
+    background: var(--primary005, rgba(var(--primary-rgb), .03));
+}
+
+.apy-pm-option.is-selected {
+    border-color: var(--primary-color);
+    background: var(--primary005, rgba(var(--primary-rgb), .04));
+    box-shadow: 0 0 0 1px var(--primary-color);
+}
+
+.apy-pm-option-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
     cursor: pointer;
     user-select: none;
-    border-radius: 8px;
-    transition: background 0.15s;
-    flex-wrap: wrap;
 }
 
-.ipv-permit-header:hover {
-    background: var(--gray-1, #f8fafc);
+.apy-pm-radio {
+    accent-color: var(--primary-color);
+    flex-shrink: 0;
+    width: 17px;
+    height: 17px;
+    cursor: pointer;
 }
 
-.ipv-permit-header .ipv-permit-id-group {
-    flex: 1 1 180px;
-    min-width: 120px;
-}
-
-.ipv-permit-header .ipv-permit-id {
-    font-weight: 600;
-    font-size: 0.95rem;
-}
-
-.ipv-permit-header .ipv-permit-name {
-    font-size: 0.8rem;
-    color: var(--gray-6, #475569);
-}
-
-.ipv-permit-header .ipv-permit-value {
-    font-weight: 600;
-    font-size: 0.9rem;
-    color: #0f172a;
-    margin-left: auto;
-    white-space: nowrap;
-}
-
-.ipv-permit-header .ipv-badge {
-    margin-left: 0.5rem;
+.apy-pm-logo {
+    height: 28px;
+    max-width: 90px;
+    object-fit: contain;
     flex-shrink: 0;
 }
 
-.ipv-permit-header .ipv-chevron {
-    margin-left: 0.25rem;
-    flex-shrink: 0;
-    transition: transform 0.2s;
+.apy-pm-name {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--default-text-color);
 }
 
-.ipv-permit-item.is-open .ipv-chevron {
-    transform: rotate(180deg);
-}
-
-/* ---- Price chip ---- */
-.ps-price-chip {
-    display: inline-flex;
+.apy-pm-info-btn {
+    background: var(--gray-1);
+    border: 1px solid var(--default-border);
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
     align-items: center;
-    background: var(--gray-2, #f1f5f9);
-    padding: 0.15rem 0.7rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--gray-7, #334155);
-    white-space: nowrap;
+    justify-content: center;
+    color: var(--gray-6);
+    cursor: pointer;
     flex-shrink: 0;
 }
 
-.ps-price-chip .currency {
-    font-weight: 400;
-    color: var(--gray-5, #94a3b8);
-    margin-right: 0.1rem;
+.apy-pm-info-btn:hover {
+    background: var(--gray-2);
+    color: var(--primary-color);
 }
 
-/* ---- Selected state highlight ---- */
-.ipv-permit-item.is-selected .ipv-permit-header {
-    background: var(--gray-1, #f8fafc);
-    border-left: 3px solid #0f172a;
-    padding-left: calc(1rem - 3px);
+/* ============================================================
+   How-to-pay modal
+   ============================================================ */
+
+.apy-howto-modal-content {
+    border-radius: 1rem;
+    border: none;
 }
 
-/* ---- Responsive ---- */
-@media (max-width: 640px) {
-    .ps-sticky-bar {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 0.75rem 1rem;
-    }
-    .ps-sticky-bar .ps-summary {
-        justify-content: center;
-    }
-    .ps-sticky-bar .ps-btn-pay {
-        justify-content: center;
-        width: 100%;
-    }
-    .ipv-permit-header {
-        gap: 0.5rem;
-        padding: 0.6rem 0.75rem;
-    }
-    .ipv-permit-header .ipv-permit-id-group {
-        flex: 1 1 100px;
-        min-width: 80px;
-    }
-    .ipv-permit-header .ipv-permit-value {
-        font-size: 0.8rem;
-    }
+.apy-howto-logo {
+    height: 26px;
+    object-fit: contain;
 }
 
-/* ---- Reuse existing utility classes from your main CSS ---- */
-/* These are included in your main app styles, but we keep them here
-   for completeness in case the main styles are not loaded. */
-.ipv-empty-state {
-    padding: 2rem 1rem;
-    text-align: center;
-    color: var(--gray-5, #94a3b8);
+.apy-howto-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
-.ipv-empty-state i {
-    font-size: 2rem;
-    display: block;
+
+.apy-howto-step {
+    display: flex;
+    gap: 0.9rem;
+}
+
+.apy-howto-step-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.apy-howto-step-body {
+    flex: 1;
+}
+
+.apy-howto-step-text {
+    font-size: 0.86rem;
+    color: var(--default-text-color);
     margin-bottom: 0.5rem;
+    line-height: 1.5;
 }
-.ipv-permit-body .ipv-permit-subsection-title:first-of-type {
-    margin-top: 0;
+
+.apy-howto-step-image {
+    border: 1.5px dashed var(--gray-4);
+    border-radius: 0.6rem;
+    background: var(--gray-1);
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--text-muted);
+    font-size: 0.74rem;
 }
-.detail-row {
+
+.apy-howto-step-image i {
+    font-size: 1.4rem;
+    color: var(--gray-4);
+}
+
+/* ============================================================
+   Summary column (sticky)
+   ============================================================ */
+
+.apy-summary-col {
+    position: sticky;
+    top: 1rem;
+}
+
+.apy-summary-card {
+    background: var(--custom-white);
+    border: 1px solid var(--default-border);
+    border-radius: 1rem;
+    padding: 1.25rem;
+    box-shadow: 0 4px 24px rgba(0,0,0,.06);
+}
+
+.apy-summary-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--default-text-color);
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid var(--default-border);
+}
+
+.apy-summary-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 0.75rem;
+}
+
+.apy-summary-line {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--gray-1);
+}
+
+.apy-summary-line:last-child { border-bottom: none; }
+
+.apy-summary-line-left { flex: 1; min-width: 0; }
+
+.apy-summary-permit-no {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--default-text-color);
+}
+
+.apy-summary-permit-name {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
+    margin-top: 0.1rem;
+}
+
+.apy-summary-line-fee {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--default-text-color);
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.apy-summary-divider {
+    height: 1px;
+    background: var(--default-border);
+    margin: 0.75rem 0;
+}
+
+.apy-totals {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 1.1rem;
+}
+
+.apy-total-row {
     display: flex;
     justify-content: space-between;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid var(--gray-2, #f1f5f9);
+    align-items: center;
+    font-size: 0.82rem;
+    color: var(--text-muted);
 }
-.detail-label {
-    color: var(--gray-6, #475569);
-    font-weight: 500;
+
+.apy-total-row span:last-child {
+    font-weight: 600;
+    color: var(--default-text-color);
 }
-.detail-value {
-    color: var(--gray-8, #0f172a);
+
+.apy-total-row.is-grand {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--default-text-color);
+    padding-top: 0.6rem;
+    border-top: 2px solid var(--default-border);
+    margin-top: 0.25rem;
+}
+
+.apy-total-row.is-grand span:last-child {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+}
+
+/* ============================================================
+   Pay button
+   ============================================================ */
+
+.apy-btn-pay {
+    width: 100%;
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 30px;
+    padding: 0.7rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: opacity .15s;
+    margin-bottom: 0.75rem;
+}
+
+.apy-btn-pay:hover { opacity: 0.88; }
+
+.apy-secure-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+.apy-secure-note i { color: rgb(var(--success-rgb)); }
+
+/* ============================================================
+   Confirm modal
+   ============================================================ */
+
+.apy-confirm-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.55rem 0;
+    font-size: 0.84rem;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--gray-1);
+}
+
+.apy-confirm-row:last-child { border-bottom: none; }
+.apy-confirm-row strong { color: var(--default-text-color); }
+
+.apy-confirm-row.is-total {
+    padding-top: 0.75rem;
+    margin-top: 0.25rem;
+    border-top: 2px solid var(--default-border);
+    border-bottom: none;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--default-text-color);
+}
+
+.apy-confirm-total {
+    color: var(--primary-color) !important;
+    font-size: 1.05rem;
+}
+
+.apy-confirm-permits {
+    background: var(--gray-1);
+    border-radius: 0.65rem;
+    padding: 0.6rem 0.8rem;
+    margin: 0.35rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.apy-confirm-permit-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--default-text-color);
+}
+
+.apy-confirm-permit-no {
+    font-weight: 700;
+    flex-shrink: 0;
+    min-width: 70px;
+}
+
+.apy-confirm-permit-row span:nth-child(2) {
+    flex: 1;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.apy-confirm-fee { font-weight: 600; flex-shrink: 0; }
+
+.apy-confirm-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    background: rgba(var(--warning-rgb), .07);
+    border: 1px solid rgba(var(--warning-rgb), .2);
+    border-radius: 0.6rem;
+    padding: 0.65rem 0.85rem;
+    margin-top: 1rem;
+    line-height: 1.5;
+}
+
+.apy-confirm-note i { color: rgb(var(--warning-rgb)); flex-shrink: 0; margin-top: 0.1rem; }
+
+.apy-btn-secondary {
+    background: var(--custom-white);
+    border: 1px solid var(--default-border);
+    border-radius: 30px;
+    padding: 0.5rem 1.1rem;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--default-text-color);
+    cursor: pointer;
+    transition: background .15s;
+}
+
+.apy-btn-secondary:hover { background: var(--gray-1); }
+
+.apy-btn-pay-confirm {
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 30px;
+    padding: 0.55rem 1.3rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    transition: opacity .15s;
+}
+
+.apy-btn-pay-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+.apy-btn-pay-confirm:not(:disabled):hover { opacity: 0.88; }
+
+.apy-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    display: inline-block;
+    animation: apy-spin .65s linear infinite;
+}
+
+@keyframes apy-spin { to { transform: rotate(360deg); } }
+
+/* ============================================================
+   Success overlay
+   ============================================================ */
+
+.apy-success-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 1.5rem;
+}
+
+.apy-success-card {
+    background: var(--custom-white);
+    border-radius: 1.25rem;
+    padding: 2.5rem 2rem;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 24px 60px rgba(0,0,0,.18);
+}
+
+.apy-success-icon { font-size: 3rem; color: rgb(var(--success-rgb)); margin-bottom: 1rem; line-height: 1; }
+.apy-success-title { font-size: 1.3rem; font-weight: 700; color: var(--default-text-color); margin-bottom: 0.5rem; }
+.apy-success-sub { font-size: 0.84rem; color: var(--text-muted); margin-bottom: 0.75rem; line-height: 1.55; }
+
+.apy-success-ref {
+    display: inline-block;
+    background: var(--gray-1);
+    border: 1px solid var(--default-border);
+    border-radius: 0.5rem;
+    padding: 0.4rem 0.85rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--default-text-color);
+    margin-bottom: 1.5rem;
+    letter-spacing: 0.3px;
+}
+
+.apy-btn-done {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 30px;
+    padding: 0.65rem 1.4rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity .15s;
+}
+
+.apy-btn-done:hover { opacity: 0.88; color: #fff; }
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+
+@media (max-width: 991.98px) {
+    .apy-layout { grid-template-columns: 1fr; }
+    .apy-summary-col { position: static; order: -1; }
+    .apy-summary-card { box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+    .apy-parties { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 767.98px) {
+    .apy-ref-strip { grid-template-columns: repeat(2, 1fr); }
+    .apy-ref-cell { border-right: none; border-bottom: 1px solid var(--default-border); }
+    .apy-ref-cell:nth-child(odd) { border-right: 1px solid var(--default-border); }
+    .apy-ref-cell:last-child { border-bottom: none; }
+    .apy-hero { flex-direction: column; }
+    .apy-pm-option { flex-wrap: wrap; }
+}
+
+@media (max-width: 480px) {
+    .apy-success-card { padding: 2rem 1.25rem; }
 }

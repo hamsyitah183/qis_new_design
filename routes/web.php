@@ -340,12 +340,16 @@ Route::middleware(['auth.any'])->group(function () {
 
     // TEST NEW DESIGN
     Route::get('/apply_import/test', [ApplicationController::class, 'applyTest']);
+    Route::get('/apply_import/bahasa/test', [ApplicationController::class, 'applyTestBahasa']);
     Route::get('/view_import/test', [ApplicationController::class, 'viewapplicationTest']);
     Route::get('/summary_import/test', [ApplicationController::class, 'summaryTest']);
     Route::get('/list_import/test', [ApplicationController::class, 'listTest']);
     Route::get('/verify_import/test', [ApplicationController::class, 'verifyTest']);
     Route::get('/approve_permit/test', [ApplicationController::class, 'approveTest']);
     Route::get('/payment_permit/test', [ApplicationController::class, 'paymentTest']);
+    Route::get('/order_payment/test', [ApplicationController::class, 'orderTest']);
+    Route::get('/receipt_payment/test', [ApplicationController::class, 'receiptTest']);
+    Route::get('/control_panel/test', [ApplicationController::class, 'controlPanelTest']);
 
     Route::get('/view_consignment/{uuid}', [ConsignmentApplicationController::class, 'viewapplication'])->name('consignment.view');
     Route::get('/edit_consignment/{uuid}', [ConsignmentApplicationController::class, 'editApplication'])->name('consignment.edit');

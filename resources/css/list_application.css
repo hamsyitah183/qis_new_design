@@ -26,7 +26,7 @@
     padding: 16px 18px;
     transition: 0.2s ease;
     height: 100%;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
 }
 .ipv-summary-card small {
     color: #6b7a8f;
@@ -43,7 +43,7 @@
 }
 .ipv-summary-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
     border-color: #d0d8e3;
 }
 
@@ -65,10 +65,13 @@
     top: 20px;
     height: fit-content;
     overflow: hidden;
-    transition: width 0.3s ease, min-width 0.3s ease, opacity 0.2s ease;
+    transition:
+        width 0.3s ease,
+        min-width 0.3s ease,
+        opacity 0.2s ease;
     padding: 0;
     opacity: 0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
 .ipv-filter-panel.show {
     width: 280px;
@@ -141,7 +144,7 @@
 }
 .ipv-filter-body .form-select:focus {
     border-color: #4a6cf7;
-    box-shadow: 0 0 0 3px rgba(74,108,247,0.1);
+    box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.1);
 }
 .ipv-filter-body .btn-primary {
     background-color: #4a6cf7;
@@ -180,7 +183,7 @@
         padding: 0 !important;
         opacity: 1 !important;
         border-radius: 0 16px 16px 0;
-        box-shadow: 8px 0 40px rgba(0,0,0,0.12);
+        box-shadow: 8px 0 40px rgba(0, 0, 0, 0.12);
         overflow-y: auto;
         transition: left 0.3s ease;
         z-index: 1060;
@@ -194,7 +197,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0,0,0,0.3);
+        background: rgba(0, 0, 0, 0.3);
         z-index: 1055;
         opacity: 0;
         visibility: hidden;
@@ -222,7 +225,7 @@
     border-radius: 16px;
     padding: 16px 18px 18px;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
 .ipv-toolbar {
     display: flex;
@@ -271,7 +274,7 @@
 }
 .ipv-toolbar .input-group .form-control:focus {
     border-color: #4a6cf7;
-    box-shadow: 0 0 0 3px rgba(74,108,247,0.08);
+    box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.08);
 }
 
 /* ----- TABLE ----- */
@@ -391,7 +394,7 @@
     width: 70% !important;
     max-width: 900px;
     border-left: none;
-    box-shadow: -8px 0 40px rgba(0,0,0,0.06);
+    box-shadow: -8px 0 40px rgba(0, 0, 0, 0.06);
 }
 .offcanvas-header {
     border-bottom: 1px solid #f0f3f8;
@@ -456,4 +459,189 @@
     .ipv-action-group {
         gap: 2px;
     }
+}
+
+/* ----- SORT DROPDOWN ----- */
+.ipv-sort-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #5a6e84;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    margin: 0;
+}
+
+.ipv-sort-select {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    padding: 6px 12px;
+    background-color: #fafcff;
+    color: #2d3f57;
+    width: auto;
+    min-width: 190px;
+}
+
+.ipv-sort-select:focus {
+    border-color: #4a6cf7;
+    box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.08);
+}
+
+/* ----- DATE RANGE FILTER ----- */
+.ipv-date-sublabel {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #8a9aa8;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.ipv-filter-body input[type="date"] {
+    border-radius: 8px;
+    border-color: #e2e8f0;
+    font-size: 0.82rem;
+    padding: 7px 10px;
+    background-color: #fafcff;
+    width: 100%;
+}
+
+.ipv-filter-body input[type="date"]:focus {
+    border-color: #4a6cf7;
+    box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.1);
+}
+
+/* ----- Toolbar responsive: stack sort under search row on small screens ----- */
+@media (max-width: 768px) {
+    .ipv-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .ipv-toolbar .d-flex {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .ipv-sort-select {
+        flex: 1;
+        min-width: 0;
+    }
+}
+
+/* ----- SELECT2 OVERRIDES — match the existing filter panel styling ----- */
+.ipv-filter-body .select2-container {
+    width: 100% !important;
+    font-family: var(--default-font-family);
+    font-family: var(--font-family) !important;
+}
+
+.ipv-filter-body .select2-container--default .select2-selection--multiple {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background-color: #fafcff !important;
+    min-height: 38px;
+    padding: 2px 4px;
+}
+
+.ipv-filter-body
+    .select2-container--default.select2-container--focus
+    .select2-selection--multiple {
+    /* background-color: rgba(var(--primary-rgb), .9) !important; */
+    box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.1);
+    font-family: var(--default-font-family);
+}
+
+.ipv-filter-body
+    .select2-container--default
+    .select2-selection--multiple
+    .select2-selection__choice {
+    background-color: #dbe4ff !important;
+    border: none;
+    border-radius: 6px;
+    color: rgba(var(--primary-rgb), 0.9) !important;
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 2px 6px 2px 8px;
+    margin-top: 5px;
+}
+
+.ipv-filter-body
+    .select2-container--default
+    .select2-selection--multiple
+    .select2-selection__choice__remove {
+    color: rgba(var(--primary-rgb), 0.9) !important;
+    margin-right: 4px;
+    border: none;
+}
+
+.ipv-filter-body
+    .select2-container--default
+    .select2-selection--multiple
+    .select2-selection__choice__remove:hover {
+    color: #b33636 !important;
+    background: transparent;
+}
+
+.ipv-filter-body
+    .select2-container--default
+    .select2-search--inline
+    .select2-search__field {
+    font-size: 0.82rem;
+}
+
+.ipv-filter-body .select2-dropdown {
+    border-color: #e2e8f0 !important;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    font-size: 0.85rem;
+}
+
+.ipv-filter-body
+    .select2-container--default
+    .select2-results__option--highlighted[aria-selected] {
+    background-color: #4a6cf7 !important;
+}
+
+.ipv-filter-body
+    .select2-container--default
+    .select2-results__option[aria-selected="true"] {
+    background-color: #edf2f7 !important;
+}
+
+/* ----- ACTIVE FILTER BADGE (on the toolbar "Filter" button) -----
+   Small numbered circle pinned to the top-right corner of #openFilter,
+   shown only while at least one filter group (status / transport /
+   entry point / date range) is currently applied. The button itself
+   needs `position: relative` for the badge's absolute positioning to
+   anchor correctly — its existing .btn-light.border rules already set
+   display:inline-flex, so this just layers on top of that. */
+.ipv-toolbar #openFilter {
+    position: relative;
+}
+
+.ipv-toolbar #openFilter.has-active-filters {
+    border-color: #4a6cf7 !important;
+    color: #2d4bc0;
+    background: #eef2ff;
+}
+
+.ipv-filter-badge {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: #e8453c;
+    color: #ffffff;
+    font-size: 0.66rem;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+    box-shadow: 0 0 0 2px #ffffff;
 }

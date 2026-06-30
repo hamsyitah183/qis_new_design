@@ -57,6 +57,7 @@
     font-size: 0.82rem;
     font-weight: 500;
     color: var(--text-muted);
+    text-wrap: nowrap;
 }
 
 .ipa-draft-dot {
@@ -107,6 +108,10 @@
     font-weight: 500;
     color: var(--default-text-color);
     margin-bottom: 0.35rem;
+}
+
+.ipa-field-fullrow {
+    width: 100%;
 }
 
 .ipa-required {
@@ -963,4 +968,66 @@
     .ipa-oc-nav { min-width: 150px; width: 150px; }
     .ipa-oc-info-grid { grid-template-columns: 1fr; }
     .ipa-modal-item-summary { grid-template-columns: 1fr; }
+}
+
+
+.ipa-search-wrapper{
+    position:relative;
+}
+
+.ipa-search-result{
+
+    position:absolute;
+    top:100%;
+    left:0;
+    right:0;
+
+    background:#fff;
+
+    border:1px solid #ddd;
+
+    border-radius:10px;
+
+    max-height:260px;
+
+    overflow:auto;
+
+    z-index:1000;
+
+    display:none;
+
+    margin-top:5px;
+
+    box-shadow:0 10px 25px rgba(0,0,0,.08);
+
+}
+
+.ipa-search-item{
+
+    padding:12px 15px;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+}
+
+.ipa-search-item:hover{
+
+    background:#f4f7fb;
+
+}
+
+.ipa-search-item small{
+
+    color:#666;
+
+}
+
+.ipa-add-new{
+
+    color:#198754;
+
+    font-weight:600;
+
 }

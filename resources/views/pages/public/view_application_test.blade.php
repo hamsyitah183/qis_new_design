@@ -70,7 +70,7 @@
         <!-- ============================================================ -->
         <!-- LEFT: Sidebar                                                  -->
         <!-- ============================================================ -->
-        <div class="col-xl-4 col-lg-5">
+        <div class="col-xl-4 col-lg-5" style = "height: fit-content">
             <div class="ipv-side-card">
 
                 <div class="ipv-tags" id="ipvTags"></div>

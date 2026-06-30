@@ -1,6 +1,6 @@
 @extends('pages.app')
 
-@section('pageName', 'Payment Selection')
+@section('pageName', 'Select Items for Payment')
 
 @push('scripts')
     @vite(['resources/js/pages/importPermit/userPaymentSelection.js'])
@@ -8,19 +8,20 @@
 
 @section('breadcrumb')
     <x-breadcrumb :items="[
-        ['label' => 'Dashboard', 'url' => '/'],
-        ['label' => 'My Applications', 'url' => '/applications'],
-        ['label' => 'Application: IP-2025-00456', 'url' => '#'],
-    ]" title="Payment Selection">
+        ['label' => 'Dashboard',                    'url' => '/'],
+        ['label' => 'My Applications',              'url' => '/public/view_import_permit'],
+        ['label' => 'Application: IP-2025-00456',   'url' => '#'],
+    ]" title="Select Items for Payment">
     </x-breadcrumb>
 @endsection
 
 @section('content')
+
     <div class="ipv-wrapper row g-4">
 
-        <!-- ============================================================
-        LEFT: Sidebar
-        ============================================================ -->
+        <!-- ============================================================ -->
+        <!-- LEFT: Sidebar                                                  -->
+        <!-- ============================================================ -->
         <div class="col-xl-4 col-lg-5">
             <div class="ipv-side-card">
 
@@ -39,27 +40,45 @@
                     </button>
                 </div>
 
-                <!-- Progress summary -->
-                <div class="otr-progress-box" id="psProgressBox">
-                    <div class="otr-progress-title">Permit Summary</div>
-                    <div class="otr-progress-counts" id="psProgressCounts">
+                <!-- Payment progress summary box (reuses otr-progress-box styling) -->
+                <div class="otr-progress-box">
+                    <div class="otr-progress-title">Payment Selection</div>
+                    <div class="otr-progress-counts">
                         <div class="otr-count-cell">
                             <div class="otr-count-num" id="psCountTotal">0</div>
-                            <div class="otr-count-label">Total Items</div>
+                            <div class="otr-count-label">Total</div>
                         </div>
                         <div class="otr-count-cell">
                             <div class="otr-count-num is-approved" id="psCountSelected">0</div>
                             <div class="otr-count-label">Selected</div>
                         </div>
                         <div class="otr-count-cell">
-                            <div class="otr-count-num" id="psCountTotalPrice">RM 0</div>
-                            <div class="otr-count-label">Total Payable</div>
+                            <div class="otr-count-num is-rejected" id="psCountRejected">0</div>
+                            <div class="otr-count-label">Rejected</div>
                         </div>
                     </div>
                     <div class="otr-progress-track">
                         <div class="otr-progress-fill is-approved" id="psFillSelected" style="width:0%"></div>
                     </div>
-                    <div class="otr-progress-hint" id="psProgressHint">Tick the items you wish to pay for.</div>
+                    <div class="otr-progress-hint" id="psProgressHint">
+                        Tick the approved items you wish to pay for.
+                    </div>
+                </div>
+
+                <!-- Fee summary -->
+                <div class="ps-fee-summary-box" id="psFeeBox">
+                    <div class="ps-fee-row">
+                        <span>Items selected</span>
+                        <span id="psFeeCount">0</span>
+                    </div>
+                    <div class="ps-fee-row">
+                        <span>Fee per item</span>
+                        <span>RM 15.00</span>
+                    </div>
+                    <div class="ps-fee-row is-total">
+                        <span>Total payable</span>
+                        <span id="psFeeTotalLabel">RM 0.00</span>
+                    </div>
                 </div>
 
                 <div class="ipv-value-box">
@@ -89,9 +108,9 @@
             </div>
         </div>
 
-        <!-- ============================================================
-        RIGHT: Main panel
-        ============================================================ -->
+        <!-- ============================================================ -->
+        <!-- RIGHT: Main panel                                              -->
+        <!-- ============================================================ -->
         <div class="col-xl-8 col-lg-7">
             <div class="ipv-main-card">
 
@@ -102,7 +121,7 @@
                         <strong>Import Permit</strong>
                         <span class="ipv-status-sep">|</span>
                         <span class="ipv-status-eyebrow">Status:</span>
-                        <strong id="psStatusLabel">Technical Review</strong>
+                        <strong id="psStatusLabel">—</strong>
                     </div>
                     <div class="ipv-status-duration" id="psStatusDuration"></div>
                 </div>
@@ -110,7 +129,7 @@
                 <!-- Stage stepper -->
                 <div class="ipv-stage-stepper" id="psStageStepper"></div>
 
-                <!-- Officer / SLA row -->
+                <!-- Info row -->
                 <div class="ipv-info-row">
                     <div class="ipv-info-item">
                         <div class="ipv-info-icon"><i class="bi bi-person-badge"></i></div>
@@ -122,7 +141,7 @@
                     <div class="ipv-info-item">
                         <div class="ipv-info-icon"><i class="bi bi-hourglass-split"></i></div>
                         <div>
-                            <div class="ipv-info-label">Next Action / SLA</div>
+                            <div class="ipv-info-label">Payment Due</div>
                             <div class="ipv-info-value" id="psSlaDue">—</div>
                         </div>
                     </div>
@@ -130,60 +149,77 @@
 
                 <!-- Tabs -->
                 <div class="ipv-tabnav" role="tablist">
-                    <button type="button" class="ipv-tabnav-item is-active" data-ps-tab="permits" role="tab">
-                        Permit List <span class="ipv-tab-count" id="psPermitCount">0</span>
+                    <button type="button" class="ipv-tabnav-item is-active"
+                        data-ipv-tab="permits" role="tab">
+                        Permit List
+                        <span class="ipv-tab-count" id="psPermitCount">0</span>
                     </button>
-                    <button type="button" class="ipv-tabnav-item" data-ps-tab="transport" role="tab">
+                    <button type="button" class="ipv-tabnav-item"
+                        data-ipv-tab="transport" role="tab">
                         Transportation Details
                     </button>
-                    <button type="button" class="ipv-tabnav-item" data-ps-tab="condition" role="tab">
+                    <button type="button" class="ipv-tabnav-item"
+                        data-ipv-tab="condition" role="tab">
                         Condition
                     </button>
-                    <button type="button" class="ipv-tabnav-item" data-ps-tab="activity" role="tab">
+                    <button type="button" class="ipv-tabnav-item"
+                        data-ipv-tab="activity" role="tab">
                         Activity
                     </button>
                 </div>
 
                 <div class="ipv-tabbody">
 
-                    <!-- PERMIT LIST -->
-                    <div class="ipv-tabpane is-active" data-ps-pane="permits">
+                    <!-- ============================================ -->
+                    <!-- PERMIT LIST TAB                               -->
+                    <!-- ============================================ -->
+                    <div class="ipv-tabpane is-active" data-ipv-pane="permits">
+
+                        <!-- Context hint (same style as otr-review-hint) -->
                         <div class="otr-review-hint">
-                            <i class="bi bi-info-circle"></i>
-                            Review the permit items below. <strong>Tick</strong> each item you want to pay for.
-                            Each item costs <strong>RM 15.00</strong>.
+                            <i class="bi bi-credit-card"></i>
+                            Tick each <strong>approved</strong> permit you want to include in this
+                            payment. Rejected permits cannot be paid. Each item costs
+                            <strong>RM 15.00</strong>.
                         </div>
+
                         <div class="ipv-permit-accordion" id="psPermitAccordion"></div>
 
-                        <!-- Sticky footer -->
-                        <div class="ps-sticky-bar" id="psStickyBar">
-                            <div class="ps-summary">
-                                <span class="ps-stat">
-                                    Selected: <strong id="psSelectedCount">0</strong> item<span id="psSelectedPlural">s</span>
-                                </span>
-                                <span class="ps-total">
-                                    <span class="currency">RM</span>
-                                    <span class="amount" id="psTotalPayable">0.00</span>
-                                </span>
+                        <!-- ======================================== -->
+                        <!-- STICKY PAYMENT FOOTER BAR                -->
+                        <!-- ======================================== -->
+                        <div class="ps-pay-bar" id="psPayBar">
+                            <div class="ps-pay-bar-left">
+                                <div class="ps-pay-bar-count">
+                                    <span class="ps-pay-bar-num" id="psBarCount">0</span>
+                                    <span class="ps-pay-bar-label">item<span id="psBarPlural">s</span> selected</span>
+                                </div>
+                                <div class="ps-pay-bar-divider"></div>
+                                <div class="ps-pay-bar-total">
+                                    <span class="ps-pay-bar-currency">RM</span>
+                                    <span class="ps-pay-bar-amount" id="psBarTotal">0.00</span>
+                                </div>
                             </div>
-                            <button type="button" class="ps-btn-pay" id="psPayBtn" disabled>
-                                <i class="bi bi-credit-card"></i> Proceed to Payment
+                            <button type="button" class="ps-pay-bar-btn" id="psPayBtn" disabled>
+                                <i class="bi bi-credit-card"></i>
+                                Proceed to Payment
                             </button>
                         </div>
+
                     </div>
 
-                    <!-- Transport -->
-                    <div class="ipv-tabpane" data-ps-pane="transport">
+                    <!-- Transportation Details -->
+                    <div class="ipv-tabpane" data-ipv-pane="transport">
                         <div id="psTransportDetails"></div>
                     </div>
 
                     <!-- Condition -->
-                    <div class="ipv-tabpane" data-ps-pane="condition">
+                    <div class="ipv-tabpane" data-ipv-pane="condition">
                         <div id="psConditionList"></div>
                     </div>
 
                     <!-- Activity -->
-                    <div class="ipv-tabpane" data-ps-pane="activity">
+                    <div class="ipv-tabpane" data-ipv-pane="activity">
                         <div class="ipv-timeline" id="psActivityTimeline"></div>
                     </div>
 
@@ -193,9 +229,9 @@
 
     </div>
 
-    <!-- ============================================================
-    ATTACHMENT VIEWER OFFCANVAS
-    ============================================================ -->
+    <!-- ============================================================ -->
+    <!-- ATTACHMENT VIEWER OFFCANVAS                                    -->
+    <!-- ============================================================ -->
     <div class="offcanvas offcanvas-end" tabindex="-1" id="attachmentOffcanvas"
         aria-labelledby="attachmentOffcanvasLabel" style="width: 70%; max-width: 900px;">
         <div class="offcanvas-header border-bottom">
@@ -204,9 +240,13 @@
                 <span id="attachmentTitle">Attachment</span>
             </h5>
             <div class="d-flex align-items-center gap-2">
-                <button class="btn btn-sm btn-outline-secondary" id="attachmentPrevBtn"><i class="bi bi-chevron-left"></i></button>
+                <button class="btn btn-sm btn-outline-secondary" id="attachmentPrevBtn">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
                 <span class="badge bg-light text-dark" id="attachmentCounter">1 / 1</span>
-                <button class="btn btn-sm btn-outline-secondary" id="attachmentNextBtn"><i class="bi bi-chevron-right"></i></button>
+                <button class="btn btn-sm btn-outline-secondary" id="attachmentNextBtn">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
                 <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
             </div>
         </div>
@@ -214,21 +254,28 @@
             <div class="pd-nav flex-shrink-0">
                 <ul class="nav nav-pills flex-column" role="tablist">
                     <li class="nav-item">
-                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#attach-view"
-                            type="button" title="View"><i class="bi bi-eye"></i></button>
+                        <button class="nav-link active" data-bs-toggle="tab"
+                            data-bs-target="#attach-view" type="button" title="View">
+                            <i class="bi bi-eye"></i>
+                        </button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#attach-details"
-                            type="button" title="Details"><i class="bi bi-info-circle"></i></button>
+                        <button class="nav-link" data-bs-toggle="tab"
+                            data-bs-target="#attach-details" type="button" title="Details">
+                            <i class="bi bi-info-circle"></i>
+                        </button>
                     </li>
                 </ul>
             </div>
             <div class="tab-content flex-grow-1 p-3 overflow-auto">
                 <div class="tab-pane fade show active" id="attach-view">
                     <div id="attachmentViewer"
-                        style="min-height:400px; display:flex; align-items:center; justify-content:center;
-                                background:var(--gray-1, #f8fafc); border-radius:0.5rem;">
-                        <div class="text-muted"><i class="bi bi-file-earmark-fill fs-1"></i><br>Select an attachment</div>
+                        style="min-height:400px; display:flex; align-items:center;
+                               justify-content:center; background:var(--gray-1);
+                               border-radius:0.5rem;">
+                        <div class="text-muted">
+                            <i class="bi bi-file-earmark-fill fs-1"></i><br>Select an attachment
+                        </div>
                     </div>
                 </div>
                 <div class="tab-pane fade" id="attach-details">
@@ -238,9 +285,9 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    PERMIT DETAIL OFFCANVAS
-    ============================================================ -->
+    <!-- ============================================================ -->
+    <!-- PERMIT DETAIL OFFCANVAS                                        -->
+    <!-- ============================================================ -->
     <div class="offcanvas offcanvas-end" tabindex="-1" id="permitDetailOffcanvas"
         aria-labelledby="permitDetailOffcanvasLabel" style="width: 65%; max-width: 860px;">
         <div class="offcanvas-header border-bottom px-4">
@@ -258,12 +305,16 @@
             <div class="pd-nav flex-shrink-0">
                 <ul class="nav nav-pills flex-column" role="tablist">
                     <li class="nav-item">
-                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#pd-details"
-                            type="button" title="Details"><i class="bi bi-file-text"></i></button>
+                        <button class="nav-link active" data-bs-toggle="tab"
+                            data-bs-target="#pd-details" type="button" title="Details">
+                            <i class="bi bi-file-text"></i>
+                        </button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pd-activity"
-                            type="button" title="Activity"><i class="bi bi-clock-history"></i></button>
+                        <button class="nav-link" data-bs-toggle="tab"
+                            data-bs-target="#pd-activity" type="button" title="Activity">
+                            <i class="bi bi-clock-history"></i>
+                        </button>
                     </li>
                 </ul>
             </div>

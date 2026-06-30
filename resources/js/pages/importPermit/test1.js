@@ -577,7 +577,7 @@ function renderPermitAccordion() {
                     <span class="ipv-badge is-${cfg.color}">${escapeHtml(cfg.en)}</span>
                     <div class="ipv-permit-value">RM ${money(permit.value)}</div>
                     <button type="button" class="ipv-view-detail-btn" data-permit-number="${escapeHtml(permit.permit_number)}" title="View full details">
-                        <i class="bi bi-arrow-up-right-square"></i>
+                        <i class="bi bi-eye"></i>
                     </button>
                     <i class="bi bi-chevron-down ipv-chevron"></i>
                 </div>
