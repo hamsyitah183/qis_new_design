@@ -1323,3 +1323,183 @@
         width: 100%;
     }
 }
+
+/* ============================================================
+   Cleaner permit row — replaces the old crowded header
+   ============================================================ */
+
+.ps-row .ipv-permit-header.ps-header {
+    display: grid;
+    grid-template-columns: 32px 1fr auto auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+}
+
+.ps-header-main {
+    min-width: 0;
+}
+
+.ps-header-title-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.ps-header-title-row .ipv-permit-id {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+.ps-header-title-row .ipv-permit-name {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--default-text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ps-header-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    font-size: 0.76rem;
+}
+
+.ps-meta-sep { color: var(--gray-4); }
+
+.ps-meta-text { color: var(--text-muted); }
+
+/* Single status pill — replaces dual badge + fee chip clutter */
+.ps-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.18rem 0.6rem;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+.ps-status-pill.is-success { background: rgba(var(--success-rgb), .12); color: rgb(var(--success-rgb)); }
+.ps-status-pill.is-gray    { background: var(--gray-2);              color: var(--gray-6); }
+.ps-status-pill.is-danger  { background: rgba(var(--danger-rgb), .1); color: rgb(var(--danger-rgb)); }
+.ps-status-pill.is-warning { background: rgba(var(--warning-rgb), .15); color: #8a6d00; }
+.ps-status-pill.is-teal    { background: rgba(var(--teal-rgb), .12);   color: rgb(var(--teal-rgb)); }
+.ps-status-pill.is-orange  { background: rgba(var(--orange-rgb), .14); color: rgb(var(--orange-rgb)); }
+
+/* Selected state — quiet left accent bar instead of full box-shadow ring */
+.ipv-permit-item.ps-item-selected {
+    border-color: var(--default-border);
+    box-shadow: none;
+    border-left: 3px solid var(--primary-color);
+}
+
+.ipv-permit-item.ps-item-selected > .ipv-permit-header {
+    background: var(--primary005, rgba(var(--primary-rgb), .03));
+}
+
+/* Edit button on rejected rows */
+.ps-edit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: rgba(var(--warning-rgb), .12);
+    color: #8a6d00;
+    border: 1px solid rgba(var(--warning-rgb), .3);
+    border-radius: 20px;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s;
+}
+
+.ps-edit-btn:hover { background: rgba(var(--warning-rgb), .2); }
+
+.ps-edit-inline-btn {
+    margin-top: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: none;
+    border: none;
+    color: rgb(var(--danger-rgb));
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+}
+
+/* Edit modal reason box */
+.ps-edit-reason-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    background: rgba(var(--danger-rgb), .06);
+    border: 1px solid rgba(var(--danger-rgb), .2);
+    border-radius: 0.65rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.1rem;
+}
+
+.ps-edit-reason-box i {
+    color: rgb(var(--danger-rgb));
+    font-size: 1rem;
+    margin-top: 0.1rem;
+}
+
+.ps-edit-reason-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: rgb(var(--danger-rgb));
+}
+
+.ps-edit-reason-text {
+    font-size: 0.8rem;
+    color: var(--default-text-color);
+    margin-top: 0.15rem;
+}
+
+/* ============================================================
+   Pay bar — hidden until something is selected
+   ============================================================ */
+
+.ps-pay-bar {
+    display: none;
+}
+
+.ps-pay-bar.ps-pay-bar-visible {
+    display: flex;
+    animation: ps-bar-slide-up .25s ease;
+}
+
+@keyframes ps-bar-slide-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   Responsive tweaks for the new header grid
+   ============================================================ */
+
+@media (max-width: 640px) {
+    .ps-row .ipv-permit-header.ps-header {
+        grid-template-columns: 28px 1fr;
+        grid-template-rows: auto auto;
+    }
+
+    .ps-edit-btn,
+    .ipv-view-detail-btn,
+    .ipv-chevron {
+        grid-column: 2;
+        justify-self: end;
+    }
+}

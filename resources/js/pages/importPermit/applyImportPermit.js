@@ -1,26 +1,45 @@
 /**
  * applyImportPermit.js
  * ------------------------------------------------------------------
- * Permit item form with:
- *  - Single reusable item form (fill → Add Item → condition modal → confirmed list)
- *  - Added items list with View (offcanvas) and Delete actions
- *  - Item detail offcanvas with Details + Documents tabs
+ * Permit item form, now driven by the selected exporter's COUNTRY
+ * instead of a free-standing category dropdown:
+ *
+ *   exporter selected → country known → ITEM_CATALOG_BY_COUNTRY[country]
+ *   populates the Category select → Category populates Item Name.
+ *
+ * If no exporter is selected yet, the Category select stays locked
+ * with a prompt, since there's no country to derive the catalog from.
+ *
+ * Also adds full-form validation: "Review Application" stays
+ * disabled until every required field across Transportation,
+ * Importer/Exporter, and at least one Added Item is filled in.
  */
 
 // ---------------------------------------------------------------
-// Reference data
+// Reference data — catalog is now keyed by exporter COUNTRY
 // ---------------------------------------------------------------
 
-const ITEM_CATALOG = {
-    'Fresh Produce':          ['Fresh Fruit — Corn', 'Fresh Vegetables — Cabbage'],
-    'Live Animals':           ['Live Ornamental Fish', 'Live Poultry Chicks'],
-    'Frozen Seafood':         ['Frozen Seafood — Tilapia', 'Frozen Shrimp'],
-    'Agricultural Seedlings': ['Rubber Seedlings', 'Oil Palm Seedlings'],
-    'Processed Food':         ['Canned Pineapple', 'Instant Noodles'],
-    'Ornamental Plants':      ['Orchid Hybrids', 'Bonsai Trees'],
+const ITEM_CATALOG_BY_COUNTRY = {
+    Thailand: {
+        'Fresh Produce':  ['Fresh Fruit — Durian', 'Fresh Vegetables — Thai Eggplant'],
+        'Processed Food': ['Canned Pineapple', 'Instant Noodles'],
+    },
+    Indonesia: {
+        'Agricultural Seedlings': ['Oil Palm Seedlings', 'Rubber Seedlings'],
+        'Ornamental Plants':      ['Orchid Hybrids', 'Bonsai Trees'],
+    },
+    Singapore: {
+        'Frozen Seafood': ['Frozen Seafood — Tilapia', 'Frozen Shrimp'],
+        'Processed Food': ['Instant Noodles'],
+    },
+    China: {
+        'Live Animals':   ['Live Ornamental Fish', 'Live Poultry Chicks'],
+        'Processed Food': ['Canned Pineapple'],
+    },
 };
 
-// Conditions keyed by category
+// Conditions keyed by category — unchanged, category is still the
+// meaningful unit for import conditions regardless of country.
 const CATEGORY_CONDITIONS = {
     'Fresh Produce': [
         'Must be accompanied by a valid phytosanitary certificate issued by the country of origin.',
@@ -100,24 +119,15 @@ function money(n) {
 }
 
 // ---------------------------------------------------------------
-// Uploader widget
-// ---------------------------------------------------------------
-// ---------------------------------------------------------------
-// Attachment card system — 1 file per card
+// Attachment card system — 1 file per card (unchanged)
 // ---------------------------------------------------------------
 
 let attachSeq = 0;
 let fileSeq   = 0;
 
-/**
- * createAttachmentList(container)
- * Renders an "Add Attachment" button inside `container`.
- * Each click spawns a new self-contained attachment card.
- * Returns getFiles() → array of completed file entries.
- */
 function createAttachmentList(container) {
     const listId = 'alist-' + (attachSeq++);
-    const cards  = []; // { cardId, name, docType, fileName, size, progress, status, fileObj }
+    const cards  = [];
 
     container.innerHTML = `
         <div class="ipa-attachment-list" id="${listId}-list"></div>
@@ -136,7 +146,6 @@ function createAttachmentList(container) {
         const bodyEl = el.querySelector('.ipa-attachment-card-body');
 
         if (!card.fileObj) {
-            // No file yet — show dropzone
             bodyEl.innerHTML = `
                 <label class="ipa-dropzone" data-card-drop="${card.cardId}">
                     <i class="bi bi-cloud-arrow-up"></i>
@@ -148,7 +157,6 @@ function createAttachmentList(container) {
             `;
             wireDropzone(card, bodyEl);
         } else {
-            // File picked — show progress / done row
             const meta   = fileMeta(card.fileName);
             const isDone = card.status === 'completed';
             bodyEl.innerHTML = `
@@ -220,6 +228,7 @@ function createAttachmentList(container) {
                 clearInterval(interval);
             }
             rerenderCard(card);
+            document.dispatchEvent(new CustomEvent('ipa:form-dirty'));
         }, 350);
     }
 
@@ -256,15 +265,15 @@ function createAttachmentList(container) {
             <div class="ipa-attachment-card-body"></div>
         `;
 
-        // Sync name/type inputs into card object
         el.querySelector('.ipa-card-name').addEventListener('input', function() {
             card.name = this.value.trim();
+            document.dispatchEvent(new CustomEvent('ipa:form-dirty'));
         });
         el.querySelector('.ipa-card-type').addEventListener('change', function() {
             card.docType = this.value;
+            document.dispatchEvent(new CustomEvent('ipa:form-dirty'));
         });
 
-        // Remove card
         el.querySelector(`[data-card-remove="${cardId}"]`).addEventListener('click', () => {
             el.remove();
             const idx = cards.findIndex(c => c.cardId === cardId);
@@ -273,7 +282,7 @@ function createAttachmentList(container) {
         });
 
         listEl.appendChild(el);
-        rerenderCard(card); // render the dropzone into the body
+        rerenderCard(card);
         document.dispatchEvent(new CustomEvent('ipa:form-dirty'));
     }
 
@@ -291,6 +300,7 @@ function createAttachmentList(container) {
                 fileObj: c.fileObj,
                 status:  c.status,
             })),
+        getCardCount: () => cards.length,
         clear: () => {
             cards.length = 0;
             listEl.innerHTML = '';
@@ -298,20 +308,68 @@ function createAttachmentList(container) {
         },
     };
 }
+
+let appUploader = null; // exposed at module scope so validation can check it
+
 // ---------------------------------------------------------------
-// Populate form selects
+// Category / Item cascade — now driven by exporter COUNTRY
+// ---------------------------------------------------------------
+
+function getCatalogForCurrentExporter() {
+    const country = document.getElementById('exporterCountry')?.value.trim();
+    return country ? (ITEM_CATALOG_BY_COUNTRY[country] || {}) : {};
+}
+
+function populateCategorySelectForExporter() {
+    const catSelect  = document.getElementById('ipaItemCategory');
+    const nameSelect = document.getElementById('ipaItemName');
+    const catalog    = getCatalogForCurrentExporter();
+    const categories = Object.keys(catalog);
+
+    // Reset item name select regardless — category is changing under it
+    nameSelect.innerHTML = '<option value="">-- Select category first --</option>';
+    nameSelect.disabled = true;
+
+    if (!categories.length) {
+        catSelect.innerHTML = '<option value="">-- Select an exporter first --</option>';
+        catSelect.disabled = true;
+        return;
+    }
+
+    catSelect.disabled = false;
+    catSelect.innerHTML = '<option value="">-- Select category --</option>' +
+        categories.map(cat => `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`).join('');
+
+    document.dispatchEvent(new CustomEvent('ipa:form-dirty'));
+}
+
+function initCategoryNameCascade() {
+    const catSelect  = document.getElementById('ipaItemCategory');
+    const nameSelect = document.getElementById('ipaItemName');
+
+    // Start locked — no exporter selected yet on page load
+    catSelect.disabled = true;
+    catSelect.innerHTML = '<option value="">-- Select an exporter first --</option>';
+
+    catSelect.addEventListener('change', () => {
+        const catalog = getCatalogForCurrentExporter();
+        const items   = catalog[catSelect.value] || [];
+        nameSelect.innerHTML = '<option value="">-- Select item --</option>' +
+            items.map(i => `<option value="${escapeHtml(i)}">${escapeHtml(i)}</option>`).join('');
+        nameSelect.disabled = items.length === 0;
+        document.dispatchEvent(new CustomEvent('ipa:form-dirty'));
+    });
+
+    // Whenever the exporter changes (selected from search, or a new
+    // exporter is being added), re-derive the category list.
+    document.addEventListener('ipa:exporter-changed', populateCategorySelectForExporter);
+}
+
+// ---------------------------------------------------------------
+// Populate the rest of the form selects (purpose, unit — unaffected)
 // ---------------------------------------------------------------
 
 function populateFormSelects() {
-    // Category
-    const catSelect = document.getElementById('ipaItemCategory');
-    Object.keys(ITEM_CATALOG).forEach(cat => {
-        const opt = document.createElement('option');
-        opt.value = cat; opt.textContent = cat;
-        catSelect.appendChild(opt);
-    });
-
-    // Purpose
     const purposeSelect = document.getElementById('ipaItemPurpose');
     PURPOSE_OPTIONS.forEach(p => {
         const opt = document.createElement('option');
@@ -319,7 +377,6 @@ function populateFormSelects() {
         purposeSelect.appendChild(opt);
     });
 
-    // Unit
     const unitSelect = document.getElementById('ipaItemUnit');
     UNIT_OPTIONS.forEach(u => {
         const opt = document.createElement('option');
@@ -327,15 +384,7 @@ function populateFormSelects() {
         unitSelect.appendChild(opt);
     });
 
-    // Category → item name cascade
-    catSelect.addEventListener('change', () => {
-        const nameSelect = document.getElementById('ipaItemName');
-        const items = ITEM_CATALOG[catSelect.value] || [];
-        nameSelect.innerHTML = '<option value="">-- Select item --</option>' +
-            items.map(i => `<option value="${escapeHtml(i)}">${escapeHtml(i)}</option>`).join('');
-        nameSelect.disabled = items.length === 0;
-        document.dispatchEvent(new CustomEvent('ipa:form-dirty'));
-    });
+    initCategoryNameCascade();
 }
 
 // ---------------------------------------------------------------
@@ -343,7 +392,7 @@ function populateFormSelects() {
 // ---------------------------------------------------------------
 
 let itemSeq = 0;
-const addedItems = []; // { id, category, itemName, usage, purpose, qty, unit, value, files[] }
+const addedItems = [];
 
 function getFormData() {
     return {
@@ -358,6 +407,9 @@ function getFormData() {
 }
 
 function validateForm(data) {
+    const exporterChosen = document.getElementById('exporterId').value.trim() ||
+                            document.getElementById('exporterSearch').value.trim();
+    if (!exporterChosen) return false;
     return data.category && data.itemName && data.purpose && data.qty && data.unit && data.value;
 }
 
@@ -371,24 +423,23 @@ function resetItemForm() {
     document.getElementById('ipaItemQty').value     = '';
     document.getElementById('ipaItemUnit').value    = '';
     document.getElementById('ipaItemValue').value   = '';
-    // Re-create the uploader to clear files
+
     const uploaderContainer = document.getElementById('ipaItemUploaderContainer');
     uploaderContainer.innerHTML = '';
-    // currentItemUploader = createUploader(uploaderContainer);
+    currentItemUploader = createAttachmentList(uploaderContainer);
 }
 
 // ---------------------------------------------------------------
 // Condition modal
 // ---------------------------------------------------------------
 
-let pendingItemData   = null;
+let pendingItemData     = null;
 let currentItemUploader = null;
-let conditionModal    = null;
+let conditionModal      = null;
 
 function openConditionModal(data) {
     pendingItemData = data;
 
-    // Item summary
     document.getElementById('ipaModalItemSummary').innerHTML = `
         <div class="ipa-modal-summary-cell">
             <div class="ipa-modal-summary-label">Category</div>
@@ -408,7 +459,6 @@ function openConditionModal(data) {
         </div>
     `;
 
-    // Conditions
     const conditions = CATEGORY_CONDITIONS[data.category] || DEFAULT_CONDITIONS;
     document.getElementById('ipaModalConditions').innerHTML = conditions.map(c => `
         <div class="ipa-modal-condition-item">
@@ -417,7 +467,6 @@ function openConditionModal(data) {
         </div>
     `).join('');
 
-    // Reset agree checkbox + confirm button
     const agreeCheck  = document.getElementById('ipaAgreeCheck');
     const confirmBtn  = document.getElementById('ipaConfirmAddBtn');
     agreeCheck.checked = false;
@@ -505,14 +554,11 @@ function openItemDetail(itemId) {
     const item = addedItems.find(i => i.id === itemId);
     if (!item) return;
 
-    // Reset to details tab
     const detailsTab = document.getElementById('ipa-oc-details-tab');
     if (detailsTab) bootstrap.Tab.getOrCreateInstance(detailsTab).show();
 
-    // Header
     document.getElementById('ipaItemDetailOffcanvasLabel').textContent = item.itemName;
 
-    // Details tab
     const fields = [
         { label: 'Category',       value: item.category },
         { label: 'Item',           value: item.itemName },
@@ -542,7 +588,6 @@ function openItemDetail(itemId) {
         `).join('')}
     `;
 
-    // Documents tab
     const docsEl = document.getElementById('ipaOcDocsContent');
     if (!item.files.length) {
         docsEl.innerHTML = `
@@ -592,7 +637,7 @@ function initAddedListDelegation() {
 }
 
 // ---------------------------------------------------------------
-// Draft / submit status
+// Draft / submit status + FULL FORM VALIDATION
 // ---------------------------------------------------------------
 
 function setStatus(state, text) {
@@ -604,19 +649,68 @@ function setStatus(state, text) {
     });
 }
 
+/**
+ * isApplicationReadyToReview()
+ * Gate for the "Review Application" button — every required field
+ * across Transportation, Importer/Exporter, and at least one
+ * confirmed Added Item must be present.
+ */
+function isApplicationReadyToReview() {
+    const eta            = document.getElementById('ipaEta')?.value.trim();
+    const transportType  = document.getElementById('ipaTransportType')?.value.trim();
+    const entryPoint      = document.getElementById('ipaEntryPoint')?.value.trim();
+
+    const importerName   = document.getElementById('importerName')?.value.trim();
+    const importerPhone  = document.getElementById('importerPhone')?.value.trim();
+
+    const exporterId      = document.getElementById('exporterId')?.value.trim();
+    const exporterSearch  = document.getElementById('exporterSearch')?.value.trim();
+    const exporterCountry = document.getElementById('exporterCountry')?.value.trim();
+    const exporterAddress = document.getElementById('exporterAddress')?.value.trim();
+
+    if (!eta || !transportType || !entryPoint) return false;
+    if (!importerName || !importerPhone) return false;
+    // An exporter must be either selected from search (has exporterId)
+    // OR being added new (has a typed name + country + address filled in).
+    if (!exporterSearch || !exporterCountry || !exporterAddress) return false;
+
+    if (!addedItems.length) return false;
+
+    // Application-level documents — require at least one completed upload.
+    if (!appUploader || appUploader.getFiles().length === 0) return false;
+
+    return true;
+}
+
+function updateReviewButtonState() {
+    const reviewBtn = document.getElementById('ipaSubmitBtn');
+    if (!reviewBtn) return;
+
+    const ready = isApplicationReadyToReview();
+    reviewBtn.disabled = !ready;
+    reviewBtn.classList.toggle('is-disabled-look', !ready);
+}
+
 function wireFooterActions() {
     document.getElementById('ipaSaveDraftBtn')?.addEventListener('click', () => {
         const time = new Date().toLocaleTimeString('en-MY', { hour: '2-digit', minute: '2-digit' });
         setStatus('saved', `Saved as draft — ${time}`);
     });
+
     document.getElementById('ipaSubmitBtn')?.addEventListener('click', () => {
-        if (!addedItems.length) {
-            alert('Please add at least one permit item before submitting.');
+        if (!isApplicationReadyToReview()) {
+            alert('Please complete all required fields, add at least one permit item, and upload at least one application document before reviewing.');
             return;
         }
-        setStatus('submitted', 'Submitted — pending clerk review');
+        setStatus('submitted', 'Ready for review');
+        // Navigate to summary/review page here, e.g.:
+        // window.location.href = '/public/apply_import_permit/review';
     });
-    document.addEventListener('ipa:form-dirty', () => setStatus('unsaved', 'Unsaved changes'));
+
+    document.addEventListener('ipa:form-dirty', () => {
+        setStatus('unsaved', 'Unsaved changes');
+        updateReviewButtonState();
+    });
 }
 
 // ---------------------------------------------------------------
@@ -632,51 +726,52 @@ function init() {
     const appUploaderContainer = document.getElementById('ipaAppUploader');
     if (!appUploaderContainer) return;
 
-    // Application-level uploader
-    createAttachmentList(appUploaderContainer);
+    appUploader = createAttachmentList(appUploaderContainer);
 
-    // Item uploader (inside the form card)
     const itemUploaderContainer = document.getElementById('ipaItemUploaderContainer');
-   currentItemUploader = createAttachmentList(itemUploaderContainer);
+    currentItemUploader = createAttachmentList(itemUploaderContainer);
 
     populateFormSelects();
 
-    // Condition modal
     conditionModal = new bootstrap.Modal(document.getElementById('ipaConditionModal'), {
         backdrop: 'static',
         keyboard: false,
     });
 
-    // Agree checkbox toggles confirm button
     document.getElementById('ipaAgreeCheck').addEventListener('change', function () {
         document.getElementById('ipaConfirmAddBtn').disabled = !this.checked;
     });
 
-    // Confirm button in modal
     document.getElementById('ipaConfirmAddBtn').addEventListener('click', confirmAddItem);
 
-    // "Add Item to Application" button
     document.getElementById('ipaAddItemBtn').addEventListener('click', () => {
         const data = getFormData();
         if (!validateForm(data)) {
-            alert('Please fill in all required fields (Category, Item, Purpose, Quantity, Unit, Declared Value).');
+            const hasExporter = document.getElementById('exporterId').value.trim() ||
+                                 document.getElementById('exporterSearch').value.trim();
+            if (!hasExporter) {
+                alert('Please select an exporter first — the item catalog depends on the exporter\'s country.');
+            } else {
+                alert('Please fill in all required fields (Category, Item, Purpose, Quantity, Unit, Declared Value).');
+            }
             return;
         }
         openConditionModal(data);
     });
 
-    // Reset button
     document.getElementById('ipaResetItemBtn').addEventListener('click', resetItemForm);
 
-    // Added list delegation
     initAddedListDelegation();
 
     wireFooterActions();
 
-    // Mark dirty on field input
+    // Mark dirty on any field input, then re-check Review button gate
     document.querySelector('.ipa-wrapper')?.addEventListener('input', () => {
         document.dispatchEvent(new CustomEvent('ipa:form-dirty'));
     });
+
+    // Initial state — Review button starts disabled
+    updateReviewButtonState();
 }
 
 document.addEventListener('DOMContentLoaded', init);
