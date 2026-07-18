@@ -31,6 +31,12 @@ class AuthenticationController extends Controller
             'title' => 'Login',
         ]);
     }
+    public function login2()
+    {
+        return view('pages.authentication.login2', [
+            'title' => 'Login',
+        ]);
+    }
 
     public function loginAction(Request $request)
     {

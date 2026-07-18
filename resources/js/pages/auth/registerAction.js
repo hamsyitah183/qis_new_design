@@ -131,67 +131,241 @@ async function loadPostcodes(districtId) {
 function fileUpload() {
     const fileDropArea = document.getElementById("fileDropArea");
     const fileInput = document.getElementById("fileInput");
-    const fileNameDisplay = document.getElementById("fileName");
+    const listContainer = document.getElementById("fileListContainer");
+    const emptyState = document.getElementById("fileListEmpty");
+    const fileLabelModalEl = document.getElementById("fileLabelModal");
+    const fileLabelModalTitle = document.getElementById("fileLabelModalLabel");
+    const fileLabelInput = document.getElementById("fileLabelInput");
+    const fileLabelName = document.getElementById("fileLabelName");
+    const fileLabelPreview = document.getElementById("fileLabelPreview");
+    const filePreviewIcon = document.getElementById("filePreviewIcon");
+    const saveFileLabelBtn = document.getElementById("saveFileLabelBtn");
 
-    // Create an <img> element for preview
-    let imgPreview = document.createElement("img");
-    imgPreview.style.maxWidth = "100%";
-    imgPreview.style.maxHeight = "150px";
-    imgPreview.style.marginTop = "10px";
-    imgPreview.style.marginInline = "auto";
-    fileDropArea.appendChild(imgPreview);
+    const fileLabelModal = new bootstrap.Modal(fileLabelModalEl);
+    let selectedFiles = [];
+    let pendingFiles = [];
+    let currentEditIndex = null;
+    let currentQueueItem = null;
 
-    // Click to open file dialog
-    fileDropArea.addEventListener("click", () => {
+    const MAX_FILES = 10;
+    const MAX_SIZE_MB = 10;
+
+    function formatSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function iconFor(name) {
+        var ext = name.split('.').pop().toLowerCase();
+        if (ext === 'pdf') return 'ti ti-file-type-pdf';
+        return 'ti ti-photo';
+    }
+
+    function isImage(file) {
+        return file.type.startsWith('image/');
+    }
+
+    function syncInput() {
+        var dt = new DataTransfer();
+        selectedFiles.forEach(function (item) {
+            dt.items.add(item.file);
+        });
+        fileInput.files = dt.files;
+    }
+
+    function render() {
+        listContainer.innerHTML = '';
+        emptyState.style.display = selectedFiles.length ? 'none' : 'block';
+
+        selectedFiles.forEach(function (item, index) {
+            var li = document.createElement('li');
+            li.className = 'file-list-item d-flex align-items-center justify-content-between gap-2';
+            li.innerHTML =
+                '<div class="d-flex align-items-center gap-3 me-2">' +
+                '<i class="' + iconFor(item.file.name) + '"></i>' +
+                '<div class="file-meta">' +
+                '<div class="file-name fw-semibold file-label-clickable" style="cursor:pointer;">' + item.label + '</div>' +
+                '<div class="file-name text-truncate" style="max-width: 220px;">' + item.file.name + '</div>' +
+                '<div class="file-size text-muted">' + formatSize(item.file.size) + '</div>' +
+                '</div>' +
+                '</div>' +
+                '<div class="d-flex gap-2 align-items-center">' +
+                '<button type="button" class="btn btn-sm btn-outline-secondary file-preview" title="View document">' +
+                '<i class="ti ti-eye"></i>' +
+                '</button>' +
+                '<button type="button" class="btn btn-sm btn-outline-secondary file-edit" title="Edit label">' +
+                '<i class="ti ti-pencil"></i>' +
+                '</button>' +
+                '<button type="button" class="file-remove btn btn-sm btn-outline-danger" title="Remove">&times;</button>' +
+                '</div>';
+
+            li.querySelector('.file-remove').addEventListener('click', function () {
+                if (item.previewUrl) {
+                    URL.revokeObjectURL(item.previewUrl);
+                }
+                selectedFiles.splice(index, 1);
+                syncInput();
+                render();
+            });
+
+            li.querySelector('.file-preview').addEventListener('click', function () {
+                currentEditIndex = index;
+                openModalForExistingFile(selectedFiles[index]);
+            });
+
+            li.querySelector('.file-edit').addEventListener('click', function () {
+                currentEditIndex = index;
+                openModalForExistingFile(selectedFiles[index]);
+            });
+
+            li.querySelector('.file-label-clickable').addEventListener('click', function () {
+                currentEditIndex = index;
+                openModalForExistingFile(selectedFiles[index]);
+            });
+
+            listContainer.appendChild(li);
+        });
+    }
+
+    function showFileModal(file, label, previewUrl) {
+        var isEdit = !!label;
+        fileLabelModalTitle.textContent = isEdit ? 'Edit uploaded file label' : 'Label your file';
+        fileLabelName.textContent = file.name;
+        fileLabelInput.value = label || '';
+
+        if (isImage(file)) {
+            fileLabelPreview.src = previewUrl || URL.createObjectURL(file);
+            fileLabelPreview.style.display = 'block';
+            filePreviewIcon.style.display = 'none';
+        } else {
+            fileLabelPreview.src = '';
+            fileLabelPreview.style.display = 'none';
+            filePreviewIcon.style.display = 'block';
+        }
+
+        fileLabelModal.show();
+        setTimeout(function () {
+            fileLabelInput.focus();
+        }, 200);
+    }
+
+    function openModalForExistingFile(item) {
+        currentQueueItem = { file: item.file, label: item.label, previewUrl: item.previewUrl };
+        showFileModal(item.file, item.label, item.previewUrl);
+    }
+
+    function processNextPending() {
+        if (!pendingFiles.length) {
+            return;
+        }
+        currentQueueItem = pendingFiles.shift();
+        showFileModal(currentQueueItem.file, currentQueueItem.label, currentQueueItem.previewUrl);
+    }
+
+    function addQueuedFiles(fileList) {
+        var incoming = Array.prototype.slice.call(fileList);
+
+        incoming.forEach(function (file) {
+            if (selectedFiles.length + pendingFiles.length >= MAX_FILES) return;
+
+            if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+                alert(file.name + ' exceeds the ' + MAX_SIZE_MB + 'MB limit.');
+                return;
+            }
+
+            var isDuplicate = selectedFiles.some(function (item) {
+                return item.file.name === file.name && item.file.size === file.size;
+            }) || pendingFiles.some(function (item) {
+                return item.file.name === file.name && item.file.size === file.size;
+            });
+            if (isDuplicate) return;
+
+            pendingFiles.push({ file: file, label: '', previewUrl: isImage(file) ? URL.createObjectURL(file) : null });
+        });
+
+        if (!fileLabelModalEl.classList.contains('show')) {
+            processNextPending();
+        }
+    }
+
+    fileDropArea.addEventListener('click', function () {
         fileInput.click();
     });
 
-    // Handle file selection (dialog)
-    fileInput.addEventListener("change", () => {
-        if (fileInput.files.length) {
-            const file = fileInput.files[0];
-            fileNameDisplay.textContent = file.name;
-            showPreview(file);
+    fileInput.addEventListener('change', function (e) {
+        if (e.target.files.length) {
+            addQueuedFiles(e.target.files);
+            fileInput.value = '';
         }
     });
 
-    // Drag over effect
-    fileDropArea.addEventListener("dragover", (e) => {
-        e.preventDefault();
-        fileDropArea.classList.add("border-primary", "bg-light");
+    ['dragenter', 'dragover'].forEach(function (evt) {
+        fileDropArea.addEventListener(evt, function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            fileDropArea.classList.add('is-dragover');
+        });
     });
 
-    // Remove dragover effect
-    fileDropArea.addEventListener("dragleave", (e) => {
-        e.preventDefault();
-        fileDropArea.classList.remove("border-primary", "bg-light");
+    ['dragleave', 'drop'].forEach(function (evt) {
+        fileDropArea.addEventListener(evt, function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            fileDropArea.classList.remove('is-dragover');
+        });
     });
 
-    // Handle drop
-    fileDropArea.addEventListener("drop", (e) => {
-        e.preventDefault();
-        fileDropArea.classList.remove("border-primary", "bg-light");
-
-        const files = e.dataTransfer.files;
-        if (files.length) {
-            fileInput.files = files; // set files to input
-            fileNameDisplay.textContent = files[0].name;
-            showPreview(files[0]);
+    fileDropArea.addEventListener('drop', function (e) {
+        if (e.dataTransfer && e.dataTransfer.files) {
+            addQueuedFiles(e.dataTransfer.files);
         }
     });
 
-    // Function to show image preview
-    function showPreview(file) {
-        if (file.type.startsWith("image/")) {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                imgPreview.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
+    saveFileLabelBtn.addEventListener('click', function () {
+        if (!currentQueueItem || !fileLabelModalEl) return;
+
+        var label = fileLabelInput.value.trim();
+        if (!label) {
+            label = currentQueueItem.file.name;
+        }
+
+        if (currentEditIndex !== null) {
+            selectedFiles[currentEditIndex].label = label;
+            if (currentQueueItem.previewUrl) {
+                selectedFiles[currentEditIndex].previewUrl = currentQueueItem.previewUrl;
+            }
+            currentEditIndex = null;
         } else {
-            imgPreview.src = ""; // remove preview for non-images
+            selectedFiles.push({
+                file: currentQueueItem.file,
+                label: label,
+                previewUrl: currentQueueItem.previewUrl,
+            });
         }
-    }
+
+        syncInput();
+        render();
+        fileLabelModal.hide();
+        currentQueueItem = null;
+
+        if (pendingFiles.length) {
+            processNextPending();
+        }
+    });
+
+    fileLabelModalEl.addEventListener('hidden.bs.modal', function () {
+        if (currentQueueItem && currentEditIndex === null && !selectedFiles.some(function (item) {
+            return item.file.name === currentQueueItem.file.name && item.file.size === currentQueueItem.file.size;
+        })) {
+            if (currentQueueItem.previewUrl) {
+                URL.revokeObjectURL(currentQueueItem.previewUrl);
+            }
+        }
+        currentEditIndex = null;
+    });
+
+    render();
 }
 
 $(document).ready(function () {
@@ -249,10 +423,28 @@ $(document).ready(function () {
     type_styling();
     inputEdit();
 
+    function toggleAdditionalFields() {
+        var companyFields = $('.company-details');
+        var individualFields = $('.individual-details');
+
+        companyFields.addClass('d-none');
+        individualFields.addClass('d-none');
+
+        if (type === 'company') {
+            companyFields.removeClass('d-none');
+        } else if (type === 'individual') {
+            individualFields.removeClass('d-none');
+        }
+    }
+
     $(document).on("change", 'input[name="type"]', function () {
         type_styling();
         inputEdit();
+        toggleAdditionalFields();
     });
+
+    // initialize additional field visibility on page load
+    toggleAdditionalFields();
 
     // State and District dropdown logic
     $(document).on("change", '#state', function () {
@@ -382,10 +574,12 @@ $(document).ready(function () {
         let account_type = type === "individual" ? "individu" : type;
         formData.append("account_type", account_type);
 
-        // Append file manually
+        // Append chosen files manually
         const fileInput = document.getElementById("fileInput");
         if (fileInput && fileInput.files.length > 0) {
-            formData.append("attachment", fileInput.files[0]);
+            for (let i = 0; i < fileInput.files.length; i++) {
+                formData.append("attachment[]", fileInput.files[i]);
+            }
         }
 
         $.ajax({

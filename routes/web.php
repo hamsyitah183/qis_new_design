@@ -25,41 +25,48 @@ use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\BoundaryOfficerController;
 use App\Http\Controllers\ConsignmentMiscController;
 use App\Http\Controllers\FilterController;
+use App\Http\Controllers\LandingController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
 
-// Logout route hello temadigital
-Route::get('/logout', [AuthenticationController::class, 'logout'])->name('logout');
-
-// Guest routes
+// Guest routes (Unauthenticated users)
 Route::middleware(['multi.guest'])->group(function () {
-    Route::get('/login', [AuthenticationController::class, 'login'])->name('login');
-    // Route::get('/register', [AuthenticationController::class, 'register'])->name('register');
-    Route::get('/register', [AuthenticationController::class, 'register'])->name('register');
+    Route::get('/login', [AuthenticationController::class, 'login2'])->name('login');
     Route::post('/login', [AuthenticationController::class, 'loginAction'])->name('login.action');
+
+    Route::get('/register', [AuthenticationController::class, 'register'])->name('register');
     Route::post('/register', [AuthenticationController::class, 'registerPublic'])->name('register.public');
 
     Route::get('/forgot-password', [PasswordResetController::class, 'resetPage'])->name('password.request');
     Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
 });
 
-// Password Reset Routes
+// Password Reset Routes (Token verification)
 Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
 Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.update');
 
-// Root route '/'
+// Protected Authentication Routes (Logged-in users only)
+// Note: Changed to POST for security. If your frontend strictly requires GET, change it back to Route::get
+Route::get('/logout', [AuthenticationController::class, 'logout'])->name('logout');
+
+// Root Route '/'
+// This handles the logic of where to send someone based on their auth status
 Route::get('/', function () {
-    if (auth('public')->check()) {
-        return redirect()->route('public.dashboard');
-    } elseif (auth('internal')->check()) {
-        return redirect()->route('internal.dashboard');
-    } else {
-        return redirect()->route('login');
-    }
-});
+
+    return app(LandingController::class)->landing();
+
+
+    // return redirect()->route('login');
+})->name('home');
+
+Route::get('/announcement', function() {
+    return view('pages.announcement', [
+        'title' => 'Announcement'
+    ]);
+})->name('announcements.index');
 
 // verify email
 Route::get('/verify-email', [AuthenticationController::class, 'verify_email'])
