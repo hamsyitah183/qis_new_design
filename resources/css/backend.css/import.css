@@ -1,0 +1,550 @@
+/* ===================================================================
+   IMPORT PERMIT — APPLY WIZARD STYLESHEET
+   Prefix: ipa- (Import Permit Apply)
+   Depends on the same root design tokens as the rest of the site
+   (--primary-rgb, --primary-tint1-rgb, --primary-tint2-rgb, --gray-*,
+   --default-text-color, --text-muted, --default-border, etc) so it
+   matches the login and landing pages.
+
+   IMPORTANT: this file only adds classes/selectors on top of the
+   existing markup — no element ids, names, or data-route attributes
+   used by the wizard JS are renamed or removed anywhere this is applied.
+=================================================================== */
+
+/* ---------- wizard shell ---------- */
+.ipa-wizard-card {
+    border-radius: 22px !important;
+    border: 1px solid var(--default-border) !important;
+    overflow: hidden;
+    box-shadow: 0 10px 34px rgba(0, 0, 0, .05);
+}
+
+.ipa-wizard-card > .card-body { padding: 32px clamp(16px, 3vw, 40px) 40px; }
+
+/* ---------- stepper (keeps .wizard-nav / .dots / .wizard-step / .dot
+   so the Wizard1 plugin's JS hooks keep working — purely a reskin) ---------- */
+.ipa-wizard-nav {
+    display: flex;
+    justify-content: space-between;
+    gap: 4px;
+    list-style: none;
+    padding: 0 4px 32px;
+    margin: 0 0 28px;
+    border-bottom: 1px solid var(--default-border);
+    counter-reset: ipaStep;
+}
+
+.ipa-wizard-nav .wizard-step {
+    position: relative;
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+    counter-increment: ipaStep;
+    cursor: pointer;
+}
+
+/* connecting line between circles */
+.ipa-wizard-nav .wizard-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 17px;
+    left: calc(50% + 22px);
+    width: calc(100% - 44px);
+    height: 2px;
+    background: var(--default-border);
+    z-index: 0;
+}
+
+.ipa-wizard-nav .wizard-step.active ~ .wizard-step::after,
+.ipa-wizard-nav .wizard-step.active::after { background: var(--default-border); }
+
+.ipa-wizard-nav .wizard-step.done::after,
+.ipa-wizard-nav .wizard-step.done ~ .wizard-step.done::after {
+    background: rgb(var(--primary-tint2-rgb));
+}
+
+.ipa-wizard-nav .dot {
+    position: relative;
+    z-index: 1;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gray-2);
+    border: 2px solid var(--default-border);
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 700;
+    transition: all .2s ease;
+}
+
+.ipa-wizard-nav .dot::before { content: counter(ipaStep); }
+
+.ipa-wizard-nav .wizard-step.active .dot {
+    background: rgb(var(--primary-rgb));
+    border-color: rgb(var(--primary-rgb));
+    color: #fff;
+    box-shadow: 0 0 0 5px rgba(var(--primary-rgb), .14);
+}
+
+.ipa-wizard-nav .wizard-step.done .dot {
+    background: rgb(var(--primary-tint2-rgb));
+    border-color: rgb(var(--primary-tint2-rgb));
+    color: #fff;
+}
+
+.ipa-wizard-nav .wizard-step > span:last-child {
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: .4px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.ipa-wizard-nav .wizard-step.active > span:last-child { color: var(--default-text-color); }
+
+@media (max-width: 767.98px) {
+    .ipa-wizard-nav .wizard-step > span:last-child { display: none; }
+}
+
+/* ---------- section cards (applied alongside .register-page) ---------- */
+.ipa-card {
+    background: var(--custom-white);
+    border: 1px solid var(--default-border);
+    border-radius: 18px;
+    padding: 26px 26px 22px;
+    height: 100%;
+}
+
+.ipa-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.ipa-card-header .ipa-icon-badge {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    background: rgba(var(--primary-rgb), .1);
+    color: rgb(var(--primary-rgb));
+    flex-shrink: 0;
+}
+
+.ipa-card-header h6 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--default-text-color);
+}
+
+.ipa-card-header .ipa-card-sub {
+    display: block;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-muted);
+    margin-top: 1px;
+}
+
+/* ---------- form polish (scoped to wizard content so it doesn't
+   bleed into the rest of the app) ---------- */
+.wizard-content .form-label {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--default-text-color);
+    margin-bottom: 6px;
+}
+
+.wizard-content .form-control,
+.wizard-content .form-select {
+    border-radius: 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--input-border);
+    background: var(--form-control-bg);
+    font-size: 14px;
+}
+
+.wizard-content .form-control:focus,
+.wizard-content .form-select:focus {
+    border-color: rgb(var(--primary-rgb));
+    box-shadow: 0 0 0 .2rem rgba(var(--primary-rgb), .15);
+}
+
+.wizard-content .form-control:disabled {
+    background: var(--gray-1);
+    color: var(--text-muted);
+    border-style: dashed;
+}
+
+.ipa-hint-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 8px;
+}
+
+.ipa-hint-note a { font-weight: 600; }
+
+/* ---------- buttons ---------- */
+.ipa-btn-primary.btn {
+    border-radius: 10px;
+    font-weight: 600;
+    background: rgb(var(--primary-rgb));
+    border-color: rgb(var(--primary-rgb));
+}
+.ipa-btn-primary.btn:hover { background: rgb(var(--primary-tint1-rgb)); border-color: rgb(var(--primary-tint1-rgb)); }
+
+.ipa-btn-outline.btn {
+    border-radius: 10px;
+    font-weight: 600;
+    background: transparent;
+    border: 1.5px solid rgb(var(--primary-rgb));
+    color: rgb(var(--primary-rgb));
+}
+.ipa-btn-outline.btn:hover { background: rgba(var(--primary-rgb), .08); color: rgb(var(--primary-rgb)); }
+
+.wizard-content .btn { border-radius: 10px; font-weight: 600; }
+
+/* ---------- items table (step 2) ---------- */
+.ipa-items-card {
+    background: var(--custom-white);
+    border: 1px solid var(--default-border);
+    border-radius: 18px;
+    padding: 22px;
+}
+
+.ipa-items-card table thead tr { background: var(--gray-1) !important; }
+.ipa-items-card table thead th {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    color: var(--text-muted);
+    font-weight: 700;
+    border-bottom: none !important;
+}
+.ipa-items-card table td { vertical-align: middle; font-size: 13.5px; }
+.ipa-items-card table tbody tr:hover { background: var(--list-hover-focus-bg); }
+
+/* ---------- summary (step 3) ---------- */
+.ipa-summary-card {
+    border: 1px solid var(--default-border) !important;
+    border-radius: 16px !important;
+    overflow: hidden;
+}
+.ipa-summary-card table thead tr.bg-light {
+    background: rgba(var(--primary-rgb), .06) !important;
+}
+.ipa-summary-card table thead th {
+    font-weight: 700;
+    color: var(--default-text-color);
+    font-size: 13.5px;
+}
+.ipa-summary-card table td { font-size: 13.5px; }
+.ipa-summary-card table td span.fw-semibold { color: var(--default-text-color); }
+
+/* ---------- add item modal (fullscreen) ---------- */
+#addItemModal .modal-content { border-radius: 0; }
+#addItemModal .modal-header {
+    background: linear-gradient(135deg, rgb(var(--primary-rgb)), rgb(var(--primary-tint2-rgb)));
+    color: #fff;
+    border-bottom: none;
+}
+#addItemModal .modal-header .modal-title { font-weight: 700; }
+#addItemModal .modal-body { background: var(--gray-1); }
+#addItemModal .modal-body .row.gy-4 {
+    background: var(--custom-white);
+    border-radius: 18px;
+    border: 1px solid var(--default-border);
+}
+
+#addItemModal .card-header {
+    background: transparent;
+    border: none;
+    padding: 0 0 8px;
+}
+#addItemModal .card-header .card-title {
+    font-weight: 700;
+    font-size: 13.5px;
+    color: var(--default-text-color);
+}
+
+#addItemModal .dz-button {
+    border-radius: 14px !important;
+    border: 1.5px dashed var(--gray-4) !important;
+    background: var(--gray-1) !important;
+    color: var(--text-muted) !important;
+    font-weight: 600;
+    transition: border-color .2s ease, color .2s ease;
+}
+#addItemModal .dz-button:hover { border-color: rgb(var(--primary-tint2-rgb)) !important; color: rgb(var(--primary-rgb)) !important; }
+
+#addItemModal .modal-footer { border-top: 1px solid var(--default-border); }
+
+/* ---------- x-modal (Add Exporter) form polish — scoped, doesn't
+   touch the component's own chrome, only the form fields inside ---------- */
+#addExporterModal .form-label { font-weight: 600; font-size: 13px; }
+#addExporterModal .form-control,
+#addExporterModal .form-select {
+    border-radius: 12px;
+    padding: 10px 14px;
+}
+#addExporterModal .form-control:focus,
+#addExporterModal .form-select:focus {
+    border-color: rgb(var(--primary-rgb));
+    box-shadow: 0 0 0 .2rem rgba(var(--primary-rgb), .15);
+}
+
+/* ---------- item details modal (step 2 view modal) ---------- */
+#ItemDetailsModal .table { border-radius: 12px; overflow: hidden; }
+
+
+
+
+
+/* ==========================================================
+   STEP 3 - SUMMARY
+   Match Step 0 / Step 1 Styling
+========================================================== */
+
+.ipa-alert-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+
+    padding: 14px 16px;
+    margin-bottom: 24px;
+
+    background: rgba(var(--primary-rgb), .06);
+    border: 1px solid rgba(var(--primary-rgb), .12);
+    border-radius: 14px;
+}
+
+.ipa-alert-note i {
+    font-size: 18px;
+    color: rgb(var(--primary-rgb));
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.ipa-alert-note span {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--default-text-color);
+}
+
+/* ==========================================================
+   SUMMARY CARD
+========================================================== */
+
+.wizard-step[data-step="3"] .ipa-card {
+    padding: 26px;
+}
+
+.wizard-step[data-step="3"] .ipa-card-header {
+    margin-bottom: 20px;
+}
+
+/* ==========================================================
+   SECTION LABELS
+========================================================== */
+
+.ipa-info-group-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+
+    color: rgb(var(--primary-rgb));
+
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+
+    border-bottom: 1px dashed var(--default-border);
+}
+
+/* ==========================================================
+   INFORMATION LIST
+========================================================== */
+
+.ipa-info-grid {
+    display: flex;
+    flex-direction: column;
+}
+
+.ipa-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    gap: 20px;
+
+    padding: 10px 0;
+
+    border-bottom: 1px solid var(--gray-2);
+}
+
+.ipa-info-row:last-child {
+    border-bottom: none;
+}
+
+.ipa-info-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.ipa-info-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--default-text-color);
+    text-align: right;
+    word-break: break-word;
+}
+
+/* Empty fields */
+.ipa-info-value:empty::before {
+    content: "-";
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* ==========================================================
+   ITEMS TABLE
+========================================================== */
+
+.ipa-items-card {
+    margin-top: 4px;
+}
+
+#summaryTable3 {
+    margin-bottom: 0;
+}
+
+#summaryTable3 thead th {
+    background: var(--gray-1);
+    color: var(--default-text-color);
+
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+
+    border-bottom: 1px solid var(--default-border);
+}
+
+#summaryTable3 tbody td {
+    font-size: 13px;
+    vertical-align: middle;
+}
+
+#summaryTable3 tbody tr:hover {
+    background: var(--list-hover-focus-bg);
+}
+
+/* Number column */
+#summaryTable3 tbody td:first-child {
+    width: 60px;
+    font-weight: 700;
+}
+
+/* ==========================================================
+   REVIEW HIGHLIGHT
+========================================================== */
+
+.wizard-step[data-step="3"] .ipa-card-header .ipa-icon-badge {
+    background: rgba(var(--primary-rgb), .08);
+}
+
+/* ==========================================================
+   SUBMIT SECTION
+========================================================== */
+
+.ipa-submit-row {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+
+    gap: 12px;
+
+    margin-top: 28px;
+    padding-top: 24px;
+
+    border-top: 1px solid var(--default-border);
+}
+
+#submitApps {
+    min-width: 220px;
+    height: 46px;
+
+    font-weight: 600;
+    border-radius: 10px;
+}
+
+/* ==========================================================
+   MOBILE
+========================================================== */
+
+@media (max-width: 768px) {
+
+    .ipa-info-row {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .ipa-info-value {
+        text-align: left;
+    }
+
+    .ipa-submit-row {
+        justify-content: stretch;
+    }
+
+    #submitApps {
+        width: 100%;
+        min-width: auto;
+    }
+}
+
+.ipa-review-banner{
+    display:flex;
+    align-items:center;
+    gap:14px;
+
+    padding:18px 20px;
+    margin-bottom:24px;
+
+    background:#fff;
+    border:1px solid var(--default-border);
+    border-radius:16px;
+}
+
+.ipa-review-banner i{
+    font-size:28px;
+    color:rgb(var(--primary-rgb));
+}
+
+.ipa-review-banner strong{
+    display:block;
+    font-size:14px;
+    font-weight:700;
+    color:var(--default-text-color);
+}
+
+.ipa-review-banner span{
+    display:block;
+    font-size:12px;
+    color:var(--text-muted);
+}

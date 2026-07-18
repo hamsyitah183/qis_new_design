@@ -1,37 +1,47 @@
 <div class="wizard-step" data-title="PERMIT ITEM DETAILS" data-id="H53WJiv9blN17MYTztq4g8U6eSVkaZDx" data-step="2">
     <div class="row justify-content-center summary-view">
-        <div class="table-responsive">
-            <table id="itemListTbl" class="table text-nowrap fs-12">
-                <thead class="table-primary">
-                    <tr>
-                   
-                        <th scope="col">Item Name</th>
-                 
-                        <th scope="col">Purpose</th>
-                        <th scope="col">View More</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- <tr>
-                        <td>1</td>
-                        <td scope="row">Durian - Fresh Fruit</td>
-                        <td>500 KG</td>
-                        <td>Commercial (Trade)</td>
-                        <td>Fresh Produce</td>
-                        <td>RM 10,000</td>
-                        <td></td>
-                        <td style="text-align: center">
-                            <button type="button" class="btn btn-sm btn-primary-light">Remove</button>
-                        </td>
-                    </tr> -->
-                </tbody>
-            </table>
-            <div class="d-flex justify-content-end align-items-end">
-                <input type="text" id="itemCountCheck" style="opacity: 0; position: absolute; pointer-events: none;">
-                <button id="mdlAddItemBtn" type="button" class="btn btn-md btn-info mt-3" data-bs-toggle="modal"
-                    data-bs-target="#addItemModal">
-                    <i class="bx bx-plus me-1"></i> Add Item
-                </button>
+        <div class="col-xl-12">
+            <div class="ipa-items-card">
+                <div class="ipa-card-header" style="margin-bottom:14px">
+                    <span class="ipa-icon-badge"><i class='bx bx-package'></i></span>
+                    <h6>Permit Items
+                        <span class="ipa-card-sub">Add every item included in this consignment</span>
+                    </h6>
+                </div>
+                <div class="table-responsive">
+                    <table id="itemListTbl" class="table text-nowrap fs-12">
+                        <thead class="table-primary">
+                            <tr>
+
+                                <th scope="col">Item Name</th>
+
+                                <th scope="col">Purpose</th>
+                                <th scope="col">View More</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- <tr>
+                                <td>1</td>
+                                <td scope="row">Durian - Fresh Fruit</td>
+                                <td>500 KG</td>
+                                <td>Commercial (Trade)</td>
+                                <td>Fresh Produce</td>
+                                <td>RM 10,000</td>
+                                <td></td>
+                                <td style="text-align: center">
+                                    <button type="button" class="btn btn-sm btn-primary-light">Remove</button>
+                                </td>
+                            </tr> -->
+                        </tbody>
+                    </table>
+                    <div class="d-flex justify-content-end align-items-end">
+                        <input type="text" id="itemCountCheck" style="opacity: 0; position: absolute; pointer-events: none;">
+                        <button id="mdlAddItemBtn" type="button" class="btn btn-md btn-info mt-3 ipa-btn-primary" data-bs-toggle="modal"
+                            data-bs-target="#addItemModal">
+                            <i class="bx bx-plus me-1"></i> Add Item
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 

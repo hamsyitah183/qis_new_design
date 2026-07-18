@@ -5,7 +5,7 @@
             <!-- Header -->
             <div class="modal-header ">
                 <h5 class="modal-title" id="addExporterModalLabel">
-                    Add Consignment
+                    <i class='bx bx-package me-2'></i>Add Consignment
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                     aria-label="Close"></button>
@@ -74,6 +74,7 @@
                                     @csrf
                                     <div class="dz-default dz-message">
                                         <button class="dz-button p-5 border w-100 border-radius" type="button">
+                                            <i class='bx bx-cloud-upload' style="font-size:22px"></i><br>
                                             Drop files here to upload
                                         </button>
                                     </div>
@@ -90,7 +91,7 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="bx bx-x me-1"></i> Cancel
                 </button>
-                <button id="saveBtn" type="submit" class="btn btn-primary">
+                <button id="saveBtn" type="submit" class="btn btn-primary ipa-btn-primary">
                     <i class="bx bx-save me-1"></i> Add Item
                 </button>
             </div>

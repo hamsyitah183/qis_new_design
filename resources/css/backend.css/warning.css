@@ -1,0 +1,108 @@
+/* Custom component styles utilizing your token definitions */
+.verify-dashboard-card {
+    border: 1px solid var(--bootstrap-card-border);
+    background-color: var(--custom-white);
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+}
+
+.card-lang-header {
+    display: flex;
+    justify-content: flex-end;
+    padding: 16px 24px 0;
+}
+
+
+
+/* Pulsing warning status badge background */
+.verification-icon-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: rgba(var(--warning-rgb), 0.12);
+    color: rgb(var(--warning-rgb));
+    margin: 0 auto;
+}
+
+.verification-icon-badge .icon-inner-bg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: rgba(var(--warning-rgb), 0.2);
+}
+
+.verification-icon-badge svg {
+    width: 28px;
+    height: 28px;
+}
+
+/* Callout status containers */
+.verification-status-callout {
+    background-color: var(--gray-1);
+    border-left: 4px solid rgb(var(--warning-rgb));
+    border-radius: 4px 12px 12px 4px;
+    padding: 16px 20px;
+    max-width: 520px;
+    margin: 0 auto;
+    border-top: 1px solid var(--bootstrap-card-border);
+    border-right: 1px solid var(--bootstrap-card-border);
+    border-bottom: 1px solid var(--bootstrap-card-border);
+}
+
+.verification-status-callout strong {
+    font-size: 14px;
+    color: var(--default-text-color);
+}
+
+.verification-status-callout p {
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.max-w-md {
+    max-width: 480px;
+}
+
+/* Primary Button Styling using variables */
+.btn-primary-custom {
+    background-color: var(--primary-color);
+    border: 1px solid var(--primary-border);
+    color: #fff;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 13.5px;
+    transition: all 0.2s ease;
+}
+
+.btn-primary-custom:hover {
+    background-color: var(--primary-tint1-color);
+    border-color: var(--primary-tint1-color);
+    color: #fff;
+}
+
+/* Outline Secondary Button Styling */
+.btn-outline-secondary-custom {
+    background-color: transparent;
+    border: 1px solid var(--input-border);
+    color: var(--text-muted);
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 13.5px;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-secondary-custom:hover {
+    background-color: var(--list-hover-focus-bg);
+    color: var(--default-text-color);
+}
+
+.text-danger-custom {
+    color: rgb(var(--danger-rgb)) !important;
+}

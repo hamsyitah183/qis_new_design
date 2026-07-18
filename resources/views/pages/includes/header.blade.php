@@ -26,43 +26,22 @@
         </div>
         <!-- End::header-element -->
 
-
     </div>
     <!-- End::header-content-left -->
 
     <!-- Start::header-content-right -->
-    <ul class="header-content-right">
+    <ul class="header-content-right  list-unstyled">
 
-
-
-        <!-- Start::header-element -->
-        {{-- <li class="header-element header-theme-mode">
-            <!-- Start::header-link|layout-setting -->
-            <a href="javascript:void(0);" class="header-link layout-setting">
-                <span class="light-layout">
-                    <!-- Start::header-link-icon -->
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 header-link-icon" fill="none"
-                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
-                    </svg>
-                    <!-- End::header-link-icon -->
-                </span>
-                <span class="dark-layout">
-                    <!-- Start::header-link-icon -->
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 header-link-icon" fill="none"
-                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
-                    </svg>
-                    <!-- End::header-link-icon -->
-                </span>
-            </a>
-            <!-- End::header-link|layout-setting -->
-        </li> --}}
-        <!-- End::header-element -->
-
-
+        <!-- Start::Language Switcher Element -->
+        <li class="header-element px-2">
+            {{-- Language toggle: visible on all breakpoints --}}
+            <div class="lang-toggle d-flex align-items-center gap-1 border rounded-2 p-1 bg-light"
+                style="border-color: var(--input-border) !important;">
+                <button type="button" class="btn btn-sm py-1 px-2 lang-btn" data-lang="en">EN</button>
+                <button type="button" class="btn btn-sm py-1 px-2 lang-btn" data-lang="bm">BM</button>
+            </div>
+        </li>
+        <!-- End::Language Switcher Element -->
 
         <!-- Start::header-element -->
         <li class="header-element notifications-dropdown dropdown d-block">
@@ -74,14 +53,14 @@
                     <path stroke-linecap="round" stroke-linejoin="round"
                         d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0M3.124 7.5A8.969 8.969 0 0 1 5.292 3m13.416 0a8.969 8.969 0 0 1 2.168 4.5" />
                 </svg>
-                {{-- header-icon-pulse bg-primary2 rounded pulse pulse-secondary --}}
                 <span class="" id="pulse"></span>
-
             </a>
             <!-- End::header-link|dropdown-toggle -->
+
             <!-- Start::main-header-dropdown -->
             <div class="main-header-dropdown dropdown-menu dropdown-menu-end" data-popper-placement="bottom-end"
                 style="position: absolute; inset: 0px 0px auto auto; margin: 0px; transform: translate(0px, 34px);">
+
                 <div class="p-3">
                     <div class="d-flex align-items-center justify-content-between">
                         <p class="mb-0 fs-15 fw-medium">Notifications</p>
@@ -163,11 +142,8 @@
         </li>
         <!-- End::header-element -->
 
-
-
         <!-- Start::header-element -->
         <li class="header-element dropdown">
-            <!-- Start::header-link|dropdown-toggle -->
             @php
                 $name = authUser()['user']['fullname'] ?? '';
                 $parts = explode(' ', trim($name));
@@ -184,61 +160,60 @@
                 </div>
             </a>
 
-            <!-- End::header-link|dropdown-toggle -->
             <ul class="main-header-dropdown dropdown-menu pt-0 overflow-hidden header-profile-dropdown dropdown-menu-end"
                 aria-labelledby="mainHeaderProfile">
                 <li>
-                    <div class="dropdown-item text-center border-bottom" id="redirectProfile">
+                    <div class="dropdown-item text-center border-bottom p-3" id="redirectProfile">
                         @php
                             $internalUser = Auth::guard('internal')->user();
                             $publicUser = Auth::guard('public')->user();
                         @endphp
 
-                        <span>
+                        <span class="fw-semibold fs-14 d-block mb-1">
                             {{ $internalUser->fullname ?? ($publicUser->fullname ?? 'Guest') }}
                         </span>
 
-                        <span class="d-block fs-12 text-muted">
+                        <span class="d-block fs-12 text-muted mb-2">
                             @if ($internalUser)
-                                Internal User
+                                <span data-en="Internal User" data-bm="Pengguna Dalaman">Internal User</span>
                             @elseif ($publicUser)
-                                Public User
-                                @if ($publicUser->doa_verified)
-                                    <span class="badge bg-success-transparent ms-1" title="Verified by DOA">
-                                        <i class="bx bx-check"></i>
-                                    </span>
-                                @else
-                                    <span class="badge bg-dark-transparent ms-1" title="Not verified by DOA">
-                                        <i class="bx bx-x"></i>
-                                    </span>
-                                @endif
+                                <span data-en="Public User" data-bm="Pengguna Awam">Public User</span>
                             @else
-                                Guest
+                                <span data-en="Guest" data-bm="Pelawat">Guest</span>
                             @endif
                         </span>
+
+                        {{-- Friendly Alert Block for Unverified Public Users --}}
+                        @if ($publicUser && !$publicUser->doa_verified)
+                            <div
+                                class="alert alert-warning border-0 p-2 mb-0 mt-2 rounded-2 text-start d-flex align-items-start gap-2">
+                                <i class="bx bx-info-circle fs-16 text-warning mt-1"></i>
+                                <div>
+                                    <div class="fw-medium fs-12 text-warning-emphasis"
+                                        data-en="Account Pending Approval" data-bm="Akaun Menunggu Pengesahan">
+                                        Account Pending Approval
+                                    </div>
+                                    <p class="mb-0 fs-11 text-muted mt-0.5"
+                                        data-en="Some features are restricted until verified by DOA."
+                                        data-bm="Beberapa fungsi dihadkan sehingga disahkan oleh DOA.">
+                                        Some features are restricted until verified by DOA.
+                                    </p>
+                                </div>
+                            </div>
+                        @endif
                     </div>
-
                 </li>
-
-
 
                 <li class="p-4 p-md-0">
-
                     <a type="button" id="logoutButton" href="{{ route('logout') }}"
-                        class="dropdown-item d-flex align-items-center text-start w-100">
-
+                        class="dropdown-item d-flex align-items-center text-start w-100 py-2.5">
                         <i class="ti ti-lock p-1 rounded-circle bg-primary-transparent me-2 fs-16"></i>
-                        Log Out
+                        <span data-en="Log Out" data-bm="Log Keluar">Log Out</span>
                     </a>
-
-
                 </li>
-
             </ul>
-
         </li>
         <!-- End::header-element -->
-
 
     </ul>
     <!-- End::header-content-right -->
@@ -248,14 +223,66 @@
 @push('scripts')
     <script>
         document.addEventListener("DOMContentLoaded", function() {
+            // Logout logic
             const logoutForm = document.getElementById("logoutForm");
-
             if (logoutForm) {
                 logoutForm.addEventListener("submit", function(e) {
                     e.preventDefault();
-                    this.submit(); // let Laravel handle redirect
+                    this.submit();
                 });
             }
+
+            // Client-side Localization Sandbox Controller
+            (function() {
+                var STORAGE_KEY = "qis_lang";
+                var buttons = document.querySelectorAll(".lang-btn");
+                var elements = document.querySelectorAll("[data-en]");
+
+                function setLang(lang) {
+                    elements.forEach(function(el) {
+                        var text = el.getAttribute("data-" + lang);
+                        if (text === null) return;
+                        if (el.getAttribute("data-i18n-attr") === "placeholder") {
+                            el.setAttribute("placeholder", text);
+                        } else {
+                            el.textContent = text;
+                        }
+                    });
+
+                    buttons.forEach(function(btn) {
+                        btn.classList.toggle(
+                            "active",
+                            btn.getAttribute("data-lang") === lang
+                        );
+                    });
+
+                    document.documentElement.setAttribute(
+                        "lang",
+                        lang === "bm" ? "ms" : "en"
+                    );
+
+                    try {
+                        localStorage.setItem(STORAGE_KEY, lang);
+                    } catch (e) {
+                        /* storage unavailable, ignore */
+                    }
+                }
+
+                buttons.forEach(function(btn) {
+                    btn.addEventListener("click", function() {
+                        setLang(btn.getAttribute("data-lang"));
+                    });
+                });
+
+                var savedLang = "en";
+                try {
+                    savedLang = localStorage.getItem(STORAGE_KEY) || "en";
+                } catch (e) {
+                    /* storage unavailable, default to en */
+                }
+
+                setLang(savedLang);
+            })();
         });
     </script>
 @endpush

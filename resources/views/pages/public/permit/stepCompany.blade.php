@@ -1,11 +1,16 @@
 <div class="wizard-step active" data-title="IMPORTER & EXPORTER" data-id="2e8WqSV3slGIpTbnjcJzmDwBQaHrfh0Z" data-step="0">
-    <div class="row justify-content-center">
+    <div class="row justify-content-center gy-3">
         <div class="col-xl-6">
-            <div class="register-page">
-                <h6 class="mb-3">Importer :</h6>
+            <div class="register-page ipa-card">
+                <div class="ipa-card-header">
+                    <span class="ipa-icon-badge"><i class='bx bx-user-check'></i></span>
+                    <h6>Importer
+                        <span class="ipa-card-sub">Find the importer you're applying for</span>
+                    </h6>
+                </div>
                 <div class="row gy-3">
                     <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
-                        <label for="selectimp" class="form-label">Select Assigning Importer</label>
+                        <label for="findImporter" class="form-label">Select Assigning Importer</label>
                         <!-- <select id="selectimp" class="form-select xintra-select2" name="selectimp" style="width:100%;" >
                             <option value="">-- Select Importer --</option>
                             <option value="">--  Importer --</option>
@@ -14,7 +19,7 @@
                         </select> -->
                         <input type="text" class="form-control mb-3 required" id="findImporter" name="findImporter"
                             placeholder="Company Number / Identification Number">
-                        <button type="button" class="btn btn-md btn-info mb-3" id="btnFindImp"><i
+                        <button type="button" class="btn btn-md btn-info mb-3 ipa-btn-outline" id="btnFindImp"><i
                                 class="bx bx-search"></i> Find Importer</button>
 
                         <div class="alert alert-danger" id="searchresult" role="alert" style="display:none">
@@ -51,8 +56,13 @@
             </div>
         </div>
         <div class="col-xl-6">
-            <div class="register-page">
-                <h6 class="mb-3">Exporter :</h6>
+            <div class="register-page ipa-card">
+                <div class="ipa-card-header">
+                    <span class="ipa-icon-badge"><i class='bx bx-globe'></i></span>
+                    <h6>Exporter
+                        <span class="ipa-card-sub">Who the goods are coming from</span>
+                    </h6>
+                </div>
                 <div class="row gy-3">
                     <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                         <label for="selectexp" class="form-label">Select Exporter</label>
@@ -62,11 +72,14 @@
                         </select>
                     </div>
                     <div class="col-xl-12" class="">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                        <button type="button" class="btn btn-primary ipa-btn-primary" data-bs-toggle="modal"
                             data-bs-target="#addExporterModal">
                             <i class="bx bx-plus me-1"></i> Add Exporter
                         </button>
-                        <a style="color:red"> *If exporter is not in the selection list above</a>
+                        <div class="ipa-hint-note">
+                            <i class='bx bx-info-circle'></i>
+                            <span>If your exporter isn't in the list above, <a style="color:red">add them here</a>.</span>
+                        </div>
                     </div>
                     <div class="col-xl-12">
                         <input type="hidden" id="expid">
@@ -129,7 +142,7 @@
                 @slot('footer')
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
 
-                    <button type="button" id="addExporterbtn" class="btn btn-primary"
+                    <button type="button" id="addExporterbtn" class="btn btn-primary ipa-btn-primary"
                         data-route="{{ route('public.storeExp') }}">
                         Save Exporter
                     </button>

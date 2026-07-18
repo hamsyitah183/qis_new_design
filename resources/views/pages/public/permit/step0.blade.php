@@ -1,8 +1,13 @@
 <div class="wizard-step active" data-title="IMPORTER & EXPORTER" data-id="2e8WqSV3slGIpTbnjcJzmDwBQaHrfh0Z" data-step="0">
-    <div class="row justify-content-center">
+    <div class="row justify-content-center gy-3">
         <div class="col-xl-6">
-            <div class="register-page">
-                <h6 class="mb-3">Importer :</h6>
+            <div class="register-page ipa-card">
+                <div class="ipa-card-header">
+                    <span class="ipa-icon-badge"><i class='bx bx-user'></i></span>
+                    <h6>Importer
+                        <span class="ipa-card-sub">Auto-filled from your account</span>
+                    </h6>
+                </div>
                 <div class="row gy-3">
                     <input type="hidden" id="app_cate" value="0">
                     <input type="hidden" id="impemail">
@@ -28,8 +33,13 @@
             </div>
         </div>
         <div class="col-xl-6">
-            <div class="register-page">
-                <h6 class="mb-3">Exporter :<a style="color:red"> * </a></h6>
+            <div class="register-page ipa-card">
+                <div class="ipa-card-header">
+                    <span class="ipa-icon-badge"><i class='bx bx-globe'></i></span>
+                    <h6>Exporter <a style="color:red"> * </a>
+                        <span class="ipa-card-sub">Who you're importing the goods from</span>
+                    </h6>
+                </div>
                 <div class="row gy-3">
                     <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                         <label for="selectexp" class="form-label">Select Exporter</label>
@@ -39,11 +49,14 @@
                         </select>
                     </div>
                     <div class="col-xl-12" class="">
-                        <button type="button" class="btn btn-primary"
+                        <button type="button" class="btn btn-primary ipa-btn-primary"
                           id="openExporterModalBtn">
                             <i class="bx bx-plus me-1"></i> Add Exporter
                         </button>
-                        <a style="color:red"> *If exporter is not in the selection list above</a>
+                        <div class="ipa-hint-note">
+                            <i class='bx bx-info-circle'></i>
+                            <span>If your exporter isn't in the list above, <a style="color:red">add them here</a>.</span>
+                        </div>
                     </div>
                     <div class="col-xl-12">
                         <input type="hidden" id="expid">
@@ -107,7 +120,7 @@
                 @slot('footer')
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
 
-                    <button type="button" id="addExporterbtn" class="btn btn-primary"
+                    <button type="button" id="addExporterbtn" class="btn btn-primary ipa-btn-primary"
                        >
                         Save Exporter
                     </button>

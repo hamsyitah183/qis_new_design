@@ -14,6 +14,84 @@ select2(window.jQuery);
 
 import "select2/dist/css/select2.min.css";
 
+const ITEM_CONDITIONS = [
+    {
+        title: "General Import Requirements",
+        content: `
+        <p>
+        The importer shall ensure that all goods declared under this
+        application are accurate, complete and compliant with the
+        applicable import regulations.
+        </p>
+
+        <p>
+        Any false declaration, omission of information, misleading
+        description, incorrect quantity or inaccurate valuation may
+        result in rejection of the application, permit cancellation,
+        investigation, enforcement action or prosecution.
+        </p>
+
+        <p>
+        Importers are responsible for maintaining supporting
+        documentation for inspection purposes for a minimum period
+        required by the authority.
+        </p>
+    `,
+    },
+    {
+        title: "Restricted Goods Declaration",
+        content: `
+        <p>
+        Certain goods may be subject to quantity limits, special
+        approval requirements, quarantine inspections, laboratory
+        testing, health certifications or additional permits.
+        </p>
+
+        <p>
+        Submission of this application does not guarantee approval.
+        Additional documents may be requested at any stage during
+        evaluation.
+        </p>
+
+        <p>
+        The department reserves the right to suspend processing,
+        request clarification or reject applications that do not meet
+        regulatory requirements.
+        </p>
+    `,
+    },
+    {
+        title: "Applicant Declaration",
+        content: `
+        <p>
+        By proceeding, the applicant confirms that all information
+        submitted is true, accurate and complete to the best of their
+        knowledge.
+        </p>
+
+        <p>
+        The applicant acknowledges that approval may be revoked if
+        information provided is subsequently found to be inaccurate,
+        misleading or fraudulent.
+        </p>
+
+        <p>
+        The applicant agrees to comply with all permit conditions,
+        import restrictions and instructions issued by the authority.
+        </p>
+
+        <p>
+        Failure to comply may result in permit suspension, permit
+        revocation or other enforcement actions.
+        </p>
+
+        <p>
+        The applicant further acknowledges that electronic submission
+        constitutes a legally binding declaration.
+        </p>
+    `,
+    },
+];
 
 Dropzone.autoDiscover = false;
 
@@ -39,22 +117,20 @@ let limitMeasurement = null;
 let startLimitDate = null;
 let endLimitDate = null;
 
-function measurementUnit()
-{
-     return $.ajax({
-        url: '/measurement',
+function measurementUnit() {
+    return $.ajax({
+        url: "/measurement",
         type: "GET",
         dataType: "json",
         cache: false,
         success: (data) => {
-           measurementUnits = data;
+            measurementUnits = data;
 
-           console.log('measurement', measurementUnits)
+            console.log("measurement", measurementUnits);
         },
 
         error: (xhr) => {
             console.error("Failed to load exporters:", xhr.responseText);
-           
         },
     });
 }
@@ -86,7 +162,9 @@ function fetchExporterList() {
                 .empty()
                 .append('<option value="">-- Select Exporter --</option>');
             data.forEach((exp) =>
-                $select.append(`<option value="${exp.id}">${exp.name}</option>`)
+                $select.append(
+                    `<option value="${exp.id}">${exp.name}</option>`,
+                ),
             );
 
             if ($select.hasClass("xintra-select2")) {
@@ -116,8 +194,8 @@ function handleExporterChange() {
     const $select = $("#selectexp");
 
     $select.on("change", function () {
-        const selectedId  = $(this).val();
-        const $selectRef  = $(this); // ✅ capture reference for use inside Swal callback
+        const selectedId = $(this).val();
+        const $selectRef = $(this); // ✅ capture reference for use inside Swal callback
 
         const applyExporter = (id) => {
             if (!id) return clearExporterFields();
@@ -128,26 +206,26 @@ function handleExporterChange() {
 
             console.log("exporter details", exporter);
 
-            $("#expid").val(exporter.id       || "");
-            $("#expname").val(exporter.name   || "");
+            $("#expid").val(exporter.id || "");
+            $("#expname").val(exporter.name || "");
             $("#expfonno").val(exporter.phone_no || "");
             $("#expaddress1").val(exporter.address1 || exporter.address || "");
-            $("#expcountryCode").val(exporter.ccode    || "");
-            $("#expcountry").val(exporter.country  || "");
+            $("#expcountryCode").val(exporter.ccode || "");
+            $("#expcountry").val(exporter.country || "");
 
             change = 1;
         };
 
         if (tempItems.length > 0) {
             Swal.fire({
-                icon:              'warning',
-                title:             'Change Exporter?',
-                text:              'Want to change the exporter? All the items will be removed!',
-                showCancelButton:  true,
-                confirmButtonText: 'Yes, change it',
-                cancelButtonText:  'Cancel',
-                confirmButtonColor: '#d33',
-                cancelButtonColor:  '#6c757d',
+                icon: "warning",
+                title: "Change Exporter?",
+                text: "Want to change the exporter? All the items will be removed!",
+                showCancelButton: true,
+                confirmButtonText: "Yes, change it",
+                cancelButtonText: "Cancel",
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#6c757d",
             }).then((result) => {
                 if (result.isConfirmed) {
                     // ✅ Clear all temp items and re-render
@@ -157,7 +235,9 @@ function handleExporterChange() {
                     applyExporter(selectedId);
                 } else {
                     // ✅ Revert select back to previous exporter
-                    $selectRef.val(exporter?.id ?? "").trigger("change.select2");
+                    $selectRef
+                        .val(exporter?.id ?? "")
+                        .trigger("change.select2");
                 }
             });
 
@@ -175,11 +255,10 @@ function clearExporterFields() {
 
 // ------------------------- Consignment / Uses -------------------------
 function loadConsignmentSelection() {
-
     limitMeasurement = null;
     limit = null;
     // Remove old alert first (important if dynamic)
-    $('#addItemModal .modal-body .news').find('.alert').remove();
+    $("#addItemModal .modal-body .news").find(".alert").remove();
 
     const countryCode = $("#expcountryCode").val();
     const $select = $("#itemSelect");
@@ -213,7 +292,7 @@ function loadConsignmentSelection() {
 
             data.forEach((row) => {
                 $select.append(
-                    `<option value="${row.id}">${row.entry_display}</option>`
+                    `<option value="${row.id}">${row.entry_display}</option>`,
                 );
             });
 
@@ -234,7 +313,6 @@ function loadConsignmentSelection() {
         },
     });
 }
-
 
 function loadUses(itemId) {
     const $select = $("#itemUses");
@@ -272,54 +350,68 @@ function loadUses(itemId) {
 }
 
 function formatDate(dateString) {
-    const options = { day: '2-digit', month: 'short', year: 'numeric' };
-    return new Date(dateString).toLocaleDateString('en-GB', options);
+    const options = { day: "2-digit", month: "short", year: "numeric" };
+    return new Date(dateString).toLocaleDateString("en-GB", options);
 }
 
 function loadDetails(itemId) {
-
-
     fetch(`/public/get_item_details/${itemId}`)
-    .then((res) => res.json())
-    .then((data) => {
+        .then((res) => res.json())
+        .then((data) => {
+            console.log("data in details", data);
 
-        console.log('data in details', data)
+            let item = data.data;
+            let startDateText = ``;
 
-        let item = data.data;
-        let startDateText = ``;
+            // convert to Date objects
+            const today = new Date();
+            const startDate = item.start_date
+                ? new Date(item.start_date)
+                : null;
+            const endDate = item.end_date ? new Date(item.end_date) : null;
 
-        // convert to Date objects
-        const today     = new Date();
-        const startDate = item.start_date ? new Date(item.start_date) : null;
-        const endDate   = item.end_date   ? new Date(item.end_date)   : null;
+            // ✅ Strip time — compare dates only
+            const todayDate = new Date(
+                today.getFullYear(),
+                today.getMonth(),
+                today.getDate(),
+            );
+            const startDay = startDate
+                ? new Date(
+                      startDate.getFullYear(),
+                      startDate.getMonth(),
+                      startDate.getDate(),
+                  )
+                : null;
+            const endDay = endDate
+                ? new Date(
+                      endDate.getFullYear(),
+                      endDate.getMonth(),
+                      endDate.getDate(),
+                  )
+                : null;
 
-        // ✅ Strip time — compare dates only
-        const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        const startDay  = startDate ? new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate()) : null;
-        const endDay    = endDate   ? new Date(endDate.getFullYear(),   endDate.getMonth(),   endDate.getDate())   : null;
+            const isWithinLimitPeriod =
+                item.quantity_limit &&
+                startDay &&
+                endDay &&
+                todayDate >= startDay &&
+                todayDate <= endDay;
 
-        const isWithinLimitPeriod =
-            item.quantity_limit &&
-            startDay &&
-            endDay &&
-            todayDate >= startDay &&
-            todayDate <= endDay;
+            console.log("is within limit period", isWithinLimitPeriod);
 
-        console.log('is within limit period', isWithinLimitPeriod);
+            if (isWithinLimitPeriod) {
+                limit = item.quantity_limit;
+                limitMeasurement = item.measurement_unit;
+                startLimitDate = item.start_date;
+                endLimitDate = item.end_date;
 
-        if (isWithinLimitPeriod) {
-
-            limit = item.quantity_limit;
-            limitMeasurement = item.measurement_unit;
-            startLimitDate = item.start_date;
-            endLimitDate = item.end_date;
-
-            startDateText = `
+                startDateText = `
                 from <span class="fw-bold">${formatDate(item.start_date)}</span>
                 until <span class="fw-bold">${formatDate(item.end_date)}</span>
             `;
 
-            const alertHtml = `
+                const alertHtml = `
                 <div class="col-12 alert alert-primary">
                     <p>
                         The quantity allowed for ${item.item_name} is
@@ -331,23 +423,19 @@ function loadDetails(itemId) {
                 </div>
             `;
 
-            $('#addItemModal .modal-body .news').find('.alert').remove();
-            $('#addItemModal .modal-body .news').prepend(alertHtml);
+                $("#addItemModal .modal-body .news").find(".alert").remove();
+                $("#addItemModal .modal-body .news").prepend(alertHtml);
+            } else {
+                // No limit if today is outside period
+                limit = null;
+                limitMeasurement = null;
 
-        } else {
-
-            // No limit if today is outside period
-            limit = null;
-            limitMeasurement = null;
-
-            $('#addItemModal .modal-body .news').find('.alert').remove();
-        }
-
-    })
-    .catch((err) => {
-        console.error("Failed to load uses:", err);
-    });
-    
+                $("#addItemModal .modal-body .news").find(".alert").remove();
+            }
+        })
+        .catch((err) => {
+            console.error("Failed to load uses:", err);
+        });
 }
 
 // ------------------------- Add Exporter Modal -------------------------
@@ -387,19 +475,19 @@ function initAddExporterModal() {
             text: "Please wait",
             allowOutsideClick: false,
             allowEscapeKey: false,
-            didOpen: () => Swal.showLoading()
+            didOpen: () => Swal.showLoading(),
         });
 
-        console.log('add exporter')
+        console.log("add exporter");
 
         $.ajax({
-            url: '/public/store_exporter', // ✅ always HTTPS
+            url: "/public/store_exporter", // ✅ always HTTPS
             method: "POST",
             data: {
                 name,
                 phone_no,
                 address: full_address,
-                country
+                country,
             },
             headers: {
                 "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
@@ -425,9 +513,9 @@ function initAddExporterModal() {
                 Swal.fire({
                     icon: "error",
                     title: "Failed!",
-                    text: "Failed to save exporter. Please try again."
+                    text: "Failed to save exporter. Please try again.",
                 });
-            }
+            },
         });
     });
 }
@@ -480,7 +568,7 @@ function handleImporterResponse(data) {
     const hideAll = () => {
         $("#searchresult, #doanotver, #emailnotver").hide();
         $(
-            "#impname, #impid, #impfonno, #impaddress1, #impaddress2, #imp_id, #impemail"
+            "#impname, #impid, #impfonno, #impaddress1, #impaddress2, #imp_id, #impemail",
         ).val("");
     };
 
@@ -526,7 +614,7 @@ function permitDetails() {
 
         // build URL with the selected value as query param
         const url = `${route}?type=${encodeURIComponent(value)}`;
-        console.log('the url is', url);
+        console.log("the url is", url);
         $.ajax({
             url: url, // the same URL you built earlier: route + ?type=value
             type: "GET",
@@ -648,7 +736,7 @@ function itemConsigment() {
             console.log("temp", tempAttachments);
             console.log(
                 "Latest uploaded file:",
-                tempAttachments[tempAttachments.length - 1]
+                tempAttachments[tempAttachments.length - 1],
             );
             console.log("All attachments:", tempAttachments);
 
@@ -677,7 +765,7 @@ function itemConsigment() {
         removedfile: function (file) {
             if (file.temp_id) {
                 const indexToRemove = tempAttachments.findIndex(
-                    (a) => a.id === file.temp_id
+                    (a) => a.id === file.temp_id,
                 );
                 if (indexToRemove > -1)
                     tempAttachments.splice(indexToRemove, 1);
@@ -723,13 +811,13 @@ function groupPreview() {
                 if (file.type === "application/pdf") {
                     const $preview = $(file.previewElement);
                     const $img = $preview.find(
-                        ".dz-image img[data-dz-thumbnail]"
+                        ".dz-image img[data-dz-thumbnail]",
                     );
 
                     // Set your PDF logo path
                     $img.attr(
                         "src",
-                        "/images/pdf-logo.png" // <-- replace with your actual PDF logo path
+                        "/images/pdf-logo.png", // <-- replace with your actual PDF logo path
                     );
                     $img.css({
                         "object-fit": "contain",
@@ -748,126 +836,136 @@ function groupPreview() {
 }
 
 function saveConsignmentAttachment() {
-    document.getElementById("saveBtn").addEventListener("click", function (e) {
-        e.preventDefault();
+    document
+        .getElementById("saveBtn")
+        .addEventListener("click", async function (e) {
+            e.preventDefault();
 
-        console.log("Saving consignment item...");
+            console.log("Saving consignment item...");
 
-        // ✅ Get values (Select2 fields via jQuery)
-        const itemSelectValue = $("#itemSelect").val();
-        const itemSelectText = $("#itemSelect option:selected").text();
-        const itemValue = $("#itemValue").val().trim();
-        const itemQuantity = $("#itemQuantity").val().trim();
-        const itemMeasure = $("#itemMeasure").val();
-        const itemPurpose = $("#itemPurpose").val();
-        const itemUsesValue = $("#itemUses").val();
+            // ✅ Get values (Select2 fields via jQuery)
+            const itemSelectValue = $("#itemSelect").val();
+            const itemSelectText = $("#itemSelect option:selected").text();
+            const itemValue = $("#itemValue").val().trim();
+            const itemQuantity = $("#itemQuantity").val().trim();
+            const itemMeasure = $("#itemMeasure").val();
+            const itemPurpose = $("#itemPurpose").val();
+            const itemUsesValue = $("#itemUses").val();
 
-        // ✅ Get files from Dropzone
-        const files = itemDropzone.getAcceptedFiles();
-        const itemPurposeDescription = $("#itemPurpose option:selected").data("description") || $("#itemPurpose").val();
+            // ✅ Get files from Dropzone
+            const files = itemDropzone.getAcceptedFiles();
+            const itemPurposeDescription =
+                $("#itemPurpose option:selected").data("description") ||
+                $("#itemPurpose").val();
 
-        // ✅ Validation
-        if (
-            !itemSelectValue ||
-            !itemValue ||
-            !itemQuantity ||
-            !itemMeasure ||
-            !itemPurpose ||
-            !itemUsesValue ||
-            files.length === 0
-        ) {
-            Swal.fire({
-                icon: "error",
-                title: "Incomplete Data",
-                text: "Please fill in all required fields and upload an attachment before saving.",
-            });
-            return;
-        }
-
-        if(limitMeasurement) {
-            // convert the limit to kg first
-            let limitInKg = null;
-            let conversion = null;
-
-            const selectedUnit = measurementUnits.unit.find(unit =>
-                unit.cate_code.toLowerCase() === limitMeasurement.toLowerCase()
-                && unit.is_del === false
-            );
-
-            if (selectedUnit) {
-                console.log("Found:", selectedUnit);
-                console.log("Cate Code:", selectedUnit.cate_code);
-
-                limitInKg = limit * selectedUnit.conversion.conversion;
-
-            } else {
-                console.log("Measurement unit not found.");
-            }
-
-            console.log("limit in kg", limitInKg);
-
-            // convert the quantity of the selected item weight
-            let selectedItemInKg = null;
-            
-            const selectedItemUnit = measurementUnits.unit.find(unit =>
-                unit.cate_code.toLowerCase() === itemMeasure.toLowerCase()
-                && unit.is_del === false
-            );
-
-            if (selectedItemUnit) {
-                console.log("Found:", selectedItemUnit);
-                console.log("Cate Code:", selectedItemUnit.cate_code);
-
-                selectedItemInKg = itemQuantity * selectedItemUnit.conversion.conversion;
-
-
-            } else {
-                console.log("Measurement unit not found.");
-            }
-
-            console.log("selected limit in kg", selectedItemInKg);
-
-            if(selectedItemInKg > limitInKg) {
+            // ✅ Validation
+            if (
+                !itemSelectValue ||
+                !itemValue ||
+                !itemQuantity ||
+                !itemMeasure ||
+                !itemPurpose ||
+                !itemUsesValue ||
+                files.length === 0
+            ) {
                 Swal.fire({
                     icon: "error",
-                    title: "The item is over limit",
-                    text: "Please fill in again.",
+                    title: "Incomplete Data",
+                    text: "Please fill in all required fields and upload an attachment before saving.",
                 });
                 return;
             }
-        }
 
+            if (limitMeasurement) {
+                // convert the limit to kg first
+                let limitInKg = null;
+                let conversion = null;
 
-        // ✅ Build new item
-        const newItem = {
-            // id: crypto.randomUUID(),
-            id: generateUUID(),
-            item_id: itemSelectValue,
-            item_name: itemSelectText,
-            value: itemValue,
-            quantity: itemQuantity,
-            measure: itemMeasure,
-            purpose: itemPurposeDescription,
-            uses: itemUsesValue,
-            files: files,
-        };
+                const selectedUnit = measurementUnits.unit.find(
+                    (unit) =>
+                        unit.cate_code.toLowerCase() ===
+                            limitMeasurement.toLowerCase() &&
+                        unit.is_del === false,
+                );
 
-        // ✅ Add to temporary array
-        tempItems.push(newItem);
+                if (selectedUnit) {
+                    console.log("Found:", selectedUnit);
+                    console.log("Cate Code:", selectedUnit.cate_code);
 
-        // ✅ Render the list table
-        renderAllItems();
+                    limitInKg = limit * selectedUnit.conversion.conversion;
+                } else {
+                    console.log("Measurement unit not found.");
+                }
 
-        // ✅ Reset modal fields
-        resetAddItemModal();
+                console.log("limit in kg", limitInKg);
 
-        // ✅ Hide modal
-        const modalEl = document.getElementById("addItemModal");
-        bootstrap.Modal.getInstance(modalEl).hide();
+                // convert the quantity of the selected item weight
+                let selectedItemInKg = null;
 
-        // ✅ Trigger summary / submit update if needed
-        summarySubmit();
-    });
+                const selectedItemUnit = measurementUnits.unit.find(
+                    (unit) =>
+                        unit.cate_code.toLowerCase() ===
+                            itemMeasure.toLowerCase() && unit.is_del === false,
+                );
+
+                if (selectedItemUnit) {
+                    console.log("Found:", selectedItemUnit);
+                    console.log("Cate Code:", selectedItemUnit.cate_code);
+
+                    selectedItemInKg =
+                        itemQuantity * selectedItemUnit.conversion.conversion;
+                } else {
+                    console.log("Measurement unit not found.");
+                }
+
+                console.log("selected limit in kg", selectedItemInKg);
+
+                if (selectedItemInKg > limitInKg) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "The item is over limit",
+                        text: "Please fill in again.",
+                    });
+                    return;
+                }
+            }
+
+            // ✅ Build new item
+            const newItem = {
+                // id: crypto.randomUUID(),
+                id: generateUUID(),
+                item_id: itemSelectValue,
+                item_name: itemSelectText,
+                value: itemValue,
+                quantity: itemQuantity,
+                measure: itemMeasure,
+                purpose: itemPurposeDescription,
+                uses: itemUsesValue,
+                files: files,
+            };
+
+            const agreed = await showItemConditions();
+
+            if (!agreed) {
+                return;
+            }
+
+            // ✅ Add to temporary array
+            tempItems.push(newItem);
+
+            // ✅ Render the list table
+            renderAllItems();
+
+            // ✅ Reset modal fields
+            resetAddItemModal();
+
+            // ✅ Hide modal
+            const modalEl = document.getElementById("addItemModal");
+            bootstrap.Modal.getInstance(modalEl).hide();
+
+            // ✅ Trigger summary / submit update if needed
+            summarySubmit();
+        });
 }
 
 function resetAddItemModal() {
@@ -885,7 +983,6 @@ function resetAddItemModal() {
     if (itemDropzone) itemDropzone.removeAllFiles(true);
 }
 
-
 function renderAllItems() {
     const tableBody = document.querySelector("#itemListTbl tbody");
     tableBody.innerHTML = ""; // Clear existing rows
@@ -895,15 +992,15 @@ function renderAllItems() {
     if (countInput) {
         countInput.value = tempItems.length > 0 ? "1" : "";
         if (tempItems.length > 0) {
-            countInput.classList.remove('is-invalid');
-            countInput.style.border = '';
+            countInput.classList.remove("is-invalid");
+            countInput.style.border = "";
 
             // Also remove red border from button
             const addBtn = document.getElementById("mdlAddItemBtn");
             if (addBtn) {
-                addBtn.classList.remove('is-invalid');
-                addBtn.style.setProperty('border', '', 'important');
-                addBtn.style.color = '';
+                addBtn.classList.remove("is-invalid");
+                addBtn.style.setProperty("border", "", "important");
+                addBtn.style.color = "";
             }
         }
     }
@@ -928,7 +1025,7 @@ function renderAllItems() {
                         </button>
                     </div>
                 </td>
-            </tr>`
+            </tr>`,
         );
     });
 }
@@ -988,7 +1085,7 @@ function viewMore() {
                             </button>
                         </td>
                     </tr>
-                `
+                `,
                 );
             };
 
@@ -1113,14 +1210,9 @@ function saveapplication(isDraft = false) {
                 showConfirmButton: false,
             });
 
-
-
             setTimeout(() => {
                 window.location.href = "/public/view_import_permit";
             }, 1500);
-
-
-
         },
         error: function (xhr) {
             Swal.fire("Error", "Failed to save application", "error");
@@ -1198,7 +1290,7 @@ $(document).ready(async function () {
 
             // Load uses for the selected item
             loadUses(itemId);
-            loadDetails(itemId)
+            loadDetails(itemId);
         });
 
         // Expose loadConsignmentSelection globally if needed
@@ -1244,7 +1336,7 @@ $(document).ready(async function () {
                         } else {
                             target.click();
                         }
-                    } 
+                    }
 
                     if (result.isDenied) {
                         saveapplication(true); // ✅ draft
@@ -1253,14 +1345,14 @@ $(document).ready(async function () {
 
                     // result.isDismissed → user clicked "Stay"
                 });
-            }
+            },
         );
     } catch (error) {
         console.error("Error during initialization:", error);
         Swal.fire(
             "Error",
             "Failed to initialize page. Check console for details.",
-            "error"
+            "error",
         );
     } finally {
         Swal.close();
@@ -1276,8 +1368,8 @@ export function summarySubmit() {
     // --- IMPORTER & EXPORTER SUMMARY ---
     impAddrs = importer
         ? [importer.address_1, importer.address_2]
-            .filter((x) => x && x.trim() !== "")
-            .join(", ")
+              .filter((x) => x && x.trim() !== "")
+              .join(", ")
         : "";
 
     permitDetails = {
@@ -1331,7 +1423,7 @@ export function summarySubmit() {
                     <td>RM ${item.value || ""}</td>
                     <td>${attachmentHTML}</td>
                 </tr>
-            `
+            `,
         );
     });
 }
@@ -1342,51 +1434,226 @@ export function summarySubmit() {
 // Registers a function that the inactivity timeout can call silently before
 // auto-logging out the user. Only active on import permit application pages.
 $(document).ready(function () {
-    const isPermitPage = window.location.pathname.includes('import_permit_application')
-        || window.location.pathname.includes('import_assign_application');
+    const isPermitPage =
+        window.location.pathname.includes("import_permit_application") ||
+        window.location.pathname.includes("import_assign_application");
     if (!isPermitPage) return;
 
     window.qisDraftSaver = function () {
         return new Promise((resolve, reject) => {
-            const form = document.querySelector('#wizardForm');
+            const form = document.querySelector("#wizardForm");
             if (!form) return resolve(); // nothing to save
 
             const formData = new FormData(form);
-            formData.append('is_draft', 1);
-            formData.append('exporterData', JSON.stringify(exporter));
-            formData.append('importerData', JSON.stringify(importer));
+            formData.append("is_draft", 1);
+            formData.append("exporterData", JSON.stringify(exporter));
+            formData.append("importerData", JSON.stringify(importer));
 
             const livePermitDetails = {
-                applCate: document.getElementById('app_cate')?.value ?? '',
-                eta: document.getElementById('eta')?.value ?? '',
-                tranType: document.getElementById('trnptType')?.value ?? '',
-                entrypoint: document.getElementById('entryPoint')?.value ?? '',
+                applCate: document.getElementById("app_cate")?.value ?? "",
+                eta: document.getElementById("eta")?.value ?? "",
+                tranType: document.getElementById("trnptType")?.value ?? "",
+                entrypoint: document.getElementById("entryPoint")?.value ?? "",
             };
-            formData.append('permitDetails', JSON.stringify(livePermitDetails));
+            formData.append("permitDetails", JSON.stringify(livePermitDetails));
 
             tempItems.forEach((item, index) => {
                 const { files, ...otherData } = item;
-                formData.append(`items[${index}][data]`, JSON.stringify(otherData));
+                formData.append(
+                    `items[${index}][data]`,
+                    JSON.stringify(otherData),
+                );
                 if (files && files.length > 0) {
                     files.forEach((file) => {
-                        formData.append('files[]', file);
-                        formData.append('file_item_index[]', index);
+                        formData.append("files[]", file);
+                        formData.append("file_item_index[]", index);
                     });
                 }
             });
 
             $.ajax({
-                url: '/public/save-application',
-                type: 'POST',
+                url: "/public/save-application",
+                type: "POST",
                 data: formData,
-                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                headers: {
+                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
+                        "content",
+                    ),
+                },
                 processData: false,
                 contentType: false,
                 success: () => resolve(),
-                error: (xhr) => reject(new Error(xhr.responseJSON?.message || 'Draft save failed')),
+                error: (xhr) =>
+                    reject(
+                        new Error(
+                            xhr.responseJSON?.message || "Draft save failed",
+                        ),
+                    ),
             });
         });
     };
 
-    console.log('[QIS] Import permit draft saver registered.');
+    console.log("[QIS] Import permit draft saver registered.");
 });
+
+async function showItemConditions() {
+    let currentPage = 0;
+
+    while (currentPage < ITEM_CONDITIONS.length) {
+        const page = ITEM_CONDITIONS[currentPage];
+
+        const result = await Swal.fire({
+            title: page.title,
+            width: 900,
+            html: `
+                <div style="
+                    text-align:left;
+                    max-height:350px;
+                    overflow:auto;
+                    padding-right:10px;
+                ">
+                    ${page.content}
+                </div>
+
+                <div class="mt-3 text-muted">
+                    Page ${currentPage + 1} of ${ITEM_CONDITIONS.length}
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText:
+                currentPage === ITEM_CONDITIONS.length - 1
+                    ? "Continue"
+                    : "Next",
+            cancelButtonText: "Cancel",
+            allowOutsideClick: false,
+        });
+
+        if (!result.isConfirmed) {
+            return false;
+        }
+
+        currentPage++;
+    }
+
+    return await showFinalAgreement();
+}
+
+async function showFinalAgreement() {
+    let agreed = false;
+
+    const result = await Swal.fire({
+        title: "Declaration & Agreement",
+        width: 900,
+
+        html: `
+            <div
+                id="agreementScroll"
+                style="
+                    height:280px;
+                    overflow-y:auto;
+                    text-align:left;
+                    border:1px solid #ddd;
+                    padding:15px;
+                    border-radius:8px;
+                "
+            >
+
+                <h5>Final Declaration</h5>
+
+                <p>
+                I declare that all information provided in this
+                application is true and accurate.
+                </p>
+
+                <p>
+                I understand that approval may be revoked if false
+                information is provided.
+                </p>
+
+                <p>
+                I agree to comply with all permit conditions,
+                regulations, requirements and instructions imposed by
+                the authority.
+                </p>
+
+                <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                Sed non risus. Suspendisse lectus tortor dignissim sit
+                amet adipiscing nec ultricies sed dolor.
+                </p>
+
+                <p>
+                Mauris placerat eleifend leo.
+                Quisque sit amet est et sapien ullamcorper pharetra.
+                Vestibulum erat wisi condimentum sed commodo vitae.
+                </p>
+
+                <p>
+                Pellentesque habitant morbi tristique senectus et netus
+                et malesuada fames ac turpis egestas.
+                </p>
+
+                <p>
+                Donec odio urna tempus molestie porttitor ut iaculis quis
+                sem. Donec viverra fermentum felis.
+                </p>
+
+                <p>
+                END OF DECLARATION.
+                </p>
+
+            </div>
+
+            <div class="form-check mt-3 text-start">
+                <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="agreeCheckbox"
+                    disabled
+                >
+                <label class="form-check-label">
+                    I have read and agree to all conditions.
+                </label>
+            </div>
+        `,
+
+        didOpen: () => {
+            const scrollBox = document.getElementById("agreementScroll");
+
+            const checkbox = document.getElementById("agreeCheckbox");
+
+            scrollBox.addEventListener("scroll", () => {
+                const reachedBottom =
+                    scrollBox.scrollTop + scrollBox.clientHeight >=
+                    scrollBox.scrollHeight - 10;
+
+                if (reachedBottom) {
+                    checkbox.disabled = false;
+                }
+            });
+        },
+
+        preConfirm: () => {
+            const checked = document.getElementById("agreeCheckbox").checked;
+
+            if (!checked) {
+                Swal.showValidationMessage(
+                    "Please read the declaration and tick the agreement checkbox.",
+                );
+
+                return false;
+            }
+
+            agreed = true;
+
+            return true;
+        },
+
+        allowOutsideClick: false,
+        showCancelButton: true,
+        confirmButtonText: "I Agree",
+        cancelButtonText: "Cancel",
+    });
+
+    return result.isConfirmed && agreed;
+}

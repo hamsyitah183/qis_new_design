@@ -54,7 +54,7 @@
     <link rel="stylesheet" href="{{ asset('build2/assets/libs/@tarekraafat/autocomplete.js/css/autoComplete.css') }}">
 
     <!-- APP CSS & APP SCSS -->
-    <link rel="preload" as="style" href="{{ asset('build2/assets/app-BXaKe1N-.css') }}">
+    {{-- <link rel="preload" as="style" href="{{ asset('build2/assets/app-BXaKe1N-.css') }}"> --}}
     <link rel="stylesheet" href="{{ asset('build2/assets/app-BXaKe1N-.css') }}">
 
     <!-- FlatPickr CSS (duplicate, can remove one if redundant) -->

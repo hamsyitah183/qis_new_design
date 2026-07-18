@@ -4,13 +4,13 @@
             <li class="nav-item" role="presentation">
                 <button class="nav-link w-100 text-start active" id="profile-about-tab" data-bs-toggle="tab"
                     data-bs-target="#profile-about-tab-pane" type="button" role="tab"
-                    aria-controls="profile-about-tab-pane" aria-selected="true">About</button>
+                    aria-controls="profile-about-tab-pane" aria-selected="true" data-en = "Profile" data-bm = "Profil">Profile</button>
             </li>
 
             <li class="nav-item" role="presentation">
                 <button class="nav-link w-100 text-start" id="edit-profile-tab" data-bs-toggle="tab"
                     data-bs-target="#edit-profile-tab-pane" type="button" role="tab"
-                    aria-controls="edit-profile-tab-pane" aria-selected="false" tabindex="-1">Edit Profile</button>
+                    aria-controls="edit-profile-tab-pane" aria-selected="false" tabindex="-1"  data-en = "Edit Profile" data-bm = "Sunting Profil">Edit Profile</button>
             </li>
 
             @if ($user['type'] === 'public')
