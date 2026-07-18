@@ -78,10 +78,8 @@
     </header>
 
     {{-- =============================== HERO =============================== --}}
-    {{-- Image URL is injected here via asset() so it resolves correctly no matter
-         how the webserver's document root is configured; qis-landing.css consumes
-         it through the --hero-bg-image custom property (see additions below). --}}
-    <section class="qis-hero" style="--hero-bg-image: url('{{ asset('images/background.jpg') }}')">
+    {{-- Background photo now lives in qis-landing.css: .qis-hero { background: url('/images/background.jpg') ... } --}}
+    <section class="qis-hero" style="background: url('/images/background.jpg')">
         <div class="qis-container qis-hero-grid">
             <div>
                 <span class="qis-eyebrow" data-en="Jabatan Pertanian Sabah &middot; Plant Biosecurity Division" data-bm="Jabatan Pertanian Sabah &middot; Bahagian Biosekuriti Tumbuhan">Jabatan Pertanian Sabah &middot; Plant Biosecurity Division</span>
@@ -489,8 +487,32 @@
         </div>
     </div>
 
-    {{-- =============================== ANNOUNCEMENT MODAL =============================== --}}
-    <x-announcement-modal />
+    {{-- =============================== ANNOUNCEMENT MODAL (shared, populated by JS) =============================== --}}
+    <div class="qis-modal-overlay" id="qisModalAnnouncement">
+        <div class="qis-modal">
+            <button type="button" class="qis-modal-close" data-close-modal>&times;</button>
+            <span class="qis-modal-tag" data-en="ANNOUNCEMENT" data-bm="PENGUMUMAN">ANNOUNCEMENT</span>
+            <div class="qis-icon-wrap"><i class='bx bx-bell'></i></div>
+            <h4 class="js-am-title" data-en="" data-bm=""></h4>
+
+            <div class="qis-modal-meta">
+                <div class="qis-modal-meta-row">
+                    <i class='bx bx-calendar-check'></i>
+                    <span><b data-en="Released" data-bm="Dikeluarkan">Released</b>: <span class="js-am-released-at"></span></span>
+                </div>
+                <div class="qis-modal-meta-row">
+                    <i class='bx bx-user-circle'></i>
+                    <span><b data-en="By" data-bm="Oleh">By</b>: <span class="js-am-released-by"></span></span>
+                </div>
+                <div class="qis-modal-meta-row">
+                    <i class='bx bx-time-five'></i>
+                    <span><b data-en="Valid Until" data-bm="Sah Sehingga">Valid Until</b>: <span class="js-am-expiry" data-en="No expiry" data-bm="Tiada tamat tempoh">No expiry</span></span>
+                </div>
+            </div>
+
+            <p class="js-am-body" data-en="" data-bm=""></p>
+        </div>
+    </div>
 
     {{-- =============================== IMAGE MODAL (shared, populated by JS) =============================== --}}
     <div class="qis-modal-overlay" id="qisModalImage">
@@ -557,15 +579,36 @@
             });
         });
 
-        // ---------- announcement modal ----------
-        // Handled entirely by the <x-announcement-modal /> component now —
-        // no page-side JS needed for it.
-
+        // ---------- announcement modal (shared, dynamic content) ----------
         function setBilingual(el, en, bm) {
             if (!el) return;
             el.setAttribute('data-en', en || '');
             el.setAttribute('data-bm', bm || '');
         }
+
+        document.querySelectorAll('.qis-announcement-card').forEach(function (card) {
+            card.addEventListener('click', function () {
+                var payload = card.querySelector('.js-announcement-payload');
+                var modal = document.getElementById('qisModalAnnouncement');
+                if (!payload || !modal) return;
+
+                setBilingual(modal.querySelector('.js-am-title'), payload.dataset.titleEn, payload.dataset.titleBm);
+                setBilingual(modal.querySelector('.js-am-body'), payload.dataset.bodyEn, payload.dataset.bodyBm);
+
+                modal.querySelector('.js-am-released-at').textContent = payload.dataset.releasedAt || '';
+                modal.querySelector('.js-am-released-by').textContent = payload.dataset.releasedBy || '';
+
+                var expiryEl = modal.querySelector('.js-am-expiry');
+                if (payload.dataset.expiresAt) {
+                    setBilingual(expiryEl, payload.dataset.expiresAt, payload.dataset.expiresAt);
+                } else {
+                    setBilingual(expiryEl, 'No expiry', 'Tiada tamat tempoh');
+                }
+
+                applyLang(currentLang); // refresh text in the newly populated modal
+                modal.classList.add('qis-open');
+            });
+        });
 
         // ---------- image modal (shared, dynamic content) ----------
         document.querySelectorAll('.qis-gallery-tile[data-modal="qisModalImage"]').forEach(function (tile) {
