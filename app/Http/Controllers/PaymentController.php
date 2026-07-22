@@ -109,8 +109,7 @@ class PaymentController extends Controller
 
     public function signedUrl(Request $request)
     {
-        // dd($request->all());
-
+        //    dd($request->all());
         $type = $request['type'];
         $id = $request['application_id'];
         $permitIds = $request['permit_ids'];
@@ -121,12 +120,22 @@ class PaymentController extends Controller
         ]);
 
         if ($type == 'import_permit') {
-            $application = IpApplication::findOrFail($id);
-            // $permitIds = explode(',', $permitId);
 
-            $permits = IpConsignmentPermit::where('application_id', $id)
+            $application = IpApplication::where(
+                'application_id',
+                $id
+            )->firstOrFail();
+
+            $permits = IpConsignmentPermit::where(
+                'application_id',
+                $application->id
+            )
                 ->whereIn('id', $permitIds)
-                ->whereIn('status', ['pending for payment', 'payment failed', 'Payment Failed'])
+                ->whereIn('status', [
+                    'pending for payment',
+                    'payment failed',
+                    'Payment Failed'
+                ])
                 ->get();
         } elseif ($type == 'inspection') {
             $application = InspectionApplication::findOrFail($id);
@@ -148,9 +157,6 @@ class PaymentController extends Controller
             // dd($permits);
         }
 
-        // $application = IpApplication::findOrFail($request->application_id);
-
-        // // 🔒 Ownership check
         if ($application->user_id !== authUser()['user']->uuid) {
             abort(403);
         }

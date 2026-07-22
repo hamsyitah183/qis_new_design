@@ -1,3 +1,8 @@
+@push('style')
+    {{-- adjust the path if your project loads dashboard CSS differently --}}
+    @vite(['resources/css/pages/dashboard/admin-dashboard.css'])
+@endpush
+
 {{-- finance and application data --}}
 @include('dashboard.internal.components.finance_application_data')
 {{-- @dd($data) --}}
@@ -10,9 +15,9 @@
 <div class="row align-items-stretch mb-2">
     @include('dashboard.internal.components.user_chart')
     <div class="col-12 col-lg-4 col-xl-5 d-flex">
-    
+
             @include('dashboard.internal.components.recent_activity')
-   
+
     </div>
 </div>
 
@@ -20,4 +25,14 @@
 <div class="row align-items-stretch mt-4 mb-4">
     @include('dashboard.internal.components.order_chart')
     @include('dashboard.internal.components.payment_type_chart')
+</div>
+
+{{-- activity calendar + announcements --}}
+<div class="row align-items-stretch mt-4 mb-4">
+    <div class="col-12 col-lg-7 d-flex">
+        @include('dashboard.internal.components.calendar')
+    </div>
+    <div class="col-12 col-lg-5 d-flex">
+        @include('dashboard.internal.components.announcements-widget')
+    </div>
 </div>

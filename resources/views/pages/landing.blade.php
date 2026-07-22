@@ -71,8 +71,12 @@
                     <button type="button" class="qis-lang-btn active" data-lang="en">EN</button>
                     <button type="button" class="qis-lang-btn" data-lang="bm">BM</button>
                 </div>
-                <a href="/login" class="qis-btn-ghost d-none d-md-inline-flex" data-en="Sign In" data-bm="Log Masuk">Sign In</a>
-                <a href="/login" class="qis-btn-primary" data-en="Apply Now" data-bm="Mohon Sekarang">Apply Now</a>
+                @if (Auth::guard('public')->check() || Auth::guard('internal')->check())
+                    <a href="/dashboard" class="qis-btn-ghost d-none d-md-inline-flex" data-en="Dashboard" data-bm="Dashboard">Dashboard</a>
+                @else
+                    <a href="/login" class="qis-btn-ghost d-none d-md-inline-flex" data-en="Sign In" data-bm="Log Masuk">Sign In</a>
+                @endif
+                <a href="/public/new_application" class="qis-btn-primary" data-en="Apply Now" data-bm="Mohon Sekarang">Apply Now</a>
             </div>
         </div>
     </header>
@@ -436,7 +440,7 @@
             <span class="qis-modal-tag" data-en="APPLICATION TYPE 01" data-bm="JENIS PERMOHONAN 01">APPLICATION TYPE 01</span>
             <div class="qis-icon-wrap"><i class='bx bx-package'></i></div>
             <h4 data-en="Import Permit" data-bm="Permit Import">Import Permit</h4>
-            <p data-en="Official authorization to import regulated agricultural goods into Sabah. Covers goods listed under the standard schedule and is the primary entry point for commercial importers." data-bm="Kebenaran rasmi untuk mengimport barangan pertanian terkawal ke Sabah. Merangkumi barangan yang disenaraikan di bawah jadual standard dan merupakan titik masuk utama bagi pengimport komersial.">
+            <p data-en="Official authorization to import regulated agricultural goods into Sabah. Covers goods listed under the standard schedule and is the primary entry point for commercial importers." data-bm="Kebenaran rasmi untuk mengimport barangan pertanian terkawal ke Sabah. Merangkumi barangan yang disenaraikan di bawah jadual standard dan merupakan Pintu Masuk utama bagi pengimport komersial.">
                 Official authorization to import regulated agricultural goods into Sabah. Covers goods listed under the standard schedule and is the primary entry point for commercial importers.
             </p>
             <div class="qis-modal-steps">

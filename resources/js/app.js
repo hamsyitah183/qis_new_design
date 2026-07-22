@@ -3,7 +3,6 @@ import { initInactivityTimeout } from "./inactivity_timeout";
 import { IconHome, IconUser } from "tabler-icons";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
-
 import $ from "jquery";
 window.$ = window.jQuery = $; // make it global
 import "select2";
@@ -16,11 +15,10 @@ import "datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css";
 import { public_dashboard } from "./pages/dashboard/public_dashboard";
 
 // resources/js/app.js
-import ApexCharts from 'apexcharts';
+import ApexCharts from "apexcharts";
 
 // Make it globally available
 window.ApexCharts = ApexCharts;
-
 
 $("#redirectProfile").on("click", function (e) {
     e.preventDefault();
@@ -34,9 +32,8 @@ export function getAuthUser() {
     return window.authUser ?? null;
 }
 
-
 const user = getAuthUser();
-console.log('user', user);
+console.log("user", user);
 
 if (user) {
     if (user.type === "internal") {
@@ -63,7 +60,7 @@ export function formatTime(timestamp) {
     };
 
     const formatted = new Intl.DateTimeFormat("en-GB", options).format(
-        localTime
+        localTime,
     );
 
     return formatted;
@@ -119,9 +116,7 @@ export function notifyUser(message, editor = null) {
     notificationContent();
 }
 
-
 // notification();
-
 
 let notificationInterval = null;
 
@@ -148,7 +143,7 @@ export function stopNotificationPolling() {
     notificationInterval = null;
 }
 
-document.addEventListener('visibilitychange', () => {
+document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
         stopNotificationPolling();
     } else {
@@ -173,7 +168,7 @@ export function fetchVerificationCount() {
         success: function (data) {
             if (data.count > 0) {
                 $("#verificationCount").html(
-                    `<span class="sidebar-count-row"><span>User Verification</span><span class="badge bg-success text-white sidebar-nav-count-badge">${data.count}</span></span>`
+                    `<span class="sidebar-count-row"><span>User Verification</span><span class="badge bg-success text-white sidebar-nav-count-badge">${data.count}</span></span>`,
                 );
                 $("#userMgmtParentBadge").show();
             } else {
@@ -198,7 +193,7 @@ export function fetchApplicationCount() {
 
             if (data.permit > 0) {
                 $("#importPermitCount").html(
-                    `<span class="sidebar-count-row"><span>Import Permit</span><span class="badge bg-success text-white sidebar-nav-count-badge">${data.permit}</span></span>`
+                    `<span class="sidebar-count-row"><span>Import Permit</span><span class="badge bg-success text-white sidebar-nav-count-badge">${data.permit}</span></span>`,
                 );
             } else {
                 $("#importPermitCount").text("Import Permit");
@@ -206,7 +201,7 @@ export function fetchApplicationCount() {
 
             if (data.inspection > 0) {
                 $("#inspectionAppCount").html(
-                    `<span class="sidebar-count-row"><span>Inspection Certificate</span><span class="badge bg-success text-white sidebar-nav-count-badge">${data.inspection}</span></span>`
+                    `<span class="sidebar-count-row"><span>Inspection Certificate</span><span class="badge bg-success text-white sidebar-nav-count-badge">${data.inspection}</span></span>`,
                 );
             } else {
                 $("#inspectionAppCount").text("Inspection Certificate");
@@ -214,7 +209,7 @@ export function fetchApplicationCount() {
 
             if (data.consignment > 0) {
                 $("#consignmentAppCount").html(
-                    `<span class="sidebar-count-row"><span>Consignment Certificate</span><span class="badge bg-success text-white sidebar-nav-count-badge">${data.consignment}</span></span>`
+                    `<span class="sidebar-count-row"><span>Consignment Certificate</span><span class="badge bg-success text-white sidebar-nav-count-badge">${data.consignment}</span></span>`,
                 );
             } else {
                 $("#consignmentAppCount").text("Consignment Certificate");
@@ -233,16 +228,131 @@ if (window.authUser?.type === "public") {
     public_dashboard();
 }
 
-
 export function generateUUID() {
-  if (crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
+    if (crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
 
-  // fallback for older browsers
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
+    // fallback for older browsers
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === "x" ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+    });
 }
+
+function languange() {
+    (function () {
+        var STORAGE_KEY = "qis_lang";
+        var buttons = document.querySelectorAll(".lang-btn");
+        var elements = document.querySelectorAll("[data-en]");
+
+        function setLang(lang) {
+            elements.forEach(function (el) {
+                var text = el.getAttribute("data-" + lang);
+                if (text === null) return;
+
+                // Check if this element has data-title attribute (for wizard steps)
+                if (
+                    el.hasAttribute("data-title") &&
+                    el.hasAttribute("data-en") &&
+                    el.hasAttribute("data-bm")
+                ) {
+                    el.setAttribute("data-title", text);
+
+                    // Update wizard navigation if this is a wizard step
+                    var stepIndex = el.getAttribute("data-step");
+                    if (stepIndex !== null) {
+                        // Support both .wz-nav and .wizard-nav classes
+                        var navSteps = document.querySelectorAll(".wz-nav .wz-step, .wizard-nav .wizard-step");
+                        navSteps.forEach(function (navStep) {
+                            var navIndex = Array.from(navSteps).indexOf(navStep);
+                            var stepNum = parseInt(stepIndex) - 1; // steps are 1-indexed
+                            if (navIndex === stepNum) {
+                                // Find the span that contains the text (second span, after the dot)
+                                var spans = navStep.querySelectorAll("span");
+                                if (spans.length > 1) {
+                                    spans[1].innerHTML = text;
+                                } else if (spans.length === 1) {
+                                    spans[0].innerHTML = text;
+                                }
+                            }
+                        });
+                    }
+                }
+
+                if (el.getAttribute("data-i18n-attr") === "placeholder") {
+                    el.setAttribute("placeholder", text);
+                } else {
+                    el.textContent = text;
+                }
+            });
+
+            buttons.forEach(function (btn) {
+                btn.classList.toggle(
+                    "active",
+                    btn.getAttribute("data-lang") === lang,
+                );
+            });
+
+            // Update wizard buttons text
+            var wizardBtns = document.querySelectorAll(".wizard-btn");
+            wizardBtns.forEach(function (btn) {
+                if (btn.classList.contains("prev")) {
+                    btn.textContent = lang === "bm" ? "Kembali" : "Prev";
+                } else if (btn.classList.contains("next")) {
+                    btn.textContent = lang === "bm" ? "Seterusnya" : "Next";
+                } else if (btn.classList.contains("finish")) {
+                    btn.textContent = lang === "bm" ? "Hantar" : "Submit";
+                }
+            });
+
+            document.documentElement.setAttribute(
+                "lang",
+                lang === "bm" ? "ms" : "en",
+            );
+
+            try {
+                localStorage.setItem(STORAGE_KEY, lang);
+
+                applyTranslations();
+            } catch (e) {
+                /* storage unavailable, ignore */
+            }
+        }
+
+        buttons.forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                setLang(btn.getAttribute("data-lang"));
+            });
+        });
+
+        var savedLang = "en";
+        try {
+            savedLang = localStorage.getItem(STORAGE_KEY) || "en";
+        } catch (e) {
+            /* storage unavailable, default to en */
+        }
+
+        setLang(savedLang);
+    })();
+}
+
+export function applyTranslations(container) {
+    const lang = localStorage.getItem("qis_lang") || "en";
+    // Find all elements with data-en/data-bm inside this container
+    const elements = container.querySelectorAll("[data-en]");
+    
+    elements.forEach(function (el) {
+        const text = el.getAttribute("data-" + lang);
+        if (text === null) return;
+
+        if (el.getAttribute("data-i18n-attr") === "placeholder") {
+            el.setAttribute("placeholder", text);
+        } else {
+            el.textContent = text;
+        }
+    });
+}
+
+languange();

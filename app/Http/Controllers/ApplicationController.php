@@ -666,14 +666,43 @@ class ApplicationController extends Controller
         ]); //, 'consignment', 'attachment'
     }
 
-    public function viewapplicationTest()
+    public function viewapplicationTest($uuid)
     {
         Artisan::call('bayupay:check-pending');
 
+        Artisan::call('bayupay:check-pending');
+
+        $application = IpApplication::with([
+            'user', // submitted by
+            'importer', // importer user
+            'exporter', // exporter record
+            // 'exporter.country',
+            'entryPoint.districtCode',
+        ])
+            ->where('application_id', $uuid)
+            ->orderBy('created_at', 'desc')
+            ->firstOrFail();
+
+        $itemId = $application->id;
+
+        // dd($application->consignmentPermits);
+
+        $consignment = IpConsignmentPermit::with(['unit', 'purposeCode'])
+            ->where('application_id', $itemId)
+            ->get();
+
+        // dd($consignment);
+
+        $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
+        $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
+        $country = country::where('is_del', false)->get();
 
         return view('pages.public.view_application_test', [
-
-            // 'consignmentDetails' => $consignment[0]->attachments
+            'application' => $application,
+            'consignment' => $consignment,
+            'pubmeasure' => $pubmeasure,
+            'pubpurpose' => $pubpurpose,
+            'country' => $country,
         ]); //, 'consignment', 'attachment'
     }
 
@@ -799,7 +828,8 @@ class ApplicationController extends Controller
 
         // Fetch application and eager load relationships
         $application = IpApplication::where('application_id', $id)
-            ->with(['user', 'importer', 'exporter.countryInfo', 'entryPoint.districtCode', 'consignmentPermits.attachments', 'activity_log.causer'])
+            ->with(['user', 'importer', 'exporter.countryInfo', 'attachment',
+            'entryPoint.districtCode', 'consignmentPermits.attachments', 'activity_log.causer'])
             ->firstOrFail();
 
         // Collect QR scan logs linked to this import permit application via its order numbers.

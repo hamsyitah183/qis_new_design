@@ -296,13 +296,13 @@
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active" id="attach-view-tab" data-bs-toggle="tab"
                             data-bs-target="#attach-view" type="button" role="tab" aria-selected="true" title="View">
-                            <i class="bi bi-eye me-2"></i>
+                            <i class="bi bi-eye"></i>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="attach-details-tab" data-bs-toggle="tab"
                             data-bs-target="#attach-details" type="button" role="tab" aria-selected="false" title="Details">
-                            <i class="bi bi-info-circle me-2"></i>
+                            <i class="bi bi-info-circle"></i>
                         </button>
                     </li>
                 </ul>

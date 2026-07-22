@@ -4,6 +4,8 @@
 @import './backend.css/login.css';
 @import './backend.css/warning.css';
 @import './backend.css/import.css';
+@import './backend.css/admin_dashboard.css';
+@import './backend.css/order_detail.css';
 
 @import '@fortawesome/fontawesome-free/css/all.min.css';
 
@@ -65,7 +67,7 @@
 }
 
 
-#itemDropzone .dz-preview-group {
+ .dz-preview-group {
     display: flex !important;
     flex-direction: row;
     flex-wrap: wrap;
@@ -78,7 +80,7 @@
     row-gap: 15px;
 }
 
-#itemDropzone .dz-preview-group .dz-preview {
+ .dz-preview-group .dz-preview {
     border: 1px solid var(--default-border) !important;
     padding: 15px;
     border-radius: 5px;
@@ -88,7 +90,7 @@
 
 }
 
-#itemDropzone .dz-preview-group .dz-image {
+ .dz-preview-group .dz-image {
     height: 100px;
     width: 100%;
     object-fit: cover;
@@ -100,11 +102,11 @@
     justify-content: center;
 }
 
-#itemDropzone .dz-details {
+ .dz-details {
     width: 100% !important;
 }
 
-#itemDropzone .dz-preview-group .dz-filename {
+ .dz-preview-group .dz-filename {
     width: 70%;
     text-wrap: wrap !important;
     color: var(--text-muted) !important;
@@ -117,13 +119,13 @@
     text-wrap: wrap !important;
 }
 
-#itemDropzone .dz-preview-group .dz-progress,
-#itemDropzone .dz-preview-group .dz-error-mark,
-#itemDropzone .dz-preview-group .dz-success-mark {
+ .dz-preview-group .dz-progress,
+ .dz-preview-group .dz-error-mark,
+ .dz-preview-group .dz-success-mark {
     display: none !important;
 }
 
-#itemDropzone .dz-size {
+ .dz-size {
     padding: .25rem .45rem;
     font-weight: 500;
     border-radius: .25rem;
@@ -135,7 +137,7 @@
     color: var(--primary-color);
 }
 
-#itemDropzone .dz-remove {
+ .dz-remove {
     background-color: rgba(var(--danger-rgb), .1);
     color: rgb(var(--danger-rgb));
     /* color: #fff !important; */
@@ -144,11 +146,9 @@
     padding: .375rem .75rem;
     box-shadow: none;
     font-weight: 500;
-    margin-top: 1rem !important;
     /* align-self: end; */
     height: fit-content;
-    width: fit-content;
-    margin-left: auto;
+
 }
 
 .payment-pic {

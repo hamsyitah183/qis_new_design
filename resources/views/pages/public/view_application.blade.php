@@ -3,7 +3,7 @@
 @section('pageName', 'View Application')
 
 @push('scripts')
-    @vite(['resources/js/pages/importPermit/application_detail2.js'])
+    @vite(['resources/js/pages/importPermit/application_detail.js'])
     {{-- @vite(['resources/js/pages/importPermit/application_reapply.js']) --}}
 @endpush
 

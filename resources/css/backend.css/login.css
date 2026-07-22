@@ -10,7 +10,7 @@
         rgba(var(--primary-tint2-rgb), 0.08)
     );
     /* TODO: swap for your background image later, e.g.*/
-    background: url("images/background.jpg") center/cover
+    background: url('/public/images/background.jpg') center/cover
         no-repeat;
 }
 

@@ -52,6 +52,16 @@ Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']
 // Note: Changed to POST for security. If your frontend strictly requires GET, change it back to Route::get
 Route::get('/logout', [AuthenticationController::class, 'logout'])->name('logout');
 
+Route::get('/dashboard', function () {
+    if (auth('public')->check()) {
+        return redirect()->route('public.dashboard');
+    } elseif (auth('internal')->check()) {
+        return redirect()->route('internal.dashboard');
+    } else {
+        return redirect()->route('login');
+    }
+});
+
 // Root Route '/'
 // This handles the logic of where to send someone based on their auth status
 Route::get('/', function () {
@@ -341,14 +351,15 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/inspection_certificates_list/data', [InspectionController::class, 'getAllInspectionList'])->name('inspection.list.data');
 
     Route::get('/application/{id}/data', [ApplicationController::class, 'getApplicationDetails']);
-    Route::get('/view_application/{uuid}', [ApplicationController::class, 'viewapplication'])->name('viewApplication');
+    // Route::get('/view_application/{uuid}', [ApplicationController::class, 'viewapplication'])->name('viewApplication');
 
     Route::get('/edit_application/{uuid}', [ApplicationController::class, 'editApplication'])->name('editApplication');
 
     // TEST NEW DESIGN
     Route::get('/apply_import/test', [ApplicationController::class, 'applyTest']);
     Route::get('/apply_import/bahasa/test', [ApplicationController::class, 'applyTestBahasa']);
-    Route::get('/view_import/test', [ApplicationController::class, 'viewapplicationTest']);
+    // Route::get('/view_import/test/{uuid}', [ApplicationController::class, 'viewapplicationTest']);
+    Route::get('/view_application/{uuid}', [ApplicationController::class, 'viewapplicationTest'])->name('viewApplication');
     Route::get('/summary_import/test', [ApplicationController::class, 'summaryTest']);
     Route::get('/list_import/test', [ApplicationController::class, 'listTest']);
     Route::get('/verify_import/test', [ApplicationController::class, 'verifyTest']);

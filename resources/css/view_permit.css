@@ -125,7 +125,7 @@
 
 @media (max-width: 767.98px) {
     #permitDetailOffcanvas { width: 100% !important; }
-    .pd-nav { min-width: 150px; width: 150px; }
+    .pd-nav { min-width: 55px; width: 55px; }
     .pd-info-grid { grid-template-columns: repeat(2, 1fr); }
 }
 

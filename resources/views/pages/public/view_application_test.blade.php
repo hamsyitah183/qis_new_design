@@ -3,16 +3,10 @@
 @section('pageName', 'View Application')
 
 @push('scripts')
-    @vite(['resources/js/pages/importPermit/test1.js'])
-    @vite(['resources/js/pages/importPermit/test2.js'])
-    {{-- @vite(['resources/js/pages/importPermit/application_reapply.js']) --}}
+    @vite(['resources/js/pages/importPermit/test1.js', 'resources/js/pages/importPermit/test2.js', 'resources/js/pages/importPermit/test4-actions.js'])
 @endpush
 
-
-
-
 @section('breadcrumb')
-
     @php
         $internalUser = auth('internal')->user();
         $isInternal = auth('internal')->check();
@@ -20,62 +14,150 @@
     @endphp
 
     @if ($internalUser && $internalUser->hasRole('boundary officer'))
-        <x-breadcrumb :items="[
-            ['label' => 'Dashboard', 'url' => '/'],
-            ['label' => 'Application: ', 'url' => '#'],
-        ]" title="View Application">
+        <x-breadcrumb 
+            :items="[
+                ['label' => 'Dashboard', 'url' => '/', 'data-en' => 'Dashboard', 'data-bm' => 'Papan Pemuka'],
+                ['label' => 'Application: ' . $application->application_id, 'url' => '#', 'data-en' => 'Application', 'data-bm' => 'Permohonan'],
+            ]" 
+            title="View Application"
+            title_en="View Application"
+            title_bm="Lihat Permohonan">
         </x-breadcrumb>
     @else
-        <x-breadcrumb :items="[
-            ['label' => 'Dashboard', 'url' => '/'],
-            ['label' => 'Application List', 'url' => '#'],
-            ['label' => 'Application: ' , 'url' => '#'],
-        ]" title="View Application">
+        <x-breadcrumb 
+            :items="[
+                ['label' => 'Dashboard', 'url' => '/', 'data-en' => 'Dashboard', 'data-bm' => 'Papan Pemuka'],
+                ['label' => 'Application List', 'url' => $applicationUrl, 'data-en' => 'Application List', 'data-bm' => 'Senarai Permohonan'],
+                ['label' => 'Application: ' . $application->application_id, 'url' => '#', 'data-en' => 'Application', 'data-bm' => 'Permohonan'],
+            ]" 
+            title="View Application"
+            title_en="View Application"
+            title_bm="Lihat Permohonan">
         </x-breadcrumb>
     @endif
-
 @endsection
-
-
-
 
 @section('content')
 
     @php
         $authUuid = authUser()['user']->uuid ?? null;
-        $status = '';
-        $importerVerify = '';
+        $status = strtolower($application->status ?? '');
+        $importerVerify = strtolower($application->importer_verify ?? '');
+
+        $isInternal = auth()->guard('internal')->check();
+        $isAdminOrClerk =
+            $isInternal &&
+            auth()
+                ->guard('internal')
+                ->user()
+                ->hasAnyRole(['admin', 'clerk', 'superadmin']);
+        $isAdmin =
+            $isInternal &&
+            auth()
+                ->guard('internal')
+                ->user()
+                ->hasAnyRole(['admin', 'superadmin']);
+
+        $isPublic = auth()->guard('public')->check();
+        $isOwner = $isPublic && $application->importer->uuid === auth()->guard('public')->user()->uuid;
+        $isImporterVerifier = $isPublic && $application->importer->uuid === $authUuid;
+
+        // Shows the "Pending for Payment" tab under the same condition the old
+        // blade used for step5.
+        $showPaymentTab =
+            $isPublic &&
+            $application->user_id === $authUuid &&
+            ($application->status !== 'Completed' || $application->status === 'Officer Verification Completed');
+
+        // Application-level accept/reject/verify actions — same gating the old
+        // blade's step4 used, just rendered as a bar instead of a full step.
+$showClerkReviewActions = str_contains($status, 'clerk review in-progress') && $isAdminOrClerk;
+$showImporterVerifyActions =
+    $application->category_application == 1 &&
+    str_contains($importerVerify, 'wait for company approval') &&
+    $isImporterVerifier;
+$showAdminRejectedActions = str_contains($status, 'rejected') && $isAdmin;
     @endphp
 
-    {{--
-    Import Permit — Application View
-    ---------------------------------
-    Maps to IpApplication / IpConsignmentPermit. Every value you see here
-    is rendered client-side from dummy data in importPermitView.js
-    (window.IPV_DATA) so the layout can be reviewed before the real
-    Eloquent data is wired in.
-
-    To wire up later: pass `$application` (with importer, exporter,
-    consignmentPermits, activity_log eager-loaded) into this view, drop
-    the dummy IPV_DATA object in importPermitView.js, and feed the same
-    shape from a small @json($application->toViewArray()) blob instead.
-    The render functions don't need to change.
-
-    Include with:
-        @include('pages.public.view_permit_test.import_permit_view')
---}}
+    {{-- Feed real application context to test1.js instead of URL-parsing --}}
+    <script>
+        window.baseUrl = "{{ url('/') }}";
+        window.APPLICATION_ID = "{{ $application->application_id }}";
+        window.authUser = {
+            type: "{{ $isInternal ? 'internal' : 'public' }}",
+            roles: {!! json_encode(
+                $isInternal ? auth('internal')->user()->roles->map(fn($r) => ['name' => $r->name])->values() : [],
+            ) !!}
+        };
+    </script>
 
     <div class="ipv-wrapper row g-4">
 
+        {{-- ============================================================ --}}
+        {{-- PAYMENT AWARENESS BANNER --}}
+        {{-- ============================================================ --}}
+        <div class="col-xl-12" id="ipvPaymentBannerWrap" style="display:none">
+            <div class="ipv-payment-banner" id="ipvPaymentBanner"></div>
+        </div>
+
+        {{-- ============================================================ --}}
+        {{-- APPLICATION-LEVEL ACTIONS BAR --}}
+        {{-- ============================================================ --}}
+        @if ($showClerkReviewActions || $showImporterVerifyActions || $showAdminRejectedActions)
+            <div class="col-xl-12">
+                <div class="ipv-actions-bar">
+                    <div class="ipv-actions-bar-text">
+                        <i class="bi bi-info-circle"></i>
+                        @if ($showClerkReviewActions)
+                            <span data-en="This application is awaiting your review."
+                                data-bm="Permohonan ini sedang menunggu semakan anda.">This application is awaiting your
+                                review.</span>
+                        @elseif ($showImporterVerifyActions)
+                            <span data-en="This application is awaiting your verification as the importer."
+                                data-bm="Permohonan ini sedang menunggu pengesahan anda sebagai pengimport.">This
+                                application is awaiting your verification as the importer.</span>
+                        @elseif ($showAdminRejectedActions)
+                            <span data-en="This application was rejected. You may review and re-evaluate it."
+                                data-bm="Permohonan ini telah ditolak. Anda boleh menyemak dan menilai semula.">This
+                                application was rejected. You may review and re-evaluate it.</span>
+                        @endif
+                    </div>
+                    <div class="ipv-actions-bar-buttons">
+                        @if ($showClerkReviewActions)
+                            <button id="acceptAppl" class="ipv-btn-action is-success">
+                                <i class="bi bi-check-lg"></i> <span data-en="Accept Application"
+                                    data-bm="Terima Permohonan">Accept Application</span>
+                            </button>
+                            <button id="rejectAdminAppl" class="ipv-btn-action is-danger">
+                                <i class="bi bi-x-lg"></i> <span data-en="Reject Application"
+                                    data-bm="Tolak Permohonan">Reject Application</span>
+                            </button>
+                        @endif
+                        @if ($showImporterVerifyActions)
+                            <button id="verifyAppl" class="ipv-btn-action is-success">
+                                <i class="bi bi-check-lg"></i> <span data-en="Verify Application"
+                                    data-bm="Sahkan Permohonan">Verify Application</span>
+                            </button>
+                            <button id="rejectAppl" class="ipv-btn-action is-danger">
+                                <i class="bi bi-x-lg"></i> <span data-en="Reject Application"
+                                    data-bm="Tolak Permohonan">Reject Application</span>
+                            </button>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <!-- ============================================================ -->
-        <!-- LEFT: Sidebar                                                  -->
+        <!-- LEFT: Sidebar -->
         <!-- ============================================================ -->
-        <div class="col-xl-4 col-lg-5" style = "height: fit-content">
+        <div class="col-xl-4 col-lg-5" style="height: fit-content">
             <div class="ipv-side-card">
 
                 <div class="ipv-tags" id="ipvTags"></div>
 
-                <div class="ipv-app-type" id="ipvAppType">Import Permit</div>
+                <div class="ipv-app-type" id="ipvAppType" data-en="Import Permit" data-bm="Permit Import">Import Permit
+                </div>
                 <div class="ipv-app-id" id="ipvAppId">—</div>
                 <div class="ipv-submitted-by">
                     <i class="bi bi-person-circle"></i>
@@ -84,7 +166,8 @@
 
                 <div class="ipv-action-row">
                     <button type="button" class="ipv-btn-primary" id="ipvPrintPermitBtn">
-                        <i class="bi bi-printer"></i> Print Permit
+                        <i class="bi bi-printer"></i> <span data-en="Print Permit" data-bm="Cetak Permit">Print
+                            Permit</span>
                     </button>
                     <span class="ipv-download-badge" id="ipvDownloadBadge" title="Permits downloaded">
                         <i class="bi bi-download"></i> 0
@@ -93,16 +176,15 @@
                         <button type="button" class="ipv-icon-btn" id="scheduleBtn" title="Schedule inspection">
                             <i class="bi bi-calendar3"></i>
                         </button>
-                        <!-- Schedule Inspection — calendar popover -->
                         <div class="ipv-cal-popover" id="ipvSchedulePopover">
                             <div class="ipv-cal-popover-header">
-                                <strong>Application Schedule</strong>
+                                <strong data-en="Application Schedule" data-bm="Jadual Permohonan">Application
+                                    Schedule</strong>
                                 <button type="button" class="ipv-cal-popover-close" id="ipvScheduleClose"
                                     aria-label="Close">
                                     <i class="bi bi-x-lg"></i>
                                 </button>
                             </div>
-
                             <div class="ipv-cal-nav">
                                 <button type="button" class="ipv-cal-nav-btn" id="ipvScheduleCalPrev"><i
                                         class="bi bi-chevron-left"></i></button>
@@ -110,127 +192,182 @@
                                 <button type="button" class="ipv-cal-nav-btn" id="ipvScheduleCalNext"><i
                                         class="bi bi-chevron-right"></i></button>
                             </div>
-
                             <div class="ipv-cal-weekdays">
-                                <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                                <span data-en="Sun" data-bm="Ahad">Sun</span>
+                                <span data-en="Mon" data-bm="Isnin">Mon</span>
+                                <span data-en="Tue" data-bm="Selasa">Tue</span>
+                                <span data-en="Wed" data-bm="Rabu">Wed</span>
+                                <span data-en="Thu" data-bm="Khamis">Thu</span>
+                                <span data-en="Fri" data-bm="Jumaat">Fri</span>
+                                <span data-en="Sat" data-bm="Sabtu">Sat</span>
                             </div>
-
                             <div class="ipv-cal-grid" id="ipvScheduleGrid"></div>
-
                             <div class="ipv-cal-legend" id="ipvScheduleLegend"></div>
                         </div>
                     </div>
-                    <button type="button" class="ipv-icon-btn" title="More actions">
-                        <i class="bi bi-three-dots"></i>
+                    <button type="button" class="ipv-icon-btn" id="applicationModal" title="Application Log">
+                        <i class="bi bi-clock-history"></i>
                     </button>
-
-
                 </div>
 
                 <div class="ipv-value-box">
                     <div>
-                        <div class="ipv-value-label">Total Consignment Value</div>
+                        <div class="ipv-value-label" data-en="Total Consignment Value" data-bm="Jumlah Nilai Konsainan">
+                            Total Consignment Value</div>
                         <div class="ipv-value-amount" id="ipvTotalValue">RM 0.00</div>
                     </div>
-                    <button type="button" class="ipv-value-link" id="ipvViewPermitsLink">View</button>
+                    <button type="button" class="ipv-value-link" id="ipvViewPermitsLink" data-en="View"
+                        data-bm="Lihat">View</button>
                 </div>
 
-                <div class="ipv-divider"></div>
-
-                <div class="ipv-section-label">Importer &amp; Exporter Details</div>
-
-                <div class="ipv-party" id="ipvImporterBlock"></div>
-                <div class="ipv-party" id="ipvExporterBlock"></div>
+                <div class="ipv-footer-note" id="ipvCreatedAt"></div>
 
                 <div class="ipv-divider"></div>
 
                 <div class="ipv-section-label-row">
-                    <span class="ipv-section-label">Application Documents</span>
+                    <span class="ipv-section-label" data-en="Application Documents"
+                        data-bm="Dokumen Permohonan">Application Documents</span>
                     <button type="button" class="ipv-download-all" id="ipvDownloadAllApp">
-                        <i class="bi bi-download"></i> Download All
+                        <i class="bi bi-download"></i> <span data-en="Download All" data-bm="Muat Turun Semua">Download
+                            All</span>
                     </button>
                 </div>
                 <div class="ipv-attach-list" id="ipvAppAttachments"></div>
 
-                <div class="ipv-footer-note" id="ipvCreatedAt"></div>
+                <div class="ipv-divider"></div>
+
+                @if ($application->status == 'Draft' && $application->user_id === $authUuid)
+                    <a class="ipv-btn-outline w-100 justify-content-center mt-3" id="editButton"
+                        href="/edit_application/{{ $application->application_id }}">
+                        <i class="bi bi-pencil"></i> <span data-en="Edit Application" data-bm="Kemaskini Permohonan">Edit
+                            Application</span>
+                    </a>
+                @endif
             </div>
         </div>
 
         <!-- ============================================================ -->
-        <!-- RIGHT: Main panel                                              -->
+        <!-- RIGHT: Main panel -->
         <!-- ============================================================ -->
         <div class="col-xl-8 col-lg-7">
             <div class="ipv-main-card">
 
-                <!-- Status header -->
                 <div class="ipv-status-header">
                     <div>
-                        <span class="ipv-status-eyebrow">Application Type:</span>
-                        <strong>Import Permit</strong>
+                        <span class="ipv-status-eyebrow" data-en="Application Type:"
+                            data-bm="Jenis Permohonan:">Application Type:</span>
+                        <strong data-en="Import Permit" data-bm="Permit Import">Import Permit</strong>
                         <span class="ipv-status-sep">|</span>
-                        <span class="ipv-status-eyebrow">Status:</span>
+                        <span class="ipv-status-eyebrow" data-en="Status:" data-bm="Status:">Status:</span>
                         <strong id="ipvStatusLabel">—</strong>
                     </div>
                     <div class="ipv-status-duration" id="ipvStatusDuration"></div>
                 </div>
 
-                <!-- Stage stepper -->
                 <div class="ipv-stage-stepper" id="ipvStageStepper"></div>
                 <div class="ipv-returned-note d-none" id="ipvReturnedNote"></div>
 
-                <!-- Officer / SLA row -->
-                <div class="ipv-info-row">
+                <div class="ipv-info-row d-none">
                     <div class="ipv-info-item">
                         <div class="ipv-info-icon"><i class="bi bi-person-badge"></i></div>
                         <div>
-                            <div class="ipv-info-label">Assigned Officer</div>
+                            <div class="ipv-info-label" data-en="Assigned Officer" data-bm="Pegawai Bertugas">Assigned
+                                Officer</div>
                             <div class="ipv-info-value" id="ipvAssignedOfficer">—</div>
                         </div>
-                        <button type="button" class="ipv-info-link">Reassign</button>
                     </div>
                     <div class="ipv-info-item">
                         <div class="ipv-info-icon"><i class="bi bi-hourglass-split"></i></div>
                         <div>
-                            <div class="ipv-info-label">Next Action / SLA</div>
+                            <div class="ipv-info-label" data-en="Next Action / SLA" data-bm="Tindakan Seterusnya / SLA">
+                                Next Action / SLA</div>
                             <div class="ipv-info-value" id="ipvSlaDue">—</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Tabs -->
                 <div class="ipv-tabnav" role="tablist">
                     <button type="button" class="ipv-tabnav-item is-active" data-ipv-tab="permits" role="tab">
-                        Permit List <span class="ipv-tab-count" id="ipvPermitCount">0</span>
+                        <span data-en="Permit List" data-bm="Senarai Permit">Permit List</span> <span
+                            class="ipv-tab-count" id="ipvPermitCount">0</span>
                     </button>
-                    <button type="button" class="ipv-tabnav-item" data-ipv-tab="transport" role="tab">
+                    <button type="button" class="ipv-tabnav-item" data-ipv-tab="importer_exporter" role="tab"
+                        data-en="Importer & Exporter" data-bm="Pengimport & Pengeksport">
+                        Importer & Exporter
+                    </button>
+                    <button type="button" class="ipv-tabnav-item" data-ipv-tab="transport" role="tab"
+                        data-en="Transportation Details" data-bm="Butiran Pengangkutan">
                         Transportation Details
                     </button>
-                    <button type="button" class="ipv-tabnav-item" data-ipv-tab="condition" role="tab">
-                        Condition
-                    </button>
-                    <button type="button" class="ipv-tabnav-item" data-ipv-tab="activity" role="tab">
+
+                    @if ($showPaymentTab)
+                        <button type="button" class="ipv-tabnav-item" data-ipv-tab="payment" role="tab">
+                            <span data-en="Pending Payment" data-bm="Pembayaran Tertangguh">Pending Payment</span> <span
+                                class="ipv-tab-count" id="ipvPendingPaymentCount">0</span>
+                        </button>
+                    @endif
+                    <button type="button" class="ipv-tabnav-item" data-ipv-tab="activity" role="tab"
+                        data-en="Activity" data-bm="Aktiviti">
                         Activity
                     </button>
                 </div>
 
                 <div class="ipv-tabbody">
 
-                    <!-- Permit List -->
                     <div class="ipv-tabpane is-active" data-ipv-pane="permits">
                         <div class="ipv-permit-accordion" id="ipvPermitAccordion"></div>
                     </div>
 
-                    <!-- Transportation Details -->
+                    <div class="ipv-tabpane" data-ipv-pane="importer_exporter">
+                        <div id="importerExporterDetails">
+                            <div class="ipv-section-label" data-en="Importer & Exporter Details"
+                                data-bm="Butiran Pengimport & Pengeksport">Importer & Exporter Details</div>
+
+                            <div class="ipv-party" id="ipvImporterBlock"></div>
+                            <div class="ipv-party" id="ipvExporterBlock"></div>
+
+                            <div class="ipv-divider"></div>
+                        </div>
+                    </div>
+
                     <div class="ipv-tabpane" data-ipv-pane="transport">
                         <div id="ipvTransportDetails"></div>
                     </div>
 
-                    <!-- Condition -->
-                    <div class="ipv-tabpane" data-ipv-pane="condition">
-                        <div id="ipvConditionList"></div>
-                    </div>
+                    @if ($showPaymentTab)
+                        <div class="ipv-tabpane" data-ipv-pane="payment">
+                            <div class="table-responsive">
+                                <table id="summaryTable4" class="table ipv-payment-table text-nowrap">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:40px">
+                                                <input class="form-check-input" type="checkbox" id="checkAllPermits">
+                                            </th>
+                                            <th data-en="Permit Number" data-bm="Nombor Permit">Permit Number</th>
+                                            <th data-en="Item Name" data-bm="Nama Item">Item Name</th>
+                                            <th class="text-end" data-en="Value" data-bm="Nilai">Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="3" class="text-end fw-bold" data-en="Total:"
+                                                data-bm="Jumlah:">Total:</td>
+                                            <td class="text-end fw-bold" id="totalValue">RM 0</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
 
-                    <!-- Activity -->
+                            <div class="ipv-checkout-bar">
+                                <button class="ipv-btn-primary" id="checkoutPage" disabled>
+                                    <i class="bi bi-credit-card"></i> <span data-en="Go To Checkout"
+                                        data-bm="Pergi Ke Bayaran">Go To Checkout</span>
+                                </button>
+                            </div>
+                        </div>
+                    @endif
+
                     <div class="ipv-tabpane" data-ipv-pane="activity">
                         <div class="ipv-timeline" id="ipvActivityTimeline"></div>
                     </div>
@@ -245,12 +382,13 @@
     <!-- ATTACHMENT VIEWER OFFCANVAS (Vertical Tabs)                   -->
     <!-- ============================================================ -->
     <div class="offcanvas offcanvas-end" tabindex="-1" id="attachmentOffcanvas"
-        aria-labelledby="attachmentOffcanvasLabel" style="width: 70%; max-width: 900px;">
+        aria-labelledby="attachmentOffcanvasLabel" style="width: 70%; max-width: 900px; z-index: 1046;">
         <div class="offcanvas-header border-bottom">
             <h5 class="offcanvas-title" id="attachmentOffcanvasLabel">
-                <i class="bi bi-paperclip me-2"></i> <span id="attachmentTitle">Attachment</span>
+                <i class="bi bi-paperclip me-2"></i> <span id="attachmentTitle" data-en="Attachment"
+                    data-bm="Lampiran">Attachment</span>
             </h5>
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2 ms-auto">
                 <button class="btn btn-sm btn-outline-secondary" id="attachmentPrevBtn" title="Previous">
                     <i class="bi bi-chevron-left"></i>
                 </button>
@@ -258,43 +396,37 @@
                 <button class="btn btn-sm btn-outline-secondary" id="attachmentNextBtn" title="Next">
                     <i class="bi bi-chevron-right"></i>
                 </button>
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                <button type="button" class="btn-close attachment-close" data-bs-dismiss="offcanvas"
+                    aria-label="Close"></button>
             </div>
         </div>
         <div class="offcanvas-body p-0 d-flex" style="height: calc(100% - 60px);">
-
             <div class="pd-nav flex-shrink-0">
                 <ul class="nav nav-pills flex-column" id="attachmentTabs" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active" id="attach-view-tab" data-bs-toggle="tab"
                             data-bs-target="#attach-view" type="button" role="tab" aria-selected="true"
-                            data-bs-toggle="tooltip" data-bs-placement="right" title="View">
-                            <i class="bi bi-eye me-2"></i>
+                            data-bs-placement="right" title="View">
+                            <i class="bi bi-eye"></i>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="attach-details-tab" data-bs-toggle="tab"
                             data-bs-target="#attach-details" type="button" role="tab" aria-selected="false"
-                            data-bs-toggle="tooltip" data-bs-placement="right" title="Details">
-                            <i class="bi bi-info-circle me-2"></i>
+                            data-bs-placement="right" title="Details">
+                            <i class="bi bi-info-circle"></i>
                         </button>
                     </li>
                 </ul>
             </div>
-            <!-- Tab Content -->
             <div class="tab-content flex-grow-1 p-3 overflow-auto" id="attachmentTabContent">
-                <!-- View Tab -->
                 <div class="tab-pane fade show active" id="attach-view" role="tabpanel">
-                    <div id="attachmentViewer"
-                        style="min-height: 400px; display: flex; align-items: center; justify-content: center; background: var(--gray-1); border-radius: 0.5rem;">
+                    <div id="attachmentViewer">
                         <div class="text-muted"><i class="bi bi-file-earmark-fill fs-1"></i><br>Select an attachment</div>
                     </div>
                 </div>
-                <!-- Details Tab -->
                 <div class="tab-pane fade" id="attach-details" role="tabpanel">
-                    <div id="attachmentDetails" class="py-2">
-                        <!-- filled dynamically -->
-                    </div>
+                    <div id="attachmentDetails" class="py-2"></div>
                 </div>
             </div>
         </div>
@@ -314,32 +446,22 @@
         <div class="offcanvas-body">
             <div class="table-responsive">
                 <table class="table table-hover align-middle" id="permitDownloadTable">
-                    <thead style="background: var(--gray-1); border-bottom: 2px solid var(--default-border);">
+                    <thead>
                         <tr>
-                            <th style="width: 40px;">
-                                <input type="checkbox" id="selectAllPermits" class="form-check-input">
-                            </th>
-                            <th
-                                style="font-weight: 600; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">
-                                Permit Number</th>
-                            <th
-                                style="font-weight: 600; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">
-                                Item</th>
-                            <th
-                                style="font-weight: 600; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">
-                                Status</th>
-                            <th
-                                style="font-weight: 600; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; text-align: right;">
-                                Action</th>
+                            <th style="width: 40px;"><input type="checkbox" id="selectAllPermits"
+                                    class="form-check-input"></th>
+                            <th data-en="Permit Number" data-bm="Nombor Permit">Permit Number</th>
+                            <th data-en="Item" data-bm="Item">Item</th>
+                            <th data-en="Status" data-bm="Status">Status</th>
+                            <th style="text-align: right;" data-en="Action" data-bm="Tindakan">Action</th>
                         </tr>
                     </thead>
-                    <tbody id="permitDownloadTableBody">
-                        <!-- dynamically populated -->
-                    </tbody>
+                    <tbody id="permitDownloadTableBody"></tbody>
                 </table>
             </div>
             <div class="d-flex justify-content-end gap-2 mt-3 pt-2 border-top">
-                <button class="btn btn-sm btn-outline-secondary" data-bs-dismiss="offcanvas">Close</button>
+                <button class="btn btn-sm btn-outline-secondary" data-bs-dismiss="offcanvas" data-en="Close"
+                    data-bm="Tutup">Close</button>
                 <button class="btn btn-sm btn-primary" id="downloadSelectedPermitsBtn" disabled>
                     <i class="bi bi-download me-1"></i> Download Selected (<span id="selectedCount">0</span>)
                 </button>
@@ -354,63 +476,55 @@
         aria-labelledby="permitDetailOffcanvasLabel" style="width: 65%; max-width: 860px;">
         <div class="offcanvas-header border-bottom px-4">
             <div class="d-flex align-items-center gap-3">
-                <div class="ipv-permit-detail-icon">
-                    <i class="bi bi-box-seam"></i>
+                <div class="ipv-permit-detail-icon"><i class="bi bi-box-seam"></i></div>
+                <div class = "d-flex justify-content-between gap-5">
+                    <div class="">
+                        <div class="ipv-permit-detail-eyebrow">Permit Details</div>
+                        <h5 class="offcanvas-title mb-0 fw-bold" id="permitDetailOffcanvasLabel">—</h5>
+                    </div>
+
+                    <span class="ipv-badge ms-2" id="pdBadge">—</span>
                 </div>
-                <div>
-                    <div class="ipv-permit-detail-eyebrow">Permit Details</div>
-                    <h5 class="offcanvas-title mb-0 fw-bold" id="permitDetailOffcanvasLabel">—</h5>
-                </div>
-                <span class="ipv-badge ms-2" id="pdBadge">—</span>
+
             </div>
             <button type="button" class="btn-close ms-auto" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body p-0 d-flex" style="height: calc(100% - 68px); overflow: hidden;">
-            <!-- Vertical Nav -->
             <div class="pd-nav flex-shrink-0">
                 <ul class="nav nav-pills flex-column" id="permitDetailTabs" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="pd-details-tab" data-bs-toggle="tab" data-bs-target="#pd-details"
-                            type="button" role="tab" data-bs-toggle="tooltip" data-bs-placement="right"
-                            title="Details">
+                            type="button" role="tab" data-bs-placement="right" title="Details">
                             <i class="bi bi-file-text"></i>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="pd-activity-tab" data-bs-toggle="tab" data-bs-target="#pd-activity"
-                            type="button" role="tab" data-bs-toggle="tooltip" data-bs-placement="right"
-                            title="Activity Log">
+                            type="button" role="tab" data-bs-placement="right" title="Activity Log">
                             <i class="bi bi-clock-history"></i>
                         </button>
                     </li>
                 </ul>
             </div>
-            <!-- Tab Content -->
             <div class="tab-content flex-grow-1 overflow-auto" id="permitDetailTabContent">
-                <!-- Details Tab -->
                 <div class="tab-pane fade show active p-4" id="pd-details" role="tabpanel">
                     <div id="pdDetailsContent"></div>
                 </div>
-                <!-- Activity Tab -->
                 <div class="tab-pane fade p-4" id="pd-activity" role="tabpanel">
                     <div class="ipv-timeline" id="pdActivityTimeline"></div>
                 </div>
             </div>
         </div>
     </div>
+
     <x-modal id="consignmentModal" title="">
-
-
         @slot('footer')
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         @endslot
-
     </x-modal>
 
     <x-modal id="activityLogModal" title="Activity Log">
-
-        <!-- Your table goes here -->
-        <div class="table-responsive scroll-div" style = "max-height: 400px;">
+        <div class="table-responsive scroll-div" style="max-height: 400px;">
             <table class="table text-wrap table-hover" id="applicationLogTable">
                 <thead class="table-primary">
                     <tr>
@@ -421,65 +535,103 @@
                         <th scope="col">Time and Date</th>
                     </tr>
                 </thead>
-                <tbody class="table-group-divider">
-
-                </tbody>
+                <tbody class="table-group-divider"></tbody>
             </table>
         </div>
-
         @slot('footer')
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         @endslot
-
     </x-modal>
 
-    {{-- @include('pages.public.view_permit_test.step2modal') --}}
+    {{-- Reapply modal — needed by test4-actions.js's reapply() flow.
+         Controller must pass $pubmeasure and $pubpurpose (same as the old blade did). --}}
+    <div class="modal fade" id="addItemModal" tabindex="-1" data-bs-focus="false">
+        <form class="modal-dialog modal-fullscreen">
+            <input type="hidden" name="permit_id" value="permit_id">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addExporterModalLabel">Reapply</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row gy-4 mb-3 p-4">
+                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                            <label for="itemSelect" class="form-label">Item</label>
+                            <select class="form-select" id="itemSelect" name="itemSelect"></select>
+                            <small style="color:red">Item refering to the exporter's Country</small>
+                        </div>
+                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                            <label for="itemValue" class="form-label">Value (RM)</label>
+                            <input type="number" class="form-control" id="itemValue" name="itemValue"
+                                placeholder="RM ...">
+                        </div>
+                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                            <label for="itemQuantity" class="form-label">Quantity</label>
+                            <input type="number" class="form-control" id="itemQuantity" name="itemQuantity">
+                        </div>
+                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                            <label for="itemMeasure" class="form-label">Measurement Unit</label>
+                            <select class="form-select" id="itemMeasure" name="itemMeasure">
+                                <option value="">-- Select Measurement Unit --</option>
+                                @foreach ($pubmeasure ?? [] as $measure)
+                                    <option value="{{ $measure->cate_code }}">{{ $measure->description }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                            <label for="itemPurpose" class="form-label">Purpose</label>
+                            <select class="form-select" id="itemPurpose" name="itemPurpose">
+                                <option value="">-- Select Purpose --</option>
+                                @foreach ($pubpurpose ?? [] as $purpose)
+                                    <option value="{{ $purpose->cate_code }}"
+                                        data-description="{{ $purpose->description }}">{{ $purpose->description }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                            <label for="itemUses" class="form-label">Uses</label>
+                            <select class="form-select" id="itemUses" name="itemUses"></select>
+                        </div>
+                        <div class="row gy-4">
+                            <div class="col-xl-12">
+                                <div class="card-header">
+                                    <div class="card-title">Attachment</div>
+                                </div>
+                                <div class="card-body">
+                                    <div id="itemDropzone" method="post" class="dz-clickable"
+                                        enctype="multipart/form-data">
+                                        @csrf
+                                        <div class="dz-default dz-message">
+                                            <button class="dz-button p-5 border w-100 border-radius" type="button">
+                                                Drop files here to upload
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bx bx-x me-1"></i> Cancel
+                    </button>
+                    <button id="saveBtn" type="submit" class="btn btn-primary">
+                        <i class="bx bx-save me-1"></i> Reapply
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
 
 @endsection
 
 @push('scripts')
     <script>
-        window.baseUrl = "{{ url('/') }}";
-    </script>
-    <script>
-        // for form wizard next and prev button
-        (function() {
-            // 🟢 First wizard
-            let firstWizardConfig = {
-                wz_class: ".wizard-tab",
-                highlight: true,
-                highlight_time: 1000,
-                progress: true,
-                validate: true
-            };
-            new Wizard1(firstWizardConfig).init();
-
-            // 🟢 Second wizard (with progress bar)
-            let secondWizardConfig = {
-                wz_class: ".wizard-second-tab", // ✅ fixed selector
-                highlight: true,
-                highlight_time: 1000,
-                progress: true,
-                validate: true
-            };
-            new Wizard1(secondWizardConfig).init();
-        })();
-    </script>
-    <script>
         document.addEventListener('DOMContentLoaded', function() {
             if (window.location.hash === '#pending') {
-
-
-                document.querySelectorAll('.wizard-step').forEach(el => {
-                    el.classList.remove('active');
-                });
-
-
-                const pendingTab = document.getElementById('pendingTab');
-                if (pendingTab) {
-                    pendingTab.classList.add('active');
-                }
-
+                document.querySelector('.ipv-tabnav-item[data-ipv-tab="payment"]')?.click();
             }
         });
     </script>

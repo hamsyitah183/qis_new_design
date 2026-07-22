@@ -114,54 +114,5 @@ $(document).ready(function () {
             });
         });
 
-    (function () {
-        var STORAGE_KEY = "qis_lang";
-        var buttons = document.querySelectorAll(".lang-btn");
-        var elements = document.querySelectorAll("[data-en]");
-
-        function setLang(lang) {
-            elements.forEach(function (el) {
-                var text = el.getAttribute("data-" + lang);
-                if (text === null) return;
-                if (el.getAttribute("data-i18n-attr") === "placeholder") {
-                    el.setAttribute("placeholder", text);
-                } else {
-                    el.textContent = text;
-                }
-            });
-
-            buttons.forEach(function (btn) {
-                btn.classList.toggle(
-                    "active",
-                    btn.getAttribute("data-lang") === lang,
-                );
-            });
-
-            document.documentElement.setAttribute(
-                "lang",
-                lang === "bm" ? "ms" : "en",
-            );
-
-            try {
-                localStorage.setItem(STORAGE_KEY, lang);
-            } catch (e) {
-                /* storage unavailable, ignore */
-            }
-        }
-
-        buttons.forEach(function (btn) {
-            btn.addEventListener("click", function () {
-                setLang(btn.getAttribute("data-lang"));
-            });
-        });
-
-        var savedLang = "en";
-        try {
-            savedLang = localStorage.getItem(STORAGE_KEY) || "en";
-        } catch (e) {
-            /* storage unavailable, default to en */
-        }
-
-        setLang(savedLang);
-    })();
+   
 });

@@ -9,16 +9,25 @@
     resources/js/pages/importPermit/registerexp.js below.
 --}}
 @push('style')
-    @vite(['resources/css/pages/importPermit/ipa-wizard.css'])
+    {{-- @vite(['resources/css/pages/importPermit/ipa-wizard.css']) --}}
 @endpush
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[
-        ['label' => 'Home', 'url' => '/'],
-        ['label' => 'New Application', 'url' => '/public/new_application'],
-        ['label' => 'Self Apply Import Permit Application', 'url' => '#'],
-    ]" title="Import Permit">
-
+    <x-breadcrumb title="Import Permit" title_en="Import Permit" title_bm="Permit Import" :items="[
+        ['label' => 'Home', 'url' => '/', 'data-en' => 'Home', 'data-bm' => 'Utama'],
+        [
+            'label' => 'New Application',
+            'url' => '/public/new_application',
+            'data-en' => 'New Application',
+            'data-bm' => 'Permohonan Baru',
+        ],
+        [
+            'label' => 'Self Apply Import Permit Application',
+            'url' => '#',
+            'data-en' => 'Self Apply Import Permit Application',
+            'data-bm' => 'Permohonan Permit Import Sendiri',
+        ],
+    ]">
     </x-breadcrumb>
 @endsection
 
@@ -29,29 +38,30 @@
             <div class="card custom-card ipa-wizard-card">
 
                 <div class="card-body p-0">
-                    <form id="wizardForm" class="wizard wizard-tab horizontal" action="javascript:void(0)" accept="multipart/form-data">
+                    <form id="wizardForm" class="wizard wizard-tab horizontal" action="javascript:void(0)"
+                        accept="multipart/form-data">
                         {{-- same wizard-nav / dots / wizard-step / dot structure the Wizard1
                              plugin expects — "ipa-wizard-nav" only adds the visual reskin --}}
                         <aside class="wizard-nav dots ipa-wizard-nav">
                             <div class="wizard-step active" data-step="0">
                                 <span class="dot"></span>
-                                <span>IMPORTER & EXPORTER</span>
+                                <span></span>
                             </div>
                             <div class="wizard-step" data-step="1">
                                 <span class="dot"></span>
-                                <span>PERMIT DETAILS</span>
+                                <span></span>
                             </div>
                             <div class="wizard-step" data-step="2">
                                 <span class="dot"></span>
-                                <span>PERMIT ITEMS</span>
+                                <span></span>
                             </div>
                             <div class="wizard-step" data-step="3">
                                 <span class="dot"></span>
-                                <span>Payment</span>
+                                <span></span>
                             </div>
                             <div class="wizard-step" data-step="4">
                                 <span class="dot"></span>
-                                <span>Confirmation</span>
+                                <span></span>
                             </div>
                         </aside>
                         <aside class="wizard-content container">

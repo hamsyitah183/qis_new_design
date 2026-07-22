@@ -16,7 +16,7 @@ return new class extends Migration
 
             $table->foreignId('application_id')
                 ->comment('References ip_application.id')
-                ->constrained('ip_application') // ✅ FIXED table name
+                ->constrained('ip_application') 
                 ->onDelete('cascade');
 
             $table->string('permit_number', 25)->nullable();

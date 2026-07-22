@@ -68,6 +68,11 @@ class IpApplication extends Model
         return $this->hasMany(ImportPermitLog::class, 'application_id', 'application_id');
     }
 
+    public function attachment()
+    {
+        return $this->hasMany(IpApplicationAttachment::class, 'application_id', 'id');
+    }
+
     public function latestLog()
     {
         return $this->hasOne(ImportPermitLog::class, 'application_id', 'application_id')->latestOfMany();

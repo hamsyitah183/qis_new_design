@@ -2,13 +2,13 @@
 @import './applicationCalendar.css';
 @import './apply_application.css';
 @import './summary_application.css';
-@import './list_application.css';
-@import './verify_application.css';
-@import './verify_item.css';
+/* @import './list_application.css'; */
+/* @import './verify_application.css'; */
+/* @import './verify_item.css'; */
 @import './permit_payment2.css';
 @import './permit_payment.css';
 @import './receipt.css';
-@import './district_entry.css';
+/* @import './district_entry.css'; */
 
 /* ============================================================
    Import Permit — Application View
@@ -349,6 +349,29 @@
     font-weight: 600;
 }
 
+.ipv-attach-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.ipv-attach-actions .btn-icon {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ipv-attach-chip.is-pdf .ipv-attach-icon {
+    background: rgb(var(--danger-rgb));
+}
+
+.ipv-attach-chip.is-file .ipv-attach-icon {
+    background: var(--gray-5);
+}
+
 .ipv-attach-size a:hover { text-decoration: underline; }
 
 .ipv-attach-more {
@@ -516,7 +539,7 @@
 /* ----- Tabs ----- */
 .ipv-tabnav {
     display: flex;
-    gap: 1.75rem;
+    gap: 1.2rem;
     border-bottom: 1px solid var(--default-border);
     overflow-x: auto;
     margin-bottom: 1.2rem;
@@ -526,7 +549,7 @@
     background: none;
     border: none;
     padding: 0 0 0.85rem 0;
-    font-size: 0.88rem;
+    font-size: 0.78rem;
     font-weight: 500;
     color: var(--text-muted);
     position: relative;
@@ -943,6 +966,11 @@
 }
 
 /* Adjust content area */
+#attachmentOffcanvas .offcanvas-header, #itemAttachmentOffcanvas .offcanvas-header {
+    display: flex;
+    justify-content: space-between;
+}
+
 #attachmentTabContent {
     background: var(--custom-white);
 }
@@ -959,7 +987,9 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    flex-direction: column;
 }
+
 
 #attachmentViewer iframe,
 #attachmentViewer img,
@@ -1062,4 +1092,242 @@
 /* Ensure consistent spacing */
 #permitListOffcanvas .offcanvas-body {
     padding: 1.25rem;
+}
+
+
+/* ===================================================================
+   ADDITIONS — append to the end of importPermitView.css
+   =================================================================== */
+
+/* ---------- application-level actions bar ---------- */
+.ipv-actions-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    background: rgba(var(--warning-rgb), .12);
+    border: 1px solid rgba(var(--warning-rgb), .3);
+    border-radius: 0.9rem;
+    padding: 0.9rem 1.2rem;
+}
+
+.ipv-actions-bar-text {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.86rem;
+    color: #8a6d00;
+    font-weight: 500;
+}
+
+.ipv-actions-bar-text i { font-size: 1.1rem; }
+
+.ipv-actions-bar-buttons {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+/* Shared small action-button style — used in the actions bar AND inside
+   the permit accordion body for accept/reject/reapply/download */
+.ipv-btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: none;
+    border-radius: 30px;
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: #fff;
+    transition: opacity .15s ease;
+}
+
+.ipv-btn-action:hover { opacity: .88; }
+
+.ipv-btn-action.is-success { background: rgb(var(--success-rgb)); }
+.ipv-btn-action.is-danger  { background: rgb(var(--danger-rgb)); }
+.ipv-btn-action.is-warning { background: rgb(var(--warning-rgb)); color: #4a3a00; }
+.ipv-btn-action.is-info    { background: rgb(var(--info-rgb)); }
+
+/* ---------- per-permit action row (inside accordion body) ---------- */
+.ipv-permit-actions {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--default-border);
+}
+
+/* ---------- payment tab ---------- */
+.ipv-payment-table thead th {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--text-muted);
+    font-weight: 700;
+    background: var(--gray-1);
+    border-bottom: none;
+}
+
+.ipv-payment-table td { vertical-align: middle; font-size: 0.85rem; }
+.ipv-payment-table tbody tr:hover { background: var(--list-hover-focus-bg); }
+.ipv-payment-table tfoot td { border-top: 2px solid var(--default-border); font-size: 0.92rem; }
+
+/* Sticky checkout bar — keeps the button reachable on mobile without
+   scrolling back up through a long permit list */
+.ipv-checkout-bar {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    justify-content: flex-end;
+    padding: 0.9rem 0 0.2rem;
+    margin-top: 0.5rem;
+    background: linear-gradient(180deg, transparent, var(--custom-white) 35%);
+}
+
+.ipv-checkout-bar .ipv-btn-primary:disabled {
+    background: var(--gray-4);
+    cursor: not-allowed;
+    opacity: .7;
+}
+
+@media (max-width: 575.98px) {
+    .ipv-actions-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .ipv-actions-bar-buttons { justify-content: stretch; }
+    .ipv-actions-bar-buttons .ipv-btn-action { flex: 1; justify-content: center; }
+
+    .ipv-checkout-bar .ipv-btn-primary { width: 100%; justify-content: center; }
+}
+
+/* ===================================================================
+   ADDITIONS — payment awareness. Append to importPermitView.css.
+   =================================================================== */
+
+/* ---------- top-of-page payment banner ---------- */
+.ipv-payment-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    background: rgba(var(--warning-rgb), .16);
+    border: 1px solid rgba(var(--warning-rgb), .4);
+    border-radius: 0.9rem;
+    padding: 1rem 1.3rem;
+}
+
+.ipv-payment-banner.is-danger {
+    background: rgba(var(--danger-rgb), .1);
+    border-color: rgba(var(--danger-rgb), .3);
+}
+
+.ipv-payment-banner-text {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+}
+
+.ipv-payment-banner-text i {
+    font-size: 1.6rem;
+    color: #8a6d00;
+    flex-shrink: 0;
+}
+
+.ipv-payment-banner.is-danger .ipv-payment-banner-text i { color: rgb(var(--danger-rgb)); }
+
+.ipv-payment-banner-text strong {
+    display: block;
+    font-size: 0.95rem;
+    color: var(--default-text-color);
+}
+
+.ipv-payment-banner-text span {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.1rem;
+}
+
+.ipv-btn-primary.is-pay {
+    background: rgb(var(--warning-rgb));
+    color: #4a3a00;
+}
+
+.ipv-btn-primary.is-pay:hover { opacity: .85; }
+
+.ipv-payment-banner.is-danger .ipv-btn-primary.is-pay {
+    background: rgb(var(--danger-rgb));
+    color: #fff;
+}
+
+/* ---------- permit detail offcanvas: payment CTA block ---------- */
+.pd-payment-cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    background: rgba(var(--warning-rgb), .14);
+    border: 1px solid rgba(var(--warning-rgb), .35);
+    border-radius: 0.85rem;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1.4rem;
+}
+
+.pd-payment-cta.is-danger {
+    background: rgba(var(--danger-rgb), .08);
+    border-color: rgba(var(--danger-rgb), .3);
+}
+
+.pd-payment-cta.is-success {
+    background: rgba(var(--success-rgb), .1);
+    border-color: rgba(var(--success-rgb), .3);
+}
+
+.pd-payment-cta-text {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.pd-payment-cta-text i {
+    font-size: 1.5rem;
+    color: #8a6d00;
+    flex-shrink: 0;
+}
+
+.pd-payment-cta.is-danger .pd-payment-cta-text i  { color: rgb(var(--danger-rgb)); }
+.pd-payment-cta.is-success .pd-payment-cta-text i { color: rgb(var(--success-rgb)); }
+
+.pd-payment-cta-text strong {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--default-text-color);
+}
+
+.pd-payment-cta-text span {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 0.1rem;
+}
+
+@media (max-width: 575.98px) {
+    .ipv-payment-banner, .pd-payment-cta {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: left;
+    }
+    .ipv-payment-banner .ipv-btn-primary,
+    .pd-payment-cta .ipv-btn-primary {
+        width: 100%;
+        justify-content: center;
+    }
 }

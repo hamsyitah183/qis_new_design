@@ -1,0 +1,84 @@
+/* ===================================================================
+   ORDER DETAILS PAGE — missing class styles
+   Prefix: apr- (this page's own prefix, alongside the shared ipv-*
+   classes already defined elsewhere for ipv-wrapper/ipv-side-card/
+   ipv-main-card/ipv-party/ipv-detail-row etc. — those are untouched
+   here, only the apr-* ones this blade introduces are new).
+=================================================================== */
+
+/* ---------- payment details reference grid ---------- */
+.apr-ref-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px 20px;
+}
+
+.apr-ref-cell {
+    min-width: 0;
+}
+
+.apr-ref-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 3px;
+}
+
+.apr-ref-value {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--default-text-color);
+    word-break: break-word;
+}
+
+/* ---------- permit item list (lightweight table-like rows) ---------- */
+.apr-item-table {
+    border: 1px solid var(--default-border);
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.apr-item-row {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 14px;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--default-border);
+}
+.apr-item-row:last-child { border-bottom: none; }
+
+@media (max-width: 575.98px) {
+    .apr-item-row { grid-template-columns: 1fr; gap: 4px; }
+}
+
+.apr-item-row-head {
+    background: var(--gray-1);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.apr-item-permit-no {
+    font-family: 'Courier New', ui-monospace, monospace;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: rgb(var(--primary-rgb));
+}
+
+.apr-item-name-cell {
+    min-width: 0;
+}
+
+.apr-item-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--default-text-color);
+    word-break: break-word;
+}

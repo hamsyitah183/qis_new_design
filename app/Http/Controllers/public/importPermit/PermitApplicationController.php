@@ -14,6 +14,7 @@ use App\Models\Country;
 use App\Models\ImportPermitLog;
 use App\Models\InternalUser;
 use App\Models\IpApplication;
+use App\Models\IpApplicationAttachment;
 use App\Models\IpCondition;
 use App\Models\IpConsignmentAttachment;
 use App\Models\IpConsignmentPermit;
@@ -302,6 +303,7 @@ class PermitApplicationController extends Controller
 
     public function saveApplication(Request $request)
     {
+        // dd($request->all());
         DB::beginTransaction();
         $movedFiles = [];
         $isNewApplication = false;
@@ -321,7 +323,7 @@ class PermitApplicationController extends Controller
             if (!$isDraft && isset($permit['applCate'])) {
                 $importer_verify = $permit['applCate'] == 0
                     ? 'Clerk Review In-Progress'
-                    : 'wait for company approval';
+                    : 'Wait for Representative Approval';
             }
 
             // -----------------------------
@@ -354,7 +356,7 @@ class PermitApplicationController extends Controller
                 $status = $isDraft
                     ? 'Draft'
                     : ((int) ($permit['applCate'] ?? 0) === 1
-                        ? 'wait for company approval'
+                        ? 'Wait for Representative Approval'
                         : 'Clerk Review In-Progress');
 
                 $isNewApplication = true;
@@ -446,6 +448,25 @@ class PermitApplicationController extends Controller
 
                     IpConsignmentAttachment::create([
                         'permit_id' => $consignmentArray[$itemIndex],
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_path' => "/storage/{$path}",
+                        'file_type' => $file->getClientOriginalExtension(),
+                    ]);
+                }
+            }
+
+            // dd($application);
+            // -----------------------------
+            // Application Attachments
+            // -----------------------------
+            if ($request->hasFile('application_files')) {
+                foreach ($request->file('application_files') as $file) {
+                    $name = uniqid() . '_' . $file->getClientOriginalName();
+                    $path = $file->storeAs('import_applications', $name, 'public');
+                    $movedFiles[] = $path;
+
+                    IpApplicationAttachment::create([
+                        'application_id' => $application->id,
                         'file_name' => $file->getClientOriginalName(),
                         'file_path' => "/storage/{$path}",
                         'file_type' => $file->getClientOriginalExtension(),

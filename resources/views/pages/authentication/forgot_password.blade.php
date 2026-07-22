@@ -391,7 +391,7 @@
         </div>
     </div>
 
-    <script>
+    {{-- <script>
         (function () {
             var STORAGE_KEY = 'qis_lang';
             var buttons = document.querySelectorAll('.lang-btn');
@@ -436,5 +436,5 @@
 
             setLang(savedLang);
         })();
-    </script>
+    </script> --}}
 @endsection

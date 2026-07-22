@@ -13,82 +13,82 @@ class NotificationController extends Controller
 {
     public function sendStatusMessage($fullname, $type, $applicationId, $status, $messageText, $phoneNumber)
     {
-        $whatsappSuccess = $this->sendWhatsapp($fullname, $type, $applicationId, $status, $messageText, $phoneNumber);
+        // $whatsappSuccess = $this->sendWhatsapp($fullname, $type, $applicationId, $status, $messageText, $phoneNumber);
 
-        if (!$whatsappSuccess) {
-            Log::warning('WhatsApp failed, falling back to email only', [
-                'phone_number' => $phoneNumber,
-                'application_id' => $applicationId,
-            ]);
-        }
+        // if (!$whatsappSuccess) {
+        //     Log::warning('WhatsApp failed, falling back to email only', [
+        //         'phone_number' => $phoneNumber,
+        //         'application_id' => $applicationId,
+        //     ]);
+        // }
 
-        // Always send email regardless of WhatsApp status
-        $this->sendEmail($fullname, $type, $applicationId, $status, $messageText, $phoneNumber);
+        // // Always send email regardless of WhatsApp status
+        // $this->sendEmail($fullname, $type, $applicationId, $status, $messageText, $phoneNumber);
     }
 
     private function sendWhatsapp($fullname, $type, $applicationId, $status, $messageText, $phoneNumber)
     {
-        try {
-            $phoneNumber = preg_replace('/^\+/', '', $phoneNumber);
+        // try {
+        //     $phoneNumber = preg_replace('/^\+/', '', $phoneNumber);
 
-            $url = 'https://rest.moceanapi.com/rest/2/send-message/whatsapp';
+        //     $url = 'https://rest.moceanapi.com/rest/2/send-message/whatsapp';
 
-            $bearerToken = config('services.mocean.token');
-            $fromNumber = config('services.mocean.from');
+        //     $bearerToken = config('services.mocean.token');
+        //     $fromNumber = config('services.mocean.from');
 
-            $payload = [
-                'mocean-from' => $fromNumber,
-                'mocean-to' => $phoneNumber,
-                'mocean-event-url' => '',
-                'mocean-content' => [
-                    'type' => 'template',
-                    'wa_template' => [
-                        'name' => 'qisapplicationstatus',
-                        'language' => 'en',
-                        'body_params' => [
-                            ['type' => 'text', 'text' => $fullname],
-                            ['type' => 'text', 'text' => $type],
-                            ['type' => 'text', 'text' => $applicationId],
-                            ['type' => 'text', 'text' => $status],
-                            ['type' => 'text', 'text' => $messageText],
-                        ],
-                        'wa_buttons' => [
-                            [
-                                'type' => 'url',
-                                'index' => 0,
-                                'url_parameter' => $applicationId,
-                            ],
-                        ],
-                    ],
-                ],
-            ];
+        //     $payload = [
+        //         'mocean-from' => $fromNumber,
+        //         'mocean-to' => $phoneNumber,
+        //         'mocean-event-url' => '',
+        //         'mocean-content' => [
+        //             'type' => 'template',
+        //             'wa_template' => [
+        //                 'name' => 'qisapplicationstatus',
+        //                 'language' => 'en',
+        //                 'body_params' => [
+        //                     ['type' => 'text', 'text' => $fullname],
+        //                     ['type' => 'text', 'text' => $type],
+        //                     ['type' => 'text', 'text' => $applicationId],
+        //                     ['type' => 'text', 'text' => $status],
+        //                     ['type' => 'text', 'text' => $messageText],
+        //                 ],
+        //                 'wa_buttons' => [
+        //                     [
+        //                         'type' => 'url',
+        //                         'index' => 0,
+        //                         'url_parameter' => $applicationId,
+        //                     ],
+        //                 ],
+        //             ],
+        //         ],
+        //     ];
 
-            $response = Http::withToken($bearerToken)
-                ->timeout(10)           // Give up after 10 seconds
-                ->retry(2, 1000)        // Retry 2 times, 1 second apart
-                ->post($url, $payload);
+        //     $response = Http::withToken($bearerToken)
+        //         ->timeout(10)           // Give up after 10 seconds
+        //         ->retry(2, 1000)        // Retry 2 times, 1 second apart
+        //         ->post($url, $payload);
 
-            if ($response->successful()) {
-                Log::info('WhatsApp sent successfully', [
-                    'phone_number' => $phoneNumber,
-                    'application_id' => $applicationId,
-                ]);
-                return true;
-            } else {
-                Log::warning('WhatsApp API returned error', [
-                    'phone_number' => $phoneNumber,
-                    'application_id' => $applicationId,
-                    'response' => $response->body(),
-                ]);
-                return false;
-            }
-        } catch (\Exception $e) {
-            Log::error('WhatsApp exception: ' . $e->getMessage(), [
-                'phone_number' => $phoneNumber,
-                'application_id' => $applicationId,
-            ]);
-            return false;
-        }
+        //     if ($response->successful()) {
+        //         Log::info('WhatsApp sent successfully', [
+        //             'phone_number' => $phoneNumber,
+        //             'application_id' => $applicationId,
+        //         ]);
+        //         return true;
+        //     } else {
+        //         Log::warning('WhatsApp API returned error', [
+        //             'phone_number' => $phoneNumber,
+        //             'application_id' => $applicationId,
+        //             'response' => $response->body(),
+        //         ]);
+        //         return false;
+        //     }
+        // } catch (\Exception $e) {
+        //     Log::error('WhatsApp exception: ' . $e->getMessage(), [
+        //         'phone_number' => $phoneNumber,
+        //         'application_id' => $applicationId,
+        //     ]);
+        //     return false;
+        // }
     }
 
     private function sendEmail($fullname, $type, $applicationId, $status, $messageText, $phoneNumber)
