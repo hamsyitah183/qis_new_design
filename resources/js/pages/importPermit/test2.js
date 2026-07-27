@@ -25,7 +25,7 @@ export function initPermitDetailOffcanvas() {
     const el = document.getElementById('permitDetailOffcanvas');
     if (el && !permitDetailOffcanvas) {
         permitDetailOffcanvas = new bootstrap.Offcanvas(el, {
-            backdrop: 'static',
+            backdrop: true,
             keyboard: true,
             scroll: false,
         });

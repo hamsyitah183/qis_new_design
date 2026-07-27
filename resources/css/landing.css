@@ -189,6 +189,22 @@
         background 0.2s ease,
         transform 0.2s ease;
 }
+.qis-btn-secondary {
+    border-radius: 999px;
+    padding: 10px 22px;
+    font-weight: 600;
+    font-size: 14px;
+    background: rgb(var(--secondary-rgb));
+    border: none;
+    color: #fff;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
 
 .qis-btn-primary:hover {
     background: rgb(var(--primary-tint1-rgb));
@@ -696,6 +712,58 @@
     border-radius: 6px;
 }
 
+/* gallery tile with background image */
+.qis-gallery-tile {
+    position: relative;
+    border: none;
+    border-radius: 16px;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+    padding: 16px;
+}
+
+.qis-gallery-tile:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+}
+
+/* text overlay on the image */
+.qis-tile-overlay {
+    position: relative;
+    z-index: 2;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(2px);
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    pointer-events: none;
+}
+
+/* keep the tag (IMG_01) on top-left */
+/* .qis-gallery-tile .qis-tag {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 3;
+    font-family: "Courier New", monospace;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    padding: 2px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.15);
+} */
+
 /* ---------- contact ---------- */
 .qis-contact-section {
     background: linear-gradient(180deg, var(--gray-1), var(--custom-white));
@@ -1172,12 +1240,19 @@
     max-width: 720px;
     padding: 16px;
     background: #0e1f16;
+    max-height: 90vh;           /* modal fits within viewport */
+    overflow: hidden;           /* no scrollbar – image will scale down */
 }
 
+/* image inside the modal */
 .qis-modal--image img {
-    width: 100%;
-    border-radius: 14px;
     display: block;
+    max-width: 100%;            /* never wider than modal padding */
+    max-height: 80vh;           /* never taller than viewport */
+    width: auto;                /* let the browser choose */
+    height: auto;               /* maintain aspect ratio */
+    border-radius: 14px;
+    margin: 0 auto;            /* center if smaller */
 }
 
 .qis-modal--image .qis-modal-image-placeholder {

@@ -316,7 +316,11 @@ let attachmentOffcanvas = null;
 function initOffcanvas() {
     const el = document.getElementById('attachmentOffcanvas');
     if (el) {
-        attachmentOffcanvas = new bootstrap.Offcanvas(el, { backdrop: 'static', keyboard: true, scroll: false, focus: false });
+        attachmentOffcanvas = new bootstrap.Offcanvas(el, { backdrop: true, keyboard: true, scroll: false, focus: false });
+        el.addEventListener('hidden.bs.offcanvas', function () {
+            document.querySelectorAll('.offcanvas-backdrop').forEach((b) => b.remove());
+            document.body.classList.remove('offcanvas-open');
+        });
     }
 }
 
