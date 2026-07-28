@@ -1,11 +1,12 @@
 @extends('pages.app')
 
-@section('pageName', 'Apply Application')
-
+@section('pageName', __('Apply Application'))
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '/'], ['label' => 'New Application', 'url' => '#']]" title=" ">
-
+    <x-breadcrumb :items="[
+        ['label' => __('Home'), 'url' => '/'],
+        ['label' => __('New Application'), 'url' => '#']
+    ]" title=" ">
     </x-breadcrumb>
 @endsection
 
@@ -49,7 +50,6 @@
     </style>
 @endpush
 
-
 @section('content')
 
     <div class="col-12">
@@ -64,10 +64,10 @@
                                     data-bs-target="#order-tab-pane" type="button" role="tab" aria-controls="order-tab"
                                     aria-selected="true">
                                     <span class="d-flex flex-column gap-1 align-items-center d-md-inline">
-
-                                        <span class="text-type text-wrap">Application Type</span>
+                                        <span class="text-type text-wrap" 
+                                              data-en="Application Type" 
+                                              data-bm="Jenis Permohonan">Application Type</span>
                                     </span>
-
                                 </button>
                             </li>
 
@@ -76,18 +76,17 @@
                                     data-bs-target="#shipped-tab-pane" type="button" role="tab"
                                     aria-controls="shipped-tab" aria-selected="false" tabindex="-1">
                                     <span class="d-flex flex-column gap-1 align-items-center d-md-inline">
-                                        
-                                        <span class="text-type text-wrap"> Category </span>
+                                        <span class="text-type text-wrap" 
+                                              data-en="Category" 
+                                              data-bm="Kategori">Category</span>
                                     </span>
                                 </button>
                             </li>
 
                         </ul>
-                        <div class="tab-content " id="myTabContent">
+                        <div class="tab-content" id="myTabContent">
                             @include('pages.public.application.type')
-
                             @include('pages.public.application.category')
-
                         </div>
                     </div>
                 </div>
@@ -95,6 +94,5 @@
         </div>
 
     </div>
-
 
 @endsection

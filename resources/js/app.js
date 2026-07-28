@@ -249,43 +249,57 @@ function languange() {
 
         function setLang(lang) {
             elements.forEach(function (el) {
-                var text = el.getAttribute("data-" + lang);
-                if (text === null) return;
-
-                // Check if this element has data-title attribute (for wizard steps)
+                // --- Handle data-title ---
                 if (
-                    el.hasAttribute("data-title") &&
-                    el.hasAttribute("data-en") &&
-                    el.hasAttribute("data-bm")
+                    el.hasAttribute("data-title-en") &&
+                    el.hasAttribute("data-title-bm")
                 ) {
-                    el.setAttribute("data-title", text);
-
-                    // Update wizard navigation if this is a wizard step
-                    var stepIndex = el.getAttribute("data-step");
-                    if (stepIndex !== null) {
-                        // Support both .wz-nav and .wizard-nav classes
-                        var navSteps = document.querySelectorAll(".wz-nav .wz-step, .wizard-nav .wizard-step");
-                        navSteps.forEach(function (navStep) {
-                            var navIndex = Array.from(navSteps).indexOf(navStep);
-                            var stepNum = parseInt(stepIndex) - 1; // steps are 1-indexed
-                            if (navIndex === stepNum) {
-                                // Find the span that contains the text (second span, after the dot)
-                                var spans = navStep.querySelectorAll("span");
-                                if (spans.length > 1) {
-                                    spans[1].innerHTML = text;
-                                } else if (spans.length === 1) {
-                                    spans[0].innerHTML = text;
-                                }
-                            }
-                        });
+                    var titleText =
+                        el.getAttribute("data-" + lang + "-title") ||
+                        el.getAttribute("data-title-en");
+                    if (titleText) {
+                        el.setAttribute("data-title", titleText);
                     }
                 }
+
+                // --- Handle placeholder ---
+                var text = el.getAttribute("data-" + lang);
+                if (text === null) return;
 
                 if (el.getAttribute("data-i18n-attr") === "placeholder") {
                     el.setAttribute("placeholder", text);
                 } else {
+                    // For wizard steps we might also need to update the displayed step text
+                    // If the element is a wizard-step and has a span inside, update that span's content
+                    if (el.classList.contains("wizard-step")) {
+                        var span = el.querySelector("span:last-child");
+                        if (span) {
+                            span.textContent = text;
+                        }
+                    }
                     el.textContent = text;
                 }
+
+                // Update wizard navigation step labels
+                document
+                    .querySelectorAll(".wizard-content .wizard-step")
+                    .forEach(function (stepEl) {
+                        var step = stepEl.getAttribute("data-step");
+                        var newTitle = stepEl.getAttribute("data-title");
+                        if (newTitle) {
+                            var navSpan = document.querySelector(
+                                '.wizard-nav .wizard-step[data-step="' +
+                                    step +
+                                    '"] span:last-child',
+                            );
+                            if (navSpan) {
+                                navSpan.textContent = newTitle;
+                            }
+                        }
+                    });
+
+                // Update wizard buttons
+                updateWizardButtons(lang);
             });
 
             buttons.forEach(function (btn) {
@@ -295,18 +309,6 @@ function languange() {
                 );
             });
 
-            // Update wizard buttons text
-            var wizardBtns = document.querySelectorAll(".wizard-btn");
-            wizardBtns.forEach(function (btn) {
-                if (btn.classList.contains("prev")) {
-                    btn.textContent = lang === "bm" ? "Kembali" : "Prev";
-                } else if (btn.classList.contains("next")) {
-                    btn.textContent = lang === "bm" ? "Seterusnya" : "Next";
-                } else if (btn.classList.contains("finish")) {
-                    btn.textContent = lang === "bm" ? "Hantar" : "Submit";
-                }
-            });
-
             document.documentElement.setAttribute(
                 "lang",
                 lang === "bm" ? "ms" : "en",
@@ -314,11 +316,7 @@ function languange() {
 
             try {
                 localStorage.setItem(STORAGE_KEY, lang);
-
-                applyTranslations();
-            } catch (e) {
-                /* storage unavailable, ignore */
-            }
+            } catch (e) {}
         }
 
         buttons.forEach(function (btn) {
@@ -330,29 +328,61 @@ function languange() {
         var savedLang = "en";
         try {
             savedLang = localStorage.getItem(STORAGE_KEY) || "en";
-        } catch (e) {
-            /* storage unavailable, default to en */
-        }
-
+        } catch (e) {}
         setLang(savedLang);
     })();
 }
-
 export function applyTranslations(container) {
     const lang = localStorage.getItem("qis_lang") || "en";
-    // Find all elements with data-en/data-bm inside this container
     const elements = container.querySelectorAll("[data-en]");
-    
+
     elements.forEach(function (el) {
+        // Handle data-title
+        if (
+            el.hasAttribute("data-title-en") &&
+            el.hasAttribute("data-title-bm")
+        ) {
+            var titleText =
+                el.getAttribute("data-" + lang + "-title") ||
+                el.getAttribute("data-title-en");
+            if (titleText) {
+                el.setAttribute("data-title", titleText);
+            }
+        }
+
         const text = el.getAttribute("data-" + lang);
         if (text === null) return;
 
         if (el.getAttribute("data-i18n-attr") === "placeholder") {
             el.setAttribute("placeholder", text);
         } else {
+            // If it's a wizard step, update the displayed label as well
+            if (el.classList.contains("wizard-step")) {
+                var span = el.querySelector("span:last-child");
+                if (span) {
+                    span.textContent = text;
+                }
+            }
             el.textContent = text;
         }
     });
+}
+
+function updateWizardButtons(lang) {
+    const labels = {
+        en: { prev: "Prev", next: "Next", submit: "Submit" },
+        bm: { prev: "Kembali", next: "Seterusnya", submit: "Hantar" },
+    };
+    const t = labels[lang] || labels.en;
+    document
+        .querySelectorAll(".wizard-btn.prev")
+        .forEach((el) => (el.textContent = t.prev));
+    document
+        .querySelectorAll(".wizard-btn.next")
+        .forEach((el) => (el.textContent = t.next));
+    document
+        .querySelectorAll(".wizard-btn.finish, .wizard-btn.submit")
+        .forEach((el) => (el.textContent = t.submit));
 }
 
 languange();
