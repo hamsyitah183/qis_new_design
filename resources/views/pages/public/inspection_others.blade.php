@@ -5,10 +5,10 @@
 
 @section('breadcrumb')
     <x-breadcrumb :items="[
-        ['label' => 'Home', 'url' => '/'],
-        ['label' => 'New Application', 'url' => '/public/new_application'],
-        ['label' => 'Apply for Others Inspection Application', 'url' => '#'],
-    ]" title="Inspection Certificate">
+        ['label' => 'Home', 'url' => '/', 'data-en' => 'Home', 'data-bm' => 'Laman Utama'],
+        ['label' => 'New Application', 'url' => '/public/new_application', 'data-en' => 'New Application', 'data-bm' => 'Permohonan Baru'],
+        ['label' => 'Apply for Others Inspection Application', 'url' => '#', 'data-en' => 'Apply for Others Inspection Application', 'data-bm' => 'Permohonan Pemeriksaan Bagi Pihak Lain'],
+    ]" title="Inspection Certificate" title_en="Inspection Certificate" title_bm="Sijil Pemeriksaan">
 
     </x-breadcrumb>
 @endsection
@@ -24,22 +24,22 @@
                 <div class="card-body p-0"> <!-- method="POST"  data-wizard="active" style="display: block;"-->
                     <form id="wizardFormOthers" class="wizard wizard-tab horizontal" accept="multipart/form-data">
                         <input type="hidden" id="applicationId" value="{{ $id }}">
-                        <aside class="wizard-nav dots">
+                        <aside class="wizard-nav dots ipa-wizard-nav">
                             <div class="wizard-step active" data-step="0">
                                 <span class="dot"></span>
-                                <span>IMPORTER & EXPORTER</span>
+                                <span data-en="IMPORTER & EXPORTER" data-bm="PENGIMPORT & PENGEKSPORT">IMPORTER & EXPORTER</span>
                             </div>
                             <div class="wizard-step" data-step="1">
                                 <span class="dot"></span>
-                                <span>INSPECTION DETAILS</span>
+                                <span data-en="INSPECTION DETAILS" data-bm="BUTIRAN PEMERIKSAAN">INSPECTION DETAILS</span>
                             </div>
                             <div class="wizard-step" data-step="2">
                                 <span class="dot"></span>
-                                <span>CONSIGNMENT ITEMS</span>
+                                <span data-en="CONSIGNMENT ITEMS" data-bm="BARANGAN KONSAINAN">CONSIGNMENT ITEMS</span>
                             </div>
                             <div class="wizard-step" data-step="3">
                                 <span class="dot"></span>
-                                <span>Summary</span>
+                                <span data-en="Summary" data-bm="Ringkasan">Summary</span>
                             </div>
                         </aside>
                         <aside class="wizard-content container">
@@ -64,7 +64,7 @@
     </script>
     <script>
         // for form wizard next and prev button
-        (function () {
+        (function() {
             // 🟢 First wizard
             let firstWizardConfig = {
                 wz_class: ".wizard-tab",
@@ -77,12 +77,13 @@
 
             // 🟢 Second wizard (with progress bar)
             let secondWizardConfig = {
-                wz_class: ".wizard-second-tab",   // ✅ fixed selector
+                wz_class: ".wizard-second-tab", // ✅ fixed selector
                 highlight: true,
                 highlight_time: 1000,
                 progress: true,
                 validate: true
             };
+            
             new Wizard1(secondWizardConfig).init();
         })();
 

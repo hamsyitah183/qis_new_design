@@ -75,7 +75,7 @@
                         </button>
                         <div class="ipa-hint-note">
                             <i class='bx bx-info-circle'></i>
-                            <span data-en="If your exporter isn't in the list above, <a style='color:red'>add them here</a>." data-bm="Jika pengeksport anda tiada dalam senarai di atas, <a style='color:red'>tambah mereka di sini</a>.">If your exporter isn't in the list above, <a style='color:red'>add them here</a>.</span>
+                            <span data-en="If your exporter isn't in the list above, " data-bm="Jika pengeksport anda tiada dalam senarai di atas, ">If your exporter isn't in the list above, </span><a style="color:red" data-en="add them here" data-bm="tambah mereka di sini">add them here</a><span>.</span>
                         </div>
                     </div>
                     <div class="col-xl-12">

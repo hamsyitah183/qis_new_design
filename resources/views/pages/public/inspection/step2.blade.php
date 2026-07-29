@@ -5,10 +5,10 @@
                 <thead class="table-primary">
                     <tr>
                         <th scope="col">#</th>
-                        <th scope="col">Item Name</th>
-                        <th scope="col">Quantity</th>
-                        <th scope="col">Purpose</th>
-                        <th scope="col">View More</th>
+                        <th scope="col" data-en="Item Name" data-bm="Nama Barangan">Item Name</th>
+                        <th scope="col" data-en="Quantity" data-bm="Kuantiti">Quantity</th>
+                        <th scope="col" data-en="Purpose" data-bm="Tujuan">Purpose</th>
+                        <th scope="col" data-en="View More" data-bm="Lihat Lebih Lanjut">View More</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -30,7 +30,7 @@
                 <input type="hidden" id="hasItems" name="hasItems" required>
                 <button id="mdlAddItemBtn" type="button" class="btn btn-md btn-info mt-3" data-bs-toggle="modal"
                     data-bs-target="#addItemModal">
-                    <i class="bx bx-plus me-1"></i> Add Item
+                    <i class="bx bx-plus me-1"></i> <span data-en="Add Item" data-bm="Tambah Barangan">Add Item</span>
                 </button>
             </div>
         </div>

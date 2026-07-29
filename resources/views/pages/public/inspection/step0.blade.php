@@ -1,24 +1,29 @@
 <div class="wizard-step active" data-title="IMPORTER & EXPORTER" data-id="2e8WqSV3slGIpTbnjcJzmDwBQaHrfh0Z" data-step="0">
     <div class="row justify-content-center">
         <div class="col-xl-6">
-            <div class="register-page">
-                <h6 class="mb-3">Importer :</h6>
+            <div class="register-page ipa-card h-100">
+                <div class="ipa-card-header">
+                    <span class="ipa-icon-badge"><i class='bx bx-user'></i></span>
+                    <h6 data-en="Importer" data-bm="Pengimport">Importer
+                        <span class="ipa-card-sub" data-en="Auto-filled from your account" data-bm="Diisi secara automatik daripada akaun anda">Auto-filled from your account</span>
+                    </h6>
+                </div>
                 <div class="row gy-3">
                     <input type="hidden" id="app_cate" value="0">
                     <input type="hidden" id="impemail">
                     <div class="col-xl-12">
-                        <label for="impname" class="form-label">Name</label>
+                        <label for="impname" class="form-label" data-en="Name" data-bm="Nama">Name</label>
                         <input type="hidden" id="impid" value="{{ Auth::user()->id ?? '' }}">
                         <input type="text" class="form-control " id="impname" name="impname"
                             value="{{ Auth::user()->fullname ?? '' }}" disabled>
                     </div>
                     <div class="col-xl-12">
-                        <label for="impfonno" class="form-label">Phone No</label>
+                        <label for="impfonno" class="form-label" data-en="Phone No" data-bm="No Telefon">Phone No</label>
                         <input type="text" class="form-control " id="impfonno" name="impfonno"
                             value="{{ Auth::user()->phone_number ?? '' }}" disabled>
                     </div>
                     <div class="col-xl-12">
-                        <label for="impaddress" class="form-label">Address</label>
+                        <label for="impaddress" class="form-label" data-en="Address" data-bm="Alamat">Address</label>
                         <input type="text" class="form-control mb-2" id="impaddress1" name="impaddress1"
                             value="{{ Auth::user()->address_1 ?? '' }}" disabled>
                         <input type="text" class="form-control " id="impaddress2" name="impaddress2"
@@ -28,11 +33,16 @@
             </div>
         </div>
         <div class="col-xl-6">
-            <div class="register-page">
-                <h6 class="mb-3">Exporter :<a style="color:red"> * </a></h6>
+            <div class="register-page ipa-card h-100">
+                <div class="ipa-card-header">
+                    <span class="ipa-icon-badge"><i class='bx bx-globe'></i></span>
+                    <h6 data-en="Exporter" data-bm="Pengeksport">Exporter <a style="color:red"> * </a>
+                        <span class="ipa-card-sub" data-en="Who you're importing the goods from" data-bm="Siapa anda mengimport barangan daripada">Who you're importing the goods from</span>
+                    </h6>
+                </div>
                 <div class="row gy-3">
                     <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
-                        <label for="selectexp" class="form-label">Select Exporter</label>
+                        <label for="selectexp" class="form-label" data-en="Select Exporter" data-bm="Pilih Pengeksport">Select Exporter</label>
                         <select id="selectexp" data-route="/public/get_exporters"
                             class="form-select xintra-select2" name="selectexp" style="width:100%;" required>
                             <option value="">-- Select Exporter --</option>
@@ -47,21 +57,21 @@
                     </div>
                     <div class="col-xl-12">
                         <input type="hidden" id="expid">
-                        <label for="expname" class="form-label">Name</label>
+                        <label for="expname" class="form-label" data-en="Name" data-bm="Nama">Name</label>
                         <input type="text" class="form-control " id="expname" name="expname" disabled>
                     </div>
                     <div class="col-xl-12">
-                        <label for="expfonno" class="form-label">Phone No</label>
+                        <label for="expfonno" class="form-label" data-en="Phone No" data-bm="No Telefon">Phone No</label>
                         <input type="text" class="form-control " id="expfonno" name="expfonno" disabled>
                     </div>
                     <div class="col-xl-12">
-                        <label for="expaddress" class="form-label">Address</label>
+                        <label for="expaddress" class="form-label" data-en="Address" data-bm="Alamat">Address</label>
                         {{-- <input type="text" class="form-control mb-2" id="expaddress1" name="expaddress1" disabled> --}}
                         <textarea name="expadress1" id="expaddress1" class="form-control" cols="30" rows="3" disabled></textarea>
                         <!-- <input type="text" class="form-control " id="expaddress2"  name="expaddress2"> -->
                     </div>
                     <div class="col-lg-12">
-                        <label for="expcountry" class="form-label">Country</label>
+                        <label for="expcountry" class="form-label" data-en="Country" data-bm="Negara">Country</label>
                         <input type="hidden" class="form-control mb-2" id="expcountryCode" name="expcountryCode">
                         <input type="text" class="form-control" id="expcountry" name="expcountry" disabled>
                     </div>
