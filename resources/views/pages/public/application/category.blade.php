@@ -15,7 +15,7 @@
                                   
                                     <i class="bi bi-person-fill fs-2 text-primary icon"></i>
                                 </h6>
-                                <span class="fs-15 fw-bold">Self Apply</span>
+                                <span class="fs-15 fw-bold" data-en="Self Apply" data-bm="Mohon Sendiri">Self Apply</span>
                             </div>
                         </div>
                     </div>
@@ -32,7 +32,7 @@
                                     {{-- <i class="bx bx-package fs-2 text-primary icon"></i> --}}
                                     <i class="bi bi-people-fill fs-2 text-primary icon"></i>
                                 </h6>
-                                <span class="fs-15 fw-bold">Apply For Others</span>
+                                <span class="fs-15 fw-bold" data-en="Apply For Others" data-bm="Mohon Untuk Pihak Lain">Apply For Others</span>
                             </div>
                         </div>
                     </div>
@@ -44,11 +44,11 @@
     <div class="p-3 border-top border-block-start-dashed d-flex justify-content-between">
         <button class="btn btn-secondary" id="backToAccountTab" type="button">
             <i class="ri-arrow-left-line me-2 align-middle"></i>
-            Back
+            <span data-en="Back" data-bm="Kembali">Back</span>
         </button>
 
         <button class="btn btn-primary" id="nextToSummaryTab" type="button">
-            Next
+            <span data-en="Next" data-bm="Seterusnya">Next</span>
             <i class="ri-arrow-right-line ms-2 align-middle"></i>
         </button>
     </div>

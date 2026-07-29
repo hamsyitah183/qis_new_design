@@ -86,38 +86,38 @@
             <div class="card custom-card">
 
                 <div class="card-header">
-                    <div class="card-title">Order List</div>
+                    <div class="card-title" data-en="Order List" data-bm="Senarai Pesanan">Order List</div>
                     <div class="ms-auto d-flex gap-2 align-items-center">
 
                         <button class="btn btn-sm btn-primary filter dropdown-toggle" type="button" id="orderFilterDropdown"
                             data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                             <span class="me-2"><i class="ti ti-adjustments-horizontal"></i></span>
-                            Filter
+                            <span data-en="Filter" data-bm="Tapis">Filter</span>
                         </button>
 
                         <ul class="dropdown-menu p-3 filter-dropdown" aria-labelledby="orderFilterDropdown">
 
                             {{-- Order Status --}}
                             <li class="mb-2">
-                                <label class="form-label fw-semibold mb-1">Order Status</label>
+                                <label class="form-label fw-semibold mb-1" data-en="Order Status" data-bm="Status Pesanan">Order Status</label>
                                 <select class="form-select form-select-sm" id="filterOrderStatus">
-                                    <option value="">All Status</option>
-                                    <option value="SUCCESSFUL">Successful</option>
-                                    <option value="UNSUCCESSFUL">Unsuccessful</option>
-                                    <option value="PAYMENT PROCESSING">Payment Processing</option>
-                                    <option value="PENDING FOR AUTHORIZER TO APPROVE">Pending for Authorizer to Approve
+                                    <option value="" data-en="All Status" data-bm="Semua Status">All Status</option>
+                                    <option value="SUCCESSFUL" data-en="Successful" data-bm="Berjaya">Successful</option>
+                                    <option value="UNSUCCESSFUL" data-en="Unsuccessful" data-bm="Tidak Berjaya">Unsuccessful</option>
+                                    <option value="PAYMENT PROCESSING" data-en="Payment Processing" data-bm="Pemprosesan Bayaran">Payment Processing</option>
+                                    <option value="PENDING FOR AUTHORIZER TO APPROVE" data-en="Pending for Authorizer to Approve" data-bm="Menunggu Kelulusan Pengesah">Pending for Authorizer to Approve
                                     </option>
                                 </select>
                             </li>
 
                             {{-- Application Type --}}
                             <li class="mb-2">
-                                <label class="form-label fw-semibold mb-1">Application Type</label>
+                                <label class="form-label fw-semibold mb-1" data-en="Application Type" data-bm="Jenis Permohonan">Application Type</label>
                                 <select class="form-select form-select-sm" id="filterAppType">
-                                    <option value="">All Types</option>
-                                    <option value="import_permit">Import Permit</option>
-                                    <option value="inspection">Inspection Certificate</option>
-                                    <option value="consignment">Consignment Certificate</option>
+                                    <option value="" data-en="All Types" data-bm="Semua Jenis">All Types</option>
+                                    <option value="import_permit" data-en="Import Permit" data-bm="Permit Import">Import Permit</option>
+                                    <option value="inspection" data-en="Inspection Certificate" data-bm="Sijil Pemeriksaan">Inspection Certificate</option>
+                                    <option value="consignment" data-en="Consignment Certificate" data-bm="Sijil Konsainan">Consignment Certificate</option>
                                 </select>
                             </li>
 
@@ -125,19 +125,19 @@
                             <li class="mb-2">
                                 <div class="row g-2">
                                     <div class="col-6">
-                                        <label class="form-label fw-semibold mb-1">Start Date</label>
+                                        <label class="form-label fw-semibold mb-1" data-en="Start Date" data-bm="Tarikh Mula">Start Date</label>
                                         <input type="date" class="form-control form-control-sm" id="filterOrderStartDate">
                                     </div>
                                     <div class="col-6">
-                                        <label class="form-label fw-semibold mb-1">End Date</label>
+                                        <label class="form-label fw-semibold mb-1" data-en="End Date" data-bm="Tarikh Akhir">End Date</label>
                                         <input type="date" class="form-control form-control-sm" id="filterOrderEndDate">
                                     </div>
                                 </div>
                             </li>
 
                             <li class="d-flex justify-content-end gap-2 mt-2 pt-2 border-top">
-                                <button class="btn btn-sm btn-secondary" id="btnResetOrderFilter">Reset</button>
-                                <button class="btn btn-sm btn-primary" id="btnOrderFilter">Apply</button>
+                                <button class="btn btn-sm btn-secondary" id="btnResetOrderFilter" data-en="Reset" data-bm="Tetap Semula">Reset</button>
+                                <button class="btn btn-sm btn-primary" id="btnOrderFilter" data-en="Apply" data-bm="Guna">Apply</button>
                             </li>
                         </ul>
                     </div>
@@ -154,18 +154,18 @@
                                     <thead class="mt-3">
                                         <tr class="">
                                             {{-- <th>#</th> --}}
-                                            <th>Order Number</th>
-                                            <th>Permit Number</th>
-                                            <th>Order Status</th>
-                                            <th>Application Type</th>
+                                            <th data-en="Order Number" data-bm="Nombor Pesanan">Order Number</th>
+                                            <th data-en="Permit Number" data-bm="Nombor Permit">Permit Number</th>
+                                            <th data-en="Order Status" data-bm="Status Pesanan">Order Status</th>
+                                            <th data-en="Application Type" data-bm="Jenis Permohonan">Application Type</th>
                                             @if (authUser()['type'] == 'internal')
-                                                <th>Transaction Data</th>
+                                                <th data-en="Transaction Data" data-bm="Data Transaksi">Transaction Data</th>
                                             @endif
 
-                                            <th>Payment Amount</th>
+                                            <th data-en="Payment Amount" data-bm="Jumlah Bayaran">Payment Amount</th>
 
 
-                                            <th>Action</th>
+                                            <th data-en="Action" data-bm="Tindakan">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -189,11 +189,11 @@
             <table class="table text-wrap table-hover" id="applicationLogTable">
                 <thead class="table-primary">
                     <tr>
-                        <th scope="col">Action</th>
-                        <th scope="col">User</th>
-                        <th scope="col">Remark</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">Time and Date</th>
+                        <th scope="col" data-en="Action" data-bm="Tindakan">Action</th>
+                        <th scope="col" data-en="User" data-bm="Pengguna">User</th>
+                        <th scope="col" data-en="Remark" data-bm="Catatan">Remark</th>
+                        <th scope="col" data-en="Status" data-bm="Status">Status</th>
+                        <th scope="col" data-en="Time and Date" data-bm="Masa dan Tarikh">Time and Date</th>
                     </tr>
                 </thead>
                 <tbody class="table-group-divider">
@@ -203,7 +203,7 @@
         </div>
 
         @slot('footer')
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Close" data-bm="Tutup">Close</button>
         @endslot
 
     </x-modal>
@@ -215,7 +215,7 @@
         </div>
 
         @slot('footer')
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Close" data-bm="Tutup">Close</button>
         @endslot
     </x-modal>
 

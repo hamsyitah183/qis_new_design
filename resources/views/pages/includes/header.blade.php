@@ -220,7 +220,7 @@
 
 </div>
 
-{{-- @push('scripts')
+@push('scripts')
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             // Logout logic
@@ -285,4 +285,4 @@
             })();
         });
     </script>
-@endpush --}}
+@endpush

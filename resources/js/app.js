@@ -264,9 +264,12 @@ function languange() {
                     var stepIndex = el.getAttribute("data-step");
                     if (stepIndex !== null) {
                         // Support both .wz-nav and .wizard-nav classes
-                        var navSteps = document.querySelectorAll(".wz-nav .wz-step, .wizard-nav .wizard-step");
+                        var navSteps = document.querySelectorAll(
+                            ".wz-nav .wz-step, .wizard-nav .wizard-step",
+                        );
                         navSteps.forEach(function (navStep) {
-                            var navIndex = Array.from(navSteps).indexOf(navStep);
+                            var navIndex =
+                                Array.from(navSteps).indexOf(navStep);
                             var stepNum = parseInt(stepIndex) - 1; // steps are 1-indexed
                             if (navIndex === stepNum) {
                                 // Find the span that contains the text (second span, after the dot)
@@ -342,7 +345,7 @@ export function applyTranslations(container) {
     const lang = localStorage.getItem("qis_lang") || "en";
     // Find all elements with data-en/data-bm inside this container
     const elements = container.querySelectorAll("[data-en]");
-    
+
     elements.forEach(function (el) {
         const text = el.getAttribute("data-" + lang);
         if (text === null) return;

@@ -34,7 +34,7 @@
                     <div class="d-flex gap-2">
                         <a href="{{ route('profile') }}"
                             class="btn btn-light text-primary btn-wave fw-medium rounded-pill px-4">
-                            <i class="ti ti-user me-1"></i> My Profile
+                            <i class="ti ti-user me-1"></i> <span data-en="My Profile" data-bm="Profil Saya">My Profile</span>
                         </a>
                     </div>
                 </div>
@@ -69,11 +69,11 @@
                             <div class="d-grid gap-2">
                                 <a href="{{ route('public.permitApplication') }}"
                                     class="btn btn-sm btn-light btn-wave text-start fs-12">
-                                    <i class="ti ti-user me-1"></i> Self Import
+                                    <i class="ti ti-user me-1"></i> <span data-en="Self Import" data-bm="Import Sendiri">Self Import</span>
                                 </a>
                                 <a href="/public/import_assign_application"
                                     class="btn btn-sm btn-light btn-wave text-start fs-12">
-                                    <i class="ti ti-users me-1"></i> For Someone Else
+                                    <i class="ti ti-users me-1"></i> <span data-en="For Someone Else" data-bm="Untuk Orang Lain">For Someone Else</span>
                                 </a>
                             </div>
                         </div>
@@ -96,11 +96,11 @@
                             <div class="d-grid gap-2">
                                 <a href="{{ route('public.inspectionApplicationSelf') }}"
                                     class="btn btn-sm btn-light btn-wave text-start fs-12">
-                                    <i class="ti ti-user me-1"></i> Self Request
+                                    <i class="ti ti-user me-1"></i> <span data-en="Self Request" data-bm="Permohonan Sendiri">Self Request</span>
                                 </a>
                                 <a href="{{ route('public.inspectionApplicationOthers') }}"
                                     class="btn btn-sm btn-light btn-wave text-start fs-12">
-                                    <i class="ti ti-users me-1"></i> For Someone Else
+                                    <i class="ti ti-users me-1"></i> <span data-en="For Someone Else" data-bm="Untuk Orang Lain">For Someone Else</span>
                                 </a>
                             </div>
                         </div>
@@ -123,11 +123,11 @@
                             <div class="d-grid gap-2">
                                 <a href="{{ route('public.consignment.app') }}"
                                     class="btn btn-sm btn-light btn-wave text-start fs-12">
-                                    <i class="ti ti-user me-1"></i> Self Consignment
+                                    <i class="ti ti-user me-1"></i> <span data-en="Self Consignment" data-bm="Konsainan Sendiri">Self Consignment</span>
                                 </a>
                                 <a href="{{ route('public.consignmentOther.app') }}"
                                     class="btn btn-sm btn-light btn-wave text-start fs-12">
-                                    <i class="ti ti-users me-1"></i> For Someone Else
+                                    <i class="ti ti-users me-1"></i> <span data-en="For Someone Else" data-bm="Untuk Orang Lain">For Someone Else</span>
                                 </a>
                             </div>
                         </div>
@@ -172,7 +172,7 @@
                                             <div class="avatar avatar-sm bg-primary-transparent rounded-circle me-3">
                                                 <i class="ti ti-hourglass-low text-primary fs-16"></i>
                                             </div>
-                                            <span class="fs-13 fw-medium text-muted">Under Review</span>
+                                            <span class="fs-13 fw-medium text-muted" data-en="Under Review" data-bm="Dalam Semakan">Under Review</span>
                                         </div>
                                         <span class="fw-bold fs-16">{{ $pendingCount ?? 0 }}</span>
                                     </div>
@@ -183,7 +183,7 @@
                                             <div class="avatar avatar-sm bg-warning rounded-circle me-3 text-white">
                                                 <i class="ti ti-wallet fs-16"></i>
                                             </div>
-                                            <span class="fs-13 fw-medium text-warning-emphasis">Pending Payment</span>
+                                            <span class="fs-13 fw-medium text-warning-emphasis" data-en="Pending Payment" data-bm="Menunggu Pembayaran">Pending Payment</span>
                                         </div>
                                         <span
                                             class="fw-bold fs-16 text-warning-emphasis">{{ $pendingPaymentCount ?? 0 }}</span>
@@ -194,7 +194,7 @@
                                             <div class="avatar avatar-sm bg-success-transparent rounded-circle me-3">
                                                 <i class="ti ti-circle-check text-success fs-16"></i>
                                             </div>
-                                            <span class="fs-13 fw-medium text-muted">Verified / Issued</span>
+                                            <span class="fs-13 fw-medium text-muted" data-en="Verified / Issued" data-bm="Disahkan / Dikeluarkan">Verified / Issued</span>
                                         </div>
                                         <span class="fw-bold fs-16">{{ $verifiedCount ?? 0 }}</span>
                                     </div>
@@ -204,7 +204,7 @@
                                             <div class="avatar avatar-sm bg-danger-transparent rounded-circle me-3">
                                                 <i class="ti ti-circle-x text-danger fs-16"></i>
                                             </div>
-                                            <span class="fs-13 fw-medium text-muted">Rejected</span>
+                                            <span class="fs-13 fw-medium text-muted" data-en="Rejected" data-bm="Ditolak">Rejected</span>
                                         </div>
                                         <span class="fw-bold fs-16">{{ $rejectedCount ?? 0 }}</span>
                                     </div>
@@ -216,7 +216,7 @@
                                 {{-- Soft inset background to mimic the reference image --}}
                                 <div class="p-3 rounded-4"
                                     style="background-color: var(--gray-1); border: 1px solid var(--default-border);">
-                                    <h6 class="fs-13 fw-semibold text-center mb-1 text-muted">Applications Received</h6>
+                                    <h6 class="fs-13 fw-semibold text-center mb-1 text-muted" data-en="Applications Received" data-bm="Permohonan Diterima">Applications Received</h6>
                                     <div id="dummyBarChart" style="min-height: 220px;"></div>
                                 </div>
                             </div>
@@ -226,7 +226,7 @@
                                 {{-- Soft inset background to mimic the reference image --}}
                                 <div class="p-3 rounded-4"
                                     style="background-color: var(--gray-1); border: 1px solid var(--default-border);">
-                                    <h6 class="fs-13 fw-semibold text-center mb-1 text-muted">Application Trends</h6>
+                                    <h6 class="fs-13 fw-semibold text-center mb-1 text-muted" data-en="Application Trends" data-bm="Trend Permohonan">Application Trends</h6>
                                     <div id="dummyLineChart" style="min-height: 220px;"></div>
                                 </div>
                             </div>
@@ -251,11 +251,11 @@
                 <div class="mb-3 text-white">
                     <i class="bx bx-buildings fs-1 opacity-50"></i>
                 </div>
-                <h6 class="fw-semibold mb-2 text-white">Manage Exporters</h6>
-                <p class="fs-12 opacity-75 text-white mb-3">Update and manage your registered exporter profiles for
+                <h6 class="fw-semibold mb-2 text-white" data-en="Manage Exporters" data-bm="Urus Pengeksport">Manage Exporters</h6>
+                <p class="fs-12 opacity-75 text-white mb-3" data-en="Update and manage your registered exporter profiles for seamless applications." data-bm="Kemaskini dan urus profil pengeksport berdaftar anda untuk kelancaran permohonan.">Update and manage your registered exporter profiles for
                     seamless applications.</p>
                 <a href="{{ route('application.exporter') }}" class="btn btn-light btn-sm rounded-pill fw-medium">
-                    Manage My Exporters <i class="ti ti-arrow-right ms-1"></i>
+                    <span data-en="Manage My Exporters" data-bm="Urus Pengeksport Saya">Manage My Exporters</span> <i class="ti ti-arrow-right ms-1"></i>
                 </a>
             </div>
 
@@ -268,18 +268,18 @@
                     <h5 class="card-title fw-semibold mb-0" data-en="Recent Submissions" data-bm="Penyerahan Terkini">
                         Recent Submissions</h5>
                     <a href="{{ route('public.showallapplicationlist') }}"
-                        class="btn btn-sm btn-primary-transparent rounded-pill px-3">View All</a>
+                        class="btn btn-sm btn-primary-transparent rounded-pill px-3" data-en="View All" data-bm="Lihat Semua">View All</a>
                 </div>
                 <div class="card-body pt-0">
                     <div class="table-responsive">
                         <table class="table table-borderless table-hover text-nowrap align-middle">
                             <thead class="bg-light rounded-3 text-muted fs-12 uppercase">
                                 <tr>
-                                    <th scope="col" class="rounded-start">Type</th>
-                                    <th scope="col">Application ID</th>
-                                    <th scope="col">Submitted At</th>
-                                    <th scope="col">Status</th>
-                                    <th scope="col" class="text-end rounded-end">Action</th>
+                                    <th scope="col" class="rounded-start" data-en="Type" data-bm="Jenis">Type</th>
+                                    <th scope="col" data-en="Application ID" data-bm="ID Permohonan">Application ID</th>
+                                    <th scope="col" data-en="Submitted At" data-bm="Dihantar Pada">Submitted At</th>
+                                    <th scope="col" data-en="Status" data-bm="Status">Status</th>
+                                    <th scope="col" class="text-end rounded-end" data-en="Action" data-bm="Tindakan">Action</th>
                                 </tr>
                             </thead>
                             <tbody class="border-top-0">
@@ -309,7 +309,10 @@
                                             <span
                                                 class="badge {{ $typeDetails['class'] }} d-flex align-items-center w-max-content px-2 py-1">
                                                 <i class="bx {{ $typeDetails['icon'] }} me-1 fs-14"></i>
-                                                {{ $app->type }}
+                                                <span data-en="{{ $app->type }}" 
+                                                      data-bm="{{ $app->type == 'Import Permit' ? 'Permit Import' : ($app->type == 'Inspection' ? 'Pemeriksaan' : ($app->type == 'Consignment' ? 'Konsainan' : $app->type)) }}">
+                                                    {{ $app->type }}
+                                                </span>
                                             </span>
                                         </td>
                                         <td>
@@ -331,7 +334,18 @@
                                                 };
                                             @endphp
                                             <span
-                                                class="badge {{ $badgeClass }} rounded-pill px-2">{{ $app->status }}</span>
+                                                class="badge {{ $badgeClass }} rounded-pill px-2"
+                                                data-en="{{ $app->status }}"
+                                                data-bm="{{ match ($app->status) {
+                                                    'Draft' => 'Draf',
+                                                    'Clerk Review In-Progress', 'Clerk review in-progress' => 'Dalam Semakan Kerani',
+                                                    'Clerk Verified' => 'Kerani Disahkan',
+                                                    'Clerk Rejected' => 'Ditolak Kerani',
+                                                    'Rejected' => 'Ditolak',
+                                                    'Officer Verification Completed' => 'Pengesahan Pegawai Selesai',
+                                                    default => $app->status
+                                                } }}"
+                                                >{{ $app->status }}</span>
                                         </td>
                                         <td class="text-end">
                                             @php
@@ -357,7 +371,7 @@
                                         <td colspan="5" class="text-center text-muted py-4">
                                             <div class="mb-2"><i class="bx bx-folder-open fs-1"
                                                     style="opacity: 0.2;"></i></div>
-                                            No recent applications found. Start by requesting a new service above.
+                                            <span data-en="No recent applications found. Start by requesting a new service above." data-bm="Tiada permohonan terkini ditemui. Mula dengan memohon perkhidmatan baharu di atas.">No recent applications found. Start by requesting a new service above.</span>
                                         </td>
                                     </tr>
                                 @endforelse

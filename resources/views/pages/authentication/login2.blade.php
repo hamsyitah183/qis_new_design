@@ -130,5 +130,45 @@
         </div>
     </div>
 
-   
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var STORAGE_KEY = 'qis_lang';
+            var langButtons = document.querySelectorAll('.lang-btn');
+            var i18nElements = document.querySelectorAll('[data-en]');
+
+            function setLang(lang) {
+                i18nElements.forEach(function (el) {
+                    var text = el.getAttribute('data-' + lang);
+                    if (text === null) return;
+                    if (el.getAttribute('data-i18n-attr') === 'placeholder') {
+                        el.setAttribute('placeholder', text);
+                    } else {
+                        el.textContent = text;
+                    }
+                });
+
+                langButtons.forEach(function (btn) {
+                    btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
+                });
+
+                document.documentElement.setAttribute('lang', lang === 'bm' ? 'ms' : 'en');
+
+                try {
+                    localStorage.setItem(STORAGE_KEY, lang);
+                } catch (e) { /* ignore */ }
+            }
+
+            langButtons.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    setLang(btn.getAttribute('data-lang'));
+                });
+            });
+
+            var savedLang = 'en';
+            try {
+                savedLang = localStorage.getItem(STORAGE_KEY) || 'en';
+            } catch (e) { /* default en */ }
+            setLang(savedLang);
+        });
+    </script>
 @endsection

@@ -59,34 +59,34 @@
                                     </div>
 
                                     <div class="p-3 pb-1 d-flex flex-wrap justify-content-between">
-                                        <div class="fw-medium fs-15 text-primary1">
+                                        <div class="fw-medium fs-15 text-primary1" data-en="Basic Info :" data-bm="Maklumat Asas :">
                                             Basic Info :
                                         </div>
                                     </div>
                                     <div class="card-body border-bottom border-block-end-dashed p-0">
                                         <ul class="list-group list-group-flush" id="basicInfo">
                                             <li class="list-group-item pt-2 border-0">
-                                                <div><span class="fw-medium me-2">Name :</span><span
+                                                <div><span class="fw-medium me-2" data-en="Name :" data-bm="Nama :">Name :</span><span
                                                         class="text-muted fullname"></span></div>
                                             </li>
 
                                             <li class="list-group-item pt-2 border-0">
-                                                <div><span class="fw-medium me-2">Email :</span><span
+                                                <div><span class="fw-medium me-2" data-en="Email :" data-bm="E-mel :">Email :</span><span
                                                         class="text-muted email"></span></div>
                                             </li>
                                             <li class="list-group-item pt-2 border-0">
-                                                <div><span class="fw-medium me-2">Phone :</span>
+                                                <div><span class="fw-medium me-2" data-en="Phone :" data-bm="Telefon :">Phone :</span>
                                                     <span class="text-muted phone_number"></span>
                                                 </div>
                                             </li>
                                             <li class="list-group-item pt-2 border-0">
-                                                <div><span class="fw-medium me-2">IC :</span>
+                                                <div><span class="fw-medium me-2" data-en="IC :" data-bm="KP :">IC :</span>
                                                     <span class="text-muted ic"></span>
                                                 </div>
                                             </li>
                                             @if ($user['type'] == 'internal')
                                                 <li class="list-group-item pt-2 border-0">
-                                                    <div><span class="fw-medium me-2">Role :</span>
+                                                    <div><span class="fw-medium me-2" data-en="Role :" data-bm="Peranan :">Role :</span>
                                                         <span class="text-muted role">{{ $user['roles'][0] }}</span>
                                                     </div>
                                                 </li>

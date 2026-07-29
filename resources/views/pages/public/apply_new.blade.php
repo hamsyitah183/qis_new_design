@@ -4,7 +4,7 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '/'], ['label' => 'New Application', 'url' => '#']]" title=" ">
+    <x-breadcrumb :items="[['label' => 'Home', 'url' => '/', 'data-en' => 'Home', 'data-bm' => 'Utama'], ['label' => 'New Application', 'url' => '#', 'data-en' => 'New Application', 'data-bm' => 'Permohonan Baru']]" title=" ">
 
     </x-breadcrumb>
 @endsection
@@ -65,7 +65,7 @@
                                     aria-selected="true">
                                     <span class="d-flex flex-column gap-1 align-items-center d-md-inline">
 
-                                        <span class="text-type text-wrap">Application Type</span>
+                                        <span class="text-type text-wrap" data-en="Application Type" data-bm="Jenis Permohonan">Application Type</span>
                                     </span>
 
                                 </button>
@@ -77,7 +77,7 @@
                                     aria-controls="shipped-tab" aria-selected="false" tabindex="-1">
                                     <span class="d-flex flex-column gap-1 align-items-center d-md-inline">
                                         
-                                        <span class="text-type text-wrap"> Category </span>
+                                        <span class="text-type text-wrap" data-en="Category" data-bm="Kategori"> Category </span>
                                     </span>
                                 </button>
                             </li>
