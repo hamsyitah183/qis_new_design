@@ -23,8 +23,8 @@
 @section('pageName', 'All Exporters')
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#'], ['label' => 'Exporter List', 'url' => '#']]"
-        title="All Exporter List" title_en="All Exporter List" title_bm="Senarai Pengeksport">
+    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#', 'data-en' => 'Home', 'data-bm' => 'Laman Utama'], ['label' => 'Exporter List', 'url' => '#', 'data-en' => 'Exporter List', 'data-bm' => 'Senarai Pengeksport']]"
+        title="All Exporter List" title_en="All Exporter List" title_bm="Senarai Semua Pengeksport">
     </x-breadcrumb>
 @endsection
 

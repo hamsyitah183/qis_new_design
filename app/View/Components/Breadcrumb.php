@@ -13,11 +13,15 @@ class Breadcrumb extends Component
      */
     public $items;
     public $title;
+    public $titleEn;
+    public $titleBm;
 
-    public function __construct($items = [], $title = null)
+    public function __construct($items = [], $title = null, $titleEn = null, $titleBm = null)
     {
         $this->items = $items;
         $this->title = $title ?? end($items)['label'] ?? '';
+        $this->titleEn = $titleEn ?? $this->title;
+        $this->titleBm = $titleBm ?? $this->title;
     }
 
     /**

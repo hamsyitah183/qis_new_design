@@ -34,7 +34,7 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="Boundary Officer List" title_en="Boundary Officer List" title_bm="Senarai Pegawai Sempadan">
+    <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/', 'data-en' => 'Dashboard', 'data-bm' => 'Dashboard'], ['label' => 'Boundary Officer List', 'url' => '#', 'data-en' => 'Boundary Officer List', 'data-bm' => 'Senarai Pegawai Sempadan']]" title="Boundary Officer List" title_en="Boundary Officer List" title_bm="Senarai Pegawai Sempadan">
 
     </x-breadcrumb>
 @endsection

@@ -37,7 +37,7 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="Import Permit Application List">
+    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#', 'data-en' => 'Home', 'data-bm' => 'Laman Utama']]" title="Import Permit Application List" title_en="Import Permit Application List" title_bm="Senarai Permohonan Permit Import">
 
     </x-breadcrumb>
 @endsection

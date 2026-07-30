@@ -28,7 +28,7 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/'], ['label' => 'Public User List', 'url' => '#']]"
+    <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/', 'data-en' => 'Dashboard', 'data-bm' => 'Dashboard'], ['label' => 'Public User List', 'url' => '#', 'data-en' => 'Public User List', 'data-bm' => 'Senarai Pengguna Awam']]"
         title="Public User List" title_en="Public User List" title_bm="Senarai Pengguna Awam">
 
     </x-breadcrumb>

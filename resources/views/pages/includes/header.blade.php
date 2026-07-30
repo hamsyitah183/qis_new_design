@@ -63,7 +63,7 @@
 
                 <div class="p-3">
                     <div class="d-flex align-items-center justify-content-between">
-                        <p class="mb-0 fs-15 fw-medium">Notifications</p>
+                        <p class="mb-0 fs-15 fw-medium" data-en="Notifications" data-bm="Notifikasi">Notifications</p>
                         <span class="badge bg-secondary text-fixed-white" id="notifiation-data">5 Unread</span>
                     </div>
                 </div>
@@ -125,7 +125,7 @@
 
                 <div class="p-3 empty-header-item1 border-top">
                     <div class="d-grid">
-                        <a href="/notifications" class="btn btn-primary btn-wave waves-effect waves-light">View
+                        <a href="/notifications" class="btn btn-primary btn-wave waves-effect waves-light" data-en="View All" data-bm="Lihat Semua">View
                             All</a>
                     </div>
                 </div>
@@ -134,7 +134,7 @@
                         <span class="avatar avatar-xl avatar-rounded bg-secondary-transparent">
                             <i class="ri-notification-off-line fs-2"></i>
                         </span>
-                        <h6 class="fw-medium mt-3">No New Notifications</h6>
+                        <h6 class="fw-medium mt-3" data-en="No New Notifications" data-bm="Tiada Notifikasi Baru">No New Notifications</h6>
                     </div>
                 </div>
             </div>

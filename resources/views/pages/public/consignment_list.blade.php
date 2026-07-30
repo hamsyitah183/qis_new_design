@@ -36,7 +36,7 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="Consignment Certificate List">
+    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#', 'data-en' => 'Home', 'data-bm' => 'Laman Utama']]" title="Consignment Certificate List" title_en="Consignment Certificate List" title_bm="Senarai Sijil Konsainan">
 
     </x-breadcrumb>
 @endsection

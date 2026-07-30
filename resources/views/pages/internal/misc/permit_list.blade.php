@@ -27,8 +27,8 @@
 @section('breadcrumb')
     <x-breadcrumb 
         :items="[
-            ['label' => 'Home', 'url' => '#'],
-          
+            ['label' => 'Dashboard', 'url' => '/', 'data-en' => 'Dashboard', 'data-bm' => 'Dashboard'],
+            ['label' => 'Permit Condition List', 'url' => '#', 'data-en' => 'Permit Condition List', 'data-bm' => 'Senarai Syarat Permit']
         ]" 
         title="Permit Condition List"
         title_en="Permit Condition List"

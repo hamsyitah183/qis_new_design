@@ -19,7 +19,7 @@
 @section('pageName', ' List Role')
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/'], ['label' => 'List Role', 'url' => '#']]" title="List Role" title_en="List Role" title_bm="Senarai Peranan" />
+    <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/', 'data-en' => 'Dashboard', 'data-bm' => 'Dashboard'], ['label' => 'List Role', 'url' => '#', 'data-en' => 'List Role', 'data-bm' => 'Senarai Peranan']]" title="List Role" title_en="List Role" title_bm="Senarai Peranan" />
 @endsection
 
 @section('content')

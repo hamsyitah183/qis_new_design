@@ -23,8 +23,8 @@
 @section('pageName', 'All Importers')
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#'], ['label' => 'Importer List', 'url' => '#']]"
-        title="All Importer List" title_en="All Importer List" title_bm="Senarai Pengimport">
+    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#', 'data-en' => 'Home', 'data-bm' => 'Laman Utama'], ['label' => 'Importer List', 'url' => '#', 'data-en' => 'Importer List', 'data-bm' => 'Senarai Pengimport']]"
+        title="All Importer List" title_en="All Importer List" title_bm="Senarai Semua Pengimport">
     </x-breadcrumb>
 @endsection
 

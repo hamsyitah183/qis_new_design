@@ -48,9 +48,9 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/'], 
+    <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/', 'data-en' => 'Dashboard', 'data-bm' => 'Dashboard'], 
     
-    ['label' => 'Activity Log', 'url' => '#']]" title="Activity Log" title_en="Activity Log" title_bm="Log Aktiviti">
+    ['label' => 'Activity Log', 'url' => '#', 'data-en' => 'Activity Log', 'data-bm' => 'Log Aktiviti']]" title="Activity Log" title_en="Activity Log" title_bm="Log Aktiviti">
 
     </x-breadcrumb>
 @endsection

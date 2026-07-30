@@ -4,7 +4,7 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="System Control Panel" title_en="System Control Panel" title_bm="Panel Kawalan Sistem">
+    <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/', 'data-en' => 'Dashboard', 'data-bm' => 'Dashboard'], ['label' => 'Control Panel', 'url' => '#', 'data-en' => 'Control Panel', 'data-bm' => 'Panel Kawalan']]" title="System Control Panel" title_en="System Control Panel" title_bm="Panel Kawalan Sistem">
 
     </x-breadcrumb>
 @endsection

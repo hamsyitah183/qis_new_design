@@ -25,7 +25,7 @@
 @endpush
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/'], ['label' => 'User Verification List', 'url' => '#']]"
+    <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/', 'data-en' => 'Dashboard', 'data-bm' => 'Dashboard'], ['label' => 'User Verification List', 'url' => '#', 'data-en' => 'User Verification List', 'data-bm' => 'Senarai Pengesahan Pengguna']]"
         title="User Verification List" title_en="User Verification List" title_bm="Senarai Pengesahan Pengguna">
     </x-breadcrumb>
 @endsection

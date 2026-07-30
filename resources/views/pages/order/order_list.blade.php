@@ -74,7 +74,7 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="Order List">
+    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#', 'data-en' => 'Home', 'data-bm' => 'Laman Utama']]" title="Order List" title_en="Order List" title_bm="Senarai Pesanan">
 
     </x-breadcrumb>
 @endsection

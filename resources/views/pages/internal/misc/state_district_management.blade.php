@@ -8,7 +8,7 @@
 @endpush
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#'], ['label' => 'State & District', 'url' => '#']]"
+    <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/', 'data-en' => 'Dashboard', 'data-bm' => 'Dashboard'], ['label' => 'State & District', 'url' => '#', 'data-en' => 'State & District', 'data-bm' => 'Negeri & Daerah']]"
         title="State & District Management"
         title_en="State & District Management"
         title_bm="Pengurusan Negeri & Daerah">

@@ -3,7 +3,7 @@
 @section('pageName', 'Branch Management')
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#'], ['label' => 'System Config', 'url' => '#']]"
+    <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/', 'data-en' => 'Dashboard', 'data-bm' => 'Dashboard'], ['label' => 'Branch Management', 'url' => '#', 'data-en' => 'Branch Management', 'data-bm' => 'Pengurusan Cawangan']]"
         title="Branch Management"
         title_en="Branch Management"
         title_bm="Pengurusan Cawangan">

@@ -60,7 +60,7 @@ export function notification() {
                                 notification.data.message
                             }</div>
                             <div class="fw-normal fs-10 text-muted">${formatTime(
-                                notification.created_at
+                                notification.created_at,
                             )}</div>
                         </div>
                     </a>
@@ -74,7 +74,7 @@ export function notification() {
     // Mark all notifications as read when dropdown is clicked
     messageDropdown.addEventListener("click", () => {
         const unreadItems = document.querySelectorAll(
-            "#notificationContent li a"
+            "#notificationContent li a",
         ); // only shown notifications
         if (unreadItems.length === 0) return;
 
@@ -97,7 +97,7 @@ export function notification() {
                 });
             })
             .catch((err) =>
-                console.error("Failed to mark notifications read:", err)
+                console.error("Failed to mark notifications read:", err),
             );
     });
 }
@@ -126,14 +126,13 @@ function formatTime(dateString) {
     });
 }
 
-document.querySelectorAll('.dropdown-item-notification').forEach(item => {
-    item.addEventListener('click', function (e) {
+document.querySelectorAll(".dropdown-item-notification").forEach((item) => {
+    item.addEventListener("click", function (e) {
         e.preventDefault();
         const hours = this.dataset.time;
         notificationContent(hours);
     });
 });
-
 
 export function notificationContent(hours = null) {
     const notificationList = document.getElementById("notificationList");
@@ -198,11 +197,9 @@ export function notificationContent(hours = null) {
             });
         })
         .catch(() => {
-            console.log('error fetch notification');
+            console.log("error fetch notification");
         })
         .finally(() => Swal.close());
 }
-
-
 
 notificationContent();
