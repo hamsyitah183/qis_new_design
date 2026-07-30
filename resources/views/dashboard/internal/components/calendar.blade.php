@@ -2,8 +2,8 @@
     <div class="card-body">
         <div class="adm-card-title-row">
             <div>
-                <h6>Activity Calendar</h6>
-                <span class="adm-card-sub">Applications, notices &amp; system events</span>
+                <h6 data-en="Activity Calendar" data-bm="Kalendar Aktiviti">Activity Calendar</h6>
+                <span class="adm-card-sub" data-en="Applications, notices &amp; system events" data-bm="Permohonan, notis &amp; acara sistem">Applications, notices &amp; system events</span>
             </div>
         </div>
 

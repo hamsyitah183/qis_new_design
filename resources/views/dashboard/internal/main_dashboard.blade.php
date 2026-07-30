@@ -10,6 +10,8 @@
     <x-breadcrumb
         :items="[['label' => ' ', 'url' => '/']]"
         title="Welcome {{ authUser()['user']->fullname }}"
+        title_en="Welcome {{ authUser()['user']->fullname }}"
+        title_bm="Selamat Datang {{ authUser()['user']->fullname }}"
     />
 @endsection
 

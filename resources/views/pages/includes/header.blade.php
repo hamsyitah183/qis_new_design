@@ -266,6 +266,9 @@
                     } catch (e) {
                         /* storage unavailable, ignore */
                     }
+
+                    // Dispatch event for JS components to re-render
+                    window.dispatchEvent(new CustomEvent("lang-changed", { detail: lang }));
                 }
 
                 buttons.forEach(function(btn) {
