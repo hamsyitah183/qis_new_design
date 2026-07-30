@@ -34,7 +34,7 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="Boundary Officer List">
+    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="Boundary Officer List" title_en="Boundary Officer List" title_bm="Senarai Pegawai Sempadan">
 
     </x-breadcrumb>
 @endsection
@@ -46,35 +46,35 @@
             <div class="card custom-card">
 
                 <div class="card-header">
-                    <div class="card-title">Boundary Officer List</div>
+                    <div class="card-title" data-en="Boundary Officer List" data-bm="Senarai Pegawai Sempadan">Boundary Officer List</div>
                     <div class="ms-auto d-flex gap-2 align-items-center">
 
                         <button class="btn btn-sm btn-primary filter dropdown-toggle" type="button"
                             id="boundaryFilterDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
                             aria-expanded="false">
                             <span class="me-2"><i class="ti ti-adjustments-horizontal"></i></span>
-                            Filter
+                            <span data-en="Filter" data-bm="Tapis">Filter</span>
                         </button>
 
                         <ul class="dropdown-menu p-3 filter-dropdown" aria-labelledby="boundaryFilterDropdown">
 
                             {{-- Name Search --}}
                             <li class="mb-2">
-                                <label class="form-label fw-semibold mb-1">Name</label>
+                                <label class="form-label fw-semibold mb-1" data-en="Name" data-bm="Nama">Name</label>
                                 <input type="text" class="form-control form-control-sm" id="filterBoundaryName"
-                                    placeholder="Search by name...">
+                                    placeholder="Search by name..." data-en="Search by name..." data-bm="Cari dengan nama..." data-i18n-attr="placeholder">
                             </li>
 
                             {{-- Place --}}
                             <li class="mb-2">
-                                <label class="form-label fw-semibold mb-1">Place / Entry Point</label>
+                                <label class="form-label fw-semibold mb-1" data-en="Place / Entry Point" data-bm="Tempat / Titik Masuk">Place / Entry Point</label>
                                 <input type="text" class="form-control form-control-sm" id="filterBoundaryPlace"
-                                    placeholder="Search by place...">
+                                    placeholder="Search by place..." data-en="Search by place..." data-bm="Cari dengan tempat..." data-i18n-attr="placeholder">
                             </li>
 
                             <li class="d-flex justify-content-end gap-2 mt-2 pt-2 border-top">
-                                <button class="btn btn-sm btn-secondary" id="btnResetBoundaryFilter">Reset</button>
-                                <button class="btn btn-sm btn-primary" id="btnBoundaryFilter">Apply</button>
+                                <button class="btn btn-sm btn-secondary" id="btnResetBoundaryFilter"><span data-en="Reset" data-bm="Set Semula">Reset</span></button>
+                                <button class="btn btn-sm btn-primary" id="btnBoundaryFilter"><span data-en="Apply" data-bm="Guna">Apply</span></button>
                             </li>
                         </ul>
                     </div>
@@ -90,9 +90,9 @@
                                     style="width: 1588px;">
                                     <thead class="mt-3">
                                         <tr class="even">
-                                            <td>Name</td>
-                                            <td>Place</td>
-                                            <td>Action</td>
+                                            <td data-en="Name" data-bm="Nama">Name</td>
+                                            <td data-en="Place" data-bm="Tempat">Place</td>
+                                            <td data-en="Action" data-bm="Tindakan">Action</td>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -110,29 +110,29 @@
     </div>
 
 
-    <x-modal id="boundaryModal" title="User Details">
+    <x-modal id="boundaryModal" title="User Details" title_en="User Details" title_bm="Butiran Pengguna">
 
         <input type="hidden" name="id">
         <div class="my-2">
-            <label for="trnptType" class="name">User Name</label>
+            <label for="trnptType" class="name"><span data-en="User Name" data-bm="Nama Pengguna">User Name</span></label>
             <input type="text" id="name" readonly class="form-control" name="name">
         </div>
 
         <div class="my-2">
-            <label for="trnptType" class="form-label">Transport Type</label>
+            <label for="trnptType" class="form-label"><span data-en="Transport Type" data-bm="Jenis Pengangkutan">Transport Type</span></label>
             <select class="form-select" id="trnptType" name="trnptType" data-route="/internal/get_entry_point"
                 required>
-                <option value="">-- Select Transport --</option>
-                <option value="Air">Air</option>
-                <option value="Sea">Sea</option>
-                <option value="Land">Land</option>
+                <option value="" data-en="-- Select Transport --" data-bm="-- Pilih Pengangkutan --">-- Select Transport --</option>
+                <option value="Air" data-en="Air" data-bm="Udara">Air</option>
+                <option value="Sea" data-en="Sea" data-bm="Laut">Sea</option>
+                <option value="Land" data-en="Land" data-bm="Darat">Land</option>
             </select>
         </div>
        
         <div class="my-2">
-            <label for="entryPoint" class="form-label">Entry Point</label>
+            <label for="entryPoint" class="form-label"><span data-en="Entry Point" data-bm="Titik Masuk">Entry Point</span></label>
             <select class="form-select" id="entryPoint" name="entryPoint" required>
-                <option value="">-- Select Entry Point --</option>
+                <option value="" data-en="-- Select Entry Point --" data-bm="-- Pilih Titik Masuk --">-- Select Entry Point --</option>
     
             </select>
             <input type="hidden" id="descEntryPoint">
@@ -140,8 +140,8 @@
         
 
         @slot('footer')
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" id="saveBtn">Save</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><span data-en="Close" data-bm="Tutup">Close</span></button>
+        <button type="button" class="btn btn-primary" id="saveBtn"><span data-en="Save" data-bm="Simpan">Save</span></button>
         @endslot
 
     </x-modal>

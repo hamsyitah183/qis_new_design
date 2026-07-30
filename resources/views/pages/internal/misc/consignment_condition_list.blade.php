@@ -25,7 +25,7 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="Consignment List">
+    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="Consignment List" title_en="Consignment List" title_bm="Senarai Konsainan">
 
     </x-breadcrumb>
 @endsection
@@ -36,50 +36,50 @@
         <div class="col-xl-12">
             <div class="card custom-card">
                 <div class="card-header">
-                    <div class="card-title">Consignment Condition List</div>
+                    <div class="card-title" data-en="Consignment Condition List" data-bm="Senarai Syarat Konsainan">Consignment Condition List</div>
                     <div class="ms-auto d-flex gap-2 align-items-center">
 
                         <button class="btn btn-sm btn-primary filter dropdown-toggle" type="button"
                             id="consignCondFilterDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
                             aria-expanded="false">
                             <span class="me-2"><i class="ti ti-adjustments-horizontal"></i></span>
-                            Filter
+                            <span data-en="Filter" data-bm="Tapis">Filter</span>
                         </button>
 
                         <ul class="dropdown-menu p-3 filter-dropdown" aria-labelledby="consignCondFilterDropdown">
 
                             {{-- Item Name --}}
                             <li class="mb-2">
-                                <label class="form-label fw-semibold mb-1">Item Name</label>
+                                <label class="form-label fw-semibold mb-1" data-en="Item Name" data-bm="Nama Item">Item Name</label>
                                 <input type="text" class="form-control form-control-sm" id="filterConsignItemName"
-                                    placeholder="Search item name...">
+                                    placeholder="Search item name..." data-en="Search item name..." data-bm="Cari nama item..." data-i18n-attr="placeholder">
                             </li>
 
                             {{-- Category --}}
                             <li class="mb-2">
-                                <label class="form-label fw-semibold mb-1">Category</label>
+                                <label class="form-label fw-semibold mb-1" data-en="Category" data-bm="Kategori">Category</label>
                                 <select class="form-select form-select-sm" id="filterConsignCategory">
-                                    <option value="">All Categories</option>
+                                    <option value="" data-en="All Categories" data-bm="Semua Kategori">All Categories</option>
                                 </select>
                             </li>
 
                             {{-- Usage --}}
                             <li class="mb-2">
-                                <label class="form-label fw-semibold mb-1">Usage</label>
+                                <label class="form-label fw-semibold mb-1" data-en="Usage" data-bm="Kegunaan">Usage</label>
                                 <select class="form-select form-select-sm" id="filterConsignUsage">
-                                    <option value="">All Usage</option>
+                                    <option value="" data-en="All Usage" data-bm="Semua Kegunaan">All Usage</option>
                                 </select>
                             </li>
 
                             <li class="d-flex justify-content-end gap-2 mt-2 pt-2 border-top">
-                                <button class="btn btn-sm btn-secondary" id="btnResetConsignCondFilter">Reset</button>
-                                <button class="btn btn-sm btn-primary" id="btnConsignCondFilter">Apply</button>
+                                <button class="btn btn-sm btn-secondary" id="btnResetConsignCondFilter"><span data-en="Reset" data-bm="Set Semula">Reset</span></button>
+                                <button class="btn btn-sm btn-primary" id="btnConsignCondFilter"><span data-en="Apply" data-bm="Guna">Apply</span></button>
                             </li>
                         </ul>
 
                         <a type="button" href="{{ url('internal/consignment_condition/add') }}"
                             class="btn btn-success btn-sm">
-                            <i class="ti ti-plus me-1"></i> Add Consignment Item
+                            <i class="ti ti-plus me-1"></i> <span data-en="Add Consignment Item" data-bm="Tambah Item Konsainan">Add Consignment Item</span>
                         </a>
                     </div>
                 </div>
@@ -89,11 +89,11 @@
                         <thead>
                             <tr>
                                 {{-- <th>#</th> --}}
-                                <th class="text-wrap">Item Name</th>
-                                <th class="text-wrap">Scientific Name</th>
-                                <th>Category</th>
-                                <th>Usage</th>
-                                <th>Action</th>
+                                <th class="text-wrap" data-en="Item Name" data-bm="Nama Item">Item Name</th>
+                                <th class="text-wrap" data-en="Scientific Name" data-bm="Nama Saintifik">Scientific Name</th>
+                                <th data-en="Category" data-bm="Kategori">Category</th>
+                                <th data-en="Usage" data-bm="Kegunaan">Usage</th>
+                                <th data-en="Action" data-bm="Tindakan">Action</th>
                             </tr>
                         </thead>
                         <tbody></tbody> <!-- Important for DataTables -->
@@ -116,35 +116,35 @@
                     <!-- Your content here -->
                     <!-- ITEM DETAILS -->
                     <div class="mb-4">
-                        <h5 class="fw-bold text-muted">Item Information</h5>
+                        <h5 class="fw-bold text-muted" data-en="Item Information" data-bm="Maklumat Item">Item Information</h5>
                         <table class="table table-bordered align-middle">
                             <tbody>
                                 <tr>
-                                    <th width="25%">Item Name</th>
+                                    <th width="25%" data-en="Item Name" data-bm="Nama Item">Item Name</th>
                                     <td id="itemNameCell"></td>
                                 </tr>
                                 <tr>
-                                    <th width="25%">Scientific Name</th>
+                                    <th width="25%" data-en="Scientific Name" data-bm="Nama Saintifik">Scientific Name</th>
                                     <td id="scientificNameCell"></td>
                                 </tr>
                                 <tr>
-                                    <th>Category</th>
+                                    <th data-en="Category" data-bm="Kategori">Category</th>
                                     <td id="categoryCell"></td>
                                 </tr>
                                 <tr>
-                                    <th>Usage / Consignment Application</th>
+                                    <th data-en="Usage / Consignment Application" data-bm="Kegunaan / Permohonan Konsainan">Usage / Consignment Application</th>
                                     <td id="usageCell"></td>
                                 </tr>
                                 <tr>
-                                    <th>Country</th>
+                                    <th data-en="Country" data-bm="Negara">Country</th>
                                     <td id="countryCell"></td>
                                 </tr>
                                 <tr>
-                                    <th>Quantity Limit</th>
+                                    <th data-en="Quantity Limit" data-bm="Had Kuantiti">Quantity Limit</th>
                                     <td id="quantityLimit"></td>
                                 </tr>
                                 <tr>
-                                    <th>Date</th>
+                                    <th data-en="Date" data-bm="Tarikh">Date</th>
                                     <td id="date"></td>
                                 </tr>
                             </tbody>
@@ -153,14 +153,14 @@
 
                     <!-- PERMIT CONDITION -->
                     <div class="mt-4">
-                        <h5 class="fw-bold text-muted">Consignment Condition</h5>
+                        <h5 class="fw-bold text-muted" data-en="Consignment Condition" data-bm="Syarat Konsainan">Consignment Condition</h5>
                         <div id="conditionHtml" class="border rounded p-3 bg-light" style="min-height: 150px;">
                         </div>
                     </div>
                 </div>
 
                 <div class="modal-footer">
-                    <button class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                    <button class="btn btn-primary" data-bs-dismiss="modal" data-en="Close" data-bm="Tutup">Close</button>
                 </div>
 
             </div>

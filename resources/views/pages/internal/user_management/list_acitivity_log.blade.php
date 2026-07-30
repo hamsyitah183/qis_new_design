@@ -50,7 +50,7 @@
 @section('breadcrumb')
     <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/'], 
     
-    ['label' => 'Activity Log', 'url' => '#']]" title="Activity Log">
+    ['label' => 'Activity Log', 'url' => '#']]" title="Activity Log" title_en="Activity Log" title_bm="Log Aktiviti">
 
     </x-breadcrumb>
 @endsection
@@ -62,46 +62,46 @@
                 <div class="card custom-card border overflow-hidden">
 
                     <div class="card-header">
-                        <div class="card-title">Activity Log</div>
+                        <div class="card-title" data-en="Activity Log" data-bm="Log Aktiviti">Activity Log</div>
                         <div class="ms-auto d-flex gap-2 align-items-center">
 
                             <button class="btn btn-sm btn-info" id="openExportModal">
-                                <i class="ri-download-cloud-2-line"></i> Download Report
+                                <i class="ri-download-cloud-2-line"></i> <span data-en="Download Report" data-bm="Muat Turun Laporan">Download Report</span>
                             </button>
 
                             <button class="btn btn-sm btn-primary filter dropdown-toggle" type="button"
                                 id="activityFilterDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
                                 aria-expanded="false">
                                 <span class="me-2"><i class="ti ti-adjustments-horizontal"></i></span>
-                                Filter
+                                <span data-en="Filter" data-bm="Tapis">Filter</span>
                             </button>
 
                             <ul class="dropdown-menu p-3 filter-dropdown" aria-labelledby="activityFilterDropdown">
 
                                 {{-- User Type --}}
                                 <li class="mb-2">
-                                    <label class="form-label fw-semibold mb-1">User Type</label>
+                                    <label class="form-label fw-semibold mb-1" data-en="User Type" data-bm="Jenis Pengguna">User Type</label>
                                     <select class="form-select form-select-sm" id="userType">
-                                        <option selected value="0">Choose User Type</option>
-                                        <option value="public">Public</option>
-                                        <option value="internal">Internal</option>
+                                        <option selected value="0" data-en="Choose User Type" data-bm="Pilih Jenis Pengguna">Choose User Type</option>
+                                        <option value="public" data-en="Public" data-bm="Awam">Public</option>
+                                        <option value="internal" data-en="Internal" data-bm="Dalaman">Internal</option>
                                     </select>
                                 </li>
 
                                 {{-- User Account --}}
                                 <li class="mb-3">
-                                    <label class="form-label fw-semibold mb-1" id="accountUserModalLabel">User Account</label>
+                                    <label class="form-label fw-semibold mb-1" id="accountUserModalLabel" data-en="User Account" data-bm="Akaun Pengguna">User Account</label>
                                     <div class="btn btn-sm btn-outline-primary w-100 mb-2" id="userAccountBtn" style="pointer-events: none; opacity: 0.6;">
-                                        <i class="ti ti-user me-1"></i> Choose User
+                                        <i class="ti ti-user me-1"></i> <span data-en="Choose User" data-bm="Pilih Pengguna">Choose User</span>
                                     </div>
                                     <div id="userAccountContainer" class="d-none border rounded p-2 bg-white mt-2">
                                         <div class="input-group input-group-sm mb-2">
-                                            <input type="text" class="form-control" placeholder="Search Name...." id="searchUserInput">
-                                            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="categoryDropdown">Category</button>
+                                            <input type="text" class="form-control" placeholder="Search Name...." id="searchUserInput" data-en="Search Name...." data-bm="Cari Nama...." data-i18n-attr="placeholder">
+                                            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="categoryDropdown" data-en="Category" data-bm="Kategori">Category</button>
                                             <ul class="dropdown-menu dropdown-menu-end" id="categoryDropdownMenu">
-                                                <li><a class="dropdown-item" href="javascript:void(0);">All</a></li>
-                                                <li><a class="dropdown-item" href="javascript:void(0);">Individual</a></li>
-                                                <li><a class="dropdown-item" href="javascript:void(0);">Company</a></li>
+                                                <li><a class="dropdown-item" href="javascript:void(0);" data-en="All" data-bm="Semua">All</a></li>
+                                                <li><a class="dropdown-item" href="javascript:void(0);" data-en="Individual" data-bm="Individu">Individual</a></li>
+                                                <li><a class="dropdown-item" href="javascript:void(0);" data-en="Company" data-bm="Syarikat">Company</a></li>
                                             </ul>
                                         </div>
                                         <div class="row g-2 scrollable-grey" id="userList" style="max-height: 150px; overflow-y: auto;">
@@ -113,31 +113,31 @@
                                 <li class="mb-2">
                                     <div class="row g-2">
                                         <div class="col-6">
-                                            <label class="form-label fw-semibold mb-1">Start Date &amp; Time</label>
+                                            <label class="form-label fw-semibold mb-1" data-en="Start Date &amp; Time" data-bm="Tarikh &amp; Masa Mula">Start Date &amp; Time</label>
                                             <div class="input-group input-group-sm">
                                                 <div class="input-group-text text-muted">
                                                     <i class="ri-calendar-line"></i>
                                                 </div>
                                                 <input type="text" id="startDateTime" class="form-control"
-                                                    placeholder="Select start date &amp; time">
+                                                    placeholder="Select start date &amp; time" data-en="Select start date &amp; time" data-bm="Pilih tarikh &amp; masa mula" data-i18n-attr="placeholder">
                                             </div>
                                         </div>
                                         <div class="col-6">
-                                            <label class="form-label fw-semibold mb-1">End Date &amp; Time</label>
+                                            <label class="form-label fw-semibold mb-1" data-en="End Date &amp; Time" data-bm="Tarikh &amp; Masa Tamat">End Date &amp; Time</label>
                                             <div class="input-group input-group-sm">
                                                 <div class="input-group-text text-muted">
                                                     <i class="ri-calendar-line"></i>
                                                 </div>
                                                 <input type="text" id="endDateTime" class="form-control"
-                                                    placeholder="Select end date &amp; time">
+                                                    placeholder="Select end date &amp; time" data-en="Select end date &amp; time" data-bm="Pilih tarikh &amp; masa tamat" data-i18n-attr="placeholder">
                                             </div>
                                         </div>
                                     </div>
                                 </li>
 
                                 <li class="d-flex justify-content-end gap-2 mt-2 pt-2 border-top">
-                                    <button class="btn btn-sm btn-secondary" id="clearAll">Reset</button>
-                                    <button class="btn btn-sm btn-primary" id="find">Search</button>
+                                    <button class="btn btn-sm btn-secondary" id="clearAll"><span data-en="Reset" data-bm="Set Semula">Reset</span></button>
+                                    <button class="btn btn-sm btn-primary" id="find"><span data-en="Search" data-bm="Cari">Search</span></button>
                                 </li>
                             </ul>
                         </div>
@@ -195,10 +195,10 @@
 
 
     {{-- Export Modal --}}
-    <x-modal id="exportModal" title="Download Report" size="modal-dialog-centered">
+    <x-modal id="exportModal" title="Download Report">
         <div class="row g-3">
             <div class="col-md-6">
-                <label for="exportMonth" class="form-label">Month</label>
+                <label for="exportMonth" class="form-label" data-en="Month" data-bm="Bulan">Month</label>
                 <select class="form-select" id="exportMonth">
                     @foreach(range(1, 12) as $m)
                         <option value="{{ $m }}" {{ date('n') == $m ? 'selected' : '' }}>
@@ -208,7 +208,7 @@
                 </select>
             </div>
             <div class="col-md-6">
-                <label for="exportYear" class="form-label">Year</label>
+                <label for="exportYear" class="form-label" data-en="Year" data-bm="Tahun">Year</label>
                 <select class="form-select" id="exportYear">
                     @foreach(range(date('Y'), date('Y') - 5) as $y)
                         <option value="{{ $y }}" {{ date('Y') == $y ? 'selected' : '' }}>
@@ -220,12 +220,12 @@
         </div>
 
         @slot('footer')
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><span data-en="Close" data-bm="Tutup">Close</span></button>
             <button type="button" class="btn btn-success" id="confirmExportExcel">
-                <i class="ri-file-excel-2-line"></i> Download Excel
+                <i class="ri-file-excel-2-line"></i> <span data-en="Download Excel" data-bm="Muat Turun Excel">Download Excel</span>
             </button>
             <button type="button" class="btn btn-danger" id="confirmExportPdf">
-                <i class="ri-file-pdf-line"></i> Download PDF
+                <i class="ri-file-pdf-line"></i> <span data-en="Download PDF" data-bm="Muat Turun PDF">Download PDF</span>
             </button>
         @endslot
     </x-modal>

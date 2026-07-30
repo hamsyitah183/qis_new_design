@@ -80,6 +80,13 @@ document.addEventListener("hide.bs.dropdown", function (e) {
 // ✅ Load all activity logs when page loads
 loadActivityTimeline();
 
+// Listen to language changes
+window.addEventListener('lang-changed', function() {
+    if (window.currentActivities) {
+        renderTimeline(window.currentActivities);
+    }
+});
+
 // 🚀 Load activity timeline (with optional filters)
 async function loadActivityTimeline(
     startDate = null,
@@ -123,6 +130,7 @@ async function loadActivityTimeline(
         );
 
         const groupedActivities = groupActivitiesByDate(activities);
+        window.currentActivities = groupedActivities;
         renderTimeline(groupedActivities);
 
         Swal.close();
@@ -153,15 +161,37 @@ function groupActivitiesByDate(activities) {
     }, {});
 }
 
-// 🕒 Render timeline
 function renderTimeline(groupedActivities) {
     const container = document.querySelector(".timeline-container");
     container.innerHTML = "";
 
     console.log("grouped activities", groupedActivities);
 
+    const lang = localStorage.getItem("qis_lang") || "en";
+    const translations = {
+        'logged in to the system': 'telah log masuk ke sistem',
+        'logged out from the system': 'telah log keluar dari sistem',
+        'internal user': 'pengguna dalaman',
+        'public user': 'pengguna awam',
+        'is new user for boundary officer': 'pengguna baharu untuk pegawai sempadan',
+        'has created a new import permit application draft': 'telah mencipta draf permohonan permit import baharu',
+        'has created a new inspection certificate application draft': 'telah mencipta draf permohonan sijil pemeriksaan baharu',
+        'has created a new consignment application draft': 'telah mencipta draf permohonan konsainan baharu',
+        'has submitted an import permit application': 'telah menghantar permohonan permit import',
+        'has submitted an inspection certificate application': 'telah menghantar permohonan sijil pemeriksaan',
+        'has submitted a consignment application': 'telah menghantar permohonan konsainan',
+        'has updated an import permit application draft': 'telah mengemas kini draf permohonan permit import',
+        'has updated an inspection certificate application draft': 'telah mengemas kini draf permohonan sijil pemeriksaan',
+        'has updated a consignment application draft': 'telah mengemas kini draf permohonan konsainan',
+        'verification is in-progress by': 'pengesahan sedang dijalankan oleh',
+        'was verified by': 'telah disahkan oleh',
+        'verification is rejected by': 'pengesahan ditolak oleh',
+        'is not approved by': 'tidak diluluskan oleh'
+    };
+
     if (!Object.keys(groupedActivities).length) {
-        container.innerHTML = `<div class="text-center text-muted p-4">No activities found.</div>`;
+        const emptyMsg = lang === 'bm' ? "Tiada aktiviti dijumpai." : "No activities found.";
+        container.innerHTML = `<div class="text-center text-muted p-4">${emptyMsg}</div>`;
         return;
     }
 
@@ -178,7 +208,31 @@ function renderTimeline(groupedActivities) {
             <div class="timeline-continue">
                 ${activities
                 .map(
-                    (activity) => `
+                    (activity) => {
+                        let desc = activity.description;
+                        if (lang === 'bm') {
+                            for (const [en, bm] of Object.entries(translations)) {
+                                if (desc.includes(en)) {
+                                    desc = desc.replaceAll(en, bm);
+                                }
+                            }
+                        }
+
+                        let propsHtml = '';
+                        if (activity.properties?.attributes) {
+                            const changedLabel = lang === 'bm' ? 'Menukar' : 'Changed';
+                            const toLabel = lang === 'bm' ? 'kepada' : 'to';
+                            propsHtml = `<p class="text-muted mb-0 ms-2">
+                                            ${changedLabel} <b>${Object.keys(
+                                activity.properties.attributes
+                            ).join(", ")}</b>
+                                            ${toLabel} <b>${Object.values(
+                                activity.properties.attributes
+                            ).join(", ")}</b>
+                                        </p>`;
+                        }
+
+                        return `
                     <div class="timeline-right">
                         <div class="timeline-content">
                             <p class="timeline-date text-muted mb-2">
@@ -191,21 +245,12 @@ function renderTimeline(groupedActivities) {
                     })}
                             </p>
                             <div class="timeline-box">
-                                <p class="mb-2">${activity.description}</p>
-                                ${activity.properties?.attributes
-                            ? `<p class="text-muted mb-0 ms-2">
-                                            Changed <b>${Object.keys(
-                                activity.properties.attributes
-                            ).join(", ")}</b>
-                                            to <b>${Object.values(
-                                activity.properties.attributes
-                            ).join(", ")}</b>
-                                        </p>`
-                            : ""
-                        }
+                                <p class="mb-2">${desc}</p>
+                                ${propsHtml}
                             </div>
                         </div>
-                    </div>`
+                    </div>`;
+                    }
                 )
                 .join("")}
             </div>`;

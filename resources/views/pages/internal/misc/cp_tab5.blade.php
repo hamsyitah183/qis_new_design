@@ -4,10 +4,10 @@
             <div class="col-xxl-11">
                 <div class="card custom-card shadow-none mb-0">
                     <div class="card-header justify-content-between d-sm-flex d-block">
-                        <div class="card-title">Rejection Notes</div>
+                        <div class="card-title" data-en="Rejection Notes" data-bm="Nota Penolakan">Rejection Notes</div>
                         <div class="mt-sm-0 mt-2">
                             <button class="btn btn-sm btn-primary" onclick="addmodal('rejection')" data-type = "rejection"><i
-                                    class="ri-add-line me-1"></i> Add Rejection Notes</button>
+                                    class="ri-add-line me-1"></i> <span data-en="Add Rejection Notes" data-bm="Tambah Nota Penolakan">Add Rejection Notes</span></button>
                         </div>
                     </div>
                     <div class="card-body">
@@ -19,8 +19,8 @@
                                             <tr>
                                                 {{-- <th scope="col">#</th> --}}
                                                 {{-- <th scope="col">Code</th> --}}
-                                                <th scope="col">Name</th>
-                                                <th scope="col">Action</th>
+                                                <th scope="col" data-en="Name" data-bm="Nama">Name</th>
+                                                <th scope="col" data-en="Action" data-bm="Tindakan">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
