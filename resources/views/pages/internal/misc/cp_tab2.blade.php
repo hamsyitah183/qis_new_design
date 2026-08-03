@@ -4,10 +4,10 @@
             <div class="col-xxl-11">
                 <div class="card custom-card shadow-none mb-0">
                     <div class="card-header justify-content-between d-sm-flex d-block">
-                        <div class="card-title">Purpose of Import</div>
+                        <div class="card-title" data-en="Purpose of Import" data-bm="Tujuan Import">Purpose of Import</div>
                         <div class="mt-sm-0 mt-2">
                             <button class="btn btn-sm btn-primary" onclick="addmodal('purpose')" data-type = "purpose"><i
-                                    class="ri-add-line me-1"></i> Add Purpose</button>
+                                    class="ri-add-line me-1"></i> <span data-en="Add Purpose" data-bm="Tambah Tujuan">Add Purpose</span></button>
                         </div>
                     </div>
                     <div class="card-body">
@@ -19,8 +19,8 @@
                                             <tr>
                                                 {{-- <th scope="col">#</th> --}}
                                                 {{-- <th scope="col">Code</th> --}}
-                                                <th scope="col">Name</th>
-                                                <th scope="col" style="text-align:center">Action</th>
+                                                <th scope="col" data-en="Name" data-bm="Nama">Name</th>
+                                                <th scope="col" style="text-align:center" data-en="Action" data-bm="Tindakan">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>

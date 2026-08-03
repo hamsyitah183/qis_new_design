@@ -25,7 +25,7 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="Review Application">
+    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#', 'data-en' => 'Home', 'data-bm' => 'Laman Utama']]" title="Representative List" title_en="Representative List" title_bm="Senarai Wakil">
 
     </x-breadcrumb>
 @endsection
@@ -38,40 +38,40 @@
             <div class="card custom-card">
 
                 <div class="card-header">
-                    <div class="card-title">Application List</div>
+                    <div class="card-title" data-en="Application List" data-bm="Senarai Permohonan">Application List</div>
                     <div class="ms-auto d-flex gap-2 align-items-center">
 
                         <button class="btn btn-sm btn-primary filter dropdown-toggle" type="button"
                             id="agentAppFilterDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
                             aria-expanded="false">
                             <span class="me-2"><i class="ti ti-adjustments-horizontal"></i></span>
-                            Filter
+                            <span data-en="Filter" data-bm="Tapis">Filter</span>
                         </button>
 
                         <ul class="dropdown-menu p-3 filter-dropdown" aria-labelledby="agentAppFilterDropdown">
 
                             {{-- Status --}}
                             <li class="mb-2">
-                                <label class="form-label fw-semibold mb-1">Application Status</label>
+                                <label class="form-label fw-semibold mb-1" data-en="Application Status" data-bm="Status Permohonan">Application Status</label>
                                 <select class="form-select form-select-sm" id="filterAgentStatus">
-                                    <option value="">All Status</option>
-                                    <option value="draft">Draft</option>
-                                    <option value="submitted">Submitted</option>
-                                    <option value="clerk_review">Clerk Review In-Progress</option>
-                                    <option value="clerk_verified">Clerk Verified</option>
-                                    <option value="officer_verified">Officer Verification Completed</option>
-                                    <option value="rejected">Rejected</option>
+                                    <option value="" data-en="All Status" data-bm="Semua Status">All Status</option>
+                                    <option value="draft" data-en="Draft" data-bm="Draf">Draft</option>
+                                    <option value="submitted" data-en="Submitted" data-bm="Dihantar">Submitted</option>
+                                    <option value="clerk_review" data-en="Clerk Review In-Progress" data-bm="Dalam Semakan Kerani">Clerk Review In-Progress</option>
+                                    <option value="clerk_verified" data-en="Clerk Verified" data-bm="Kerani Disahkan">Clerk Verified</option>
+                                    <option value="officer_verified" data-en="Officer Verification Completed" data-bm="Pengesahan Pegawai Selesai">Officer Verification Completed</option>
+                                    <option value="rejected" data-en="Rejected" data-bm="Ditolak">Rejected</option>
                                 </select>
                             </li>
 
                             {{-- Application Type --}}
                             <li class="mb-2">
-                                <label class="form-label fw-semibold mb-1">Application Type</label>
+                                <label class="form-label fw-semibold mb-1" data-en="Application Type" data-bm="Jenis Permohonan">Application Type</label>
                                 <select class="form-select form-select-sm" id="filterAgentAppType">
-                                    <option value="">All Types</option>
-                                    <option value="import_permit">Import Permit</option>
-                                    <option value="inspection">Inspection Certificate</option>
-                                    <option value="consignment">Consignment Certificate</option>
+                                    <option value="" data-en="All Types" data-bm="Semua Jenis">All Types</option>
+                                    <option value="import_permit" data-en="Import Permit" data-bm="Permit Import">Import Permit</option>
+                                    <option value="inspection" data-en="Inspection Certificate" data-bm="Sijil Pemeriksaan">Inspection Certificate</option>
+                                    <option value="consignment" data-en="Consignment Certificate" data-bm="Sijil Konsainan">Consignment Certificate</option>
                                 </select>
                             </li>
 
@@ -79,11 +79,11 @@
                             <li class="mb-2">
                                 <div class="row g-2">
                                     <div class="col-6">
-                                        <label class="form-label fw-semibold mb-1">Start Date</label>
+                                        <label class="form-label fw-semibold mb-1" data-en="Start Date" data-bm="Tarikh Mula">Start Date</label>
                                         <input type="date" class="form-control form-control-sm" id="filterAgentStartDate">
                                     </div>
                                     <div class="col-6">
-                                        <label class="form-label fw-semibold mb-1">End Date</label>
+                                        <label class="form-label fw-semibold mb-1" data-en="End Date" data-bm="Tarikh Akhir">End Date</label>
                                         <input type="date" class="form-control form-control-sm" id="filterAgentEndDate">
                                     </div>
                                 </div>
@@ -91,14 +91,14 @@
 
                             {{-- Submitted By --}}
                             <li class="mb-2">
-                                <label class="form-label fw-semibold mb-1">Submitted By</label>
+                                <label class="form-label fw-semibold mb-1" data-en="Submitted By" data-bm="Dihantar Oleh">Submitted By</label>
                                 <input type="text" class="form-control form-control-sm" id="filterAgentSubmittedBy"
-                                    placeholder="Search by name or email...">
+                                    placeholder="Search by name or email..." data-en="Search by name or email..." data-bm="Cari dengan nama atau e-mel..." data-i18n-attr="placeholder">
                             </li>
 
                             <li class="d-flex justify-content-end gap-2 mt-2 pt-2 border-top">
-                                <button class="btn btn-sm btn-secondary" id="btnResetAgentFilter">Reset</button>
-                                <button class="btn btn-sm btn-primary" id="btnAgentFilter">Apply</button>
+                                <button class="btn btn-sm btn-secondary" id="btnResetAgentFilter" data-en="Reset" data-bm="Tetap Semula">Reset</button>
+                                <button class="btn btn-sm btn-primary" id="btnAgentFilter" data-en="Apply" data-bm="Guna">Apply</button>
                             </li>
                         </ul>
                     </div>
@@ -115,15 +115,15 @@
                                     <thead class="mt-3">
                                         <tr class="even">
                                             <th>#</th>
-                                            <th>Importer</th>
-                                            <th>Exporter</th>
+                                            <th data-en="Importer" data-bm="Pengimport">Importer</th>
+                                            <th data-en="Exporter" data-bm="Pengeksport">Exporter</th>
                                             
                                             {{-- <th style="text-align: center;">Importer Type</th> <!-- self or other --> --}}
                                             {{-- <th>ETA</th> --}}
-                                            <th>Application Type</th>
-                                            <th>Status</th>
-                                            <th>Submitted By</th>
-                                            <th>Action</th>
+                                            <th data-en="Application Type" data-bm="Jenis Permohonan">Application Type</th>
+                                            <th data-en="Status" data-bm="Status">Status</th>
+                                            <th data-en="Submitted By" data-bm="Dihantar Oleh">Submitted By</th>
+                                            <th data-en="Action" data-bm="Tindakan">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>

@@ -23,7 +23,7 @@
                         </span>
                     </div>
                     <div>
-                        <p class="text-muted mb-1 fs-13">Pending Import Permits</p>
+                        <p class="text-muted mb-1 fs-13" data-en="Pending Import Permits" data-bm="Permit Import Tertunggak">Pending Import Permits</p>
                         <h3 class="fw-semibold mb-0" id = "ipCount">{{ $pendingPermits ?? 0 }}</h3>
                     </div>
                 </div>
@@ -40,7 +40,7 @@
                         </span>
                     </div>
                     <div>
-                        <p class="text-muted mb-1 fs-13">Pending Inspections Certificate</p>
+                        <p class="text-muted mb-1 fs-13" data-en="Pending Inspections Certificate" data-bm="Sijil Pemeriksaan Tertunggak">Pending Inspections Certificate</p>
                         <h3 class="fw-semibold mb-0" id="icCount">{{ $pendingInspections ?? 0 }}</h3>
                     </div>
                 </div>
@@ -57,7 +57,7 @@
                         </span>
                     </div>
                     <div>
-                        <p class="text-muted mb-1 fs-13">Pending Consignments Certificate</p>
+                        <p class="text-muted mb-1 fs-13" data-en="Pending Consignments Certificate" data-bm="Sijil Konsainan Tertunggak">Pending Consignments Certificate</p>
                         <h3 class="fw-semibold mb-0" id = "ccCount">{{ $pendingConsignments ?? 0 }}</h3>
                     </div>
                 </div>
@@ -74,7 +74,7 @@
                         </span>
                     </div>
                     <div>
-                        <p class="text-muted mb-1 fs-13">Verified Today</p>
+                        <p class="text-muted mb-1 fs-13" data-en="Verified Today" data-bm="Disahkan Hari Ini">Verified Today</p>
                         <h3 class="fw-semibold mb-0">{{ $verifiedToday ?? 0 }}</h3>
                     </div>
                 </div>
@@ -88,7 +88,7 @@
     <div class="col-xl-4">
         <div class="card custom-card">
             <div class="card-header">
-                <div class="card-title">Review Status Distribution</div>
+                <div class="card-title" data-en="Review Status Distribution" data-bm="Taburan Status Semakan">Review Status Distribution</div>
             </div>
             <div class="card-body">
                 {!! $clerkStatusChart->container() !!}
@@ -100,7 +100,7 @@
     <div class="col-xl-8">
         <div class="card custom-card">
             <div class="card-header">
-                <div class="card-title">Verification Performance</div>
+                <div class="card-title" data-en="Verification Performance" data-bm="Prestasi Pengesahan">Verification Performance</div>
             </div>
             <div class="card-body">
                 {!! $clerkWorkloadChart->container() !!}
@@ -126,8 +126,8 @@
     <div class="col-xl-12">
         <div class="card custom-card">
             <div class="card-header justify-content-between">
-                <div class="card-title">Action Needed Queue</div>
-                <div class="text-muted fs-11">Showing oldest pending applications</div>
+                <div class="card-title" data-en="Action Needed Queue" data-bm="Barisan Tindakan Diperlukan">Action Needed Queue</div>
+                <div class="text-muted fs-11" data-en="Showing oldest pending applications" data-bm="Menunjukkan permohonan tertunggak tertua">Showing oldest pending applications</div>
             </div>
             <div class="card-body">
                 <div class="table-responsive">

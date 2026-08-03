@@ -4,10 +4,10 @@
             <div class="col-xxl-11">
                 <div class="card custom-card shadow-none mb-0">
                     <div class="card-header justify-content-between d-sm-flex d-block">
-                        <div class="card-title">Description Form</div>
+                        <div class="card-title" data-en="Description Form" data-bm="Borang Penerangan">Description Form</div>
                         <div class="mt-sm-0 mt-2">
                             <button class="btn btn-sm btn-primary" onclick="addmodal('condition')" data-type = "condition"><i
-                                    class="ri-add-line me-1"></i> Add Description Form</button>
+                                    class="ri-add-line me-1"></i> <span data-en="Add Description Form" data-bm="Tambah Borang Penerangan">Add Description Form</span></button>
                         </div>
                     </div>
                     <div class="card-body">
@@ -20,8 +20,8 @@
                                             <tr>
                                                 {{-- <th scope="col">#</th> --}}
                                                 {{-- <th scope="col">Code</th> --}}
-                                                <th scope="col">Name</th>
-                                                <th scope="col">Action</th>
+                                                <th scope="col" data-en="Name" data-bm="Nama">Name</th>
+                                                <th scope="col" data-en="Action" data-bm="Tindakan">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>

@@ -22,8 +22,8 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/'], ['label' => 'Internal User List', 'url' => '#']]"
-        title="Internal User List">
+    <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/', 'data-en' => 'Dashboard', 'data-bm' => 'Dashboard'], ['label' => 'Internal User List', 'url' => '#', 'data-en' => 'Internal User List', 'data-bm' => 'Senarai Pengguna Dalaman']]"
+        title="Internal User List" title_en="Internal User List" title_bm="Senarai Pengguna Dalaman">
 
     </x-breadcrumb>
 @endsection
@@ -36,7 +36,7 @@
                 <div class="card-header">
                     @can('create internal user')
                         <div class="ms-auto">
-                            <button class="btn btn-success btn-sm addInternalUser-modal">Add Internal User</button>
+                            <button class="btn btn-success btn-sm addInternalUser-modal"><span data-en="Add Internal User" data-bm="Tambah Pengguna Dalaman">Add Internal User</span></button>
                         </div>
                     @endcan
                 </div>
@@ -46,14 +46,14 @@
                         <thead>
                             <tr>
 
-                                <th>Name</th>
+                                <th data-en="Name" data-bm="Nama">Name</th>
 
-                                <th>Email</th>
-                                <th>Phone Number</th>
-                                <th>Position</th>
-                                <th>Role</th>
-                                <th>Branch</th>
-                                <th>Action</th>
+                                <th data-en="Email" data-bm="E-mel">Email</th>
+                                <th data-en="Phone Number" data-bm="Nombor Telefon">Phone Number</th>
+                                <th data-en="Position" data-bm="Jawatan">Position</th>
+                                <th data-en="Role" data-bm="Peranan">Role</th>
+                                <th data-en="Branch" data-bm="Cawangan">Branch</th>
+                                <th data-en="Action" data-bm="Tindakan">Action</th>
                             </tr>
                         </thead>
                         <tbody></tbody> <!-- Important for DataTables -->
@@ -70,7 +70,7 @@
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="internalUserModalLabel">Internal User Details</h5>
+                    <h5 class="modal-title" id="internalUserModalLabel" data-en="Internal User Details" data-bm="Butiran Pengguna Dalaman">Internal User Details</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
@@ -83,60 +83,60 @@
                             <input type="hidden" id="userUuid" name="uuid">
 
                             <div class="col-md-6">
-                                <label class="form-label text-default">Full Name <span class="text-danger">*</span></label>
+                                <label class="form-label text-default"><span data-en="Full Name" data-bm="Nama Penuh">Full Name</span> <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="fullname" name="fullname" required>
                                 <div class="invalid-feedback" id="error-fullname"></div>
 
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label text-default">IC Number <span class="text-danger">*</span></label>
+                                <label class="form-label text-default"><span data-en="IC Number" data-bm="Nombor KP">IC Number</span> <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="no_ic" name="no_ic" required>
                                 <div class="invalid-feedback" id="error-no_ic"></div>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label text-default">Email <span class="text-danger">*</span></label>
+                                <label class="form-label text-default"><span data-en="Email" data-bm="E-mel">Email</span> <span class="text-danger">*</span></label>
                                 <input type="email" class="form-control" id="email" name="email" required>
                                 <div class="invalid-feedback" id="error-email"></div>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label text-default">Phone Number <span
+                                <label class="form-label text-default"><span data-en="Phone Number" data-bm="Nombor Telefon">Phone Number</span> <span
                                         class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="phone_number" name="phone_number" required>
                                 <div class="invalid-feedback" id="error-phone"></div>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label text-default">Position <span class="text-danger">*</span></label>
+                                <label class="form-label text-default"><span data-en="Position" data-bm="Jawatan">Position</span> <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="position" name="position" required>
                                 <div class="invalid-feedback" id="error-position"></div>
                             </div>
 
                             <div class="col-md-6 d-none">
-                                <label class="form-label text-default">Office <span class="text-danger">*</span></label>
+                                <label class="form-label text-default"><span data-en="Office" data-bm="Pejabat">Office</span> <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="office" name="office">
                                 <div class="invalid-feedback" id="error-office"></div>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label text-default">Role <span class="text-danger">*</span></label>
+                                <label class="form-label text-default"><span data-en="Role" data-bm="Peranan">Role</span> <span class="text-danger">*</span></label>
                                 <select class="form-select" id="role" name="role" required>
-                                    <option value="superadmin">Superadmin</option>
-                                    <option value="admin">Admin</option>
-                                    <option value="officer">Officer</option>
-                                    <option value="clerk">Clerk</option>
-                                    <option value="boundary officer">Boundary Officer</option>
-                                    <option value="finance">Finance</option>
+                                    <option value="superadmin" data-en="Superadmin" data-bm="Pentadbir Super">Superadmin</option>
+                                    <option value="admin" data-en="Admin" data-bm="Pentadbir">Admin</option>
+                                    <option value="officer" data-en="Officer" data-bm="Pegawai">Officer</option>
+                                    <option value="clerk" data-en="Clerk" data-bm="Kerani">Clerk</option>
+                                    <option value="boundary officer" data-en="Boundary Officer" data-bm="Pegawai Sempadan">Boundary Officer</option>
+                                    <option value="finance" data-en="Finance" data-bm="Kewangan">Finance</option>
                                 </select>
                             </div>
 
                             @if ($isAdminOrSuperadmin)
                             <div class="col-md-6" id="branchField">
-                                <label class="form-label text-default">Branch</label>
+                                <label class="form-label text-default" data-en="Branch" data-bm="Cawangan">Branch</label>
                                 <select class="form-select" id="branch" name="branch">
-                                    <option value="">Select Branch</option>
+                                    <option value="" data-en="Select Branch" data-bm="Pilih Cawangan">Select Branch</option>
                                     @foreach ($branches as $branch)
                                         <option value="{{ $branch->name }}">{{ $branch->name }}</option>
                                     @endforeach
@@ -149,8 +149,8 @@
                     </div>
 
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-success">Save Changes</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><span data-en="Close" data-bm="Tutup">Close</span></button>
+                        <button type="submit" class="btn btn-success"><span data-en="Save Changes" data-bm="Simpan Perubahan">Save Changes</span></button>
                     </div>
                 </form>
             </div>

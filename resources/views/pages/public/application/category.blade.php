@@ -13,9 +13,7 @@
                                 <h6 class="icon-box fs-16 fw-semibold border border-3 p-3 rounded-3">
                                     <i class="bi bi-person-fill fs-2 text-primary icon"></i>
                                 </h6>
-                                <span class="fs-15 fw-bold" 
-                                      data-en="Self Apply" 
-                                      data-bm="Permohonan Sendiri">Self Apply</span>
+                                <span class="fs-15 fw-bold" data-en="Self Apply" data-bm="Mohon Sendiri">Self Apply</span>
                             </div>
                         </div>
                     </div>
@@ -31,9 +29,7 @@
                                 <h6 class="icon-box fs-16 fw-semibold border border-3 p-3 rounded-3">
                                     <i class="bi bi-people-fill fs-2 text-primary icon"></i>
                                 </h6>
-                                <span class="fs-15 fw-bold" 
-                                      data-en="Apply For Others" 
-                                      data-bm="Mohon Untuk Orang Lain">Apply For Others</span>
+                                <span class="fs-15 fw-bold" data-en="Apply For Others" data-bm="Mohon Untuk Pihak Lain">Apply For Others</span>
                             </div>
                         </div>
                     </div>

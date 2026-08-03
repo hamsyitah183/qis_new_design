@@ -37,7 +37,6 @@ class PaymentMethodBarChart
     
         // Initialize chart
         $chart = $this->chart->barChart()
-            ->setTitle('Payment Method Revenue by Month')
             ->setHeight(350)
             ->setFontFamily('inherit')
             ->setXAxis(['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']);

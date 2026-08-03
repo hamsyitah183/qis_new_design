@@ -34,9 +34,8 @@
 @section('pageName', 'List Import Permit Application')
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[
-        ['label' => 'Home', 'url' => '#', 'data-en' => 'Home', 'data-bm' => 'Utama'],
-    ]" title="Import Permit Application List" title_en="Import Permit Application List" title_bm="Senarai Permohonan Permit Import">
+    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#', 'data-en' => 'Home', 'data-bm' => 'Laman Utama']]" title="Import Permit Application List" title_en="Import Permit Application List" title_bm="Senarai Permohonan Permit Import">
+
     </x-breadcrumb>
 @endsection
 
@@ -50,8 +49,7 @@
                     <div class="ms-auto d-flex gap-2 align-items-center">
                         <button class="btn btn-sm btn-primary filter dropdown-toggle" type="button" id="filterDropdownBtn"
                             data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
-                            <span class="me-2"><i class="ti ti-adjustments-horizontal"></i></span>
-                            <span data-en="Filter" data-bm="Penapis">Filter</span>
+                            <span class="me-2"><i class="ti ti-adjustments-horizontal"></i></span><span data-en="Filter" data-bm="Tapis">Filter</span>
                         </button>
 
                         <ul class="dropdown-menu p-3 filter-dropdown" aria-labelledby="filterDropdownBtn">

@@ -14,14 +14,8 @@
                                 <h6 class="icon-box fs-16 fw-semibold border border-3 p-3 rounded-3">
                                     <i class="bx bx-package fs-2 text-primary icon"></i>
                                 </h6>
-                                <span class="fs-15 fw-bold" 
-                                      data-en="Import Permit" 
-                                      data-bm="Permit Import">Import Permit</span>
-                                <p class="text-muted fs-12 text-center mt-2" 
-                                   data-en="An official authorization granted to importers for the importation of regulated agricultural goods into Sabah."
-                                   data-bm="Kebenaran rasmi yang diberikan kepada pengimport untuk mengimport barangan pertanian terkawal ke Sabah.">
-                                    An official authorization granted to importers for the importation of regulated agricultural goods into Sabah.
-                                </p>
+                                <span class="fs-15 fw-bold" data-en="Import Permit" data-bm="Permit Import">Import Permit</span>
+                                <p class="text-muted fs-12 text-center mt-2" data-en="An official authorization granted to importers for the importation of regulated agricultural goods into Sabah." data-bm="Kebenaran rasmi yang diberikan kepada pengimport untuk mengimport barangan pertanian terkawal ke Sabah.">An official authorization granted to importers for the importation of regulated agricultural goods into Sabah.</p>
                             </div>
                         </div>
                     </div>
@@ -41,14 +35,8 @@
                                 <h6 class="icon-box fs-16 fw-semibold border border-3 p-3 rounded-3">
                                     <i class="bx bx-search fs-2 text-primary icon"></i>
                                 </h6>
-                                <span class="fs-15 fw-bold" 
-                                      data-en="Inspection Certificate" 
-                                      data-bm="Sijil Pemeriksaan">Inspection Certificate</span>
-                                <p class="text-muted fs-12 text-center mt-2" 
-                                   data-en="An authorization required for importing agricultural goods that are not covered under the standard Import Permit list into Sabah."
-                                   data-bm="Kebenaran yang diperlukan untuk mengimport barangan pertanian yang tidak disenaraikan di bawah senarai Permit Import standard ke Sabah.">
-                                    An authorization required for importing agricultural goods that are not covered under the standard Import Permit list into Sabah.
-                                </p>
+                                <span class="fs-15 fw-bold" data-en="Inspection Certificate" data-bm="Sijil Pemeriksaan">Inspection Certificate</span>
+                                <p class="text-muted fs-12 text-center mt-2" data-en="An authorization required for importing agricultural goods that are not covered under the standard Import Permit list into Sabah." data-bm="Kebenaran yang diperlukan untuk mengimport barangan pertanian yang tidak dilindungi di bawah senarai Permit Import standard ke Sabah.">An authorization required for importing agricultural goods that are not covered under the standard Import Permit list into Sabah.</p>
                             </div>
                         </div>
                     </div>
@@ -68,14 +56,8 @@
                                 <h6 class="icon-box fs-16 fw-semibold border border-3 p-3 rounded-3">
                                     <i class="bx bx-file fs-2 text-primary icon"></i>
                                 </h6>
-                                <span class="fs-15 fw-bold" 
-                                      data-en="Consignment Certificate" 
-                                      data-bm="Sijil Consignment">Consignment Certificate</span>
-                                <p class="text-muted fs-12 text-center mt-2" 
-                                   data-en="A specific export authorization dedicated exclusively for the movement of agricultural goods to Brunei."
-                                   data-bm="Kebenaran eksport khusus untuk pergerakan barangan pertanian ke Brunei.">
-                                    A specific export authorization dedicated exclusively for the movement of agricultural goods to Brunei.
-                                </p>
+                                <span class="fs-15 fw-bold" data-en="Consignment Certificate" data-bm="Sijil Konsainan">Consignment Certificate</span>
+                                <p class="text-muted fs-12 text-center mt-2" data-en="A specific export authorization dedicated exclusively for the movement of agricultural goods to Brunei." data-bm="Kebenaran eksport khusus yang dikhaskan secara eksklusif untuk pergerakan barangan pertanian ke Brunei.">A specific export authorization dedicated exclusively for the movement of agricultural goods to Brunei.</p>
                             </div>
                         </div>
                     </div>

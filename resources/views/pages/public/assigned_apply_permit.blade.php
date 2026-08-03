@@ -32,26 +32,26 @@
 
                 <div class="card-body p-0"> <!-- method="POST"  data-wizard="active" style="display: block;"-->
                     <form id="wizardForm" class="wizard wizard-tab horizontal">
-                        <aside class="wizard-nav dots">
+                        <aside class="wizard-nav dots ipa-wizard-nav">
                             <div class="wizard-step active" data-step="0">
                                 <span class="dot"></span>
-                                <span>IMPORTER & EXPORTER</span>
+                                <span data-en="IMPORTER & EXPORTER" data-bm="PENGIMPORT & PENGEKSPORT">IMPORTER & EXPORTER</span>
                             </div>
                             <div class="wizard-step" data-step="1">
                                 <span class="dot"></span>
-                                <span>PERMIT DETAILS</span>
+                                <span data-en="PERMIT DETAILS" data-bm="BUTIRAN PERMIT">PERMIT DETAILS</span>
                             </div>
                             <div class="wizard-step" data-step="2">
                                 <span class="dot"></span>
-                                <span>PERMIT ITEMS</span>
+                                <span data-en="PERMIT ITEMS" data-bm="BARANGAN PERMIT">PERMIT ITEMS</span>
                             </div>
                             <div class="wizard-step" data-step="3">
                                 <span class="dot"></span>
-                                <span>Payment</span>
+                                <span data-en="Payment" data-bm="Pembayaran">Payment</span>
                             </div>
                             <div class="wizard-step" data-step="4">
                                 <span class="dot"></span>
-                                <span>Confirmation</span>
+                                <span data-en="Confirmation" data-bm="Pengesahan">Confirmation</span>
                             </div>
                         </aside>
                         <aside class="wizard-content container">
@@ -120,6 +120,7 @@
                 progress: true,
                 validate: true
             };
+            
             new Wizard1(secondWizardConfig).init();
 
             // Event Listener for the wizard error
