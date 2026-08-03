@@ -1,33 +1,145 @@
 /**
- * test4-actions.js
- * ------------------------------------------------------------------
- * Application- and permit-level workflow actions, ported from the old
- * application_detail2.js (document 19) onto the new import_permit_view
- * UI. Buttons this file listens for:
- *
- *   Application-level (server-gated, rendered in the Actions Bar):
- *     #acceptAppl, #rejectAdminAppl, #verifyAppl, #rejectAppl
- *
- *   Permit-level (rendered per-permit by test1.js's permitActionsHtml()):
- *     .accept, .reject, .reapply, .generatePermit  (data-permit attr)
- *
- * Application-level actions change which server-gated buttons should
- * render next (blade @if conditions), so those still do a full
- * window.location.reload() after success — same as the old code.
- * Permit-level actions only change data the client already renders, so
- * those call window.ImportPermitView.reload() to refresh in place
- * without a full page reload.
+ * importPermitActions.js - Bilingual workflow actions for Import Permit applications
+ * All Swal alerts now display plain translated text based on the user's language preference.
  */
 
-import Dropzone from "dropzone";
 import $ from "jquery";
 import Swal from "sweetalert2";
-import "dropzone/dist/dropzone.css";
-import select2 from "select2";
-select2(window.jQuery);
-import "select2/dist/css/select2.min.css";
+import { applyTranslations } from "../../app"; // adjust path as needed
 
-Dropzone.autoDiscover = false;
+// ---------------------------------------------------------------
+// Helper: get current language
+// ---------------------------------------------------------------
+
+function getLang() {
+    try {
+        return localStorage.getItem('qis_lang') || 'en';
+    } catch {
+        return 'en';
+    }
+}
+
+// ---------------------------------------------------------------
+// Translation map – all user‑facing strings
+// ---------------------------------------------------------------
+
+const t = {
+    acceptApplication: {
+        en: { title: 'Accept Application?', text: 'Are you sure you want to accept this application?', confirm: 'Yes, accept it!', cancel: 'Cancel' },
+        bm: { title: 'Terima Permohonan?', text: 'Adakah anda pasti mahu menerima permohonan ini?', confirm: 'Ya, terima!', cancel: 'Batal' }
+    },
+    applicationVerified: {
+        en: { title: 'Application Verified!', text: 'The application has been successfully verified.' },
+        bm: { title: 'Permohonan Disahkan!', text: 'Permohonan telah berjaya disahkan.' }
+    },
+    rejectApplication: {
+        en: { title: 'Reject Application', placeholder: 'Enter rejection reason...', confirm: 'Confirm', cancel: 'Cancel' },
+        bm: { title: 'Tolak Permohonan', placeholder: 'Masukkan sebab penolakan...', confirm: 'Sahkan', cancel: 'Batal' }
+    },
+    applicationRejected: {
+        en: { title: 'Application Rejected!', text: 'The application has been rejected.' },
+        bm: { title: 'Permohonan Ditolak!', text: 'Permohonan telah ditolak.' }
+    },
+    verifyApplication: {
+        en: { title: 'Verify Application?', text: 'Are you sure you want to verify this application?', confirm: 'Yes, verify it!', cancel: 'Cancel' },
+        bm: { title: 'Sahkan Permohonan?', text: 'Adakah anda pasti mahu mengesahkan permohonan ini?', confirm: 'Ya, sahkan!', cancel: 'Batal' }
+    },
+    notVerifyApplication: {
+        en: { title: 'Mark as Not Verified?', text: 'Are you sure you want to mark this application as not verified?', confirm: 'Yes, proceed', cancel: 'Cancel' },
+        bm: { title: 'Tandakan Sebagai Tidak Disahkan?', text: 'Adakah anda pasti mahu menandakan permohonan ini sebagai tidak disahkan?', confirm: 'Ya, teruskan', cancel: 'Batal' }
+    },
+    applicationNotVerified: {
+        en: { title: 'Application Not Approved!', text: 'The application has been successfully marked as not verified.' },
+        bm: { title: 'Permohonan Tidak Diluluskan!', text: 'Permohonan telah berjaya ditandakan sebagai tidak disahkan.' }
+    },
+    acceptPermit: {
+        en: { title: 'Are you sure?', text: 'Do you want to accept this permit?', confirm: 'Yes, proceed', cancel: 'Cancel' },
+        bm: { title: 'Adakah anda pasti?', text: 'Adakah anda mahu menerima permit ini?', confirm: 'Ya, teruskan', cancel: 'Batal' }
+    },
+    acceptPermitConfirm: {
+        en: { title: 'Please Confirm Again', text: 'This action cannot be undone. Accept the permit?', confirm: 'Yes, accept it', cancel: 'Cancel' },
+        bm: { title: 'Sila Sahkan Semula', text: 'Tindakan ini tidak boleh dibatalkan. Terima permit?', confirm: 'Ya, terima', cancel: 'Batal' }
+    },
+    permitAccepted: {
+        en: { title: 'Accepted!', text: 'The permit has been accepted.' },
+        bm: { title: 'Diterima!', text: 'Permit telah diterima.' }
+    },
+    rejectPermit: {
+        en: { title: 'Reject Permit', placeholder: 'Enter rejection reason...', confirm: 'Reject Permit', cancel: 'Cancel' },
+        bm: { title: 'Tolak Permit', placeholder: 'Masukkan sebab penolakan...', confirm: 'Tolak Permit', cancel: 'Batal' }
+    },
+    permitRejected: {
+        en: { title: 'Rejected!', text: 'The permit has been rejected successfully.' },
+        bm: { title: 'Ditolak!', text: 'Permit telah berjaya ditolak.' }
+    },
+    permitDownloadReason: {
+        en: { title: 'This Permit has been downloaded more than once', placeholder: 'Enter reason...', confirm: 'Submit', cancel: 'Cancel' },
+        bm: { title: 'Permit ini telah dimuat turun lebih daripada sekali', placeholder: 'Masukkan sebab...', confirm: 'Hantar', cancel: 'Batal' }
+    },
+    reasonSubmitted: {
+        en: { title: 'Submitted!', text: 'The reason submitted successfully.' },
+        bm: { title: 'Dihantar!', text: 'Sebab telah berjaya dihantar.' }
+    },
+    payNow: {
+        en: { title: 'Proceed to Payment?', confirm: 'Yes, proceed to payment', cancel: 'Cancel' },
+        bm: { title: 'Teruskan ke Pembayaran?', confirm: 'Ya, teruskan ke pembayaran', cancel: 'Batal' }
+    },
+    processing: { en: 'Processing...', bm: 'Memproses...' },
+    loading: { en: 'Loading...', bm: 'Memuat...' },
+    redirecting: { en: 'Redirecting to payment...', bm: 'Sedang dialihkan ke pembayaran...' },
+    uploading: { en: 'Uploading...', bm: 'Memuat naik...' },
+    error: { en: 'Error!', bm: 'Ralat!' },
+    required: { en: 'Please fill all required fields', bm: 'Sila isi semua ruangan wajib' },
+    noItem: { en: 'No item to save', bm: 'Tiada item untuk disimpan' },
+    failedSave: { en: 'Failed to save permit', bm: 'Gagal menyimpan permit' },
+    permitReapply: { en: 'Permit Reapply!', bm: 'Permohonan Semula Permit!' },
+    reasonRequired: { en: 'Rejection reason is required', bm: 'Sebab penolakan diperlukan' },
+    reasonMin5: { en: 'Rejection reason is required (min 5 characters).', bm: 'Sebab penolakan diperlukan (min 5 aksara).' },
+    reasonRequired5: { en: 'Reason is required (min 5 characters).', bm: 'Sebab diperlukan (min 5 aksara).' },
+    unableCheckout: { en: 'Unable to proceed to checkout.', bm: 'Tidak dapat meneruskan ke bayaran.' },
+    selectItem: { en: '-- Select Item --', bm: '-- Pilih Item --' },
+    selectUses: { en: '-- Select Uses --', bm: '-- Pilih Kegunaan --' },
+    loadingUses: { en: 'Loading uses...', bm: 'Memuat kegunaan...' },
+    yesReject: { en: 'Yes, reject it!', bm: 'Ya, tolak!' },
+    confirm: { en: 'Confirm', bm: 'Sahkan' },
+    cancel: { en: 'Cancel', bm: 'Batal' },
+    submit: { en: 'Submit', bm: 'Hantar' },
+};
+
+function getText(key, lang = null) {
+    const l = lang || getLang();
+    const [topKey, subKey] = key.split('.');
+    const entry = t[topKey];
+    if (!entry) return key;
+
+    if (!subKey) {
+        return entry[l] ?? entry.en ?? key;
+    }
+
+    const langObj = entry[l] || entry.en;
+    if (!langObj) return key;
+    return langObj[subKey] ?? '';
+}
+
+function swalTitle(key) {
+    return getText(key + '.title') || getText(key);
+}
+
+function swalText(key) {
+    return getText(key + '.text') || '';
+}
+
+function swalConfirm(key) {
+    return getText(key + '.confirm') || getText('confirm');
+}
+
+function swalCancel(key) {
+    return getText(key + '.cancel') || getText('cancel');
+}
+
+// ---------------------------------------------------------------
+// Common helpers
+// ---------------------------------------------------------------
 
 function applicationId() {
     return window.APPLICATION_ID || window.ImportPermitView?.getApplication()?.application_id;
@@ -35,6 +147,10 @@ function applicationId() {
 
 function csrfToken() {
     return $('meta[name="csrf-token"]').attr('content');
+}
+
+function hidePermitActionButtons(id) {
+    $(`.accept[data-permit="${id}"], .reject[data-permit="${id}"]`).remove();
 }
 
 // ---------------------------------------------------------------
@@ -46,12 +162,12 @@ function acceptApplication() {
         e.preventDefault();
 
         Swal.fire({
-            title: 'Accept Application?',
-            text: 'Are you sure you want to accept this application?',
+            title: swalTitle('acceptApplication'),
+            text: swalText('acceptApplication'),
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Yes, accept it!',
-            cancelButtonText: 'Cancel',
+            confirmButtonText: swalConfirm('acceptApplication'),
+            cancelButtonText: swalCancel('acceptApplication'),
         }).then((result) => {
             if (!result.isConfirmed) return;
 
@@ -62,15 +178,19 @@ function acceptApplication() {
                 success: function (res) {
                     Swal.fire({
                         icon: 'success',
-                        title: 'Application Verified!',
-                        text: res.message || 'The application has been successfully verified.',
+                        title: swalTitle('applicationVerified'),
+                        text: swalText('applicationVerified'),
                         showConfirmButton: false,
                         position: 'center',
                     });
                     window.location.reload();
                 },
                 error: function (err) {
-                    Swal.fire('Error!', err.responseJSON?.message || 'Something went wrong.', 'error');
+                    Swal.fire({
+                        icon: 'error',
+                        title: getText('error'),
+                        text: err.responseJSON?.message || 'Something went wrong.',
+                    });
                 },
             });
         });
@@ -81,21 +201,23 @@ function adminRejectApplication() {
     $('#rejectAdminAppl').off('click').on('click', function (e) {
         e.preventDefault();
 
+        const placeholder = getText('rejectApplication.placeholder');
+
         Swal.fire({
-            title: 'Reject Application',
+            title: swalTitle('rejectApplication'),
             html: `
-                <p class="mb-2">Please provide a reason for rejection:</p>
-                <textarea id="rejectReason" class="swal2-textarea" placeholder="Enter rejection reason..."></textarea>
+                <p class="mb-2">${getLang() === 'bm' ? 'Sila berikan sebab untuk penolakan:' : 'Please provide a reason for rejection:'}</p>
+                <textarea id="rejectReason" class="swal2-textarea" placeholder="${placeholder}"></textarea>
             `,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Confirm',
-            cancelButtonText: 'Cancel',
+            confirmButtonText: swalConfirm('rejectApplication'),
+            cancelButtonText: swalCancel('rejectApplication'),
             focusConfirm: false,
             preConfirm: () => {
                 const reason = document.getElementById('rejectReason').value;
                 if (!reason.trim()) {
-                    Swal.showValidationMessage('Rejection reason is required');
+                    Swal.showValidationMessage(getText('reasonRequired'));
                     return false;
                 }
                 return reason;
@@ -108,11 +230,21 @@ function adminRejectApplication() {
                 method: 'POST',
                 data: { _token: csrfToken(), rejected: 1, reason: result.value },
                 success: function () {
-                    Swal.fire({ icon: 'success', title: 'Application Rejected!', text: 'The application has been rejected.', showConfirmButton: false, timer: 2000 });
+                    Swal.fire({
+                        icon: 'success',
+                        title: swalTitle('applicationRejected'),
+                        text: swalText('applicationRejected'),
+                        showConfirmButton: false,
+                        timer: 2000,
+                    });
                     window.location.reload();
                 },
                 error: function (err) {
-                    Swal.fire('Error!', err.responseJSON?.message || 'Something went wrong.', 'error');
+                    Swal.fire({
+                        icon: 'error',
+                        title: getText('error'),
+                        text: err.responseJSON?.message || 'Something went wrong.',
+                    });
                 },
             });
         });
@@ -124,12 +256,12 @@ function verifyApplication() {
         e.preventDefault();
 
         Swal.fire({
-            title: 'Verify Application?',
-            text: 'Are you sure you want to verify this application?',
+            title: swalTitle('verifyApplication'),
+            text: swalText('verifyApplication'),
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Yes, verify it!',
-            cancelButtonText: 'Cancel',
+            confirmButtonText: swalConfirm('verifyApplication'),
+            cancelButtonText: swalCancel('verifyApplication'),
         }).then((result) => {
             if (!result.isConfirmed) return;
 
@@ -138,11 +270,21 @@ function verifyApplication() {
                 method: 'POST',
                 data: { _token: csrfToken(), verified: 1 },
                 success: function (res) {
-                    Swal.fire({ icon: 'success', title: 'Application Verified!', text: res.message || 'The application has been successfully verified.', showConfirmButton: false, position: 'center' });
+                    Swal.fire({
+                        icon: 'success',
+                        title: swalTitle('applicationVerified'),
+                        text: swalText('applicationVerified'),
+                        showConfirmButton: false,
+                        position: 'center',
+                    });
                     window.location.reload();
                 },
                 error: function (err) {
-                    Swal.fire('Error!', err.responseJSON?.message || 'Something went wrong.', 'error');
+                    Swal.fire({
+                        icon: 'error',
+                        title: getText('error'),
+                        text: err.responseJSON?.message || 'Something went wrong.',
+                    });
                 },
             });
         });
@@ -154,12 +296,12 @@ function rejectApplication() {
         e.preventDefault();
 
         Swal.fire({
-            title: 'Reject Application?',
-            text: 'Are you sure you want to reject this application?',
+            title: swalTitle('notVerifyApplication'),
+            text: swalText('notVerifyApplication'),
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Yes, reject it!',
-            cancelButtonText: 'Cancel',
+            confirmButtonText: swalConfirm('notVerifyApplication'),
+            cancelButtonText: swalCancel('notVerifyApplication'),
         }).then((result) => {
             if (!result.isConfirmed) return;
 
@@ -168,11 +310,21 @@ function rejectApplication() {
                 method: 'POST',
                 data: { _token: csrfToken(), not_verified: 1 },
                 success: function () {
-                    Swal.fire({ icon: 'success', title: 'Application Not Approved!', text: 'The application has been successfully not verified.', showConfirmButton: false, position: 'center' });
+                    Swal.fire({
+                        icon: 'success',
+                        title: swalTitle('applicationNotVerified'),
+                        text: swalText('applicationNotVerified'),
+                        showConfirmButton: false,
+                        position: 'center',
+                    });
                     window.location.reload();
                 },
                 error: function (err) {
-                    Swal.fire('Error!', err.responseJSON?.message || 'Something went wrong.', 'error');
+                    Swal.fire({
+                        icon: 'error',
+                        title: getText('error'),
+                        text: err.responseJSON?.message || 'Something went wrong.',
+                    });
                 },
             });
         });
@@ -189,26 +341,30 @@ function acceptPermit() {
         const id = $(this).data('permit');
 
         Swal.fire({
-            title: 'Are you sure?',
-            text: 'Do you want to accept this permit?',
+            title: swalTitle('acceptPermit'),
+            text: swalText('acceptPermit'),
             icon: 'question',
             showCancelButton: true,
-            confirmButtonText: 'Yes, proceed',
-            cancelButtonText: 'Cancel',
+            confirmButtonText: swalConfirm('acceptPermit'),
+            cancelButtonText: swalCancel('acceptPermit'),
         }).then((firstResult) => {
             if (!firstResult.isConfirmed) return;
 
             Swal.fire({
-                title: 'Please Confirm Again',
-                text: 'This action cannot be undone. Accept the permit?',
+                title: swalTitle('acceptPermitConfirm'),
+                text: swalText('acceptPermitConfirm'),
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonText: 'Yes, accept it',
-                cancelButtonText: 'Cancel',
+                confirmButtonText: swalConfirm('acceptPermitConfirm'),
+                cancelButtonText: swalCancel('acceptPermitConfirm'),
             }).then((secondResult) => {
                 if (!secondResult.isConfirmed) return;
 
-                Swal.fire({ title: 'Processing...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                Swal.fire({
+                    title: getText('processing'),
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading(),
+                });
 
                 $.ajax({
                     url: `/internal/permit/${id}`,
@@ -216,12 +372,23 @@ function acceptPermit() {
                     data: { _token: csrfToken(), accepted: 1 },
                     success: function () {
                         Swal.close();
-                        Swal.fire({ icon: 'success', title: 'Accepted!', text: 'The permit has been accepted.', timer: 2000, showConfirmButton: false });
+                        hidePermitActionButtons(id);
+                        Swal.fire({
+                            icon: 'success',
+                            title: swalTitle('permitAccepted'),
+                            text: swalText('permitAccepted'),
+                            timer: 2000,
+                            showConfirmButton: false,
+                        });
                         window.ImportPermitView?.reload();
                     },
                     error: function (err) {
                         Swal.close();
-                        Swal.fire('Error!', err.responseJSON?.message || 'Something went wrong.', 'error');
+                        Swal.fire({
+                            icon: 'error',
+                            title: getText('error'),
+                            text: err.responseJSON?.message || 'Something went wrong.',
+                        });
                     },
                 });
             });
@@ -234,22 +401,30 @@ function rejectPermit() {
         e.preventDefault();
         const id = $(this).data('permit');
 
+        const placeholder = getText('rejectPermit.placeholder');
+
         Swal.fire({
-            title: 'Reject Permit',
-            text: 'Please provide a reason for rejecting this permit:',
+            title: swalTitle('rejectPermit'),
+            text: getText('rejectPermit.text') || 'Please provide a reason for rejecting this permit:',
             icon: 'warning',
             input: 'textarea',
-            inputPlaceholder: 'Enter rejection reason...',
+            inputPlaceholder: placeholder,
             showCancelButton: true,
-            confirmButtonText: 'Reject Permit',
-            cancelButtonText: 'Cancel',
+            confirmButtonText: swalConfirm('rejectPermit'),
+            cancelButtonText: swalCancel('rejectPermit'),
             inputValidator: (value) => {
-                if (!value || value.trim().length < 5) return 'Rejection reason is required (min 5 characters).';
+                if (!value || value.trim().length < 5) {
+                    return getText('reasonMin5');
+                }
             },
         }).then((result) => {
             if (!result.isConfirmed) return;
 
-            Swal.fire({ title: 'Processing...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            Swal.fire({
+                title: getText('processing'),
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading(),
+            });
 
             $.ajax({
                 url: `/internal/permit/${id}`,
@@ -257,12 +432,23 @@ function rejectPermit() {
                 data: { _token: csrfToken(), rejected: 1, reason: result.value },
                 success: function () {
                     Swal.close();
-                    Swal.fire({ icon: 'success', title: 'Rejected!', text: 'The permit has been rejected successfully.', timer: 2000, showConfirmButton: false });
+                    hidePermitActionButtons(id);
+                    Swal.fire({
+                        icon: 'success',
+                        title: swalTitle('permitRejected'),
+                        text: swalText('permitRejected'),
+                        timer: 2000,
+                        showConfirmButton: false,
+                    });
                     window.ImportPermitView?.reload();
                 },
                 error: function (err) {
                     Swal.close();
-                    Swal.fire('Error!', err.responseJSON?.message || 'Something went wrong.', 'error');
+                    Swal.fire({
+                        icon: 'error',
+                        title: getText('error'),
+                        text: err.responseJSON?.message || 'Something went wrong.',
+                    });
                 },
             });
         });
@@ -280,22 +466,29 @@ function generatePermit() {
             data: { _token: csrfToken(), type: 'Import Permit', permit_number: id },
             success: function (res) {
                 if (res.message === 'Need Response') {
+                    const placeholder = getText('permitDownloadReason.placeholder');
                     Swal.fire({
-                        title: 'This Permit has been downloaded more than once',
-                        text: 'Please provide a reason for downloading it:',
+                        title: swalTitle('permitDownloadReason'),
+                        text: getText('permitDownloadReason.text') || 'Please provide a reason for downloading it:',
                         icon: 'warning',
                         input: 'textarea',
-                        inputPlaceholder: 'Enter reason...',
+                        inputPlaceholder: placeholder,
                         showCancelButton: true,
-                        confirmButtonText: 'Submit',
-                        cancelButtonText: 'Cancel',
+                        confirmButtonText: swalConfirm('permitDownloadReason'),
+                        cancelButtonText: swalCancel('permitDownloadReason'),
                         inputValidator: (value) => {
-                            if (!value || value.trim().length < 5) return 'Reason is required (min 5 characters).';
+                            if (!value || value.trim().length < 5) {
+                                return getText('reasonRequired5');
+                            }
                         },
                     }).then((result) => {
                         if (!result.isConfirmed) return;
 
-                        Swal.fire({ title: 'Processing...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                        Swal.fire({
+                            title: getText('processing'),
+                            allowOutsideClick: false,
+                            didOpen: () => Swal.showLoading(),
+                        });
 
                         $.ajax({
                             url: `/permit/print`,
@@ -303,13 +496,23 @@ function generatePermit() {
                             data: { _token: csrfToken(), type: 'Import Permit', permit_number: id, reason: result.value },
                             success: function () {
                                 Swal.close();
-                                Swal.fire({ icon: 'success', title: 'Submitted!', text: 'The reason submitted successfully.', timer: 2000, showConfirmButton: false });
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: swalTitle('reasonSubmitted'),
+                                    text: swalText('reasonSubmitted'),
+                                    timer: 2000,
+                                    showConfirmButton: false,
+                                });
                                 window.ImportPermitView?.reload();
                                 window.open(`/permit/generate/${id}`, '_blank');
                             },
                             error: function (err) {
                                 Swal.close();
-                                Swal.fire('Error!', err.responseJSON?.message || 'Something went wrong.', 'error');
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: getText('error'),
+                                    text: err.responseJSON?.message || 'Something went wrong.',
+                                });
                             },
                         });
                     });
@@ -318,17 +521,18 @@ function generatePermit() {
                 }
             },
             error: function (err) {
-                Swal.fire('Error!', err.responseJSON?.message || 'Something went wrong.', 'error');
+                Swal.fire({
+                    icon: 'error',
+                    title: getText('error'),
+                    text: err.responseJSON?.message || 'Something went wrong.',
+                });
             },
         });
     });
 }
 
 // ---------------------------------------------------------------
-// Single-permit "Pay Now" — used by the payment CTA inside the permit
-// detail offcanvas (test2.js) and the inline accordion action button
-// (test1.js's permitActionsHtml()). Skips the multi-select checkout
-// tab entirely for the common case of paying for just one permit.
+// Single-permit "Pay Now"
 // ---------------------------------------------------------------
 
 function payNowSingle() {
@@ -337,18 +541,28 @@ function payNowSingle() {
 
         const id = $(this).data('permit');
         const value = $(this).data('value');
+        const lang = getLang();
+        const amount = Number(value).toFixed(2);
+
+        const paymentText = lang === 'bm'
+            ? `Anda akan membayar RM ${amount} untuk permit ini.`
+            : `You are about to pay RM ${amount} for this permit.`;
 
         Swal.fire({
-            title: 'Proceed to Payment?',
-            text: `You are about to pay RM ${Number(value).toFixed(2)} for this permit.`,
+            title: swalTitle('payNow'),
+            text: paymentText,
             icon: 'question',
             showCancelButton: true,
-            confirmButtonText: 'Yes, proceed to payment',
-            cancelButtonText: 'Cancel',
+            confirmButtonText: swalConfirm('payNow'),
+            cancelButtonText: swalCancel('payNow'),
         }).then((result) => {
             if (!result.isConfirmed) return;
 
-            Swal.fire({ title: 'Redirecting to payment...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            Swal.fire({
+                title: getText('redirecting'),
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading(),
+            });
 
             $.ajax({
                 url: '/payment/signed-url',
@@ -356,7 +570,7 @@ function payNowSingle() {
                 data: {
                     application_id: applicationId(),
                     permit_ids: [id],
-                    total: Number(value).toFixed(2),
+                    total: amount,
                     type: 'import_permit',
                     _token: csrfToken(),
                 },
@@ -365,7 +579,11 @@ function payNowSingle() {
                 },
                 error: function (err) {
                     Swal.close();
-                    Swal.fire('Error!', err.responseJSON?.message || 'Unable to proceed to checkout.', 'error');
+                    Swal.fire({
+                        icon: 'error',
+                        title: getText('error'),
+                        text: err.responseJSON?.message || getText('unableCheckout'),
+                    });
                 },
             });
         });
@@ -373,241 +591,7 @@ function payNowSingle() {
 }
 
 // ---------------------------------------------------------------
-// Reapply flow (opens #addItemModal, prefilled with the rejected
-// permit's details)
-// ---------------------------------------------------------------
-
-let itemDropzone = null;
-let updateItem = null;
-
-function itemConsigment($modal) {
-    const dropzoneEl = $modal.find('#itemDropzone')[0];
-    if (!dropzoneEl) return;
-    if (dropzoneEl.dropzone) dropzoneEl.dropzone.destroy();
-
-    itemDropzone = new Dropzone(dropzoneEl, {
-        url: '/',
-        autoProcessQueue: false,
-        maxFilesize: 10,
-        acceptedFiles: '.jpg,.jpeg,.png,.pdf',
-        addRemoveLinks: true,
-        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
-        processing: function () {
-            Swal.fire({ title: 'Uploading...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-            groupPreview();
-        },
-    });
-
-    itemDropzone.on('addedfile', function () { groupPreview(); });
-}
-
-function groupPreview() {
-    Swal.fire({ title: 'Loading...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-    setTimeout(function () {
-        const $dropzone = $('#itemDropzone');
-        const $previews = $dropzone.find('.dz-preview');
-        let $group = $dropzone.find('.dz-preview-group');
-        if (!$group.length) {
-            $group = $('<div class="dz-preview-group"></div>');
-            $dropzone.find('.dz-message').after($group);
-        }
-        $previews.appendTo($group);
-
-        for (const file of itemDropzone.getAcceptedFiles()) {
-            if (file.type === 'application/pdf') {
-                const $img = $(file.previewElement).find('.dz-image img[data-dz-thumbnail]');
-                $img.attr('src', '/images/pdf-logo.png').css({ 'object-fit': 'contain', width: '100%', height: '100%' });
-            }
-        }
-
-        $dropzone.find('.dz-remove').html('<i class="ti ti-trash"></i>');
-        Swal.close();
-    }, 100);
-}
-
-function resetAddItemModal() {
-    $('#itemValue').val('');
-    $('#itemQuantity').val('');
-    $('#itemSelect').val(null).trigger('change');
-    $('#itemMeasure').val('').trigger('change');
-    $('#itemPurpose').val('').trigger('change');
-    $('#itemUses').val(null).trigger('change');
-    if (itemDropzone) itemDropzone.removeAllFiles(true);
-}
-
-async function loadConsignmentSelection(selectedItemId = null) {
-    const countryCode = $('#expcountryCode').val() || window.ImportPermitView?.getApplication()?.exporter?.country;
-    const $select = $('#itemSelect');
-    if (!countryCode) return;
-
-    $select.empty().append('<option value="">-- Select Item --</option>');
-    if ($select.hasClass('select2-hidden-accessible')) $select.select2('destroy');
-    $select.prop('disabled', true);
-
-    Swal.fire({ title: 'Loading...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-    try {
-        const res = await fetch(`/public/get_consignment/${countryCode}`);
-        const data = await res.json();
-        $select.prop('disabled', false);
-
-        data.forEach((row) => $select.append(`<option value="${row.id}">${row.entry_display}</option>`));
-
-        $select.select2({ width: '100%', placeholder: '-- Select Item --', allowClear: true, dropdownParent: $('#addItemModal') });
-
-        if (selectedItemId) $select.val(String(selectedItemId)).trigger('change');
-
-        Swal.close();
-    } catch (e) {
-        $select.prop('disabled', false);
-        Swal.close();
-    }
-}
-
-function reapply() {
-    $(document).off('click', '.reapply').on('click', '.reapply', async function (e) {
-        e.preventDefault();
-
-        const id = $(this).data('permit');
-        const permits = window.ImportPermitView?.getPermits() || [];
-        const permit = permits.find((p) => p.id == id);
-        if (!permit) return;
-
-        $('#saveBtn').data('id', id).attr('data-id', id);
-
-        const detail = permit._raw?.consignment_detail || {};
-
-        await loadConsignmentSelection(detail.item_id);
-
-        const modalEl = document.getElementById('addItemModal');
-        const modal = new bootstrap.Modal(modalEl);
-
-        modalEl.addEventListener('shown.bs.modal', async () => {
-            const $modal = $(modalEl);
-            itemConsigment($modal);
-
-            $modal.find('#itemValue').val(detail.value);
-            $modal.find('#itemQuantity').val(detail.quantity);
-
-            $modal.find('#itemPurpose option').each(function () {
-                if ($(this).data('description') === detail.purpose) $(this).prop('selected', true);
-            });
-            $modal.find('#itemPurpose').trigger('change');
-
-            $modal.find('#itemMeasure').val(detail.measure).trigger('change');
-
-            const itemId = $('#itemSelect').val();
-            if (itemId) {
-                const $itemUses = $modal.find('#itemUses');
-                $itemUses.empty().append('<option value="">-- Select Uses --</option>');
-
-                try {
-                    Swal.fire({ title: 'Loading uses...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                    const res = await fetch(`/public/consignment_uses/${itemId}`);
-                    const data = await res.json();
-                    let uses = [...new Set(data.data ?? [])];
-                    uses.forEach((row) => $itemUses.append(`<option value="${row}">${row}</option>`));
-
-                    if ($itemUses.hasClass('select2-hidden-accessible')) {
-                        $itemUses.trigger('change');
-                    } else {
-                        $itemUses.select2({ width: '100%', placeholder: '-- Select Uses --', allowClear: true, dropdownParent: $modal });
-                    }
-
-                    if (detail.uses) $itemUses.val(detail.uses).trigger('change');
-
-                    Swal.close();
-                } catch (err) {
-                    Swal.close();
-                }
-            }
-
-            saveConsignmentAttachment();
-        }, { once: true });
-
-        modal.show();
-    });
-}
-
-function saveConsignmentAttachment() {
-    $(document).off('click', '#saveBtn').on('click', '#saveBtn', function (e) {
-        e.preventDefault();
-
-        const $modal = $('#addItemModal');
-        const id = $(this).data('id');
-
-        const itemSelectValue = $modal.find('#itemSelect').val();
-        const itemSelectText = $modal.find('#itemSelect option:selected').text();
-        const itemValue = $modal.find('#itemValue').val().trim();
-        const itemQuantity = $modal.find('#itemQuantity').val().trim();
-        const itemMeasure = $modal.find('#itemMeasure').val();
-        const itemPurpose = $modal.find('#itemPurpose option:selected').text();
-        const itemUsesValue = $modal.find('#itemUses').val();
-
-        if (!itemSelectValue || !itemValue || !itemQuantity || !itemMeasure || !itemPurpose || !itemUsesValue) {
-            Swal.fire('Error', 'Please fill all required fields', 'error');
-            return;
-        }
-
-        const files = itemDropzone?.getAcceptedFiles() || [];
-
-        updateItem = {
-            item_id: itemSelectValue,
-            item_name: itemSelectText,
-            value: itemValue,
-            quantity: itemQuantity,
-            measure: itemMeasure,
-            purpose: itemPurpose,
-            uses: itemUsesValue,
-            files,
-        };
-
-        saveApplication(id);
-        resetAddItemModal();
-        bootstrap.Modal.getInstance($modal[0])?.hide();
-    });
-}
-
-function saveApplication(permitId) {
-    if (!updateItem) {
-        Swal.fire('Error', 'No item to save', 'error');
-        return;
-    }
-
-    const { files, ...otherData } = updateItem;
-    const formData = new FormData();
-    formData.append('items[0][data]', JSON.stringify(otherData));
-
-    if (files && files.length > 0) {
-        files.forEach((file) => {
-            formData.append('files[]', file);
-            formData.append('file_item_index[]', 0);
-        });
-    }
-
-    Swal.fire({ title: 'Submitting...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-    $.ajax({
-        url: '/public/save-permit/' + permitId,
-        type: 'POST',
-        data: formData,
-        headers: { 'X-CSRF-TOKEN': csrfToken() },
-        processData: false,
-        contentType: false,
-        success: function () {
-            Swal.fire({ icon: 'success', title: 'Permit Reapply!', timer: 1500, showConfirmButton: false });
-            window.ImportPermitView?.reload();
-        },
-        error: function () {
-            Swal.fire('Error', 'Failed to save permit', 'error');
-        },
-    });
-}
-
-// ---------------------------------------------------------------
-// Wire everything up once the DOM (and test1.js's initial render)
-// is ready.
+// Wire everything up
 // ---------------------------------------------------------------
 
 function initActions() {
@@ -620,7 +604,9 @@ function initActions() {
     rejectPermit();
     generatePermit();
     payNowSingle();
-    reapply();
 }
 
 document.addEventListener('DOMContentLoaded', initActions);
+
+// Export for use in other modules if needed
+export { getText, swalTitle, swalText, swalConfirm, swalCancel };

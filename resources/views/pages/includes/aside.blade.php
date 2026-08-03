@@ -33,23 +33,19 @@
                 $isSipitang = $internalUser?->branch === 'Sipitang';
 
                 // ── User Management visibility ──────────────────────────────────
-                // Check each permission individually
                 $canReadPublicUser = $internalUser?->can('read public user') ?? false;
                 $canReadInternalUser = $internalUser?->can('read internal user') ?? false;
                 $canApprovePublicUser = $internalUser?->can('approve public user') ?? false;
                 $canReadActivityLog = $internalUser?->can('read activity log') ?? false;
                 $canManageRolePermission = $internalUser?->hasRole('superadmin') ?? false;
 
-                // Show User Management if user has at least one of these permissions
                 $canSeeUserManagement = $isSuperadmin || 
                     $canReadPublicUser || 
                     $canReadInternalUser || 
                     $canApprovePublicUser || 
                     $canReadActivityLog;
 
-                // ── Active state helpers ────────────────────────────────────────
                 $isApplicationActive = Str::contains($currentRoute, ['application', 'inspection', 'consignment']);
-
                 $isUserManagementActive = collect([
                     'internal.public.list',
                     'internal.internal.list',
@@ -57,12 +53,10 @@
                     'internal.activity_logs',
                     'internal.internal.role',
                 ])->contains(fn($prefix) => Str::startsWith($currentRoute, $prefix) || $currentRoute === $prefix);
-
                 $isImporterExporterActive = in_array($currentRoute, [
                     'internal.exporter.list',
                     'internal.importer.list',
                 ]);
-
                 $isPublicAppActive = in_array($currentRoute, [
                     'public.permitApplication',
                     'public.permitAssignApplication',
@@ -76,65 +70,91 @@
             <ul class="main-menu">
 
                 {{-- ── Main ──────────────────────────────────────────────────── --}}
-                <li class="slide__category"><span class="category-name">Main</span></li>
+                <li class="slide__category">
+                    <span class="category-name">
+                        <span data-en="Main" data-bm="Utama">Main</span>
+                    </span>
+                </li>
 
                 <li class="slide {{ Str::contains($currentRoute, 'dashboard') ? 'open active' : '' }}">
                     <a href="{{ route($isPublic ? 'public.dashboard' : 'internal.dashboard') }}" class="side-menu__item">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 side-menu__icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/>
                         </svg>
-                        <span class="side-menu__label">Dashboards</span>
+                        <span class="side-menu__label">
+                            <span data-en="Dashboards" data-bm="Papan Pemuka">Dashboards</span>
+                        </span>
                     </a>
                 </li>
 
                 {{-- ── Public Section ────────────────────────────────────────── --}}
                 @if($isPublic)
-                    <li class="slide__category"><span class="category-name">Application</span></li>
+                    <li class="slide__category">
+                        <span class="category-name">
+                            <span data-en="Application" data-bm="Permohonan">Application</span>
+                        </span>
+                    </li>
 
                     <li class="slide {{ $currentRoute === 'public.newApplication' ? 'active open' : '' }}">
                         <a href="{{ route('public.newApplication') }}" class="side-menu__item">
                             <i class="bi bi-box side-menu__icon"></i>
-                            <span class="side-menu__label">Apply New</span>
+                            <span class="side-menu__label">
+                                <span data-en="Apply New" data-bm="Mohon Baru">Apply New</span>
+                            </span>
                         </a>
                     </li>
 
                     <li class="slide {{ $currentRoute === '/application/exporter' ? 'active open' : '' }}">
                         <a href="/application/exporter" class="side-menu__item">
                             <i class="bi bi-truck side-menu__icon"></i>
-                            <span class="side-menu__label">Exporter</span>
+                            <span class="side-menu__label">
+                                <span data-en="Exporter" data-bm="Pengeksport">Exporter</span>
+                            </span>
                         </a>
                     </li>
 
                     <li class="slide {{ $currentRoute === 'application.importer' ? 'active open' : '' }}">
                         <a href="{{ route('application.importer') }}" class="side-menu__item">
                             <i class="bi bi-people side-menu__icon"></i>
-                            <span class="side-menu__label">Importer</span>
+                            <span class="side-menu__label">
+                                <span data-en="Importer" data-bm="Pengimport">Importer</span>
+                            </span>
                         </a>
                     </li>
 
                     <li class="slide has-sub {{ $isPublicAppActive ? 'open active' : '' }}">
                         <a href="javascript:void(0);" class="side-menu__item">
                             <i class="bi bi-journal side-menu__icon"></i>
-                            <span class="side-menu__label">Application List</span>
+                            <span class="side-menu__label">
+                                <span data-en="Application List" data-bm="Senarai Permohonan">Application List</span>
+                            </span>
                             <i class="ri-arrow-down-s-line side-menu__angle"></i>
                         </a>
                         <ul class="slide-menu child1">
                             <li class="slide">
-                                <a href="{{ route('public.verifyapplication') }}" class="side-menu__item" id="toReviewCount">To Review</a>
+                                <a href="{{ route('public.verifyapplication') }}" class="side-menu__item" id="toReviewCount">
+                                    <span data-en="To Review" data-bm="Untuk Semakan">To Review</span>
+                                </a>
                             </li>
                             <li class="slide">
-                                <a href="/public/agent_list" class="side-menu__item">Representative List</a>
-                            </li>
-                 
-                            <li class="slide">
-                                <a href="{{ route('public.showallapplicationlist') }}" class="side-menu__item">Import Permit List</a>
+                                <a href="/public/agent_list" class="side-menu__item">
+                                    <span data-en="Representative List" data-bm="Senarai Wakil">Representative List</span>
+                                </a>
                             </li>
                             <li class="slide">
-                                <a href="{{ route('public.showallinspectionlist') }}" class="side-menu__item">Inspection Certificate List</a>
+                                <a href="{{ route('public.showallapplicationlist') }}" class="side-menu__item">
+                                    <span data-en="Import Permit List" data-bm="Senarai Permit Import">Import Permit List</span>
+                                </a>
                             </li>
-                       
                             <li class="slide">
-                                <a href="{{ route('public.showallconsignmentlist') }}" class="side-menu__item">Consignment Certificate List</a>
+                                <a href="{{ route('public.showallinspectionlist') }}" class="side-menu__item">
+                                    <span data-en="Inspection Certificate List" data-bm="Senarai Sijil Pemeriksaan">Inspection Certificate List</span>
+                                </a>
+                            </li>
+                            <li class="slide">
+                                <a href="{{ route('public.showallconsignmentlist') }}" class="side-menu__item">
+                                    <span data-en="Consignment Certificate List" data-bm="Senarai Sijil Konsainan">Consignment Certificate List</span>
+                                </a>
                             </li>
                         </ul>
                     </li>
@@ -144,14 +164,18 @@
                 @if($isInternal && !$isRestricted)
 
                     {{-- Application --}}
-                    <li class="slide__category"><span class="category-name">Application</span></li>
+                    <li class="slide__category">
+                        <span class="category-name">
+                            <span data-en="Application" data-bm="Permohonan">Application</span>
+                        </span>
+                    </li>
 
                     <li class="slide has-sub {{ $isApplicationActive ? 'open active' : '' }}">
                         <a href="javascript:void(0);" class="side-menu__item">
                             <i class="ri-arrow-down-s-line side-menu__angle"></i>
                             <i class="bi bi-journal side-menu__icon"></i>
                             <span class="side-menu__label">
-                                Application List
+                                <span data-en="Application List" data-bm="Senarai Permohonan">Application List</span>
                                 <svg id="appListParentBadge" style="display:none; position: relative; top: -5px; left: 2px;" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                     <circle cx="4" cy="4" r="4" fill="#dc3545"/>
                                 </svg>
@@ -159,63 +183,85 @@
                         </a>
                         <ul class="slide-menu child1">
                             <li class="slide side-menu__label1"><a href="javascript:void(0)">Application List</a></li>
-                    
                             <li class="slide {{ $currentRoute === 'internal.application.list' ? 'active' : '' }}">
-                                <a href="{{ route('internal.application.list') }}" class="side-menu__item" id="importPermitCount">Import Permit</a>
+                                <a href="{{ route('internal.application.list') }}" class="side-menu__item" id="importPermitCount">
+                                    <span data-en="Import Permit" data-bm="Permit Import">Import Permit</span>
+                                </a>
                             </li>
                             <li class="slide {{ $currentRoute === 'internal.inspection.list' ? 'active' : '' }}">
-                                <a href="{{ route('internal.inspection.list') }}" class="side-menu__item" id="inspectionAppCount">Inspection Certificate</a>
+                                <a href="{{ route('internal.inspection.list') }}" class="side-menu__item" id="inspectionAppCount">
+                                    <span data-en="Inspection Certificate" data-bm="Sijil Pemeriksaan">Inspection Certificate</span>
+                                </a>
                             </li>
-                        
                             <li class="slide {{ $currentRoute === 'internal.consignment.list' ? 'active' : '' }}">
-                                <a href="{{ route('internal.consignment.list') }}" class="side-menu__item" id="consignmentAppCount">Consignment Certificate</a>
+                                <a href="{{ route('internal.consignment.list') }}" class="side-menu__item" id="consignmentAppCount">
+                                    <span data-en="Consignment Certificate" data-bm="Sijil Konsainan">Consignment Certificate</span>
+                                </a>
                             </li>
                         </ul>
                     </li>
 
                     {{-- User Management — only shown if user has at least one relevant permission --}}
                     @if($canSeeUserManagement)
-                        <li class="slide__category"><span class="category-name">User</span></li>
+                        <li class="slide__category">
+                            <span class="category-name">
+                                <span data-en="User" data-bm="Pengguna">User</span>
+                            </span>
+                        </li>
 
                         <li class="slide has-sub {{ $isUserManagementActive ? 'open active' : '' }}">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <i class="ri-arrow-down-s-line side-menu__angle"></i>
                                 <i class="ti ti-user side-menu__icon"></i>
-                                <span class="side-menu__label">User Management</span>
+                                <span class="side-menu__label">
+                                    <span data-en="User Management" data-bm="Pengurusan Pengguna">User Management</span>
+                                </span>
                             </a>
                             <ul class="slide-menu child1">
                                 <li class="slide side-menu__label1"><a href="javascript:void(0)">Users</a></li>
 
                                 @if($canReadPublicUser)
                                     <li class="slide {{ $currentRoute === 'internal.public.list' ? 'active' : '' }}">
-                                        <a href="{{ route('internal.public.list') }}" class="side-menu__item">Public Users</a>
+                                        <a href="{{ route('internal.public.list') }}" class="side-menu__item">
+                                            <span data-en="Public Users" data-bm="Pengguna Awam">Public Users</span>
+                                        </a>
                                     </li>
                                 @endif
 
                                 @if($canReadInternalUser)
                                     <li class="slide {{ $currentRoute === 'internal.internal.list' ? 'active' : '' }}">
-                                        <a href="{{ route('internal.internal.list') }}" class="side-menu__item">Internal Users</a>
+                                        <a href="{{ route('internal.internal.list') }}" class="side-menu__item">
+                                            <span data-en="Internal Users" data-bm="Pengguna Dalaman">Internal Users</span>
+                                        </a>
                                     </li>
                                 @endif
 
                                 @if($canApprovePublicUser)
                                     <li class="slide {{ $currentRoute === 'internal.public.verification.list' ? 'active' : '' }}">
-                                        <a href="{{ route('internal.public.verification.list') }}" class="side-menu__item" id="verificationCount">User Verification</a>
+                                        <a href="{{ route('internal.public.verification.list') }}" class="side-menu__item" id="verificationCount">
+                                            <span data-en="User Verification" data-bm="Pengesahan Pengguna">User Verification</span>
+                                        </a>
                                     </li>
                                 @endif
 
                                 @if($canReadActivityLog)
                                     <li class="slide {{ $currentRoute === 'internal.activity_logs' ? 'active' : '' }}">
-                                        <a href="{{ route('internal.activity_logs') }}" class="side-menu__item">Activity Log</a>
+                                        <a href="{{ route('internal.activity_logs') }}" class="side-menu__item">
+                                            <span data-en="Activity Log" data-bm="Log Aktiviti">Activity Log</span>
+                                        </a>
                                     </li>
                                 @endif
 
                                 @if($isSuperadmin)
                                     <li class="slide {{ $currentRoute === 'internal.internal.role' ? 'active' : '' }}">
-                                        <a href="{{ route('internal.internal.role') }}" class="side-menu__item">Role and Permission</a>
+                                        <a href="{{ route('internal.internal.role') }}" class="side-menu__item">
+                                            <span data-en="Role and Permission" data-bm="Peranan dan Keizinan">Role and Permission</span>
+                                        </a>
                                     </li>
                                     <li class="slide">
-                                        <a href="{{ route('internal.boundary.list') }}" class="side-menu__item">Boundary Officer</a>
+                                        <a href="{{ route('internal.boundary.list') }}" class="side-menu__item">
+                                            <span data-en="Boundary Officer" data-bm="Pegawai Sempadan">Boundary Officer</span>
+                                        </a>
                                     </li>
                                 @endif
                             </ul>
@@ -233,20 +279,26 @@
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <i class="ri-arrow-down-s-line side-menu__angle"></i>
                                 <i class="ti ti-user side-menu__icon"></i>
-                                <span class="side-menu__label">Importer &amp; Exporter</span>
+                                <span class="side-menu__label">
+                                    <span data-en="Importer &amp; Exporter" data-bm="Pengimport &amp; Pengeksport">Importer &amp; Exporter</span>
+                                </span>
                             </a>
                             <ul class="slide-menu child1">
                                 <li class="slide side-menu__label1"><a href="javascript:void(0)">Importer &amp; Exporter</a></li>
 
                                 @if($canViewImporter)
                                     <li class="slide {{ $currentRoute === 'internal.importer.list' ? 'active' : '' }}">
-                                        <a href="{{ route('internal.importer.list') }}" class="side-menu__item">Importer List</a>
+                                        <a href="{{ route('internal.importer.list') }}" class="side-menu__item">
+                                            <span data-en="Importer List" data-bm="Senarai Pengimport">Importer List</span>
+                                        </a>
                                     </li>
                                 @endif
 
                                 @if($canViewExporter)
                                     <li class="slide {{ $currentRoute === 'internal.exporter.list' ? 'active' : '' }}">
-                                        <a href="{{ route('internal.exporter.list') }}" class="side-menu__item">Exporter List</a>
+                                        <a href="{{ route('internal.exporter.list') }}" class="side-menu__item">
+                                            <span data-en="Exporter List" data-bm="Senarai Pengeksport">Exporter List</span>
+                                        </a>
                                     </li>
                                 @endif
                             </ul>
@@ -259,32 +311,46 @@
                     @endphp
                     
                     @if($canManageSettings)
-                        <li class="slide__category"><span class="category-name">Misc</span></li>
+                        <li class="slide__category">
+                            <span class="category-name">
+                                <span data-en="Misc" data-bm="Lain-lain">Misc</span>
+                            </span>
+                        </li>
 
                         <li class="slide has-sub {{ Str::startsWith($currentRoute, 'internal.') ? 'open active' : '' }}">
                             <a href="javascript:void(0);" class="side-menu__item">
                                 <i class="ri-arrow-down-s-line side-menu__angle"></i>
                                 <i class="bi bi-gear-wide side-menu__icon"></i>
                                 <span class="side-menu__label" style="line-height:1.3rem">
-                                    <span>System <br> Configuration</span>
+                                    <span data-en="System Configuration" data-bm="Konfigurasi Sistem">System Configuration</span>
                                 </span>
                             </a>
                             <ul class="slide-menu child1">
                                 <li class="slide side-menu__label1"><a href="javascript:void(0)">Misc</a></li>
                                 <li class="slide {{ $currentRoute === 'internal.controlpanel' ? 'active' : '' }}">
-                                    <a href="{{ url('/internal/control_panel') }}" class="side-menu__item">Control Panel</a>
+                                    <a href="{{ url('/internal/control_panel') }}" class="side-menu__item">
+                                        <span data-en="Control Panel" data-bm="Panel Kawalan">Control Panel</span>
+                                    </a>
                                 </li>
                                 <li class="slide">
-                                    <a href="{{ url('/internal/permit_condition') }}" class="side-menu__item">Permit Item</a>
+                                    <a href="{{ url('/internal/permit_condition') }}" class="side-menu__item">
+                                        <span data-en="Permit Item" data-bm="Item Permit">Permit Item</span>
+                                    </a>
                                 </li>
                                 <li class="slide">
-                                    <a href="{{ url('/internal/consignment_condition') }}" class="side-menu__item">Consignment Item</a>
+                                    <a href="{{ url('/internal/consignment_condition') }}" class="side-menu__item">
+                                        <span data-en="Consignment Item" data-bm="Item Konsainan">Consignment Item</span>
+                                    </a>
                                 </li>
                                 <li class="slide {{ $currentRoute === 'internal.state-district-management' ? 'active' : '' }}">
-                                    <a href="{{ route('internal.state-district-management') }}" class="side-menu__item">State &amp; District Management</a>
+                                    <a href="{{ route('internal.state-district-management') }}" class="side-menu__item">
+                                        <span data-en="State &amp; District Management" data-bm="Pengurusan Negeri &amp; Daerah">State &amp; District Management</span>
+                                    </a>
                                 </li>
                                 <li class="slide {{ $currentRoute === 'internal.branch-management' ? 'active' : '' }}">
-                                    <a href="{{ route('internal.branch-management') }}" class="side-menu__item">Branch Management</a>
+                                    <a href="{{ route('internal.branch-management') }}" class="side-menu__item">
+                                        <span data-en="Branch Management" data-bm="Pengurusan Cawangan">Branch Management</span>
+                                    </a>
                                 </li>
                             </ul>
                         </li>
@@ -294,12 +360,18 @@
 
                 {{-- ── Order (hidden for finance & boundary officer) ──────────── --}}
                 @if(!($isInternal && $isRestricted))
-                    <li class="slide__category"><span class="category-name">Order</span></li>
+                    <li class="slide__category">
+                        <span class="category-name">
+                            <span data-en="Order" data-bm="Pesanan">Order</span>
+                        </span>
+                    </li>
 
                     <li class="slide {{ Str::contains($currentRoute, 'order') ? 'open active' : '' }}">
                         <a href="/order/list" class="side-menu__item">
                             <i class="bi bi-card-list side-menu__icon"></i>
-                            <span class="side-menu__label">Order</span>
+                            <span class="side-menu__label">
+                                <span data-en="Order" data-bm="Pesanan">Order</span>
+                            </span>
                         </a>
                     </li>
                 @endif

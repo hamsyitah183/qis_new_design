@@ -20,10 +20,8 @@
     </style>
 @endpush
 
-
 @php
     $type = authUser()['type'];
-
 @endphp
 
 @push('scripts')
@@ -35,10 +33,10 @@
 
 @section('pageName', 'List Import Permit Application')
 
-
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="Import Permit Application List">
-
+    <x-breadcrumb :items="[
+        ['label' => 'Home', 'url' => '#', 'data-en' => 'Home', 'data-bm' => 'Utama'],
+    ]" title="Import Permit Application List" title_en="Import Permit Application List" title_bm="Senarai Permohonan Permit Import">
     </x-breadcrumb>
 @endsection
 
@@ -52,89 +50,89 @@
                     <div class="ms-auto d-flex gap-2 align-items-center">
                         <button class="btn btn-sm btn-primary filter dropdown-toggle" type="button" id="filterDropdownBtn"
                             data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
-                            <span class="me-2"><i class="ti ti-adjustments-horizontal"></i></span>Filter
+                            <span class="me-2"><i class="ti ti-adjustments-horizontal"></i></span>
+                            <span data-en="Filter" data-bm="Penapis">Filter</span>
                         </button>
 
                         <ul class="dropdown-menu p-3 filter-dropdown" aria-labelledby="filterDropdownBtn">
                             <div class="row gx-3">
                                 <div class="col-12 col-md-6">
                                     <li class="mb-3">
-                                        <label class="form-label fw-semibold mb-1">Status</label>
+                                        <label class="form-label fw-semibold mb-1" data-en="Status" data-bm="Status">Status</label>
                                         <select id="filterStatus" class="form-select form-select-sm">
-                                            <option value="">All Statuses</option>
-                                            <option value="Draft">Draft</option>
-                                            <option value="Clerk Review In-Progress">Clerk Review In-Progress</option>
-                                            <option value="Clerk Verified">Clerk Verified</option>
-                                            <option value="Clerk Rejected">Clerk Rejected</option>
-                                            <option value="Officer Verification Completed">Officer Verification Completed
-                                            </option>
-                                            <option value="Not Approved">Not Approved</option>
-                                            <option value="wait for company approval">Wait for Company Approval</option>
-                                            <option value="Completed">Completed</option>
+                                            <option value="" data-en="All Statuses" data-bm="Semua Status">All Statuses</option>
+                                            <option value="Draft" data-en="Draft" data-bm="Draf">Draft</option>
+                                            <option value="Clerk Review In-Progress" data-en="Clerk Review In-Progress" data-bm="Semakan Kerani Dalam Proses">Clerk Review In-Progress</option>
+                                            <option value="Clerk Verified" data-en="Clerk Verified" data-bm="Disahkan Kerani">Clerk Verified</option>
+                                            <option value="Clerk Rejected" data-en="Clerk Rejected" data-bm="Ditolak Kerani">Clerk Rejected</option>
+                                            <option value="Officer Verification Completed" data-en="Officer Verification Completed" data-bm="Pengesahan Pegawai Selesai">Officer Verification Completed</option>
+                                            <option value="Not Approved" data-en="Not Approved" data-bm="Tidak Diluluskan">Not Approved</option>
+                                            <option value="wait for company approval" data-en="Wait for Company Approval" data-bm="Menunggu Kelulusan Syarikat">Wait for Company Approval</option>
+                                            <option value="Completed" data-en="Completed" data-bm="Selesai">Completed</option>
                                         </select>
                                     </li>
                                 </div>
                                 @if (authUser()['type'] == 'internal')
                                     <div class="col-12 col-md-6">
                                         <li class="mb-3">
-                                            <label class="form-label fw-semibold mb-1">Public User</label>
+                                            <label class="form-label fw-semibold mb-1" data-en="Public User" data-bm="Pengguna Awam">Public User</label>
                                             <select id="filterPublicUser" class="form-select form-select-sm">
-                                                <option value="">All Users</option>
+                                                <option value="" data-en="All Users" data-bm="Semua Pengguna">All Users</option>
                                             </select>
                                         </li>
                                     </div>
                                 @endif
                                 <div class="col-12 col-md-6">
                                     <li class="mb-3">
-                                        <label class="form-label fw-semibold mb-1">Exporter</label>
+                                        <label class="form-label fw-semibold mb-1" data-en="Exporter" data-bm="Pengeksport">Exporter</label>
                                         <select id="filterExporter" class="form-select form-select-sm">
-                                            <option value="">All Exporters</option>
+                                            <option value="" data-en="All Exporters" data-bm="Semua Pengeksport">All Exporters</option>
                                         </select>
                                     </li>
                                 </div>
                                 <div class="col-12 col-md-6">
                                     <li class="mb-3">
-                                        <label class="form-label fw-semibold mb-1">Importer</label>
+                                        <label class="form-label fw-semibold mb-1" data-en="Importer" data-bm="Pengimport">Importer</label>
                                         <select id="filterImporter" class="form-select form-select-sm">
-                                            <option value="">All Importers</option>
+                                            <option value="" data-en="All Importers" data-bm="Semua Pengimport">All Importers</option>
                                         </select>
                                     </li>
                                 </div>
                                 @if (authUser()['type'] == 'internal')
                                     <div class="col-12 col-md-6">
                                         <li class="mb-3">
-                                            <label class="form-label fw-semibold mb-1">Submitted By</label>
+                                            <label class="form-label fw-semibold mb-1" data-en="Submitted By" data-bm="Dihantar Oleh">Submitted By</label>
                                             <input type="text" id="filterUsername" class="form-control form-control-sm"
-                                                placeholder="Enter username">
+                                                placeholder="Enter username" data-en="Enter username" data-bm="Masukkan nama pengguna" data-i18n-attr="placeholder">
                                         </li>
                                     </div>
                                 @endif
                                 <div class="col-12 col-md-6">
                                     <li class="mb-3">
-                                        <label class="form-label fw-semibold mb-1">Start Date</label>
+                                        <label class="form-label fw-semibold mb-1" data-en="Start Date" data-bm="Tarikh Mula">Start Date</label>
                                         <input type="date" id="filterStartDate" class="form-control form-control-sm">
                                     </li>
                                 </div>
                                 <div class="col-12 col-md-6">
                                     <li class="mb-3">
-                                        <label class="form-label fw-semibold mb-1">End Date</label>
+                                        <label class="form-label fw-semibold mb-1" data-en="End Date" data-bm="Tarikh Tamat">End Date</label>
                                         <input type="date" id="filterEndDate" class="form-control form-control-sm">
                                     </li>
                                 </div>
                             </div>
                             <li class="d-flex justify-content-end gap-2 mt-2">
                                 <button class="btn btn-sm btn-secondary" id="btnResetFilter">
-                                    <i class="ti ti-refresh"></i> Reset
+                                    <i class="ti ti-refresh"></i> <span data-en="Reset" data-bm="Set Semula">Reset</span>
                                 </button>
                                 <button class="btn btn-sm btn-primary" id="btnFilter">
-                                    <i class="ti ti-filter"></i> Apply
+                                    <i class="ti ti-filter"></i> <span data-en="Apply" data-bm="Guna">Apply</span>
                                 </button>
                             </li>
                         </ul>
 
                         @if ($type === 'internal')
                             <button type="button" id="btnOpenExportModal" class="btn btn-sm btn-info">
-                                <i class="ti ti-download"></i> Download Report
+                                <i class="ti ti-download"></i> <span data-en="Download Report" data-bm="Muat Turun Laporan">Download Report</span>
                             </button>
                         @endif
                     </div>
@@ -150,24 +148,18 @@
                                     aria-describedby="responsiveDataTable_info" style="width: 1588px;">
                                     <thead class="mt-3">
                                         <tr class="even">
-                                            <th>#</th>
-                                            <th>Importer</th>
-                                            <th>Exporter</th>
-                                            {{-- <th style="text-align: center;">Importer Type</th> --}}
-                                            {{-- <th>ETA</th> --}}
-                                            <th>Application Status</th>
-                                            <th>Permit Status</th>
+                                            <th data-en="#" data-bm="#">#</th>
+                                            <th data-en="Importer" data-bm="Pengimport">Importer</th>
+                                            <th data-en="Exporter" data-bm="Pengeksport">Exporter</th>
+                                            <th data-en="Application Status" data-bm="Status Permohonan">Application Status</th>
+                                            <th data-en="Permit Status" data-bm="Status Permit">Permit Status</th>
                                             @if (authUser()['type'] == 'internal')
-                                                <th>Submitted By</th>
+                                                <th data-en="Submitted By" data-bm="Dihantar Oleh">Submitted By</th>
                                             @endif
-
-                                            <th>Action</th>
+                                            <th data-en="Action" data-bm="Tindakan">Action</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-
-
-                                    </tbody>
+                                    <tbody></tbody>
                                 </table>
                             </div>
                         </div>
@@ -179,49 +171,45 @@
     </div>
 
     <x-modal id="activityLogModal" title="Activity Log">
-
-        <!-- Your table goes here -->
         <div class="table-responsive">
             <table class="table text-wrap table-hover" id="applicationLogTable">
                 <thead class="table-primary">
                     <tr>
-                        <th scope="col">Action</th>
-                        <th scope="col">User</th>
-                        <th scope="col">Remark</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">Time and Date</th>
+                        <th scope="col" data-en="Action" data-bm="Tindakan">Action</th>
+                        <th scope="col" data-en="User" data-bm="Pengguna">User</th>
+                        <th scope="col" data-en="Remark" data-bm="Catatan">Remark</th>
+                        <th scope="col" data-en="Status" data-bm="Status">Status</th>
+                        <th scope="col" data-en="Time and Date" data-bm="Masa dan Tarikh">Time and Date</th>
                     </tr>
                 </thead>
-                <tbody class="table-group-divider">
-
-                </tbody>
+                <tbody class="table-group-divider"></tbody>
             </table>
         </div>
-
         @slot('footer')
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Close" data-bm="Tutup">Close</button>
         @endslot
-
     </x-modal>
 
     @if ($type === 'internal')
-        {{-- 📑 Application Export Modal --}}
-        <x-modal id="applicationExportModal" title="Download Report" size="modal-dialog-centered">
+        <x-modal id="applicationExportModal" title="Download Report" title_en="Download Report" title_bm="Muat Turun Laporan" size="modal-dialog-centered">
             <div class="p-3 text-center">
-                <p>Select the format for your exported report. The current filters will be applied.</p>
+                <p data-en="Select the format for your exported report. The current filters will be applied." 
+                   data-bm="Pilih format untuk laporan yang dieksport. Penapis semasa akan digunakan.">
+                    Select the format for your exported report. The current filters will be applied.
+                </p>
                 <div class="d-flex justify-content-center gap-3 mt-4">
                     <button type="button" class="btn btn-success btn-md d-flex align-items-center gap-2"
                         id="btnConfirmExportExcel">
-                        <i class="ti ti-file-spreadsheet fs-20"></i> Excel (CSV)
+                        <i class="ti ti-file-spreadsheet fs-20"></i> <span data-en="Excel (CSV)" data-bm="Excel (CSV)">Excel (CSV)</span>
                     </button>
                     <button type="button" class="btn btn-danger btn-md d-flex align-items-center gap-2"
                         id="btnConfirmExportPdf">
-                        <i class="ti ti-file-description fs-20"></i> PDF Document
+                        <i class="ti ti-file-description fs-20"></i> <span data-en="PDF Document" data-bm="Dokumen PDF">PDF Document</span>
                     </button>
                 </div>
             </div>
             @slot('footer')
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Cancel" data-bm="Batal">Cancel</button>
             @endslot
         </x-modal>
     @endif

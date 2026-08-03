@@ -289,7 +289,7 @@
     <!-- PERMIT DETAIL OFFCANVAS                                        -->
     <!-- ============================================================ -->
     <div class="offcanvas offcanvas-end" tabindex="-1" id="permitDetailOffcanvas"
-        aria-labelledby="permitDetailOffcanvasLabel" style="width: 65%; max-width: 860px;">
+        aria-labelledby="permitDetailOffcanvasLabel" style=" ">
         <div class="offcanvas-header border-bottom px-4">
             <div class="d-flex align-items-center gap-3">
                 <div class="ipv-permit-detail-icon"><i class="bi bi-box-seam"></i></div>

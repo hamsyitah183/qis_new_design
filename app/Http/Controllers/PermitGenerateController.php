@@ -23,9 +23,7 @@ use Spatie\Activitylog\Models\Activity;
 
 class PermitGenerateController extends Controller
 {
-    public function __construct(private readonly PermitQrService $permitQrService)
-    {
-    }
+    public function __construct(private readonly PermitQrService $permitQrService) {}
 
     /**
      * Decode URL-safe permit slug back to stored permit_number.
@@ -107,15 +105,15 @@ class PermitGenerateController extends Controller
         );
 
         $validityDate = $permits->validity_date ? \Carbon\Carbon::parse($permits->validity_date)->format('d/M/Y') : '-';
-      
-         $qrDataUri = null;
-          try {
-              // Use the same encrypted payload format as the scanner flow.
-              $encryptedPayload = $this->permitQrService->createEncryptedPayload((string) ($permits->permit_number ?? ''));
-              $qrDataUri = $this->permitQrService->createQrDataUri($encryptedPayload);
-          } catch (\Throwable $e) {
-              Log::warning('Failed generating hardcopy permit QR: ' . $e->getMessage());
-          }
+
+        $qrDataUri = null;
+        try {
+            // Use the same encrypted payload format as the scanner flow.
+            $encryptedPayload = $this->permitQrService->createEncryptedPayload((string) ($permits->permit_number ?? ''));
+            $qrDataUri = $this->permitQrService->createQrDataUri($encryptedPayload);
+        } catch (\Throwable $e) {
+            Log::warning('Failed generating hardcopy permit QR: ' . $e->getMessage());
+        }
 
         $pdf = Pdf::loadView('pdf.permit_pdf', compact('permits', 'detail', 'application', 'importer', 'exporter', 'qrDataUri'))->setPaper('a4', 'portrait');
 
@@ -608,93 +606,96 @@ class PermitGenerateController extends Controller
     public function permitCount(Request $request)
     {
         $type = $request->type;
-
         $id = $request->permit_number;
-
         $reason = $request->reason;
 
-      
+        $flag = null; // ✅ initialized
 
         if ($type == 'Import Permit') {
-            // UI passes permit_number using a URL-safe slug format (e.g. IPO_2604086439).
-            // Decode back to the stored format (e.g. IPO/2604086439) before querying.
             $decodedPermitNumber = is_string($id) ? $this->decodePermitNumberSlug($id) : (string) $id;
-
             $permit = IpConsignmentPermit::where('permit_number', $decodedPermitNumber)->first();
 
-            // Backward compatibility: if an older frontend sends numeric DB id.
             if (!$permit && is_numeric($id)) {
                 $permit = IpConsignmentPermit::where('id', $id)->first();
             }
 
             if (!$permit) {
-                return response()->json([
-                    'message' => 'Permit not found',
-                ], 404);
+                return response()->json(['message' => 'Permit not found'], 404);
             }
 
             $flag = $this->countReason($permit, $reason);
-
             $application = $permit->application;
 
             ApplicationActivityLogger::log(
                 application: $application,
                 event: 'boundary_officer',
-                description: 'A permit with id '  . $permit->permit_number .  ' is downloaded by ' . authUser()['user']->fullname .  '. (Reason:' . $reason . ') .' ,
-                properties: [ 
-                    'role' => 'boundary officer',
-                ],
+                description: 'A permit with id ' . $permit->permit_number . ' is downloaded by ' . authUser()['user']->fullname . '. (Reason:' . $reason . ') .',
+                properties: ['role' => 'boundary officer'],
             );
+            $application->logActivity('Printed', 'Permit with id ' . $permit->permit_number . ' is Printed with reason: ' . $reason, 'Printed');
 
-            $application->logActivity('Printed', 'Permit with id ' .  $permit->permit_number .  ' is Printed with reason: ' .   $reason, 'Printed');
-        
-
-        } elseif ($type == 'Consignment') {
-
-            $application = ConsignmentApplication::where('application_id', $id)->first();
-            $permits = $application->consignmentPermits;
-      
-            foreach($permits as $permit) {
-   
-                $flag = $this->countReason($permit, $reason);
-            }
-
-        } elseif($type == 'Inspection') {
- 
-            $application = InspectionApplication::where('application_id', $id)->first();
-            $permits = $application->inspectionItems;
-
-            // dd($id, $permits);
-
-            foreach($permits as $permit) {
-                $flag = $this->countReason($permit, $reason);
-            }
-
+            return $flag;
         }
-       
 
-       
-        return $flag;
+        if ($type == 'Consignment') {
+            $application = ConsignmentApplication::where('application_id', $id)->first();
+            if (!$application) {
+                return response()->json(['message' => 'Application not found'], 404);
+            }
+
+            $permits = $application->consignmentPermits;
+            if (!$permits || $permits->isEmpty()) {
+                return response()->json(['message' => 'No permits found for this application'], 404);
+            }
+
+            $flag = null;
+            foreach ($permits as $permit) {
+                $flag = $this->countReason($permit, $reason);
+            }
+
+            return $flag;
+        }
+
+        if ($type == 'Inspection') {
+            $application = InspectionApplication::where('application_id', $id)->first();
+            if (!$application) {
+                return response()->json(['message' => 'Application not found'], 404);
+            }
+
+            $permits = $application->inspectionItems;
+            if (!$permits || $permits->isEmpty()) {
+                return response()->json(['message' => 'No inspection items found for this application'], 404);
+            }
+
+            $flag = null;
+            foreach ($permits as $permit) {
+                $flag = $this->countReason($permit, $reason);
+            }
+
+            return $flag;
+        }
+
+        // If type is unknown
+        return response()->json(['message' => 'Invalid application type'], 400);
     }
 
     private function countReason($permit, $reason)
     {
         $count = $permit->print_calc;
 
-      
+
 
         if ($count == 0 || $count == null) {
 
             $permit->print_calc = 1;
             $permit->save();
 
-      
+
 
             return 'yes';
-
         } else {
 
-            if($reason) {
+            if ($reason) {
                 $permit->print_calc = $count + 1;
                 $permit->print_reason = $reason;
                 $permit->save();
@@ -703,17 +704,12 @@ class PermitGenerateController extends Controller
                 return response()->json([
                     'message' => 'Add response'
                 ]);
-            } 
+            } else {
 
-            else {
-                 
                 return response()->json([
                     'message' => 'Need Response',
                 ]);
-        
             }
-            
         }
     }
-
 }

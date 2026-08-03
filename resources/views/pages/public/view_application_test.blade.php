@@ -62,21 +62,17 @@
         $isOwner = $isPublic && $application->importer->uuid === auth()->guard('public')->user()->uuid;
         $isImporterVerifier = $isPublic && $application->importer->uuid === $authUuid;
 
-        // Shows the "Pending for Payment" tab under the same condition the old
-        // blade used for step5.
         $showPaymentTab =
             $isPublic &&
             $application->user_id === $authUuid &&
             ($application->status !== 'Completed' || $application->status === 'Officer Verification Completed');
 
-        // Application-level accept/reject/verify actions — same gating the old
-        // blade's step4 used, just rendered as a bar instead of a full step.
-$showClerkReviewActions = str_contains($status, 'clerk review in-progress') && $isAdminOrClerk;
-$showImporterVerifyActions =
-    $application->category_application == 1 &&
-    str_contains($importerVerify, 'wait for company approval') &&
-    $isImporterVerifier;
-$showAdminRejectedActions = str_contains($status, 'rejected') && $isAdmin;
+        $showClerkReviewActions = str_contains($status, 'clerk review in-progress') && $isAdminOrClerk;
+        $showImporterVerifyActions =
+            $application->category_application == 1 &&
+            str_contains($importerVerify, 'wait for company approval') &&
+            $isImporterVerifier;
+        $showAdminRejectedActions = str_contains($status, 'rejected') && $isAdmin;
     @endphp
 
     {{-- Feed real application context to test1.js instead of URL-parsing --}}
@@ -382,18 +378,20 @@ $showAdminRejectedActions = str_contains($status, 'rejected') && $isAdmin;
     <!-- ATTACHMENT VIEWER OFFCANVAS (Vertical Tabs)                   -->
     <!-- ============================================================ -->
     <div class="offcanvas offcanvas-end" tabindex="-1" id="attachmentOffcanvas"
-        aria-labelledby="attachmentOffcanvasLabel" style="width: 70%; max-width: 900px; z-index: 1046;">
+        aria-labelledby="attachmentOffcanvasLabel" style="z-index: 1046;">
         <div class="offcanvas-header border-bottom">
             <h5 class="offcanvas-title" id="attachmentOffcanvasLabel">
                 <i class="bi bi-paperclip me-2"></i> <span id="attachmentTitle" data-en="Attachment"
                     data-bm="Lampiran">Attachment</span>
             </h5>
             <div class="d-flex align-items-center gap-2 ms-auto">
-                <button class="btn btn-sm btn-outline-secondary" id="attachmentPrevBtn" title="Previous">
+                <button class="btn btn-sm btn-outline-secondary" id="attachmentPrevBtn" 
+                        title="Previous" >
                     <i class="bi bi-chevron-left"></i>
                 </button>
                 <span class="badge bg-light text-dark" id="attachmentCounter">1 / 1</span>
-                <button class="btn btn-sm btn-outline-secondary" id="attachmentNextBtn" title="Next">
+                <button class="btn btn-sm btn-outline-secondary" id="attachmentNextBtn" 
+                        title="Next" >
                     <i class="bi bi-chevron-right"></i>
                 </button>
                 <button type="button" class="btn-close attachment-close" data-bs-dismiss="offcanvas"
@@ -422,7 +420,10 @@ $showAdminRejectedActions = str_contains($status, 'rejected') && $isAdmin;
             <div class="tab-content flex-grow-1 p-3 overflow-auto" id="attachmentTabContent">
                 <div class="tab-pane fade show active" id="attach-view" role="tabpanel">
                     <div id="attachmentViewer">
-                        <div class="text-muted"><i class="bi bi-file-earmark-fill fs-1"></i><br>Select an attachment</div>
+                        <div class="text-muted">
+                            <i class="bi bi-file-earmark-fill fs-1"></i>
+                            <br><span data-en="Select an attachment" data-bm="Pilih lampiran">Select an attachment</span>
+                        </div>
                     </div>
                 </div>
                 <div class="tab-pane fade" id="attach-details" role="tabpanel">
@@ -439,7 +440,8 @@ $showAdminRejectedActions = str_contains($status, 'rejected') && $isAdmin;
         aria-labelledby="permitListOffcanvasLabel" style="width: 60%; max-width: 800px;">
         <div class="offcanvas-header border-bottom">
             <h5 class="offcanvas-title" id="permitListOffcanvasLabel">
-                <i class="bi bi-file-earmark-pdf me-2"></i> Available Permits
+                <i class="bi bi-file-earmark-pdf me-2"></i> 
+                <span data-en="Available Permits" data-bm="Permit Tersedia">Available Permits</span>
             </h5>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
@@ -463,7 +465,9 @@ $showAdminRejectedActions = str_contains($status, 'rejected') && $isAdmin;
                 <button class="btn btn-sm btn-outline-secondary" data-bs-dismiss="offcanvas" data-en="Close"
                     data-bm="Tutup">Close</button>
                 <button class="btn btn-sm btn-primary" id="downloadSelectedPermitsBtn" disabled>
-                    <i class="bi bi-download me-1"></i> Download Selected (<span id="selectedCount">0</span>)
+                    <i class="bi bi-download me-1"></i> 
+                    <span data-en="Download Selected" data-bm="Muat Turun Dipilih">Download Selected</span> 
+                    (<span id="selectedCount">0</span>)
                 </button>
             </div>
         </div>
@@ -473,19 +477,17 @@ $showAdminRejectedActions = str_contains($status, 'rejected') && $isAdmin;
     <!-- PERMIT DETAIL OFFCANVAS                                        -->
     <!-- ============================================================ -->
     <div class="offcanvas offcanvas-end" tabindex="-1" id="permitDetailOffcanvas"
-        aria-labelledby="permitDetailOffcanvasLabel" style="width: 65%; max-width: 860px;">
+        aria-labelledby="permitDetailOffcanvasLabel" style=" ">
         <div class="offcanvas-header border-bottom px-4">
             <div class="d-flex align-items-center gap-3">
                 <div class="ipv-permit-detail-icon"><i class="bi bi-box-seam"></i></div>
-                <div class = "d-flex justify-content-between gap-5">
-                    <div class="">
-                        <div class="ipv-permit-detail-eyebrow">Permit Details</div>
+                <div class="d-flex justify-content-between gap-5">
+                    <div>
+                        <div class="ipv-permit-detail-eyebrow" data-en="Permit Details" data-bm="Butiran Permit">Permit Details</div>
                         <h5 class="offcanvas-title mb-0 fw-bold" id="permitDetailOffcanvasLabel">—</h5>
                     </div>
-
                     <span class="ipv-badge ms-2" id="pdBadge">—</span>
                 </div>
-
             </div>
             <button type="button" class="btn-close ms-auto" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
@@ -494,13 +496,15 @@ $showAdminRejectedActions = str_contains($status, 'rejected') && $isAdmin;
                 <ul class="nav nav-pills flex-column" id="permitDetailTabs" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="pd-details-tab" data-bs-toggle="tab" data-bs-target="#pd-details"
-                            type="button" role="tab" data-bs-placement="right" title="Details">
+                            type="button" role="tab" data-bs-placement="right" 
+                            title="Details" >
                             <i class="bi bi-file-text"></i>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="pd-activity-tab" data-bs-toggle="tab" data-bs-target="#pd-activity"
-                            type="button" role="tab" data-bs-placement="right" title="Activity Log">
+                            type="button" role="tab" data-bs-placement="right" 
+                            title="Activity Log" >
                             <i class="bi bi-clock-history"></i>
                         </button>
                     </li>
@@ -519,7 +523,8 @@ $showAdminRejectedActions = str_contains($status, 'rejected') && $isAdmin;
 
     <x-modal id="consignmentModal" title="">
         @slot('footer')
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" 
+                    data-en="Close" data-bm="Tutup">Close</button>
         @endslot
     </x-modal>
 
@@ -528,18 +533,19 @@ $showAdminRejectedActions = str_contains($status, 'rejected') && $isAdmin;
             <table class="table text-wrap table-hover" id="applicationLogTable">
                 <thead class="table-primary">
                     <tr>
-                        <th scope="col">Action</th>
-                        <th scope="col">User</th>
-                        <th scope="col">Remark</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">Time and Date</th>
+                        <th scope="col" data-en="Action" data-bm="Tindakan">Action</th>
+                        <th scope="col" data-en="User" data-bm="Pengguna">User</th>
+                        <th scope="col" data-en="Remark" data-bm="Catatan">Remark</th>
+                        <th scope="col" data-en="Status" data-bm="Status">Status</th>
+                        <th scope="col" data-en="Time and Date" data-bm="Masa dan Tarikh">Time and Date</th>
                     </tr>
                 </thead>
                 <tbody class="table-group-divider"></tbody>
             </table>
         </div>
         @slot('footer')
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" 
+                    data-en="Close" data-bm="Tutup">Close</button>
         @endslot
     </x-modal>
 
@@ -550,39 +556,41 @@ $showAdminRejectedActions = str_contains($status, 'rejected') && $isAdmin;
             <input type="hidden" name="permit_id" value="permit_id">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addExporterModalLabel">Reapply</h5>
+                    <h5 class="modal-title" id="addExporterModalLabel" data-en="Reapply" data-bm="Mohon Semula">Reapply</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row gy-4 mb-3 p-4">
                         <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                            <label for="itemSelect" class="form-label">Item</label>
+                            <label for="itemSelect" class="form-label" data-en="Item" data-bm="Item">Item</label>
                             <select class="form-select" id="itemSelect" name="itemSelect"></select>
-                            <small style="color:red">Item refering to the exporter's Country</small>
+                            <small style="color:red" data-en="Item refering to the exporter's Country" 
+                                   data-bm="Item merujuk kepada Negara pengeksport">Item refering to the exporter's Country</small>
                         </div>
                         <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                            <label for="itemValue" class="form-label">Value (RM)</label>
+                            <label for="itemValue" class="form-label" data-en="Value (RM)" data-bm="Nilai (RM)">Value (RM)</label>
                             <input type="number" class="form-control" id="itemValue" name="itemValue"
-                                placeholder="RM ...">
+                                placeholder="RM ..." data-en="RM ..." data-bm="RM ..." data-i18n-attr="placeholder">
                         </div>
                         <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                            <label for="itemQuantity" class="form-label">Quantity</label>
-                            <input type="number" class="form-control" id="itemQuantity" name="itemQuantity">
+                            <label for="itemQuantity" class="form-label" data-en="Quantity" data-bm="Kuantiti">Quantity</label>
+                            <input type="number" class="form-control" id="itemQuantity" name="itemQuantity"
+                                   placeholder="0" data-en="0" data-bm="0" data-i18n-attr="placeholder">
                         </div>
                         <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                            <label for="itemMeasure" class="form-label">Measurement Unit</label>
+                            <label for="itemMeasure" class="form-label" data-en="Measurement Unit" data-bm="Unit Ukuran">Measurement Unit</label>
                             <select class="form-select" id="itemMeasure" name="itemMeasure">
-                                <option value="">-- Select Measurement Unit --</option>
+                                <option value="" data-en="-- Select Measurement Unit --" data-bm="-- Pilih Unit Ukuran --">-- Select Measurement Unit --</option>
                                 @foreach ($pubmeasure ?? [] as $measure)
                                     <option value="{{ $measure->cate_code }}">{{ $measure->description }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                            <label for="itemPurpose" class="form-label">Purpose</label>
+                            <label for="itemPurpose" class="form-label" data-en="Purpose" data-bm="Tujuan">Purpose</label>
                             <select class="form-select" id="itemPurpose" name="itemPurpose">
-                                <option value="">-- Select Purpose --</option>
+                                <option value="" data-en="-- Select Purpose --" data-bm="-- Pilih Tujuan --">-- Select Purpose --</option>
                                 @foreach ($pubpurpose ?? [] as $purpose)
                                     <option value="{{ $purpose->cate_code }}"
                                         data-description="{{ $purpose->description }}">{{ $purpose->description }}</option>
@@ -590,13 +598,13 @@ $showAdminRejectedActions = str_contains($status, 'rejected') && $isAdmin;
                             </select>
                         </div>
                         <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                            <label for="itemUses" class="form-label">Uses</label>
+                            <label for="itemUses" class="form-label" data-en="Uses" data-bm="Kegunaan">Uses</label>
                             <select class="form-select" id="itemUses" name="itemUses"></select>
                         </div>
                         <div class="row gy-4">
                             <div class="col-xl-12">
                                 <div class="card-header">
-                                    <div class="card-title">Attachment</div>
+                                    <div class="card-title" data-en="Attachment" data-bm="Lampiran">Attachment</div>
                                 </div>
                                 <div class="card-body">
                                     <div id="itemDropzone" method="post" class="dz-clickable"
@@ -604,7 +612,7 @@ $showAdminRejectedActions = str_contains($status, 'rejected') && $isAdmin;
                                         @csrf
                                         <div class="dz-default dz-message">
                                             <button class="dz-button p-5 border w-100 border-radius" type="button">
-                                                Drop files here to upload
+                                                <span data-en="Drop files here to upload" data-bm="Jatuhkan fail di sini untuk muat naik">Drop files here to upload</span>
                                             </button>
                                         </div>
                                     </div>
@@ -615,10 +623,10 @@ $showAdminRejectedActions = str_contains($status, 'rejected') && $isAdmin;
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bx bx-x me-1"></i> Cancel
+                        <i class="bx bx-x me-1"></i> <span data-en="Cancel" data-bm="Batal">Cancel</span>
                     </button>
                     <button id="saveBtn" type="submit" class="btn btn-primary">
-                        <i class="bx bx-save me-1"></i> Reapply
+                        <i class="bx bx-save me-1"></i> <span data-en="Reapply" data-bm="Mohon Semula">Reapply</span>
                     </button>
                 </div>
             </div>

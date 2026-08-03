@@ -622,37 +622,25 @@ class PermitApplicationController extends Controller
     public function reapply($id, Request $request)
     {
         $permit = IpConsignmentPermit::with(['application', 'attachments'])->findOrFail($id);
+        $application = $permit->application;
 
-        $attachments = $permit->attachments;
-
-        $permit = IpConsignmentPermit::with(['application', 'attachments'])->findOrFail($id);
-
-
+        // 1. Remove old attachments (storage + DB)
         foreach ($permit->attachments as $attachment) {
-            // Remove file from storage
             if ($attachment->file_path) {
-                // file_path = "/storage/import/xxx.jpg"
                 $storagePath = str_replace('/storage/', '', $attachment->file_path);
-
                 Storage::disk('public')->delete($storagePath);
             }
-
-            // Remove DB record
             $attachment->delete();
         }
 
-        // 1️⃣ Get item data
+        // 2. Get new item data
         $item = $request->items[0] ?? null;
         if (!$item || !isset($item['data'])) {
             return response()->json(['message' => 'Invalid item data'], 422);
         }
-
         $data = json_decode($item['data'], true);
 
-        // dd($data);
-
-
-        // 2️⃣ Update permit fields
+        // 3. Update permit fields
         $permit->update([
             'consignment_detail' => $data,
             'quantity' => $data['quantity'] ?? $permit->quantity,
@@ -662,7 +650,7 @@ class PermitApplicationController extends Controller
             'status' => 'reapplied',
         ]);
 
-        // 3️⃣ Save attachments (single permit)
+        // 4. Save new attachments
         if ($request->hasFile('files')) {
             foreach ($request->file('files') as $file) {
                 $name = uniqid() . '_' . $file->getClientOriginalName();
@@ -677,12 +665,37 @@ class PermitApplicationController extends Controller
             }
         }
 
-        $application = $permit->application;
-
-        $application->logActivity(action: 'Consignment Reapply', remark: 'User reapply the consignment', status: 'User Reapply Consignment');
-
+        // 5. Update application status
         $application->status = 'Clerk Verified';
         $application->save();
+
+        // 6. Log the re‑application on the permit
+        activity()
+            ->tap(function (Activity $activity) {
+                $activity->log_name = 'user_activity';
+            })
+            ->event('reapply')
+            ->causedBy(authUser()['user'])
+            ->performedOn($permit)
+            ->withProperties([
+                'stage' => 'consignment_reapply',
+                'permit_id' => $permit->id,
+            ])
+            ->log(authUser()['user']['fullname'] . ' reapplied for permit #' . $permit->permit_number);
+
+        // 7. Also log on the application level (keeps timeline consistent)
+        activity()
+            ->tap(function (Activity $activity) {
+                $activity->log_name = 'user_activity';
+            })
+            ->event('reapply')
+            ->causedBy(authUser()['user'])
+            ->performedOn($application)
+            ->withProperties([
+                'stage' => 'consignment_reapply',
+                'permit_id' => $permit->id,
+            ])
+            ->log('Permit #' . $permit->permit_number . ' reapplied for application ' . $application->application_id);
 
         return response()->json([
             'status' => 'success',

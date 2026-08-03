@@ -269,8 +269,6 @@ function languange() {
                 if (el.getAttribute("data-i18n-attr") === "placeholder") {
                     el.setAttribute("placeholder", text);
                 } else {
-                    // For wizard steps we might also need to update the displayed step text
-                    // If the element is a wizard-step and has a span inside, update that span's content
                     if (el.classList.contains("wizard-step")) {
                         var span = el.querySelector("span:last-child");
                         if (span) {
@@ -279,28 +277,33 @@ function languange() {
                     }
                     el.textContent = text;
                 }
-
-                // Update wizard navigation step labels
-                document
-                    .querySelectorAll(".wizard-content .wizard-step")
-                    .forEach(function (stepEl) {
-                        var step = stepEl.getAttribute("data-step");
-                        var newTitle = stepEl.getAttribute("data-title");
-                        if (newTitle) {
-                            var navSpan = document.querySelector(
-                                '.wizard-nav .wizard-step[data-step="' +
-                                    step +
-                                    '"] span:last-child',
-                            );
-                            if (navSpan) {
-                                navSpan.textContent = newTitle;
-                            }
-                        }
-                    });
-
-                // Update wizard buttons
-                updateWizardButtons(lang);
             });
+
+            // --- Sync wizard-nav dot labels from wizard-content step titles ---
+            // Runs once per language switch (not per element), and works even
+            // though these step divs have no data-en/data-bm of their own.
+            document
+                .querySelectorAll(".wizard-content .wizard-step")
+                .forEach(function (stepEl) {
+                    var step = stepEl.getAttribute("data-step");
+                    var titleText =
+                        stepEl.getAttribute("data-title-" + lang) ||
+                        stepEl.getAttribute("data-title-en");
+                    if (!titleText) return;
+
+                    stepEl.setAttribute("data-title", titleText);
+
+                    var navSpan = document.querySelector(
+                        '.wizard-nav .wizard-step[data-step="' +
+                            step +
+                            '"] span:last-child',
+                    );
+                    if (navSpan) {
+                        navSpan.textContent = titleText;
+                    }
+                });
+
+            updateWizardButtons(lang);
 
             buttons.forEach(function (btn) {
                 btn.classList.toggle(

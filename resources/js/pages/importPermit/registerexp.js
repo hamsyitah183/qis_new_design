@@ -15,9 +15,9 @@ import "select2/dist/css/select2.min.css";
 // ─── Helper ──────────────────────────────────────────────
 function getCurrentLang() {
     try {
-        return localStorage.getItem('qis_lang') || 'en';
+        return localStorage.getItem("qis_lang") || "en";
     } catch {
-        return 'en';
+        return "en";
     }
 }
 
@@ -126,20 +126,23 @@ function fetchExporterList() {
             $select
                 .empty()
                 .append(
-                    '<option value="" data-en="-- Select Exporter --" data-bm="-- Pilih Pengeksport --">-- Select Exporter --</option>'
+                    '<option value="" data-en="-- Select Exporter --" data-bm="-- Pilih Pengeksport --">-- Select Exporter --</option>',
                 );
 
             data.forEach((exp) => {
                 const en = exp.name_en || exp.name;
                 const bm = exp.name_bm || exp.name;
                 $select.append(
-                    `<option value="${exp.id}" data-en="${en}" data-bm="${bm}">${exp.name}</option>`
+                    `<option value="${exp.id}" data-en="${en}" data-bm="${bm}">${exp.name}</option>`,
                 );
             });
 
             // Re-init Select2 with bilingual placeholder
             const lang = getCurrentLang();
-            const placeholder = lang === 'bm' ? '-- Pilih Pengeksport --' : '-- Select Exporter --';
+            const placeholder =
+                lang === "bm"
+                    ? "-- Pilih Pengeksport --"
+                    : "-- Select Exporter --";
             $select.select2({
                 width: "100%",
                 placeholder: placeholder,
@@ -152,7 +155,7 @@ function fetchExporterList() {
                 icon: "error",
                 title: '<span data-en="Failed to Load Exporters" data-bm="Gagal Memuatkan Pengeksport">Failed to Load Exporters</span>',
                 text: '<span data-en="Please try again or check your connection." data-bm="Sila cuba lagi atau periksa sambungan anda.">Please try again or check your connection.</span>',
-                didOpen: (modal) => applyTranslations(modal)
+                didOpen: (modal) => applyTranslations(modal),
             });
         },
     });
@@ -186,11 +189,13 @@ function handleExporterChange() {
                 title: '<span data-en="Change Exporter?" data-bm="Tukar Pengeksport?">Change Exporter?</span>',
                 html: '<span data-en="Want to change the exporter? All the items will be removed!" data-bm="Adakah anda ingin menukar pengeksport? Semua item akan dipadamkan!">Want to change the exporter? All the items will be removed!</span>',
                 showCancelButton: true,
-                confirmButtonText: '<span data-en="Yes, change it" data-bm="Ya, tukar">Yes, change it</span>',
-                cancelButtonText: '<span data-en="Cancel" data-bm="Batal">Cancel</span>',
+                confirmButtonText:
+                    '<span data-en="Yes, change it" data-bm="Ya, tukar">Yes, change it</span>',
+                cancelButtonText:
+                    '<span data-en="Cancel" data-bm="Batal">Cancel</span>',
                 confirmButtonColor: "#d33",
                 cancelButtonColor: "#6c757d",
-                didOpen: (modal) => applyTranslations(modal)
+                didOpen: (modal) => applyTranslations(modal),
             }).then((result) => {
                 if (result.isConfirmed) {
                     tempItems.length = 0;
@@ -198,7 +203,9 @@ function handleExporterChange() {
                     summarySubmit();
                     applyExporter(selectedId);
                 } else {
-                    $selectRef.val(exporter?.id ?? "").trigger("change.select2");
+                    $selectRef
+                        .val(exporter?.id ?? "")
+                        .trigger("change.select2");
                 }
             });
             return;
@@ -227,7 +234,7 @@ function loadConsignmentSelection() {
     $select
         .empty()
         .append(
-            '<option value="" data-en="-- Select Item --" data-bm="-- Pilih Item --">-- Select Item --</option>'
+            '<option value="" data-en="-- Select Item --" data-bm="-- Pilih Item --">-- Select Item --</option>',
         );
 
     if ($select.hasClass("select2-hidden-accessible")) {
@@ -253,12 +260,13 @@ function loadConsignmentSelection() {
                 const en = row.entry_en || row.entry_display;
                 const bm = row.entry_bm || row.entry_display;
                 $select.append(
-                    `<option value="${row.id}" data-en="${en}" data-bm="${bm}">${row.entry_display}</option>`
+                    `<option value="${row.id}" data-en="${en}" data-bm="${bm}">${row.entry_display}</option>`,
                 );
             });
 
             const lang = getCurrentLang();
-            const placeholder = lang === 'bm' ? '-- Pilih Item --' : '-- Select Item --';
+            const placeholder =
+                lang === "bm" ? "-- Pilih Item --" : "-- Select Item --";
             $select.select2({
                 width: "100%",
                 placeholder: placeholder,
@@ -276,7 +284,7 @@ function loadConsignmentSelection() {
                 icon: "error",
                 title: '<span data-en="Error" data-bm="Ralat">Error</span>',
                 html: '<span data-en="Failed to load consignment items." data-bm="Gagal memuatkan item konsainan.">Failed to load consignment items.</span>',
-                didOpen: (modal) => applyTranslations(modal)
+                didOpen: (modal) => applyTranslations(modal),
             });
         },
     });
@@ -287,7 +295,7 @@ function loadUses(itemId) {
     $select
         .empty()
         .append(
-            '<option value="" data-en="-- Select Uses --" data-bm="-- Pilih Kegunaan --">-- Select Uses --</option>'
+            '<option value="" data-en="-- Select Uses --" data-bm="-- Pilih Kegunaan --">-- Select Uses --</option>',
         );
 
     if (!itemId) return;
@@ -305,12 +313,13 @@ function loadUses(itemId) {
 
             data.data.forEach((row) => {
                 $select.append(
-                    `<option value="${row}" data-en="${row}" data-bm="${row}">${row}</option>`
+                    `<option value="${row}" data-en="${row}" data-bm="${row}">${row}</option>`,
                 );
             });
 
             const lang = getCurrentLang();
-            const placeholder = lang === 'bm' ? '-- Pilih Kegunaan --' : '-- Select Uses --';
+            const placeholder =
+                lang === "bm" ? "-- Pilih Kegunaan --" : "-- Select Uses --";
             $select.select2({
                 width: "100%",
                 placeholder: placeholder,
@@ -326,7 +335,7 @@ function loadUses(itemId) {
                 icon: "error",
                 title: '<span data-en="Error" data-bm="Ralat">Error</span>',
                 html: '<span data-en="Failed to load uses." data-bm="Gagal memuatkan kegunaan.">Failed to load uses.</span>',
-                didOpen: (modal) => applyTranslations(modal)
+                didOpen: (modal) => applyTranslations(modal),
             });
         });
 }
@@ -346,26 +355,28 @@ function loadDetails(itemId) {
             let startDateText = ``;
 
             const today = new Date();
-            const startDate = item.start_date ? new Date(item.start_date) : null;
+            const startDate = item.start_date
+                ? new Date(item.start_date)
+                : null;
             const endDate = item.end_date ? new Date(item.end_date) : null;
 
             const todayDate = new Date(
                 today.getFullYear(),
                 today.getMonth(),
-                today.getDate()
+                today.getDate(),
             );
             const startDay = startDate
                 ? new Date(
                       startDate.getFullYear(),
                       startDate.getMonth(),
-                      startDate.getDate()
+                      startDate.getDate(),
                   )
                 : null;
             const endDay = endDate
                 ? new Date(
                       endDate.getFullYear(),
                       endDate.getMonth(),
-                      endDate.getDate()
+                      endDate.getDate(),
                   )
                 : null;
 
@@ -440,7 +451,7 @@ function initAddExporterModal() {
         if (!name || !phone_no || !country) {
             return Swal.fire({
                 title: '<span data-en="⚠️ Please fill in all required fields." data-bm="⚠️ Sila isi semua ruangan wajib.">⚠️ Please fill in all required fields.</span>',
-                didOpen: (modal) => applyTranslations(modal)
+                didOpen: (modal) => applyTranslations(modal),
             });
         }
 
@@ -474,7 +485,7 @@ function initAddExporterModal() {
                     timer: 1800,
                     showConfirmButton: false,
                     timerProgressBar: true,
-                    didOpen: (modal) => applyTranslations(modal)
+                    didOpen: (modal) => applyTranslations(modal),
                 });
 
                 modal.hide();
@@ -486,7 +497,7 @@ function initAddExporterModal() {
                     icon: "error",
                     title: '<span data-en="Failed!" data-bm="Gagal!">Failed!</span>',
                     html: '<span data-en="Failed to save exporter. Please try again." data-bm="Gagal menyimpan pengeksport. Sila cuba lagi.">Failed to save exporter. Please try again.</span>',
-                    didOpen: (modal) => applyTranslations(modal)
+                    didOpen: (modal) => applyTranslations(modal),
                 });
             },
         });
@@ -494,7 +505,8 @@ function initAddExporterModal() {
 
     // Init Select2 for country dropdown with bilingual placeholder
     const lang = getCurrentLang();
-    const placeCountry = lang === 'bm' ? '-- Pilih Negara --' : '-- Select Country --';
+    const placeCountry =
+        lang === "bm" ? "-- Pilih Negara --" : "-- Select Country --";
     $("#addexpcountry").select2({
         width: "100%",
         placeholder: placeCountry,
@@ -515,7 +527,7 @@ function initImporterSearch() {
             Swal.fire({
                 icon: "warning",
                 title: '<span data-en="Identity number is empty!" data-bm="Nombor identiti kosong!">Identity number is empty!</span>',
-                didOpen: (modal) => applyTranslations(modal)
+                didOpen: (modal) => applyTranslations(modal),
             });
             return;
         }
@@ -529,7 +541,8 @@ function initImporterSearch() {
         fetch(`/public/get_importers/${identityNumber}`)
             .then((res) => {
                 Swal.close();
-                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                if (!res.ok)
+                    throw new Error(`HTTP error! status: ${res.status}`);
                 return res.json();
             })
             .then(handleImporterResponse)
@@ -540,7 +553,7 @@ function initImporterSearch() {
                     icon: "error",
                     title: '<span data-en="Search Failed" data-bm="Carian Gagal">Search Failed</span>',
                     html: '<span data-en="Unable to fetch importer data. Please try again." data-bm="Tidak dapat mengambil data pengimport. Sila cuba lagi.">Unable to fetch importer data. Please try again.</span>',
-                    didOpen: (modal) => applyTranslations(modal)
+                    didOpen: (modal) => applyTranslations(modal),
                 });
             });
     });
@@ -552,7 +565,7 @@ function handleImporterResponse(data) {
     const hideAll = () => {
         $("#searchresult, #doanotver, #emailnotver").hide();
         $(
-            "#impname, #impid, #impfonno, #impaddress1, #impaddress2, #imp_id, #impemail"
+            "#impname, #impid, #impfonno, #impaddress1, #impaddress2, #imp_id, #impemail",
         ).val("");
     };
 
@@ -562,7 +575,7 @@ function handleImporterResponse(data) {
             icon: "error",
             title: '<span data-en="Importer Not Found" data-bm="Pengimport Tidak Ditemui">Importer Not Found</span>',
             html: '<span data-en="The importer details could not be retrieved." data-bm="Butiran pengimport tidak dapat diambil.">The importer details could not be retrieved.</span>',
-            didOpen: (modal) => applyTranslations(modal)
+            didOpen: (modal) => applyTranslations(modal),
         });
         return;
     }
@@ -631,7 +644,7 @@ function permitDetails() {
                     icon: "error",
                     title: '<span data-en="Error" data-bm="Ralat">Error</span>',
                     html: '<span data-en="An error occurred while loading entry points." data-bm="Ralat berlaku semasa memuatkan Pintu Masuk.">An error occurred while loading entry points.</span>',
-                    didOpen: (modal) => applyTranslations(modal)
+                    didOpen: (modal) => applyTranslations(modal),
                 });
             },
         });
@@ -658,7 +671,7 @@ function permitDetails() {
                     icon: "warning",
                     title: '<span data-en="Invalid Date" data-bm="Tarikh Tidak Sah">Invalid Date</span>',
                     html: '<span data-en="Estimated Time Arrival cannot be a past date. Please select today or a future date." data-bm="Anggaran Waktu Tiba tidak boleh berupa tarikh yang lalu. Sila pilih hari ini atau tarikh akan datang.">Estimated Time Arrival cannot be a past date. Please select today or a future date.</span>',
-                    didOpen: (modal) => applyTranslations(modal)
+                    didOpen: (modal) => applyTranslations(modal),
                 });
                 this.value = "";
                 this.classList.add("is-invalid");
@@ -682,7 +695,8 @@ function itemConsigment() {
         acceptedFiles: ".jpg,.jpeg,.png,.pdf",
         addRemoveLinks: true,
         headers: {
-            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
+                .content,
         },
         processing: function (file) {
             Swal.fire({
@@ -718,31 +732,35 @@ function itemConsigment() {
                 html: `<span data-en="${response.original_name} has been uploaded." data-bm="${response.original_name} telah dimuat naik.">${response.original_name} has been uploaded.</span>`,
                 timer: 3000,
                 showConfirmButton: false,
-                didOpen: (modal) => applyTranslations(modal)
+                didOpen: (modal) => applyTranslations(modal),
             });
         },
         error: (file, message, xhr) => {
             Swal.close();
             itemDropzone.removeFile(file);
 
-            const errText = message.error || "An unknown error occurred during upload.";
-            const errTextBm = message.error || "Ralat tidak diketahui berlaku semasa memuat naik.";
+            const errText =
+                message.error || "An unknown error occurred during upload.";
+            const errTextBm =
+                message.error ||
+                "Ralat tidak diketahui berlaku semasa memuat naik.";
 
             Swal.fire({
                 icon: "error",
                 title: '<span data-en="Upload Failed" data-bm="Muat Naik Gagal">Upload Failed</span>',
                 html: `<span data-en="${errText}" data-bm="${errTextBm}">${errText}</span>`,
                 footer: '<span data-en="Please try again." data-bm="Sila cuba lagi.">Please try again.</span>',
-                didOpen: (modal) => applyTranslations(modal)
+                didOpen: (modal) => applyTranslations(modal),
             });
             console.error("Dropzone Error:", message);
         },
         removedfile: function (file) {
             if (file.temp_id) {
                 const indexToRemove = tempAttachments.findIndex(
-                    (a) => a.id === file.temp_id
+                    (a) => a.id === file.temp_id,
                 );
-                if (indexToRemove > -1) tempAttachments.splice(indexToRemove, 1);
+                if (indexToRemove > -1)
+                    tempAttachments.splice(indexToRemove, 1);
             }
             const _ref = file.previewElement;
             if (_ref) _ref.parentNode.removeChild(_ref);
@@ -768,6 +786,7 @@ function addPreviewButtons(file) {
     const removeBtn = preview.querySelector(".dz-remove");
     if (!removeBtn) return;
 
+    // Create the action group
     const attachmentGroup = document.createElement("div");
     attachmentGroup.className = "attachment-group";
     attachmentGroup.style.display = "flex";
@@ -775,6 +794,7 @@ function addPreviewButtons(file) {
     attachmentGroup.style.alignItems = "center";
     attachmentGroup.style.justifyContent = "end";
 
+    // View button
     const viewBtn = document.createElement("a");
     viewBtn.href = "#";
     viewBtn.innerHTML = "<i class='ti ti-eye'></i>";
@@ -785,6 +805,7 @@ function addPreviewButtons(file) {
         showItemFilePreview(file);
     };
 
+    // Edit button
     const editBtn = document.createElement("a");
     editBtn.href = "#";
     editBtn.innerHTML = "<i class='ti ti-pencil'></i>";
@@ -799,15 +820,30 @@ function addPreviewButtons(file) {
         modal.show();
     };
 
+    // Delete button – custom handler that removes the file from Dropzone
+    const deleteBtn = document.createElement("a");
+    deleteBtn.href = "#";
+    deleteBtn.innerHTML = "<i class='ti ti-trash'></i>";
+    deleteBtn.className = "btn btn-icon btn-danger-light"; // or keep dz-remove class? We'll use our own
+    deleteBtn.onclick = function (e) {
+        e.preventDefault();
+        if (itemDropzone) {
+            itemDropzone.removeFile(file);
+        }
+    };
+
     attachmentGroup.appendChild(viewBtn);
     attachmentGroup.appendChild(editBtn);
-    attachmentGroup.appendChild(removeBtn.cloneNode(true));
+    attachmentGroup.appendChild(deleteBtn);
 
+    // Replace the original .dz-remove with our group
     removeBtn.parentNode.replaceChild(attachmentGroup, removeBtn);
 }
 
 function showItemFilePreview(file) {
-    const previewContainer = document.getElementById("itemFilePreviewContainer");
+    const previewContainer = document.getElementById(
+        "itemFilePreviewContainer",
+    );
     const fileNameSpan = document.getElementById("itemFileName");
     const fileEditInput = document.getElementById("itemFileEditName");
     const fileDetailsDiv = document.getElementById("itemFileDetails");
@@ -817,7 +853,7 @@ function showItemFilePreview(file) {
     if (!itemFileOffcanvas) {
         itemFileOffcanvas = new bootstrap.Offcanvas(
             document.getElementById("itemFilePreviewOffcanvas"),
-            { backdrop: true, keyboard: true, scroll: false }
+            { backdrop: true, keyboard: true, scroll: false },
         );
     }
 
@@ -872,12 +908,30 @@ $(document).on("click", "#itemFileSaveBtn", function () {
             icon: "warning",
             title: '<span data-en="Empty Name" data-bm="Nama Kosong">Empty Name</span>',
             html: '<span data-en="Please enter a file name" data-bm="Sila masukkan nama fail">Please enter a file name</span>',
-            didOpen: (modal) => applyTranslations(modal)
+            didOpen: (modal) => applyTranslations(modal),
         });
         return;
     }
 
+    // Update the file object
     currentItemFile.displayName = newName;
+
+    // ----- NEW: Update Dropzone preview filename -----
+    if (currentItemFile.previewElement) {
+        const $preview = $(currentItemFile.previewElement);
+        // Dropzone places filename in .dz-filename span
+        const $filenameSpan = $preview.find(".dz-filename span");
+        if ($filenameSpan.length) {
+            $filenameSpan.text(newName);
+        }
+        // Also update the .dz-filename data-dz-name attribute if used
+        const $filenameDiv = $preview.find(".dz-filename");
+        if ($filenameDiv.length) {
+            $filenameDiv.attr("data-dz-name", newName);
+        }
+    }
+
+    // Update offcanvas title
     document.getElementById("itemFileName").textContent = newName;
 
     Swal.fire({
@@ -886,7 +940,7 @@ $(document).on("click", "#itemFileSaveBtn", function () {
         html: '<span data-en="File name updated" data-bm="Nama fail dikemas kini">File name updated</span>',
         timer: 1500,
         showConfirmButton: false,
-        didOpen: (modal) => applyTranslations(modal)
+        didOpen: (modal) => applyTranslations(modal),
     });
 });
 
@@ -907,7 +961,7 @@ function initApplicationAttachments() {
             maxFilesize: 15,
             headers: {
                 "X-CSRF-TOKEN": document.querySelector(
-                    'meta[name="csrf-token"]'
+                    'meta[name="csrf-token"]',
                 ).content,
             },
             init: function () {
@@ -920,9 +974,10 @@ function initApplicationAttachments() {
                         size: file.size,
                         type: file.type,
                     };
-                    file._attachmentId = attachment.id;
+                    file._attachmentId = attachment.id; // <-- this must be set
                     applicationAttachments.push(attachment);
                     renderApplicationAttachmentTable();
+                    updateAttachmentTable(); // also update summary immediately
                 });
             },
             error: function (file, message) {
@@ -931,7 +986,7 @@ function initApplicationAttachments() {
                     file.previewElement.remove();
                 }
             },
-        }
+        },
     );
 
     renderApplicationAttachmentTable();
@@ -945,7 +1000,7 @@ function renderApplicationAttachmentTable() {
         $tbody.append(`
             <tr>
                 <td colspan="2" class="text-center text-muted py-3" data-en="No attachments uploaded yet." data-bm="Tiada lampiran dimuat naik lagi.">
-                    No attachments uploaded yet.
+                    <span data-en = "No attachments uploaded yet." data-bm = "Tiada lampiran"></span>
                 </td>
             </tr>
         `);
@@ -978,12 +1033,29 @@ function renderApplicationAttachmentTable() {
 }
 
 function removeAttachmentFromDropzone(attachmentId) {
-    if (!applicationAttachmentDropzone) return;
-    const file = applicationAttachmentDropzone.files.find(
-        (fileItem) => fileItem._attachmentId === attachmentId
+    if (!applicationAttachmentDropzone) {
+        console.warn("Dropzone not initialized");
+        return false;
+    }
+    // Find the file by our custom _attachmentId
+    const fileIndex = applicationAttachmentDropzone.files.findIndex(
+        (fileItem) => fileItem._attachmentId === attachmentId,
     );
-    if (file) {
+    if (fileIndex === -1) {
+        console.warn(
+            `File with attachmentId ${attachmentId} not found in Dropzone`,
+        );
+        return false;
+    }
+    const file = applicationAttachmentDropzone.files[fileIndex];
+    try {
         applicationAttachmentDropzone.removeFile(file);
+        return true;
+    } catch (e) {
+        console.error("Error removing file from Dropzone:", e);
+        // Fallback: manually remove from the files array
+        applicationAttachmentDropzone.files.splice(fileIndex, 1);
+        return true;
     }
 }
 
@@ -1019,7 +1091,7 @@ function initAttachmentOffcanvas() {
 
 function openAttachmentViewer(attachmentId) {
     const index = applicationAttachments.findIndex(
-        (item) => item.id === attachmentId
+        (item) => item.id === attachmentId,
     );
     if (index === -1) return;
 
@@ -1112,7 +1184,7 @@ function renderAttachmentDetails(attachment, container) {
                     <strong>${field.label}:</strong>
                     <div class="text-muted">${field.value}</div>
                 </div>
-            `
+            `,
         )
         .join("");
 }
@@ -1149,7 +1221,7 @@ $(document).on("click", ".attachment-name-link", function (e) {
 $(document).on("click", ".edit-attachment-btn", function () {
     const attachmentId = $(this).data("id");
     const attachment = applicationAttachments.find(
-        (item) => item.id === attachmentId
+        (item) => item.id === attachmentId,
     );
 
     if (!attachment) return;
@@ -1159,18 +1231,34 @@ $(document).on("click", ".edit-attachment-btn", function () {
 
     attachment.displayName = newName.trim();
     renderApplicationAttachmentTable();
+    updateAttachmentTable();
 });
 
 $(document).on("click", ".delete-attachment-btn", function () {
     const attachmentId = $(this).data("id");
     const index = applicationAttachments.findIndex(
-        (item) => item.id === attachmentId
+        (item) => item.id === attachmentId,
     );
     if (index === -1) return;
 
+    // Remove from Dropzone (if possible)
     removeAttachmentFromDropzone(attachmentId);
+
+    // Remove from our array
     applicationAttachments.splice(index, 1);
+
+    // Re-render both tables
     renderApplicationAttachmentTable();
+    updateAttachmentTable(); // <-- ensure summary table updates too
+
+    // Optional: show a quick feedback
+    Swal.fire({
+        icon: "success",
+        title: '<span data-en="Attachment removed" data-bm="Lampiran dibuang">Attachment removed</span>',
+        timer: 1000,
+        showConfirmButton: false,
+        didOpen: (modal) => applyTranslations(modal),
+    });
 });
 
 $(document).on("click", "#attachmentSaveNameBtn", function () {
@@ -1181,7 +1269,7 @@ $(document).on("click", "#attachmentSaveNameBtn", function () {
             icon: "warning",
             title: '<span data-en="Empty Name" data-bm="Nama Kosong">Empty Name</span>',
             html: '<span data-en="Please enter a file name" data-bm="Sila masukkan nama fail">Please enter a file name</span>',
-            didOpen: (modal) => applyTranslations(modal)
+            didOpen: (modal) => applyTranslations(modal),
         });
         return;
     }
@@ -1196,7 +1284,7 @@ $(document).on("click", "#attachmentSaveNameBtn", function () {
         renderApplicationAttachmentTable();
         renderAttachmentDetails(
             attachment,
-            document.getElementById("attachmentDetails")
+            document.getElementById("attachmentDetails"),
         );
 
         Swal.fire({
@@ -1205,12 +1293,12 @@ $(document).on("click", "#attachmentSaveNameBtn", function () {
             html: '<span data-en="File name updated successfully" data-bm="Nama fail berjaya dikemas kini">File name updated successfully</span>',
             timer: 1500,
             showConfirmButton: false,
-            didOpen: (modal) => applyTranslations(modal)
+            didOpen: (modal) => applyTranslations(modal),
         });
 
         document.getElementById("attachmentEditName").value = "";
 
-        updateAttachmentTable()
+        updateAttachmentTable();
     }
 });
 
@@ -1305,16 +1393,22 @@ function showItemAttachment(file, index) {
 
     const fields = file.displayName
         ? [
-            { label: "File Name", value: file.displayName },
-            { label: "Original Name", value: file.name },
-            { label: "File Size", value: (file.size / 1024).toFixed(2) + " KB" },
-            { label: "File Type", value: file.type || "Unknown" },
-        ]
+              { label: "File Name", value: file.displayName },
+              { label: "Original Name", value: file.name },
+              {
+                  label: "File Size",
+                  value: (file.size / 1024).toFixed(2) + " KB",
+              },
+              { label: "File Type", value: file.type || "Unknown" },
+          ]
         : [
-            { label: "File Name", value: file.name },
-            { label: "File Size", value: (file.size / 1024).toFixed(2) + " KB" },
-            { label: "File Type", value: file.type || "Unknown" },
-        ];
+              { label: "File Name", value: file.name },
+              {
+                  label: "File Size",
+                  value: (file.size / 1024).toFixed(2) + " KB",
+              },
+              { label: "File Type", value: file.type || "Unknown" },
+          ];
     detailsBody.innerHTML = fields
         .map(
             (field) => `
@@ -1322,7 +1416,7 @@ function showItemAttachment(file, index) {
                     <strong>${field.label}:</strong>
                     <div class="text-muted">${field.value}</div>
                 </div>
-            `
+            `,
         )
         .join("");
 
@@ -1341,7 +1435,7 @@ function initItemAttachmentNavigation() {
         if (currentItemAttachIndex > 0 && currentItemAttachments.length > 0) {
             showItemAttachment(
                 currentItemAttachments[currentItemAttachIndex - 1],
-                currentItemAttachIndex - 1
+                currentItemAttachIndex - 1,
             );
         }
     });
@@ -1353,7 +1447,7 @@ function initItemAttachmentNavigation() {
         ) {
             showItemAttachment(
                 currentItemAttachments[currentItemAttachIndex + 1],
-                currentItemAttachIndex + 1
+                currentItemAttachIndex + 1,
             );
         }
     });
@@ -1366,29 +1460,38 @@ function initItemAttachmentNavigation() {
     });
 
     $(document).on("click", "#itemAttachSaveNameBtn", function () {
-        const newName = document.getElementById("itemAttachEditName").value.trim();
+        const newName = document
+            .getElementById("itemAttachEditName")
+            .value.trim();
 
         if (!newName) {
             Swal.fire({
                 icon: "warning",
                 title: '<span data-en="Empty Name" data-bm="Nama Kosong">Empty Name</span>',
                 html: '<span data-en="Please enter a file name" data-bm="Sila masukkan nama fail">Please enter a file name</span>',
-                didOpen: (modal) => applyTranslations(modal)
+                didOpen: (modal) => applyTranslations(modal),
             });
             return;
         }
 
-        if (currentItemAttachIndex >= 0 && currentItemAttachIndex < currentItemAttachments.length) {
+        if (
+            currentItemAttachIndex >= 0 &&
+            currentItemAttachIndex < currentItemAttachments.length
+        ) {
             const file = currentItemAttachments[currentItemAttachIndex];
             file.displayName = newName;
 
-            document.getElementById("itemAttachmentTitle").textContent = newName;
+            document.getElementById("itemAttachmentTitle").textContent =
+                newName;
 
             const detailsBody = document.getElementById("itemAttachDetails");
             const fields = [
                 { label: "File Name", value: newName },
                 { label: "Original Name", value: file.name },
-                { label: "File Size", value: (file.size / 1024).toFixed(2) + " KB" },
+                {
+                    label: "File Size",
+                    value: (file.size / 1024).toFixed(2) + " KB",
+                },
                 { label: "File Type", value: file.type || "Unknown" },
             ];
             detailsBody.innerHTML = fields
@@ -1398,7 +1501,7 @@ function initItemAttachmentNavigation() {
                             <strong>${field.label}:</strong>
                             <div class="text-muted">${field.value}</div>
                         </div>
-                    `
+                    `,
                 )
                 .join("");
 
@@ -1408,7 +1511,7 @@ function initItemAttachmentNavigation() {
                 html: '<span data-en="File name updated successfully" data-bm="Nama fail berjaya dikemas kini">File name updated successfully</span>',
                 timer: 1500,
                 showConfirmButton: false,
-                didOpen: (modal) => applyTranslations(modal)
+                didOpen: (modal) => applyTranslations(modal),
             });
         }
     });
@@ -1439,12 +1542,9 @@ function groupPreview() {
                 if (file.type === "application/pdf") {
                     const $preview = $(file.previewElement);
                     const $img = $preview.find(
-                        ".dz-image img[data-dz-thumbnail]"
+                        ".dz-image img[data-dz-thumbnail]",
                     );
-                    $img.attr(
-                        "src",
-                        "/images/pdf-logo.png"
-                    );
+                    $img.attr("src", "/images/pdf-logo.png");
                     $img.css({
                         "object-fit": "contain",
                         width: "100%",
@@ -1513,7 +1613,7 @@ function saveConsignmentAttachment() {
                     (unit) =>
                         unit.cate_code.toLowerCase() ===
                             limitMeasurement.toLowerCase() &&
-                        unit.is_del === false
+                        unit.is_del === false,
                 );
                 if (selectedUnit) {
                     limitInKg = limit * selectedUnit.conversion.conversion;
@@ -1523,7 +1623,7 @@ function saveConsignmentAttachment() {
                 const selectedItemUnit = measurementUnits.unit.find(
                     (unit) =>
                         unit.cate_code.toLowerCase() ===
-                            itemMeasure.toLowerCase() && unit.is_del === false
+                            itemMeasure.toLowerCase() && unit.is_del === false,
                 );
                 if (selectedItemUnit) {
                     selectedItemInKg =
@@ -1637,7 +1737,7 @@ async function showItemAgreement(item) {
 
             if (hasCondition) {
                 const scrollDiv = document.getElementById(
-                    "itemConditionScroll"
+                    "itemConditionScroll",
                 );
                 if (scrollDiv) {
                     checkbox.disabled = true;
@@ -1658,7 +1758,7 @@ async function showItemAgreement(item) {
                         if (this.disabled) {
                             e.preventDefault();
                             Swal.showValidationMessage(
-                                '<span data-en="Please scroll to the bottom of the conditions to enable agreement." data-bm="Sila skrol ke bawah syarat untuk membolehkan persetujuan.">Please scroll to the bottom of the conditions to enable agreement.</span>'
+                                '<span data-en="Please scroll to the bottom of the conditions to enable agreement." data-bm="Sila skrol ke bawah syarat untuk membolehkan persetujuan.">Please scroll to the bottom of the conditions to enable agreement.</span>',
                             );
                         }
                     });
@@ -1679,7 +1779,7 @@ async function showItemAgreement(item) {
                 document.getElementById("itemAgreeCheckbox").checked;
             if (!checked) {
                 Swal.showValidationMessage(
-                    '<span data-en="Please check the agreement box to continue." data-bm="Sila tandakan kotak persetujuan untuk meneruskan.">Please check the agreement box to continue.</span>'
+                    '<span data-en="Please check the agreement box to continue." data-bm="Sila tandakan kotak persetujuan untuk meneruskan.">Please check the agreement box to continue.</span>',
                 );
                 return false;
             }
@@ -1744,7 +1844,7 @@ function renderAllItems() {
                         </button>
                     </div>
                 </td>
-            </tr>`
+            </tr>`,
         );
     });
 }
@@ -1845,22 +1945,24 @@ function viewMore() {
             `;
             if (attachmentCount) attachmentCount.textContent = "0";
         } else {
+            // inside viewMore(), when building chipsHTML
             let chipsHTML = "";
+            // Inside viewMore(), when iterating item.files
             item.files.forEach((file, index) => {
+                const displayName = file.displayName || file.name; // <-- use displayName
                 const fileIcon =
                     file.type === "application/pdf"
                         ? "bi-file-earmark-pdf-fill"
                         : "bi-file-earmark-fill";
                 const fileTypeClass =
                     file.type === "application/pdf" ? "is-pdf" : "is-file";
-
                 const typeDisplay = file.type || "Unknown";
 
                 chipsHTML += `
                     <div class="ipv-attach-chip ${fileTypeClass} view-item-attach-btn" data-index="${index}" style="cursor:pointer;">
                         <div class="ipv-attach-icon"><i class="bi ${fileIcon}"></i></div>
                         <div class="ipv-attach-info">
-                            <div class="ipv-attach-name" title="${file.name}">${file.name}</div>
+                            <div class="ipv-attach-name" title="${displayName}">${displayName}</div>
                             <div class="ipv-attach-size">
                                 <span data-en="${typeDisplay}" data-bm="${typeDisplay}">${typeDisplay}</span>
                                 · ${(file.size / 1024).toFixed(1)} KB
@@ -1950,7 +2052,9 @@ function saveapplication(isDraft = false) {
     });
 
     Swal.fire({
-        title: isDraft ? '<span data-en="Saving Draft..." data-bm="Menyimpan Draf...">Saving Draft...</span>' : '<span data-en="Submitting..." data-bm="Menghantar...">Submitting...</span>',
+        title: isDraft
+            ? '<span data-en="Saving Draft..." data-bm="Menyimpan Draf...">Saving Draft...</span>'
+            : '<span data-en="Submitting..." data-bm="Menghantar...">Submitting...</span>',
         allowOutsideClick: false,
         didOpen: () => {
             Swal.showLoading();
@@ -1970,10 +2074,12 @@ function saveapplication(isDraft = false) {
         success: function (response) {
             Swal.fire({
                 icon: "success",
-                title: isDraft ? '<span data-en="Draft Saved" data-bm="Draf Disimpan">Draft Saved</span>' : '<span data-en="Application Submitted!" data-bm="Permohonan Dihantar!">Application Submitted!</span>',
+                title: isDraft
+                    ? '<span data-en="Draft Saved" data-bm="Draf Disimpan">Draft Saved</span>'
+                    : '<span data-en="Application Submitted!" data-bm="Permohonan Dihantar!">Application Submitted!</span>',
                 timer: 1500,
                 showConfirmButton: false,
-                didOpen: (modal) => applyTranslations(modal)
+                didOpen: (modal) => applyTranslations(modal),
             });
 
             setTimeout(() => {
@@ -1985,7 +2091,7 @@ function saveapplication(isDraft = false) {
                 icon: "error",
                 title: '<span data-en="Error" data-bm="Ralat">Error</span>',
                 text: '<span data-en="Failed to save application" data-bm="Gagal menyimpan permohonan">Failed to save application</span>',
-                didOpen: (modal) => applyTranslations(modal)
+                didOpen: (modal) => applyTranslations(modal),
             });
         },
     });
@@ -2046,7 +2152,7 @@ export function summarySubmit() {
                     <td data-label="Value">RM ${item.value || ""}</td>
                     <td data-label="Action">${attachmentHTML}</td>
                 </tr>
-            `
+            `,
         );
     });
 
@@ -2054,12 +2160,12 @@ export function summarySubmit() {
         applyTranslations(targetTable);
     }
 
-    updateAttachmentTable()
+    updateAttachmentTable();
 }
 
 function updateAttachmentTable() {
     const attachmentTable = document.querySelector(
-        "#summaryAttachmentTable tbody"
+        "#summaryAttachmentTable tbody",
     );
     if (attachmentTable) {
         attachmentTable.innerHTML = "";
@@ -2073,7 +2179,7 @@ function updateAttachmentTable() {
                         No attachments uploaded
                     </td>
                 </tr>
-                `
+                `,
             );
         } else {
             applicationAttachments.forEach((attachment, index) => {
@@ -2116,7 +2222,7 @@ function updateAttachmentTable() {
                             </button>
                         </td>
                     </tr>
-                    `
+                    `,
                 );
             });
         }
@@ -2156,7 +2262,7 @@ $(document).ready(function () {
                 const { files, ...otherData } = item;
                 formData.append(
                     `items[${index}][data]`,
-                    JSON.stringify(otherData)
+                    JSON.stringify(otherData),
                 );
                 if (files && files.length > 0) {
                     files.forEach((file) => {
@@ -2172,7 +2278,7 @@ $(document).ready(function () {
                 data: formData,
                 headers: {
                     "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
-                        "content"
+                        "content",
                     ),
                 },
                 processData: false,
@@ -2181,8 +2287,8 @@ $(document).ready(function () {
                 error: (xhr) =>
                     reject(
                         new Error(
-                            xhr.responseJSON?.message || "Draft save failed"
-                        )
+                            xhr.responseJSON?.message || "Draft save failed",
+                        ),
                     ),
             });
         });
@@ -2289,7 +2395,9 @@ async function showFinalAgreement() {
             const scrollBox = document.getElementById("agreementScroll");
             const checkbox = document.getElementById("agreeCheckbox");
             scrollBox.addEventListener("scroll", () => {
-                const reachedBottom = scrollBox.scrollTop + scrollBox.clientHeight >= scrollBox.scrollHeight - 10;
+                const reachedBottom =
+                    scrollBox.scrollTop + scrollBox.clientHeight >=
+                    scrollBox.scrollHeight - 10;
                 if (reachedBottom) {
                     checkbox.disabled = false;
                 }
@@ -2299,7 +2407,7 @@ async function showFinalAgreement() {
             const checked = document.getElementById("agreeCheckbox").checked;
             if (!checked) {
                 Swal.showValidationMessage(
-                    '<span data-en="Please read the declaration and tick the agreement checkbox." data-bm="Sila baca pengisytiharan dan tandakan kotak persetujuan.">Please read the declaration and tick the agreement checkbox.</span>'
+                    '<span data-en="Please read the declaration and tick the agreement checkbox." data-bm="Sila baca pengisytiharan dan tandakan kotak persetujuan.">Please read the declaration and tick the agreement checkbox.</span>',
                 );
                 return false;
             }
@@ -2308,8 +2416,10 @@ async function showFinalAgreement() {
         },
         allowOutsideClick: false,
         showCancelButton: true,
-        confirmButtonText: '<span data-en="I Agree" data-bm="Saya Setuju">I Agree</span>',
-        cancelButtonText: '<span data-en="Cancel" data-bm="Batal">Cancel</span>',
+        confirmButtonText:
+            '<span data-en="I Agree" data-bm="Saya Setuju">I Agree</span>',
+        cancelButtonText:
+            '<span data-en="Cancel" data-bm="Batal">Cancel</span>',
     });
 
     return result.isConfirmed && agreed;
@@ -2348,7 +2458,10 @@ $(document).ready(async function () {
 
         // ─── Select2 for Measurement ────────────────────
         const lang = getCurrentLang();
-        const placeMeasure = lang === 'bm' ? '-- Pilih Unit Ukuran --' : '-- Select Measurement Unit --';
+        const placeMeasure =
+            lang === "bm"
+                ? "-- Pilih Unit Ukuran --"
+                : "-- Select Measurement Unit --";
         $("#itemMeasure").select2({
             width: "100%",
             placeholder: placeMeasure,
@@ -2356,7 +2469,8 @@ $(document).ready(async function () {
         });
 
         // ─── Select2 for Purpose ────────────────────────
-        const placePurpose = lang === 'bm' ? '-- Pilih Tujuan --' : '-- Select Purpose --';
+        const placePurpose =
+            lang === "bm" ? "-- Pilih Tujuan --" : "-- Select Purpose --";
         $("#itemPurpose").select2({
             width: "100%",
             placeholder: placePurpose,
@@ -2396,7 +2510,7 @@ $(document).ready(async function () {
                     icon: "warning",
                     title: '<span data-en="No Items" data-bm="Tiada Item">No Items</span>',
                     html: '<span data-en="Please add at least one item before submitting." data-bm="Sila tambah sekurang-kurangnya satu item sebelum menghantar.">Please add at least one item before submitting.</span>',
-                    didOpen: (modal) => applyTranslations(modal)
+                    didOpen: (modal) => applyTranslations(modal),
                 });
                 return;
             }
@@ -2407,7 +2521,7 @@ $(document).ready(async function () {
                     icon: "warning",
                     title: '<span data-en="Incomplete Declarations" data-bm="Pengisytiharan Tidak Lengkap">Incomplete Declarations</span>',
                     html: '<span data-en="Please confirm the declaration for all items before submitting." data-bm="Sila sahkan pengisytiharan untuk semua item sebelum menghantar.">Please confirm the declaration for all items before submitting.</span>',
-                    didOpen: (modal) => applyTranslations(modal)
+                    didOpen: (modal) => applyTranslations(modal),
                 });
                 return;
             }
@@ -2438,10 +2552,13 @@ $(document).ready(async function () {
                     icon: "warning",
                     showCancelButton: true,
                     showDenyButton: true,
-                    confirmButtonText: '<span data-en="Yes, leave" data-bm="Ya, tinggalkan">Yes, leave</span>',
-                    denyButtonText: '<span data-en="Save as Draft" data-bm="Simpan sebagai Draf">Save as Draft</span>',
-                    cancelButtonText: '<span data-en="Stay" data-bm="Kekal">Stay</span>',
-                    didOpen: (modal) => applyTranslations(modal)
+                    confirmButtonText:
+                        '<span data-en="Yes, leave" data-bm="Ya, tinggalkan">Yes, leave</span>',
+                    denyButtonText:
+                        '<span data-en="Save as Draft" data-bm="Simpan sebagai Draf">Save as Draft</span>',
+                    cancelButtonText:
+                        '<span data-en="Stay" data-bm="Kekal">Stay</span>',
+                    didOpen: (modal) => applyTranslations(modal),
                 }).then((result) => {
                     if (result.isConfirmed) {
                         change = false;
@@ -2457,16 +2574,15 @@ $(document).ready(async function () {
                         window.location.href = "/public/view_import_permit";
                     }
                 });
-            }
+            },
         );
-
     } catch (error) {
         console.error("Error during initialization:", error);
         Swal.fire({
             icon: "error",
             title: '<span data-en="Error" data-bm="Ralat">Error</span>',
             html: '<span data-en="Failed to initialize page. Check console for details." data-bm="Gagal memulakan halaman. Periksa konsol untuk butiran.">Failed to initialize page. Check console for details.</span>',
-            didOpen: (modal) => applyTranslations(modal)
+            didOpen: (modal) => applyTranslations(modal),
         });
     } finally {
         Swal.close();
