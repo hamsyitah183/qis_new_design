@@ -37,8 +37,6 @@ class OrderDonutChart
         $colors = array_map(fn($label) => $statusColors[strtolower($label)] ?? '#6C757D', $labels);
 
         return $this->chart->donutChart()
-            ->setTitle('Order Payment Status')
-            ->setSubtitle('2026')
             ->addData($data)
             ->setLabels($labels)
             ->setColors($colors)

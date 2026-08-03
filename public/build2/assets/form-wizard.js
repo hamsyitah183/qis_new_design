@@ -589,7 +589,7 @@ class Wizard1 {
             }
         }
 
-        if (this.form) {
+        if (this.form && this.options.validate !== false) {
             const check_form = this.checkForm()
             if (check_form.error === true) {
 
@@ -647,11 +647,13 @@ class Wizard1 {
     */
 
     onClickFinish(e) {
-        if (this.form) {
+        if (this.form && this.options.validate !== false) {
             const check_form = this.checkForm()
             if (check_form.error !== true) {
                 document.querySelector(this.wz_class).dispatchEvent(new Event("wz.form.submit"));
             }
+        } else if (this.form) {
+            document.querySelector(this.wz_class).dispatchEvent(new Event("wz.form.submit"));
         } else {
             document.querySelector(this.wz_class).dispatchEvent(new Event("wz.end"));
         }

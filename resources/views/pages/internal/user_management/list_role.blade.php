@@ -19,7 +19,7 @@
 @section('pageName', ' List Role')
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/'], ['label' => 'List Role', 'url' => '#']]" title="List Role" />
+    <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/', 'data-en' => 'Dashboard', 'data-bm' => 'Dashboard'], ['label' => 'List Role', 'url' => '#', 'data-en' => 'List Role', 'data-bm' => 'Senarai Peranan']]" title="List Role" title_en="List Role" title_bm="Senarai Peranan" />
 @endsection
 
 @section('content')
@@ -33,9 +33,9 @@
                     <table id="roleTable" class="table table-hover table-bordered text-nowrap w-100">
                         <thead>
                             <tr>
-                                <th>Name</th>
+                                <th data-en="Name" data-bm="Nama">Name</th>
                                 {{-- <th class="text-center">User</th> --}}
-                                <th class="text-center" style="width: 50%;">Permission</th>
+                                <th class="text-center" style="width: 50%;" data-en="Permission" data-bm="Kebenaran">Permission</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -53,17 +53,17 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="roleDetailsModalLabel">Role Details</h5>
+                    <h5 class="modal-title" id="roleDetailsModalLabel" data-en="Role Details" data-bm="Butiran Peranan">Role Details</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body" id="roleDetailsContentModal">
+                <div class="modal-body" id="roleDetailsContentModal" data-en="Select a role to see details" data-bm="Pilih peranan untuk melihat butiran">
                     Select a role to see details
                 </div>
             </div>
         </div>
     </div>
 
-    <x-modal id="userModal" title="User List">
+    <x-modal id="userModal" title="User List" title_en="User List" title_bm="Senarai Pengguna">
 
         <form id="userModalForm">
             @csrf
@@ -71,15 +71,15 @@
             <div id="userListContainer"></div>
 
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="submit" class="btn btn-primary" id="updateRoleBtn">Submit</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Close" data-bm="Tutup">Close</button>
+                <button type="submit" class="btn btn-primary" id="updateRoleBtn" data-en="Submit" data-bm="Hantar">Submit</button>
             </div>
         </form>
 
 
     </x-modal>
 
-    <x-modal id="permissionModal" title="Permission List">
+    <x-modal id="permissionModal" title="Permission List" title_en="Permission List" title_bm="Senarai Kebenaran">
 
         <form id="permissionModalForm">
             @csrf
@@ -88,8 +88,8 @@
             <div id="permissionListContainer"></div>
 
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="submit" class="btn btn-primary" id="updatePermissionBtn">Submit</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Close" data-bm="Tutup">Close</button>
+                <button type="submit" class="btn btn-primary" id="updatePermissionBtn" data-en="Submit" data-bm="Hantar">Submit</button>
             </div>
         </form>
 

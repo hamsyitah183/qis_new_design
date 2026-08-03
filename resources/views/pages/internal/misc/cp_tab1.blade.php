@@ -4,10 +4,10 @@
             <div class="col-xxl-11">
                 <div class="card custom-card shadow-none mb-0">
                     <div class="card-header justify-content-between d-sm-flex d-block">
-                        <div class="card-title">District Entry</div>
+                        <div class="card-title" data-en="District Entry" data-bm="Kemasukan Daerah">District Entry</div>
                         <div class="mt-sm-0 mt-2">
                             <button class="btn btn-sm btn-primary" onclick="addmodal('entry')" data-type = "entry"><i
-                                    class="ri-add-line me-1"></i> Add Entry Point</button>
+                                    class="ri-add-line me-1"></i> <span data-en="Add Entry Point" data-bm="Tambah Titik Masuk">Add Entry Point</span></button>
                         </div>
                     </div>
                     <div class="card-body">
@@ -19,9 +19,9 @@
                                             <tr>
                                                 {{-- <th scope="col">#</th> --}}
                                                 {{-- <th scope="col">Code</th> --}}
-                                                <th scope="col">Name</th>
-                                                <th scope="col">Entry Points</th>
-                                                <th scope="col">Action</th>
+                                                <th scope="col" data-en="Name" data-bm="Nama">Name</th>
+                                                <th scope="col" data-en="Entry Points" data-bm="Titik Masuk">Entry Points</th>
+                                                <th scope="col" data-en="Action" data-bm="Tindakan">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>

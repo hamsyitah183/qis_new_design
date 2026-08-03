@@ -432,7 +432,7 @@
         </div>
     </div>
 
-    {{-- <script>
+    <script>
         (function () {
             /* ---------- Language toggle (shared pattern with login / forgot password) ---------- */
             var STORAGE_KEY = 'qis_lang';
@@ -512,5 +512,5 @@
                 }
             });
         })();
-    </script> --}}
+    </script>
 @endsection

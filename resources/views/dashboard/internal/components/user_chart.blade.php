@@ -2,9 +2,6 @@
     <div class="card custom-card w-100 h-100 ">
         <div class="card-body p-4 ">
             {!! $userLineChart->container() !!}
-            {{-- <div id="userLineChart">
-                
-            </div> --}}
         </div>
     </div>
 </div>
@@ -16,4 +13,6 @@
 
     {{-- Chart render script --}}
     {{ $userLineChart->script() }}
+
+
 @endpush

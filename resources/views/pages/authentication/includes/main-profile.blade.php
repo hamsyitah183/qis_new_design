@@ -18,7 +18,7 @@
                     <button class="nav-link w-100 text-start" id="edit-verification-tab" data-bs-toggle="tab"
                         data-bs-target="#edit-verification-tab-pane" type="button" role="tab"
                         aria-controls="edit-verification-tab-pane" aria-selected="false" tabindex="-1">
-                        Verification
+                        <span data-en="Verification" data-bm="Pengesahan">Verification</span>
                        
                         @if (authUser()['user']->approved?->verification_attachment == null)
                             <i class="ri-alert-line text-warning ms-1"></i>
@@ -31,8 +31,7 @@
             <li class="nav-item" role="presentation">
                 <button class="nav-link w-100 text-start" id="edit-password-tab" data-bs-toggle="tab"
                     data-bs-target="#edit-password-tab-pane" type="button" role="tab"
-                    aria-controls="edit-password-tab-pane" aria-selected="false" tabindex="-1">Change
-                    Password</button>
+                    aria-controls="edit-password-tab-pane" aria-selected="false" tabindex="-1" data-en="Change Password" data-bm="Tukar Kata Laluan">Change Password</button>
             </li>
 
 

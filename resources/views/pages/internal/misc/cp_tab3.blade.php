@@ -4,10 +4,10 @@
             <div class="col-xxl-11">
                 <div class="card custom-card shadow-none mb-0">
                     <div class="card-header justify-content-between d-sm-flex d-block">
-                        <div class="card-title">Unit Measurement</div>
+                        <div class="card-title" data-en="Unit Measurement" data-bm="Unit Ukuran">Unit Measurement</div>
                         <div class="mt-sm-0 mt-2">
                             <button class="btn btn-sm btn-primary" onclick="addmodal('measurement')" data-type = "measurement"><i
-                                    class="ri-add-line me-1"></i> Add Measurement Unit</button>
+                                    class="ri-add-line me-1"></i> <span data-en="Add Measurement Unit" data-bm="Tambah Unit Ukuran">Add Measurement Unit</span></button>
                         </div>
                     </div>
                     <div class="card-body">
@@ -19,8 +19,8 @@
                                             <tr>
                                                 {{-- <th scope="col">#</th> --}}
                                                 {{-- <th scope="col">Code</th> --}}
-                                                <th scope="col">Name</th>
-                                                <th scope="col">Action</th>
+                                                <th scope="col" data-en="Name" data-bm="Nama">Name</th>
+                                                <th scope="col" data-en="Action" data-bm="Tindakan">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>

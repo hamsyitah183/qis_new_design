@@ -16,21 +16,21 @@
             <div class="modal-body">
                 <div class="row gy-4 mb-3 p-4">
                     <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12">
-                        <label for="itemSelect" class="form-label">Item<a style="color:red"> * </a> </label>
+                        <label for="itemSelect" class="form-label" data-en="Item" data-bm="Item">Item<a style="color:red"> * </a> </label>
                         <input type="text" class="form-control" id="itemSelect" name="itemSelect">
                         <small style="color:red">Item refering to the exporter's Country</small>
                     </div>
                     <div class="col-xl-3 col-lg-3 col-md-3 col-sm-12">
 
-                        <label for="itemValue" class="form-label">Value (RM)<a style="color:red"> * </a></label>
+                        <label for="itemValue" class="form-label" data-en="Value (RM)" data-bm="Nilai (RM)">Value (RM)<a style="color:red"> * </a></label>
                         <input type="number" class="form-control" id="itemValue" name="itemValue" placeholder="RM ...">
                     </div>
                     <div class="col-xl-2 col-lg-2 col-md-2 col-sm-12">
-                        <label for="itemQuantity" class="form-label">Quantity<a style="color:red"> * </a></label>
+                        <label for="itemQuantity" class="form-label" data-en="Quantity" data-bm="Kuantiti">Quantity<a style="color:red"> * </a></label>
                         <input type="number" class="form-control" id="itemQuantity" name="itemQuantity">
                     </div>
                     <div class="col-xl-3 col-lg-3 col-md-3 col-sm-12">
-                        <label for="itemMeasure" class="form-label">Measurement Unit<a style="color:red"> * </a></label>
+                        <label for="itemMeasure" class="form-label" data-en="Measurement Unit" data-bm="Unit Ukuran">Measurement Unit<a style="color:red"> * </a></label>
                         <select class="form-select" id="itemMeasure" name="itemMeasure">
                             <option value="">-- Select Measurement Unit --</option>
                             @foreach ($pubmeasure as $measure)
@@ -40,7 +40,7 @@
 
                     </div>
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                        <label for="itemPurpose" class="form-label">Purpose<a style="color:red"> * </a></label>
+                        <label for="itemPurpose" class="form-label" data-en="Purpose" data-bm="Tujuan">Purpose<a style="color:red"> * </a></label>
                         <select class="form-select" id="itemPurpose" name="itemPurpose">
                             <option value="">-- Select Purpose --</option>
                             @foreach ($pubpurpose as $purpose)
@@ -50,7 +50,7 @@
                         </select>
                     </div>
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                        <label for="itemUses" class="form-label">Uses<a style="color:red"> * </a></label>
+                        <label for="itemUses" class="form-label" data-en="Uses" data-bm="Kegunaan">Uses<a style="color:red"> * </a></label>
                         <select class="form-select" id="itemUses" name="itemUses">
                             <option value="fresh produce">Fresh Produce</option>
                             <option value="for animal consumption">For Animal Consumption</option>

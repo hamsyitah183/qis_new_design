@@ -4,9 +4,9 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '/'], ['label' => 'Consignment List', 'url' => '/internal/consignment_condition'], ['label' => 'Edit Consignment Item', 'url' => '#']]" 
+    <x-breadcrumb :items="[['label' => 'Dashboard', 'url' => '/', 'data-en' => 'Dashboard', 'data-bm' => 'Dashboard'], ['label' => 'Consignment List', 'url' => '/internal/consignment_condition', 'data-en' => 'Consignment List', 'data-bm' => 'Senarai Konsainan'], ['label' => 'Edit Consignment Item', 'url' => '#', 'data-en' => 'Edit Consignment Item', 'data-bm' => 'Sunting Item Konsainan']]" 
         
-        title="Edit Consignment Item">
+        title="Edit Consignment Item" title_en="Edit Consignment Item" title_bm="Sunting Item Konsainan">
 
     </x-breadcrumb>
 @endsection
@@ -44,27 +44,27 @@
         <div class="col-xl-12">
             <div class="card custom-card">
                 <div class="card-header">
-                    <div class="card-title">
-                        Add New
+                    <div class="card-title" data-en="Edit Consignment Item" data-bm="Sunting Item Konsainan">
+                        Edit Consignment Item
                     </div>
                 </div>
                 <div class="card-body">
                     <input type="hidden" name="id" value = {{ $condition->id }} id="id">
                     <div class="row gy-3">
                         <div class="col-xl-12">
-                            <label for="blog-title" class="form-label">Item Name</label>
+                            <label for="blog-title" class="form-label" data-en="Item Name" data-bm="Nama Item">Item Name</label>
                             <input type="text" class="form-control" id="itemName" name="itemName"
                                 value="{{ $condition->item_name }}"
                                 placeholder="Citrus - Lemon, Chinese Mandarine, Limau Kasturi">
                         </div>
                         <div class="col-xl-12">
-                            <label for="blog-title" class="form-label">Scientific Name</label>
+                            <label for="blog-title" class="form-label" data-en="Scientific Name" data-bm="Nama Saintifik">Scientific Name</label>
                             <input type="text" class="form-control" id="scientificName" name="scientificName"
                                 value="{{ $condition->scientific_name }}"
                                 placeholder="Citrus - Lemon, Chinese Mandarine, Limau Kasturi">
                         </div>
                         <div class="col-xl-6">
-                            <label for="blog-category" class="form-label">Category</label>
+                            <label for="blog-category" class="form-label" data-en="Category" data-bm="Kategori">Category</label>
                             <select class="form-select" name="itemCategory" id="itemCategory">
                                 @foreach ($pbdata as $cate)
                                     <option value="{{ $cate->cate_code }}"
@@ -78,13 +78,13 @@
                     </div>
                      <div class="row gy-3 mt-1">
                         <div class="col-xl-3">
-                            <label for="quanLimit" class="form-label">Quantity Limit (Special case)</label>
+                            <label for="quanLimit" class="form-label" data-en="Quantity Limit (Special case)" data-bm="Had Kuantiti (Kes Khas)">Quantity Limit (Special case)</label>
                             <input type="number" class="form-control" id="quanLimit"
                                 value="{{ $condition->quantity_limit ?? null }}" name="quanLimit" min = '0'>
                             
                         </div>
                         <div class="col-xl-3">
-                            <label for="quanmunit" class="form-label">Measurement Unit (Special case)</label>
+                            <label for="quanmunit" class="form-label" data-en="Measurement Unit (Special case)" data-bm="Unit Ukuran (Kes Khas)">Measurement Unit (Special case)</label>
                             {{-- <input type="text" class="form-control" id="quanmunit" name="quanmunit"> --}}
                             <select class="form-select" name="quanmunit" id="quanmunit">
                                 @foreach ($measurements as $measurement)
@@ -101,7 +101,7 @@
                         </div>
                         {{-- @dd($condition) --}}
                         <div class="col-xl-3">
-                            <label class="form-label">Start Date</label>
+                            <label class="form-label" data-en="Start Date" data-bm="Tarikh Mula">Start Date</label>
                             <input 
                                 type="date"
                                 class="form-control"
@@ -112,7 +112,7 @@
                         </div>
 
                         <div class="col-xl-3">
-                            <label class="form-label">End Date</label>
+                            <label class="form-label" data-en="End Date" data-bm="Tarikh Tamat">End Date</label>
                             <input 
                                 type="date"
                                 class="form-control"
@@ -125,19 +125,19 @@
 
 
                         <div class="col-xl-12">
-                            <label class="form-label">Country</label>
+                            <label class="form-label" data-en="Country" data-bm="Negara">Country</label>
                             <input id="countryTag" name="countryTag" class="form-control"
                                 placeholder="Select or type countries...">
                         </div>
                         <div class="col-xl-12">
-                            <label class="form-label d-block">Consignment Application (Usage)</label>
+                            <label class="form-label d-block" data-en="Consignment Application (Usage)" data-bm="Permohonan Konsainan (Kegunaan)">Consignment Application (Usage)</label>
 
                             <!-- Your Tagify input -->
                             <input id="usageTags" name="usageTags" class="form-control"
                                 placeholder="Select or type usage...">
                         </div>
                         <div class="col-xl-12"> <!-- style="display:none" -->
-                            <label class="form-label d-block">Permit Condition</label>
+                            <label class="form-label d-block" data-en="Permit Condition" data-bm="Syarat Permit">Permit Condition</label>
                             <!-- Quill editor -->
                             <!-- <div id="permit-condition-editor" style="min-height:150px; border:1px solid var(--bs-border-color); border-radius:.5rem; background:var(--bs-body-bg);"></div> -->
                             <div class="quill-wrapper">
@@ -146,16 +146,16 @@
 
                             <!-- hidden input to submit HTML -->
                             <input type="hidden" name="permit_condition" id="permit-condition-input">
-                            <small class="form-text text-muted mt-2">You may use simple formatting — bold, lists,
+                            <small class="form-text text-muted mt-2" data-en="You may use simple formatting — bold, lists, links." data-bm="Anda boleh menggunakan pemformatan ringkas — tebal, senarai, pautan.">You may use simple formatting — bold, lists,
                                 links.</small>
                         </div>
                     </div>
                 </div>
                 <div class="card-footer text-end">
                     <button id="submitConditionBtn" type="submit" class="btn btn-primary">
-                        <i class="ri-add-line me-1"></i> Update Condition
+                        <i class="ri-add-line me-1"></i> <span data-en="Update Condition" data-bm="Kemaskini Syarat">Update Condition</span>
                     </button>
-                    <a href="/internal/consignment_condition" class="btn btn-secondary">Cancel</a>
+                    <a href="/internal/consignment_condition" class="btn btn-secondary" data-en="Cancel" data-bm="Batal">Cancel</a>
                 </div>
             </div>
         </div>

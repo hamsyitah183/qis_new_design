@@ -14,7 +14,7 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#']]" title="Review Application">
+    <x-breadcrumb :items="[['label' => 'Home', 'url' => '#', 'data-en' => 'Home', 'data-bm' => 'Laman Utama']]" title="Review Application" title_en="Review Application" title_bm="Untuk Disemak">
 
     </x-breadcrumb>
 @endsection
@@ -37,15 +37,15 @@
                                     <thead class="mt-3">
                                         <tr class="even">
                                             <th>#</th>
-                                            <th>Importer</th>
-                                            <th>Exporter</th>
+                                            <th data-en="Importer" data-bm="Pengimport">Importer</th>
+                                            <th data-en="Exporter" data-bm="Pengeksport">Exporter</th>
                                             
                                             {{-- <th style="text-align: center;">Importer Type</th> <!-- self or other --> --}}
                                             {{-- <th>ETA</th> --}}
-                                            <th>Application Type</th>
-                                            <th>Status</th>
-                                            <th>Submitted By</th>
-                                            <th>Action</th>
+                                            <th data-en="Application Type" data-bm="Jenis Permohonan">Application Type</th>
+                                            <th data-en="Status" data-bm="Status">Status</th>
+                                            <th data-en="Submitted By" data-bm="Dihantar Oleh">Submitted By</th>
+                                            <th data-en="Action" data-bm="Tindakan">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>

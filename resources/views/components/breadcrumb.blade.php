@@ -25,8 +25,8 @@
         </nav>
         {{-- Assuming $title_en and $title_bm are passed, or just using attributes on the title --}}
         <h1 class="page-title fw-medium fs-18 mb-0" 
-            data-en="{{ $title_en ?? $title }}" 
-            data-bm="{{ $title_bm ?? $title }}">
+            data-en="{{ $titleEn ?? $title }}" 
+            data-bm="{{ $titleBm ?? $title }}">
             {{ $title }}
         </h1>
     </div>

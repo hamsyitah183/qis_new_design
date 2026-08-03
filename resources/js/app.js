@@ -254,6 +254,29 @@ function languange() {
                     el.hasAttribute("data-title-en") &&
                     el.hasAttribute("data-title-bm")
                 ) {
+                    el.setAttribute("data-title", text);
+
+                    // Update wizard navigation if this is a wizard step
+                    var stepIndex = el.getAttribute("data-step");
+                    if (stepIndex !== null) {
+                        // Support both .wz-nav and .wizard-nav classes
+                        var navSteps = document.querySelectorAll(
+                            ".wz-nav .wz-step, .wizard-nav .wizard-step",
+                        );
+                        navSteps.forEach(function (navStep) {
+                            var navIndex =
+                                Array.from(navSteps).indexOf(navStep);
+                            var stepNum = parseInt(stepIndex) - 1; // steps are 1-indexed
+                            if (navIndex === stepNum) {
+                                // Find the span that contains the text (second span, after the dot)
+                                var spans = navStep.querySelectorAll("span");
+                                if (spans.length > 1) {
+                                    spans[1].innerHTML = text;
+                                } else if (spans.length === 1) {
+                                    spans[0].innerHTML = text;
+                                }
+                            }
+                        });
                     var titleText =
                         el.getAttribute("data-" + lang + "-title") ||
                         el.getAttribute("data-title-en");

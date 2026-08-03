@@ -13,7 +13,14 @@
 @endpush
 
 @section('breadcrumb')
-    <x-breadcrumb :items="[['label' => 'Home', 'url' => '/'], ['label' => 'Notification', 'url' => '#']]" title="Notifications">
+    <x-breadcrumb 
+        :items="[
+            ['label' => 'Home', 'url' => '/', 'data-en' => 'Home', 'data-bm' => 'Utama'], 
+            ['label' => 'Notification', 'url' => '#', 'data-en' => 'Notification', 'data-bm' => 'Notifikasi']
+        ]" 
+        title="Notifications" 
+        titleEn="Notifications" 
+        titleBm="Notifikasi">
     </x-breadcrumb>
 @endsection
 
@@ -22,20 +29,20 @@
         <div class="card custom-card">
             <div class="card-header justify-content-between">
                 <div class="card-title">
-                    <span class="mb-0 fs-16" id="readCount">Notifications</span>
+                    <span class="mb-0 fs-16" id="readCount" data-en="Notifications" data-bm="Notifikasi">Notifications</span>
                 </div>
                 <div class="dropdown">
                     <button class="btn btn-outline-light border btn-full btn-sm" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="ti ti-filter me-1"></i> Filter <i class="ti ti-chevron-down ms-1"></i>
+                        <i class="ti ti-filter me-1"></i> <span data-en="Filter" data-bm="Tapis">Filter</span> <i class="ti ti-chevron-down ms-1"></i>
                     </button>
 
                     <ul class="dropdown-menu" role="menu">
-                        <li><a class="dropdown-item dropdown-item-notification active" href="#" data-time="">All</a></li>
+                        <li><a class="dropdown-item dropdown-item-notification active" href="#" data-time="" data-en="All" data-bm="Semua">All</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item dropdown-item-notification" href="#" data-time="1">Last 1 hour</a></li>
-                        <li><a class="dropdown-item dropdown-item-notification" href="#" data-time="24">Last 24 hours</a></li>
-                        <li><a class="dropdown-item dropdown-item-notification" href="#" data-time="168">Last 7 days</a></li>
-                        <li><a class="dropdown-item dropdown-item-notification" href="#" data-time="720">Last 30 days</a></li>
+                        <li><a class="dropdown-item dropdown-item-notification" href="#" data-time="1" data-en="Last 1 hour" data-bm="1 jam lepas">Last 1 hour</a></li>
+                        <li><a class="dropdown-item dropdown-item-notification" href="#" data-time="24" data-en="Last 24 hours" data-bm="24 jam lepas">Last 24 hours</a></li>
+                        <li><a class="dropdown-item dropdown-item-notification" href="#" data-time="168" data-en="Last 7 days" data-bm="7 hari lepas">Last 7 days</a></li>
+                        <li><a class="dropdown-item dropdown-item-notification" href="#" data-time="720" data-en="Last 30 days" data-bm="30 hari lepas">Last 30 days</a></li>
                     </ul>
                 </div>
             </div>

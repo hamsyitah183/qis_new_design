@@ -23,7 +23,7 @@
                         </span>
                     </div>
                     <div>
-                        <p class="text-muted mb-1 fs-13">Total Revenue</p>
+                        <p class="text-muted mb-1 fs-13" data-en="Total Revenue" data-bm="Jumlah Hasil">Total Revenue</p>
                         <h3 class="fw-semibold mb-0" id="amountRevenue">0</h3>
                     </div>
                 </div>
@@ -55,7 +55,7 @@
                         </span>
                     </div>
                     <div>
-                        <p class="text-muted mb-1 fs-13">Import Permit</p>
+                        <p class="text-muted mb-1 fs-13" data-en="Import Permit" data-bm="Permit Import">Import Permit</p>
                         <h3 class="fw-semibold mb-0" id="ipCount">0</h3>
                     </div>
                 </div>
@@ -85,7 +85,7 @@
                         </span>
                     </div>
                     <div>
-                        <p class="text-muted mb-1 fs-13">Inspection Certificate</p>
+                        <p class="text-muted mb-1 fs-13" data-en="Inspection Certificate" data-bm="Sijil Pemeriksaan">Inspection Certificate</p>
                         <h3 class="fw-semibold mb-0" id="icCount">0</h3>
                     </div>
                 </div>
@@ -115,7 +115,7 @@
                         </span>
                     </div>
                     <div>
-                        <p class="text-muted mb-1 fs-13">Consignment Certificate</p>
+                        <p class="text-muted mb-1 fs-13" data-en="Consignment Certificate" data-bm="Sijil Konsainan">Consignment Certificate</p>
                         <h3 class="fw-semibold mb-0" id="ccCount">0</h3>
                     </div>
                 </div>
