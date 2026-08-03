@@ -38,10 +38,10 @@
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>Permit Number</th>
-                                <th>Item Name</th>
-                                <th>Importer</th>
-                                <th>Action</th>
+                                <th data-bm="Nombor Permit" data-en="Permit Number">Permit Number</th>
+                                <th data-bm="Nama Item" data-en="Item Name">Item Name</th>
+                                <th data-bm="Pengimport" data-en="Importer">Importer</th>
+                                <th data-bm="Tindakan" data-en="Action">Action</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -59,11 +59,11 @@
             <table class="table text-wrap table-hover" id="applicationLogTable">
                 <thead class="table-primary">
                     <tr>
-                        <th scope="col">Action</th>
-                        <th scope="col">User</th>
-                        <th scope="col">Remark</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">Time and Date</th>
+                        <th scope="col" data-bm="Tindakan" data-en="Action">Action</th>
+                        <th scope="col" data-bm="Pengguna" data-en="User">User</th>
+                        <th scope="col" data-bm="Catatan" data-en="Remark">Remark</th>
+                        <th scope="col" data-bm="Status" data-en="Status">Status</th>
+                        <th scope="col" data-bm="Masa dan Tarikh" data-en="Time and Date">Time and Date</th>
                     </tr>
                 </thead>
                 <tbody class="table-group-divider">
@@ -73,7 +73,7 @@
         </div>
 
         @slot('footer')
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-bm="Tutup" data-en="Close">Close</button>
         @endslot
 
     </x-modal>

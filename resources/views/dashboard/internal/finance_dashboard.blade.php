@@ -35,7 +35,7 @@
         <div class="col-xl-12">
             <div class="card custom-card">
                 <div class="card-header justify-content-between">
-                    <div class="card-title">
+                    <div class="card-title" data-bm="Pesanan Permit Import" data-en="Import Permit Orders">
                         Import Permit Orders
                     </div>
                 </div>
@@ -46,16 +46,16 @@
                             style="width: 100%;">
                             <thead class="mt-3">
                                 <tr>
-                                    <th>Order Number</th>
-                                    <th>Transaction Date</th>
-                                    <th>FPX Reference</th>
-                                    <th>User Name</th>
-                                    <th>Permit Number</th>
-                                    <th>Order Status</th>
-                                    <th>Application Type</th>
-                                    <th>Transaction Data</th>
-                                    <th>Payment Amount</th>
-                                    <th>Action</th>
+                                    <th data-bm="Nombor Pesanan" data-en="Order Number">Order Number</th>
+                                    <th data-bm="Tarikh Transaksi" data-en="Transaction Date">Transaction Date</th>
+                                    <th data-bm="Rujukan FPX" data-en="FPX Reference">FPX Reference</th>
+                                    <th data-bm="Nama Pengguna" data-en="User Name">User Name</th>
+                                    <th data-bm="Nombor Permit" data-en="Permit Number">Permit Number</th>
+                                    <th data-bm="Status Pesanan" data-en="Order Status">Order Status</th>
+                                    <th data-bm="Jenis Permohonan" data-en="Application Type">Application Type</th>
+                                    <th data-bm="Data Transaksi" data-en="Transaction Data">Transaction Data</th>
+                                    <th data-bm="Jumlah Bayaran" data-en="Payment Amount">Payment Amount</th>
+                                    <th data-bm="Tindakan" data-en="Action">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -72,7 +72,7 @@
         <div class="col-xl-12">
             <div class="card custom-card">
                 <div class="card-header justify-content-between">
-                    <div class="card-title">
+                    <div class="card-title" data-bm="Pesanan Sijil Pemeriksaan" data-en="Inspection Certificate Orders">
                         Inspection Certificate Orders
                     </div>
                 </div>
@@ -83,16 +83,16 @@
                             style="width: 100%;">
                             <thead class="mt-3">
                                 <tr>
-                                    <th>Order Number</th>
-                                    <th>Transaction Date</th>
-                                    <th>FPX Reference</th>
-                                    <th>User Name</th>
-                                    <th>Permit Number</th>
-                                    <th>Order Status</th>
-                                    <th>Application Type</th>
-                                    <th>Transaction Data</th>
-                                    <th>Payment Amount</th>
-                                    <th>Action</th>
+                                    <th data-bm="Nombor Pesanan" data-en="Order Number">Order Number</th>
+                                    <th data-bm="Tarikh Transaksi" data-en="Transaction Date">Transaction Date</th>
+                                    <th data-bm="Rujukan FPX" data-en="FPX Reference">FPX Reference</th>
+                                    <th data-bm="Nama Pengguna" data-en="User Name">User Name</th>
+                                    <th data-bm="Nombor Permit" data-en="Permit Number">Permit Number</th>
+                                    <th data-bm="Status Pesanan" data-en="Order Status">Order Status</th>
+                                    <th data-bm="Jenis Permohonan" data-en="Application Type">Application Type</th>
+                                    <th data-bm="Data Transaksi" data-en="Transaction Data">Transaction Data</th>
+                                    <th data-bm="Jumlah Bayaran" data-en="Payment Amount">Payment Amount</th>
+                                    <th data-bm="Tindakan" data-en="Action">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -109,7 +109,7 @@
         <div class="col-xl-12">
             <div class="card custom-card">
                 <div class="card-header justify-content-between">
-                    <div class="card-title">
+                    <div class="card-title" data-bm="Pesanan Sijil Konsainan" data-en="Consignment Certificate Orders">
                         Consignment Certificate Orders
                     </div>
                 </div>
@@ -120,16 +120,16 @@
                             style="width: 100%;">
                             <thead class="mt-3">
                                 <tr>
-                                    <th>Order Number</th>
-                                    <th>Transaction Date</th>
-                                    <th>FPX Reference</th>
-                                    <th>User Name</th>
-                                    <th>Permit Number</th>
-                                    <th>Order Status</th>
-                                    <th>Application Type</th>
-                                    <th>Transaction Data</th>
-                                    <th>Payment Amount</th>
-                                    <th>Action</th>
+                                    <th data-bm="Nombor Pesanan" data-en="Order Number">Order Number</th>
+                                    <th data-bm="Tarikh Transaksi" data-en="Transaction Date">Transaction Date</th>
+                                    <th data-bm="Rujukan FPX" data-en="FPX Reference">FPX Reference</th>
+                                    <th data-bm="Nama Pengguna" data-en="User Name">User Name</th>
+                                    <th data-bm="Nombor Permit" data-en="Permit Number">Permit Number</th>
+                                    <th data-bm="Status Pesanan" data-en="Order Status">Order Status</th>
+                                    <th data-bm="Jenis Permohonan" data-en="Application Type">Application Type</th>
+                                    <th data-bm="Data Transaksi" data-en="Transaction Data">Transaction Data</th>
+                                    <th data-bm="Jumlah Bayaran" data-en="Payment Amount">Payment Amount</th>
+                                    <th data-bm="Tindakan" data-en="Action">Action</th>
                                 </tr>
                             </thead>
                             <tbody>

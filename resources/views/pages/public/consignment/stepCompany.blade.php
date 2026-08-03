@@ -18,19 +18,19 @@
                             <option value="">-- SelectImporter --</option>
                         </select> -->
                         <input type="text" class="form-control mb-3" id="findImporter" name="findImporter"
-                            placeholder="Company Number / Identification Number">
+                            placeholder="Company Number / Identification Number" data-bm="Nombor Syarikat / Nombor Pengenalan" data-en="Company Number / Identification Number" data-i18n-attr="placeholder">
                         <button type="button" class="btn btn-md btn-info mb-3" id="btnFindImp"><i
-                                class="bx bx-search"></i> Find Importer</button>
+                                class="bx bx-search"></i> <span data-bm="Cari Pengimport" data-en="Find Importer">Find Importer</span></button>
 
-                        <div class="alert alert-danger" id="searchresult" role="alert" style="display:none">
+                        <div class="alert alert-danger" id="searchresult" role="alert" style="display:none" data-bm="Tiada Nombor Pengenalan Sepadan!" data-en="No Matching Identity Number!">
                             No Matching Identity Number!
                         </div>
 
-                        <div class="alert alert-primary2" id="emailnotver" role="alert" style="display:none">
+                        <div class="alert alert-primary2" id="emailnotver" role="alert" style="display:none" data-bm="E-mel tidak disahkan!" data-en="Email not verified!">
                             Email not verified!
                         </div>
 
-                        <div class="alert alert-primary2" id="doanotver" role="alert" style="display:none">
+                        <div class="alert alert-primary2" id="doanotver" role="alert" style="display:none" data-bm="Akaun tidak disahkan oleh DOA!" data-en="Account is not verified by DOA!">
                             Account is not verified by DOA!
                         </div>
 
@@ -68,7 +68,7 @@
                         <label for="selectexp" class="form-label" data-en="Select Importer" data-bm="Pilih Pengimport">Select Importer</label>
                         <select id="selectexp" data-route="{{ route('public.getConsignmentImporters') }}"
                             class="form-select xintra-select2" name="selectexp" style="width:100%;" required>
-                            <option value="">-- Select Importer --</option>
+                            <option value="" data-bm="-- Pilih Pengimport --" data-en="-- Select Importer --">-- Select Importer --</option>
                         </select>
                     </div>
                     <div class="col-xl-12" class="">
@@ -108,28 +108,28 @@
 
                 {{-- Name --}}
                 <div class="mb-3">
-                    <label for="addexpName" class="form-label">Name</label>
+                    <label for="addexpName" class="form-label" data-bm="Nama" data-en="Name">Name</label>
                     <input type="text" id="addexpName" name="addexpName" class="form-control">
                 </div>
 
                 {{-- Phone --}}
                 <div class="mb-3">
-                    <label for="addexpfonno" class="form-label">Phone No</label>
+                    <label for="addexpfonno" class="form-label" data-bm="No Telefon" data-en="Phone No">Phone No</label>
                     <input type="text" id="addexpfonno" name="addexpfonno" class="form-control">
                 </div>
 
                 {{-- Address --}}
                 <div class="mb-3">
-                    <label for="addexpaddress" class="form-label">Address</label>
+                    <label for="addexpaddress" class="form-label" data-bm="Alamat" data-en="Address">Address</label>
                     <input type="text" id="addexpaddress1" name="addexpaddress1" class="form-control mb-2">
                     <input type="text" id="addexpaddress2" name="addexpaddress2" class="form-control">
                 </div>
 
                 {{-- Country --}}
                 <div class="mb-3">
-                    <label for="addexpcountry" class="form-label">Country</label>
+                    <label for="addexpcountry" class="form-label" data-bm="Negara" data-en="Country">Country</label>
                     <select class="form-select" id="addexpcountry" name="addexpcountry">
-                        <option value="">-- Select Country --</option>
+                        <option value="" data-bm="-- Pilih Negara --" data-en="-- Select Country --">-- Select Country --</option>
                         {{-- @foreach ($country as $coun)
                             <option value="{{ $coun->code }}">{{ $coun->name }}</option>
                         @endforeach --}}

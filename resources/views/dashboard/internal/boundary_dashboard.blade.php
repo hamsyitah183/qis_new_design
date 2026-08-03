@@ -12,7 +12,7 @@
                                 </span>
                             </div>
                             <div>
-                                <p class="text-muted mb-1 fs-13">Total Import Permit</p>
+                                <p class="text-muted mb-1 fs-13" data-bm="Jumlah Permit Import" data-en="Total Import Permit">Total Import Permit</p>
                                 <h3 class="fw-semibold mb-0">{{ $totalImportPermits ?? 0 }}</h3>
                             </div>
                         </div>
@@ -29,7 +29,7 @@
                                 </span>
                             </div>
                             <div>
-                                <p class="text-muted mb-1 fs-13">Total Inspection Certificate</p>
+                                <p class="text-muted mb-1 fs-13" data-bm="Jumlah Sijil Pemeriksaan" data-en="Total Inspection Certificate">Total Inspection Certificate</p>
                                 <h3 class="fw-semibold mb-0">{{ $totalInspectionCerts ?? 0 }}</h3>
                             </div>
                         </div>
@@ -46,7 +46,7 @@
                                 </span>
                             </div>
                             <div>
-                                <p class="text-muted mb-1 fs-13">Total Consignment Certificate</p>
+                                <p class="text-muted mb-1 fs-13" data-bm="Jumlah Sijil Konsainan" data-en="Total Consignment Certificate">Total Consignment Certificate</p>
                                 <h3 class="fw-semibold mb-0">{{ $totalConsignmentCerts ?? 0 }}</h3>
                             </div>
                         </div>
@@ -64,7 +64,7 @@
                             <span class="avatar avatar-sm avatar-rounded bg-primary-transparent">
                                 <i class="ti ti-file-import fs-16"></i>
                             </span>
-                            Import Permit Applications
+                            <span data-bm="Permohonan Permit Import" data-en="Import Permit Applications">Import Permit Applications</span>
                         </div>
                     </div>
                     <div class="card-body">
@@ -72,10 +72,10 @@
                             <table id="importPermitTable" class="table text-nowrap table-compact">
                                 <thead>
                                     <tr>
-                                        <th>Application ID</th>
-                                        <th>User Name</th>
-                                        <th>Status</th>
-                                        <th>Action</th>
+                                        <th data-bm="ID Permohonan" data-en="Application ID">Application ID</th>
+                                        <th data-bm="Nama Pengguna" data-en="User Name">User Name</th>
+                                        <th data-bm="Status" data-en="Status">Status</th>
+                                        <th data-bm="Tindakan" data-en="Action">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -101,7 +101,7 @@
                                             <td>
                                                 <a href="{{ route('viewApplication', $application->application_id) }}"
                                                     class="btn btn-sm btn-primary-light">
-                                                    <i class="ti ti-eye"></i> View
+                                                    <i class="ti ti-eye"></i> <span data-bm="Lihat" data-en="View">View</span>
                                                 </a>
                                             </td>
                                         </tr>
@@ -124,7 +124,7 @@
                             <span class="avatar avatar-sm avatar-rounded bg-secondary-transparent">
                                 <i class="ti ti-file-certificate fs-16"></i>
                             </span>
-                            Inspection Certificate Applications
+                            <span data-bm="Permohonan Sijil Pemeriksaan" data-en="Inspection Certificate Applications">Inspection Certificate Applications</span>
                         </div>
                     </div>
                     <div class="card-body">
@@ -132,10 +132,10 @@
                             <table id="inspectionCertTable" class="table text-nowrap table-compact">
                                 <thead>
                                     <tr>
-                                        <th>Application ID</th>
-                                        <th>User Name</th>
-                                        <th>Status</th>
-                                        <th>Action</th>
+                                        <th data-bm="ID Permohonan" data-en="Application ID">Application ID</th>
+                                        <th data-bm="Nama Pengguna" data-en="User Name">User Name</th>
+                                        <th data-bm="Status" data-en="Status">Status</th>
+                                        <th data-bm="Tindakan" data-en="Action">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -161,7 +161,7 @@
                                             <td>
                                                 <a href="{{ route('inspection.view_details', $application->application_id) }}"
                                                     class="btn btn-sm btn-primary-light">
-                                                    <i class="ti ti-eye"></i> View
+                                                    <i class="ti ti-eye"></i> <span data-bm="Lihat" data-en="View">View</span>
                                                 </a>
                                             </td>
                                         </tr>
@@ -184,7 +184,7 @@
                             <span class="avatar avatar-sm avatar-rounded bg-info-transparent">
                                 <i class="ti ti-file-text fs-16"></i>
                             </span>
-                            Consignment Certificate Applications
+                            <span data-bm="Permohonan Sijil Konsainan" data-en="Consignment Certificate Applications">Consignment Certificate Applications</span>
                         </div>
                     </div>
                     <div class="card-body">
@@ -192,10 +192,10 @@
                             <table id="consignmentCertTable" class="table text-nowrap table-compact">
                                 <thead>
                                     <tr>
-                                        <th>Application ID</th>
-                                        <th>User Name</th>
-                                        <th>Status</th>
-                                        <th>Action</th>
+                                        <th data-bm="ID Permohonan" data-en="Application ID">Application ID</th>
+                                        <th data-bm="Nama Pengguna" data-en="User Name">User Name</th>
+                                        <th data-bm="Status" data-en="Status">Status</th>
+                                        <th data-bm="Tindakan" data-en="Action">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -221,7 +221,7 @@
                                             <td>
                                                 <a href="{{ url('/view_consignment/' . $application->application_id) }}"
                                                     class="btn btn-sm btn-primary-light">
-                                                    <i class="ti ti-eye"></i> View
+                                                    <i class="ti ti-eye"></i> <span data-bm="Lihat" data-en="View">View</span>
                                                 </a>
                                             </td>
                                         </tr>

@@ -7,7 +7,7 @@
                         <table class="table  text-nowrap">
                             <thead>
                                 <tr class="bg-light">
-                                    <th scope="col">Importer & Exporter Details</th>
+                                    <th scope="col" data-bm="Butiran Pengimport & Pengeksport" data-en="Importer & Exporter Details">Importer & Exporter Details</th>
                                     <th scope="col"></th>
                                     <th scope="col"></th>
                                 </tr>
@@ -15,8 +15,8 @@
                             <tbody>
                                 <tr>
                                     <td class="w-25">
-                                        <span class="d-block fw-semibold  "><strong>Exporter</strong>
-                                            Name</span>
+                                        <span class="d-block fw-semibold  "><strong data-bm="Pengeksport" data-en="Exporter">Exporter</strong>
+                                            <span data-bm="Nama" data-en="Name">Name</span></span>
                                     </td>
                                     <td class="w-10">:</td>
                                     <td class="text-start  text-muted" id="importerName">
@@ -25,7 +25,7 @@
                                 </tr>
                                 <tr>
                                     <td class="w-25">
-                                        <span class="d-block fw-semibold  ">&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <span class="d-block fw-semibold  " data-bm="Telefon" data-en="Phone">&nbsp;&nbsp;&nbsp;&nbsp;
                                             Phone</span>
                                     </td>
                                     <td class="w-10">:</td>
@@ -35,7 +35,7 @@
                                 </tr>
                                 <tr>
                                     <td class="w-25">
-                                        <span class="d-block fw-semibold  ">&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <span class="d-block fw-semibold  " data-bm="Alamat" data-en="Address">&nbsp;&nbsp;&nbsp;&nbsp;
                                             Address</span>
                                     </td>
                                     <td class="w-10">:</td>
@@ -48,8 +48,8 @@
                                 </tr>
                                 <tr>
                                     <td class="w-25">
-                                        <span class="d-block fw-semibold  "><strong>Exporter</strong>
-                                            Name</span>
+                                        <span class="d-block fw-semibold  "><strong data-bm="Pengeksport" data-en="Exporter">Exporter</strong>
+                                            <span data-bm="Nama" data-en="Name">Name</span></span>
                                     </td>
                                     <td class="w-10">:</td>
                                     <td class="text-start text-muted" id="sexpName">
@@ -58,7 +58,7 @@
                                 </tr>
                                 <tr>
                                     <td class="w-25">
-                                        <span class="d-block fw-semibold  ">&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <span class="d-block fw-semibold  " data-bm="Telefon" data-en="Phone">&nbsp;&nbsp;&nbsp;&nbsp;
                                             Phone</span>
                                     </td>
                                     <td class="w-10">:</td>
@@ -68,7 +68,7 @@
                                 </tr>
                                 <tr>
                                     <td class="w-25">
-                                        <span class="d-block fw-semibold  ">&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <span class="d-block fw-semibold  " data-bm="Alamat" data-en="Address">&nbsp;&nbsp;&nbsp;&nbsp;
                                             Address</span>
                                     </td>
                                     <td class="w-10">:</td>
@@ -78,7 +78,7 @@
                                 </tr>
                                 <tr>
                                     <td class="w-25">
-                                        <span class="d-block fw-semibold  ">&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <span class="d-block fw-semibold  " data-bm="Negara" data-en="Country">&nbsp;&nbsp;&nbsp;&nbsp;
                                             Country</span>
                                     </td>
                                     <td class="w-10">:</td>
@@ -99,7 +99,7 @@
                         <table id="summaryTable" class="table text-nowrap">
                             <thead>
                                 <tr class="bg-light">
-                                    <th scope="col">Permit Details</th>
+                                    <th scope="col" data-bm="Butiran Permit" data-en="Permit Details">Permit Details</th>
                                     <th scope="col"></th>
                                     <th scope="col"></th>
                                 </tr>
@@ -107,7 +107,7 @@
                             <tbody>
                                 <tr>
                                     <td class="w-25">
-                                        <span class="d-block fw-semibold">Estimated Time
+                                        <span class="d-block fw-semibold" data-bm="Anggaran Masa Ketibaan" data-en="Estimated Time Arrival">Estimated Time
                                             Arrival</span>
                                     </td>
                                     <td class="w-10">:</td>
@@ -117,7 +117,7 @@
                                 </tr>
                                 <tr>
                                     <td class="w-25">
-                                        <span class="d-block fw-semibold">Transport Type</span>
+                                        <span class="d-block fw-semibold" data-bm="Jenis Pengangkutan" data-en="Transport Type">Transport Type</span>
                                     </td>
                                     <td class="w-10">:</td>
                                     <td class="text-start  text-muted" id="strty">
@@ -126,7 +126,7 @@
                                 </tr>
                                 <tr>
                                     <td class="w-25">
-                                        <span class="d-block fw-semibold">Entry Point</span>
+                                        <span class="d-block fw-semibold" data-bm="Pintu Masuk" data-en="Entry Point">Entry Point</span>
                                     </td>
                                     <td class="w-10">:</td>
                                     <td class="text-start  text-muted" id="sentryp">
@@ -194,7 +194,7 @@
                         <table class="table text-nowrap">
                             <thead>
                                 <tr class="bg-light">
-                                    <th scope="col">Consignment Details</th>
+                                    <th scope="col" data-bm="Butiran Konsainan" data-en="Consignment Details">Consignment Details</th>
                                     <th scope="col"></th>
                                     <th scope="col"></th>
                                 </tr>
@@ -207,18 +207,18 @@
                                                 <thead class="table-primary">
                                                     <tr>
 
-                                                        <th scope="col">Item Name</th>
-                                                        <th scope="col">Quantity</th>
-                                                        <th scope="col" style="">
+                                                        <th scope="col" data-bm="Nama Item" data-en="Item Name">Item Name</th>
+                                                        <th scope="col" data-bm="Kuantiti" data-en="Quantity">Quantity</th>
+                                                        <th scope="col" style="" data-bm="Tujuan" data-en="Purpose">
                                                             Purpose</th>
-                                                        <th scope="col">Value</th>
+                                                        <th scope="col" data-bm="Nilai" data-en="Value">Value</th>
 
 
-                                                        <th scope="col">Permit Status</th>
+                                                        <th scope="col" data-bm="Status Permit" data-en="Permit Status">Permit Status</th>
 
 
 
-                                                        <th scope="col">Action</th>
+                                                        <th scope="col" data-bm="Tindakan" data-en="Action">Action</th>
 
                                                     </tr>
                                                 </thead>
@@ -259,7 +259,7 @@
                                                 <div class="modal-dialog modal-xl">
                                                     <div class="modal-content">
                                                         <div class="modal-header">
-                                                            <h5 class="modal-title">Edit
+                                                            <h5 class="modal-title" data-bm="Sunting Butiran Konsainan" data-en="Edit Consignment Details">Edit
                                                                 Consignment Details</h5>
                                                             <button type="button" class="btn-close"
                                                                 data-bs-dismiss="modal"></button>
@@ -267,7 +267,7 @@
                                                         <div class="modal-body">
                                                             <div class="row gy-4 mb-3">
                                                                 <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                                                                    <label for="itemSelect" class="form-label">Item
+                                                                    <label for="itemSelect" class="form-label" data-bm="Item" data-en="Item">Item
                                                                     </label>
                                                                     <!-- <select class="form-select" id="itemSelect" name="itemSelect">
                                                                                                                             <option value="aa" >-- Select Item</option>
@@ -275,13 +275,13 @@
                                                                                                                         </select> -->
                                                                     <input type="text" class="form-control"
                                                                         value="Fresh Fruit - CORN" disabled>
-                                                                    <small style="color:red">Item
+                                                                    <small style="color:red" data-bm="Item merujuk kepada Negara pengeksport" data-en="Item refering to the exporter's Country">Item
                                                                         refering to the
                                                                         exporter's
                                                                         Country</small>
                                                                 </div>
                                                                 <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                                                                    <label for="itemValue" class="form-label">Value
+                                                                    <label for="itemValue" class="form-label" data-bm="Nilai (RM)" data-en="Value (RM)">Value
                                                                         (RM)</label>
                                                                     <input type="text" class="form-control"
                                                                         id="itemValue" name="itemValue"
@@ -289,17 +289,17 @@
                                                                 </div>
                                                                 <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
                                                                     <label for="itemQuantity"
-                                                                        class="form-label">Quantity</label>
+                                                                        class="form-label" data-bm="Kuantiti" data-en="Quantity">Quantity</label>
                                                                     <input type="text" class="form-control"
                                                                         id="itemQuantity" name="itemQuantity">
                                                                 </div>
                                                                 <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
                                                                     <label for="itemMeasure"
-                                                                        class="form-label">Measurement
+                                                                        class="form-label" data-bm="Unit Ukuran" data-en="Measurement Unit">Measurement
                                                                         Unit</label>
                                                                     <select class="form-select" id="itemMeasure"
                                                                         name="itemMeasure">
-                                                                        <option value="">
+                                                                        <option value="" data-bm="-- Pilih Unit Ukuran --" data-en="-- Select Measurement Unit --">
                                                                             -- Select
                                                                             Measurement Unit --
                                                                         </option>
@@ -309,10 +309,10 @@
                                                                 </div>
                                                                 <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
                                                                     <label for="itemPurpose"
-                                                                        class="form-label">Purpose</label>
+                                                                        class="form-label" data-bm="Tujuan" data-en="Purpose">Purpose</label>
                                                                     <select class="form-select" id="itemPurpose"
                                                                         name="itemPurpose">
-                                                                        <option value="">
+                                                                        <option value="" data-bm="-- Pilih Tujuan --" data-en="-- Select Purpose --">
                                                                             -- Select Purpose --
                                                                         </option>
 
@@ -320,7 +320,7 @@
                                                                 </div>
                                                                 <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
                                                                     <label for="itemUses"
-                                                                        class="form-label">Uses</label>
+                                                                        class="form-label" data-bm="Kegunaan" data-en="Uses">Uses</label>
                                                                     <select class="form-select" id="itemUses"
                                                                         name="itemUses">
 
@@ -329,7 +329,7 @@
                                                                 <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12"
                                                                     style="display:none">
                                                                     <label for="itemUses"
-                                                                        class="form-label">Attachments</label>
+                                                                        class="form-label" data-bm="Lampiran" data-en="Attachments">Attachments</label>
                                                                     <select class="form-select" id="itemUses"
                                                                         name="itemUses">
 
@@ -338,7 +338,7 @@
                                                             </div>
                                                         </div>
                                                         <div class="modal-footer">
-                                                            <button class="btn btn-info btn-md">Update
+                                                            <button class="btn btn-info btn-md" data-bm="Kemaskini Butiran" data-en="Update Details">Update
                                                                 Details</button>
                                                         </div>
                                                     </div>
@@ -356,8 +356,8 @@
     </div>
     <div class="row justify-content-center" style="display:none">
         <div class="col-auto d-flex gap-3">
-            <button id="generateSummary" type="button" class="btn btn-md btn-warning">Generate Summary</button>
-            <button id="submitApps" type="button" class="btn btn-md btn-info">Submit
+            <button id="generateSummary" type="button" class="btn btn-md btn-warning" data-bm="Jana Ringkasan" data-en="Generate Summary">Generate Summary</button>
+            <button id="submitApps" type="button" class="btn btn-md btn-info" data-bm="Hantar Permohonan" data-en="Submit Application">Submit
                 Application</button>
         </div>
     </div>

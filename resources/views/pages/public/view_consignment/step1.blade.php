@@ -2,10 +2,10 @@
     <div class="row justify-content-center">
         <div class="col-xl-12">
             <div class="register-page">
-                <h6 class="mb-3">Permit Details :</h6>
+                <h6 class="mb-3" data-bm="Butiran Permit :" data-en="Permit Details :">Permit Details :</h6>
                 <div class="row gy-3 mb-3">
                     <div class="col-xl-6">
-                        <label for="eta" class="form-label">Estimated Time
+                        <label for="eta" class="form-label" data-bm="Anggaran Masa Ketibaan" data-en="Estimated Time Arrival">Estimated Time
                             Arrival</label>
                         <input type="text" class="form-control " id="eta" name="eta"
                             value="{{ $application->eta ? \Carbon\Carbon::parse($application->eta)->format('d/m/Y') : '' }}"
@@ -14,18 +14,18 @@
                 </div>
                 <div class="row gy-3">
                     <div class="col-xl-6">
-                        <label for="trnptType" class="form-label">Transport Type</label>
+                        <label for="trnptType" class="form-label" data-bm="Jenis Pengangkutan" data-en="Transport Type">Transport Type</label>
                         <select class="form-select" id="trnptType" name="trnptType" data-route="/public/get_entry_point"
                             disabled>
                             <option value="">{{ $application->transport_type }}</option>
-                            <option value="Air">Air</option>
-                            <option value="Sea">Sea</option>
-                            <option value="Land">Land</option>
+                            <option value="Air" data-bm="Udara" data-en="Air">Air</option>
+                            <option value="Sea" data-bm="Laut" data-en="Sea">Sea</option>
+                            <option value="Land" data-bm="Darat" data-en="Land">Land</option>
                         </select>
 
                     </div>
                     <div class="col-xl-6">
-                        <label for="entryPoint" class="form-label">Entry Point</label>
+                        <label for="entryPoint" class="form-label" data-bm="Pintu Masuk" data-en="Entry Point">Entry Point</label>
                         <input type="text" id="entryPoint" disabled class="form-control"
                             value="{{ $application->entryPoint?->entry_name }}">
                         <input type="hidden" id="descEntryPoint">

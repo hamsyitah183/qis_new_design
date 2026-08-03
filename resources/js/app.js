@@ -277,6 +277,7 @@ function languange() {
                                 }
                             }
                         });
+                    }
                     var titleText =
                         el.getAttribute("data-" + lang + "-title") ||
                         el.getAttribute("data-title-en");

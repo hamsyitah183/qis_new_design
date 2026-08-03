@@ -26,7 +26,7 @@
                                 </span>
                             </div>
                             <div>
-                                <p class="text-muted mb-1 fs-13">Total Import Permit</p>
+                                <p class="text-muted mb-1 fs-13" data-bm="Jumlah Permit Import" data-en="Total Import Permit">Total Import Permit</p>
                                 <h3 class="fw-semibold mb-0" id="ipCount">0</h3>
                             </div>
                         </div>
@@ -56,7 +56,7 @@
                                 </span>
                             </div>
                             <div>
-                                <p class="text-muted mb-1 fs-13">Total Inspection Certificate Permit</p>
+                                <p class="text-muted mb-1 fs-13" data-bm="Jumlah Sijil Pemeriksaan" data-en="Total Inspection Certificate Permit">Total Inspection Certificate Permit</p>
                                 <h3 class="fw-semibold mb-0" id="icCount">0</h3>
                             </div>
                         </div>
@@ -86,7 +86,7 @@
                                 </span>
                             </div>
                             <div>
-                                <p class="text-muted mb-1 fs-13">Total Consignment Certificate Permit</p>
+                                <p class="text-muted mb-1 fs-13" data-bm="Jumlah Sijil Konsainan" data-en="Total Consignment Certificate Permit">Total Consignment Certificate Permit</p>
                                 <h3 class="fw-semibold mb-0" id="ccCount">0</h3>
                             </div>
                         </div>
@@ -205,20 +205,20 @@
             <div class="col-xl-12">
                 <div class="card custom-card">
                     <div class="card-header justify-content-between">
-                        <div class="card-title">Action Needed Queue</div>
-                        <div class="text-muted fs-11">Showing oldest pending applications</div>
+                        <div class="card-title" data-bm="Barisan Tindakan Diperlukan" data-en="Action Needed Queue">Action Needed Queue</div>
+                        <div class="text-muted fs-11" data-bm="Menunjukkan permohonan tertangguh yang terawal" data-en="Showing oldest pending applications">Showing oldest pending applications</div>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-bordered text-nowrap mt-2">
                                 <thead>
                                     <tr>
-                                        <th scope="col">Type</th>
-                                        <th scope="col">Application ID</th>
-                                        <th scope="col">Submitter</th>
-                                        <th scope="col">Received Date</th>
-                                        <th scope="col">Status</th>
-                                        <th scope="col">Action</th>
+                                        <th scope="col" data-bm="Jenis" data-en="Type">Type</th>
+                                        <th scope="col" data-bm="ID Permohonan" data-en="Application ID">Application ID</th>
+                                        <th scope="col" data-bm="Pemohon" data-en="Submitter">Submitter</th>
+                                        <th scope="col" data-bm="Tarikh Diterima" data-en="Received Date">Received Date</th>
+                                        <th scope="col" data-bm="Status" data-en="Status">Status</th>
+                                        <th scope="col" data-bm="Tindakan" data-en="Action">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -263,13 +263,13 @@
                                                     };
                                                 @endphp
                                                 <a href="{{ $viewUrl }}" class="btn btn-sm btn-primary">
-                                                    <i class="ti ti-eye me-1"></i> View & Verify
+                                                    <i class="ti ti-eye me-1"></i> <span data-bm="Lihat & Sahkan" data-en="View & Verify">View & Verify</span>
                                                 </a>
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="text-center">No pending applications found.</td>
+                                            <td colspan="6" class="text-center" data-bm="Tiada permohonan tertangguh dijumpai." data-en="No pending applications found.">No pending applications found.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>

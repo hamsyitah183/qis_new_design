@@ -48,22 +48,22 @@
             , <strong>Public User:</strong> {{ $publicUserName }}
         @endif
         @if(request('username'))
-            , <strong>Submitted By:</strong> {{ request('username') }}
+            , <strong data-bm="Dihantar Oleh:" data-en="Submitted By:">Submitted By:</strong> {{ request('username') }}
         @endif
         @if(request('start_date') || request('end_date'))
             <br>
-            <strong>Period:</strong> {{ request('start_date') ?? 'Start' }} to {{ request('end_date') ?? 'End' }}
+            <strong data-bm="Tempoh:" data-en="Period:">Period:</strong> {{ request('start_date') ?? 'Start' }} <span data-bm="hingga" data-en="to">to</span> {{ request('end_date') ?? 'End' }}
         @endif
     </div>
 
     <table>
         <thead>
             <tr>
-                <th>Application ID</th>
-                <th>Date</th>
-                <th>Importer</th>
-                <th>Exporter</th>
-                <th>Status</th>
+                <th data-bm="ID Permohonan" data-en="Application ID">Application ID</th>
+                <th data-bm="Tarikh" data-en="Date">Date</th>
+                <th data-bm="Pengimport" data-en="Importer">Importer</th>
+                <th data-bm="Pengeksport" data-en="Exporter">Exporter</th>
+                <th data-bm="Status" data-en="Status">Status</th>
             </tr>
         </thead>
         <tbody>
@@ -77,7 +77,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" style="text-align: center;">No records found.</td>
+                    <td colspan="5" style="text-align: center;" data-bm="Tiada rekod dijumpai." data-en="No records found.">No records found.</td>
                 </tr>
             @endforelse
         </tbody>

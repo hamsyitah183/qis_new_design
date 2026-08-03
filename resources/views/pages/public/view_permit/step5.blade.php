@@ -8,7 +8,7 @@
                         <table class="table text-nowrap">
                             <thead>
                                 <tr class="bg-light">
-                                    <th scope="col">Permit Pending for Payment</th>
+                                    <th scope="col" data-bm="Permit Menunggu Bayaran" data-en="Permit Pending for Payment">Permit Pending for Payment</th>
                                     <th scope="col"></th>
                                     <th scope="col"></th>
                                 </tr>
@@ -27,10 +27,10 @@
 
                                                             </div>
                                                         </th>
-                                                        <th scope="col">Permit Number</th>
-                                                        <th scope="col">Item Name</th>
+                                                        <th scope="col" data-bm="Nombor Permit" data-en="Permit Number">Permit Number</th>
+                                                        <th scope="col" data-bm="Nama Item" data-en="Item Name">Item Name</th>
 
-                                                        <th scope="col">Value</th>
+                                                        <th scope="col" data-bm="Nilai" data-en="Value">Value</th>
 
 
 
@@ -49,7 +49,7 @@
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <td colspan="2" class="text-end fw-bold">Total:</td>
+                                    <td colspan="2" class="text-end fw-bold" data-bm="Jumlah:" data-en="Total:">Total:</td>
                                     <td class="fw-bold" id="totalValue">RM 0</td>
                                 </tr>
                             </tfoot>

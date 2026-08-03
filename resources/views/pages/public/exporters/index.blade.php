@@ -18,9 +18,9 @@
 @section('content')
 <div class="row">
     <div class="col-xl-12 d-flex justify-content-between align-items-center mb-4">
-        <h4 class="page-title fw-semibold fs-18 mb-0">Manage My Exporters</h4>
+        <h4 class="page-title fw-semibold fs-18 mb-0" data-bm="Urus Pengeksport Saya" data-en="Manage My Exporters">Manage My Exporters</h4>
         <button type="button" class="btn btn-primary btn-wave" data-bs-toggle="modal" data-bs-target="#addExporterModal">
-            <i class="ti ti-plus me-1"></i> Add New Exporter
+            <i class="ti ti-plus me-1"></i> <span data-bm="Tambah Pengeksport Baru" data-en="Add New Exporter">Add New Exporter</span>
         </button>
     </div>
 </div>
@@ -29,7 +29,7 @@
     <div class="col-xl-12">
         <div class="card custom-card">
             <div class="card-header">
-                <div class="card-title">Exporters List</div>
+                <div class="card-title" data-bm="Senarai Pengeksport" data-en="Exporters List">Exporters List</div>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -37,11 +37,11 @@
                         <thead>
                             <tr>
                                 <th scope="col">#</th>
-                                <th scope="col">Name</th>
-                                <th scope="col">Phone Number</th>
-                                <th scope="col">Address</th>
-                                <th scope="col">Country</th>
-                                <th scope="col">Actions</th>
+                                <th scope="col" data-bm="Nama" data-en="Name">Name</th>
+                                <th scope="col" data-bm="Nombor Telefon" data-en="Phone Number">Phone Number</th>
+                                <th scope="col" data-bm="Alamat" data-en="Address">Address</th>
+                                <th scope="col" data-bm="Negara" data-en="Country">Country</th>
+                                <th scope="col" data-bm="Tindakan" data-en="Actions">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -65,7 +65,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted">No exporters found. Click "Add New Exporter" to get started.</td>
+                                    <td colspan="6" class="text-center text-muted" data-bm='Tiada pengeksport dijumpai. Klik "Tambah Pengeksport Baru" untuk bermula.' data-en='No exporters found. Click "Add New Exporter" to get started.'>No exporters found. Click "Add New Exporter" to get started.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -81,34 +81,34 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addExporterModalLabel">Add New Exporter</h5>
+                <h5 class="modal-title" id="addExporterModalLabel" data-bm="Tambah Pengeksport Baru" data-en="Add New Exporter">Add New Exporter</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="exporterForm">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="exporterName" class="form-label">Exporter Name <span class="text-danger">*</span></label>
+                        <label for="exporterName" class="form-label"><span data-bm="Nama Pengeksport" data-en="Exporter Name">Exporter Name</span> <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="exporterName" name="name" required>
                     </div>
                     <div class="mb-3">
-                        <label for="exporterPhone" class="form-label">Phone Number</label>
+                        <label for="exporterPhone" class="form-label" data-bm="Nombor Telefon" data-en="Phone Number">Phone Number</label>
                         <input type="text" class="form-control" id="exporterPhone" name="phone_no">
                     </div>
                     <div class="mb-3">
-                        <label for="exporterAddress" class="form-label">Address</label>
+                        <label for="exporterAddress" class="form-label" data-bm="Alamat" data-en="Address">Address</label>
                         <textarea class="form-control" id="exporterAddress" name="address" rows="3"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label for="exporterCountry" class="form-label">Country <span class="text-danger">*</span></label>
+                        <label for="exporterCountry" class="form-label"><span data-bm="Negara" data-en="Country">Country</span> <span class="text-danger">*</span></label>
                         <select class="form-select" id="exporterCountry" name="country" required>
-                            <option value="">Select Country</option>
+                            <option value="" data-bm="Pilih Negara" data-en="Select Country">Select Country</option>
                             {{-- Countries will be populated via AJAX --}}
                         </select>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Exporter</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal" data-bm="Batal" data-en="Cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary" data-bm="Simpan Pengeksport" data-en="Save Exporter">Save Exporter</button>
                 </div>
             </form>
         </div>
