@@ -4,15 +4,13 @@
 
         <div class="row gy-3">
 
-            <a href = "#" id = "selfApply" class="col-6">
+            <a href="#" id="selfApply" class="col-6">
                 <div class="card custom-card card-style-6 border shadow-sm type-element">
                     <div class="card-body p-3" for="type-import">
-
 
                         <div class="d-flex justify-content-center mb-3 type-div">
                             <div class="d-flex flex-column align-items-center gap-2">
                                 <h6 class="icon-box fs-16 fw-semibold border border-3 p-3 rounded-3">
-                                  
                                     <i class="bi bi-person-fill fs-2 text-primary icon"></i>
                                 </h6>
                                 <span class="fs-15 fw-bold" data-en="Self Apply" data-bm="Mohon Sendiri">Self Apply</span>
@@ -21,15 +19,14 @@
                     </div>
                 </div>
             </a>
-            <a href = "#" id = "othersApply" class="col-6">
+
+            <a href="#" id="othersApply" class="col-6">
                 <div class="card custom-card card-style-6 border shadow-sm type-element">
                     <div class="card-body p-3" for="type-import">
-
 
                         <div class="d-flex justify-content-center mb-3 type-div">
                             <div class="d-flex flex-column align-items-center gap-2">
                                 <h6 class="icon-box fs-16 fw-semibold border border-3 p-3 rounded-3">
-                                    {{-- <i class="bx bx-package fs-2 text-primary icon"></i> --}}
                                     <i class="bi bi-people-fill fs-2 text-primary icon"></i>
                                 </h6>
                                 <span class="fs-15 fw-bold" data-en="Apply For Others" data-bm="Mohon Untuk Pihak Lain">Apply For Others</span>
@@ -37,10 +34,11 @@
                         </div>
                     </div>
                 </div>
-
             </a>
+
         </div>
     </div>
+
     <div class="p-3 border-top border-block-start-dashed d-flex justify-content-between">
         <button class="btn btn-secondary" id="backToAccountTab" type="button">
             <i class="ri-arrow-left-line me-2 align-middle"></i>

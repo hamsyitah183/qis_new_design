@@ -1,4 +1,4 @@
-import { applyTranslations } from '../../app.js';
+import { applyTranslations } from "../../app.js";
 import {
     PERMITS,
     STAGE_CONFIG,
@@ -6,8 +6,8 @@ import {
     escapeHtml,
     money,
     renderAttachmentList,
+} from "./test1.js";
 
-} from './test1.js';
 // ---------------------------------------------------------------
 // Per-permit activity log (keyed by permit_number)
 // // TODO verify: replace with real per-permit activity once your API
@@ -21,17 +21,33 @@ const PERMIT_ACTIVITY = {};
 // ---------------------------------------------------------------
 let permitDetailOffcanvas = null;
 
+// Add this near the top of your module
+function getCurrentLang() {
+    try {
+        return localStorage.getItem("qis_lang") || "en";
+    } catch {
+        return "en";
+    }
+}
+
+function getStatusText(status) {
+    const cfg = PERMIT_STATUS_CONFIG[status] || PERMIT_STATUS_CONFIG.queued;
+    const lang = getCurrentLang();
+    return lang === "bm" ? cfg.bm : cfg.en;
+}
+
 export function initPermitDetailOffcanvas() {
-    const el = document.getElementById('permitDetailOffcanvas');
+    const el = document.getElementById("permitDetailOffcanvas");
     if (el && !permitDetailOffcanvas) {
         permitDetailOffcanvas = new bootstrap.Offcanvas(el, {
             backdrop: true,
             keyboard: true,
             scroll: false,
         });
-        el.addEventListener('show.bs.offcanvas', () => {
-            const detailsTab = document.getElementById('pd-details-tab');
-            if (detailsTab) bootstrap.Tab.getOrCreateInstance(detailsTab).show();
+        el.addEventListener("show.bs.offcanvas", () => {
+            const detailsTab = document.getElementById("pd-details-tab");
+            if (detailsTab)
+                bootstrap.Tab.getOrCreateInstance(detailsTab).show();
         });
     }
 }
@@ -54,12 +70,18 @@ function paymentCtaHtml(permit) {
                 <div class="pd-payment-cta-text">
                     <i class="bi ${failed ? 'bi-exclamation-octagon' : 'bi-credit-card'}"></i>
                     <div>
-                        <strong>${failed ? 'Payment failed — please retry' : 'Payment required'}</strong>
-                        <span>This permit will not be issued until payment is completed.</span>
+                        <strong data-en="${failed ? 'Payment failed — please retry' : 'Payment required'}" 
+                                data-bm="${failed ? 'Pembayaran gagal — sila cuba semula' : 'Pembayaran diperlukan'}">
+                            ${failed ? 'Payment failed — please retry' : 'Payment required'}
+                        </strong>
+                        <span data-en="This permit will not be issued until payment is completed." 
+                              data-bm="Permit ini tidak akan dikeluarkan sehingga pembayaran selesai.">
+                            This permit will not be issued until payment is completed.
+                        </span>
                     </div>
                 </div>
-                <button type="button" class="ipv-btn-primary is-pay pd-pay-now" data-permit="${permit.id}" data-value="${permit.value}">
-                    <i class="bi bi-credit-card"></i> Pay RM ${money(permit.value)} Now
+                <button type="button" class="ipv-btn-primary is-pay pd-pay-now" data-permit="${permit.id}" data-value="12">
+                    <i class="bi bi-credit-card"></i> <span data-en="Pay" data-bm="Bayar">Pay</span> RM 12 <span data-en="Now" data-bm="Sekarang">Now</span>
                 </button>
             </div>
         `;
@@ -72,12 +94,15 @@ function paymentCtaHtml(permit) {
                 <div class="pd-payment-cta-text">
                     <i class="bi bi-check-circle"></i>
                     <div>
-                        <strong>Payment complete</strong>
-                        <span>This permit is active and ready to print.</span>
+                        <strong data-en="Payment complete" data-bm="Pembayaran selesai">Payment complete</strong>
+                        <span data-en="This permit is active and ready to print." 
+                              data-bm="Permit ini aktif dan sedia untuk dicetak.">
+                            This permit is active and ready to print.
+                        </span>
                     </div>
                 </div>
                 <button type="button" class="ipv-btn-primary generatePermit" data-permit="${slug}">
-                    <i class="bi bi-download"></i> Print / Download Permit
+                    <i class="bi bi-download"></i> <span data-en="Print / Download Permit" data-bm="Cetak / Muat Turun Permit">Print / Download Permit</span>
                 </button>
             </div>
         `;
@@ -85,46 +110,47 @@ function paymentCtaHtml(permit) {
 
     return '';
 }
-
 export function openPermitDetail(permitNumber) {
-    const permit = PERMITS.find(p => p.permit_number === permitNumber);
+    const permit = PERMITS.find((p) => p.permit_number === permitNumber);
     if (!permit) return;
 
-    const cfg = PERMIT_STATUS_CONFIG[permit.status] || PERMIT_STATUS_CONFIG.queued;
+    const cfg =
+        PERMIT_STATUS_CONFIG[permit.status] || PERMIT_STATUS_CONFIG.queued;
     const detail = permit.consignment_detail;
 
-    console.log('permits details', permit)
+    console.log("permits details", permit);
 
     // Header
-    document.getElementById('permitDetailOffcanvasLabel').textContent = permit.consignment_detail.item_name;
-    const badge = document.getElementById('pdBadge');
-    badge.textContent = cfg.en;
+    document.getElementById("permitDetailOffcanvasLabel").textContent =
+        permit.consignment_detail.item_name;
+    const badge = document.getElementById("pdBadge");
+    badge.textContent = getStatusText(permit.status);
     badge.className = `ipv-badge ms-2 is-${cfg.color}`;
 
-    const agreementBanner = permit.agreedAt
-        ? `<div class="alert alert-success mb-3 d-flex align-items-center">
-            <i class="bi bi-check-circle-fill me-2"></i>
-            <div>
-                <strong>
-                    <span data-en="Declaration Confirmed" data-bm="Pengisytiharan Disahkan">Declaration Confirmed</span>
-                </strong>
-                <div class="small text-muted">
-                    <span data-en="Agreed on:" data-bm="Dipersetujui pada:">Agreed on:</span> ${permit.agreedAt}
-                </div>
-            </div>
-        </div>`
-        : `<div class="alert alert-warning mb-3">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+   const agreementBanner = permit.agreedAt
+    ? `<div class="alert alert-success mb-3 d-flex align-items-center">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <div>
             <strong>
-                <span data-en="Pending Agreement" data-bm="Menunggu Persetujuan">Pending Agreement</span>
+                <span data-en="Declaration Confirmed" data-bm="Pengisytiharan Disahkan">Declaration Confirmed</span>
             </strong>
-            - <span data-en="User has not confirmed this item yet." data-bm="Pengguna belum mengesahkan item ini lagi.">User has not confirmed this item yet.</span>
-        </div>`;
+            <div class="small text-muted">
+                <span data-en="Agreed on:" data-bm="Dipersetujui pada:">Agreed on:</span> ${permit.agreedAt}
+            </div>
+        </div>
+    </div>`
+    : `<div class="alert alert-warning mb-3">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <strong>
+            <span data-en="Pending Agreement" data-bm="Menunggu Persetujuan">Pending Agreement</span>
+        </strong>
+        - <span data-en="User has not confirmed this item yet." data-bm="Pengguna belum mengesahkan item ini lagi.">User has not confirmed this item yet.</span>
+    </div>`;
 
     // ---- Details tab ----
     const attachListId = `pd-attach-${permit.permit_number}`;
 
-    document.getElementById('pdDetailsContent').innerHTML = `
+    document.getElementById("pdDetailsContent").innerHTML = `
         ${paymentCtaHtml(permit)}
 
         ${agreementBanner}
@@ -196,30 +222,42 @@ export function openPermitDetail(permitNumber) {
             </div>
         </div>
 
-        ${permit.remark ? `
+        ${
+            permit.remark
+                ? `
             <div class="pd-section-label mt-4" data-en="Permit Remark" data-bm="Catatan Permit">Permit Remark</div>
             <div class="ipv-permit-remark is-${cfg.color}">
                 <i class="bi bi-info-circle"></i>
                 <span>${escapeHtml(permit.remark)}</span>
             </div>
-        ` : ''}
+        `
+                : ""
+        }
 
-        ${permit.conditions ? `
+        ${
+            permit.conditions
+                ? `
             <div class="pd-section-label mt-4" data-en="Conditions" data-bm="Syarat">Conditions</div>
             <div class="ipv-condition-item">
                 <span>${escapeHtml(permit.conditions)}</span>
             </div>
-        ` : ''}
+        `
+                : ""
+        }
 
         <div class="pd-section-label mt-4" data-en="Attachments" data-bm="Lampiran">Attachments (${permit.attachments.length})</div>
         <div class="ipv-attach-list" id="${attachListId}"></div>
     `;
 
     const attachContainer = document.getElementById(attachListId);
-    renderAttachmentList(attachContainer, permit.attachments, permit.attachments.length);
+    renderAttachmentList(
+        attachContainer,
+        permit.attachments,
+        permit.attachments.length,
+    );
 
     // Apply translations to the newly rendered details
-    const detailsContainer = document.getElementById('pdDetailsContent');
+    const detailsContainer = document.getElementById("pdDetailsContent");
     if (detailsContainer) {
         applyTranslations(detailsContainer);
     }
@@ -227,14 +265,20 @@ export function openPermitDetail(permitNumber) {
     // ---- Activity tab ----
     // Prefer real per-permit activity from the API if it's there, fall
     // back to the (currently empty) static map above.
-    const log = permit._raw?.activity_log || PERMIT_ACTIVITY[permit.permit_number] || [];
-    const timelineEl = document.getElementById('pdActivityTimeline');
+    const log =
+        permit._raw?.activity_log ||
+        PERMIT_ACTIVITY[permit.permit_number] ||
+        [];
+    const timelineEl = document.getElementById("pdActivityTimeline");
     if (!log.length) {
-        timelineEl.innerHTML = '<div class="ipv-empty-state"><i class="bi bi-clock-history"></i><p>No activity recorded yet.</p></div>';
+        timelineEl.innerHTML =
+            '<div class="ipv-empty-state"><i class="bi bi-clock-history"></i><p>No activity recorded yet.</p></div>';
     } else {
-        timelineEl.innerHTML = log.map(entry => {
-            const stageCfg = STAGE_CONFIG[entry.stage] || STAGE_CONFIG.email;
-            return `
+        timelineEl.innerHTML = log
+            .map((entry) => {
+                const stageCfg =
+                    STAGE_CONFIG[entry.stage] || STAGE_CONFIG.email;
+                return `
                 <div class="ipv-timeline-item">
                     <div class="ipv-timeline-icon is-${stageCfg.color}"><i class="bi ${stageCfg.icon}"></i></div>
                     <div class="ipv-timeline-body">
@@ -246,7 +290,8 @@ export function openPermitDetail(permitNumber) {
                     </div>
                 </div>
             `;
-        }).join('');
+            })
+            .join("");
     }
 
     // Reinitialize offcanvas to ensure it's properly set up
@@ -254,28 +299,31 @@ export function openPermitDetail(permitNumber) {
         initPermitDetailOffcanvas();
     }
     // Always get a fresh instance to ensure it can be shown again
-    const offcanvasInstance = bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('permitDetailOffcanvas'));
+    const offcanvasInstance = bootstrap.Offcanvas.getOrCreateInstance(
+        document.getElementById("permitDetailOffcanvas"),
+    );
     offcanvasInstance.show();
 }
 
 // Listen for language changes and re-apply translations to offcanvas if visible
-document.addEventListener('storage', (e) => {
-    if (e.key === 'qis_lang') {
-        const offcanvasEl = document.getElementById('permitDetailOffcanvas');
-        if (offcanvasEl && offcanvasEl.classList.contains('show')) {
+document.addEventListener("storage", (e) => {
+    if (e.key === "qis_lang") {
+        const offcanvasEl = document.getElementById("permitDetailOffcanvas");
+        if (offcanvasEl && offcanvasEl.classList.contains("show")) {
             // Re-apply translations to the currently visible offcanvas
-            const detailsContainer = document.getElementById('pdDetailsContent');
+            const detailsContainer =
+                document.getElementById("pdDetailsContent");
             if (detailsContainer) {
                 applyTranslations(detailsContainer);
             }
-            const activityContainer = document.getElementById('pdActivityTimeline');
+            const activityContainer =
+                document.getElementById("pdActivityTimeline");
             if (activityContainer) {
                 applyTranslations(activityContainer);
             }
         }
     }
 });
-
 
 // Import these functions from test1.js or define them here
 const attachmentRegistry = new Map();

@@ -25,25 +25,6 @@
 
 
             {{-- Inspection Certificate --}}
-            {{-- <div class="col-xl-4 cursor-pointer mb-3">
-                <div class="card custom-card card-style-6 border shadow-sm type-element">
-                    <label class="card-body p-3" for="type-inspection">
-                        <input class="form-check-input d-none" type="radio" id="type-inspection" name="type"
-                            value="inspection_certificate" data-type="inspection_certificate">
-
-                        <div class="d-flex justify-content-center mb-3 type-div">
-                            <div class="d-flex flex-column align-items-center gap-2">
-                                <h6 class="icon-box fs-16 fw-semibold border border-3 p-3 rounded-3">
-                                    <i class="bx bx-search fs-2 text-primary icon"></i>
-                                </h6>
-                                <span class="fs-15 fw-bold">Inspection Certificate</span>
-                            </div>
-                        </div>
-                    </label>
-                </div>
-            </div> --}}
-
-
             <div class="col-xl-4 cursor-pointer mb-3">
                 <div class="card custom-card card-style-6 border shadow-sm type-element"
                     data-type="inspection_certificate">
@@ -65,24 +46,6 @@
 
 
             {{-- Consignment Certificate --}}
-            {{-- <div class="col-xl-4 cursor-pointer mb-3">
-                <div class="card custom-card card-style-6 border shadow-sm type-element">
-                    <label class="card-body p-3" for="type-consignment">
-                        <input class="form-check-input d-none" type="radio" id="type-consignment" name="type"
-                            value="consignment" data-type="consignment">
-
-                        <div class="d-flex justify-content-center mb-3 type-div">
-                            <div class="d-flex flex-column align-items-center gap-2">
-                                <h6 class="icon-box fs-16 fw-semibold border border-3 p-3 rounded-3">
-                                    <i class="bx bx-file fs-2 text-primary icon"></i>
-                                </h6>
-                                <span class="fs-15 fw-bold">Consignment Certificate</span>
-                            </div>
-                        </div>
-                    </label>
-                </div>
-            </div> --}}
-
             <div class="col-xl-4 cursor-pointer mb-3">
                 <div class="card custom-card card-style-6 border shadow-sm type-element"
                     data-type="consignment">
@@ -90,7 +53,7 @@
                     <div class="card-body p-3">
                         <div class="d-flex justify-content-center mb-3 type-div">
                             <div class="d-flex flex-column align-items-center gap-2">
-                                  <h6 class="icon-box fs-16 fw-semibold border border-3 p-3 rounded-3">
+                                <h6 class="icon-box fs-16 fw-semibold border border-3 p-3 rounded-3">
                                     <i class="bx bx-file fs-2 text-primary icon"></i>
                                 </h6>
                                 <span class="fs-15 fw-bold" data-en="Consignment Certificate" data-bm="Sijil Konsainan">Consignment Certificate</span>
@@ -106,9 +69,7 @@
 
     </div>
 
-    <div
-        class="p-3 border-top border-block-start-dashed d-flex justify-content-between button-group align-items-center">
-
+    <div class="p-3 border-top border-block-start-dashed d-flex justify-content-between button-group align-items-center">
         <button class="btn btn-primary ms-auto" id="nextToPersonalTab" type="button">
             <span data-en="Next" data-bm="Seterusnya">Next</span>
             <i class="ri-arrow-right-line ms-2 align-middle"></i>

@@ -249,14 +249,10 @@ function languange() {
 
         function setLang(lang) {
             elements.forEach(function (el) {
-                var text = el.getAttribute("data-" + lang);
-                if (text === null) return;
-
-                // Check if this element has data-title attribute (for wizard steps)
+                // --- Handle data-title ---
                 if (
-                    el.hasAttribute("data-title") &&
-                    el.hasAttribute("data-en") &&
-                    el.hasAttribute("data-bm")
+                    el.hasAttribute("data-title-en") &&
+                    el.hasAttribute("data-title-bm")
                 ) {
                     el.setAttribute("data-title", text);
 
@@ -281,33 +277,62 @@ function languange() {
                                 }
                             }
                         });
+                    var titleText =
+                        el.getAttribute("data-" + lang + "-title") ||
+                        el.getAttribute("data-title-en");
+                    if (titleText) {
+                        el.setAttribute("data-title", titleText);
                     }
                 }
+
+                // --- Handle placeholder ---
+                var text = el.getAttribute("data-" + lang);
+                if (text === null) return;
 
                 if (el.getAttribute("data-i18n-attr") === "placeholder") {
                     el.setAttribute("placeholder", text);
                 } else {
+                    if (el.classList.contains("wizard-step")) {
+                        var span = el.querySelector("span:last-child");
+                        if (span) {
+                            span.textContent = text;
+                        }
+                    }
                     el.textContent = text;
                 }
             });
+
+            // --- Sync wizard-nav dot labels from wizard-content step titles ---
+            // Runs once per language switch (not per element), and works even
+            // though these step divs have no data-en/data-bm of their own.
+            document
+                .querySelectorAll(".wizard-content .wizard-step")
+                .forEach(function (stepEl) {
+                    var step = stepEl.getAttribute("data-step");
+                    var titleText =
+                        stepEl.getAttribute("data-title-" + lang) ||
+                        stepEl.getAttribute("data-title-en");
+                    if (!titleText) return;
+
+                    stepEl.setAttribute("data-title", titleText);
+
+                    var navSpan = document.querySelector(
+                        '.wizard-nav .wizard-step[data-step="' +
+                            step +
+                            '"] span:last-child',
+                    );
+                    if (navSpan) {
+                        navSpan.textContent = titleText;
+                    }
+                });
+
+            updateWizardButtons(lang);
 
             buttons.forEach(function (btn) {
                 btn.classList.toggle(
                     "active",
                     btn.getAttribute("data-lang") === lang,
                 );
-            });
-
-            // Update wizard buttons text
-            var wizardBtns = document.querySelectorAll(".wizard-btn");
-            wizardBtns.forEach(function (btn) {
-                if (btn.classList.contains("prev")) {
-                    btn.textContent = lang === "bm" ? "Kembali" : "Prev";
-                } else if (btn.classList.contains("next")) {
-                    btn.textContent = lang === "bm" ? "Seterusnya" : "Next";
-                } else if (btn.classList.contains("finish")) {
-                    btn.textContent = lang === "bm" ? "Hantar" : "Submit";
-                }
             });
 
             document.documentElement.setAttribute(
@@ -317,11 +342,7 @@ function languange() {
 
             try {
                 localStorage.setItem(STORAGE_KEY, lang);
-
-                applyTranslations();
-            } catch (e) {
-                /* storage unavailable, ignore */
-            }
+            } catch (e) {}
         }
 
         buttons.forEach(function (btn) {
@@ -333,29 +354,61 @@ function languange() {
         var savedLang = "en";
         try {
             savedLang = localStorage.getItem(STORAGE_KEY) || "en";
-        } catch (e) {
-            /* storage unavailable, default to en */
-        }
-
+        } catch (e) {}
         setLang(savedLang);
     })();
 }
-
 export function applyTranslations(container) {
     const lang = localStorage.getItem("qis_lang") || "en";
-    // Find all elements with data-en/data-bm inside this container
     const elements = container.querySelectorAll("[data-en]");
 
     elements.forEach(function (el) {
+        // Handle data-title
+        if (
+            el.hasAttribute("data-title-en") &&
+            el.hasAttribute("data-title-bm")
+        ) {
+            var titleText =
+                el.getAttribute("data-" + lang + "-title") ||
+                el.getAttribute("data-title-en");
+            if (titleText) {
+                el.setAttribute("data-title", titleText);
+            }
+        }
+
         const text = el.getAttribute("data-" + lang);
         if (text === null) return;
 
         if (el.getAttribute("data-i18n-attr") === "placeholder") {
             el.setAttribute("placeholder", text);
         } else {
+            // If it's a wizard step, update the displayed label as well
+            if (el.classList.contains("wizard-step")) {
+                var span = el.querySelector("span:last-child");
+                if (span) {
+                    span.textContent = text;
+                }
+            }
             el.textContent = text;
         }
     });
+}
+
+function updateWizardButtons(lang) {
+    const labels = {
+        en: { prev: "Prev", next: "Next", submit: "Submit" },
+        bm: { prev: "Kembali", next: "Seterusnya", submit: "Hantar" },
+    };
+    const t = labels[lang] || labels.en;
+    document
+        .querySelectorAll(".wizard-btn.prev")
+        .forEach((el) => (el.textContent = t.prev));
+    document
+        .querySelectorAll(".wizard-btn.next")
+        .forEach((el) => (el.textContent = t.next));
+    document
+        .querySelectorAll(".wizard-btn.finish, .wizard-btn.submit")
+        .forEach((el) => (el.textContent = t.submit));
 }
 
 languange();

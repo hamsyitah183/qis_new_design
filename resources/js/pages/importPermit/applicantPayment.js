@@ -158,6 +158,7 @@ function renderParties() {
 // ---------------------------------------------------------------
 
 function renderOrderList() {
+    console.log('item', ORDER.order_details)
     document.getElementById('apyOrderList').innerHTML = ORDER.order_details.map((item) => `
         <div class="apy-order-row">
             <div class="apy-order-row-icon"><i class="bi bi-box-seam"></i></div>

@@ -1,28 +1,14 @@
 /**
- * test1.js
- * ------------------------------------------------------------------
- * Renders import_permit_view.blade.php from REAL data fetched from
- * /application/{id}/data (same endpoint the old application_detail2.js
- * used — see old js for the response shape reference).
- *
- * IMPORTANT: PERMITS and ACTIVITY_LOG keep the exact same shape the
- * renderer functions below already expect (permit_number,
- * consignment_detail{category,item_name,usage}, quantity,
- * unit_measurement, purpose, value, status, remark, attachments[],
- * conditions[] / stage,title,description,time) — this means test2.js
- * (permit detail offcanvas) needs ZERO changes.
- *
- * // TODO verify: field names marked below are best-guess mappings from
- * the old application_detail2.js (document 19) and the old blade's
- * Blade-rendered fields (document 17). Confirm against your actual
- * /application/{id}/data JSON and adjust the map*() functions only —
- * everything below stays the same either way.
+ * test1.js - Bilingual version
+ * Renders import_permit_view.blade.php from real data.
+ * All dynamic text now switches between English and Bahasa Malaysia.
  */
 
 import { initPermitDetailOffcanvas, openPermitDetail } from "./test2";
-import { initScheduleCalendar } from "./test3";
+import { buildScheduleEvents, initScheduleCalendar } from "./test3";
 import $ from "jquery";
 import Swal from "sweetalert2";
+import { applyTranslations } from "../../app"; // <-- added
 
 // ---------------------------------------------------------------
 // Config — label + color lookups. Color keys map to
@@ -37,9 +23,9 @@ const STAGE_ORDER = [
 
 export const STAGE_CONFIG = {
     submitted:           { en: 'Submitted',              bm: 'Dihantar',                  icon: 'bi-send-check',         color: 'info' },
-    doc_verification:    { en: 'Document Verification',  bm: 'Semakan Dokumen',           icon: 'bi-file-earmark-check', color: 'secondary' },
+    doc_verification:    { en: 'Clerk Review In-Progress', bm: 'Semakan Kerani Dalam Proses', icon: 'bi-file-earmark-check', color: 'secondary' },
     returned:            { en: 'Returned / Rejected',     bm: 'Dikembalikan / Ditolak',    icon: 'bi-arrow-return-left',  color: 'danger' },
-    technical_review:    { en: 'Technical Review',        bm: 'Penilaian Pegawai',         icon: 'bi-clipboard-check',    color: 'primary' },
+    technical_review:    { en: 'Officer Verification',    bm: 'Pengesahan Pegawai',        icon: 'bi-clipboard-check',    color: 'primary' },
     awaiting_payment:    { en: 'Awaiting Payment',        bm: 'Menunggu Pembayaran',       icon: 'bi-hourglass-split',    color: 'warning' },
     payment_processing:  { en: 'Payment Processing',      bm: 'Proses Pengesahan Bayaran', icon: 'bi-credit-card',        color: 'orange' },
     completed:           { en: 'Completed',               bm: 'Selesai',                   icon: 'bi-check-circle',       color: 'success' },
@@ -50,8 +36,6 @@ export const STAGE_CONFIG = {
     qr_scan:             { en: 'QR Scan',                 bm: 'Imbasan QR',                icon: 'bi-qr-code-scan',       color: 'secondary' },
 };
 
-// Real permit status strings (lowercased) -> badge config.
-// // TODO verify: confirm these match permit.status values exactly.
 export const PERMIT_STATUS_CONFIG = {
     processing:               { en: 'Processing',                bm: 'Sedang Diproses',    color: 'info' },
     reapplied:                { en: 'Reapplied',                  bm: 'Dipohon Semula',     color: 'info' },
@@ -64,6 +48,26 @@ export const PERMIT_STATUS_CONFIG = {
     queued:                   { en: 'Queued for Review',          bm: 'Dalam Proses Semakan', color: 'info' },
 };
 
+export const PUBLIC_HOLIDAYS = [
+    { date: '2026-01-01', name: "New Year's Day" },
+    { date: '2026-02-17', name: 'Chinese New Year (Day 1)' },
+    { date: '2026-02-18', name: 'Chinese New Year (Day 2)' },
+    { date: '2026-05-01', name: 'Labour Day' },
+    { date: '2026-06-03', name: 'Sample Public Holiday (placeholder)' },
+];
+
+// ---------------------------------------------------------------
+// Helper: get current language
+// ---------------------------------------------------------------
+
+function getLang() {
+    try {
+        return localStorage.getItem('qis_lang') || 'en';
+    } catch {
+        return 'en';
+    }
+}
+
 // ---------------------------------------------------------------
 // Live data — populated by loadApplicationData(). Renderer functions
 // below read from these, same as the old dummy version.
@@ -72,7 +76,7 @@ export const PERMIT_STATUS_CONFIG = {
 let APPLICATION = {};
 let PERMITS = [];
 let ACTIVITY_LOG = [];
-let RAW_ACTIVITY_LOG = []; // used by the Application Log modal table
+let RAW_ACTIVITY_LOG = [];
 
 // ---------------------------------------------------------------
 // Fetch + map real data
@@ -80,7 +84,6 @@ let RAW_ACTIVITY_LOG = []; // used by the Application Log modal table
 
 function getApplicationId() {
     if (window.APPLICATION_ID) return window.APPLICATION_ID;
-    // fallback: parse from URL, same as the old script did
     const parts = window.location.pathname.split('/');
     return parts[2];
 }
@@ -89,15 +92,13 @@ async function loadApplicationData() {
     const applicationId = getApplicationId();
     const res = await fetch(`/application/${applicationId}/data`);
     const json = await res.json();
-
-    console.log('application', json)
+    console.log('application', json);
 
     mapApplication(json);
     mapPermits(json);
     mapActivityLog(json);
 }
 
-// // TODO verify: adjust field paths below to match your real JSON.
 function mapApplication(json) {
     const importer = json.importer || {};
     const exporter = json.exporter || {};
@@ -148,8 +149,6 @@ function mapApplication(json) {
     };
 }
 
-// Best-effort mapping from your mixed status/importer_verify strings to a
-// single stage key the stepper understands. Extend as needed.
 function deriveStageKey(status, importerVerify) {
     const s = (status || '').toLowerCase();
     const iv = (importerVerify || '').toLowerCase();
@@ -158,7 +157,10 @@ function deriveStageKey(status, importerVerify) {
     if (s.includes('clerk review')) return 'doc_verification';
     if (iv.includes('wait for company approval')) return 'doc_verification';
     if (s.includes('clerk verified')) return 'technical_review';
-    if (s.includes('officer verification completed')) return 'completed';
+    
+    // ⚠️ Officer Verification Completed → Awaiting Payment (not Completed)
+    if (s.includes('officer verification completed')) return 'awaiting_payment';
+    
     if (s.includes('completed')) return 'completed';
     if (s.includes('rejected') || s.includes('not approved')) return 'returned';
     if (s.includes('pending for payment')) return 'awaiting_payment';
@@ -170,41 +172,34 @@ function deriveStageKey(status, importerVerify) {
 function buildTags(json) {
     const tags = [];
     const category = json.category_application;
-    
     if (category === 0 || category === '0') {
-        // Self Import
-        tags.push({ 
-            label: 'Self Import', 
+        tags.push({
+            label: 'Self Import',
             label_en: 'Self Import',
             label_bm: 'Import Sendiri',
-            color: 'info' 
+            color: 'info'
         });
     } else {
-        // Apply for Others
-        tags.push({ 
-            label: 'Apply for Others', 
+        tags.push({
+            label: 'Apply for Others',
             label_en: 'Apply for Others',
             label_bm: 'Mohon untuk Pihak Lain',
-            color: 'primary' 
+            color: 'primary'
         });
     }
     return tags;
 }
 
-// // TODO verify: confirm permit.consignment_detail keys (category may not
-// exist on your model — falls back gracefully if missing).
 function mapPermits(json) {
     const permits = json.consignment_permits || [];
-
     PERMITS = permits.map((permit) => {
-        console.log('condition in permits', permit)
         const detail = permit.consignment_detail || {};
         const statusKey = (permit.status || '').toLowerCase();
         return {
             id: permit.id,
-            permit_number: permit.permit_number || String(permit.id),
+            permit_number: permit.permit_number || ' ',
             consignment_detail: {
-                category: detail.category || detail.item_name || '—',
+                
                 item_name: detail.item_name || '—',
                 usage: detail.uses || detail.usage || '—',
             },
@@ -222,14 +217,11 @@ function mapPermits(json) {
             })),
             conditions: detail.condition || [],
             agreedAt: detail.agreedAt,
-       
-            // raw pass-through, used by the permit action buttons
             _raw: permit,
         };
     });
 }
 
-// // TODO verify: adjust field names to match your ImportPermitLog shape.
 function mapActivityLog(json) {
     RAW_ACTIVITY_LOG = json.activity_log || [];
     const qrLogs = (json.qr_scan_logs || []).map((q) => ({
@@ -333,10 +325,11 @@ function openAttachmentViewer(listId, index) {
     const file = files[currentIndex];
     if (!file) return;
 
+    const lang = getLang();
     document.getElementById('attachmentTitle').textContent = file.name;
     document.getElementById('attachmentCounter').textContent = `${currentIndex + 1} / ${files.length}`;
     renderViewer(file);
-    renderDetails(file);
+    renderDetails(file, lang);
     document.getElementById('attachmentPrevBtn').disabled = (currentIndex === 0);
     document.getElementById('attachmentNextBtn').disabled = (currentIndex === files.length - 1);
 
@@ -352,7 +345,6 @@ function renderViewer(file) {
         return;
     }
 
-    // Normalize: some files give a full mime type, others just an extension ("pdf", "jpg", etc.)
     let mime = (file.mime || '').toLowerCase();
     const ext = path.split('.').pop().toLowerCase();
 
@@ -382,20 +374,29 @@ function renderViewer(file) {
     container.innerHTML = html;
 }
 
-function renderDetails(file) {
+function renderDetails(file, lang) {
     const container = document.getElementById('attachmentDetails');
+    const labels = {
+        en: { name: 'File Name', size: 'File Size', type: 'File Type', path: 'Path' },
+        bm: { name: 'Nama Fail', size: 'Saiz Fail', type: 'Jenis Fail', path: 'Laluan' }
+    };
+    const t = labels[lang] || labels.en;
+
     const fields = [
-        { label: 'File Name', value: file.name },
-        { label: 'File Size', value: file.size },
-        { label: 'File Type', value: file.mime || 'Unknown' },
-        { label: 'Path', value: file.path || '—' },
+        { key: 'name', value: file.name },
+        { key: 'size', value: file.size },
+        { key: 'type', value: file.mime || 'Unknown' },
+        { key: 'path', value: file.path || '—' },
     ];
+
     container.innerHTML = fields.map((f) => `
         <div class="detail-row">
-            <span class="detail-label">${escapeHtml(f.label)}</span>
+            <span class="detail-label" data-en="${escapeHtml(labels.en[f.key])}" data-bm="${escapeHtml(labels.bm[f.key])}">${escapeHtml(t[f.key])}</span>
             <span class="detail-value">${escapeHtml(f.value)}</span>
         </div>
     `).join('');
+
+    applyTranslations(container);
 }
 
 document.addEventListener('click', (e) => {
@@ -424,7 +425,9 @@ function paintAttachmentList(containerEl, files, visibleCount) {
             <div class="ipv-attach-icon ${fileMeta(file.name).cls}"><i class="bi ${fileMeta(file.name).icon}"></i></div>
             <div class="ipv-attach-info">
                 <div class="ipv-attach-name" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</div>
-                <div class="ipv-attach-size">${escapeHtml(file.size)} &middot; <a href="#" onclick="return false;">Download</a></div>
+                <div class="ipv-attach-size">${escapeHtml(file.size)} &middot; 
+                    <a href="#" class="ipv-download-link" data-en ="Download" data-bm = "Muat Turun" data-path="${escapeHtml(file.path)}" data-name="${escapeHtml(file.name)}">Download</a>
+                </div>
             </div>
         </div>
     `).join('');
@@ -435,7 +438,12 @@ function paintAttachmentList(containerEl, files, visibleCount) {
     containerEl.innerHTML = html;
 }
 
+// Inside the DOMContentLoaded or after paintAttachmentList is defined
 document.addEventListener('click', (e) => {
+    // If the click is on the download link or its children, do nothing (let the link handler work)
+    if (e.target.closest('.ipv-download-link')) {
+        return;
+    }
     const chip = e.target.closest('.ipv-attach-chip');
     if (chip) {
         e.preventDefault();
@@ -447,7 +455,116 @@ document.addEventListener('click', (e) => {
         }
         return false;
     }
-}, true);
+}, true); // capture phase
+
+document.getElementById('ipvDownloadAllApp')?.addEventListener('click', async function (e) {
+    e.preventDefault();
+
+    const attachments = APPLICATION.attachments || [];
+    if (!attachments.length) {
+        Swal.fire({
+            icon: 'info',
+            title: 'No Attachments',
+            text: 'There are no application documents to download.',
+            timer: 2000,
+            showConfirmButton: false
+        });
+        return;
+    }
+
+    // Show loading alert
+    Swal.fire({
+        title: 'Preparing download...',
+        text: `Zipping ${attachments.length} file(s). Please wait.`,
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    try {
+        // Ensure JSZip is loaded
+        let JSZip;
+        if (typeof window.JSZip !== 'undefined') {
+            JSZip = window.JSZip;
+        } else {
+            // Load JSZip from CDN
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+                script.onload = () => {
+                    if (typeof window.JSZip !== 'undefined') {
+                        JSZip = window.JSZip;
+                        resolve();
+                    } else {
+                        reject(new Error('JSZip not available after loading'));
+                    }
+                };
+                script.onerror = () => reject(new Error('Failed to load JSZip'));
+                document.head.appendChild(script);
+            });
+        }
+
+        const zip = new JSZip();
+        let downloaded = 0;
+
+        for (const file of attachments) {
+            if (!file.path) {
+                console.warn('Missing path for attachment:', file.name);
+                continue;
+            }
+
+            try {
+                const response = await fetch(file.path, {
+                    credentials: 'include',
+                });
+                if (!response.ok) {
+                    console.warn(`Failed to fetch ${file.name}: ${response.status}`);
+                    continue;
+                }
+                const blob = await response.blob();
+                const fileName = file.name || 'unnamed';
+                zip.file(fileName, blob);
+                downloaded++;
+            } catch (err) {
+                console.error(`Error fetching ${file.name}:`, err);
+            }
+        }
+
+        if (downloaded === 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Download Failed',
+                text: 'Could not retrieve any files. Check console for details.',
+            });
+            return;
+        }
+
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        const zipName = `Application_${APPLICATION.application_id}.zip`;
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(zipBlob);
+        link.download = zipName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(link.href);
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Download Complete!',
+            text: `${downloaded} file(s) downloaded as ${zipName}.`,
+            timer: 2500,
+            showConfirmButton: false
+        });
+
+    } catch (error) {
+        console.error('Zip creation failed:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to create zip file. Please try again or contact support.',
+        });
+    }
+});
 
 export function renderAttachmentList(containerEl, files, visibleCount) {
     if (!containerEl) return;
@@ -475,15 +592,25 @@ document.addEventListener('click', (e) => {
 // ---------------------------------------------------------------
 
 function renderHeaderInfo() {
+    const lang = getLang();
     document.getElementById('ipvAppType').textContent = APPLICATION.type;
     document.getElementById('ipvAppId').textContent = APPLICATION.application_id;
     document.getElementById('ipvSubmittedBy').textContent = APPLICATION.submitted_by;
     document.getElementById('ipvDownloadBadge').innerHTML = `<i class="bi bi-download"></i> ${APPLICATION.downloaded_count}`;
-    document.getElementById('ipvCreatedAt').textContent = `Application submitted on ${APPLICATION.submitted_at}`;
 
-    document.getElementById('ipvTags').innerHTML = APPLICATION.tags.map((tag) =>
-        `<span class="ipv-tag is-${tag.color}" data-en="${escapeHtml(tag.label_en || tag.label)}" data-bm="${escapeHtml(tag.label_bm || '')}">${escapeHtml(tag.label)}</span>`
-    ).join('');
+    // Bilingual "Application submitted on"
+    const submittedLabel = lang === 'bm' ? 'Permohonan dihantar pada' : 'Application submitted on';
+    document.getElementById('ipvCreatedAt').textContent = `${submittedLabel} ${APPLICATION.submitted_at}`;
+
+    const tagLabels = {
+        en: { self: 'Self Import', other: 'Apply for Others' },
+        bm: { self: 'Import Sendiri', other: 'Mohon untuk Pihak Lain' }
+    };
+    document.getElementById('ipvTags').innerHTML = APPLICATION.tags.map((tag) => {
+        // The tag object might have label_en and label_bm already; use them.
+        const label = lang === 'bm' ? tag.label_bm : tag.label_en;
+        return `<span class="ipv-tag is-${tag.color}">${escapeHtml(label)}</span>`;
+    }).join('');
 
     const total = PERMITS.reduce((sum, p) => sum + p.value, 0);
     document.getElementById('ipvTotalValue').textContent = `RM ${money(total)}`;
@@ -491,17 +618,19 @@ function renderHeaderInfo() {
 
 function partyBlockHtml(party, label) {
     const initial = (party.name || '?').charAt(0).toUpperCase();
+    const lang = getLang();
+    const labelText = lang === 'bm' ? (label === 'Importer' ? 'Pengimport' : 'Pengeksport') : label;
     return `
         <div class="ipv-party-header">
             <div class="ipv-party-avatar">${initial}</div>
             <div>
                 <div class="ipv-party-name">${escapeHtml(party.name)}</div>
-                <div class="ipv-party-sub">${label}</div>
+                <div class="ipv-party-sub">${escapeHtml(labelText)}</div>
             </div>
         </div>
         <div class="ipv-contact-row">
             <div class="ipv-contact-icon"><i class="bi bi-telephone"></i></div>
-            <div><div class="ipv-contact-label">Phone</div><div class="ipv-contact-value">${escapeHtml(party.phone)}</div></div>
+            <div><div class="ipv-contact-label">${lang === 'bm' ? 'Telefon' : 'Phone'}</div><div class="ipv-contact-value">${escapeHtml(party.phone)}</div></div>
         </div>
         <div class="ipv-contact-row">
             <div class="ipv-contact-icon"><i class="bi bi-envelope"></i></div>
@@ -509,7 +638,7 @@ function partyBlockHtml(party, label) {
         </div>
         <div class="ipv-contact-row">
             <div class="ipv-contact-icon"><i class="bi bi-geo-alt"></i></div>
-            <div><div class="ipv-contact-label">Address</div><div class="ipv-contact-value">${escapeHtml(party.address)}, ${escapeHtml(party.country)}</div></div>
+            <div><div class="ipv-contact-label">${lang === 'bm' ? 'Alamat' : 'Address'}</div><div class="ipv-contact-value">${escapeHtml(party.address)}, ${escapeHtml(party.country)}</div></div>
         </div>
     `;
 }
@@ -533,6 +662,7 @@ function renderStageStepper() {
     const el = document.getElementById('ipvStageStepper');
     const key = APPLICATION.status_key;
     const currentIndex = STAGE_ORDER.indexOf(key);
+    const lang = getLang();
 
     el.innerHTML = STAGE_ORDER.map((stepKey, i) => {
         const cfg = STAGE_CONFIG[stepKey];
@@ -547,10 +677,13 @@ function renderStageStepper() {
             cls = 'is-current';
         }
 
-        return `<div class="ipv-stage-step ${cls}">${cfg.en}</div>`;
+        const label = cfg[lang] || cfg.en;
+        return `<div class="ipv-stage-step ${cls}">${label}</div>`;
     }).join('');
 
-    document.getElementById('ipvStatusLabel').textContent = APPLICATION.status || '—';
+    // Status label
+    const statusCfg = STAGE_CONFIG[key] || { en: APPLICATION.status, bm: APPLICATION.status };
+    document.getElementById('ipvStatusLabel').textContent = statusCfg[lang] || APPLICATION.status || '—';
     document.getElementById('ipvStatusDuration').textContent = APPLICATION.status_duration
         ? `In this status for ${APPLICATION.status_duration}` : '';
 
@@ -570,11 +703,18 @@ function renderInfoRow() {
 
 function renderTransportDetails() {
     const el = document.getElementById('ipvTransportDetails');
+    const lang = getLang();
+    const labels = {
+        en: { eta: 'ETA', transport: 'Transport Type', entry: 'Entry Point', notes: 'Entry Point Notes' },
+        bm: { eta: 'ETA', transport: 'Jenis Pengangkutan', entry: 'Pintu Masuk', notes: 'Nota Pintu Masuk' }
+    };
+    const t = labels[lang] || labels.en;
+
     const rows = [
-        { icon: 'bi-calendar-event', label: 'ETA', value: APPLICATION.eta },
-        { icon: 'bi-truck', label: 'Transport Type', value: APPLICATION.transport_type },
-        { icon: 'bi-geo-alt', label: 'Entry Point', value: APPLICATION.entry_point },
-        { icon: 'bi-info-circle', label: 'Entry Point Notes', value: APPLICATION.entry_point_description || '—' },
+        { icon: 'bi-calendar-event', label: t.eta, value: APPLICATION.eta },
+        { icon: 'bi-truck', label: t.transport, value: APPLICATION.transport_type },
+        { icon: 'bi-geo-alt', label: t.entry, value: APPLICATION.entry_point },
+        { icon: 'bi-info-circle', label: t.notes, value: APPLICATION.entry_point_description || '—' },
     ];
     el.innerHTML = rows.map((r) => `
         <div class="ipv-detail-row">
@@ -591,22 +731,22 @@ function renderTransportDetails() {
 
 function permitActionsHtml(permit) {
     const status = permit.status;
-    console.log('permit',permit)
     const applicationStatus = (APPLICATION.status || '').toLowerCase();
     const roles = (window.authUser?.roles || []).map((r) => r.name);
     const isStaff = roles.includes('admin') || roles.includes('officer') || roles.includes('superadmin');
     const type = window.authUser?.type;
-    const isOwner = type === 'public'; // // TODO verify: tighten to "current user is this application's importer" if public accounts can view others' applications
+    const isOwner = type === 'public';
+    const lang = getLang();
 
     let actions = '';
 
     if (applicationStatus === 'clerk verified' && (status === 'processing' || status === 'reapplied') && isStaff) {
         actions += `
             <button type="button" class="ipv-btn-action is-success accept" data-permit="${permit.id}">
-                <i class="bi bi-check-lg"></i> Approve
+                <i class="bi bi-check-lg"></i> ${lang === 'bm' ? 'Lulus' : 'Approve'}
             </button>
             <button type="button" class="ipv-btn-action is-danger reject" data-permit="${permit.id}">
-                <i class="bi bi-x-lg"></i> Reject
+                <i class="bi bi-x-lg"></i> ${lang === 'bm' ? 'Tolak' : 'Reject'}
             </button>
         `;
     }
@@ -614,17 +754,15 @@ function permitActionsHtml(permit) {
     if (status === 'rejected' && type === 'public') {
         actions += `
             <button type="button" class="ipv-btn-action is-warning reapply" data-permit="${permit.id}">
-                <i class="bi bi-arrow-repeat"></i> Reapply
+                <i class="bi bi-arrow-repeat"></i> ${lang === 'bm' ? 'Mohon Semula' : 'Reapply'}
             </button>
         `;
     }
 
-    // Payment CTA — the whole point of the payment-awareness pass: make it
-    // impossible to miss that this permit needs money before it's usable.
     if (['pending for payment', 'payment failed'].includes(status) && isOwner) {
         actions += `
-            <button type="button" class="ipv-btn-action is-warning pd-pay-now" data-permit="${permit.id}" data-value="${permit.value}">
-                <i class="bi bi-credit-card"></i> Pay Now — RM ${money(permit.value)}
+            <button type="button" class="ipv-btn-action is-warning pd-pay-now" data-permit="${permit.id}" data-value="12">
+                <i class="bi bi-credit-card"></i> ${lang === 'bm' ? 'Bayar Sekarang' : 'Pay Now'} — RM 12.00
             </button>
         `;
     }
@@ -633,7 +771,7 @@ function permitActionsHtml(permit) {
         const slug = (permit.permit_number || '').replaceAll('/', '');
         actions += `
             <button type="button" class="ipv-btn-action is-info generatePermit" data-permit="${slug}">
-                <i class="bi bi-download"></i> Print / Download Permit
+                <i class="bi bi-download"></i> ${lang === 'bm' ? 'Cetak / Muat Turun Permit' : 'Print / Download Permit'}
             </button>
         `;
     }
@@ -651,11 +789,12 @@ function renderPermitAccordion() {
         return;
     }
 
+    const lang = getLang();
+
     el.innerHTML = PERMITS.map((permit) => {
         const cfg = PERMIT_STATUS_CONFIG[permit.status] || PERMIT_STATUS_CONFIG.queued;
         const detail = permit.consignment_detail;
-
-        console.log('permit details in el', permit)
+        const statusText = cfg[lang] || cfg.en;
 
         const agreementBanner = permit.agreedAt
             ? `<div class="alert alert-success mb-3 d-flex align-items-center">
@@ -678,15 +817,14 @@ function renderPermitAccordion() {
             </div>`;
 
         return `
-           
             <div class="ipv-permit-item" data-permit="${escapeHtml(permit.permit_number)}">
-                 <div class="ipv-permit-header">
+                <div class="ipv-permit-header">
                     <div class="ipv-permit-icon"><i class="bi bi-box-seam"></i></div>
                     <div class="ipv-permit-id-group">
                         <div class="ipv-permit-id">#${escapeHtml(permit.permit_number)}</div>
                         <div class="ipv-permit-name">${escapeHtml(detail.item_name)}</div>
                     </div>
-                    <span class="ipv-badge is-${cfg.color}">${escapeHtml(cfg.en)}</span>
+                    <span class="ipv-badge is-${cfg.color}">${escapeHtml(statusText)}</span>
                     <div class="ipv-permit-value">RM ${money(permit.value)}</div>
                     <button type="button" class="ipv-view-detail-btn" data-permit-number="${escapeHtml(permit.permit_number)}" title="View full details">
                         <i class="bi bi-eye"></i>
@@ -706,15 +844,7 @@ function renderPermitAccordion() {
                                 <span class="text-break">${escapeHtml(detail.item_name)}</span>
                             </p>
                         </div>
-                        <div class="col-12 col-lg-6">
-                            <p class="mb-2">
-                                <strong class="me-1">
-                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-layer-group"></i></span>
-                                    <span data-en="Category:" data-bm="Kategori:">Category:</span>
-                                </strong> 
-                                <span class="text-break">${escapeHtml(detail.category)}</span>
-                            </p>
-                        </div>
+                        
                         <div class="col-12 col-lg-6">
                             <p class="mb-2">
                                 <strong class="me-1">
@@ -762,7 +892,7 @@ function renderPermitAccordion() {
                         </div>
                     </div>
 
-                    <div class="ipv-permit-subsection-title">Attachments (${permit.attachments.length})</div>
+                    <div class="ipv-permit-subsection-title" data-bm = "Lampiran" data-en = "Attachments">Attachments (${permit.attachments.length})</div>
                     <div class="ipv-attach-list" id="attachList-${escapeHtml(permit.permit_number)}"></div>
 
                     ${permit.remark ? `
@@ -778,10 +908,14 @@ function renderPermitAccordion() {
         `;
     }).join('');
 
+    // Render attachment lists and apply translations to the whole container
     PERMITS.forEach((permit) => {
         const container = document.getElementById(`attachList-${permit.permit_number}`);
         renderAttachmentList(container, permit.attachments, 2);
     });
+
+    // Apply translations to the accordion (for data-en/data-bm labels)
+    applyTranslations(el);
 }
 
 function initAccordionToggle() {
@@ -799,7 +933,6 @@ function initAccordionToggle() {
             return;
         }
 
-        // Don't toggle the accordion row when clicking an action button
         if (e.target.closest('.ipv-permit-actions')) return;
 
         const header = e.target.closest('.ipv-permit-header');
@@ -810,8 +943,6 @@ function initAccordionToggle() {
     accordion._toggleHandler = handler;
     accordion.addEventListener('click', handler);
 }
-
-
 
 // ---------------------------------------------------------------
 // Render: Pending Payment tab
@@ -840,13 +971,13 @@ function renderPendingPaymentTable() {
                 <td>
                     <div class="form-check">
                         <input class="form-check-input permit-checkbox" type="checkbox"
-                            value="${permit.id}" data-permit-value="${permit.value}"
+                            value="${permit.id}" data-permit-value="12"
                             ${permit.status === 'payment processing' ? 'disabled' : ''}>
                     </div>
                 </td>
                 <td>${escapeHtml(permit.permit_number)}</td>
                 <td class="text-wrap">${escapeHtml(permit.consignment_detail.item_name)}</td>
-                <td class="text-end">RM ${money(permit.value)}</td>
+                <td class="text-end">RM 12</td>
             </tr>
         `);
     });
@@ -855,9 +986,7 @@ function renderPendingPaymentTable() {
 }
 
 // ---------------------------------------------------------------
-// Payment awareness banner — shown at the top of the page whenever the
-// applicant (owner) has permits sitting unpaid, so it's impossible to
-// miss. Internal staff never see this; it's not their bill to pay.
+// Payment awareness banner
 // ---------------------------------------------------------------
 
 function renderPaymentAwarenessBanner() {
@@ -867,37 +996,83 @@ function renderPaymentAwarenessBanner() {
 
     const isOwner = window.authUser?.type === 'public';
     const pending = PERMITS.filter((p) => ['pending for payment', 'payment failed'].includes(p.status));
+    const lang = getLang();
 
     if (!isOwner || !pending.length) {
         wrap.style.display = 'none';
         return;
     }
 
-    const total = pending.reduce((sum, p) => sum + p.value, 0);
+    // Fixed fee: RM 12 per permit
+    const total = pending.length * 12;
     const hasFailed = pending.some((p) => p.status === 'payment failed');
 
     el.className = `ipv-payment-banner${hasFailed ? ' is-danger' : ''}`;
+    const label = lang === 'bm' ? `${pending.length} permit menunggu bayaran` : `${pending.length} permit${pending.length > 1 ? 's' : ''} awaiting payment`;
+    const failMsg = hasFailed
+        ? (lang === 'bm' ? 'Percubaan bayaran sebelum ini gagal — sila cuba semula. ' : 'A previous payment attempt failed — please retry. ')
+        : '';
+    const due = lang === 'bm' ? 'Jumlah perlu dibayar' : 'Total due';
+
     el.innerHTML = `
         <div class="ipv-payment-banner-text">
             <i class="bi ${hasFailed ? 'bi-exclamation-octagon' : 'bi-credit-card'}"></i>
             <div>
-                <strong>${pending.length} permit${pending.length > 1 ? 's' : ''} awaiting payment</strong>
-                <span>${hasFailed ? 'A previous payment attempt failed — please retry. ' : ''}Total due: RM ${money(total)}</span>
+                <strong>${label}</strong>
+                <span>${failMsg}${due}: RM ${money(total)}</span>
             </div>
         </div>
         <button type="button" class="ipv-btn-primary is-pay" id="ipvGoToPaymentTab">
-            <i class="bi bi-arrow-right-circle"></i> Pay Now
+            <i class="bi bi-arrow-right-circle"></i> ${lang === 'bm' ? 'Bayar Sekarang' : 'Pay Now'}
         </button>
     `;
     wrap.style.display = 'block';
 
-    document.getElementById('ipvGoToPaymentTab')?.addEventListener('click', () => {
-        const paymentTab = document.querySelector('.ipv-tabnav-item[data-ipv-tab="payment"]');
-        if (paymentTab) {
-            paymentTab.click();
-            paymentTab.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-    });
+    // --- Click handler with confirmation ---
+    const btn = document.getElementById('ipvGoToPaymentTab');
+    if (btn) {
+        btn.onclick = function(e) {
+            e.preventDefault();
+
+            const count = pending.length;
+            const amount = total; // total is already computed
+            const lang = getLang();
+
+            const titleText = lang === 'bm' ? 'Teruskan ke Pembayaran?' : 'Proceed to Payment?';
+            const confirmText = lang === 'bm' ? 'Ya, teruskan ke pembayaran' : 'Yes, proceed to payment';
+            const cancelText = lang === 'bm' ? 'Batal' : 'Cancel';
+            const paymentText = lang === 'bm'
+                ? `Anda akan membayar RM ${money(amount)} untuk ${count} permit.`
+                : `You are about to pay RM ${money(amount)} for ${count} permit${count > 1 ? 's' : ''}.`;
+
+            Swal.fire({
+                title: titleText,
+                text: paymentText,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: confirmText,
+                cancelButtonText: cancelText,
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+
+                // 1. Switch to payment tab
+                const paymentTab = document.querySelector('.ipv-tabnav-item[data-ipv-tab="payment"]');
+                if (paymentTab) {
+                    paymentTab.click();
+                    paymentTab.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+
+                // 2. Select all pending permits (checkboxes in the payment table)
+                $('.permit-checkbox').prop('checked', true);
+
+                // 3. Update the total value display
+                updateTotalValue();
+
+                // 4. Enable and trigger the checkout button
+                $('#checkoutPage').prop('disabled', false).click();
+            });
+        };
+    }
 }
 
 function updateTotalValue() {
@@ -918,14 +1093,16 @@ function renderActivityTimeline() {
         el.innerHTML = '<div class="ipv-empty-state"><i class="bi bi-clock-history"></i><p>No activity recorded yet.</p></div>';
         return;
     }
+    const lang = getLang();
     el.innerHTML = ACTIVITY_LOG.map((entry) => {
         const cfg = STAGE_CONFIG[entry.stage] || STAGE_CONFIG.email;
+        const title = cfg[lang] || cfg.en;
         return `
             <div class="ipv-timeline-item">
                 <div class="ipv-timeline-icon is-${cfg.color}"><i class="bi ${cfg.icon}"></i></div>
                 <div class="ipv-timeline-body">
                     <div>
-                        <div class="ipv-timeline-title">${escapeHtml(entry.title)}</div>
+                        <div class="ipv-timeline-title">${escapeHtml(title)}</div>
                         <p class="ipv-timeline-desc">${escapeHtml(entry.description)}</p>
                     </div>
                     <span class="ipv-timeline-time">${escapeHtml(entry.time)}</span>
@@ -938,6 +1115,7 @@ function renderActivityTimeline() {
 function renderApplicationLogTable() {
     const tbody = $('#applicationLogTable tbody');
     tbody.empty();
+    const lang = getLang();
 
     if (!RAW_ACTIVITY_LOG.length) {
         tbody.append('<tr><td colspan="5" class="text-center text-muted">No log entries found.</td></tr>');
@@ -945,12 +1123,18 @@ function renderApplicationLogTable() {
     }
 
     RAW_ACTIVITY_LOG.forEach((entry) => {
+        // Try to map status to bilingual label
+        let statusLabel = entry.status || '—';
+        const statusKey = (entry.status || '').toLowerCase();
+        if (PERMIT_STATUS_CONFIG[statusKey]) {
+            statusLabel = PERMIT_STATUS_CONFIG[statusKey][lang] || PERMIT_STATUS_CONFIG[statusKey].en;
+        }
         tbody.append(`
             <tr>
                 <td>${escapeHtml(entry.action || entry.title || '—')}</td>
                 <td>${escapeHtml(entry.user || entry.user_name || entry.user?.name || '—')}</td>
                 <td>${escapeHtml(entry.remark || entry.description || '—')}</td>
-                <td>${escapeHtml(entry.status || '—')}</td>
+                <td>${escapeHtml(statusLabel)}</td>
                 <td>${escapeHtml(formatDateTime(entry.time || entry.created_at))}</td>
             </tr>
         `);
@@ -997,6 +1181,7 @@ function initTabs() {
 function renderPermitDownloadList() {
     const tbody = document.getElementById('permitDownloadTableBody');
     const available = PERMITS.filter((p) => p.status === 'paid' || p.status === 'completed');
+    const lang = getLang();
 
     if (!available.length) {
         tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">No permits available for download.</td></tr>`;
@@ -1006,13 +1191,14 @@ function renderPermitDownloadList() {
 
     tbody.innerHTML = available.map((permit, idx) => {
         const cfg = PERMIT_STATUS_CONFIG[permit.status] || PERMIT_STATUS_CONFIG.queued;
+        const statusText = cfg[lang] || cfg.en;
         const slug = (permit.permit_number || '').replaceAll('/', '');
         return `
             <tr>
                 <td><input type="checkbox" class="form-check-input permit-download-checkbox" data-index="${idx}" value="${slug}"></td>
                 <td><strong>${escapeHtml(permit.permit_number)}</strong></td>
                 <td>${escapeHtml(permit.consignment_detail.item_name)}</td>
-                <td><span class="ipv-badge is-${cfg.color}">${escapeHtml(cfg.en)}</span></td>
+                <td><span class="ipv-badge is-${cfg.color}">${escapeHtml(statusText)}</span></td>
                 <td style="text-align: right;">
                     <a href="/permit/generate/${escapeHtml(slug)}" target="_blank" class="btn btn-sm btn-info">
                         <i class="bi bi-eye me-1"></i> View
@@ -1092,18 +1278,23 @@ function initPaymentCheckboxes() {
         checkoutLocked = true;
 
         const $btn = $(this);
-        $btn.prop('disabled', true).text('Processing...');
+        const lang = getLang();
+        $btn.prop('disabled', true).text(lang === 'bm' ? 'Memproses...' : 'Processing...');
 
         const selectedPermits = $('.permit-checkbox:checked').map(function () { return $(this).val(); }).get();
 
         if (!selectedPermits.length) {
-            Swal.fire('Error!', 'Choose the permit to continue.', 'error');
+            Swal.fire({
+                icon: 'error',
+                title: lang === 'bm' ? 'Ralat!' : 'Error!',
+                text: lang === 'bm' ? 'Pilih permit untuk diteruskan.' : 'Choose the permit to continue.'
+            });
             checkoutLocked = false;
-            $btn.prop('disabled', false).text('Go To Checkout');
+            $btn.prop('disabled', false).text(lang === 'bm' ? 'Pergi Ke Bayaran' : 'Go To Checkout');
             return;
         }
 
-        Swal.fire({ title: 'Loading...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        Swal.fire({ title: lang === 'bm' ? 'Memuat...' : 'Loading...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
         let calculatedTotal = 0;
         $('.permit-checkbox:checked').each(function () {
@@ -1122,12 +1313,38 @@ function initPaymentCheckboxes() {
             },
             success: function (res) { window.location.href = res.url; },
             error: function () {
-                Swal.fire('Error!', 'Unable to proceed to checkout.', 'error');
+                Swal.fire({
+                    icon: 'error',
+                    title: lang === 'bm' ? 'Ralat!' : 'Error!',
+                    text: lang === 'bm' ? 'Tidak dapat meneruskan ke bayaran.' : 'Unable to proceed to checkout.'
+                });
                 checkoutLocked = false;
-                $btn.prop('disabled', false).text('Go To Checkout');
+                $btn.prop('disabled', false).text(lang === 'bm' ? 'Pergi Ke Bayaran' : 'Go To Checkout');
             },
         });
     });
+}
+
+// ---------------------------------------------------------------
+// Refresh UI on language change
+// ---------------------------------------------------------------
+
+function refreshUI() {
+    // Re-render all dynamic parts without re-fetching data
+    renderHeaderInfo();
+    renderParties();
+    renderAppAttachments();
+    renderStageStepper();
+    renderInfoRow();
+    renderTransportDetails();
+    renderPermitAccordion();
+    renderPendingPaymentTable();
+    renderActivityTimeline();
+    renderPaymentAwarenessBanner();
+    initAccordionToggle();
+    // Re-apply translations to any static elements inside dynamic content
+    const container = document.querySelector('.ipv-wrapper');
+    if (container) applyTranslations(container);
 }
 
 // ---------------------------------------------------------------
@@ -1146,12 +1363,27 @@ async function renderAll() {
     renderActivityTimeline();
     renderPaymentAwarenessBanner();
     initAccordionToggle();
+    // Apply translations to static parts inside the dynamic content
+    const container = document.querySelector('.ipv-wrapper');
+    if (container) applyTranslations(container);
+
+    const events = buildScheduleEvents(APPLICATION, PERMITS, { 
+        lang: getLang(), 
+        slaWorkingDays: 4 // default, or read from app.sla_days
+    });
+    initScheduleCalendar(events, PUBLIC_HOLIDAYS);
+
 }
 
 async function init() {
     if (!document.getElementById('ipvAppId')) return;
 
-    Swal.fire({ title: 'Loading...', text: 'Please wait while we fetch the application details.', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    Swal.fire({
+        title: 'Loading...',
+        text: 'Please wait while we fetch the application details.',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
 
     await loadApplicationData();
     await renderAll();
@@ -1177,12 +1409,58 @@ async function init() {
     }
 
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => new bootstrap.Tooltip(el));
+
+    // --- Listen to language changes via MutationObserver on <html> lang attribute ---
+    const observer = new MutationObserver(() => {
+        refreshUI();
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+
+    // --- Download individual attachment ---
+    document.addEventListener('click', async function (e) {
+        const link = e.target.closest('.ipv-download-link');
+        if (!link) return;
+        e.preventDefault();
+
+        let filePath = link.dataset.path;
+        const fileName = link.dataset.name || 'download';
+
+        if (!filePath) {
+            Swal.fire('Error', 'File path is missing.', 'error');
+            return;
+        }
+
+        // If the path is relative, construct absolute URL using baseUrl
+        if (!filePath.startsWith('http') && !filePath.startsWith('/')) {
+            const base = window.baseUrl || '';
+            filePath = (base.endsWith('/') ? base.slice(0, -1) : base) + '/' + filePath;
+        }
+
+        try {
+            const response = await fetch(filePath, {
+                credentials: 'include',
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('Download failed:', err);
+            Swal.fire('Error', 'Failed to download the file. Please try again.', 'error');
+        }
+    });
 }
 
 document.addEventListener('DOMContentLoaded', init);
 
 // Public API — used by test4-actions.js to refresh the view after an
-// accept/reject/reapply/etc. action completes without a full reload.
+// action completes without a full reload.
 window.ImportPermitView = {
     reload: async function () {
         await loadApplicationData();

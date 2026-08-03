@@ -1,7 +1,6 @@
 @extends('pages.app')
 
-@section('pageName', 'Apply Application')
-
+@section('pageName', __('Apply Application'))
 
 @section('breadcrumb')
     <x-breadcrumb :items="[['label' => 'Home', 'url' => '/', 'data-en' => 'Home', 'data-bm' => 'Utama'], ['label' => 'New Application', 'url' => '#', 'data-en' => 'New Application', 'data-bm' => 'Permohonan Baru']]" title=" ">
@@ -49,7 +48,6 @@
     </style>
 @endpush
 
-
 @section('content')
 
     <div class="col-12">
@@ -67,7 +65,6 @@
 
                                         <span class="text-type text-wrap" data-en="Application Type" data-bm="Jenis Permohonan">Application Type</span>
                                     </span>
-
                                 </button>
                             </li>
 
@@ -83,11 +80,9 @@
                             </li>
 
                         </ul>
-                        <div class="tab-content " id="myTabContent">
+                        <div class="tab-content" id="myTabContent">
                             @include('pages.public.application.type')
-
                             @include('pages.public.application.category')
-
                         </div>
                     </div>
                 </div>
@@ -95,6 +90,5 @@
         </div>
 
     </div>
-
 
 @endsection

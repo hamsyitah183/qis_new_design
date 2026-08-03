@@ -1,4 +1,7 @@
-<div class="wizard-step" data-title="APPLICATION DETAILS" data-id="2e8WqSV3slGIpTbnjcJzmDwBQaHrfh0Z" data-step="1">
+<div class="wizard-step" data-title="APPLICATION DETAILS"
+    data-title-en="APPLICATION DETAILS" 
+    data-title-bm="MAKLUMAT PERMOHONAN" 
+data-id="2e8WqSV3slGIpTbnjcJzmDwBQaHrfh0Z" data-step="1">
     <div class="row justify-content-center gy-3">
         <div class="col-xl-6">
             <div class="register-page ipa-card h-100">

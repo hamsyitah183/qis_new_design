@@ -1,4 +1,8 @@
-<div class="wizard-step active" data-title="IMPORTER & EXPORTER" data-id="2e8WqSV3slGIpTbnjcJzmDwBQaHrfh0Z" data-step="0">
+<div class="wizard-step active" 
+     data-title="IMPORTER & EXPORTER" 
+     data-title-en="IMPORTER & EXPORTER" 
+     data-title-bm="PENGIMPORT &amp; PENGEKSPORT" 
+     data-id="2e8WqSV3slGIpTbnjcJzmDwBQaHrfh0Z" data-step="0">
     <div class="row justify-content-center gy-3">
         <div class="col-xl-6">
             <div class="register-page ipa-card">
@@ -119,7 +123,6 @@
 
                 @slot('footer')
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Cancel" data-bm="Batal">Cancel</button>
-
                     <button type="button" id="addExporterbtn" class="btn btn-primary ipa-btn-primary"
                        data-en="Save Exporter" data-bm="Simpan Pengeksport">
                         Save Exporter

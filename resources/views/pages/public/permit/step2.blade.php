@@ -1,4 +1,7 @@
-<div class="wizard-step" data-title="PERMIT ITEM DETAILS" data-id="H53WJiv9blN17MYTztq4g8U6eSVkaZDx" data-step="2">
+<div class="wizard-step" data-title="PERMIT ITEM DETAILS"
+    data-title-en="PERMIT ITEM DETAILS" 
+    data-title-bm = "MAKLUMAT PERMIT"
+data-id="H53WJiv9blN17MYTztq4g8U6eSVkaZDx" data-step="2">
     <div class="row justify-content-center summary-view">
         <div class="col-xl-12">
             <div class="ipa-items-card">
@@ -48,7 +51,7 @@
 
 
 <!-- Item details offcanvas -->
-<div class="offcanvas offcanvas-end" tabindex="-1" id="ItemDetailsOffcanvas" aria-labelledby="ItemDetailsOffcanvasLabel" style="width: 65%; max-width: 860px;" aria-modal="true" role="dialog">
+<div class="offcanvas offcanvas-end" tabindex="-1" id="ItemDetailsOffcanvas" aria-labelledby="ItemDetailsOffcanvasLabel" style=" " aria-modal="true" role="dialog">
     <div class="offcanvas-header border-bottom px-4">
         <div class="d-flex align-items-center gap-3">
             <div class="ipv-permit-detail-icon"><i class="bi bi-box-seam"></i></div>

@@ -554,9 +554,10 @@
     color: var(--text-muted);
     position: relative;
     white-space: nowrap;
+    white-space: wrap;
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.2rem;
     cursor: pointer;
 }
 
@@ -660,6 +661,7 @@
     font-weight: 700;
     color: var(--default-text-color);
     white-space: nowrap;
+    display: none;
 }
 
 .ipv-chevron {

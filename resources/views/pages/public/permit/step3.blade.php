@@ -1,4 +1,7 @@
-<div class="wizard-step" data-title="SUMMARY" data-id="dOM0iRAyJXsLTr9b3KZfQ2jNv4pgn6Gu" data-step="3">
+<div class="wizard-step" data-title="SUMMARY" 
+ data-title-en="SUMMARY" 
+    data-title-bm = "RINGKASAN"
+data-id="dOM0iRAyJXsLTr9b3KZfQ2jNv4pgn6Gu" data-step="3">
 
     <div class="ipa-alert-note">
         <i class='bx bx-info-circle'></i>

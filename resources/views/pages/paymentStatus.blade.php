@@ -15,34 +15,28 @@
     $isFailed = $status === 'UNSUCCESSFUL';
     $isPending = !$isSuccess && !$isFailed;
 
-    // // TODO verify: confirm these column/relation names against your
-    // real Order model — they weren't present in the old blade so this
-// is a best guess at what they're likely called.
     $paymentMethod = $order->payment_method ?? '—';
     $paymentDate = optional($order->updated_at)->format('d M Y, h:i A') ?? '—';
     $applicationId = $order->application_id ?? null;
 
     $receiptNo = 'RCT-' . strtoupper(substr(preg_replace('/[^0-9A-Za-z]/', '', $order->order_number ?? 'XXXX'), -8));
 
-    // Per-item fee isn't broken out in order_details — only the order
-// total is. Split evenly for display purposes only; if you add a
-// real per-permit fee to order_details later, read that instead.
-$itemCount = max(count($permits), 1);
-$feePerItem = $order->payment_amount / $itemCount;
+    $itemCount = max(count($permits), 1);
+    $feePerItem = $order->payment_amount / $itemCount;
 
-$viewAppBaseUrl = match ($order->application_type ?? '') {
-    'Inspection Certificate', 'Inspection' => '/view_inspection/',
-    'Consignment Certificate', 'Consignment' => '/view_consignment/',
-    default => '/view_application/',
+    $viewAppBaseUrl = match ($order->application_type ?? '') {
+        'Inspection Certificate', 'Inspection' => '/view_inspection/',
+        'Consignment Certificate', 'Consignment' => '/view_consignment/',
+        default => '/view_application/',
     };
 @endphp
 
 @section('breadcrumb')
     <x-breadcrumb :items="[
-        ['label' => 'Dashboard', 'url' => '/'],
-        ['label' => 'Order List', 'url' => '/order/list'],
+        ['label' => __('Dashboard'), 'url' => '/', 'data-en' => 'Dashboard', 'data-bm' => 'Papan Pemuka'],
+        ['label' => __('Order List'), 'url' => '/order/list', 'data-en' => 'Order List', 'data-bm' => 'Senarai Pesanan'],
         ['label' => $order->order_number, 'url' => '#'],
-    ]" title="Payment Receipt">
+    ]" title="Payment Receipt" title_en="Payment Receipt" title_bm="Resit Pembayaran">
     </x-breadcrumb>
 @endsection
 
@@ -51,7 +45,7 @@ $viewAppBaseUrl = match ($order->application_type ?? '') {
     <div class="apy-wrapper">
 
         {{-- ================================================================ --}}
-        {{-- Outcome banner — three real states, not just the success case    --}}
+        {{-- Outcome banner — three real states                              --}}
         {{-- ================================================================ --}}
         <div class="apr-success-banner {{ $isFailed ? 'is-danger' : ($isPending ? 'is-pending' : '') }}">
             <div class="apr-success-icon">
@@ -66,23 +60,32 @@ $viewAppBaseUrl = match ($order->application_type ?? '') {
             <div>
                 <div class="apr-success-title">
                     @if ($isSuccess)
-                        Payment successful
+                        <span data-en="Payment successful" data-bm="Pembayaran berjaya">Payment successful</span>
                     @elseif ($isFailed)
-                        Payment failed
+                        <span data-en="Payment failed" data-bm="Pembayaran gagal">Payment failed</span>
                     @else
-                        Payment pending
+                        <span data-en="Payment pending" data-bm="Pembayaran tertunggak">Payment pending</span>
                     @endif
                 </div>
                 <p class="apr-success-sub">
                     @if ($isSuccess)
-                        Your order ({{ $order->order_number }}) payment was successful and is being processed.
-                        A copy of this receipt has been sent to your registered email.
+                        <span data-en="Your order ({{ $order->order_number }}) payment was successful and is being processed. A copy of this receipt has been sent to your registered email."
+                              data-bm="Bayaran pesanan anda ({{ $order->order_number }}) berjaya dan sedang diproses. Satu salinan resit ini telah dihantar ke e-mel berdaftar anda.">
+                            Your order ({{ $order->order_number }}) payment was successful and is being processed.
+                            A copy of this receipt has been sent to your registered email.
+                        </span>
                     @elseif ($isFailed)
-                        Your order ({{ $order->order_number }}) payment was unsuccessful. Please try again — no
-                        amount has been deducted for this attempt.
+                        <span data-en="Your order ({{ $order->order_number }}) payment was unsuccessful. Please try again — no amount has been deducted for this attempt."
+                              data-bm="Bayaran pesanan anda ({{ $order->order_number }}) tidak berjaya. Sila cuba semula — tiada jumlah yang telah dipotong untuk percubaan ini.">
+                            Your order ({{ $order->order_number }}) payment was unsuccessful. Please try again — no
+                            amount has been deducted for this attempt.
+                        </span>
                     @else
-                        Your order ({{ $order->order_number }}) is pending authorization from your bank. This can
-                        take a few minutes up to 1 business day.
+                        <span data-en="Your order ({{ $order->order_number }}) is pending authorization from your bank. This can take a few minutes up to 1 business day."
+                              data-bm="Pesanan anda ({{ $order->order_number }}) menunggu pengesahan daripada bank anda. Ini boleh mengambil masa beberapa minit sehingga 1 hari perniagaan.">
+                            Your order ({{ $order->order_number }}) is pending authorization from your bank. This can
+                            take a few minutes up to 1 business day.
+                        </span>
                     @endif
                 </p>
                 @if (!empty($paymentData['message']))
@@ -93,10 +96,12 @@ $viewAppBaseUrl = match ($order->application_type ?? '') {
             </div>
             @if ($isSuccess)
                 <div class="apr-success-actions">
-                    <button type="button" class="apr-btn-icon" id="aprPrintBtn" title="Print receipt">
+                    <button type="button" class="apr-btn-icon" id="aprPrintBtn" 
+                            title="Print receipt" >
                         <i class="bi bi-printer"></i>
                     </button>
-                    <button type="button" class="apr-btn-icon" id="aprDownloadBtn" title="Download PDF">
+                    <button type="button" class="apr-btn-icon" id="aprDownloadBtn" 
+                            title="Download PDF" >
                         <i class="bi bi-download"></i>
                     </button>
                 </div>
@@ -118,7 +123,7 @@ $viewAppBaseUrl = match ($order->application_type ?? '') {
                         </div>
                     </div>
                     <div class="apr-receipt-meta">
-                        <div class="apr-receipt-meta-label">Official Receipt</div>
+                        <div class="apr-receipt-meta-label" data-en="Official Receipt" data-bm="Resit Rasmi">Official Receipt</div>
                         <div class="apr-receipt-meta-no">{{ $receiptNo }}</div>
                     </div>
                 </div>
@@ -127,59 +132,59 @@ $viewAppBaseUrl = match ($order->application_type ?? '') {
 
                 <div class="apr-ref-grid">
                     <div class="apr-ref-cell">
-                        <div class="apr-ref-label">Payment Reference</div>
+                        <div class="apr-ref-label" data-en="Payment Reference" data-bm="Rujukan Pembayaran">Payment Reference</div>
                         <div class="apr-ref-value">{{ $order->fpx_seller_reference }}</div>
                     </div>
                     <div class="apr-ref-cell">
-                        <div class="apr-ref-label">Order Number</div>
+                        <div class="apr-ref-label" data-en="Order Number" data-bm="Nombor Pesanan">Order Number</div>
                         <div class="apr-ref-value">{{ $order->order_number }}</div>
                     </div>
                     <div class="apr-ref-cell">
-                        <div class="apr-ref-label">Application Type</div>
+                        <div class="apr-ref-label" data-en="Application Type" data-bm="Jenis Permohonan">Application Type</div>
                         <div class="apr-ref-value">{{ $order->application_type }}</div>
                     </div>
                     <div class="apr-ref-cell">
-                        <div class="apr-ref-label">Payment Date</div>
+                        <div class="apr-ref-label" data-en="Payment Date" data-bm="Tarikh Pembayaran">Payment Date</div>
                         <div class="apr-ref-value">{{ $paymentDate }}</div>
                     </div>
                     <div class="apr-ref-cell">
-                        <div class="apr-ref-label">Payment Method</div>
+                        <div class="apr-ref-label" data-en="Payment Method" data-bm="Kaedah Pembayaran">Payment Method</div>
                         <div class="apr-ref-value">{{ $paymentMethod }}</div>
                     </div>
                     <div class="apr-ref-cell">
-                        <div class="apr-ref-label">Status</div>
+                        <div class="apr-ref-label" data-en="Status" data-bm="Status">Status</div>
                         <div class="apr-ref-value">
-                            <span class="apr-status-badge is-paid">Paid</span>
+                            <span class="apr-status-badge is-paid" data-en="Paid" data-bm="Dibayar">Paid</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="apr-receipt-divider"></div>
 
-                <div class="apr-section-label">Paid By</div>
+                <div class="apr-section-label" data-en="Paid By" data-bm="Dibayar Oleh">Paid By</div>
                 <div class="apr-payer-row">
                     <div class="apr-payer-cell">
-                        <div class="apr-payer-label">Name</div>
+                        <div class="apr-payer-label" data-en="Name" data-bm="Nama">Name</div>
                         <div class="apr-payer-value">{{ $user['fullname'] }}</div>
                     </div>
                     <div class="apr-payer-cell">
-                        <div class="apr-payer-label">Email</div>
+                        <div class="apr-payer-label" data-en="Email" data-bm="E-mel">Email</div>
                         <div class="apr-payer-value">{{ $user['email'] }}</div>
                     </div>
                     <div class="apr-payer-cell">
-                        <div class="apr-payer-label">Phone</div>
+                        <div class="apr-payer-label" data-en="Phone" data-bm="Telefon">Phone</div>
                         <div class="apr-payer-value">{{ $user['phone_number'] }}</div>
                     </div>
                 </div>
 
                 <div class="apr-receipt-divider"></div>
 
-                <div class="apr-section-label">Items Paid</div>
+                <div class="apr-section-label" data-en="Items Paid" data-bm="Item Dibayar">Items Paid</div>
                 <div class="apr-item-table">
                     <div class="apr-item-row apr-item-row-head">
-                        <span>Permit</span>
-                        <span>Item</span>
-                        <span class="apr-col-right">Fee</span>
+                        <span data-en="Permit" data-bm="Permit">Permit</span>
+                        <span data-en="Item" data-bm="Item">Item</span>
+                        <span class="apr-col-right" data-en="Fee" data-bm="Yuran">Fee</span>
                     </div>
                     @foreach ($permits as $item)
                         @php
@@ -209,28 +214,25 @@ $viewAppBaseUrl = match ($order->application_type ?? '') {
                     @endforeach
                 </div>
 
-                {{-- // TODO verify: order_details doesn't currently carry a
-                 real subtotal/processing-fee split, only the grand total.
-                 Subtotal is shown equal to the total and fee as RM 0.00
-                 until that breakdown exists server-side. --}}
                 <div class="apr-totals-block">
                     <div class="apr-totals-row">
-                        <span>Subtotal</span>
+                        <span data-en="Subtotal" data-bm="Jumlah Kasar">Subtotal</span>
                         <span>RM {{ number_format($order->payment_amount, 2) }}</span>
                     </div>
                     <div class="apr-totals-row">
-                        <span>Processing fee</span>
+                        <span data-en="Processing fee" data-bm="Yuran Pemprosesan">Processing fee</span>
                         <span>RM 0.00</span>
                     </div>
                     <div class="apr-totals-row is-grand">
-                        <span>Total paid</span>
+                        <span data-en="Total paid" data-bm="Jumlah Dibayar">Total paid</span>
                         <span>RM {{ number_format($order->payment_amount, 2) }}</span>
                     </div>
                 </div>
 
                 <div class="apr-receipt-divider"></div>
 
-                <div class="apr-footer-note">
+                <div class="apr-footer-note" data-en="This is a computer-generated receipt and does not require a signature. For enquiries, contact Jabatan Pertanian Sabah at (088) 211 736."
+                     data-bm="Ini adalah resit yang dijana komputer dan tidak memerlukan tandatangan. Untuk pertanyaan, hubungi Jabatan Pertanian Sabah di (088) 211 736.">
                     <i class="bi bi-info-circle"></i>
                     This is a computer-generated receipt and does not require a signature.
                     For enquiries, contact Jabatan Pertanian Sabah at (088) 211 736.
@@ -239,15 +241,16 @@ $viewAppBaseUrl = match ($order->application_type ?? '') {
             </div>
 
             <div class="apr-next-card">
-                <div class="apr-next-title">
+                <div class="apr-next-title" data-en="What happens next" data-bm="Apa yang berlaku seterusnya">
                     <i class="bi bi-signpost-2"></i> What happens next
                 </div>
                 <div class="apr-next-steps">
                     <div class="apr-next-step">
                         <div class="apr-next-step-icon"><i class="bi bi-hourglass-split"></i></div>
                         <div>
-                            <div class="apr-next-step-title">Bank authorization</div>
-                            <div class="apr-next-step-desc">
+                            <div class="apr-next-step-title" data-en="Bank authorization" data-bm="Pengesahan bank">Bank authorization</div>
+                            <div class="apr-next-step-desc" data-en="Your payment is being verified by the bank. This usually takes a few minutes, but can take up to 1 business day."
+                                 data-bm="Pembayaran anda sedang disahkan oleh bank. Ini biasanya mengambil masa beberapa minit, tetapi boleh mengambil masa sehingga 1 hari perniagaan.">
                                 Your payment is being verified by the bank. This usually takes a few minutes,
                                 but can take up to 1 business day.
                             </div>
@@ -256,8 +259,9 @@ $viewAppBaseUrl = match ($order->application_type ?? '') {
                     <div class="apr-next-step">
                         <div class="apr-next-step-icon"><i class="bi bi-patch-check"></i></div>
                         <div>
-                            <div class="apr-next-step-title">Permit issuance</div>
-                            <div class="apr-next-step-desc">
+                            <div class="apr-next-step-title" data-en="Permit issuance" data-bm="Pengeluaran permit">Permit issuance</div>
+                            <div class="apr-next-step-desc" data-en="Once payment is confirmed, each paid permit will move to Issued / Active status and become available for download."
+                                 data-bm="Setelah pembayaran disahkan, setiap permit yang dibayar akan bertukar kepada status Dikeluarkan / Aktif dan tersedia untuk dimuat turun.">
                                 Once payment is confirmed, each paid permit will move to Issued / Active status
                                 and become available for download.
                             </div>
@@ -266,8 +270,9 @@ $viewAppBaseUrl = match ($order->application_type ?? '') {
                     <div class="apr-next-step">
                         <div class="apr-next-step-icon"><i class="bi bi-bell"></i></div>
                         <div>
-                            <div class="apr-next-step-title">Notification</div>
-                            <div class="apr-next-step-desc">
+                            <div class="apr-next-step-title" data-en="Notification" data-bm="Notifikasi">Notification</div>
+                            <div class="apr-next-step-desc" data-en="You will receive an email and an in-app notification as soon as your permits are ready."
+                                 data-bm="Anda akan menerima e-mel dan notifikasi dalam aplikasi sebaik sahaja permit anda sedia.">
                                 You will receive an email and an in-app notification as soon as your permits
                                 are ready.
                             </div>
@@ -277,33 +282,36 @@ $viewAppBaseUrl = match ($order->application_type ?? '') {
             </div>
         @else
             {{-- ============================================================ --}}
-            {{-- Failed / pending — simpler status card, no itemised receipt   --}}
-            {{-- since nothing has actually been charged/confirmed yet         --}}
+            {{-- Failed / pending — simpler status card                      --}}
             {{-- ============================================================ --}}
             <div class="apr-receipt-card">
-                <div class="apr-section-label">Order Details</div>
+                <div class="apr-section-label" data-en="Order Details" data-bm="Butiran Pesanan">Order Details</div>
                 <div class="apr-ref-grid">
                     <div class="apr-ref-cell">
-                        <div class="apr-ref-label">Order Number</div>
+                        <div class="apr-ref-label" data-en="Order Number" data-bm="Nombor Pesanan">Order Number</div>
                         <div class="apr-ref-value">{{ $order->order_number }}</div>
                     </div>
                     <div class="apr-ref-cell">
-                        <div class="apr-ref-label">Application Type</div>
+                        <div class="apr-ref-label" data-en="Application Type" data-bm="Jenis Permohonan">Application Type</div>
                         <div class="apr-ref-value">{{ $order->application_type }}</div>
                     </div>
                     <div class="apr-ref-cell">
-                        <div class="apr-ref-label">FPX Reference</div>
+                        <div class="apr-ref-label" data-en="FPX Reference" data-bm="Rujukan FPX">FPX Reference</div>
                         <div class="apr-ref-value">{{ $order->fpx_seller_reference }}</div>
                     </div>
                     <div class="apr-ref-cell">
-                        <div class="apr-ref-label">Amount</div>
+                        <div class="apr-ref-label" data-en="Amount" data-bm="Jumlah">Amount</div>
                         <div class="apr-ref-value">RM {{ number_format($order->payment_amount, 2) }}</div>
                     </div>
                     <div class="apr-ref-cell">
-                        <div class="apr-ref-label">Status</div>
+                        <div class="apr-ref-label" data-en="Status" data-bm="Status">Status</div>
                         <div class="apr-ref-value">
                             <span class="apr-status-badge {{ $isFailed ? 'is-failed' : 'is-processing' }}">
-                                {{ $isFailed ? 'Failed' : 'Pending' }}
+                                @if ($isFailed)
+                                    <span data-en="Failed" data-bm="Gagal">Failed</span>
+                                @else
+                                    <span data-en="Pending" data-bm="Tertunggak">Pending</span>
+                                @endif
                             </span>
                         </div>
                     </div>
@@ -311,36 +319,35 @@ $viewAppBaseUrl = match ($order->application_type ?? '') {
 
                 <div class="apr-receipt-divider"></div>
 
-                <div class="apr-section-label">Paid By</div>
+                <div class="apr-section-label" data-en="Paid By" data-bm="Dibayar Oleh">Paid By</div>
                 <div class="apr-payer-row">
                     <div class="apr-payer-cell">
-                        <div class="apr-payer-label">Name</div>
+                        <div class="apr-payer-label" data-en="Name" data-bm="Nama">Name</div>
                         <div class="apr-payer-value">{{ $user['fullname'] }}</div>
                     </div>
                     <div class="apr-payer-cell">
-                        <div class="apr-payer-label">Email</div>
+                        <div class="apr-payer-label" data-en="Email" data-bm="E-mel">Email</div>
                         <div class="apr-payer-value">{{ $user['email'] }}</div>
                     </div>
                     <div class="apr-payer-cell">
-                        <div class="apr-payer-label">Phone</div>
+                        <div class="apr-payer-label" data-en="Phone" data-bm="Telefon">Phone</div>
                         <div class="apr-payer-value">{{ $user['phone_number'] }}</div>
                     </div>
                 </div>
 
                 <div class="apr-receipt-divider"></div>
 
-                <div class="apr-section-label">Permit(s) in this Order</div>
+                <div class="apr-section-label" data-en="Permit(s) in this Order" data-bm="Permit dalam Pesanan Ini">Permit(s) in this Order</div>
                 <div class="apr-item-table">
                     <div class="apr-item-row apr-item-row-head">
-                        <span>Permit</span>
-                        <span colspan="2">Item</span>
+                        <span data-en="Permit" data-bm="Permit">Permit</span>
+                        <span colspan="2" data-en="Item" data-bm="Item">Item</span>
                     </div>
                     @foreach ($permits as $item)
                         <div class="apr-item-row">
                             <span class="apr-item-permit-no">{{ $item['permit_number'] ?? '—' }}</span>
                             <span class="apr-item-name-cell">
-                                <span
-                                    class="apr-item-name">{{ $item['item_name'] ?? ($item['consignment_detail']['item_name'] ?? '—') }}</span>
+                                <span class="apr-item-name">{{ $item['item_name'] ?? ($item['consignment_detail']['item_name'] ?? '—') }}</span>
                             </span>
                         </div>
                     @endforeach
@@ -353,12 +360,12 @@ $viewAppBaseUrl = match ($order->application_type ?? '') {
         {{-- ================================================================ --}}
         <div class="apr-footer-actions">
             <a href="/order/list" class="apr-btn-secondary">
-                <i class="bi bi-arrow-left"></i> Back to Order List
+                <i class="bi bi-arrow-left"></i> <span data-en="Back to Order List" data-bm="Kembali ke Senarai Pesanan">Back to Order List</span>
             </a>
             @if ($applicationId)
                 <a href="{{ $viewAppBaseUrl . $applicationId }}{{ $isFailed || $isPending ? '#pending' : '' }}"
-                    class="apr-btn-primary">
-                    <i class="bi bi-file-earmark-text"></i> View Application Status
+                   class="apr-btn-primary">
+                    <i class="bi bi-file-earmark-text"></i> <span data-en="View Application Status" data-bm="Lihat Status Permohonan">View Application Status</span>
                 </a>
             @endif
         </div>
@@ -403,6 +410,3 @@ $viewAppBaseUrl = match ($order->application_type ?? '') {
         document.addEventListener('DOMContentLoaded', init);
     </script>
 @endpush
-
-{{-- payment processing --}}
-{{-- 1. bayupay klau close page, pemit masih payment processing 7 minutes, 'processing payment' --}}

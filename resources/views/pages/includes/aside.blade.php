@@ -33,23 +33,19 @@
                 $isSipitang = $internalUser?->branch === 'Sipitang';
 
                 // ── User Management visibility ──────────────────────────────────
-                // Check each permission individually
                 $canReadPublicUser = $internalUser?->can('read public user') ?? false;
                 $canReadInternalUser = $internalUser?->can('read internal user') ?? false;
                 $canApprovePublicUser = $internalUser?->can('approve public user') ?? false;
                 $canReadActivityLog = $internalUser?->can('read activity log') ?? false;
                 $canManageRolePermission = $internalUser?->hasRole('superadmin') ?? false;
 
-                // Show User Management if user has at least one of these permissions
                 $canSeeUserManagement = $isSuperadmin || 
                     $canReadPublicUser || 
                     $canReadInternalUser || 
                     $canApprovePublicUser || 
                     $canReadActivityLog;
 
-                // ── Active state helpers ────────────────────────────────────────
                 $isApplicationActive = Str::contains($currentRoute, ['application', 'inspection', 'consignment']);
-
                 $isUserManagementActive = collect([
                     'internal.public.list',
                     'internal.internal.list',
@@ -57,12 +53,10 @@
                     'internal.activity_logs',
                     'internal.internal.role',
                 ])->contains(fn($prefix) => Str::startsWith($currentRoute, $prefix) || $currentRoute === $prefix);
-
                 $isImporterExporterActive = in_array($currentRoute, [
                     'internal.exporter.list',
                     'internal.importer.list',
                 ]);
-
                 $isPublicAppActive = in_array($currentRoute, [
                     'public.permitApplication',
                     'public.permitAssignApplication',
@@ -125,14 +119,12 @@
                             <li class="slide">
                                 <a href="/public/agent_list" class="side-menu__item" data-en="Representative List" data-bm="Senarai Wakil">Representative List</a>
                             </li>
-                 
                             <li class="slide">
                                 <a href="{{ route('public.showallapplicationlist') }}" class="side-menu__item" data-en="Import Permit List" data-bm="Senarai Permit Import">Import Permit List</a>
                             </li>
                             <li class="slide">
                                 <a href="{{ route('public.showallinspectionlist') }}" class="side-menu__item" data-en="Inspection Certificate List" data-bm="Senarai Sijil Pemeriksaan">Inspection Certificate List</a>
                             </li>
-                       
                             <li class="slide">
                                 <a href="{{ route('public.showallconsignmentlist') }}" class="side-menu__item" data-en="Consignment Certificate List" data-bm="Senarai Sijil Konsainan">Consignment Certificate List</a>
                             </li>
@@ -166,7 +158,6 @@
                             <li class="slide {{ $currentRoute === 'internal.inspection.list' ? 'active' : '' }}">
                                 <a href="{{ route('internal.inspection.list') }}" class="side-menu__item" id="inspectionAppCount" data-en="Inspection Certificate" data-bm="Sijil Pemeriksaan">Inspection Certificate</a>
                             </li>
-                        
                             <li class="slide {{ $currentRoute === 'internal.consignment.list' ? 'active' : '' }}">
                                 <a href="{{ route('internal.consignment.list') }}" class="side-menu__item" id="consignmentAppCount" data-en="Consignment Certificate" data-bm="Sijil Konsainan">Consignment Certificate</a>
                             </li>
