@@ -30,6 +30,10 @@
     height: fit-content;
 }
 
+#pd-activity-tab {
+    display: none;
+}
+
 /* For the permit detail offcanvas or all offcanvas with class .offcanvas */
 @media (max-width: 767px) {
     .offcanvas {

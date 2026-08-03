@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Import Permit Application List</title>
+    <title data-en="Import Permit Application List" data-bm="Senarai Permohonan Import Permit">Import Permit Application List</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -32,7 +32,7 @@
 </head>
 <body>
     <div class="header">
-        <h2>Import Permit Application List</h2>
+        <h2 data-en="Import Permit Application List" data-bm="Senarai Permohonan Import Permit">Import Permit Application List</h2>
         <p>Generated on: {{ now()->format('d M Y, h:i A') }}</p>
     </div>
 

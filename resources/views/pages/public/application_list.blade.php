@@ -125,7 +125,7 @@
                                     <i class="ti ti-refresh"></i> <span data-en="Reset" data-bm="Set Semula">Reset</span>
                                 </button>
                                 <button class="btn btn-sm btn-primary" id="btnFilter">
-                                    <i class="ti ti-filter"></i> <span data-en="Apply" data-bm="Guna">Apply</span>
+                                    <i class="ti ti-filter"></i> <span data-en="Apply" data-bm="Cari">Apply</span>
                                 </button>
                             </li>
                         </ul>
