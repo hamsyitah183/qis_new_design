@@ -28,15 +28,15 @@
                 {{-- Category 0 - Pending --}}
                 {{-- @if ($application->category_application == 0 && str_contains($status, 'clerk review in-progress'))
                     {!! $statusIcon !!}
-                    <h3 class="mt-2">Pending</h3>
+                    <h3 class="mt-2" data-bm="Menunggu" data-en="Pending">Pending</h3>
                     @if (authUser()['type'] == 'public')
-                        <p>This permit application is currently pending verification by Clerk.</p>
+                        <p data-bm="Permohonan permit ini sedang menunggu pengesahan oleh Kerani." data-en="This permit application is currently pending verification by Clerk.">This permit application is currently pending verification by Clerk.</p>
                     @else
-                        <p>Waiting for approval.</p>
+                        <p data-bm="Menunggu kelulusan." data-en="Waiting for approval.">Waiting for approval.</p>
                         @if (authUser() && (authUser()['user']->hasRole('clerk') || authUser()['user']->hasRole('admin')) )
                             <div class="d-flex justify-content-center gap-3 mt-3">
-                                <button id="acceptAppl" class="btn btn-sm btn-success">Accept Application</button>
-                                <button id="rejectAdminAppl" class="btn btn-sm btn-danger">Reject Application</button>
+                                <button id="acceptAppl" class="btn btn-sm btn-success" data-bm="Terima Permohonan" data-en="Accept Application">Accept Application</button>
+                                <button id="rejectAdminAppl" class="btn btn-sm btn-danger" data-bm="Tolak Permohonan" data-en="Reject Application">Reject Application</button>
                             </div>
                         @endif
 
@@ -46,15 +46,15 @@
       
                 @if ( str_contains($status, 'clerk review in-progress'))
                     {!! $statusIcon !!}
-                    <h3 class="mt-2">Pending</h3>
+                    <h3 class="mt-2" data-bm="Menunggu" data-en="Pending">Pending</h3>
                     @if (authUser()['type'] == 'public')
-                        <p>This permit application is currently pending verification by Clerk.</p>
+                        <p data-bm="Permohonan permit ini sedang menunggu pengesahan oleh Kerani." data-en="This permit application is currently pending verification by Clerk.">This permit application is currently pending verification by Clerk.</p>
                     @else
-                        <p>Waiting for approval.</p>
+                        <p data-bm="Menunggu kelulusan." data-en="Waiting for approval.">Waiting for approval.</p>
                         @if (authUser() && (authUser()['user']->hasRole('clerk') || authUser()['user']->hasRole('admin') || authUser()['user']->hasRole('superadmin')) )
                             <div class="d-flex justify-content-center gap-3 mt-3">
-                                <button id="acceptAppl" class="btn btn-sm btn-success">Accept Application</button>
-                                <button id="rejectAdminAppl" class="btn btn-sm btn-danger">Reject Application</button>
+                                <button id="acceptAppl" class="btn btn-sm btn-success" data-bm="Terima Permohonan" data-en="Accept Application">Accept Application</button>
+                                <button id="rejectAdminAppl" class="btn btn-sm btn-danger" data-bm="Tolak Permohonan" data-en="Reject Application">Reject Application</button>
                             </div>
                         @endif
 
@@ -70,7 +70,7 @@
                     {{-- @dd($importerVerify) --}}
                     @if (str_contains($importerVerify, 'awaiting approval'))
                         {!! $statusIcon !!}
-                        <h3 class="mt-2">Pending</h3>
+                        <h3 class="mt-2" data-bm="Menunggu" data-en="Pending">Pending</h3>
 
                         @if ($application->user->uuid == $authUuid)
                             <p>Your permit application is currently pending verification by the respective importer.</p>
@@ -80,8 +80,8 @@
                             {{-- If logged in user is the importer, show verify/reject buttons --}}
                             @if ($application->importer->uuid == $authUuid)
                                 <div class="d-flex justify-content-center gap-3 mt-3">
-                                    <button id="verifyAppl" class="btn btn-sm btn-secondary">Verify Application</button>
-                                    <button id="rejectAppl" class="btn btn-sm btn-danger">Reject Application</button>
+                                    <button id="verifyAppl" class="btn btn-sm btn-secondary" data-bm="Sahkan Permohonan" data-en="Verify Application">Verify Application</button>
+                                    <button id="rejectAppl" class="btn btn-sm btn-danger" data-bm="Tolak Permohonan" data-en="Reject Application">Reject Application</button>
                                 </div>
                             @endif
                         @endif
@@ -91,24 +91,24 @@
                     {{-- compnay reject --}}
                     @if (str_contains($status, 'not approved'))
                     {!! $statusIcon !!}
-                    <h3 class="mt-2">Rejected</h3>
-                    <p>This permit application has been rejected by the individual/company .</p>
+                    <h3 class="mt-2" data-bm="Ditolak" data-en="Rejected">Rejected</h3>
+                    <p data-bm="Permohonan permit ini telah ditolak oleh individu/syarikat." data-en="This permit application has been rejected by the individual/company .">This permit application has been rejected by the individual/company .</p>
                 @endif
 
                 @endif
 
                 @if (str_contains($status, 'rejected'))
                     {!! $statusIcon !!}
-                    <h3 class="mt-2">Rejected</h3>
+                    <h3 class="mt-2" data-bm="Ditolak" data-en="Rejected">Rejected</h3>
                     @if (authUser()['type'] == 'public')
-                        <p>This permit application has been rejected.</p>
+                        <p data-bm="Permohonan permit ini telah ditolak." data-en="This permit application has been rejected.">This permit application has been rejected.</p>
                         
                     @else
-                        <p>Rejected</p>
+                        <p data-bm="Ditolak" data-en="Rejected">Rejected</p>
                         @if (authUser() && (authUser()['user']->hasRole('admin') || authUser()['user']->hasRole('superadmin')))
                             {{-- <div class="d-flex justify-content-center gap-3 mt-3">
-                                <button id="acceptAppl" class="btn btn-sm btn-success">Accept Application</button>
-                                <button id="rejectAdminAppl" class="btn btn-sm btn-danger">Reject Application</button>
+                                <button id="acceptAppl" class="btn btn-sm btn-success" data-bm="Terima Permohonan" data-en="Accept Application">Accept Application</button>
+                                <button id="rejectAdminAppl" class="btn btn-sm btn-danger" data-bm="Tolak Permohonan" data-en="Reject Application">Reject Application</button>
                             </div> --}}
                         @endif
 

@@ -69,15 +69,15 @@
 
                 <div class="ipv-value-box">
                     <div>
-                        <div class="ipv-value-label">Total Consignment Value</div>
+                        <div class="ipv-value-label" data-bm="Jumlah Nilai Konsainan" data-en="Total Consignment Value">Total Consignment Value</div>
                         <div class="ipv-value-amount" id="ipvTotalValue">RM 0.00</div>
                     </div>
-                    <button type="button" class="ipv-value-link" id="ipvViewPermitsLink">View</button>
+                    <button type="button" class="ipv-value-link" id="ipvViewPermitsLink" data-bm="Lihat" data-en="View">View</button>
                 </div>
 
                 <div class="ipv-divider"></div>
 
-                <div class="ipv-section-label">Importer &amp; Exporter Details</div>
+                <div class="ipv-section-label" data-bm="Butiran Pengimport &amp; Pengeksport" data-en="Importer &amp; Exporter Details">Importer &amp; Exporter Details</div>
 
                 <div class="ipv-party" id="ipvImporterBlock"></div>
                 <div class="ipv-party" id="ipvExporterBlock"></div>
@@ -85,9 +85,9 @@
                 <div class="ipv-divider"></div>
 
                 <div class="ipv-section-label-row">
-                    <span class="ipv-section-label">Application Documents</span>
+                    <span class="ipv-section-label" data-bm="Dokumen Permohonan" data-en="Application Documents">Application Documents</span>
                     <button type="button" class="ipv-download-all" id="ipvDownloadAllApp">
-                        <i class="bi bi-download"></i> Download All
+                        <i class="bi bi-download"></i> <span data-bm="Muat Turun Semua" data-en="Download All">Download All</span>
                     </button>
                 </div>
                 <div class="ipv-attach-list" id="ipvAppAttachments"></div>
@@ -105,10 +105,10 @@
                 <!-- Status header -->
                 <div class="ipv-status-header">
                     <div>
-                        <span class="ipv-status-eyebrow">Application Type:</span>
-                        <strong>Import Permit</strong>
+                        <span class="ipv-status-eyebrow" data-bm="Jenis Permohonan:" data-en="Application Type:">Application Type:</span>
+                        <strong data-bm="Permit Import" data-en="Import Permit">Import Permit</strong>
                         <span class="ipv-status-sep">|</span>
-                        <span class="ipv-status-eyebrow">Status:</span>
+                        <span class="ipv-status-eyebrow" data-bm="Status:" data-en="Status:">Status:</span>
                         <strong id="ipvStatusLabel">—</strong>
                     </div>
                     <div class="ipv-status-duration" id="ipvStatusDuration"></div>
@@ -125,8 +125,8 @@
                     <div class="ipv-clerk-panel-header">
                         <i class="bi bi-patch-check"></i>
                         <div>
-                            <div class="ipv-clerk-panel-title">Document Verification</div>
-                            <div class="ipv-clerk-panel-sub">
+                            <div class="ipv-clerk-panel-title" data-bm="Pengesahan Dokumen" data-en="Document Verification">Document Verification</div>
+                            <div class="ipv-clerk-panel-sub" data-bm="Sahkan item di bawah sebelum memajukan permohonan ini untuk Semakan Teknikal." data-en="Confirm the items below before forwarding this application to Technical Review.">
                                 Confirm the items below before forwarding this application to Technical Review.
                             </div>
                         </div>
@@ -135,19 +135,19 @@
                     <div class="ipv-clerk-checklist">
                         <label class="ipv-clerk-check-item">
                             <input type="checkbox" data-clerk-check>
-                            <span>Application form details are complete and consistent</span>
+                            <span data-bm="Butiran borang permohonan adalah lengkap dan konsisten" data-en="Application form details are complete and consistent">Application form details are complete and consistent</span>
                         </label>
                         <label class="ipv-clerk-check-item">
                             <input type="checkbox" data-clerk-check>
-                            <span>Importer &amp; Exporter details have been verified</span>
+                            <span data-bm="Butiran Pengimport &amp; Pengeksport telah disahkan" data-en="Importer &amp; Exporter details have been verified">Importer &amp; Exporter details have been verified</span>
                         </label>
                         <label class="ipv-clerk-check-item">
                             <input type="checkbox" data-clerk-check>
-                            <span>All required application documents are attached</span>
+                            <span data-bm="Semua dokumen permohonan yang diperlukan dilampirkan" data-en="All required application documents are attached">All required application documents are attached</span>
                         </label>
                         <label class="ipv-clerk-check-item">
                             <input type="checkbox" data-clerk-check>
-                            <span>Permit item attachments are attached and legible</span>
+                            <span data-bm="Lampiran item permit dilampirkan dan boleh dibaca" data-en="Permit item attachments are attached and legible">Permit item attachments are attached and legible</span>
                         </label>
                     </div>
 
@@ -156,7 +156,7 @@
                             <i class="bi bi-x-circle"></i> Reject / Return for Amendment
                         </button>
                         <button type="button" class="ipv-btn-verify" id="ipvVerifyBtn" disabled>
-                            <i class="bi bi-check-circle"></i> Verify &amp; Forward to Officer
+                            <i class="bi bi-check-circle"></i> <span data-bm="Sahkan &amp; Maju ke Pegawai" data-en="Verify &amp; Forward to Officer">Verify &amp; Forward to Officer</span>
                         </button>
                     </div>
                 </div>
@@ -166,15 +166,15 @@
                     <div class="ipv-info-item">
                         <div class="ipv-info-icon"><i class="bi bi-person-badge"></i></div>
                         <div>
-                            <div class="ipv-info-label">Assigned Clerk</div>
+                            <div class="ipv-info-label" data-bm="Kerani Ditugaskan" data-en="Assigned Clerk">Assigned Clerk</div>
                             <div class="ipv-info-value" id="ipvAssignedOfficer">—</div>
                         </div>
-                        <button type="button" class="ipv-info-link">Reassign</button>
+                        <button type="button" class="ipv-info-link" data-bm="Tugas Semula" data-en="Reassign">Reassign</button>
                     </div>
                     <div class="ipv-info-item">
                         <div class="ipv-info-icon"><i class="bi bi-hourglass-split"></i></div>
                         <div>
-                            <div class="ipv-info-label">Next Action / SLA</div>
+                            <div class="ipv-info-label" data-bm="Tindakan Seterusnya / SLA" data-en="Next Action / SLA">Next Action / SLA</div>
                             <div class="ipv-info-value" id="ipvSlaDue">—</div>
                         </div>
                     </div>
@@ -183,16 +183,16 @@
                 <!-- Tabs -->
                 <div class="ipv-tabnav" role="tablist">
                     <button type="button" class="ipv-tabnav-item is-active" data-ipv-tab="permits" role="tab">
-                        Permit List <span class="ipv-tab-count" id="ipvPermitCount">0</span>
+                        <span data-bm="Senarai Permit" data-en="Permit List">Permit List</span> <span class="ipv-tab-count" id="ipvPermitCount">0</span>
                     </button>
                     <button type="button" class="ipv-tabnav-item" data-ipv-tab="transport" role="tab">
-                        Transportation Details
+                        Butiran Pengangkutan
                     </button>
                     <button type="button" class="ipv-tabnav-item" data-ipv-tab="condition" role="tab">
-                        Condition
+                        Syarat
                     </button>
                     <button type="button" class="ipv-tabnav-item" data-ipv-tab="activity" role="tab">
-                        Activity
+                        Aktiviti
                     </button>
                 </div>
 
@@ -203,19 +203,19 @@
                         <div class="ipv-permit-accordion" id="ipvPermitAccordion"></div>
                     </div>
 
-                    <!-- Transportation Details -->
+                    <!-- Butiran Pengangkutan -->
                     <div class="ipv-tabpane" data-ipv-pane="transport">
                         <div id="ipvTransportDetails"></div>
                     </div>
 
-                    <!-- Condition -->
+                    <!-- Syarat -->
                     <div class="ipv-tabpane" data-ipv-pane="condition">
-                        <div id="ipvConditionList"></div>
+                        <div id="ipvSyaratList"></div>
                     </div>
 
-                    <!-- Activity -->
+                    <!-- Aktiviti -->
                     <div class="ipv-tabpane" data-ipv-pane="activity">
-                        <div class="ipv-timeline" id="ipvActivityTimeline"></div>
+                        <div class="ipv-timeline" id="ipvAktivitiTimeline"></div>
                     </div>
 
                 </div>
@@ -231,11 +231,11 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content ipv-reject-modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-arrow-return-left me-2"></i>Return Application for Amendment</h5>
+                    <h5 class="modal-title"><i class="bi bi-arrow-return-left me-2"></i><span data-bm="Kembalikan Permohonan untuk Pindaan" data-en="Return Application for Amendment">Return Application for Amendment</span></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="ipv-reject-modal-intro">
+                    <p class="ipv-reject-modal-intro" data-bm="Beri tahu pemohon apa yang perlu diperbetulkan. Pengesahan akan menetapkan status permohonan kepada Dikembalikan / Ditolak dan menghantar nota di bawah kepada mereka." data-en="Let the applicant know what needs to be corrected. Confirming will set the application status to Returned / Rejected and send the note below back to them.">
                         Let the applicant know what needs to be corrected. Confirming will set the
                         application status to <strong>Returned / Rejected</strong> and send the
                         note below back to them.
@@ -243,26 +243,24 @@
 
                     <div class="ipv-reject-quick-reasons">
                         <button type="button" class="ipv-reject-chip" data-reason="One or more required attachments are missing or unreadable. Please re-upload clear copies.">
-                            Missing/unreadable attachment
+                            Lampiran tiada/tidak boleh dibaca
                         </button>
                         <button type="button" class="ipv-reject-chip" data-reason="Importer or exporter details do not match the submitted documents. Please review and correct.">
-                            Mismatched party details
+                            Butiran pihak tidak sepadan
                         </button>
                         <button type="button" class="ipv-reject-chip" data-reason="Declared quantity or value does not match the supporting invoice. Please verify and resubmit.">
-                            Quantity/value mismatch
+                            Kuantiti/nilai tidak sepadan
                         </button>
                     </div>
 
-                    <label class="ipv-reject-label" for="ipvRejectReason">
-                        Remark to applicant <span class="ipv-required">*</span>
-                    </label>
+                    <label class="ipv-reject-label" for="ipvRejectReason"><span data-bm="Nota kepada pemohon" data-en="Remark to applicant">Remark to applicant</span> <span class="ipv-required">*</span></label>
                     <textarea class="ipv-reject-textarea" id="ipvRejectReason" rows="4"
-                        placeholder="Describe what the applicant needs to fix before resubmitting..."></textarea>
+                        placeholder="Describe what the applicant needs to fix before resubmitting..." data-i18n-attr="placeholder" data-bm="Terangkan apa yang perlu diperbaiki oleh pemohon sebelum menghantar semula..." data-en="Describe what the applicant needs to fix before resubmitting..."></textarea>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="ipv-btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="ipv-btn-reject-confirm" id="ipvRejectConfirmBtn" disabled>
-                        Confirm Rejection
+                        Sahkan Penolakan
                     </button>
                 </div>
             </div>
@@ -276,7 +274,7 @@
         aria-labelledby="attachmentOffcanvasLabel" style="width: 70%; max-width: 900px;">
         <div class="offcanvas-header border-bottom">
             <h5 class="offcanvas-title" id="attachmentOffcanvasLabel">
-                <i class="bi bi-paperclip me-2"></i> <span id="attachmentTitle">Attachment</span>
+                <i class="bi bi-paperclip me-2"></i> <span id="attachmentTitle" data-bm="Lampiran" data-en="Attachment">Attachment</span>
             </h5>
             <div class="d-flex align-items-center gap-2">
                 <button class="btn btn-sm btn-outline-secondary" id="attachmentPrevBtn" title="Previous">
@@ -313,7 +311,7 @@
                 <div class="tab-pane fade show active" id="attach-view" role="tabpanel">
                     <div id="attachmentViewer"
                         style="min-height: 400px; display: flex; align-items: center; justify-content: center; background: var(--gray-1); border-radius: 0.5rem;">
-                        <div class="text-muted"><i class="bi bi-file-earmark-fill fs-1"></i><br>Select an attachment</div>
+                        <div class="text-muted"><i class="bi bi-file-earmark-fill fs-1"></i><br>Pilih satu lampiran</div>
                     </div>
                 </div>
                 <!-- Details Tab -->
@@ -337,8 +335,8 @@
                     <i class="bi bi-box-seam"></i>
                 </div>
                 <div>
-                    <div class="ipv-permit-detail-eyebrow">Permit Details</div>
-                    <h5 class="offcanvas-title mb-0 fw-bold" id="permitDetailOffcanvasLabel">—</h5>
+                    <div class="ipv-permit-detail-eyebrow" data-bm="Butiran Permit" data-en="Permit Details">Permit Details</div>
+                    <h5 class="offcanvas-title mb-0 fw-bold" id="permitDetailOffcanvasLabel" data-bm="—" data-en="—">—</h5>
                 </div>
                 <span class="ipv-badge ms-2" id="pdBadge">—</span>
             </div>

@@ -21,7 +21,7 @@
         <div class="col-xl-12">
             <div class="card custom-card">
                 <div class="card-header">
-                    <div class="card-title">
+                    <div class="card-title" data-bm="PERMOHONAN PERMIT BARU" data-en="NEW PERMIT APPLICATION">
                         NEW PERMIT APPLICATION
                     </div>
                 </div>
@@ -30,22 +30,22 @@
                         <aside class="wizard-nav dots">
                             <div class="wizard-step active" data-step="0">
                                 <span class="dot"></span>
-                                <span>IMPORTER & EXPORTER</span>
+                                <span data-bm="PENGIMPORT & PENGEKSPORT" data-en="IMPORTER & EXPORTER">IMPORTER & EXPORTER</span>
                             </div>
 
                             <div class="wizard-step" data-step="1">
                                 <span class="dot"></span>
-                                <span>PERMIT DETAILS</span>
+                                <span data-bm="BUTIRAN PERMIT" data-en="PERMIT DETAILS">PERMIT DETAILS</span>
                             </div>
 
                             <div class="wizard-step" data-step="2">
                                 <span class="dot"></span>
-                                <span>CONSIGNMENT</span>
+                                <span data-bm="KONSAINAN" data-en="CONSIGNMENT">CONSIGNMENT</span>
                             </div>
 
                             <div class="wizard-step" data-step="3">
                                 <span class="dot"></span>
-                                <span>SUMMARY</span>
+                                <span data-bm="RINGKASAN" data-en="SUMMARY">SUMMARY</span>
                             </div>
                         </aside>
                         <aside class="wizard-content container">

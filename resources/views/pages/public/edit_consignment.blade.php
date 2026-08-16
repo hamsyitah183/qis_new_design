@@ -26,23 +26,23 @@
                         <aside class="wizard-nav dots">
                             <div class="wizard-step active" data-step="0">
                                 <span class="dot"></span>
-                                <span>IMPORTER & EXPORTER</span>
+                                <span data-bm="PENGIMPORT & PENGEKSPORT" data-en="IMPORTER & EXPORTER">IMPORTER & EXPORTER</span>
                             </div>
                             <div class="wizard-step" data-step="1">
                                 <span class="dot"></span>
-                                <span>CERTIFICATE DETAILS</span>
+                                <span data-bm="BUTIRAN SIJIL" data-en="CERTIFICATE DETAILS">CERTIFICATE DETAILS</span>
                             </div>
                             <div class="wizard-step" data-step="2">
                                 <span class="dot"></span>
-                                <span>CONSIGNMENT ITEMS</span>
+                                <span data-bm="ITEM KONSAINAN" data-en="CONSIGNMENT ITEMS">CONSIGNMENT ITEMS</span>
                             </div>
                             <div class="wizard-step" data-step="3">
                                 <span class="dot"></span>
-                                <span>Payment</span>
+                                <span data-bm="Pembayaran" data-en="Payment">Payment</span>
                             </div>
                             <div class="wizard-step" data-step="4">
                                 <span class="dot"></span>
-                                <span>Confirmation</span>
+                                <span data-bm="Pengesahan" data-en="Confirmation">Confirmation</span>
                             </div>
                         </aside>
                         <aside class="wizard-content container">

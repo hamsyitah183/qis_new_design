@@ -175,7 +175,7 @@ async function data_table_init() {
                         headers: {
                             Accept: "application/json",
                         },
-                    }
+                    },
                 );
 
                 if (!response.ok) {
@@ -184,7 +184,10 @@ async function data_table_init() {
 
                 const payload = await response.json();
                 if (payload?.status !== "success" || !payload?.payload) {
-                    throw new Error(payload?.message || "Invalid encrypted QR payload response.");
+                    throw new Error(
+                        payload?.message ||
+                            "Invalid encrypted QR payload response.",
+                    );
                 }
 
                 qrPayload = payload.payload;

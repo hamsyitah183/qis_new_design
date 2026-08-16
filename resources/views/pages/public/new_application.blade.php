@@ -64,7 +64,7 @@
         <div class="col-xl-12">
             <div class="card custom-card">
                 <div class="card-header justify-content-between">
-                    <div class="card-title">
+                    <div class="card-title" data-bm="Permohonan Baru" data-en="New Application">
                         New Application
                     </div>
                 </div>
@@ -72,7 +72,7 @@
                     <ol class="list-group list-group-numbered">
                         <li class="list-group-item d-sm-flex justify-content-between align-items-start">
                             <div class="ms-2 me-auto text-muted">
-                                <div class="fw-medium fs-14 text-default mb-3">Import Permit for:</div>
+                                <div class="fw-medium fs-14 text-default mb-3" data-bm="Permit Import untuk:" data-en="Import Permit for:">Import Permit for:</div>
                                 <div class="d-flex justify-content-center flex-nowrap gap-3" id="customeCheckbox">
                                     <!-- Option 1 -->
                                     <a href = "{{ route('public.permitApplication') }}" class="xintra-radio-box text-center">
@@ -82,8 +82,8 @@
                                             <div class="xintra-radio-content">
                                                 <i class="bx bx-user fs-2 mb-2 text-primary"></i>
                                                 <!-- <h6 class="mb-1">Yourself</h6> -->
-                                                <h6 class="mb-1">Self Import</h6>
-                                                <p class="text-muted small mb-0">You are applying this import permit for
+                                                <h6 class="mb-1" data-bm="Import Sendiri" data-en="Self Import">Self Import</h6>
+                                                <p class="text-muted small mb-0" data-bm="Anda memohon permit import ini untuk diri sendiri." data-en="You are applying this import permit for yourself.">You are applying this import permit for
                                                     yourself.</p>
                                             </div>
                                         </label>
@@ -96,8 +96,8 @@
                                         <label for="planStandard" class="xintra-radio-label">
                                             <div class="xintra-radio-content">
                                                 <i class="bx bx-buildings fs-2 mb-2 text-primary"></i>
-                                                <h6 class="mb-1">For Someone Else</h6>
-                                                <p class="text-muted small mb-0">For companies or individuals you represent.
+                                                <h6 class="mb-1" data-bm="Untuk Pihak Lain" data-en="For Someone Else">For Someone Else</h6>
+                                                <p class="text-muted small mb-0" data-bm="Untuk syarikat atau individu yang anda wakili." data-en="For companies or individuals you represent.">For companies or individuals you represent.
                                                 </p>
                                             </div>
                                         </label>
@@ -108,7 +108,7 @@
                         </li>
                         <li class="list-group-item d-sm-flex justify-content-between align-items-start">
                             <div class="ms-2 me-auto text-muted">
-                                <div class="fw-medium fs-14 text-default mb-3">Inspection Certificate</div>
+                                <div class="fw-medium fs-14 text-default mb-3" data-bm="Sijil Pemeriksaan" data-en="Inspection Certificate">Inspection Certificate</div>
                                 <div class="d-flex justify-content-center flex-nowrap gap-3">
                                     <!-- Option 1 -->
                                     <a href = "{{ route('public.inspectionApplicationSelf') }}" class="xintra-radio-box text-center">
@@ -116,8 +116,8 @@
                                             <div class="xintra-radio-content">
                                                 <i class="bx bx-user fs-2 mb-2 text-primary"></i>
                                                 <!-- <h6 class="mb-1">Yourself</h6> -->
-                                                <h6 class="mb-1">Self Import</h6>
-                                                <p class="text-muted small mb-0">You are applying this inspection certificate for
+                                                <h6 class="mb-1" data-bm="Import Sendiri" data-en="Self Import">Self Import</h6>
+                                                <p class="text-muted small mb-0" data-bm="Anda memohon sijil pemeriksaan ini untuk diri sendiri." data-en="You are applying this inspection certificate for yourself.">You are applying this inspection certificate for
                                                     yourself.</p>
                                             </div>
                                         </label>
@@ -128,9 +128,9 @@
                                         <label for="inspectionOthers" class="xintra-radio-label">
                                             <div class="xintra-radio-content">
                                                 <i class="bx bx-buildings fs-2 mb-2 text-primary"></i>
-                                                <!-- <h6 class="mb-1">For Someone Else</h6> -->
-                                                <h6 class="mb-1">For Someone Else</h6>
-                                                <p class="text-muted small mb-0">For companies or individuals you represent.
+                                                <!-- <h6 class="mb-1" data-bm="Untuk Pihak Lain" data-en="For Someone Else">For Someone Else</h6> -->
+                                                <h6 class="mb-1" data-bm="Untuk Pihak Lain" data-en="For Someone Else">For Someone Else</h6>
+                                                <p class="text-muted small mb-0" data-bm="Untuk syarikat atau individu yang anda wakili." data-en="For companies or individuals you represent.">For companies or individuals you represent.
                                                 </p>
                                             </div>
                                         </label>
@@ -140,7 +140,7 @@
                         </li>
                         <li class="list-group-item d-sm-flex justify-content-between align-items-start">
                             <div class="ms-2 me-auto text-muted">
-                            <div class="fw-medium fs-14 text-default mb-3">Consignment Certificate</div>
+                            <div class="fw-medium fs-14 text-default mb-3" data-bm="Sijil Konsainan" data-en="Consignment Certificate">Consignment Certificate</div>
                                 <div class="d-flex justify-content-center flex-nowrap gap-3" id="customeCheckbox">
                                     <!-- Option 1 -->
                                     <a href = "{{ route('public.consignment.app') }}" class="xintra-radio-box text-center">
@@ -148,8 +148,8 @@
                                             <div class="xintra-radio-content">
                                                 <i class="bx bx-user fs-2 mb-2 text-primary"></i>
                                                 <!-- <h6 class="mb-1">Yourself</h6> -->
-                                                <h6 class="mb-1">Self Import</h6>
-                                                <p class="text-muted small mb-0">You are applying this import permit for
+                                                <h6 class="mb-1" data-bm="Import Sendiri" data-en="Self Import">Self Import</h6>
+                                                <p class="text-muted small mb-0" data-bm="Anda memohon permit import ini untuk diri sendiri." data-en="You are applying this import permit for yourself.">You are applying this import permit for
                                                     yourself.</p>
                                             </div>
                                         </label>
@@ -160,8 +160,8 @@
                                         <label for="consignmentOthers" class="xintra-radio-label">
                                             <div class="xintra-radio-content">
                                                 <i class="bx bx-buildings fs-2 mb-2 text-primary"></i>
-                                                <h6 class="mb-1">For Someone Else</h6>
-                                                <p class="text-muted small mb-0">For companies or individuals you represent.
+                                                <h6 class="mb-1" data-bm="Untuk Pihak Lain" data-en="For Someone Else">For Someone Else</h6>
+                                                <p class="text-muted small mb-0" data-bm="Untuk syarikat atau individu yang anda wakili." data-en="For companies or individuals you represent.">For companies or individuals you represent.
                                                 </p>
                                             </div>
                                         </label>
