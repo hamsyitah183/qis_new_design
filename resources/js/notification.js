@@ -1,6 +1,24 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
 
+// Helper to get the current language from localStorage (same as used in app.js)
+function getCurrentLanguage() {
+    return localStorage.getItem('qis_lang') || 'en';
+}
+
+// Helper to extract the message in the correct language
+function getLocalizedMessage(notificationData) {
+    const lang = getCurrentLanguage();
+    const message = notificationData.message;
+
+    // If message is an object with 'en' and 'bm' keys
+    if (typeof message === 'object' && message !== null) {
+        return message[lang] || message['en'] || 'Notification';
+    }
+    // Otherwise it's a plain string (old notifications)
+    return message || 'Notification';
+}
+
 export function notification() {
     console.log("Notification script loaded.");
 
@@ -31,9 +49,12 @@ export function notification() {
             }
 
             if (!data.length) {
+                // Use bilingual static message (already in HTML via data attributes, but we set innerHTML)
+                const lang = getCurrentLanguage();
+                const noMsg = lang === 'bm' ? 'Tiada Notifikasi' : 'No notifications';
                 notificationContent.innerHTML = `
                     <li class="dropdown-item text-muted text-center">
-                        No notifications
+                        ${noMsg}
                     </li>
                 `;
                 return;
@@ -44,6 +65,8 @@ export function notification() {
                 listItem.className = "dropdown-item";
 
                 const url = notification.data.url ? notification.data.url : "#";
+                const user = notification.data.user || 'System';
+                const message = getLocalizedMessage(notification.data);
 
                 listItem.innerHTML = `
                     <a href="${url}" class="d-flex align-items-center">
@@ -53,12 +76,8 @@ export function notification() {
                             </span>
                         </div>
                         <div class="flex-grow-1">
-                            <p class="mb-0 fw-medium">${
-                                notification.data.user
-                            }</p>
-                            <div class="text-muted fs-12">${
-                                notification.data.message
-                            }</div>
+                            <p class="mb-0 fw-medium">${user}</p>
+                            <div class="text-muted fs-12">${message}</div>
                             <div class="fw-normal fs-10 text-muted">${formatTime(
                                 notification.created_at,
                             )}</div>
@@ -107,6 +126,7 @@ function formatTime(dateString) {
     const time = new Date(dateString);
     const seconds = Math.floor((now - time) / 1000);
 
+    // You can optionally translate these time labels using a helper, but I'll keep as is.
     if (seconds < 10) return "Just now";
     if (seconds < 60) return `${seconds} seconds ago`;
 
@@ -126,6 +146,7 @@ function formatTime(dateString) {
     });
 }
 
+// (Existing event listeners for the dropdown filter – unchanged)
 document.querySelectorAll(".dropdown-item-notification").forEach((item) => {
     item.addEventListener("click", function (e) {
         e.preventDefault();
@@ -137,15 +158,7 @@ document.querySelectorAll(".dropdown-item-notification").forEach((item) => {
 export function notificationContent(hours = null) {
     const notificationList = document.getElementById("notificationList");
 
-    // Swal.fire({
-    //     title: 'Loading...',
-    //     allowOutsideClick: false,
-    //     allowEscapeKey: false,
-    //     didOpen: () => Swal.showLoading()
-    // });
-
     let url = "/notifications/data/get";
-
     if (hours) {
         url += `?hours=${hours}`;
     }
@@ -159,9 +172,11 @@ export function notificationContent(hours = null) {
             notificationList.innerHTML = "";
 
             if (!data.length) {
+                const lang = getCurrentLanguage();
+                const noMsg = lang === 'bm' ? 'Tiada notifikasi' : 'No notification';
                 notificationList.innerHTML = `
                     <li class="list-group-item border-bottom-0 text-center">
-                        <span class="fw-medium">No notification</span>
+                        <span class="fw-medium">${noMsg}</span>
                     </li>
                 `;
                 return;
@@ -174,6 +189,9 @@ export function notificationContent(hours = null) {
 
                 listItem.href = notification.data.url ?? "#";
 
+                const user = notification.data.user || 'System';
+                const message = getLocalizedMessage(notification.data);
+
                 listItem.innerHTML = `
                     <div class="pe-2">
                         <span class="avatar avatar-md bg-primary avatar-rounded">
@@ -182,9 +200,9 @@ export function notificationContent(hours = null) {
                     </div>
 
                     <div class="text-wrap">
-                        <span class="fw-medium">${notification.data.user}</span>
+                        <span class="fw-medium">${user}</span>
                         <p class="text-muted mb-0 fs-12 w-100 text-wrap">
-                            ${notification.data.message}
+                            ${message}
                         </p>
                     </div>
 
@@ -202,4 +220,5 @@ export function notificationContent(hours = null) {
         .finally(() => Swal.close());
 }
 
+// Call on load
 notificationContent();

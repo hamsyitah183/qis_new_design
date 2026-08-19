@@ -101,7 +101,7 @@
                             <!-- Apply & Reset Buttons -->
                             <li class="d-flex justify-content-end gap-2 mt-2">
                                 <button class="btn btn-sm btn-secondary" id="resetFilterBtn"><span data-en="Reset" data-bm="Set Semula">Reset</span></button>
-                                <button class="btn btn-sm btn-primary" id="applyFilterBtn"><span data-en="Apply" data-bm="Guna">Apply</span></button>
+                                <button class="btn btn-sm btn-primary" id="applyFilterBtn"><span data-en="Apply" data-bm="Cari">Apply</span></button>
                             </li>
                         </ul>
 
@@ -128,7 +128,7 @@
                                 <th data-en="Email" data-bm="E-mel">Email</th>
                                 <th data-en="Phone Number" data-bm="Nombor Telefon">Phone Number</th>
                                 <th data-en="Created At" data-bm="Tarikh Dicipta">Created At</th>
-                                <th data-en="Verified" data-bm="Disahkan">Verified</th>
+                                <th data-en="List Documents" data-bm="Senarai Dokumen">List Documents</th>
                                 <th data-en="Action" data-bm="Tindakan">Action</th>
                             </tr>
                         </thead>

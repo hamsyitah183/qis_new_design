@@ -12,7 +12,7 @@ export async function loadProfile() {
     $(".uploadAgain").hide();
     console.log("call the load profile function");
     const allInputs = document.querySelectorAll(
-        "input, select, button, textarea"
+        "input, select, button, textarea",
     );
     allInputs.forEach((el) => (el.disabled = true));
 
@@ -75,7 +75,7 @@ function fillTheData(user, type) {
         .text(user.ic ?? user.no_ic)
         .prop("readonly", true);
     $(".position").val(user.position).text(user.position);
-    
+
     // Set branch for internal users (display-only on profile)
     if (type === "internal") {
         $(".branch").text(user.branch || "");
@@ -93,10 +93,6 @@ function fillTheData(user, type) {
     //     });
     // }
 
-    
-   
-
-
     // $(".district").val(user.district);
     //$(".state").val(user.state);
     $("#account_type").val(user.account_type);
@@ -108,6 +104,7 @@ function fillTheData(user, type) {
 
     if (type === "public") {
         const approved = user.approved ?? {}; // ✅ Fallback to empty object
+        const attachments = user.attachments ?? []; // ✅ New: multiple documents
 
         // 🔹 Handle DOA verification badge
         let badgeVerification = `<span class="badge bg-dark-transparent ms-1" title="Not verified by DOA">
@@ -125,26 +122,49 @@ function fillTheData(user, type) {
             </span>`;
         }
 
-        // 🔹 Handle attachment
+        // 🔹 Handle attachments (now a list, one per document type)
         const container = $("#imgLink");
         container.empty();
 
-        const fileUrl = approved.verification_attachment ?? null;
+        if (attachments.length > 0) {
+            attachments.forEach((attachment) => {
+                const fileUrl = attachment.file_path
+                    ? `/${attachment.file_path}`.replace("//", "/")
+                    : (attachment.file_url ?? null);
+                const ext = (attachment.original_file_name || fileUrl || "")
+                    .split(".")
+                    .pop()
+                    .toLowerCase();
+                const iconClass =
+                    ext === "pdf" ? "ti ti-file-type-pdf" : "ti ti-photo";
+                const validUntil = attachment.valid_until
+                    ? `<div class="text-muted fs-11">Valid until: ${formatTime(
+                          attachment.valid_until,
+                      )}</div>`
+                    : "";
 
-        if (fileUrl) {
-            const ext = fileUrl.split(".").pop().toLowerCase();
-
-            if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) {
-                container.append(
-                    `<img src="${fileUrl}" class="img-fluid" alt="Verification Attachment">`
-                );
-            } else if (ext === "pdf") {
-                container.append(
-                    `<iframe src="${fileUrl}" class="w-100" style="height:500px;" frameborder="0"></iframe>`
-                );
-            } else {
-                container.append(`<p>Unsupported file format: ${ext}</p>`);
-            }
+                container.append(`
+                    <div class="attachment-list-item d-flex align-items-center gap-2 border rounded-3 p-2 mb-2">
+                        <i class="${iconClass} fs-20 text-primary flex-shrink-0"></i>
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="fw-semibold fs-13 text-truncate">
+                                ${attachment.document_type ?? "Document"}
+                            </div>
+                            <div class="text-muted fs-11 text-truncate">
+                                ${attachment.original_file_name ?? ""}
+                            </div>
+                            ${validUntil}
+                        </div>
+                        ${
+                            fileUrl
+                                ? `<a href="${fileUrl}" target="_blank" rel="noopener" class="btn btn-sm btn-icon btn-primary-light flex-shrink-0" title="View">
+                                    <i class="ti ti-eye"></i>
+                                   </a>`
+                                : ""
+                        }
+                    </div>
+                `);
+            });
 
             $(".hasImage").css("display", "block");
             $(".hasNoImage").css("display", "none");
@@ -156,8 +176,6 @@ function fillTheData(user, type) {
                     </div>
                 `);
             }
-
-            // $('.approvedBy').text(approved)
         } else {
             container.append("<p>No attachment uploaded yet.</p>");
             $(".hasImage").css("display", "none");
@@ -166,7 +184,7 @@ function fillTheData(user, type) {
 
         // 🔹 Dates and approver info
         $(".submittedVerification").text(
-            approved.updated_at ? formatTime(approved.updated_at) : "N/A"
+            approved.updated_at ? formatTime(approved.updated_at) : "N/A",
         );
 
         $(".approvedBy").text(approved.approver?.fullname ?? "N/A");
@@ -174,7 +192,7 @@ function fillTheData(user, type) {
         $(".approvedDate").text(
             approved.doa_approved_time
                 ? `on (${formatTime(approved.doa_approved_time)})`
-                : ""
+                : "",
         );
 
         // 🔹 Status display
@@ -220,11 +238,11 @@ function fillTheData(user, type) {
 }
 
 async function initAddressDropdowns(user) {
-    console.log('initadd', user);
+    console.log("initadd", user);
 
     Swal.fire({
-        title: 'Loading address...',
-        text: 'Please wait',
+        title: "Loading address...",
+        text: "Please wait",
         allowOutsideClick: false,
         allowEscapeKey: false,
         didOpen: () => Swal.showLoading(),
@@ -233,14 +251,13 @@ async function initAddressDropdowns(user) {
     try {
         // ✅ Await so errors are catchable
         await loadStates(user);
-
     } catch (error) {
-        console.error('Failed to load address dropdowns:', error);
+        console.error("Failed to load address dropdowns:", error);
 
         Swal.fire({
-            icon: 'error',
-            title: 'Failed to load address',
-            text: 'Please try again later',
+            icon: "error",
+            title: "Failed to load address",
+            text: "Please try again later",
         });
         return;
     }
@@ -250,18 +267,16 @@ async function initAddressDropdowns(user) {
 }
 
 async function loadStates(user) {
-    const res = await fetch('/get_states');
+    const res = await fetch("/get_states");
     const states = await res.json();
 
-    const stateSelect = $('.state');
+    const stateSelect = $(".state");
     stateSelect.empty().append('<option value="">Select State</option>');
 
     let selectedStateId = null;
 
-    states.forEach(s => {
-        stateSelect.append(
-            `<option value="${s.id}">${s.name}</option>`
-        );
+    states.forEach((s) => {
+        stateSelect.append(`<option value="${s.id}">${s.name}</option>`);
 
         if (user.state === s.name) {
             selectedStateId = s.id;
@@ -270,12 +285,10 @@ async function loadStates(user) {
 
     // ✅ FORCE value selection
     if (selectedStateId) {
-        stateSelect.val(selectedStateId).trigger('change');
-        loadDistricts(selectedStateId, user)
+        stateSelect.val(selectedStateId).trigger("change");
+        loadDistricts(selectedStateId, user);
     }
 }
-
-
 
 async function loadDistricts(stateId, user) {
     if (!stateId) return;
@@ -283,15 +296,13 @@ async function loadDistricts(stateId, user) {
     const res = await fetch(`/get_districts/${stateId}`);
     const districts = await res.json();
 
-    const districtSelect = $('.district');
+    const districtSelect = $(".district");
     districtSelect.empty().append('<option value="">Select District</option>');
 
     let selectedDistrictId = null;
 
-    districts.forEach(d => {
-        districtSelect.append(
-            `<option value="${d.id}">${d.name}</option>`
-        );
+    districts.forEach((d) => {
+        districtSelect.append(`<option value="${d.id}">${d.name}</option>`);
 
         if (user.district === d.name) {
             selectedDistrictId = d.id;
@@ -299,11 +310,10 @@ async function loadDistricts(stateId, user) {
     });
 
     if (selectedDistrictId) {
-        districtSelect.val(selectedDistrictId).trigger('change');
+        districtSelect.val(selectedDistrictId).trigger("change");
         await loadPostcodes(selectedDistrictId, user);
     }
 }
-
 
 async function loadPostcodes(districtId, user) {
     if (!districtId) return;
@@ -311,26 +321,18 @@ async function loadPostcodes(districtId, user) {
     const res = await fetch(`/get_postcodes/${districtId}`);
     const postcodes = await res.json();
 
-    const postcodeSelect = $('.postcode');
+    const postcodeSelect = $(".postcode");
     postcodeSelect.empty().append('<option value="">Select Postcode</option>');
 
-    postcodes.forEach(p => {
-        postcodeSelect.append(
-            `<option value="${p.value}">${p.value}</option>`
-        );
+    postcodes.forEach((p) => {
+        postcodeSelect.append(`<option value="${p.value}">${p.value}</option>`);
     });
 
     // ✅ Force selection
     if (user.postcode) {
-        postcodeSelect.val(user.postcode).trigger('change');
+        postcodeSelect.val(user.postcode).trigger("change");
     }
 }
-
-
-
-
-
-
 
 $(document).on("click", ".uploadAgain", function () {
     // Hide the container showing existing image
@@ -360,7 +362,7 @@ function editProfile() {
                 return;
             }
 
-            let role =  window.authUser?.roles[0]?.name || '';
+            let role = window.authUser?.roles[0]?.name || "";
 
             const $form = $(this);
             const formData = new FormData(this);
@@ -389,7 +391,7 @@ function editProfile() {
                     contentType: false,
                     headers: {
                         "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
-                            "content"
+                            "content",
                         ),
                         Accept: "application/json",
                     },
@@ -412,7 +414,7 @@ function editProfile() {
                                 if ($input.length) {
                                     $input.addClass("is-invalid");
                                     $input.after(
-                                        `<div class="invalid-feedback">${errors[key][0]}</div>`
+                                        `<div class="invalid-feedback">${errors[key][0]}</div>`,
                                     );
                                 }
                             }
@@ -473,7 +475,7 @@ function formatTime(timestamp) {
     };
 
     const formatted = new Intl.DateTimeFormat("en-GB", options).format(
-        localTime
+        localTime,
     );
 
     return formatted;
@@ -520,7 +522,7 @@ function changePassword() {
                     contentType: false,
                     headers: {
                         "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
-                            "content"
+                            "content",
                         ),
                         Accept: "application/json",
                     },
@@ -542,7 +544,7 @@ function changePassword() {
                                 if ($input.length) {
                                     $input.addClass("is-invalid");
                                     $input.after(
-                                        `<div class="invalid-feedback">${errors[key][0]}</div>`
+                                        `<div class="invalid-feedback">${errors[key][0]}</div>`,
                                     );
                                 }
                             }
@@ -585,7 +587,7 @@ export async function publicUserAddUpdate(user) {
             (e) => {
                 console.log("✅ Public user event:", e.message);
                 notifyUser(e.message);
-            }
+            },
         );
     }, 100);
 }
@@ -597,12 +599,12 @@ $(document).ready(function () {
     changePassword();
 
     // State change event listener
-    $(document).on('change', '.state', function () {
+    $(document).on("change", ".state", function () {
         const stateId = $(this).val();
         fetchDistricts(stateId);
     });
 
-    $(document).on('change', '.district', function () {
+    $(document).on("change", ".district", function () {
         const districtId = $(this).val();
         fetchPostcodes(districtId);
     });
@@ -623,15 +625,22 @@ function fetchDistricts(stateId, selectedDistrict = null, callback = null) {
         url: `/get_districts/${stateId}`,
         type: "GET",
         success: function (data) {
-            $district.empty().append('<option value="">Select District</option>');
+            $district
+                .empty()
+                .append('<option value="">Select District</option>');
             let matchedId = null;
-            data.forEach(district => {
-                const isSelected = selectedDistrict && (selectedDistrict == district.id || selectedDistrict == district.name);
+            data.forEach((district) => {
+                const isSelected =
+                    selectedDistrict &&
+                    (selectedDistrict == district.id ||
+                        selectedDistrict == district.name);
                 if (isSelected) {
                     matchedId = district.id;
                 }
-                const selectedAttr = isSelected ? 'selected' : '';
-                $district.append(`<option value="${district.id}" ${selectedAttr}>${district.name}</option>`);
+                const selectedAttr = isSelected ? "selected" : "";
+                $district.append(
+                    `<option value="${district.id}" ${selectedAttr}>${district.name}</option>`,
+                );
             });
 
             if (callback) callback(matchedId);
@@ -640,7 +649,7 @@ function fetchDistricts(stateId, selectedDistrict = null, callback = null) {
             console.error("Error fetching districts", err);
             $district.html('<option value="">Error loading districts</option>');
             if (callback) callback(null);
-        }
+        },
     });
 }
 
@@ -657,15 +666,93 @@ function fetchPostcodes(districtId, selectedPostcode = null) {
         url: `/get_postcodes/${districtId}`,
         type: "GET",
         success: function (data) {
-            $postcode.empty().append('<option value="">Select Postcode</option>');
-            data.forEach(postcode => {
-                const isSelected = selectedPostcode && (selectedPostcode == postcode.id || selectedPostcode == postcode.value) ? 'selected' : '';
-                $postcode.append(`<option value="${postcode.value}" ${isSelected}>${postcode.value}</option>`);
+            $postcode
+                .empty()
+                .append('<option value="">Select Postcode</option>');
+            data.forEach((postcode) => {
+                const isSelected =
+                    selectedPostcode &&
+                    (selectedPostcode == postcode.id ||
+                        selectedPostcode == postcode.value)
+                        ? "selected"
+                        : "";
+                $postcode.append(
+                    `<option value="${postcode.value}" ${isSelected}>${postcode.value}</option>`,
+                );
             });
         },
         error: function (err) {
             console.error("Error fetching postcodes", err);
             $postcode.html('<option value="">Error loading postcodes</option>');
-        }
+        },
     });
 }
+
+// ============================================================================
+// Document List Management - Expandable Sections & Delete Functionality
+// ============================================================================
+
+$(document).on("click", ".doc-row-toggle", function () {
+    const docId = $(this).data("doc-id");
+    const isExpanded = $(this).attr("aria-expanded") === "true";
+    const $panel = $(`.doc-panel[data-doc-id="${docId}"]`);
+
+    if (isExpanded) {
+        // Collapse
+        $(this).attr("aria-expanded", "false");
+        $panel.addClass("d-none");
+    } else {
+        // Expand
+        $(this).attr("aria-expanded", "true");
+        $panel.removeClass("d-none");
+    }
+});
+
+// Delete attachment
+$(document).on("click", ".delete-attachment", function (e) {
+    e.preventDefault();
+    const attachmentId = $(this).data("attachment-id");
+    const $item = $(this).closest(".attachment-list-item");
+
+    Swal.fire({
+        icon: "warning",
+        title: "Delete Document?",
+        text: "This action cannot be undone.",
+        showCancelButton: true,
+        confirmButtonText: "Delete",
+        confirmButtonColor: "#dc3545",
+        cancelButtonText: "Cancel",
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: `/attachments/${attachmentId}`,
+                type: "DELETE",
+                headers: {
+                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+                    Accept: "application/json",
+                },
+                success: function (response) {
+                    $item.fadeOut(300, function () {
+                        $(this).remove();
+                        Swal.fire({
+                            icon: "success",
+                            title: "Deleted",
+                            text: "Document has been removed.",
+                            showConfirmButton: false,
+                            timer: 1200,
+                        });
+                        // Reload profile to refresh attachments list
+                        setTimeout(() => loadProfile(), 1500);
+                    });
+                },
+                error: function (xhr) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: xhr.responseJSON?.message || "Failed to delete document.",
+                    });
+                },
+            });
+        }
+    });
+});

@@ -10,38 +10,91 @@ class RoleAndPermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[\Spatie\Permission\PermissionRegistrar::class]
+            ->forgetCachedPermissions();
 
         // ==================================================
-        // 🧩 1. Permissions
+        // 1. PERMISSIONS
         // ==================================================
+
         $internalPermissions = [
+
+            // ==================================================
+            // Dashboard
+            // ==================================================
             'view dashboard',
 
-            // user management — internal
+            // ==================================================
+            // User Management — Internal
+            // ==================================================
             'create internal user',
             'read internal user',
             'update internal user',
             'delete internal user',
 
-            // user management — public
+            // ==================================================
+            // User Management — Public
+            // ==================================================
             'create public user',
             'read public user',
             'update public user',
             'delete public user',
             'approve public user',
 
-            // activity log
+            // ==================================================
+            // Activity Log
+            // ==================================================
             'read activity log',
 
-            // application
+            // ==================================================
+            // Application / Importer / Exporter
+            // ==================================================
             'view importer list',
             'view exporter list',
+            'read application',
+            'approve application',
+            'delete application',
 
-            // settings
+            // ==================================================
+            // Notification
+            // ==================================================
+            'view notification',
+
+            // ==================================================
+            // Permit
+            // ==================================================
+            'approve permit',
+            'print permit',
+            'scan permit',
+
+            // ==================================================
+            // Orders & Invoices
+            // ==================================================
+            'view orders invoices',
+
+            // ==================================================
+            // Reports
+            // ==================================================
+            'generate financial report',
+            'generate operational report',
+            'generate performance report',
+
+            // ==================================================
+            // Item Management
+            // ==================================================
+            'manage import permit item',
+            'manage consignment item',
+
+            // ==================================================
+            // System / Settings
+            // ==================================================
+            'control panel',
+            'manage announcement',
             'manage settings',
+            'manage role and permission',
         ];
 
+        // Create all internal permissions
         foreach ($internalPermissions as $permission) {
             Permission::firstOrCreate([
                 'name'       => $permission,
@@ -49,79 +102,235 @@ class RoleAndPermissionSeeder extends Seeder
             ]);
         }
 
-        // Public guard only needs view dashboard
+        // ==================================================
+        // 2. PUBLIC GUARD PERMISSIONS
+        // ==================================================
+
         Permission::firstOrCreate([
             'name'       => 'view dashboard',
             'guard_name' => 'public',
         ]);
 
         // ==================================================
-        // 🧩 2. Roles + permissions
+        // 3. PERMISSION HELPER
         // ==================================================
 
-        // ✅ Helper — fetch permissions by name for a given guard
-        $perms = fn (array $names) => Permission::where('guard_name', 'internal')
-            ->whereIn('name', $names)
-            ->get();
+        $perms = fn (array $names) =>
+            Permission::where('guard_name', 'internal')
+                ->whereIn('name', $names)
+                ->get();
 
-        $allInternal = Permission::where('guard_name', 'internal')->get();
+        // ==================================================
+        // 4. ROLES
+        // ==================================================
 
         $roles = [
 
-            // ✅ Superadmin — everything
+            // ==================================================
+            // SUPERADMIN
+            // Everything
+            // ==================================================
             'superadmin' => [
-                'guard_name'  => 'internal',
-                'permissions' => $allInternal,
+                'guard_name' => 'internal',
+
+                'permissions' => Permission::where(
+                    'guard_name',
+                    'internal'
+                )->get(),
             ],
 
-            // ✅ Admin — everything except activity log
+            // ==================================================
+            // ADMIN
+            // Everything except Activity Log
+            // ==================================================
             'admin' => [
-                'guard_name'  => 'internal',
+                'guard_name' => 'internal',
+
                 'permissions' => $perms([
                     'view dashboard',
+
+                    // Internal User Management
                     'create internal user',
                     'read internal user',
                     'update internal user',
                     'delete internal user',
+
+                    // Public User Management
                     'create public user',
                     'read public user',
                     'update public user',
                     'delete public user',
                     'approve public user',
+
+                    // Application
                     'view importer list',
                     'view exporter list',
+                    'read application',
+                    'approve application',
+                    'delete application',
+
+                    // Notification
+                    'view notification',
+
+                    // Permit
+                    'approve permit',
+                    'print permit',
+                    'scan permit',
+
+                    // Orders & Invoices
+                    'view orders invoices',
+
+                    // Reports
+                    'generate financial report',
+                    'generate operational report',
+                    'generate performance report',
+
+                    // Item Management
+                    'manage import permit item',
+                    'manage consignment item',
+
+                    // System
+                    'control panel',
+                    'manage announcement',
                     'manage settings',
                 ]),
             ],
 
+            // ==================================================
+            // OFFICER
+            // ==================================================
             'officer' => [
-                'guard_name'  => 'internal',
-                'permissions' => $perms(['view dashboard']),
+                'guard_name' => 'internal',
+
+                'permissions' => $perms([
+                    'view dashboard',
+
+                    // Application
+                    'view importer list',
+                    'view exporter list',
+                    'read application',
+                    'approve application',
+
+                    // Notification
+                    'view notification',
+
+                    // Permit
+                    'approve permit',
+                    'print permit',
+                    'scan permit',
+
+                    // Orders & Invoices
+                    'view orders invoices',
+
+                    // Reports
+                    'generate operational report',
+                    'generate performance report',
+                ]),
             ],
 
+            // ==================================================
+            // CLERK
+            // ==================================================
             'clerk' => [
-                'guard_name'  => 'internal',
-                'permissions' => $perms(['view dashboard']),
+                'guard_name' => 'internal',
+
+                'permissions' => $perms([
+                    'view dashboard',
+
+                    // Application
+                    'view importer list',
+                    'view exporter list',
+                    'read application',
+                    'approve application',
+
+                    // Notification
+                    'view notification',
+
+                  
+
+                    // Orders & Invoices
+                    'view orders invoices',
+
+                    // Reports
+                    'generate operational report',
+                ]),
             ],
 
+            // ==================================================
+            // BOUNDARY OFFICER
+            // ==================================================
             'boundary officer' => [
-                'guard_name'  => 'internal',
-                'permissions' => $perms(['view dashboard']),
+                'guard_name' => 'internal',
+
+                'permissions' => $perms([
+                    'view dashboard',
+
+                    // Application
+                    'view importer list',
+                    'view exporter list',
+                    'read application',
+                    'approve application',
+
+                    // Notification
+                    'view notification',
+
+                    // Permit
+                   
+                    'print permit',
+                    'scan permit',
+
+                    // Orders & Invoices
+                    'view orders invoices',
+
+                    // Reports
+                    'generate operational report',
+                    'generate performance report',
+                ]),
             ],
 
+            // ==================================================
+            // FINANCE
+            // ==================================================
             'finance' => [
-                'guard_name'  => 'internal',
-                'permissions' => $perms(['view dashboard']),
+                'guard_name' => 'internal',
+
+                'permissions' => $perms([
+                    'view dashboard',
+
+                    // Application
+                    'view importer list',
+                    'view exporter list',
+
+                    // Notification
+                    'view notification',
+
+                    // Orders & Invoices
+                    'view orders invoices',
+
+                    // Financial Report
+                    'generate financial report',
+                ]),
             ],
 
-            // Public role
+            // ==================================================
+            // PUBLIC
+            // ==================================================
             'public' => [
-                'guard_name'  => 'public',
-                'permissions' => Permission::where('guard_name', 'public')->get(),
+                'guard_name' => 'public',
+
+                'permissions' => Permission::where(
+                    'guard_name',
+                    'public'
+                )->get(),
             ],
         ];
 
+        // ==================================================
+        // 5. CREATE / UPDATE ROLES
+        // ==================================================
+
         foreach ($roles as $roleName => $data) {
+
             $role = Role::firstOrCreate([
                 'name'       => $roleName,
                 'guard_name' => $data['guard_name'],
@@ -129,5 +338,12 @@ class RoleAndPermissionSeeder extends Seeder
 
             $role->syncPermissions($data['permissions']);
         }
+
+        // ==================================================
+        // 6. CLEAR PERMISSION CACHE
+        // ==================================================
+
+        app()[\Spatie\Permission\PermissionRegistrar::class]
+            ->forgetCachedPermissions();
     }
 }

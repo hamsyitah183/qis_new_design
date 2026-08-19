@@ -18,7 +18,7 @@
                     <button class="nav-link w-100 text-start" id="edit-verification-tab" data-bs-toggle="tab"
                         data-bs-target="#edit-verification-tab-pane" type="button" role="tab"
                         aria-controls="edit-verification-tab-pane" aria-selected="false" tabindex="-1">
-                        <span data-en="Verification" data-bm="Pengesahan">Verification</span>
+                        <span data-en="Verification" data-bm="Senarai Dokumen">List Documents</span>
                        
                         @if (authUser()['user']->approved?->verification_attachment == null)
                             <i class="ri-alert-line text-warning ms-1"></i>

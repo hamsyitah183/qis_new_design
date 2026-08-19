@@ -84,6 +84,8 @@ let startLimitDate = null;
 let endLimitDate = null;
 let currentItemCondition = null;
 
+let editingItemId = null;
+
 // ─── Measurement Units ────────────────────────────────────
 function measurementUnit() {
     return $.ajax({
@@ -249,7 +251,7 @@ function loadConsignmentSelection() {
         didOpen: () => Swal.showLoading(),
     });
 
-    $.ajax({
+    return $.ajax({
         url: `/public/get_consignment/${countryCode}`,
         method: "GET",
         dataType: "json",
@@ -290,7 +292,7 @@ function loadConsignmentSelection() {
     });
 }
 
-function loadUses(itemId) {
+async function loadUses(itemId) {
     const $select = $("#itemUses");
     $select
         .empty()
@@ -298,7 +300,7 @@ function loadUses(itemId) {
             '<option value="" data-en="-- Select Uses --" data-bm="-- Pilih Kegunaan --">-- Select Uses --</option>',
         );
 
-    if (!itemId) return;
+    if (!itemId) return Promise.resolve();
 
     Swal.fire({
         title: '<span data-en="Loading..." data-bm="Memuat...">Loading...</span>',
@@ -306,7 +308,7 @@ function loadUses(itemId) {
         didOpen: () => Swal.showLoading(),
     });
 
-    fetch(`/public/consignment_uses/${itemId}`)
+    return fetch(`/public/consignment_uses/${itemId}`)
         .then((res) => res.json())
         .then((data) => {
             if (!data.data) return;
@@ -815,7 +817,7 @@ function addPreviewButtons(file) {
         currentItemFile = file;
         showItemFilePreview(file);
         const modal = bootstrap.Modal.getOrCreateInstance(
-            document.getElementById("itemFilePreviewModal")
+            document.getElementById("itemFilePreviewModal"),
         );
         modal.show();
     };
@@ -1580,10 +1582,18 @@ function saveConsignmentAttachment() {
             const itemValue = $("#itemValue").val().trim();
             const itemQuantity = $("#itemQuantity").val().trim();
             const itemMeasure = $("#itemMeasure").val();
-            const itemPurpose = $("#itemPurpose").val();
+            const itemPurposeValue = $("#itemPurpose").val();
             const itemUsesValue = $("#itemUses").val();
 
-            const files = itemDropzone.getAcceptedFiles();
+            const existingItem = editingItemId
+                ? tempItems.find((obj) => obj.id === editingItemId)
+                : null;
+
+            let files = itemDropzone.getAcceptedFiles();
+            if (files.length === 0 && existingItem) {
+                files = existingItem.files || [];
+            }
+
             const itemPurposeDescription =
                 $("#itemPurpose option:selected").data("description") ||
                 $("#itemPurpose").val();
@@ -1593,7 +1603,7 @@ function saveConsignmentAttachment() {
                 !itemValue ||
                 !itemQuantity ||
                 !itemMeasure ||
-                !itemPurpose ||
+                !itemPurposeValue ||
                 !itemUsesValue ||
                 files.length === 0
             ) {
@@ -1644,32 +1654,50 @@ function saveConsignmentAttachment() {
             }
             console.log("in save cons", currentItemCondition);
 
-            const newItem = {
-                id: generateUUID(),
+            const itemPayload = {
+                id: existingItem ? existingItem.id : generateUUID(),
                 item_id: itemSelectValue,
                 item_name: itemSelectText,
                 value: itemValue,
                 quantity: itemQuantity,
                 measure: itemMeasure,
                 purpose: itemPurposeDescription,
+                purposeValue: itemPurposeValue,
                 uses: itemUsesValue,
                 files: files,
                 agreedAt: null,
                 condition: currentItemCondition,
             };
 
-            const agreed = await showItemAgreement(newItem);
+            const agreed = await showItemAgreement(itemPayload);
 
             if (!agreed) {
                 return;
             }
 
-            tempItems.push(newItem);
+            if (existingItem) {
+                const index = tempItems.findIndex(
+                    (obj) => obj.id === existingItem.id,
+                );
+                if (index !== -1) {
+                    tempItems[index] = itemPayload;
+                }
+            } else {
+                tempItems.push(itemPayload);
+            }
+
+            editingItemId = null;
             renderAllItems();
             resetAddItemModal();
 
             const modalEl = document.getElementById("addItemModal");
             bootstrap.Modal.getInstance(modalEl).hide();
+
+            document
+                .getElementById("addItemModal")
+                .addEventListener("hidden.bs.modal", function () {
+                    editingItemId = null;
+                });
 
             summarySubmit();
         });
@@ -1842,6 +1870,14 @@ function renderAllItems() {
                             data-id="${item.id}">
                             <i class="ti ti-trash"></i>
                         </button>
+                        <button class="btn btn-icon btn-info-light edit-item"
+                            data-id="${item.id}">
+                            <i class="ti ti-edit"></i>
+                        </button>
+                        <button class="btn btn-icon btn-secondary-light copy-item"
+                            data-id="${item.id}">
+                            <i class="ti ti-copy"></i>
+                        </button>
                     </div>
                 </td>
             </tr>`,
@@ -1849,6 +1885,7 @@ function renderAllItems() {
     });
 }
 
+// ─── View More Item ────────────────────────────────────────
 // ─── View More Item ────────────────────────────────────────
 function viewMore() {
     $(document).on("click", ".view-more-item", function (e) {
@@ -1863,6 +1900,8 @@ function viewMore() {
         const detailsDiv = document.getElementById("itemDetailsInfo");
         const attachList = document.getElementById("pdAttachList");
         const attachmentCount = document.getElementById("attachmentCount");
+        const conditionItem = document.getElementById("pdConditionItem");
+        const conditionCount = document.getElementById("pdConditionCount");
 
         const agreementBanner = item.agreedAt
             ? `<div class="alert alert-success mb-3 d-flex align-items-center">
@@ -1934,6 +1973,20 @@ function viewMore() {
 
         applyTranslations(detailsDiv);
 
+        // ─── Conditions ────────────────────────────────
+        const hasCondition = item.condition && item.condition.trim() !== "";
+
+        if (conditionItem) {
+            conditionItem.innerHTML = hasCondition
+                ? `<div style="white-space: pre-wrap; word-break: break-word;">${item.condition}</div>`
+                : `<span data-en="No special conditions for this item." data-bm="Tiada syarat khas untuk item ini.">No special conditions for this item.</span>`;
+            applyTranslations(conditionItem);
+        }
+
+        if (conditionCount) {
+            conditionCount.textContent = hasCondition ? "1" : "0";
+        }
+
         attachList.innerHTML = "";
         currentItemAttachments = item.files || [];
 
@@ -1945,11 +1998,9 @@ function viewMore() {
             `;
             if (attachmentCount) attachmentCount.textContent = "0";
         } else {
-            // inside viewMore(), when building chipsHTML
             let chipsHTML = "";
-            // Inside viewMore(), when iterating item.files
             item.files.forEach((file, index) => {
-                const displayName = file.displayName || file.name; // <-- use displayName
+                const displayName = file.displayName || file.name;
                 const fileIcon =
                     file.type === "application/pdf"
                         ? "bi-file-earmark-pdf-fill"
@@ -2019,6 +2070,116 @@ function deleteItem() {
 
         console.log("Deleted item:", id, tempItems);
         summarySubmit();
+    });
+}
+
+// ─── Copy Item ──────────────────────────────────────────────
+// ─── Copy Item ──────────────────────────────────────────────
+function copyItem() {
+    $(document).on("click", ".copy-item", async function (e) {
+        e.preventDefault();
+
+        const id = $(this).data("id");
+
+        if (!tempItems) {
+            console.error("tempItems array not found");
+            return;
+        }
+
+        const index = tempItems.findIndex((obj) => obj.id === id);
+
+        if (index === -1) {
+            console.warn("Item not found:", id);
+            return;
+        }
+
+        const original = tempItems[index];
+
+        const duplicated = {
+            ...original,
+            id: generateUUID(),
+            files: [...(original.files || [])],
+            agreedAt: null,
+        };
+
+        const agreed = await showItemAgreement(duplicated);
+
+        if (!agreed) {
+            // User cancelled or didn't tick the condition — don't add the copy
+            return;
+        }
+
+        tempItems.splice(index + 1, 0, duplicated);
+        renderAllItems();
+        summarySubmit();
+
+        console.log("Copied item:", id, "->", duplicated.id, tempItems);
+
+        Swal.fire({
+            icon: "success",
+            title: '<span data-en="Item Copied" data-bm="Item Disalin">Item Copied</span>',
+            html: '<span data-en="A duplicate of the item has been added." data-bm="Salinan item telah ditambah.">A duplicate of the item has been added.</span>',
+            timer: 1800,
+            showConfirmButton: false,
+            didOpen: (modal) => applyTranslations(modal),
+        });
+    });
+}
+
+// ─── Edit Item ──────────────────────────────────────────────
+function editItem() {
+    $(document).on("click", ".edit-item", function (e) {
+        e.preventDefault();
+
+        const id = $(this).data("id");
+        const item = tempItems.find((obj) => obj.id === id);
+        if (!item) return console.warn("Item not found for id:", id);
+
+        editingItemId = id;
+        resetAddItemModal();
+
+        const modalEl = document.getElementById("addItemModal");
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+
+        Swal.fire({
+            title: '<span data-en="Loading item..." data-bm="Memuat item...">Loading item...</span>',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading(),
+        });
+
+        loadConsignmentSelection()
+            .done(() => {
+                $("#itemSelect").val(item.item_id).trigger("change");
+
+                loadUses(item.item_id).then(() => {
+                    $("#itemUses").val(item.uses).trigger("change");
+                });
+
+                $("#itemValue").val(item.value);
+                $("#itemQuantity").val(item.quantity);
+                $("#itemMeasure").val(item.measure).trigger("change");
+                $("#itemPurpose")
+                    .val(item.purposeValue || item.purpose)
+                    .trigger("change");
+
+                if (itemDropzone) {
+                    itemDropzone.removeAllFiles(true);
+                    (item.files || []).forEach((file) =>
+                        itemDropzone.addFile(file),
+                    );
+                }
+
+                Swal.close();
+            })
+            .fail(() => {
+                Swal.close();
+                Swal.fire({
+                    icon: "error",
+                    title: '<span data-en="Error" data-bm="Ralat">Error</span>',
+                    html: '<span data-en="Failed to load item data for editing." data-bm="Gagal memuatkan data item untuk disunting.">Failed to load item data for editing.</span>',
+                    didOpen: (modal) => applyTranslations(modal),
+                });
+            });
     });
 }
 
@@ -2217,8 +2378,11 @@ function updateAttachmentTable() {
                         <td data-label="Size">${sizeDisplay}</td>
                         <td data-label="Type">${typeDisplay}</td>
                         <td class="text-end">
-                            <button type="button" class="btn btn-icon btn-success-light view-attachment-btn" data-id="${attachment.id}">
-                                <i class="ti ti-eye"></i>
+                            <button type="button" 
+                            data-bm="Lihat" 
+                            data-en="View More"
+                            class="btn btn-sm btn-primary view-attachment-btn" data-id="${attachment.id}">
+                                View More
                             </button>
                         </td>
                     </tr>
@@ -2455,6 +2619,8 @@ $(document).ready(async function () {
         saveConsignmentAttachment();
         viewMore();
         deleteItem();
+        copyItem();
+        editItem();
 
         // ─── Select2 for Measurement ────────────────────
         const lang = getCurrentLang();

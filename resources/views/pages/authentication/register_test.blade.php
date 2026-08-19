@@ -307,10 +307,11 @@
                         <span class="step-dot active" data-step-dot="order-tab-pane"></span>
                         <span class="step-dot" data-step-dot="confirm-tab-pane"></span>
                         <span class="step-dot" data-step-dot="shipped-tab-pane"></span>
+                        <span class="step-dot" data-step-dot="password-tab-pane"></span>
                     </div>
 
                     <div class="visual-caption-block active" data-caption-for="order-tab-pane">
-                        <span class="step-tag" data-en="Step 1 of 3" data-bm="Langkah 1 daripada 3">Step 1 of 3</span>
+                        <span class="step-tag" data-en="Step 1 of 4" data-bm="Langkah 1 daripada 4">Step 1 of 4</span>
                         <h5 data-en="Get Started" data-bm="Mulakan">Get Started</h5>
                         <p data-en="Choose the account type that best describes you so we can tailor your registration experience."
                             data-bm="Pilih jenis akaun yang paling sesuai dengan anda supaya kami dapat menyesuaikan proses pendaftaran anda.">
@@ -320,7 +321,7 @@
                     </div>
 
                     <div class="visual-caption-block" data-caption-for="confirm-tab-pane">
-                        <span class="step-tag" data-en="Step 2 of 3" data-bm="Langkah 2 daripada 3">Step 2 of 3</span>
+                        <span class="step-tag" data-en="Step 2 of 4" data-bm="Langkah 2 daripada 4">Step 2 of 4</span>
                         <h5 data-en="Tell Us About You" data-bm="Beritahu Kami Tentang Anda">Tell Us About You</h5>
                         <p data-en="Provide your personal or company details so we can verify your identity and keep your account secure."
                             data-bm="Berikan butiran peribadi atau syarikat anda supaya kami dapat mengesahkan identiti anda dan memastikan akaun anda selamat.">
@@ -330,12 +331,20 @@
                     </div>
 
                     <div class="visual-caption-block" data-caption-for="shipped-tab-pane">
-                        <span class="step-tag" data-en="Step 3 of 3" data-bm="Langkah 3 daripada 3">Step 3 of 3</span>
-                        <h5 data-en="Almost There" data-bm="Hampir Selesai">Almost There</h5>
+                        <span class="step-tag" data-en="Step 3 of 4" data-bm="Langkah 3 daripada 4">Step 3 of 4</span>
+                        <h5 data-en="Upload Documents" data-bm="Muat Naik Dokumen">Upload Documents</h5>
                         <p data-en="Upload your supporting documents (e.g. IC, business registration) to complete verification. You can add multiple files."
                             data-bm="Muat naik dokumen sokongan anda (cth. IC, pendaftaran perniagaan) untuk melengkapkan pengesahan. Anda boleh menambah beberapa fail.">
                             Upload your supporting documents (e.g. IC, business registration) to complete
                             verification. You can add multiple files.
+                        </p>
+                    </div>
+                    <div class="visual-caption-block" data-caption-for="password-tab-pane">
+                        <span class="step-tag" data-en="Step 4 of 4" data-bm="Langkah 4 daripada 4">Step 4 of 4</span>
+                        <h5 data-en="Almost There" data-bm="Hampir Selesai">Almost There</h5>
+                        <p data-en="You are almost done! Set a strong password to secure your account and complete the registration process."
+                            data-bm="Anda hampir selesai! Tetapkan kata laluan yang kuat untuk melindungi akaun anda dan melengkapkan proses pendaftaran.">
+                            You are almost done! Set a strong password to secure your account and complete the registration process.
                         </p>
                     </div>
                 </div>
@@ -384,12 +393,24 @@
                                     </span>
                                 </button>
                             </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link p-1 p-md-3" id="password-tab" data-bs-toggle="tab"
+                                    data-bs-target="#password-tab-pane" type="button" role="tab"
+                                    aria-controls="password-tab" aria-selected="false" tabindex="-1">
+                                    <span class="d-flex flex-column gap-1 align-items-center d-md-inline">
+                                        <i class="ti ti-download me-2 align-middle"></i>
+                                        <span class="text-type text-wrap" data-en="Password"
+                                            data-bm="Kata Laluan">Password</span>
+                                    </span>
+                                </button>
+                            </li>
                         </ul>
 
                         <div class="tab-content" id="myTabContent">
                             @include('pages.authentication.includes.register.1')
                             @include('pages.authentication.includes.register.2')
                             @include('pages.authentication.includes.register.3')
+                            @include('pages.authentication.includes.register.4')
                         </div>
                     </form>
 
@@ -402,7 +423,7 @@
                                 </div>
                                 <div class="modal-body">
                                     <div class="row g-3 align-items-center">
-                                        <div class="col-md-5">
+                                        <div class="col-12">
                                             <div class="border rounded p-3 text-center">
                                                 <img id="fileLabelPreview" src="" alt="Preview" class="img-fluid d-none" />
                                                 <div id="filePreviewIcon" class="d-none text-center py-5">
@@ -411,11 +432,11 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-7">
+                                        <div class="col-12">
                                             <p class="mb-2"><strong data-en="Selected file:" data-bm="Fail dipilih:">Selected file:</strong> <span id="fileLabelName"></span></p>
                                             <label for="fileLabelInput" class="form-label" data-en="File label" data-bm="Label fail">File label</label>
                                             <input type="text" class="form-control" id="fileLabelInput" placeholder="e.g. IC front page, IC back page">
-                                            <div class="form-text" data-en="Enter a descriptive name for this upload so you can easily identify it later." data-bm="Masukkan nama deskriptif untuk muat naik ini supaya ia mudah dikenal kemudian.">Enter a descriptive name for this upload so you can easily identify it later.</div>
+                                            <div class="form-text d-none" data-en="Enter a descriptive name for this upload so you can easily identify it later." data-bm="Masukkan nama deskriptif untuk muat naik ini supaya ia mudah dikenal kemudian.">Enter a descriptive name for this upload so you can easily identify it later.</div>
                                         </div>
                                     </div>
                                 </div>

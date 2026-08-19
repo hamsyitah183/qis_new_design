@@ -29,6 +29,8 @@ if (!function_exists('authUser')) {
             $user = Auth::guard('public')->user()->load([
                 'approved',
                 'approved.approver',
+                'approved.userAttachments',
+                'approved.verificationAttachments',
             ]);
 
             return [
@@ -36,8 +38,7 @@ if (!function_exists('authUser')) {
                 'guard'       => 'public',
                 'user'        => $user,
                 'roles'       => $user->getRoleNames(),              // Collection
-                // 'permissions' => $user->getAllPermissions()
-                //     ->pluck('name'),
+                
             ];
         }
 

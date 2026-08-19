@@ -81,7 +81,7 @@ function getDataTableLanguage() {
     const lang = getLang();
     if (lang === 'bm') {
         return {
-            "sEmptyTable": "Tiada data tersedia dalam jadual",
+            "sEmptyTable": "Tiada entri",
             "sInfo": "Menunjukkan _START_ hingga _END_ daripada _TOTAL_ entri",
             "sInfoEmpty": "Menunjukkan 0 hingga 0 daripada 0 entri",
             "sInfoFiltered": "(ditapis daripada _MAX_ jumlah entri)",

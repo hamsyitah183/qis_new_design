@@ -8,10 +8,10 @@
     <meta charset="UTF-8">
     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="Description" content="Laravel Bootstrap Responsive Admin Web Dashboard Template">
+    <meta name="Description" content="Quarantine Information System (QIS) is a web-based application designed to streamline the management and monitoring of quarantine processes. It provides a centralized platform for tracking individuals in quarantine, managing their health status, and ensuring compliance with quarantine regulations. QIS aims to enhance efficiency, improve data accuracy, and facilitate communication between relevant authorities and stakeholders involved in quarantine management.">
     <meta name="Author" content="Spruko Technologies Private Limited">
     <meta name="keywords"
-        content="laravel template, laravel, laravel admin, admin bootstrap, laravel admin template, dashboard, admin panel template, laravel framework, admin template, laravel admin panel, admin, laravel dashboard, dashboard for laravel, admin panel for laravel, bootstrap admin panel template.">
+        content="DOA SABAH, QIS, quarantine, information system, Jabatan Pertanian Sabah, agriculture, health monitoring, compliance, data management, web application, quarantine tracking, centralized platform, efficiency, data accuracy, communication, authorities, stakeholders">
 
     <!-- Title-->
     <title> {{ $title }} </title>

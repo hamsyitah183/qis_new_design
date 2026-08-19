@@ -39,6 +39,8 @@ class DatabaseSeeder extends Seeder
                 PostcodeSeeder::class,
 
                 MeasurementUnitSeeder::class,
+
+                DocumentRequirementSeeder::class,
             ]);
 
             DB::commit();

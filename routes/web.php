@@ -24,6 +24,7 @@ use App\Http\Controllers\ConsignmentPermitController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\BoundaryOfficerController;
 use App\Http\Controllers\ConsignmentMiscController;
+use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\LandingController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -42,6 +43,9 @@ Route::middleware(['multi.guest'])->group(function () {
 
     Route::get('/forgot-password', [PasswordResetController::class, 'resetPage'])->name('password.request');
     Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
+
+      // list of documents
+    Route::get('/documents/data', [DocumentController::class, 'documentsList']);
 });
 
 // Password Reset Routes (Token verification)
@@ -535,6 +539,10 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/application/count', [DashboardController::class, 'applicationCount']);
 
     Route::get('/measurement', [MiscController::class, 'measurementUnit']);
+
+
+
+  
 });
 
 // broadcast --dont kacau---

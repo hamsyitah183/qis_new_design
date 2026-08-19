@@ -36,7 +36,7 @@
             <div class="card custom-card">
 
                 <div class="card-header">
-                    <div class="card-title" data-en="User Verification List" data-bm="Senarai Pengesahan Pengguna">User Verification List</div>
+                    {{-- <div class="card-title" data-en="User Verification List" data-bm="Senarai Pengesahan Pengguna">User Verification List</div> --}}
                     <div class="ms-auto d-flex gap-2 align-items-center">
 
                         <button class="btn btn-sm btn-primary filter dropdown-toggle" type="button"
@@ -49,11 +49,11 @@
                         <ul class="dropdown-menu p-3 filter-dropdown" aria-labelledby="verifyFilterDropdown">
 
                             {{-- Name Search --}}
-                            <li class="mb-2">
+                            {{-- <li class="mb-2">
                                 <label class="form-label fw-semibold mb-1" data-en="Name" data-bm="Nama">Name</label>
                                 <input type="text" class="form-control form-control-sm" id="filterVerifyName" data-en="Search by name..." data-bm="Cari dengan nama..." data-i18n-attr="placeholder"
                                     placeholder="Search by name...">
-                            </li>
+                            </li> --}}
 
                             {{-- Date Range --}}
                             <li class="mb-2">
@@ -71,7 +71,7 @@
 
                             <li class="d-flex justify-content-end gap-2 mt-2 pt-2 border-top">
                                 <button class="btn btn-sm btn-secondary" id="btnResetVerifyFilter"><span data-en="Reset" data-bm="Set Semula">Reset</span></button>
-                                <button class="btn btn-sm btn-primary" id="btnVerifyFilter"><span data-en="Apply" data-bm="Guna">Apply</span></button>
+                                <button class="btn btn-sm btn-primary" id="btnVerifyFilter"><span data-en="Apply" data-bm="Cari">Apply</span></button>
                             </li>
                         </ul>
                     </div>

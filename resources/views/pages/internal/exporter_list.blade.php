@@ -64,7 +64,7 @@
 
                             <li class="d-flex justify-content-end gap-2 mt-2 pt-2 border-top">
                                 <button class="btn btn-sm btn-secondary" id="btnResetExporterFilter"><span data-en="Reset" data-bm="Set Semula">Reset</span></button>
-                                <button class="btn btn-sm btn-primary" id="btnExporterFilter"><span data-en="Apply" data-bm="Guna">Apply</span></button>
+                                <button class="btn btn-sm btn-primary" id="btnExporterFilter"><span data-en="Apply" data-bm="Cari">Apply</span></button>
                             </li>
                         </ul>
 

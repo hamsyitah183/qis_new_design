@@ -216,9 +216,8 @@ class UserController extends Controller
 
     public function verification_list_data(Request $request)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
+
+        Gate::authorize('approve public user');
 
         $query = PublicUser::whereHas('approved', function ($query) {
             $query->whereNotNull('verification_attachment')->where('doa_verified', '!=', 1)->where('status', '!=', 'Verification is rejected');

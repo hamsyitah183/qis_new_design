@@ -16,16 +16,30 @@ class PublicUser extends Authenticatable implements MustVerifyEmail
     use Notifiable, HasRoles, HasFactory, HasActivityLog, HasApplicationActivityLog;
 
     protected $guard = 'public';
-
     protected $table = 'public_users';
     protected $guard_name = 'public';
-
     protected $primaryKey = 'uuid';
-    public $incrementing = false; // important for UUID
+    public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = ['uuid', 'fullname', 'no_ic', 'email', 'account_type',
-     'phone_number', 'office_number', 'address_1', 'address_2', 'postcode', 'district', 'state', 'password', 'doa_verified', 'verification_attachment', 'email_verified_at'];
+    // Removed 'verification_attachment' – it's not a column anymore
+    protected $fillable = [
+        'uuid',
+        'fullname',
+        'no_ic',
+        'email',
+        'account_type',
+        'phone_number',
+        'office_number',
+        'address_1',
+        'address_2',
+        'postcode',
+        'district',
+        'state',
+        'password',
+        'doa_verified',
+        'email_verified_at',
+    ];
 
     protected $hidden = ['password', 'remember_token'];
 
@@ -36,20 +50,18 @@ class PublicUser extends Authenticatable implements MustVerifyEmail
 
     protected static function booted()
     {
-        // Generate UUID before creating
         static::creating(function ($user) {
             if (empty($user->uuid)) {
                 $user->uuid = (string) Str::uuid();
             }
         });
 
-        // Create approved_publics row AFTER user is created
         static::created(function ($user) {
             ApprovedPublic::create([
                 'user_id' => $user->uuid,
                 'doa_verified' => false,
-                'verification_attachment' => null,
-                'status' => 'pending', // or default status you want
+                // 'verification_attachment' => null, // removed – no longer a column
+                'status' => 'pending',
                 'approved_by' => null,
                 'reason' => null,
             ]);
@@ -61,9 +73,28 @@ class PublicUser extends Authenticatable implements MustVerifyEmail
         return $this->email;
     }
 
+    /**
+     * ApprovedPublic record (approval status)
+     */
     public function approved()
     {
         return $this->hasOne(ApprovedPublic::class, 'user_id', 'uuid');
+    }
+
+    /**
+     * All uploaded attachments (UserAttachment records)
+     */
+    public function attachments()
+    {
+        return $this->hasMany(UserAttachment::class, 'user_id', 'uuid');
+    }
+
+    /**
+     * Latest attachment – useful for quick access
+     */
+    public function latestAttachment()
+    {
+        return $this->hasOne(UserAttachment::class, 'user_id', 'uuid')->latest();
     }
 
     public function districtInfo()

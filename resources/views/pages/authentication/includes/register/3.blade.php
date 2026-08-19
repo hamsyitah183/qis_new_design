@@ -3,61 +3,147 @@
     <div class="p-3">
         <p class="mb-1 fw-semibold text-muted op-5 fs-20">03</p>
         <div class="fs-15 fw-semibold d-sm-flex d-block align-items-center justify-content-between mb-3">
-            <div data-en="Upload Attachment" data-bm="Muat Naik Lampiran">Upload Attachment</div>
+            <div data-en="Upload Supporting Documents" data-bm="Muat Naik Dokumen Sokongan">Upload Supporting Documents
+            </div>
         </div>
-        <p class="text-muted fs-13 mb-3" data-en="Add one or more supporting documents (e.g. IC front/back, business registration). Accepted formats: JPG, PNG, PDF."
-            data-bm="Tambah satu atau lebih dokumen sokongan (cth. IC depan/belakang, pendaftaran perniagaan). Format diterima: JPG, PNG, PDF.">
-            Add one or more supporting documents (e.g. IC front/back, business registration). Accepted formats: JPG,
-            PNG, PDF.
+        <p class="text-muted fs-13 mb-3" data-en="Click on a document below to open its upload area."
+            data-bm="Klik pada dokumen di bawah untuk membuka zon muat naik.">
+            Click on a document below to open its upload area.
         </p>
     </div>
 
-    <div class="row gy-3 px-3">
-        <div class="card custom-card card-style-6 border shadow-sm mb-0">
-            <!-- Drag & Drop area -->
-            <div id="fileDropArea" class="p-4 text-center border border-dashed rounded-3" style="cursor: pointer;">
-                <h5 class="display-3 text-muted mb-2">
-                    <i class="ti ti-folder-down"></i>
-                </h5>
-                <div class="text-muted" data-en="Drop files here or click to upload."
-                    data-bm="Lepaskan fail di sini atau klik untuk muat naik.">
-                    Drop files here or click to upload.
+    <div class="px-3">
+        <div class="d-flex flex-column gap-2">
+            @foreach ($documents as $doc)
+                <div class="card custom-card border shadow-sm mb-0 document-upload-section"
+                    data-doc-id="{{ $doc->id }}">
+                    <div class="card-body p-3">
+
+                        <!-- Row header (always visible, click to expand) -->
+                        <div class="d-flex align-items-center justify-content-between doc-row-toggle" role="button"
+                            aria-expanded="false" data-doc-id="{{ $doc->id }}">
+                            <div class="d-flex align-items-center gap-2 min-w-0">
+                                <i class="ti ti-file-text fs-18 text-muted flex-shrink-0"></i>
+                                <div class="min-w-0">
+                                    <div class="fw-semibold fs-14">{{ $doc->name }}</div>
+                                    @if ($doc->description)
+                                        <div class="text-muted fs-12 text-truncate">{{ $doc->description }}</div>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                <span class="badge rounded-pill bg-light text-muted doc-status-badge"
+                                    data-doc-id="{{ $doc->id }}">
+                                    <span data-en="No files" data-bm="Tiada fail">No files</span>
+                                </span>
+                                <i class="ti ti-chevron-down doc-toggle-icon fs-16 text-muted"></i>
+                            </div>
+                        </div>
+
+                        <!-- Upload panel, hidden by default via our own class (not Bootstrap's .collapse) -->
+                        <div class="doc-panel d-none" data-doc-id="{{ $doc->id }}">
+                            <div class="pt-3 mt-3 border-top border-block-start-dashed">
+
+                                <!-- Already uploaded files (fetched from server) -->
+                                <div class="existing-file-list-empty text-muted fs-12 mb-2 d-none"
+                                    data-doc-id="{{ $doc->id }}" data-en="Previously uploaded:"
+                                    data-bm="Dimuat naik sebelum ini:">
+                                    Previously uploaded:
+                                </div>
+                                <ul class="existing-file-list-container list-unstyled d-flex flex-column gap-2 mb-3"
+                                    data-doc-id="{{ $doc->id }}"></ul>
+
+                                <!-- Drag & Drop area -->
+                                <div class="file-drop-area p-4 text-center border border-dashed rounded-3"
+                                    style="cursor: pointer;" data-doc-id="{{ $doc->id }}">
+                                    <h5 class="display-3 text-muted mb-2">
+                                        <i class="ti ti-folder-down"></i>
+                                    </h5>
+                                    <div class="text-muted" data-en="Drop files here or click to upload."
+                                        data-bm="Lepaskan fail di sini atau klik untuk muat naik.">
+                                        Drop files here or click to upload.
+                                    </div>
+                                    <div class="text-muted fs-12 mt-1" data-en="You can select multiple files at once."
+                                        data-bm="Anda boleh memilih beberapa fail sekaligus.">
+                                        You can select multiple files at once.
+                                    </div>
+                                    <input type="file" class="file-input" style="display: none;"
+                                        accept=".jpg,.jpeg,.png,.pdf" multiple name="attachment[{{ $doc->id }}][]"
+                                        data-doc-id="{{ $doc->id }}">
+
+                                     <input type="hidden" name="document_type[{{ $doc->id }}]" value="{{ $doc->name }}">
+                                </div>
+
+                                <!-- File list for newly staged files (not yet uploaded) -->
+                                <div class="file-list-empty text-center text-muted fs-13 py-2"
+                                    data-doc-id="{{ $doc->id }}" data-en="No files added yet."
+                                    data-bm="Belum ada fail ditambah.">
+                                    No files added yet.
+                                </div>
+                                <ul class="file-list-container list-unstyled d-flex flex-column gap-2 mb-0"
+                                    data-doc-id="{{ $doc->id }}"></ul>
+
+                                <!-- Expiry date fields (only if required) -->
+                                @if ($doc->requires_expiry)
+                                    <div class="row mt-3">
+                                        <div class="col-md-6">
+                                            <label for="valid_from_{{ $doc->id }}" class="form-label"
+                                                data-en="Valid From" data-bm="Berkuat kuasa dari">Valid From</label>
+                                            <input type="date" class="form-control"
+                                                id="valid_from_{{ $doc->id }}"
+                                                name="valid_from[{{ $doc->id }}]">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="valid_until_{{ $doc->id }}" class="form-label"
+                                                data-en="Valid Until" data-bm="Berkuat kuasa sehingga">Valid
+                                                Until</label>
+                                            <input type="date" class="form-control"
+                                                id="valid_until_{{ $doc->id }}"
+                                                name="valid_until[{{ $doc->id }}]">
+                                        </div>
+                                    </div>
+                                @endif
+
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
-                <div class="text-muted fs-12 mt-1" data-en="You can select multiple files at once."
-                    data-bm="Anda boleh memilih beberapa fail sekaligus.">
-                    You can select multiple files at once.
-                </div>
-
-                <!-- Hidden multi-file input; kept name="attachment[]" so FormData collects every added file -->
-                <input type="file" id="fileInput" style="display: none;" accept=".jpg,.jpeg,.png,.pdf" multiple
-                    name="attachment[]">
-            </div>
+            @endforeach
         </div>
-
-        <!-- Selected file list -->
-        <div id="fileListEmpty" class="text-center text-muted fs-13 py-2" data-en="No files added yet."
-            data-bm="Belum ada fail ditambah.">
-            No files added yet.
-        </div>
-
-        <ul id="fileListContainer" class="list-unstyled d-flex flex-column gap-2 mb-0"></ul>
     </div>
-
 
     <div class="p-3 border-top border-block-start-dashed d-flex justify-content-between mt-3">
         <button class="btn btn-auth-secondary" id="backToDetailsTab" type="button">
             <i class="ri-arrow-left-line me-2 align-middle"></i>
             <span data-en="Back" data-bm="Kembali">Back</span>
         </button>
-
-        <button class="btn btn-auth-primary" id="finishRegistrationBtn" type="button">
-            <span data-en="Submit" data-bm="Hantar">Submit</span>
+        <button class="btn btn-auth-primary" id="nextToPasswordTab" type="button">
+            <span data-en="Next" data-bm="Seterusnya">Next</span>
+            <i class="ri-arrow-right-line ms-2 align-middle"></i>
         </button>
     </div>
 </div>
 
 <style>
-    #fileDropArea.is-dragover {
+    .doc-row-toggle {
+        cursor: pointer;
+    }
+
+    .doc-row-toggle .doc-toggle-icon {
+        transition: transform .2s ease;
+    }
+
+    .doc-row-toggle[aria-expanded="true"] .doc-toggle-icon {
+        transform: rotate(180deg);
+    }
+
+    .doc-status-badge.has-files {
+        background: rgba(var(--success-rgb, 30, 195, 121), .12) !important;
+        color: rgb(var(--success-rgb, 30, 195, 121)) !important;
+    }
+
+    .file-drop-area.is-dragover {
         border-color: rgb(var(--primary-rgb)) !important;
         background: rgba(var(--primary-rgb), .05);
     }
@@ -97,6 +183,32 @@
         color: var(--text-muted);
     }
 
+    .file-list-item .file-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+    }
+
+    .file-list-item .file-view-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        border: 1px solid var(--default-border);
+        background: transparent;
+        color: rgb(var(--primary-rgb));
+        font-size: 12px;
+        font-weight: 500;
+        text-decoration: none;
+        border-radius: 6px;
+        padding: 4px 8px;
+        white-space: nowrap;
+    }
+
+    .file-list-item .file-view-btn:hover {
+        background: rgba(var(--primary-rgb), .08);
+    }
+
     .file-list-item .file-remove {
         border: none;
         background: transparent;
@@ -111,125 +223,26 @@
     .file-list-item .file-remove:hover {
         color: var(--danger-color, #fb4242);
     }
+
+    .file-list-item.existing-file i {
+        color: var(--success-color, #1ec379);
+    }
 </style>
 
 <script>
-    (function () {
-        var dropArea = document.getElementById('fileDropArea');
-        var fileInput = document.getElementById('fileInput');
-        var listContainer = document.getElementById('fileListContainer');
-        var emptyState = document.getElementById('fileListEmpty');
+    (function() {
+        document.querySelectorAll('.document-upload-section').forEach(function(section) {
+            var docId = section.getAttribute('data-doc-id');
+            var rowToggle = section.querySelector('.doc-row-toggle');
+            var panel = section.querySelector('.doc-panel[data-doc-id="' + docId + '"]');
 
-        var MAX_FILES = 10;
-        var MAX_SIZE_MB = 10;
-
-        // Holds the actual File objects currently selected, in order.
-        var selectedFiles = [];
-
-        function formatSize(bytes) {
-            if (bytes < 1024) return bytes + ' B';
-            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-        }
-
-        function iconFor(name) {
-            var ext = name.split('.').pop().toLowerCase();
-            if (ext === 'pdf') return 'ti ti-file-type-pdf';
-            return 'ti ti-photo';
-        }
-
-        // Rebuilds the hidden <input type="file"> FileList from selectedFiles
-        // using DataTransfer, so the array stays the source of truth and the
-        // actual form submission (FormData) always matches what's rendered.
-        function syncInput() {
-            var dt = new DataTransfer();
-            selectedFiles.forEach(function (file) {
-                dt.items.add(file);
-            });
-            fileInput.files = dt.files;
-        }
-
-        function render() {
-            listContainer.innerHTML = '';
-            emptyState.style.display = selectedFiles.length ? 'none' : 'block';
-
-            selectedFiles.forEach(function (file, index) {
-                var li = document.createElement('li');
-                li.className = 'file-list-item';
-                li.innerHTML =
-                    '<i class="' + iconFor(file.name) + '"></i>' +
-                    '<div class="file-meta">' +
-                    '<div class="file-name">' + file.name + '</div>' +
-                    '<div class="file-size">' + formatSize(file.size) + '</div>' +
-                    '</div>' +
-                    '<button type="button" class="file-remove" aria-label="Remove">&times;</button>';
-
-                li.querySelector('.file-remove').addEventListener('click', function () {
-                    selectedFiles.splice(index, 1);
-                    syncInput();
-                    render();
+            if (rowToggle && panel) {
+                rowToggle.addEventListener('click', function() {
+                    var isOpen = !panel.classList.contains('d-none');
+                    panel.classList.toggle('d-none', isOpen);
+                    rowToggle.setAttribute('aria-expanded', String(!isOpen));
                 });
-
-                listContainer.appendChild(li);
-            });
-        }
-
-        function addFiles(fileList) {
-            var incoming = Array.prototype.slice.call(fileList);
-
-            incoming.forEach(function (file) {
-                if (selectedFiles.length >= MAX_FILES) return;
-
-                if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-                    alert(file.name + ' exceeds the ' + MAX_SIZE_MB + 'MB limit.');
-                    return;
-                }
-
-                // Skip exact duplicates (same name + size)
-                var isDuplicate = selectedFiles.some(function (f) {
-                    return f.name === file.name && f.size === file.size;
-                });
-                if (isDuplicate) return;
-
-                selectedFiles.push(file);
-            });
-
-            syncInput();
-            render();
-        }
-
-        dropArea.addEventListener('click', function () {
-            fileInput.click();
-        });
-
-        fileInput.addEventListener('change', function (e) {
-            addFiles(e.target.files);
-            // reset so selecting the exact same file again still fires 'change'
-            fileInput.value = '';
-        });
-
-        ['dragenter', 'dragover'].forEach(function (evt) {
-            dropArea.addEventListener(evt, function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                dropArea.classList.add('is-dragover');
-            });
-        });
-
-        ['dragleave', 'drop'].forEach(function (evt) {
-            dropArea.addEventListener(evt, function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                dropArea.classList.remove('is-dragover');
-            });
-        });
-
-        dropArea.addEventListener('drop', function (e) {
-            if (e.dataTransfer && e.dataTransfer.files) {
-                addFiles(e.dataTransfer.files);
             }
         });
-
-        render();
     })();
 </script>

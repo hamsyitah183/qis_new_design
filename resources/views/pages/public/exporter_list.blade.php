@@ -77,7 +77,7 @@
 
                             <li class="d-flex justify-content-end gap-2 mt-2 pt-2 border-top">
                                 <button class="btn btn-sm btn-secondary" id="btnResetExporterFilter" data-en="Reset" data-bm="Tetap Semula">Reset</button>
-                                <button class="btn btn-sm btn-primary" id="btnExporterFilter" data-en="Apply" data-bm="Guna">Apply</button>
+                                <button class="btn btn-sm btn-primary" id="btnExporterFilter" data-en="Apply" data-bm="Cari">Apply</button>
                             </li>
                         </ul>
 

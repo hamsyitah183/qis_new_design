@@ -3,57 +3,81 @@
 namespace App\Services;
 
 use App\Models\ApprovedPublic;
-use App\Models\PublicUser;
-use App\Notifications\InternalUserEditedNotification;
+use App\Models\UserAttachment;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class VerificationService
 {
-    public function uploadVerificationAttachment($userId, $file)
-    {
+    public function uploadVerificationAttachment(
+        string $userId,
+        array $filesByDocId,
+        array $documentTypes = [],
+        array $validFrom = [],
+        array $validUntil = []
+    ) {
         try {
-            $verification = ApprovedPublic::firstOrNew(['user_id' => $userId]);
+            DB::beginTransaction();
 
-            if ($file) {
-                // Delete old file if exists
-                if (
-                    !empty($verification->verification_attachment)
-                    && file_exists(public_path($verification->verification_attachment))
-                ) {
-                    unlink(public_path($verification->verification_attachment));
+            $uploaded = [];
+
+            foreach ($filesByDocId as $docId => $files) {
+                $docType = $documentTypes[$docId] ?? null;
+                $from = $validFrom[$docId] ?? null;
+                $until = $validUntil[$docId] ?? null;
+
+                foreach ($files as $file) {
+                    if (!$file) {
+                        continue;
+                    }
+
+                    // Generate a unique filename
+                    $filename = time() . '_' . Str::random(6) . '_' . $file->getClientOriginalName();
+                    $path = 'public/user_attachments/' . $filename; // Storage path
+
+                    // Store the file
+                    $stored = Storage::put($path, file_get_contents($file));
+                    if (!$stored) {
+                        throw new \Exception("Failed to store file: {$file->getClientOriginalName()}");
+                    }
+
+                    // Create database record
+                    $attachment = UserAttachment::create([
+                        'user_id' => $userId,
+                        'document_type' => $docType,
+                        'file_path' => Storage::url($path), // or 'storage/user_attachments/' . $filename
+                        'file_type' => $file->getClientMimeType(),
+                        'file_size' => $file->getSize(),
+                        'original_file_name' => $file->getClientOriginalName(),
+                        'valid_from' => $from,
+                        'valid_until' => $until,
+                    ]);
+
+                    $uploaded[] = $attachment;
                 }
-
-                $destinationPath = public_path('storage/verifications');
-
-                if (!file_exists($destinationPath)) {
-                    mkdir($destinationPath, 0755, true);
-                }
-
-                $filename = time() . '_' . $file->getClientOriginalName();
-                $file->move($destinationPath, $filename);
-
-                $verification->verification_attachment = 'storage/verifications/' . $filename;
             }
 
+            // Update approval status
+            $verification = ApprovedPublic::firstOrNew(['user_id' => $userId]);
             $verification->status = 'waiting for approval';
-
-            // authUser()['user']->verification_attachment = 'storage/app/public/verifications/' . $filename;
             $verification->save();
 
-            
+            DB::commit();
 
             return [
                 'success' => true,
-                'message' => 'File uploaded successfully.',
-                'file_url' => asset($verification->verification_attachment)
+                'message' => 'Files uploaded successfully.',
+                'attachments' => $uploaded,
             ];
-        } catch (\Exception $e) {
-            Log::error('Verification upload failed: ' . $e->getMessage());
 
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Verification upload failed: ' . $e->getMessage());
             return [
                 'success' => false,
-                'message' => 'Upload failed: ' . $e->getMessage()
+                'message' => 'Upload failed: ' . $e->getMessage(),
             ];
         }
     }

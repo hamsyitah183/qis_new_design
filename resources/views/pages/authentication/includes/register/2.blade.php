@@ -57,13 +57,7 @@
                     id="email">
             </div>
 
-            <!-- Password -->
-            <div class="col-xl-12">
-                <label class="form-label text-default"><span data-en="Password" data-bm="Kata Laluan">Password</span>
-                    <span class="text-primary2">*</span></label>
-                <input type="password" name="password" class="form-control" data-en="Password" data-bm="Kata Laluan"
-                    data-i18n-attr="placeholder" placeholder="Password">
-            </div>
+           
 
             <!-- Address 1 -->
             <div class="col-xl-12">

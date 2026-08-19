@@ -11,41 +11,43 @@ class ApplicationNotification extends Notification
 {
     use Queueable;
 
-    /**
-     * Create a new notification instance.
-     */
-    public $message;
+    public $messageEn;
+    public $messageBm;
     public $user;
     public $url;
 
-    public function __construct($message, $user, $url = null)
+    /**
+     * Create a new notification instance.
+     *
+     * @param string $messageEn  English message
+     * @param string $messageBm  Bahasa Malaysia message
+     * @param string $user       Sender or related user name
+     * @param string|null $url   Action URL
+     */
+    public function __construct($messageEn, $messageBm, $user, $url = null)
     {
-        $this->message = $message;
+        $this->messageEn = $messageEn;
+        $this->messageBm = $messageBm;
         $this->user = $user;
         $this->url = $url;
-        // $this->time = $time;
     }
 
-
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
-     */
-    public function via(object $notifiable): array
+    public function via($notifiable)
     {
         return ['database'];
     }
 
-    public function toDatabase($notifiable): array
+    public function toDatabase($notifiable)
     {
         return [
-            'message' => $this->message,
-            'user'  => $this->user,
-            'url' => $this->url,
+            'message' => [
+                'en' => $this->messageEn,
+                'bm' => $this->messageBm,
+            ],
+            'user' => $this->user,
+            'url'  => $this->url,
         ];
     }
-
 
     /**
      * Get the mail representation of the notification.

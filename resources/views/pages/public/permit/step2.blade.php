@@ -84,7 +84,7 @@ data-id="H53WJiv9blN17MYTztq4g8U6eSVkaZDx" data-step="2">
                 
                 {{-- <div class="pd-info-grid" id="pdInfoGrid"></div> --}}
                 <div class="pd-section-label mt-4" data-en="Conditions" data-bm="Syarat">Conditions (0)</div>
-                <div class="ipv-condition-item"><span data-en="No special conditions for this item." data-bm="Tiada syarat khas untuk item ini.">No special conditions for this item.</span></div>
+                <div class="ipv-condition-item" id="pdConditionItem"><span data-en="No special conditions for this item." data-bm="Tiada syarat khas untuk item ini.">No special conditions for this item.</span></div>
                 <div class="pd-section-label mt-4" data-en="Attachments" data-bm="Lampiran">Attachments (<span id="attachmentCount">0</span>)</div>
                 <div class="ipv-attach-list" id="pdAttachList"></div>
             </div>

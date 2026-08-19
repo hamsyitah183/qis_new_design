@@ -300,10 +300,8 @@ class PermitApplicationController extends Controller
             'data' => $data->usage,
         ]);
     }
-
     public function saveApplication(Request $request)
     {
-        // dd($request->all());
         DB::beginTransaction();
         $movedFiles = [];
         $isNewApplication = false;
@@ -311,14 +309,14 @@ class PermitApplicationController extends Controller
         try {
             $applicationUuid = $request->input('applicationId');
             $isDraft = $request->boolean('is_draft');
+            $lang = $request->input('lang', 'en');
+            app()->setLocale($lang); // Set locale for __() translations
 
             $exporter = $request->exporterData ? json_decode($request->exporterData, true) : null;
             $importer = $request->importerData ? json_decode($request->importerData, true) : null;
             $permit = $request->permitDetails ? json_decode($request->permitDetails, true) : [];
 
-            // -----------------------------
             // Importer verify logic
-            // -----------------------------
             $importer_verify = null;
             if (!$isDraft && isset($permit['applCate'])) {
                 $importer_verify = $permit['applCate'] == 0
@@ -326,9 +324,7 @@ class PermitApplicationController extends Controller
                     : 'Wait for Representative Approval';
             }
 
-            // -----------------------------
             // Create / Update Application
-            // -----------------------------
             if ($applicationUuid) {
                 $application = IpApplication::where('application_id', $applicationUuid)->firstOrFail();
 
@@ -386,9 +382,7 @@ class PermitApplicationController extends Controller
 
             $appId = $application->id;
 
-            // -----------------------------
-            // Consignments
-            // -----------------------------
+            // Sync consignments (unchanged)
             $existingIds = IpConsignmentPermit::where('application_id', $appId)->pluck('id')->toArray();
             $deletedPermits = $request->input('deleted_item_ids', []);
 
@@ -434,9 +428,7 @@ class PermitApplicationController extends Controller
                 }
             }
 
-            // -----------------------------
-            // Attachments
-            // -----------------------------
+            // Attachments (unchanged)
             if ($request->hasFile('files')) {
                 foreach ($request->file('files') as $i => $file) {
                     $itemIndex = $request->input('file_item_index')[$i] ?? null;
@@ -455,10 +447,6 @@ class PermitApplicationController extends Controller
                 }
             }
 
-            // dd($application);
-            // -----------------------------
-            // Application Attachments
-            // -----------------------------
             if ($request->hasFile('application_files')) {
                 foreach ($request->file('application_files') as $file) {
                     $name = uniqid() . '_' . $file->getClientOriginalName();
@@ -476,30 +464,32 @@ class PermitApplicationController extends Controller
 
             DB::commit();
 
-            // -----------------------------
-            // Notifications (ONLY ONCE HERE)
-            // -----------------------------
+            // --------------------------------------------
+            // BILINGUAL NOTIFICATIONS (SMS + In-app)
+            // --------------------------------------------
+
+            // 1. SMS Notifications (using __() with current locale)
             if (!$isDraft) {
                 $notificationController = new NotificationController();
 
                 if ($application->category_application == 1) {
-                    // importer
+                    // Importer (company) – needs approval
                     $notificationController->sendStatusMessage(
                         $application->importer['fullname'] ?? 'User',
                         'Import Permit',
                         $application->application_id,
                         'submitted',
-                        'An application needs your approval.',
+                        __('notifications.sms_importer_approval'),
                         $application->importer->phone_number ?? '60143290092'
                     );
 
-                    // applicant
+                    // Applicant – waiting for approval
                     $notificationController->sendStatusMessage(
                         $application->user['fullname'] ?? 'User',
                         'Import Permit',
                         $application->application_id,
                         'submitted',
-                        'Your application has been successfully submitted and is waiting for approval.',
+                        __('notifications.sms_applicant_waiting'),
                         $application->user->phone_number ?? '60143290092'
                     );
                 } else {
@@ -508,10 +498,60 @@ class PermitApplicationController extends Controller
                         'Import Permit',
                         $application->application_id,
                         'submitted',
-                        'Your application has been successfully submitted.',
+                        __('notifications.sms_applicant_success'),
                         $application->importer->phone_number ?? '60143290092'
                     );
                 }
+            }
+
+            // 2. In-app Notifications (store both languages)
+            $notificationUrl = url('/view_import_permit/' . $application->application_id);
+
+            // Build bilingual messages using translation keys with placeholders
+            // We need both versions, so we temporarily switch locale to get each.
+            $originalLocale = app()->getLocale();
+
+            // Internal users (admins/clerks)
+            $internalKey = $isDraft
+                ? ($isNewApplication ? 'notifications.internal_draft_created' : 'notifications.internal_draft_updated')
+                : ($isNewApplication ? 'notifications.internal_submit_created' : 'notifications.internal_submit_updated');
+
+            // Get English version
+            app()->setLocale('en');
+            $internalEn = __($internalKey);
+            // Get BM version
+            app()->setLocale('bm');
+            $internalBm = __($internalKey);
+
+            // Restore original locale for the rest of the request
+            app()->setLocale($originalLocale);
+
+            $internalUsers = InternalUser::permission('view dashboard')->get();
+            Notification::send($internalUsers, new ApplicationNotification(
+                $internalEn,
+                $internalBm,
+                Auth::user()->fullname ?? 'System',
+                $notificationUrl
+            ));
+
+            // Public applicant
+            $publicUser = auth()->guard('public')->user();
+            if ($publicUser) {
+                $publicKey = $isDraft ? 'notifications.public_draft' : 'notifications.public_submit';
+                $params = ['id' => $application->application_id];
+
+                app()->setLocale('en');
+                $publicEn = __($publicKey, $params);
+                app()->setLocale('bm');
+                $publicBm = __($publicKey, $params);
+                app()->setLocale($originalLocale);
+
+                $publicUser->notify(new ApplicationNotification(
+                    $publicEn,
+                    $publicBm,
+                    'QIS',
+                    $notificationUrl
+                ));
             }
 
             return response()->json([

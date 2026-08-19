@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Events\InternalUserAdminEvent;
 use App\Events\PublicUserEvent;
 use App\Models\CountryNoPhone;
+use App\Models\DocumentRequirement;
 use App\Models\InternalUser;
 use App\Models\PublicUser;
 use App\Notifications\ApplicationNotification;
@@ -40,6 +41,10 @@ class AuthenticationController extends Controller
 
     public function loginAction(Request $request)
     {
+        // Get language from request (default 'en')
+        $lang = $request->input('lang', 'en');
+        app()->setLocale($lang);
+
         $credentials = $request->validate([
             'userType' => 'required|in:public,internal',
             'email' => 'required|email',
@@ -52,13 +57,10 @@ class AuthenticationController extends Controller
         $user = ($guard === 'public' ? PublicUser::class : InternalUser::class)::where('email', $credentials['email'])->first();
 
         if (!$user) {
-            return response()->json(
-                [
-                    'status' => 'error',
-                    'message' => 'User not found.',
-                ],
-                422,
-            );
+            return response()->json([
+                'status' => 'error',
+                'message' => __('auth.user_not_found'), // translated
+            ], 422);
         }
 
         // Attempt login first
@@ -78,7 +80,7 @@ class AuthenticationController extends Controller
                 $user->notify(new VerifyEmailNotification());
                 return response()->json([
                     'status' => 'unverified',
-                    'message' => 'Your email is not verified. A verification email has been sent.',
+                    'message' => __('auth.email_unverified'), // translated
                     'redirect' => route('verify.email'),
                 ]);
             }
@@ -87,22 +89,24 @@ class AuthenticationController extends Controller
             $redirect = $guard === 'public' ? route('public.dashboard') : route('internal.dashboard');
             return response()->json([
                 'status' => 'success',
-                'message' => 'Login successful!',
+                'message' => __('auth.login_success'), // translated
                 'redirect' => $redirect,
             ]);
         }
 
-        return response()->json(
-            [
-                'status' => 'error',
-                'message' => 'Invalid credentials or user type.',
-            ],
-            422,
-        );
+        return response()->json([
+            'status' => 'error',
+            'message' => __('auth.failed'), // translated
+        ], 422);
     }
-    
+
     public function loginActionApi(Request $request)
     {
+        // Get language from request (default 'en')
+        $lang = $request->input('lang', 'en');
+        app()->setLocale($lang);
+
+
         $credentials = $request->validate([
             'userType' => 'required|in:public,internal',
             'email' => 'required|email',
@@ -115,24 +119,18 @@ class AuthenticationController extends Controller
         $user = ($guard === 'public' ? PublicUser::class : InternalUser::class)::where('email', $credentials['email'])->first();
 
         if (!$user) {
-            return response()->json(
-                [
-                    'status' => 'error',
-                    'message' => 'User not found.',
-                ],
-                422,
-            );
+            return response()->json([
+                'status' => 'error',
+                'message' => __('auth.user_not_found'), // translated
+            ], 422);
         }
 
         // API login is stateless: verify credentials without creating a session.
         if (!Hash::check($credentials['password'], $user->password)) {
-            return response()->json(
-                [
-                    'status' => 'error',
-                    'message' => 'Invalid credentials.',
-                ],
-                422,
-            );
+            return response()->json([
+                'status' => 'error',
+                'message' => __('auth.invalid_credentials'), // translated
+            ], 422);
         }
 
         // After login, check if email not verified
@@ -140,7 +138,7 @@ class AuthenticationController extends Controller
             $user->notify(new VerifyEmailNotification());
             return response()->json([
                 'status' => 'unverified',
-                'message' => 'Your email is not verified. A verification email has been sent.',
+                'message' => __('auth.email_unverified'), // translated
                 'redirect' => route('verify.email'),
             ]);
         }
@@ -148,7 +146,7 @@ class AuthenticationController extends Controller
         // Return user payload expected by mobile app.
         return response()->json([
             'status' => 'success',
-            'message' => 'Login successful!',
+            'message' => __('auth.login_success'), // translated
             'user' => [
                 'uuid' => $user->uuid,
                 'name' => $user->name ?? $user->fullname,
@@ -168,38 +166,32 @@ class AuthenticationController extends Controller
     public function registerPublic(Request $request, VerificationService $verificationService)
     {
         $countryCode = $request->phoneNumber ?? '+60';
-
-        // Keep only + and digits for country code
         $countryCode = preg_replace('/[^0-9+]/', '', $countryCode);
-
-        // Ensure country code starts with +
         if (!str_starts_with($countryCode, '+')) {
             $countryCode = '+' . $countryCode;
         }
 
-        // Clean user input (digits only)
         $number = preg_replace('/\D/', '', $request->phone_number);
-
-        // Remove leading 0 (014xxxx → 14xxxx)
         $number = ltrim($number, '0');
-
-        // Remove country code if user already typed it (60xxxx)
         if (str_starts_with($number, '60')) {
             $number = substr($number, 2);
         }
-
-        // Final normalized phone number
         $fullPhoneNumber = $countryCode . $number;
 
-        // Merge back into request for validation & saving
-        $request->merge([
-            'phone_number' => $fullPhoneNumber,
-        ]);
+        $request->merge(['phone_number' => $fullPhoneNumber]);
 
         $validated = $request->validate([
             'fullname' => 'required|string|max:255',
             'email' => 'required|email|unique:public_users,email',
-            'password' => 'required|min:8',
+            'password' => [
+                'required',
+                'min:8',
+                'confirmed',
+                'regex:/[a-z]/',
+                'regex:/[A-Z]/',
+                'regex:/[0-9]/',
+                'regex:/[@$!%*#?&]/',
+            ],
             'no_ic' => 'required|unique:public_users,no_ic',
             'account_type' => 'required|in:individu,company',
             'phone_number' => 'required|unique:public_users,phone_number',
@@ -226,70 +218,88 @@ class AuthenticationController extends Controller
                 'state' => $validated['state'],
             ]);
 
-            $result = '';
-            if ($request->hasFile('attachment')) {
-                $userId = $user->uuid;
-                $file = $request->file('attachment');
+            // Handle attachments
+            $attachmentFiles = $request->file('attachment'); // [docId => [UploadedFile, ...]]
+            $result = null;
 
-                $result = $verificationService->uploadVerificationAttachment($userId, $file);
+            if (!empty($attachmentFiles)) {
+                $documentTypes = $request->input('document_type', []);
+                $validFrom = $request->input('valid_from', []);
+                $validUntil = $request->input('valid_until', []);
+
+                $result = $verificationService->uploadVerificationAttachment(
+                    $user->uuid,
+                    $attachmentFiles,
+                    $documentTypes,
+                    $validFrom,
+                    $validUntil
+                );
+
+                // If upload fails, roll back and return error
+                if (!$result || $result['success'] !== true) {
+                    DB::rollBack();
+                    return response()->json([
+                        'message' => 'Upload failed: ' . ($result['message'] ?? 'Unknown error'),
+                    ], 500);
+                }
             }
 
-            // Automatically log in the user
+            // Log in the user
             Auth::guard('public')->login($user);
 
-            //  Send verification email
+            // Send verification email
             $user->notify(new VerifyEmailNotification());
 
+            // Events and notifications (unchanged)
             try {
                 event(new InternalUserAdminEvent('A new account is created'));
             } catch (\Exception $e) {
-                Log::warning('Pusher connection failed but continuing registration: ' . $e->getMessage());
+                Log::warning('Pusher connection failed: ' . $e->getMessage());
             }
 
-             $users = InternalUser::role(['admin', 'superadmin'])->get();
+            $admins = InternalUser::role(['admin', 'superadmin'])->get();
             $notificationUrl = route('internal.public.list');
-            Notification::send($users, new ApplicationNotification('A new account is created', $user->fullname, $notificationUrl));
-
+            Notification::send($admins, new ApplicationNotification('A new account is created', $user->fullname, $notificationUrl));
             $user->notify(new ApplicationNotification('You created an account', 'QIS', '/profile'));
 
             if (!empty($result) && $result['success'] === true) {
                 try {
                     event(new InternalUserAdminEvent($user->fullname . ' uploaded a verification attachment.'));
-
                     event(new PublicUserEvent('You uploaded a verification attachment', $user->uuid));
                 } catch (\Exception $e) {
-                    Log::warning('Pusher connection failed but continuing registration upload: ' . $e->getMessage());
+                    Log::warning('Pusher event failed: ' . $e->getMessage());
                 }
 
-                $admins = InternalUser::role(['admin'])->get();
-                $notificationUrl = '/internal/user_public/verification';
-                Notification::send($admins, new ApplicationNotification('A user uploaded a verification attachment', $user->fullname, $notificationUrl));
-
+                $adminUsers = InternalUser::role(['admin'])->get();
+                Notification::send($adminUsers, new ApplicationNotification(
+                    'A user uploaded a verification attachment',
+                    $user->fullname,
+                    '/internal/user_public/verification'
+                ));
                 $user->notify(new ApplicationNotification('You uploaded a verification attachment', 'QIS', '/profile'));
             } else {
-                // Upload failed or no file uploaded
-                $user->notify(new ApplicationNotification('Upload a verification attachment to get verified by DOA.', 'QIS', '/profile'));
+                $user->notify(new ApplicationNotification(
+                    'Upload a verification attachment to get verified by DOA.',
+                    'QIS',
+                    '/profile'
+                ));
             }
 
             DB::commit();
 
             return response()->json([
                 'message' => 'Registration successful! Please verify your email to continue.',
-                'redirect' => route('verify.email'), // user is already logged in
+                'redirect' => route('verify.email'),
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-
-            return response()->json(
-                [
-                    'message' => 'Registration failed. Please try again.',
-                    'error' => $e->getMessage(),
-                ],
-                500,
-            );
+            Log::error('Registration failed: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Registration failed. Please try again.',
+                'error' => $e->getMessage(),
+            ], 500);
         }
     }
-
     public function logout(Request $request)
     {
         $user = null;
@@ -384,10 +394,16 @@ class AuthenticationController extends Controller
     public function register()
     {
         $countryNo = CountryNoPhone::get();
+        $documents =  DocumentRequirement::where('is_active', 1)
+            ->where('module', 'user')
+            ->orderBy('id')
+            ->get();
+
         // dd($countryNo);
         return view('pages.authentication.register_test', [
             'title' => 'Register',
             'countryNo' => $countryNo,
+            'documents' => $documents
         ]);
     }
 }
