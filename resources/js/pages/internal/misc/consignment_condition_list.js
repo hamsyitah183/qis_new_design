@@ -1,5 +1,7 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
+import { autoInitFilterSelect2 } from "../../../../utils/select2Utils";
+import { setupSelect2 } from "../../../utils/select2Utils";
 
 console.log("Loaded consignment_condition_list.js");
 
@@ -149,6 +151,8 @@ function initCategoryFilter() {
                 opt.textContent = item.description;
                 select.appendChild(opt);
             });
+            // Init Select2 after options are loaded
+            setupSelect2('#filterConsignCategory', 'All Categories');
         },
         error: function () {
             console.error("Failed to load category filter options.");
@@ -169,6 +173,8 @@ function initUsageFilter() {
                 opt.textContent = usage;
                 select.appendChild(opt);
             });
+            // Init Select2 after options are loaded
+            setupSelect2('#filterConsignUsage', 'All Usage');
         },
         error: function () {
             console.error("Failed to load usage filter options.");
@@ -393,8 +399,8 @@ document.addEventListener("DOMContentLoaded", async function () {
         .getElementById("btnResetConsignCondFilter")
         .addEventListener("click", function () {
             document.getElementById("filterConsignItemName").value = "";
-            document.getElementById("filterConsignCategory").value = "";
-            document.getElementById("filterConsignUsage").value = "";
+            $('#filterConsignCategory').val('').trigger('change.select2');
+            $('#filterConsignUsage').val('').trigger('change.select2');
 
             internalListTable.search("").columns().search("").draw();
             bootstrap.Dropdown.getInstance(
@@ -402,3 +408,4 @@ document.addEventListener("DOMContentLoaded", async function () {
             ).hide();
         });
 });
+

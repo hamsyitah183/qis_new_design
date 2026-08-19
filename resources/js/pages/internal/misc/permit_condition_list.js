@@ -1,5 +1,7 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
+import { autoInitFilterSelect2 } from "../../../../utils/select2Utils";
+import { setupSelect2 } from "../../../utils/select2Utils";
 
 let internalListTable;
 let countryLookup = {};
@@ -147,6 +149,8 @@ function initCategoryFilter() {
                 opt.textContent = item.description;
                 select.appendChild(opt);
             });
+            // Init Select2 after options are loaded
+            setupSelect2('#filterPermitCategory', 'All Categories');
         },
         error: function () {
             console.error("Failed to load category filter options.");
@@ -167,6 +171,8 @@ function initUsageFilter() {
                 opt.textContent = usage;
                 select.appendChild(opt);
             });
+            // Init Select2 after options are loaded
+            setupSelect2('#filterPermitUsage', 'All Usage');
         },
         error: function () {
             console.error("Failed to load usage filter options.");
@@ -343,8 +349,8 @@ document.addEventListener("DOMContentLoaded", async function () {
         .getElementById("btnResetPermitFilter")
         .addEventListener("click", function () {
             document.getElementById("filterPermitItemName").value = "";
-            document.getElementById("filterPermitCategory").value = "";
-            document.getElementById("filterPermitUsage").value = "";
+            $('#filterPermitCategory').val('').trigger('change.select2');
+            $('#filterPermitUsage').val('').trigger('change.select2');
 
             internalListTable.search("").columns().search("").draw();
             bootstrap.Dropdown.getInstance(
@@ -352,3 +358,4 @@ document.addEventListener("DOMContentLoaded", async function () {
             ).hide();
         });
 });
+

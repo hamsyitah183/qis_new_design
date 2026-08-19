@@ -53,7 +53,7 @@
                             {{-- Status --}}
                             <li class="mb-2">
                                 <label class="form-label fw-semibold mb-1" data-en="Application Status" data-bm="Status Permohonan">Application Status</label>
-                                <select class="form-select form-select-sm" id="filterAgentStatus">
+                                <select class="form-select form-select-sm select2" id="filterAgentStatus">
                                     <option value="" data-en="All Status" data-bm="Semua Status">All Status</option>
                                     <option value="draft" data-en="Draft" data-bm="Draf">Draft</option>
                                     <option value="submitted" data-en="Submitted" data-bm="Dihantar">Submitted</option>
@@ -67,7 +67,7 @@
                             {{-- Application Type --}}
                             <li class="mb-2">
                                 <label class="form-label fw-semibold mb-1" data-en="Application Type" data-bm="Jenis Permohonan">Application Type</label>
-                                <select class="form-select form-select-sm" id="filterAgentAppType">
+                                <select class="form-select form-select-sm select2" id="filterAgentAppType">
                                     <option value="" data-en="All Types" data-bm="Semua Jenis">All Types</option>
                                     <option value="import_permit" data-en="Import Permit" data-bm="Permit Import">Import Permit</option>
                                     <option value="inspection" data-en="Inspection Certificate" data-bm="Sijil Pemeriksaan">Inspection Certificate</option>

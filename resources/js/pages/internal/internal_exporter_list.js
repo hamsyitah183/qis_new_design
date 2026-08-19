@@ -2,6 +2,8 @@ import $ from "jquery";
 window.$ = window.jQuery = $;
 import "datatables.net-bs5";
 import "datatables.net-responsive-bs5";
+import { autoInitFilterSelect2 } from "../../utils/select2Utils";
+
 
 $(document).ready(function () {
     const table = $("#internalExporterTable").DataTable({
@@ -26,6 +28,9 @@ $(document).ready(function () {
         ],
     });
 
+    // Init Select2 on all static filter selects (those with class 'select2')
+    autoInitFilterSelect2();
+
     // Apply filter
     $("#btnExporterFilter").on("click", function () {
         table.ajax.reload();
@@ -34,7 +39,7 @@ $(document).ready(function () {
     // Reset filter
     $("#btnResetExporterFilter").on("click", function () {
         $("#filterExporterName").val("");
-        $("#filterExporterCountry").val("");
+        $('#filterExporterCountry').val('').trigger('change.select2');
         table.ajax.reload();
     });
 });

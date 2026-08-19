@@ -100,7 +100,7 @@
                             {{-- Order Status --}}
                             <li class="mb-2">
                                 <label class="form-label fw-semibold mb-1" data-en="Order Status" data-bm="Status Pesanan">Order Status</label>
-                                <select class="form-select form-select-sm" id="filterOrderStatus">
+                                <select class="form-select form-select-sm select2" id="filterOrderStatus">
                                     <option value="" data-en="All Status" data-bm="Semua Status">All Status</option>
                                     <option value="SUCCESSFUL" data-en="Successful" data-bm="Berjaya">Successful</option>
                                     <option value="UNSUCCESSFUL" data-en="Unsuccessful" data-bm="Tidak Berjaya">Unsuccessful</option>
@@ -113,7 +113,7 @@
                             {{-- Application Type --}}
                             <li class="mb-2">
                                 <label class="form-label fw-semibold mb-1" data-en="Application Type" data-bm="Jenis Permohonan">Application Type</label>
-                                <select class="form-select form-select-sm" id="filterAppType">
+                                <select class="form-select form-select-sm select2" id="filterAppType">
                                     <option value="" data-en="All Types" data-bm="Semua Jenis">All Types</option>
                                     <option value="import_permit" data-en="Import Permit" data-bm="Permit Import">Import Permit</option>
                                     <option value="inspection" data-en="Inspection Certificate" data-bm="Sijil Pemeriksaan">Inspection Certificate</option>

@@ -2,13 +2,7 @@ import { formatTime, initTooltips } from "../../app";
 import Swal from "sweetalert2";
 import { activityLogDesign } from "../../appLog";
 
-// Import Select2 module
-import select2 from "select2";
-
-// Force Select2 to attach to THIS jQuery:
-select2(window.jQuery);
-
-import "select2/dist/css/select2.min.css";
+import { setupSelect2, autoInitFilterSelect2 } from "../../utils/select2Utils";
 
 console.log("consignment list");
 let consignmentListTable;
@@ -37,6 +31,9 @@ async function data_table_init() {
 
     // Load filter data on page load (internal only)
     await loadFilterData();
+
+    // Init Select2 on all static filter selects (those with class 'select2')
+    autoInitFilterSelect2();
 
     consignmentListTable = new DataTable("#consignmentListTable", {
         processing: true,
@@ -97,11 +94,11 @@ async function data_table_init() {
 
     // Reset button
     $("#btnResetFilter").on("click", function () {
-        $("#filterStatus").val("");
+        $('#filterStatus').val('').trigger('change.select2');
         $("#filterStartDate").val("");
         $("#filterEndDate").val("");
 
-        // Destroy Select2 instances before resetting
+        // Destroy Select2 instances before resetting dynamic dropdowns
         if ($('#filterExporter').hasClass('select2-hidden-accessible')) {
             $('#filterExporter').select2('destroy');
         }
@@ -112,8 +109,8 @@ async function data_table_init() {
             $('#filterPublicUser').select2('destroy');
         }
 
-        $("#filterExporter").html('<option value="">All Exporters</option>');
-        $("#filterImporter").html('<option value="">All Importers</option>');
+        $('#filterExporter').html('<option value="">All Exporters</option>');
+        $('#filterImporter').html('<option value="">All Importers</option>');
 
         if (isInternal) {
             $("#filterPublicUser").val("");
@@ -211,11 +208,7 @@ async function loadFilterData() {
                 $select.append(`<option value="${user.uuid}">${user.fullname} (${user.email})</option>`);
             });
             // Initialize Select2 for searchable dropdown
-            $select.select2({
-                placeholder: 'Select a user',
-                allowClear: true,
-                width: '100%'
-            });
+            setupSelect2($select, 'Select a user');
 
             // Use namespaced event to avoid removing Select2's internal handlers
             $select.off('change.customFilter').on('change.customFilter', async function () {
@@ -247,16 +240,8 @@ async function loadFilterData() {
                 }
 
                 // Initialize Select2 on both dropdowns
-                $('#filterExporter').select2({
-                    placeholder: 'Select exporter',
-                    allowClear: true,
-                    width: '100%'
-                }).trigger('change');
-                $('#filterImporter').select2({
-                    placeholder: 'Select importer',
-                    allowClear: true,
-                    width: '100%'
-                }).trigger('change');
+                setupSelect2('#filterExporter', 'Select exporter');
+                setupSelect2('#filterImporter', 'Select importer');
             });
         } catch (error) {
             console.error('Error loading public users:', error);
@@ -267,20 +252,12 @@ async function loadFilterData() {
             const exportersResp = await fetch('/public/api/filters/my-consignment-exporters');
             const exporters = await exportersResp.json();
             exporters.forEach(exp => $('#filterExporter').append(`<option value="${exp.id}">${exp.name}</option>`));
-            $('#filterExporter').select2({
-                placeholder: 'Select exporter',
-                allowClear: true,
-                width: '100%'
-            });
+            setupSelect2('#filterExporter', 'Select exporter');
             $('#filterImporter').html('<option value="">All Importers</option>');
             const importersResp = await fetch('/public/api/filters/my-consignment-importers');
             const importers = await importersResp.json();
             importers.forEach(imp => $('#filterImporter').append(`<option value="${imp.id}">${imp.name}</option>`));
-            $('#filterImporter').select2({
-                placeholder: 'Select importer',
-                allowClear: true,
-                width: '100%'
-            });
+            setupSelect2('#filterImporter', 'Select importer');
         } catch (error) {
             console.error('Error loading filter data:', error);
         }
@@ -309,16 +286,8 @@ async function loadAllConsignmentFilters() {
         });
 
         // Initialize Select2 on both dropdowns
-        $exporterSelect.select2({
-            placeholder: 'Select exporter',
-            allowClear: true,
-            width: '100%'
-        });
-        $importerSelect.select2({
-            placeholder: 'Select importer',
-            allowClear: true,
-            width: '100%'
-        });
+        setupSelect2('#filterExporter', 'Select exporter');
+        setupSelect2('#filterImporter', 'Select importer');
     } catch (error) {
         console.error('Error loading consignment filters:', error);
     }

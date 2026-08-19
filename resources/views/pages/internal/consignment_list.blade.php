@@ -61,7 +61,7 @@
                                 <div class="col-12 col-md-6">
                                     <li class="mb-3">
                                         <label class="form-label fw-semibold mb-1" data-en="Status" data-bm="Status">Status</label>
-                                        <select id="filterStatus" class="form-select form-select-sm">
+                                        <select id="filterStatus" class="form-select form-select-sm select2">
                                             <option value="" data-en="All Statuses" data-bm="Semua Status">All Statuses</option>
                                             <option value="Draft" data-en="Draft" data-bm="Draf">Draft</option>
                                             <option value="Application Submitted" data-en="Application Submitted" data-bm="Permohonan Dihantar">Application Submitted</option>
@@ -76,7 +76,7 @@
                                 <div class="col-12 col-md-6">
                                     <li class="mb-3">
                                         <label class="form-label fw-semibold mb-1" data-en="Public User" data-bm="Pengguna Awam">Public User</label>
-                                        <select id="filterPublicUser" class="form-select form-select-sm">
+                                        <select id="filterPublicUser" class="form-select form-select-sm select2">
                                             <option value="" data-en="All Users" data-bm="Semua Pengguna">All Users</option>
                                         </select>
                                     </li>
@@ -84,7 +84,7 @@
                                 <div class="col-12 col-md-6">
                                     <li class="mb-3">
                                         <label class="form-label fw-semibold mb-1" data-en="Exporter" data-bm="Pengeksport">Exporter</label>
-                                        <select id="filterExporter" class="form-select form-select-sm">
+                                        <select id="filterExporter" class="form-select form-select-sm select2">
                                             <option value="" data-en="All Exporters" data-bm="Semua Pengeksport">All Exporters</option>
                                         </select>
                                     </li>
@@ -92,7 +92,7 @@
                                 <div class="col-12 col-md-6">
                                     <li class="mb-3">
                                         <label class="form-label fw-semibold mb-1" data-en="Importer" data-bm="Pengimport">Importer</label>
-                                        <select id="filterImporter" class="form-select form-select-sm">
+                                        <select id="filterImporter" class="form-select form-select-sm select2">
                                             <option value="" data-en="All Importers" data-bm="Semua Pengimport">All Importers</option>
                                         </select>
                                     </li>
