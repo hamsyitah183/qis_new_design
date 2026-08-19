@@ -516,12 +516,9 @@ class UserController extends Controller
                 if ($canRead) {
                     $actionHtml .=
                         '
-            <button class="btn btn-sm btn-primary viewInternalUser-modal"
-                    data-id="' .
-                        $user->uuid .
-                        '" title="View">
+            <a href="' . route('internal.internal.view', $user->uuid) . '" class="btn btn-sm btn-primary text-white" title="View">
                 <i class="ti ti-eye"></i>
-            </button>
+            </a>
         ';
                 }
 
@@ -575,6 +572,13 @@ class UserController extends Controller
         $user->update($validated);
 
         return response()->json(['success' => true, 'message' => 'User updated successfully']);
+    }
+
+    public function internal_user_view($id)
+    {
+        $user = InternalUser::with('roles')->where('uuid', $id)->firstOrFail();
+        $activities = $user->activities()->orderBy('created_at', 'desc')->get();
+        return view('pages.internal.user_management.view_internal', compact('user', 'activities'));
     }
 
     public function internal_user_data($id)
