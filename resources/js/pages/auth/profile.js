@@ -2,11 +2,14 @@ import $ from "jquery";
 import Swal from "sweetalert2";
 import { notifyUser } from "../../app";
 import select2 from "select2";
+
+import { userDocument } from "./listDocument.js";
 select2(window.jQuery);
 
 import "select2/dist/css/select2.min.css";
 
 let user = null;
+
 
 export async function loadProfile() {
     $(".uploadAgain").hide();
@@ -38,6 +41,8 @@ export async function loadProfile() {
 
         if (user.type === "public") {
             publicUserAddUpdate(user);
+
+            await userDocument(user);
         }
 
         initAddressDropdowns(user);
@@ -102,137 +107,137 @@ function fillTheData(user, type) {
         $(".ic").prop("readonly", true);
     }
 
-    if (type === "public") {
-        const approved = user.approved ?? {}; // ✅ Fallback to empty object
-        const attachments = user.attachments ?? []; // ✅ New: multiple documents
+    // if (type === "public") {
+    //     const approved = user.approved ?? {}; // ✅ Fallback to empty object
+    //     const attachments = user.attachments ?? []; // ✅ New: multiple documents
 
-        // 🔹 Handle DOA verification badge
-        let badgeVerification = `<span class="badge bg-dark-transparent ms-1" title="Not verified by DOA">
-                Not Verified by DOA
-            </span>`;
-        if (approved.doa_verified) {
-            badgeVerification = `
-            <span class="badge bg-success-transparent ms-1" title="Verified by DOA">
-                Verified by DOA
-            </span>`;
-        } else {
-            badgeVerification = `
-            <span class="badge bg-dark-transparent ms-1" title="Not verified by DOA">
-                Not Verified by DOA
-            </span>`;
-        }
+    //     // 🔹 Handle DOA verification badge
+    //     let badgeVerification = `<span class="badge bg-dark-transparent ms-1" title="Not verified by DOA">
+    //             Not Verified by DOA
+    //         </span>`;
+    //     if (approved.doa_verified) {
+    //         badgeVerification = `
+    //         <span class="badge bg-success-transparent ms-1" title="Verified by DOA">
+    //             Verified by DOA
+    //         </span>`;
+    //     } else {
+    //         badgeVerification = `
+    //         <span class="badge bg-dark-transparent ms-1" title="Not verified by DOA">
+    //             Not Verified by DOA
+    //         </span>`;
+    //     }
 
-        // 🔹 Handle attachments (now a list, one per document type)
-        const container = $("#imgLink");
-        container.empty();
+    //     // 🔹 Handle attachments (now a list, one per document type)
+    //     const container = $("#imgLink");
+    //     container.empty();
 
-        if (attachments.length > 0) {
-            attachments.forEach((attachment) => {
-                const fileUrl = attachment.file_path
-                    ? `/${attachment.file_path}`.replace("//", "/")
-                    : (attachment.file_url ?? null);
-                const ext = (attachment.original_file_name || fileUrl || "")
-                    .split(".")
-                    .pop()
-                    .toLowerCase();
-                const iconClass =
-                    ext === "pdf" ? "ti ti-file-type-pdf" : "ti ti-photo";
-                const validUntil = attachment.valid_until
-                    ? `<div class="text-muted fs-11">Valid until: ${formatTime(
-                          attachment.valid_until,
-                      )}</div>`
-                    : "";
+    //     if (attachments.length > 0) {
+    //         attachments.forEach((attachment) => {
+    //             const fileUrl = attachment.file_path
+    //                 ? `/${attachment.file_path}`.replace("//", "/")
+    //                 : (attachment.file_url ?? null);
+    //             const ext = (attachment.original_file_name || fileUrl || "")
+    //                 .split(".")
+    //                 .pop()
+    //                 .toLowerCase();
+    //             const iconClass =
+    //                 ext === "pdf" ? "ti ti-file-type-pdf" : "ti ti-photo";
+    //             const validUntil = attachment.valid_until
+    //                 ? `<div class="text-muted fs-11">Valid until: ${formatTime(
+    //                       attachment.valid_until,
+    //                   )}</div>`
+    //                 : "";
 
-                container.append(`
-                    <div class="attachment-list-item d-flex align-items-center gap-2 border rounded-3 p-2 mb-2">
-                        <i class="${iconClass} fs-20 text-primary flex-shrink-0"></i>
-                        <div class="flex-grow-1 min-w-0">
-                            <div class="fw-semibold fs-13 text-truncate">
-                                ${attachment.document_type ?? "Document"}
-                            </div>
-                            <div class="text-muted fs-11 text-truncate">
-                                ${attachment.original_file_name ?? ""}
-                            </div>
-                            ${validUntil}
-                        </div>
-                        ${
-                            fileUrl
-                                ? `<a href="${fileUrl}" target="_blank" rel="noopener" class="btn btn-sm btn-icon btn-primary-light flex-shrink-0" title="View">
-                                    <i class="ti ti-eye"></i>
-                                   </a>`
-                                : ""
-                        }
-                    </div>
-                `);
-            });
+    //             container.append(`
+    //                 <div class="attachment-list-item d-flex align-items-center gap-2 border rounded-3 p-2 mb-2">
+    //                     <i class="${iconClass} fs-20 text-primary flex-shrink-0"></i>
+    //                     <div class="flex-grow-1 min-w-0">
+    //                         <div class="fw-semibold fs-13 text-truncate">
+    //                             ${attachment.document_type ?? "Document"}
+    //                         </div>
+    //                         <div class="text-muted fs-11 text-truncate">
+    //                             ${attachment.original_file_name ?? ""}
+    //                         </div>
+    //                         ${validUntil}
+    //                     </div>
+    //                     ${
+    //                         fileUrl
+    //                             ? `<a href="${fileUrl}" target="_blank" rel="noopener" class="btn btn-sm btn-icon btn-primary-light flex-shrink-0" title="View">
+    //                                 <i class="ti ti-eye"></i>
+    //                                </a>`
+    //                             : ""
+    //                     }
+    //                 </div>
+    //             `);
+    //         });
 
-            $(".hasImage").css("display", "block");
-            $(".hasNoImage").css("display", "none");
+    //         $(".hasImage").css("display", "block");
+    //         $(".hasNoImage").css("display", "none");
 
-            if (approved.status?.toLowerCase().includes("rejected")) {
-                $(".rejectedBtn").html(`
-                    <div class = "btn btn-sm btn-warning uploadAgain">
-                        Upload Again
-                    </div>
-                `);
-            }
-        } else {
-            container.append("<p>No attachment uploaded yet.</p>");
-            $(".hasImage").css("display", "none");
-            $(".hasNoImage").css("display", "block");
-        }
+    //         if (approved.status?.toLowerCase().includes("rejected")) {
+    //             $(".rejectedBtn").html(`
+    //                 <div class = "btn btn-sm btn-warning uploadAgain">
+    //                     Upload Again
+    //                 </div>
+    //             `);
+    //         }
+    //     } else {
+    //         container.append("<p>No attachment uploaded yet.</p>");
+    //         $(".hasImage").css("display", "none");
+    //         $(".hasNoImage").css("display", "block");
+    //     }
 
-        // 🔹 Dates and approver info
-        $(".submittedVerification").text(
-            approved.updated_at ? formatTime(approved.updated_at) : "N/A",
-        );
+    //     // 🔹 Dates and approver info
+    //     $(".submittedVerification").text(
+    //         approved.updated_at ? formatTime(approved.updated_at) : "N/A",
+    //     );
 
-        $(".approvedBy").text(approved.approver?.fullname ?? "N/A");
+    //     $(".approvedBy").text(approved.approver?.fullname ?? "N/A");
 
-        $(".approvedDate").text(
-            approved.doa_approved_time
-                ? `on (${formatTime(approved.doa_approved_time)})`
-                : "",
-        );
+    //     $(".approvedDate").text(
+    //         approved.doa_approved_time
+    //             ? `on (${formatTime(approved.doa_approved_time)})`
+    //             : "",
+    //     );
 
-        // 🔹 Status display
-        let statusText = "";
-        let reason = "";
+    //     // 🔹 Status display
+    //     let statusText = "";
+    //     let reason = "";
 
-        if (approved.status?.toLowerCase().includes("waiting")) {
-            statusText = `
-            <div class="alert alert-warning" role="alert">
-                <i class="ti ti-alert-circle me-2 fs-16"></i>
-                ${approved.status}
-            </div>`;
-        } else if (approved.status?.toLowerCase().includes("approved")) {
-            statusText = `
-            <div class="alert alert-success" role="alert">
-                <i class="ti ti-rosette-discount-check me-2 fs-16"></i>
-                ${approved.status}
-            </div>`;
-        } else if (approved.status?.toLowerCase().includes("rejected")) {
-            statusText = `
-            <div class="alert alert-danger" role="alert">
-                <i class="ti ti-rosette-discount-x me-2 fs-16"></i>
-                ${approved.status}
-            </div>`;
+    //     if (approved.status?.toLowerCase().includes("waiting")) {
+    //         statusText = `
+    //         <div class="alert alert-warning" role="alert">
+    //             <i class="ti ti-alert-circle me-2 fs-16"></i>
+    //             ${approved.status}
+    //         </div>`;
+    //     } else if (approved.status?.toLowerCase().includes("approved")) {
+    //         statusText = `
+    //         <div class="alert alert-success" role="alert">
+    //             <i class="ti ti-rosette-discount-check me-2 fs-16"></i>
+    //             ${approved.status}
+    //         </div>`;
+    //     } else if (approved.status?.toLowerCase().includes("rejected")) {
+    //         statusText = `
+    //         <div class="alert alert-danger" role="alert">
+    //             <i class="ti ti-rosette-discount-x me-2 fs-16"></i>
+    //             ${approved.status}
+    //         </div>`;
 
-            reason = `
-                <div class = "me-2 mt-2 border rounded-3 p-3">
-                <span class = "fw-bold">Reason: </span>
-                <span class = "text-muted">${approved.reason}</span>
-               </div>`;
-        } else {
-            statusText = `
-            <div class="alert alert-secondary" role="alert">
-                No verification status available.
-            </div>`;
-        }
+    //         reason = `
+    //             <div class = "me-2 mt-2 border rounded-3 p-3">
+    //             <span class = "fw-bold">Reason: </span>
+    //             <span class = "text-muted">${approved.reason}</span>
+    //            </div>`;
+    //     } else {
+    //         statusText = `
+    //         <div class="alert alert-secondary" role="alert">
+    //             No verification status available.
+    //         </div>`;
+    //     }
 
-        $(".status").html(statusText);
-        $(".reason").html(reason);
-    }
+    //     $(".status").html(statusText);
+    //     $(".reason").html(reason);
+    // }
 
     $(".mainFullName").html(badgeVerification);
 }
@@ -592,11 +597,16 @@ export async function publicUserAddUpdate(user) {
     }, 100);
 }
 
+
+
+
 $(document).ready(function () {
     // load profile on page load
     loadProfile();
     editProfile();
     changePassword();
+
+    
 
     // State change event listener
     $(document).on("change", ".state", function () {

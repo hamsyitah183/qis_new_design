@@ -31,6 +31,7 @@ if (!function_exists('authUser')) {
                 'approved.approver',
                 'approved.userAttachments',
                 'approved.verificationAttachments',
+                'attachments'
             ]);
 
             return [

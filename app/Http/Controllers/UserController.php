@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use App\Models\State;
 use App\Models\District;
+use App\Models\DocumentRequirement;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Str;
 use App\Events\PublicUserEvent;
@@ -736,9 +737,14 @@ class UserController extends Controller
 
         // $permissions = $user->getAllPermissions(); // returns a collection of Permission models
 
+        $documents = DocumentRequirement::where('is_active', true)
+            ->where('module', 'user')
+            ->get();
+
         return view('pages.authentication.profile', [
             'title' => 'Profile',
             'states' => State::all(),
+            'documents' => $documents,
         ]);
     }
 

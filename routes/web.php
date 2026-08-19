@@ -33,6 +33,8 @@ use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
 
+ Route::get('/documents/data', [DocumentController::class, 'documentsList']);
+
 // Guest routes (Unauthenticated users)
 Route::middleware(['multi.guest'])->group(function () {
     Route::get('/login', [AuthenticationController::class, 'login2'])->name('login');
@@ -45,7 +47,7 @@ Route::middleware(['multi.guest'])->group(function () {
     Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
 
       // list of documents
-    Route::get('/documents/data', [DocumentController::class, 'documentsList']);
+   
 });
 
 // Password Reset Routes (Token verification)

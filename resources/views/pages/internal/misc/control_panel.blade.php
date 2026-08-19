@@ -19,7 +19,7 @@
                         <li class="nav-item me-0" role="presentation">
                             <a class="nav-link" data-bs-toggle="tab" role="tab" aria-current="page" href="#email-settings"
                                 aria-selected="false" tabindex="-1"><i
-                                    class="ri-map-pin-line me-2 align-middle fs-14 lh-1 text-primary"></i><span data-en="District Entry" data-bm="Kemasukan Daerah">District Entry</span></a>
+                                    class="ri-map-pin-line me-2 align-middle fs-14 lh-1 text-primary"></i><span data-en="District Entry" data-bm="Pintu Masuk">District Entry</span></a>
                         </li>
 
                         <li class="nav-item me-0" role="presentation">

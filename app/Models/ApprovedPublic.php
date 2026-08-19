@@ -32,8 +32,7 @@ class ApprovedPublic extends Model
     }
 
     /**
-     * Get all attachments of the user via the PublicUser relation.
-     * This is a hasManyThrough shortcut.
+     * Get only identification document attachments for the user via the PublicUser relation.
      */
     public function userAttachments()
     {
@@ -44,21 +43,20 @@ class ApprovedPublic extends Model
             'user_id',       // foreign key on UserAttachment
             'user_id',       // local key on ApprovedPublic
             'uuid'           // local key on PublicUser
-        );
+        )
+        ->where('document_type', 'Identification Documents (IC / Passport)');
     }
 
     // --------------------------------------------------------------
-    // Accessor that replaces the old 'verification_attachment' column
+    // Accessor that returns the latest verification attachment
     // --------------------------------------------------------------
 
     /**
-     * Get the latest verification attachment for the user,
-     * or null if none exists.
+     * Get the latest identification document attachment for the user.
      */
     public function verificationAttachments()
     {
         return $this->userAttachments()
-            ->where('document_type', 'Identification Documents (IC / Passport)')
             ->latest('created_at');
     }
 }

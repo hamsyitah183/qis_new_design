@@ -200,7 +200,7 @@ async function loadPostcodes(districtId) {
 }
 
 // ---- Document file upload (per document ID) with preview ----
-function fileUpload(docId) {
+export function fileUpload(docId) {
     console.log(`🔧 Initializing fileUpload for doc ${docId}`);
 
     const dropArea = document.querySelector(

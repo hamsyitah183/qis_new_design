@@ -19,8 +19,8 @@
                         data-bs-target="#edit-verification-tab-pane" type="button" role="tab"
                         aria-controls="edit-verification-tab-pane" aria-selected="false" tabindex="-1">
                         <span data-en="Verification" data-bm="Senarai Dokumen">List Documents</span>
-                       
-                        @if (authUser()['user']->approved?->verification_attachment == null)
+                      
+                        @if (authUser()['user']->attachments->isEmpty())
                             <i class="ri-alert-line text-warning ms-1"></i>
                         @endif
                     </button>

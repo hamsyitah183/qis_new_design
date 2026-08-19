@@ -46,7 +46,7 @@
             <div class="card custom-card">
 
                 <div class="card-header">
-                    <div class="card-title" data-en="Boundary Officer List" data-bm="Senarai Pegawai Sempadan">Boundary Officer List</div>
+                    {{-- <div class="card-title" data-en="Boundary Officer List" data-bm="Senarai Pegawai Sempadan">Boundary Officer List</div> --}}
                     <div class="ms-auto d-flex gap-2 align-items-center">
 
                         <button class="btn btn-sm btn-primary filter dropdown-toggle" type="button"
@@ -59,11 +59,11 @@
                         <ul class="dropdown-menu p-3 filter-dropdown" aria-labelledby="boundaryFilterDropdown">
 
                             {{-- Name Search --}}
-                            <li class="mb-2">
+                            {{-- <li class="mb-2">
                                 <label class="form-label fw-semibold mb-1" data-en="Name" data-bm="Nama">Name</label>
                                 <input type="text" class="form-control form-control-sm" id="filterBoundaryName"
                                     placeholder="Search by name..." data-en="Search by name..." data-bm="Cari dengan nama..." data-i18n-attr="placeholder">
-                            </li>
+                            </li> --}}
 
                             {{-- Place --}}
                             <li class="mb-2">

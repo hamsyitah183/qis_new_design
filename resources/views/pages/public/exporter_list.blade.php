@@ -58,11 +58,11 @@
                         <ul class="dropdown-menu p-3 filter-dropdown" aria-labelledby="exporterFilterDropdown">
 
                             {{-- Name Search --}}
-                            <li class="mb-2">
+                            {{-- <li class="mb-2">
                                 <label class="form-label fw-semibold mb-1" data-en="Exporter Name" data-bm="Nama Pengeksport">Exporter Name</label>
                                 <input type="text" class="form-control form-control-sm" id="filterExporterName"
                                     placeholder="Search by name..." data-en="Search by name..." data-bm="Cari dengan nama..." data-i18n-attr="placeholder">
-                            </li>
+                            </li> --}}
 
                             {{-- Country --}}
                             <li class="mb-2">

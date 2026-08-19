@@ -4,7 +4,7 @@
             <div class="col-xxl-11">
                 <div class="card custom-card shadow-none mb-0">
                     <div class="card-header justify-content-between d-sm-flex d-block">
-                        <div class="card-title" data-en="District Entry" data-bm="Kemasukan Daerah">District Entry</div>
+                        <div class="card-title" data-en="District Entry" data-bm="Pintu Masuk">District Entry</div>
                         <div class="mt-sm-0 mt-2">
                             <button class="btn btn-sm btn-primary" onclick="addmodal('entry')" data-type = "entry"><i
                                     class="ri-add-line me-1"></i> <span data-en="Add Entry Point" data-bm="Tambah Titik Masuk">Add Entry Point</span></button>
