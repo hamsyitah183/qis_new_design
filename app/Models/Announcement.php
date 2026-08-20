@@ -22,4 +22,12 @@ class Announcement extends Model
     {
         return $this->belongsTo(InternalUser::class, 'released_by', 'uuid');
     }
+
+    /**
+     * Get the attachments for the announcement.
+     */
+    public function attachments()
+    {
+        return $this->hasMany(AnnouncementAttachment::class, 'announcement_id', 'id');
+    }
 }

@@ -87,7 +87,17 @@
                     <div class="border rounded" style="min-height: 150px; background-color: var(--bs-body-bg);">
                         <div id="content-editor" style="min-height: 150px; border: none;"></div>
                     </div>
-                    <input type="hidden" name="content" id="content-input">
+                </div>
+
+                <div class="col-xl-12">
+                    <label class="form-label" data-en="Attachments (Images Only)" data-bm="Lampiran (Gambar Sahaja)">Attachments (Images Only)</label>
+                    <input type="file" class="form-control" id="attachments" name="attachments[]" multiple accept="image/*">
+                    
+                    <!-- Preview new attachments (add mode) -->
+                    <div id="new-attachments-preview" class="mt-2 d-flex flex-wrap gap-2"></div>
+
+                    <!-- Existing attachments preview (edit mode) -->
+                    <div id="existing-attachments" class="mt-3 d-flex flex-wrap gap-2"></div>
                 </div>
             </div>
         </form>
@@ -107,6 +117,10 @@
                 <div class="border-top pt-3">
                     <div id="view_content" class="mt-2 text-wrap" style="word-break: break-word;"></div>
                 </div>
+            </div>
+            <div class="col-xl-12 border-top pt-3" id="view_attachments_container" style="display: none;">
+                <h6 class="fw-bold mb-2" data-en="Attachments" data-bm="Lampiran">Attachments</h6>
+                <div id="view_attachments" class="d-flex flex-wrap gap-2"></div>
             </div>
         </div>
         <x-slot name="footer">

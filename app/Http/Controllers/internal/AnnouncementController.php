@@ -4,7 +4,9 @@ namespace App\Http\Controllers\internal;
 
 use App\Http\Controllers\Controller;
 use App\Models\Announcement;
+use App\Models\AnnouncementAttachment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 
 class AnnouncementController extends Controller
@@ -27,7 +29,7 @@ class AnnouncementController extends Controller
 
     public function show($id)
     {
-        $announcement = Announcement::findOrFail($id);
+        $announcement = Announcement::with('attachments')->findOrFail($id);
         return response()->json($announcement);
     }
 
@@ -40,7 +42,7 @@ class AnnouncementController extends Controller
             'valid_until' => 'nullable|date|after_or_equal:valid_from',
         ]);
 
-        Announcement::create([
+        $announcement = Announcement::create([
             'title' => $request->title,
             'content' => $request->content,
             'released_by' => auth('internal')->user()->uuid,
@@ -49,7 +51,7 @@ class AnnouncementController extends Controller
             'is_active' => $request->has('is_active') ? true : false,
         ]);
 
-        return response()->json(['status' => 'success', 'message' => 'Announcement created successfully.']);
+        return response()->json(['status' => 'success', 'message' => 'Announcement created successfully.', 'id' => $announcement->id]);
     }
 
     public function update(Request $request, $id)
@@ -71,7 +73,7 @@ class AnnouncementController extends Controller
             'is_active' => $request->has('is_active') ? true : false,
         ]);
 
-        return response()->json(['status' => 'success', 'message' => 'Announcement updated successfully.']);
+        return response()->json(['status' => 'success', 'message' => 'Announcement updated successfully.', 'id' => $announcement->id]);
     }
 
     public function destroy($id)
@@ -89,5 +91,52 @@ class AnnouncementController extends Controller
         $announcement->save();
 
         return response()->json(['status' => 'success', 'message' => 'Status updated successfully.']);
+    }
+
+    // --- Attachment Methods ---
+
+    public function getAttachments($id)
+    {
+        $attachments = AnnouncementAttachment::where('announcement_id', $id)->get();
+        return response()->json($attachments);
+    }
+
+    public function uploadAttachment(Request $request, $id)
+    {
+        $request->validate([
+            'attachments.*' => 'required|image',
+        ]);
+
+        $announcement = Announcement::findOrFail($id);
+
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $filePath = $file->storeAs('announcements/' . $announcement->id, $fileName, 'public');
+
+                AnnouncementAttachment::create([
+                    'announcement_id' => $announcement->id,
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => $filePath,
+                    'file_type' => $file->getMimeType(),
+                    'uploaded_by' => auth('internal')->user()->uuid,
+                ]);
+            }
+        }
+
+        return response()->json(['status' => 'success', 'message' => 'Attachments uploaded successfully.']);
+    }
+
+    public function deleteAttachment($attachmentId)
+    {
+        $attachment = AnnouncementAttachment::findOrFail($attachmentId);
+        
+        if (Storage::exists('public/' . $attachment->file_path)) {
+            Storage::delete('public/' . $attachment->file_path);
+        }
+        
+        $attachment->delete();
+
+        return response()->json(['status' => 'success', 'message' => 'Attachment deleted successfully.']);
     }
 }

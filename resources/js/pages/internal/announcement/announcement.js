@@ -95,6 +95,21 @@ $(document).ready(function () {
             $('#view_dates').text(dates);
             $('#view_content').html(data.content);
             
+            if (data.attachments && data.attachments.length > 0) {
+                $('#view_attachments_container').show();
+                $('#view_attachments').empty();
+                data.attachments.forEach(function(att) {
+                    $('#view_attachments').append(`
+                        <a href="/storage/${att.file_path}" target="_blank" class="border rounded p-1">
+                            <img src="/storage/${att.file_path}" style="max-height: 100px; max-width: 100px; object-fit: cover;" alt="${att.file_name}" title="${att.file_name}">
+                        </a>
+                    `);
+                });
+            } else {
+                $('#view_attachments_container').hide();
+                $('#view_attachments').empty();
+            }
+            
             const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('viewAnnouncementModal'));
             modal.show();
         }).fail(function() {
@@ -108,6 +123,9 @@ $(document).ready(function () {
         $('#announcement_id').val('');
         quill.root.innerHTML = '';
         $('#is_active').prop('checked', true);
+        $('#existing-attachments').empty();
+        $('#new-attachments-preview').empty();
+        $('#attachments').val('');
         
         $('#announcementModalLabel').text('Add Announcement');
         const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('announcementModal'));
@@ -127,11 +145,74 @@ $(document).ready(function () {
             $('#is_active').prop('checked', data.is_active);
             quill.root.innerHTML = data.content;
             
+            // Fetch and show attachments
+            $('#existing-attachments').empty();
+            $('#new-attachments-preview').empty();
+            $('#attachments').val('');
+            $.get(`${window.baseUrl}/internal/announcements/${id}/attachments`, function (attachments) {
+                attachments.forEach(function(att) {
+                    $('#existing-attachments').append(`
+                        <div class="position-relative border rounded p-1 attachment-item" data-id="${att.id}">
+                            <img src="/storage/${att.file_path}" style="max-height: 80px; max-width: 80px; object-fit: cover;" alt="${att.file_name}">
+                            <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 translate-middle rounded-circle py-0 px-1 btn-delete-attachment" data-id="${att.id}" style="font-size: 10px;">
+                                <i class="ti ti-x"></i>
+                            </button>
+                        </div>
+                    `);
+                });
+            });
+            
             $('#announcementModalLabel').text('Edit Announcement');
             const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('announcementModal'));
             modal.show();
         }).fail(function() {
             Swal.fire('Error', 'Failed to fetch announcement details', 'error');
+        });
+    });
+
+    // Handle New Attachment Previews
+    $('#attachments').on('change', function() {
+        $('#new-attachments-preview').empty();
+        const files = this.files;
+        if (files) {
+            Array.from(files).forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        $('#new-attachments-preview').append(`
+                            <div class="position-relative border rounded p-1">
+                                <img src="${e.target.result}" style="max-height: 80px; max-width: 80px; object-fit: cover;" alt="${file.name}" title="${file.name}">
+                            </div>
+                        `);
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    });
+
+    // Handle Delete Attachment
+    $('#existing-attachments').on('click', '.btn-delete-attachment', function(e) {
+        e.preventDefault();
+        const id = $(this).data('id');
+        const container = $(this).closest('.attachment-item');
+        
+        Swal.fire({
+            title: 'Delete image?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `${window.baseUrl}/internal/announcements/attachments/${id}`,
+                    type: 'DELETE',
+                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                    success: function() {
+                        container.remove();
+                    }
+                });
+            }
         });
     });
 
@@ -151,7 +232,7 @@ $(document).ready(function () {
             Swal.fire('Error', 'Content is required', 'error');
             return;
         }
-
+        
         const valid_from = $('#valid_from').val();
         const valid_until = $('#valid_until').val();
         
@@ -186,9 +267,34 @@ $(document).ready(function () {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             },
             success: function (response) {
-                bootstrap.Modal.getInstance(document.getElementById('announcementModal')).hide();
-                Swal.fire('Success!', response.message, 'success');
-                table.ajax.reload();
+                const announcementId = response.id;
+                
+                // Upload files if any
+                const fileInput = document.getElementById('attachments');
+                if (fileInput.files.length > 0) {
+                    const uploadData = new FormData();
+                    for (let i = 0; i < fileInput.files.length; i++) {
+                        uploadData.append('attachments[]', fileInput.files[i]);
+                    }
+                    
+                    $.ajax({
+                        url: `${window.baseUrl}/internal/announcements/${announcementId}/attachments`,
+                        type: 'POST',
+                        data: uploadData,
+                        processData: false,
+                        contentType: false,
+                        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                        success: function() {
+                            bootstrap.Modal.getInstance(document.getElementById('announcementModal')).hide();
+                            Swal.fire('Success!', response.message, 'success');
+                            table.ajax.reload();
+                        }
+                    });
+                } else {
+                    bootstrap.Modal.getInstance(document.getElementById('announcementModal')).hide();
+                    Swal.fire('Success!', response.message, 'success');
+                    table.ajax.reload();
+                }
             },
             error: function (xhr) {
                 let errorMsg = 'Something went wrong';

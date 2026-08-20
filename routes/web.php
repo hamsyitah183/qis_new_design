@@ -251,6 +251,9 @@ Route::prefix('internal')
         Route::post('/announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
         Route::put('/announcements/{id}', [AnnouncementController::class, 'update'])->name('announcements.update');
         Route::delete('/announcements/{id}', [AnnouncementController::class, 'destroy'])->name('announcements.destroy');
+        Route::get('/announcements/{id}/attachments', [AnnouncementController::class, 'getAttachments'])->name('announcements.attachments.get');
+        Route::post('/announcements/{id}/attachments', [AnnouncementController::class, 'uploadAttachment'])->name('announcements.attachments.upload');
+        Route::delete('/announcements/attachments/{attachmentId}', [AnnouncementController::class, 'deleteAttachment'])->name('announcements.attachments.delete');
         Route::post('/announcements/{id}/toggle', [AnnouncementController::class, 'toggleActive'])->name('announcements.toggle');
 
         // ======================= inspection certificates ========================
