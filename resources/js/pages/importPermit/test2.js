@@ -276,6 +276,7 @@ export function openPermitDetail(permitNumber) {
     } else {
         timelineEl.innerHTML = log
             .map((entry) => {
+                console.log('Rendering activity entry:', entry);
                 const stageCfg =
                     STAGE_CONFIG[entry.stage] || STAGE_CONFIG.email;
                 return `

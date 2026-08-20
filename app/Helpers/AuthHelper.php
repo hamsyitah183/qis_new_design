@@ -19,7 +19,7 @@ if (!function_exists('authUser')) {
                 'guard'       => 'internal',
                 'user'        => $user,
                 'roles'       => $user->getRoleNames(),              // Collection (many roles)
-                // 'permissions' => $user->getAllPermissions()
+                'permissions' => $user->getAllPermissions()
                 //     ->pluck('name'),                                // Optional
             ];
         }

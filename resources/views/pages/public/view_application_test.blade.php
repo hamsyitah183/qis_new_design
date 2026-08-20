@@ -161,10 +161,12 @@
                 </div>
 
                 <div class="ipv-action-row">
+                    @can('print permit')
                     <button type="button" class="ipv-btn-primary" id="ipvPrintPermitBtn">
                         <i class="bi bi-printer"></i> <span data-en="Print Permit" data-bm="Cetak Permit">Print
                             Permit</span>
                     </button>
+                    @endcan
                     <span class="ipv-download-badge" id="ipvDownloadBadge" title="Permits downloaded">
                         <i class="bi bi-download"></i> 0
                     </span>
@@ -201,9 +203,7 @@
                             <div class="ipv-cal-legend" id="ipvScheduleLegend"></div>
                         </div>
                     </div>
-                    <button type="button" class="ipv-icon-btn" id="applicationModal" title="Application Log">
-                        <i class="bi bi-clock-history"></i>
-                    </button>
+                   
                 </div>
 
                 <div class="ipv-value-box">

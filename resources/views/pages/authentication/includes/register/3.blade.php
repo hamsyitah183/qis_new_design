@@ -190,40 +190,6 @@
         flex-shrink: 0;
     }
 
-    .file-list-item .file-view-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        border: 1px solid var(--default-border);
-        background: transparent;
-        color: rgb(var(--primary-rgb));
-        font-size: 12px;
-        font-weight: 500;
-        text-decoration: none;
-        border-radius: 6px;
-        padding: 4px 8px;
-        white-space: nowrap;
-    }
-
-    .file-list-item .file-view-btn:hover {
-        background: rgba(var(--primary-rgb), .08);
-    }
-
-    .file-list-item .file-remove {
-        border: none;
-        background: transparent;
-        color: var(--text-muted);
-        font-size: 18px;
-        line-height: 1;
-        cursor: pointer;
-        padding: 2px 6px;
-        flex-shrink: 0;
-    }
-
-    .file-list-item .file-remove:hover {
-        color: var(--danger-color, #fb4242);
-    }
-
     .file-list-item.existing-file i {
         color: var(--success-color, #1ec379);
     }

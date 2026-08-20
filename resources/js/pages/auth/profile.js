@@ -11,12 +11,24 @@ import "select2/dist/css/select2.min.css";
 let user = null;
 
 
+// ---- Separate fetch function ----
+export async function fetchUserData() {
+    const response = await $.ajax({
+        url: `/data`,
+        type: "GET",
+        headers: {
+            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+        },
+    });
+    return response; // { user: {...}, type: 'public'|'internal' }
+}
+
+// ---- Updated loadProfile ----
 export async function loadProfile() {
     $(".uploadAgain").hide();
     console.log("call the load profile function");
-    const allInputs = document.querySelectorAll(
-        "input, select, button, textarea",
-    );
+    
+    const allInputs = document.querySelectorAll("input, select, button, textarea");
     allInputs.forEach((el) => (el.disabled = true));
 
     Swal.fire({
@@ -27,21 +39,14 @@ export async function loadProfile() {
     });
 
     try {
-        const response = await $.ajax({
-            url: `/data`,
-            type: "GET",
-            headers: {
-                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
-            },
-        });
+        const response = await fetchUserData(); 
 
-        user = response.user; // important: populate global user
+        user = response.user;
         user["type"] = response.type;
         fillTheData(user, response.type);
 
         if (user.type === "public") {
             publicUserAddUpdate(user);
-
             await userDocument(user);
         }
 

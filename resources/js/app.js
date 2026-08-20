@@ -33,7 +33,7 @@ export function getAuthUser() {
 }
 
 const user = getAuthUser();
-console.log("user", user);
+
 
 if (user) {
     if (user.type === "internal") {

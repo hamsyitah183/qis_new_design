@@ -35,19 +35,24 @@ class VerificationService
 
                     // Generate a unique filename
                     $filename = time() . '_' . Str::random(6) . '_' . $file->getClientOriginalName();
-                    $path = 'public/user_attachments/' . $filename; // Storage path
-
+                    
+                    // Relative path on the 'public' disk (under user_attachments/)
+                    $relativePath = 'user_attachments/' . $filename;
+                    
                     // Store the file
-                    $stored = Storage::put($path, file_get_contents($file));
+                    $stored = Storage::disk('public')->put($relativePath, file_get_contents($file));
                     if (!$stored) {
                         throw new \Exception("Failed to store file: {$file->getClientOriginalName()}");
                     }
 
-                    // Create database record
+                    // Build the public URL path (starts with /storage/ because of the symbolic link)
+                    $publicPath = '/storage/' . $relativePath;
+
+                    // Create database record with the full public path
                     $attachment = UserAttachment::create([
                         'user_id' => $userId,
                         'document_type' => $docType,
-                        'file_path' => Storage::url($path), // or 'storage/user_attachments/' . $filename
+                        'file_path' => $publicPath,   // e.g. '/storage/user_attachments/123456_abc_file.pdf'
                         'file_type' => $file->getClientMimeType(),
                         'file_size' => $file->getSize(),
                         'original_file_name' => $file->getClientOriginalName(),

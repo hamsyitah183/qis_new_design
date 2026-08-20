@@ -33,7 +33,7 @@
         <div class="col-xl-12">
             <div class="card custom-card">
                 <div class="card-header">
-                    <div class="card-title" data-en="Importer List" data-bm="Senarai Pengimport">Importer List</div>
+                    {{-- <div class="card-title" data-en="Importer List" data-bm="Senarai Pengimport">Importer List</div> --}}
                     <div class="ms-auto d-flex gap-2 align-items-center">
 
                         <button class="btn btn-sm btn-primary filter dropdown-toggle" type="button"

@@ -27,6 +27,7 @@ use App\Http\Controllers\ConsignmentMiscController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\VehicleController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Broadcast;
@@ -167,6 +168,9 @@ Route::prefix('public')
         Route::get('/inspection_certificates_application_others/{id?}', [InspectionController::class, 'getInspectionOthers'])->name('inspectionApplicationOthers');
         Route::post('/save-inspection/{id}', [InspectionController::class, 'reapply']);
 
+        Route::get('/vehicle/data', [VehicleController::class, 'getVehicleList']);
+        Route::post('/store_vehicle', [VehicleController::class, 'storeVehicle'])->name('storeVehicle');
+
         // ==================== Filter API Endpoints ====================
         Route::get('/api/filters/my-exporters', [FilterController::class, 'getMyExporters'])->name('api.filters.myExporters');
         Route::get('/api/filters/my-importers', [FilterController::class, 'getMyImporters'])->name('api.filters.myImporters');
@@ -228,6 +232,7 @@ Route::prefix('internal')
         Route::get('/exporter_list/data', [ApplicationController::class, 'getInternalExporterListData'])->name('exporter.list.data');
         Route::get('/importer_list', [ApplicationController::class, 'showInternalImporterList'])->name('importer.list');
         Route::get('/importer_list/data', [ApplicationController::class, 'getInternalImporterListData'])->name('importer.list.data');
+        
 
         // ======================= inspection certificates ========================
         Route::get('/inspection_certificates_list', [InspectionController::class, 'showAllInspectionList'])->name('inspection.list');

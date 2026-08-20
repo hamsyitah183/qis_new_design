@@ -244,10 +244,7 @@
             <div class="auth-card-form">
                 <div class="auth-form-inner">
 
-                    <div class="d-flex d-lg-none justify-content-center align-items-center p-1 flex-column mb-2">
-                        <h4 class="text-center" data-en="Verify Email" data-bm="Sahkan E-mel">Verify Email</h4>
-                    </div>
-
+                    
                     <div class="text-center">
                         <div class="avatar-md mx-auto">
                             <div class="avatar-title">

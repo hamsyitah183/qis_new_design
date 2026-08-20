@@ -125,7 +125,8 @@
 
                 <div class="p-3 empty-header-item1 border-top">
                     <div class="d-grid">
-                        <a href="/notifications" class="btn btn-primary btn-wave waves-effect waves-light" data-en="View All" data-bm="Lihat Semua">View
+                        <a href="/notifications" class="btn btn-primary btn-wave waves-effect waves-light"
+                            data-en="View All" data-bm="Lihat Semua">View
                             All</a>
                     </div>
                 </div>
@@ -134,7 +135,8 @@
                         <span class="avatar avatar-xl avatar-rounded bg-secondary-transparent">
                             <i class="ri-notification-off-line fs-2"></i>
                         </span>
-                        <h6 class="fw-medium mt-3" data-en="No New Notifications" data-bm="Tiada Notifikasi Baru">No New Notifications</h6>
+                        <h6 class="fw-medium mt-3" data-en="No New Notifications" data-bm="Tiada Notifikasi Baru">No
+                            New Notifications</h6>
                     </div>
                 </div>
             </div>
@@ -205,12 +207,21 @@
                 </li>
 
                 <li class="p-4 p-md-0">
+                    <a type="button" id="" href="/profile"
+                        class="dropdown-item d-flex align-items-center text-start w-100 py-2.5">
+                        <i class="ti ti-user p-1 rounded-circle bg-primary-transparent me-2 fs-16"></i>
+                        <span data-en="Profile" data-bm="Profil">Profile</span>
+                    </a>
+                </li>
+
+                <li class="p-4 p-md-0">
                     <a type="button" id="logoutButton" href="{{ route('logout') }}"
                         class="dropdown-item d-flex align-items-center text-start w-100 py-2.5">
                         <i class="ti ti-lock p-1 rounded-circle bg-primary-transparent me-2 fs-16"></i>
                         <span data-en="Log Out" data-bm="Log Keluar">Log Out</span>
                     </a>
                 </li>
+
             </ul>
         </li>
         <!-- End::header-element -->
@@ -268,7 +279,9 @@
                     }
 
                     // Dispatch event for JS components to re-render
-                    window.dispatchEvent(new CustomEvent("lang-changed", { detail: lang }));
+                    window.dispatchEvent(new CustomEvent("lang-changed", {
+                        detail: lang
+                    }));
                 }
 
                 buttons.forEach(function(btn) {

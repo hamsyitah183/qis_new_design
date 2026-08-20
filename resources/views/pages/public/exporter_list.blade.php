@@ -130,8 +130,9 @@
             {{-- Address --}}
             <div class="mb-3">
                 <label for="addexpaddress" class="form-label" data-en="Address" data-bm="Alamat">Address</label>
-                <input type="text" id="addexpaddress1" name="addexpaddress1" class="form-control mb-2">
-                <input type="text" id="addexpaddress2" name="addexpaddress2" class="form-control">
+                {{-- <input type="text" id="addexpaddress1" name="addexpaddress1" class="form-control mb-2"> --}}
+                <textarea id="addexpaddress1" name="addexpaddress1" class="form-control" rows="3" ></textarea>
+                {{-- <input type="text" id="addexpaddress2" name="addexpaddress2" class="form-control"> --}}
             </div>
 
             {{-- Country --}}

@@ -9,6 +9,7 @@ import { buildScheduleEvents, initScheduleCalendar } from "./test3";
 import $ from "jquery";
 import Swal from "sweetalert2";
 import { applyTranslations } from "../../app"; // <-- added
+import { loadProfile } from "../auth/profile";
 
 // ---------------------------------------------------------------
 // Config — label + color lookups. Color keys map to
@@ -71,12 +72,38 @@ function getLang() {
 // ---------------------------------------------------------------
 // Live data — populated by loadApplicationData(). Renderer functions
 // below read from these, same as the old dummy version.
+// userData is populated once by loadProfile() in init() and is now the
+// single source of truth for "who is the current user" — nothing in
+// this file reads window.authUser anymore.
 // ---------------------------------------------------------------
 
 let APPLICATION = {};
 let PERMITS = [];
 let ACTIVITY_LOG = [];
 let RAW_ACTIVITY_LOG = [];
+let userData = null;
+
+// ---------------------------------------------------------------
+// Current-user helpers — normalize userData (from loadProfile()) into
+// the shapes the render functions need, in one place.
+// ---------------------------------------------------------------
+
+function getCurrentUserRoles() {
+    if (!userData) return [];
+    if (Array.isArray(userData.roles)) {
+        // roles could be an array of strings or an array of { name } objects
+        return userData.roles
+            .map((r) => (typeof r === 'string' ? r : r?.name))
+            .filter(Boolean);
+    }
+    if (typeof userData.role === 'string') return [userData.role];
+    return [];
+}
+
+function getCurrentUserType() {
+    // profile.js sets user["type"] = response.type ('public' | 'internal')
+    return userData?.type || null;
+}
 
 // ---------------------------------------------------------------
 // Fetch + map real data
@@ -732,9 +759,12 @@ function renderTransportDetails() {
 function permitActionsHtml(permit) {
     const status = permit.status;
     const applicationStatus = (APPLICATION.status || '').toLowerCase();
-    const roles = (window.authUser?.roles || []).map((r) => r.name);
+
+    // Read the current user from userData (populated by loadProfile() in
+    // init()) instead of window.authUser.
+    const roles = getCurrentUserRoles();
     const isStaff = roles.includes('admin') || roles.includes('officer') || roles.includes('superadmin');
-    const type = window.authUser?.type;
+    const type = getCurrentUserType();
     const isOwner = type === 'public';
     const lang = getLang();
 
@@ -994,7 +1024,8 @@ function renderPaymentAwarenessBanner() {
     const el = document.getElementById('ipvPaymentBanner');
     if (!wrap || !el) return;
 
-    const isOwner = window.authUser?.type === 'public';
+    // Read from userData (loadProfile()) instead of window.authUser.
+    const isOwner = getCurrentUserType() === 'public';
     const pending = PERMITS.filter((p) => ['pending for payment', 'payment failed'].includes(p.status));
     const lang = getLang();
 
@@ -1095,6 +1126,7 @@ function renderActivityTimeline() {
     }
     const lang = getLang();
     el.innerHTML = ACTIVITY_LOG.map((entry) => {
+        console.log('Rendering activity entry:', entry);
         const cfg = STAGE_CONFIG[entry.stage] || STAGE_CONFIG.email;
         const title = cfg[lang] || cfg.en;
         return `
@@ -1384,6 +1416,17 @@ async function init() {
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading()
     });
+
+    // userData is the single source of truth for "who is the current
+    // user" throughout this file — permitActionsHtml() and
+    // renderPaymentAwarenessBanner() read it via getCurrentUserRoles() /
+    // getCurrentUserType() instead of window.authUser.
+    userData = await loadProfile();
+    console.log('await', userData);
+
+    if (!userData) {
+        console.warn('init: profile failed to load — role/owner-based UI (permit action buttons, payment banner) will be hidden.');
+    }
 
     await loadApplicationData();
     await renderAll();

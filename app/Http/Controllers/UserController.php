@@ -217,54 +217,56 @@ class UserController extends Controller
 
     public function verification_list_data(Request $request)
     {
-
         Gate::authorize('approve public user');
 
-        $query = PublicUser::whereHas('approved', function ($query) {
-            $query->whereNotNull('verification_attachment')->where('doa_verified', '!=', 1)->where('status', '!=', 'Verification is rejected');
-        })->with('approved');
+        $query = ApprovedPublic::with('publicUser')
+            ->where('doa_verified', '!=', 1)
+            ->where('status', '!=', 'Verification is rejected')
+            ->whereHas('userAttachments'); // only those with at least one identification document
 
-        // Name search (Public user fullname)
+        // Search by public user fullname
         if ($request->filled('name')) {
             $name = $request->input('name');
-            $query->where('fullname', 'like', '%' . $name . '%');
+            $query->whereHas('publicUser', function ($q) use ($name) {
+                $q->where('fullname', 'like', '%' . $name . '%');
+            });
         }
 
-        // Date range filter based on verification record timestamps
+        // Date range filter on the approval record itself
         if ($request->filled('start_date')) {
             $startDate = $request->input('start_date');
-            $query->whereHas('approved', function ($q) use ($startDate) {
-                $q->whereDate('created_at', '>=', $startDate);
-            });
+            $query->whereDate('created_at', '>=', $startDate);
         }
 
         if ($request->filled('end_date')) {
             $endDate = $request->input('end_date');
-            $query->whereHas('approved', function ($q) use ($endDate) {
-                $q->whereDate('created_at', '<=', $endDate);
-            });
+            $query->whereDate('created_at', '<=', $endDate);
         }
 
         \Log::info('Verification List Data Query Result Count: ' . $query->count());
 
         return DataTables::of($query)
-            ->addColumn('verification_attachment', function ($user) {
-                if ($user->approved && $user->approved->verification_attachment) {
-                    return '<button class="btn btn-sm btn-info view-attachment" data-id="' . $user->uuid . '"><i class="ti ti-file-description"></i> View Attachment</button>';
+            ->addColumn('fullname', function ($approved) {
+                return $approved->publicUser->fullname ?? '';
+            })
+            ->addColumn('email', function ($approved) {
+                return $approved->publicUser->email ?? '';
+            })
+            ->addColumn('verification_attachment', function ($approved) {
+                // Get the latest attachment for this user (already filtered to identification documents)
+                $attachment = $approved->userAttachments()->latest()->first();
+                if ($attachment) {
+                    return '<button class="btn btn-sm btn-info view-attachment" data-id="' . $approved->user_id . '"><i class="ti ti-file-description"></i> View Attachment</button>';
                 }
                 return '-';
             })
-            ->addColumn('action', function ($user) {
+            ->addColumn('action', function ($approved) {
                 return '
-                    <div class="d-flex gap-2">
-                         <button class="btn btn-sm btn-success accept-btn" data-id="' .
-                    $user->uuid .
-                    '">Accept</button>
-                         <button class="btn btn-sm btn-danger reject-btn" data-id="' .
-                    $user->uuid .
-                    '">Reject</button>
-                    </div>
-                ';
+                <div class="d-flex gap-2">
+                     <button class="btn btn-sm btn-success accept-btn" data-id="' . $approved->user_id . '">Accept</button>
+                     <button class="btn btn-sm btn-danger reject-btn" data-id="' . $approved->user_id . '">Reject</button>
+                </div>
+            ';
             })
             ->rawColumns(['verification_attachment', 'action'])
             ->make(true);
@@ -935,7 +937,7 @@ class UserController extends Controller
 
         \Log::info("Fetching verification for user: {$id}");
 
-        $verification = ApprovedPublic::with(['publicUser', 'approver'])
+        $verification = ApprovedPublic::with(['publicUser', 'approver', 'userAttachments'])
             ->where('user_id', $id)
             ->first();
 

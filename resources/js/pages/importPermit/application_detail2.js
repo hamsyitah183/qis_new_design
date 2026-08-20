@@ -644,6 +644,7 @@ function renderActivityTimeline() {
         return;
     }
     el.innerHTML = ACTIVITY_LOG.map((entry) => {
+        
         const cfg = STAGE_CONFIG[entry.stage] || STAGE_CONFIG.email;
         return `
             <div class="ipv-timeline-item">
