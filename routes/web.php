@@ -189,6 +189,7 @@ Route::prefix('internal')
         // ==================== user managemet =================
         Route::get('/user_public/list', [UserController::class, 'public_list'])->name('public.list');
         Route::get('/user_public/list/data', [UserController::class, 'public_list_data'])->name('public.list.data');
+        Route::get('/user_public/view/{id}', [UserController::class, 'public_user_view'])->name('public.view');
 
         // Verification Routes
         Route::get('/user_public/verification', [UserController::class, 'verification_list'])->name('public.verification.list');
@@ -202,6 +203,7 @@ Route::prefix('internal')
 
         Route::get('/user_internal/list', [UserController::class, 'internal_list'])->name('internal.list');
         Route::get('/user_internal/list/data', [UserController::class, 'internal_list_data'])->name('internal.list.data');
+        Route::get('/user_internal/view/{id}', [UserController::class, 'internal_user_view'])->name('internal.view');
         Route::get('/user_internal/user/data/{id}', [UserController::class, 'internal_user_data']);
         Route::post('/user_internal/save', [UserController::class, 'internal_user_save']);
         Route::delete('/user_internal/delete/{id}', [UserController::class, 'internal_user_delete']);
