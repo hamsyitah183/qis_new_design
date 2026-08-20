@@ -97,7 +97,7 @@
                         <label for="entryPoint" class="form-label" data-en="PTN Number" data-bm="Nombor PTN">PTN
                             Number<a style="color:red"> * </a></label>
 
-                        <input type="text" name="ptnNumber" id="" class="form-control">
+                        <input type="text" name="ptnNumber" id="ptnNumber" class="form-control">
                     </div>
 
                     {{-- Vehicle Selection --}}

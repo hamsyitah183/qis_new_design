@@ -666,8 +666,6 @@ class ApplicationController extends Controller
     {
         Artisan::call('bayupay:check-pending');
 
-        Artisan::call('bayupay:check-pending');
-
         $application = IpApplication::with([
             'user', // submitted by
             'importer', // importer user

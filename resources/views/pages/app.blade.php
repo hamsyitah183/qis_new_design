@@ -94,6 +94,7 @@
 
     <script>
         window.authUser = @json($user);
+        window.fullUser = @json($authUser);
     </script>
 
 

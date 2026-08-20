@@ -8,7 +8,7 @@ import { initPermitDetailOffcanvas, openPermitDetail } from "./test2";
 import { buildScheduleEvents, initScheduleCalendar } from "./test3";
 import $ from "jquery";
 import Swal from "sweetalert2";
-import { applyTranslations } from "../../app"; // <-- added
+import { applyTranslations, getAuthUser } from "../../app"; // <-- added
 import { loadProfile } from "../auth/profile";
 
 // ---------------------------------------------------------------
@@ -760,17 +760,24 @@ function permitActionsHtml(permit) {
     const status = permit.status;
     const applicationStatus = (APPLICATION.status || '').toLowerCase();
 
-    // Read the current user from userData (populated by loadProfile() in
-    // init()) instead of window.authUser.
-    const roles = getCurrentUserRoles();
-    const isStaff = roles.includes('admin') || roles.includes('officer') || roles.includes('superadmin');
-    const type = getCurrentUserType();
-    const isOwner = type === 'public';
+    // ─── Permission helper ────────────────────────────────
+    function hasPermission(permissionName) {
+        const user = window.fullUser;   // set by your auth system
+        if (!user || !user.permissions) return false;
+        return user.permissions.some(p => p.name === permissionName);
+    }
+
+    const isOwner = getCurrentUserType() === 'public';
     const lang = getLang();
 
     let actions = '';
 
-    if (applicationStatus === 'clerk verified' && (status === 'processing' || status === 'reapplied') && isStaff) {
+    // ─── Approve / Reject – requires 'approve permit' permission ───
+    if (
+        applicationStatus === 'clerk verified' &&
+        (status === 'processing' || status === 'reapplied') &&
+        hasPermission('approve permit')
+    ) {
         actions += `
             <button type="button" class="ipv-btn-action is-success accept" data-permit="${permit.id}">
                 <i class="bi bi-check-lg"></i> ${lang === 'bm' ? 'Lulus' : 'Approve'}
@@ -781,7 +788,8 @@ function permitActionsHtml(permit) {
         `;
     }
 
-    if (status === 'rejected' && type === 'public') {
+    // ─── Reapply (owner only) ──────────────────────────────
+    if (status === 'rejected' && isOwner) {
         actions += `
             <button type="button" class="ipv-btn-action is-warning reapply" data-permit="${permit.id}">
                 <i class="bi bi-arrow-repeat"></i> ${lang === 'bm' ? 'Mohon Semula' : 'Reapply'}
@@ -789,6 +797,7 @@ function permitActionsHtml(permit) {
         `;
     }
 
+    // ─── Pay Now (owner only) ──────────────────────────────
     if (['pending for payment', 'payment failed'].includes(status) && isOwner) {
         actions += `
             <button type="button" class="ipv-btn-action is-warning pd-pay-now" data-permit="${permit.id}" data-value="12">
@@ -797,7 +806,11 @@ function permitActionsHtml(permit) {
         `;
     }
 
-    if (['paid', 'completed'].includes(status) && (isStaff || roles.includes('boundary officer') || isOwner)) {
+    // ─── Print / Download – requires 'print permit' permission OR owner ───
+    if (
+        ['paid', 'completed'].includes(status) &&
+        (hasPermission('print permit') || isOwner)
+    ) {
         const slug = (permit.permit_number || '').replaceAll('/', '');
         actions += `
             <button type="button" class="ipv-btn-action is-info generatePermit" data-permit="${slug}">

@@ -64,7 +64,10 @@ function measurementUnit() {
             console.log("measurement", measurementUnits);
         },
         error: (xhr) => {
-            console.error("Failed to load measurement units:", xhr.responseText);
+            console.error(
+                "Failed to load measurement units:",
+                xhr.responseText,
+            );
         },
     });
 }
@@ -167,9 +170,9 @@ function handleVehicleChange() {
 
     $select.on("change", function () {
         const selectedIds = $(this).val() || [];
-        $("#vehicleIds").val(selectedIds.join(','));
-        selectedVehicles = vehicleListArray.filter(v => 
-            selectedIds.includes(String(v.id))
+        $("#vehicleIds").val(selectedIds.join(","));
+        selectedVehicles = vehicleListArray.filter((v) =>
+            selectedIds.includes(String(v.id)),
         );
         updateSelectedVehiclesTable(selectedIds);
         change = 1;
@@ -192,7 +195,7 @@ function fetchVehicleList() {
             $select.append('<option value="">-- Select Vehicle(s) --</option>');
             vehicleListArray.forEach((v) => {
                 $select.append(
-                    `<option value="${v.id}">${v.vehicle_number}</option>`
+                    `<option value="${v.id}">${v.vehicle_number}</option>`,
                 );
             });
 
@@ -206,7 +209,9 @@ function fetchVehicleList() {
                 multiple: true,
             });
 
-            const storedIds = $("#vehicleIds").val() ? $("#vehicleIds").val().split(',') : [];
+            const storedIds = $("#vehicleIds").val()
+                ? $("#vehicleIds").val().split(",")
+                : [];
             if (storedIds.length) {
                 $select.val(storedIds).trigger("change");
             }
@@ -229,8 +234,8 @@ function updateSelectedVehiclesTable(selectedIds) {
     $container.show();
     $tableBody.empty();
 
-    const selectedVehicles = vehicleListArray.filter(v => 
-        selectedIds.includes(String(v.id))
+    const selectedVehicles = vehicleListArray.filter((v) =>
+        selectedIds.includes(String(v.id)),
     );
 
     selectedVehicles.forEach((v, index) => {
@@ -318,7 +323,11 @@ function initAddVehicleModal() {
             },
             error: (xhr) => {
                 console.error(xhr.responseText);
-                Swal.fire("❌", "Failed to save vehicle. Please try again.", "error");
+                Swal.fire(
+                    "❌",
+                    "Failed to save vehicle. Please try again.",
+                    "error",
+                );
             },
         });
     });
@@ -422,7 +431,9 @@ function loadDetails(itemId) {
 
             let item = data.data;
             const today = new Date();
-            const startDate = item.start_date ? new Date(item.start_date) : null;
+            const startDate = item.start_date
+                ? new Date(item.start_date)
+                : null;
             const endDate = item.end_date ? new Date(item.end_date) : null;
 
             const todayDate = new Date(
@@ -1437,12 +1448,18 @@ function showItemAttachment(file, index) {
         ? [
               { label: "File Name", value: file.displayName },
               { label: "Original Name", value: file.name },
-              { label: "File Size", value: (file.size / 1024).toFixed(2) + " KB" },
+              {
+                  label: "File Size",
+                  value: (file.size / 1024).toFixed(2) + " KB",
+              },
               { label: "File Type", value: file.type || "Unknown" },
           ]
         : [
               { label: "File Name", value: file.name },
-              { label: "File Size", value: (file.size / 1024).toFixed(2) + " KB" },
+              {
+                  label: "File Size",
+                  value: (file.size / 1024).toFixed(2) + " KB",
+              },
               { label: "File Type", value: file.type || "Unknown" },
           ];
     detailsBody.innerHTML = fields
@@ -1523,7 +1540,10 @@ function initItemAttachmentNavigation() {
             const fields = [
                 { label: "File Name", value: newName },
                 { label: "Original Name", value: file.name },
-                { label: "File Size", value: (file.size / 1024).toFixed(2) + " KB" },
+                {
+                    label: "File Size",
+                    value: (file.size / 1024).toFixed(2) + " KB",
+                },
                 { label: "File Type", value: file.type || "Unknown" },
             ];
             detailsBody.innerHTML = fields
@@ -1630,7 +1650,7 @@ async function showItemAgreement(item) {
         : "";
 
     const result = await Swal.fire({
-        title: 'Item Declaration',
+        title: "Item Declaration",
         width: 600,
         html: `
             <div style="text-align: left;">
@@ -1678,7 +1698,7 @@ async function showItemAgreement(item) {
                         if (this.disabled) {
                             e.preventDefault();
                             Swal.showValidationMessage(
-                                'Please scroll to the bottom of the conditions to enable agreement.',
+                                "Please scroll to the bottom of the conditions to enable agreement.",
                             );
                         }
                     });
@@ -1689,15 +1709,15 @@ async function showItemAgreement(item) {
             }
         },
         showCancelButton: true,
-        confirmButtonText: 'Confirm',
-        cancelButtonText: 'Cancel',
+        confirmButtonText: "Confirm",
+        cancelButtonText: "Cancel",
         allowOutsideClick: false,
         preConfirm: () => {
             const checked =
                 document.getElementById("itemAgreeCheckbox").checked;
             if (!checked) {
                 Swal.showValidationMessage(
-                    'Please check the agreement box to continue.',
+                    "Please check the agreement box to continue.",
                 );
                 return false;
             }
@@ -1713,6 +1733,7 @@ async function showItemAgreement(item) {
     return false;
 }
 
+// ─── Save Consignment Attachment ──────────────────────────
 // ─── Save Consignment Attachment ──────────────────────────
 function saveConsignmentAttachment() {
     document
@@ -1737,18 +1758,16 @@ function saveConsignmentAttachment() {
                 files = existingItem.files || [];
             }
 
-            // Validate required fields (simplified for this modal)
             if (
                 !itemSelectValue ||
                 !itemQuantity ||
                 !itemMeasure ||
-                !certificateNo ||
-                files.length === 0
+                !certificateNo
             ) {
                 Swal.fire({
                     icon: "error",
                     title: "Incomplete Data",
-                    text: "Please fill in all required fields and upload an attachment before saving.",
+                    text: "Please fill in all required fields before saving.",
                 });
                 return;
             }
@@ -1794,8 +1813,8 @@ function saveConsignmentAttachment() {
                 quantity: itemQuantity,
                 measure: itemMeasure,
                 certificateNo: certificateNo,
-                purpose: '',
-                uses: '',
+                purpose: "",
+                uses: "",
                 value: 0,
                 files: files,
                 agreedAt: null,
@@ -1916,35 +1935,57 @@ function viewMore() {
                 - User has not confirmed this item yet.
             </div>`;
 
-        detailsDiv.innerHTML = `
-            ${agreementBanner}
+        // Build details rows – only show fields that have values
+        let detailsRows = `
+            <div class="col-12 col-lg-6">
+                <p>
+                    <strong class="me-1">
+                        <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-tag"></i></span>
+                        Item Name:
+                    </strong> ${item.item_name}
+                </p>
+            </div>
+            <div class="col-12 col-lg-6">
+                <p>
+                    <strong class="me-1">
+                        <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-scale-balanced"></i></span>
+                        Quantity:
+                    </strong> ${item.quantity} ${item.measure}
+                </p>
+            </div>
+        `;
 
-            <div class="pd-section-label mt-4 mb-2">Consignment Info</div>
-            <div class="p-2 row" style="background: var(--gray-1); border: 1px solid var(--default-border); border-radius: 0.6rem;">
+        // Certificate Number (always show if present)
+        if (item.certificateNo) {
+            detailsRows += `
                 <div class="col-12 col-lg-6">
                     <p>
                         <strong class="me-1">
-                            <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-tag"></i></span>
-                            Item Name:
-                        </strong> ${item.item_name}
+                            <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-certificate"></i></span>
+                            Certificate No:
+                        </strong> ${item.certificateNo}
                     </p>
                 </div>
-                <div class="col-12 col-lg-6">
-                    <p>
-                        <strong class="me-1">
-                            <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-scale-balanced"></i></span>
-                            Quantity:
-                        </strong> ${item.quantity} ${item.measure}
-                    </p>
-                </div>
+            `;
+        }
+
+        // Value – only if not empty and not zero
+        if (item.value && item.value != 0) {
+            detailsRows += `
                 <div class="col-12 col-lg-6">
                     <p>
                         <strong class="me-1">
                             <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-money-bill"></i></span>
                             Value:
-                        </strong> ${item.value}
+                        </strong> RM ${item.value}
                     </p>
                 </div>
+            `;
+        }
+
+        // Purpose – only if not empty
+        if (item.purpose) {
+            detailsRows += `
                 <div class="col-12 col-lg-6">
                     <p>
                         <strong class="me-1">
@@ -1953,6 +1994,12 @@ function viewMore() {
                         </strong> ${item.purpose}
                     </p>
                 </div>
+            `;
+        }
+
+        // Uses – only if not empty
+        if (item.uses) {
+            detailsRows += `
                 <div class="col-12">
                     <p>
                         <strong class="me-1">
@@ -1961,23 +2008,30 @@ function viewMore() {
                         </strong> ${item.uses}
                     </p>
                 </div>
+            `;
+        }
+
+        detailsDiv.innerHTML = `
+            ${agreementBanner}
+
+            <div class="pd-section-label mt-4 mb-2">Consignment Info</div>
+            <div class="p-2 row" style="background: var(--gray-1); border: 1px solid var(--default-border); border-radius: 0.6rem;">
+                ${detailsRows}
             </div>
         `;
 
-        // Conditions
+        // ─── Conditions ────────────────────────────────
         const hasCondition = item.condition && item.condition.trim() !== "";
-
         if (conditionItem) {
             conditionItem.innerHTML = hasCondition
                 ? `<div style="white-space: pre-wrap; word-break: break-word;">${item.condition}</div>`
                 : `No special conditions for this item.`;
         }
-
         if (conditionCount) {
             conditionCount.textContent = hasCondition ? "1" : "0";
         }
 
-        // Attachments
+        // ─── Attachments ─────────────────────────────────
         attachList.innerHTML = "";
         currentItemAttachments = item.files || [];
 
@@ -2018,12 +2072,14 @@ function viewMore() {
                 attachmentCount.textContent = item.files.length;
         }
 
+        // ─── Show the offcanvas ─────────────────────────
         const offcanvasEl = document.getElementById("ItemDetailsOffcanvas");
         if (offcanvasEl) {
             bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl).show();
         }
     });
 
+    // Click handler for attachment chips (unchanged)
     $(document).on("click", ".view-item-attach-btn", function (e) {
         e.preventDefault();
         e.stopPropagation();
@@ -2184,6 +2240,7 @@ function saveapplication(isDraft = false) {
         entrypoint: $("#entryPoint").val(),
         applCate: $("#app_cate").val(),
         vehicle_ids: $("#selectVehicle").val() || [],
+        ptnNumber: $("#ptnNumber").val() || "", // <-- add this
     };
 
     formData.append("exporterData", JSON.stringify(importer));
@@ -2253,7 +2310,7 @@ function saveapplication(isDraft = false) {
 export function summarySubmit() {
     const targetTable = document.querySelector("#summaryTable3 tbody");
 
-    // --- IMPORTER (selected from dropdown) & EXPORTER (auto-filled user) ---
+    // --- IMPORTER (selected) & EXPORTER (auto-filled) ---
     const exporterName = importer ? importer.fullname : '';
     const exporterPhone = importer ? importer.phone_number : '';
     const exporterAddress = importer
@@ -2280,13 +2337,15 @@ export function summarySubmit() {
         eta: document.getElementById("eta").value,
         tranType: document.getElementById("trnptType").value,
         entrypoint: document.getElementById("entryPoint").value,
+        ptnNumber: $("#ptnNumber").val() || '',
     };
 
     document.getElementById("seta").textContent = permitDetails.eta;
     document.getElementById("strty").textContent = permitDetails.tranType;
     document.getElementById("sentryp").textContent = entryName || '';
+    document.getElementById("sptnnumber").textContent = permitDetails.ptnNumber;
 
-    // --- VEHICLES SUMMARY ---
+    // --- VEHICLES ---
     const selectedIds = $("#selectVehicle").val() || [];
     const selectedVehicles = vehicleListArray.filter(v => 
         selectedIds.includes(String(v.id))
@@ -2314,16 +2373,13 @@ export function summarySubmit() {
                     <td>${index + 1}</td>
                     <td>${item.item_name || ""}</td>
                     <td>${item.quantity || ""} ${item.measure || ""}</td>
-                    <td>${item.purpose || ""}</td>
-                    <td>${item.uses || ""}</td>
-                    <td>RM ${item.value || ""}</td>
                     <td>${attachmentHTML}</td>
                 </tr>
             `
         );
     });
 
-    // Update application attachments table in summary
+    // Update application attachments table
     updateAttachmentTable();
 }
 
@@ -2343,7 +2399,7 @@ function updateAttachmentTable() {
                         No attachments uploaded
                     </td>
                 </tr>
-                `
+                `,
             );
         } else {
             applicationAttachments.forEach((attachment, index) => {
@@ -2386,7 +2442,7 @@ function updateAttachmentTable() {
                             </button>
                         </td>
                     </tr>
-                    `
+                    `,
                 );
             });
         }

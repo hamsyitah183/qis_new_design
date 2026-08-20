@@ -1,4 +1,12 @@
 <div class="wizard-step" data-title="SUMMARY" data-id="dOM0iRAyJXsLTr9b3KZfQ2jNv4pgn6Gu" data-limit="3" data-step="3">
+    <div class="ipa-alert-note">
+        <i class='bx bx-info-circle'></i>
+        <span
+            data-en = "Please review everything below carefully. Once your application is submitted, changes can only be made by contacting the department."
+            data-bm = "Sila semak segala maklumat di bawah dengan teliti. Sebaik sahaja permohonan anda dihantar, sebarang perubahan hanya boleh dibuat dengan menghubungi pihak jabatan.">Please
+            review everything below carefully. Once your application is submitted, changes can only be made by
+            contacting the department.</span>
+    </div>
     <div class="row">
         <div class="col-xl-6">
             <div class="ipa-card h-100 mb-3">
@@ -74,7 +82,7 @@
 
                                     </td>
                                 </tr>
-                                <tr>
+                                <tr class = "d-none">
                                     <td class="w-25">
                                         <span class="d-block fw-semibold" data-en="Country"
                                             data-bm="Negara">&nbsp;&nbsp;&nbsp;&nbsp; Country</span>
@@ -90,6 +98,37 @@
                 </div>
             </div>
         </div>
+
+        <div class="col-xl-12">
+            <div class="ipa-items-card">
+                <div class="ipa-card-header" style="margin-bottom:14px">
+                    <span class="ipa-icon-badge"><i class='bx bx-paperclip'></i></span>
+                    <h6 data-en="Application Attachments" data-bm="Lampiran Permohonan">Application Attachments
+                        <span class="ipa-card-sub" data-en="Supporting documents for this application"
+                            data-bm="Dokumen sokongan untuk permohonan ini">Supporting documents for this
+                            application</span>
+                    </h6>
+                </div>
+                <div class="table-responsive">
+                    <table id="summaryAttachmentTable" class="table text-nowrap">
+                        <thead class="table-primary">
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col" data-en="File Name" data-bm="Nama Fail">File Name</th>
+                                <th scope="col" data-en="Size" data-bm="Saiz">Size</th>
+                                <th scope="col" data-en="Type" data-bm="Jenis">Type</th>
+                                <th scope="col" data-en="Action" data-bm="Tindakan">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
         <div class="col-xl-6">
             <div class="ipa-card h-100 mb-3">
                 <div class="ipa-card-header">
@@ -184,11 +223,7 @@
                                                             data-bm="Nama Barangan">Item Name</th>
                                                         <th scope="col" data-en="Quantity" data-bm="Kuantiti">
                                                             Quantity</th>
-                                                        <th scope="col" style="" data-en="Purpose"
-                                                            data-bm="Tujuan">Purpose</th>
-                                                        <th scope="col" data-en="Uses" data-bm="Kegunaan">Uses
-                                                        </th>
-                                                        <th scope="col" data-en="Value" data-bm="Nilai">Value</th>
+
                                                         <th scope="col" data-en="Action" data-bm="Tindakan">Action
                                                         </th>
                                                     </tr>
@@ -211,7 +246,7 @@
         <div class="d-flex gap-3 align-items-end justify-content-end">
             {{-- <button id="generateSummary" type="button" class="btn btn-md btn-warning">Generate Summary</button> --}}
             <button id="submitApps" type="button" class="btn btn-md btn-info"><span data-en="Submit Application"
-                    data-bm="Hantar Permohonan">Submit Application</span></button>
+                    data-bm="Hantar Permohonan"><i class="bx bx-send me-1"></i>  Submit Application</span></button>
         </div>
     </div>
 </div>

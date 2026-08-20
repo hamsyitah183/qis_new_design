@@ -14,25 +14,32 @@
     @endphp
 
     @if ($internalUser && $internalUser->hasRole('boundary officer'))
-        <x-breadcrumb 
-            :items="[
-                ['label' => 'Dashboard', 'url' => '/', 'data-en' => 'Dashboard', 'data-bm' => 'Papan Pemuka'],
-                ['label' => 'Application: ' . $application->application_id, 'url' => '#', 'data-en' => 'Application', 'data-bm' => 'Permohonan'],
-            ]" 
-            title="View Application"
-            title_en="View Application"
-            title_bm="Lihat Permohonan">
+        <x-breadcrumb :items="[
+            ['label' => 'Dashboard', 'url' => '/', 'data-en' => 'Dashboard', 'data-bm' => 'Papan Pemuka'],
+            [
+                'label' => 'Application: ' . $application->application_id,
+                'url' => '#',
+                'data-en' => 'Application',
+                'data-bm' => 'Permohonan',
+            ],
+        ]" title="View Application" title_en="View Application" title_bm="Lihat Permohonan">
         </x-breadcrumb>
     @else
-        <x-breadcrumb 
-            :items="[
-                ['label' => 'Dashboard', 'url' => '/', 'data-en' => 'Dashboard', 'data-bm' => 'Papan Pemuka'],
-                ['label' => 'Application List', 'url' => $applicationUrl, 'data-en' => 'Application List', 'data-bm' => 'Senarai Permohonan'],
-                ['label' => 'Application: ' . $application->application_id, 'url' => '#', 'data-en' => 'Application', 'data-bm' => 'Permohonan'],
-            ]" 
-            title="View Application"
-            title_en="View Application"
-            title_bm="Lihat Permohonan">
+        <x-breadcrumb :items="[
+            ['label' => 'Dashboard', 'url' => '/', 'data-en' => 'Dashboard', 'data-bm' => 'Papan Pemuka'],
+            [
+                'label' => 'Application List',
+                'url' => $applicationUrl,
+                'data-en' => 'Application List',
+                'data-bm' => 'Senarai Permohonan',
+            ],
+            [
+                'label' => 'Application: ' . $application->application_id,
+                'url' => '#',
+                'data-en' => 'Application',
+                'data-bm' => 'Permohonan',
+            ],
+        ]" title="View Application" title_en="View Application" title_bm="Lihat Permohonan">
         </x-breadcrumb>
     @endif
 @endsection
@@ -67,7 +74,10 @@
             $application->user_id === $authUuid &&
             ($application->status !== 'Completed' || $application->status === 'Officer Verification Completed');
 
-        $showClerkReviewActions = str_contains($status, 'clerk review in-progress') && $isAdminOrClerk;
+        $showClerkReviewActions =
+            str_contains($status, 'clerk review in-progress') &&
+            $isInternal &&
+            auth()->guard('internal')->user()->can('approve application');
         $showImporterVerifyActions =
             $application->category_application == 1 &&
             str_contains($importerVerify, 'wait for company approval') &&
@@ -161,12 +171,12 @@
                 </div>
 
                 <div class="ipv-action-row">
-                    @can('print permit')
-                    <button type="button" class="ipv-btn-primary" id="ipvPrintPermitBtn">
-                        <i class="bi bi-printer"></i> <span data-en="Print Permit" data-bm="Cetak Permit">Print
-                            Permit</span>
-                    </button>
-                    @endcan
+                    @if ($isInternal && auth()->guard('internal')->user()->can('print permit'))
+                        <button type="button" class="ipv-btn-primary" id="ipvPrintPermitBtn">
+                            <i class="bi bi-printer"></i> <span data-en="Print Permit" data-bm="Cetak Permit">Print
+                                Permit</span>
+                        </button>
+                    @endif
                     <span class="ipv-download-badge" id="ipvDownloadBadge" title="Permits downloaded">
                         <i class="bi bi-download"></i> 0
                     </span>
@@ -203,7 +213,7 @@
                             <div class="ipv-cal-legend" id="ipvScheduleLegend"></div>
                         </div>
                     </div>
-                   
+
                 </div>
 
                 <div class="ipv-value-box">
@@ -385,13 +395,11 @@
                     data-bm="Lampiran">Attachment</span>
             </h5>
             <div class="d-flex align-items-center gap-2 ms-auto">
-                <button class="btn btn-sm btn-outline-secondary" id="attachmentPrevBtn" 
-                        title="Previous" >
+                <button class="btn btn-sm btn-outline-secondary" id="attachmentPrevBtn" title="Previous">
                     <i class="bi bi-chevron-left"></i>
                 </button>
                 <span class="badge bg-light text-dark" id="attachmentCounter">1 / 1</span>
-                <button class="btn btn-sm btn-outline-secondary" id="attachmentNextBtn" 
-                        title="Next" >
+                <button class="btn btn-sm btn-outline-secondary" id="attachmentNextBtn" title="Next">
                     <i class="bi bi-chevron-right"></i>
                 </button>
                 <button type="button" class="btn-close attachment-close" data-bs-dismiss="offcanvas"
@@ -440,7 +448,7 @@
         aria-labelledby="permitListOffcanvasLabel" style="width: 60%; max-width: 800px;">
         <div class="offcanvas-header border-bottom">
             <h5 class="offcanvas-title" id="permitListOffcanvasLabel">
-                <i class="bi bi-file-earmark-pdf me-2"></i> 
+                <i class="bi bi-file-earmark-pdf me-2"></i>
                 <span data-en="Available Permits" data-bm="Permit Tersedia">Available Permits</span>
             </h5>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
@@ -465,8 +473,8 @@
                 <button class="btn btn-sm btn-outline-secondary" data-bs-dismiss="offcanvas" data-en="Close"
                     data-bm="Tutup">Close</button>
                 <button class="btn btn-sm btn-primary" id="downloadSelectedPermitsBtn" disabled>
-                    <i class="bi bi-download me-1"></i> 
-                    <span data-en="Download Selected" data-bm="Muat Turun Dipilih">Download Selected</span> 
+                    <i class="bi bi-download me-1"></i>
+                    <span data-en="Download Selected" data-bm="Muat Turun Dipilih">Download Selected</span>
                     (<span id="selectedCount">0</span>)
                 </button>
             </div>
@@ -483,7 +491,8 @@
                 <div class="ipv-permit-detail-icon"><i class="bi bi-box-seam"></i></div>
                 <div class="d-flex justify-content-between gap-5">
                     <div>
-                        <div class="ipv-permit-detail-eyebrow" data-en="Permit Details" data-bm="Butiran Permit">Permit Details</div>
+                        <div class="ipv-permit-detail-eyebrow" data-en="Permit Details" data-bm="Butiran Permit">Permit
+                            Details</div>
                         <h5 class="offcanvas-title mb-0 fw-bold" id="permitDetailOffcanvasLabel">—</h5>
                     </div>
                     <span class="ipv-badge ms-2" id="pdBadge">—</span>
@@ -496,15 +505,13 @@
                 <ul class="nav nav-pills flex-column" id="permitDetailTabs" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="pd-details-tab" data-bs-toggle="tab" data-bs-target="#pd-details"
-                            type="button" role="tab" data-bs-placement="right" 
-                            title="Details" >
+                            type="button" role="tab" data-bs-placement="right" title="Details">
                             <i class="bi bi-file-text"></i>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="pd-activity-tab" data-bs-toggle="tab" data-bs-target="#pd-activity"
-                            type="button" role="tab" data-bs-placement="right" 
-                            title="Activity Log" >
+                            type="button" role="tab" data-bs-placement="right" title="Activity Log">
                             <i class="bi bi-clock-history"></i>
                         </button>
                     </li>
@@ -523,8 +530,8 @@
 
     <x-modal id="consignmentModal" title="">
         @slot('footer')
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" 
-                    data-en="Close" data-bm="Tutup">Close</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Close"
+                data-bm="Tutup">Close</button>
         @endslot
     </x-modal>
 
@@ -544,8 +551,8 @@
             </table>
         </div>
         @slot('footer')
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" 
-                    data-en="Close" data-bm="Tutup">Close</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Close"
+                data-bm="Tutup">Close</button>
         @endslot
     </x-modal>
 
@@ -556,7 +563,8 @@
             <input type="hidden" name="permit_id" value="permit_id">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addExporterModalLabel" data-en="Reapply" data-bm="Mohon Semula">Reapply</h5>
+                    <h5 class="modal-title" id="addExporterModalLabel" data-en="Reapply" data-bm="Mohon Semula">Reapply
+                    </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
@@ -565,32 +573,39 @@
                         <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
                             <label for="itemSelect" class="form-label" data-en="Item" data-bm="Item">Item</label>
                             <select class="form-select" id="itemSelect" name="itemSelect"></select>
-                            <small style="color:red" data-en="Item refering to the exporter's Country" 
-                                   data-bm="Item merujuk kepada Negara pengeksport">Item refering to the exporter's Country</small>
+                            <small style="color:red" data-en="Item refering to the exporter's Country"
+                                data-bm="Item merujuk kepada Negara pengeksport">Item refering to the exporter's
+                                Country</small>
                         </div>
                         <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                            <label for="itemValue" class="form-label" data-en="Value (RM)" data-bm="Nilai (RM)">Value (RM)</label>
+                            <label for="itemValue" class="form-label" data-en="Value (RM)" data-bm="Nilai (RM)">Value
+                                (RM)</label>
                             <input type="number" class="form-control" id="itemValue" name="itemValue"
                                 placeholder="RM ..." data-en="RM ..." data-bm="RM ..." data-i18n-attr="placeholder">
                         </div>
                         <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                            <label for="itemQuantity" class="form-label" data-en="Quantity" data-bm="Kuantiti">Quantity</label>
+                            <label for="itemQuantity" class="form-label" data-en="Quantity"
+                                data-bm="Kuantiti">Quantity</label>
                             <input type="number" class="form-control" id="itemQuantity" name="itemQuantity"
-                                   placeholder="0" data-en="0" data-bm="0" data-i18n-attr="placeholder">
+                                placeholder="0" data-en="0" data-bm="0" data-i18n-attr="placeholder">
                         </div>
                         <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                            <label for="itemMeasure" class="form-label" data-en="Measurement Unit" data-bm="Unit Ukuran">Measurement Unit</label>
+                            <label for="itemMeasure" class="form-label" data-en="Measurement Unit"
+                                data-bm="Unit Ukuran">Measurement Unit</label>
                             <select class="form-select" id="itemMeasure" name="itemMeasure">
-                                <option value="" data-en="-- Select Measurement Unit --" data-bm="-- Pilih Unit Ukuran --">-- Select Measurement Unit --</option>
+                                <option value="" data-en="-- Select Measurement Unit --"
+                                    data-bm="-- Pilih Unit Ukuran --">-- Select Measurement Unit --</option>
                                 @foreach ($pubmeasure ?? [] as $measure)
                                     <option value="{{ $measure->cate_code }}">{{ $measure->description }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                            <label for="itemPurpose" class="form-label" data-en="Purpose" data-bm="Tujuan">Purpose</label>
+                            <label for="itemPurpose" class="form-label" data-en="Purpose"
+                                data-bm="Tujuan">Purpose</label>
                             <select class="form-select" id="itemPurpose" name="itemPurpose">
-                                <option value="" data-en="-- Select Purpose --" data-bm="-- Pilih Tujuan --">-- Select Purpose --</option>
+                                <option value="" data-en="-- Select Purpose --" data-bm="-- Pilih Tujuan --">--
+                                    Select Purpose --</option>
                                 @foreach ($pubpurpose ?? [] as $purpose)
                                     <option value="{{ $purpose->cate_code }}"
                                         data-description="{{ $purpose->description }}">{{ $purpose->description }}</option>
@@ -612,7 +627,9 @@
                                         @csrf
                                         <div class="dz-default dz-message">
                                             <button class="dz-button p-5 border w-100 border-radius" type="button">
-                                                <span data-en="Drop files here to upload" data-bm="Jatuhkan fail di sini untuk muat naik">Drop files here to upload</span>
+                                                <span data-en="Drop files here to upload"
+                                                    data-bm="Jatuhkan fail di sini untuk muat naik">Drop files here to
+                                                    upload</span>
                                             </button>
                                         </div>
                                     </div>

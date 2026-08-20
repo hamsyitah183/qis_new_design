@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('galleries', function (Blueprint $table) {
             $table->id();
+            $table->uuid('user_id');
             $table->foreign('user_id')
                 ->references('uuid')
                 ->on('internal_users')
