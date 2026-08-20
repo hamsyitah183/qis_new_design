@@ -1,6 +1,7 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
 import { fetchVerificationCount, formatTime } from "../../../app";
+import { autoInitFilterSelect2 } from "../../../utils/select2Utils";
 
 let publicUsersTable;
 
@@ -63,6 +64,9 @@ async function public_user_list() {
             ],
             responsive: true,
         });
+
+        // Init Select2 on all static filter selects (those with class 'select2')
+        autoInitFilterSelect2();
     }
 
     /**

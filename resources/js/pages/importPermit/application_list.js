@@ -2,10 +2,7 @@ import { formatTime, initTooltips, applyTranslations } from "../../app";
 import Swal from "sweetalert2";
 import { activityLogDesign } from "../../appLog";
 
-// Import Select2 module
-import select2 from "select2";
-select2(window.jQuery);
-import "select2/dist/css/select2.min.css";
+import { setupSelect2, autoInitFilterSelect2 } from "../../utils/select2Utils";
 
 console.log("application list");
 
@@ -342,6 +339,9 @@ async function data_table_init() {
     // Load filter data on page load
     await loadFilterData();
 
+    // Init Select2 on all static filter selects (those with class 'select2')
+    autoInitFilterSelect2();
+
     // Create tables
     await createDataTables();
 
@@ -407,11 +407,11 @@ async function data_table_init() {
 
     // Reset button
     $("#btnResetFilter").on("click", function () {
-        $("#filterStatus").val("");
+        $('#filterStatus').val('').trigger('change.select2');
         $("#filterStartDate").val("");
         $("#filterEndDate").val("");
 
-        // Destroy Select2 instances before resetting
+        // Destroy Select2 instances before resetting dynamic dropdowns
         if ($('#filterExporter').hasClass('select2-hidden-accessible')) {
             $('#filterExporter').select2('destroy');
         }
@@ -425,25 +425,13 @@ async function data_table_init() {
         // Re-populate with empty options and re-init Select2 with bilingual placeholders
         $('#filterExporter').html(`<option value="">${getText('allExporters')}</option>`);
         $('#filterImporter').html(`<option value="">${getText('allImporters')}</option>`);
-        $('#filterExporter').select2({
-            placeholder: getText('selectExporter'),
-            allowClear: true,
-            width: '100%'
-        });
-        $('#filterImporter').select2({
-            placeholder: getText('selectImporter'),
-            allowClear: true,
-            width: '100%'
-        });
+        setupSelect2('#filterExporter', getText('selectExporter'));
+        setupSelect2('#filterImporter', getText('selectImporter'));
 
         if (isInternal) {
             $("#filterPublicUser").val("");
             $("#filterUsername").val("");
-            $('#filterPublicUser').select2({
-                placeholder: getText('selectUser'),
-                allowClear: true,
-                width: '100%'
-            }).trigger('change');
+            setupSelect2('#filterPublicUser', getText('selectUser'));
         } else {
             loadFilterData();
         }
@@ -540,11 +528,7 @@ async function loadFilterData() {
                 $select.append(`<option value="${user.uuid}">${user.fullname} (${user.email})</option>`);
             });
 
-            $select.select2({
-                placeholder: getText('selectUser'),
-                allowClear: true,
-                width: '100%'
-            });
+            setupSelect2($select, getText('selectUser'));
 
             $select.off('change.customFilter').on('change.customFilter', async function () {
                 const selectedUser = $(this).val();
@@ -565,33 +549,17 @@ async function loadFilterData() {
                     exporters.forEach(exp => {
                         $('#filterExporter').append(`<option value="${exp.id}">${exp.name}</option>`);
                     });
-                    $('#filterExporter').select2({
-                        placeholder: getText('selectExporter'),
-                        allowClear: true,
-                        width: '100%'
-                    });
+                    setupSelect2('#filterExporter', getText('selectExporter'));
 
                     const importersResp = await fetch(`/internal/api/filters/user/${selectedUser}/importers`);
                     const importers = await importersResp.json();
                     importers.forEach(imp => {
                         $('#filterImporter').append(`<option value="${imp.id}">${imp.name}</option>`);
                     });
-                    $('#filterImporter').select2({
-                        placeholder: getText('selectImporter'),
-                        allowClear: true,
-                        width: '100%'
-                    });
+                    setupSelect2('#filterImporter', getText('selectImporter'));
                 } else {
-                    $('#filterExporter').select2({
-                        placeholder: getText('selectExporter'),
-                        allowClear: true,
-                        width: '100%'
-                    });
-                    $('#filterImporter').select2({
-                        placeholder: getText('selectImporter'),
-                        allowClear: true,
-                        width: '100%'
-                    });
+                    setupSelect2('#filterExporter', getText('selectExporter'));
+                    setupSelect2('#filterImporter', getText('selectImporter'));
                 }
             });
         } catch (error) {
@@ -605,11 +573,7 @@ async function loadFilterData() {
             exporters.forEach(exp => {
                 $('#filterExporter').append(`<option value="${exp.id}">${exp.name}</option>`);
             });
-            $('#filterExporter').select2({
-                placeholder: getText('selectExporter'),
-                allowClear: true,
-                width: '100%'
-            });
+            setupSelect2('#filterExporter', getText('selectExporter'));
 
             $('#filterImporter').html(`<option value="">${getText('allImporters')}</option>`);
             const importersResp = await fetch('/public/api/filters/my-importers');
@@ -617,11 +581,7 @@ async function loadFilterData() {
             importers.forEach(imp => {
                 $('#filterImporter').append(`<option value="${imp.id}">${imp.name}</option>`);
             });
-            $('#filterImporter').select2({
-                placeholder: getText('selectImporter'),
-                allowClear: true,
-                width: '100%'
-            });
+            setupSelect2('#filterImporter', getText('selectImporter'));
         } catch (error) {
             console.error('Error loading filter data:', error);
         }

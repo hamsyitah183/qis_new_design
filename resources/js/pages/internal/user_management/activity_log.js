@@ -1,6 +1,8 @@
 import axios from "axios";
 import Swal from "sweetalert2";
 import flatpickr from "flatpickr";
+import { autoInitFilterSelect2 } from "../../../utils/select2Utils";
+
 
 let userTypeVal = 0; // ✅ Define globally so all functions can access it
 let start = null;
@@ -79,6 +81,9 @@ document.addEventListener("hide.bs.dropdown", function (e) {
 
 // ✅ Load all activity logs when page loads
 loadActivityTimeline();
+
+// ✅ Initialize select2 on static filters
+autoInitFilterSelect2();
 
 // Listen to language changes
 window.addEventListener('lang-changed', function() {

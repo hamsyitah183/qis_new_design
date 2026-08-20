@@ -53,7 +53,7 @@
                                 <div class="col-12 col-md-6">
                                     <li class="mb-3">
                                         <label class="form-label fw-semibold mb-1" data-en="Account Type" data-bm="Jenis Akaun">Account Type</label>
-                                        <select class="form-select form-select-sm" id="filterAccountType">
+                                        <select class="form-select form-select-sm select2" id="filterAccountType">
                                             <option value="" data-en="All" data-bm="Semua">All</option>
                                             <option value="individu" data-en="Individu" data-bm="Individu">Individu</option>
                                             <option value="company" data-en="Company" data-bm="Syarikat">Company</option>
@@ -65,7 +65,7 @@
                                 <div class="col-12 col-md-6">
                                     <li class="mb-3">
                                         <label class="form-label fw-semibold mb-1" data-en="Email Verification Status" data-bm="Status Pengesahan E-mel">Email Verification Status</label>
-                                        <select class="form-select form-select-sm" id="filterEmailVerification">
+                                        <select class="form-select form-select-sm select2" id="filterEmailVerification">
                                             <option value="" data-en="All" data-bm="Semua">All</option>
                                             <option value="verified" data-en="Verified" data-bm="Disahkan">Verified</option>
                                             <option value="not_verified" data-en="Not Verified" data-bm="Belum Disahkan">Not Verified</option>
@@ -77,7 +77,7 @@
                                 <div class="col-12 col-md-6">
                                     <li class="mb-3">
                                         <label class="form-label fw-semibold mb-1" data-en="Account Verification Status" data-bm="Status Pengesahan Akaun">Account Verification Status</label>
-                                        <select class="form-select form-select-sm" id="filterAccountVerification">
+                                        <select class="form-select form-select-sm select2" id="filterAccountVerification">
                                             <option value="" data-en="All" data-bm="Semua">All</option>
                                             <option value="verified" data-en="Verified" data-bm="Disahkan">Verified</option>
                                             <option value="not_verified" data-en="Not Verified" data-bm="Belum Disahkan">Not Verified</option>
@@ -89,7 +89,7 @@
                                 <div class="col-12 col-md-6">
                                     <li class="mb-3">
                                         <label class="form-label fw-semibold mb-1" data-en="Sort By" data-bm="Susun Mengikut">Sort By</label>
-                                        <select class="form-select form-select-sm" id="filterTime">
+                                        <select class="form-select form-select-sm select2" id="filterTime">
                                             <option value="" data-en="All" data-bm="Semua">All</option>
                                             <option value="created_at" data-en="Created Date" data-bm="Tarikh Dicipta">Created Date</option>
                                             <option value="latest" data-en="Latest" data-bm="Terkini">Latest</option>

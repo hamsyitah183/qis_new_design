@@ -3,6 +3,8 @@ window.$ = window.jQuery = $;
 import Swal from "sweetalert2";
 import "datatables.net-bs5";
 import "datatables.net-responsive-bs5";
+import { autoInitFilterSelect2 } from "../utils/select2Utils";
+
 
 function initAddImporterModal() {
     const modalEl = document.getElementById("addImporterModal");
@@ -135,9 +137,12 @@ $(document).ready(function () {
     $("#btnResetImporterFilter").on("click", function (e) {
         e.preventDefault();
         $("#filterImporterName").val("");
-        $("#filterImporterCountry").val("");
+        $("#filterImporterCountry").val("").trigger("change.select2");
         table.ajax.reload();
     });
+
+    // Initialize Select2 on filters
+    autoInitFilterSelect2();
 
     // Initialize modal logic
     initAddImporterModal();

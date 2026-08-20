@@ -81,7 +81,7 @@
                                 {{-- User Type --}}
                                 <li class="mb-2">
                                     <label class="form-label fw-semibold mb-1" data-en="User Type" data-bm="Jenis Pengguna">User Type</label>
-                                    <select class="form-select form-select-sm" id="userType">
+                                    <select class="form-select form-select-sm select2" id="userType">
                                         <option selected value="0" data-en="Choose User Type" data-bm="Pilih Jenis Pengguna">Choose User Type</option>
                                         <option value="public" data-en="Public" data-bm="Awam">Public</option>
                                         <option value="internal" data-en="Internal" data-bm="Dalaman">Internal</option>

@@ -1,6 +1,7 @@
 import { initTooltips } from "../../app";
 import Swal from "sweetalert2";
 import QRCode from "qrcode";
+import { autoInitFilterSelect2 } from "../../utils/select2Utils";
 
 console.log("order list");
 
@@ -79,6 +80,9 @@ async function data_table_init() {
         initTooltips();
     });
 
+    // Init Select2 on all static filter selects (those with class 'select2')
+    autoInitFilterSelect2();
+
     const permitQrModalElement = document.getElementById("permitQrModal");
     if (permitQrModalElement && window.bootstrap?.Modal) {
         permitQrModal = new window.bootstrap.Modal(permitQrModalElement);
@@ -100,8 +104,8 @@ async function data_table_init() {
     $("#btnResetOrderFilter").on("click", function (e) {
         e.preventDefault();
 
-        $("#filterOrderStatus").val("");
-        $("#filterAppType").val("");
+        $('#filterOrderStatus').val('').trigger('change.select2');
+        $('#filterAppType').val('').trigger('change.select2');
         $("#filterOrderStartDate").val("");
         $("#filterOrderEndDate").val("");
 
