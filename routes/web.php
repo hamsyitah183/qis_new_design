@@ -4,6 +4,7 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\internal\MiscController;
+use App\Http\Controllers\internal\AnnouncementController;
 use App\Http\Controllers\public\importPermit\PermitApplicationController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\ConsignmentController;
@@ -79,8 +80,22 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('/announcement', function() {
+    $announcements = \App\Models\Announcement::with('releasedBy')
+        ->where('is_active', true)
+        ->where(function ($query) {
+            $query->whereNull('valid_from')
+                  ->orWhere('valid_from', '<=', now()->toDateString());
+        })
+        ->where(function ($query) {
+            $query->whereNull('valid_until')
+                  ->orWhere('valid_until', '>=', now()->toDateString());
+        })
+        ->latest()
+        ->get();
+
     return view('pages.announcement', [
-        'title' => 'Announcement'
+        'title' => 'Announcement',
+        'announcements' => $announcements
     ]);
 })->name('announcements.index');
 
@@ -228,6 +243,15 @@ Route::prefix('internal')
         Route::get('/exporter_list/data', [ApplicationController::class, 'getInternalExporterListData'])->name('exporter.list.data');
         Route::get('/importer_list', [ApplicationController::class, 'showInternalImporterList'])->name('importer.list');
         Route::get('/importer_list/data', [ApplicationController::class, 'getInternalImporterListData'])->name('importer.list.data');
+
+        // ======================= announcements ========================
+        Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.list');
+        Route::get('/announcements/data', [AnnouncementController::class, 'data'])->name('announcements.data');
+        Route::get('/announcements/{id}', [AnnouncementController::class, 'show'])->name('announcements.show');
+        Route::post('/announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
+        Route::put('/announcements/{id}', [AnnouncementController::class, 'update'])->name('announcements.update');
+        Route::delete('/announcements/{id}', [AnnouncementController::class, 'destroy'])->name('announcements.destroy');
+        Route::post('/announcements/{id}/toggle', [AnnouncementController::class, 'toggleActive'])->name('announcements.toggle');
 
         // ======================= inspection certificates ========================
         Route::get('/inspection_certificates_list', [InspectionController::class, 'showAllInspectionList'])->name('inspection.list');
