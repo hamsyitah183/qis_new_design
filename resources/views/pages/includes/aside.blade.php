@@ -277,6 +277,9 @@
                                 <li class="slide {{ $currentRoute === 'internal.branch-management' ? 'active' : '' }}">
                                     <a href="{{ route('internal.branch-management') }}" class="side-menu__item" data-en="Branch Management" data-bm="Pengurusan Cawangan">Branch Management</a>
                                 </li>
+                                <li class="slide {{ $currentRoute === 'internal.announcements.list' ? 'active' : '' }}">
+                                    <a href="{{ route('internal.announcements.list') }}" class="side-menu__item" data-en="Announcements" data-bm="Pengumuman">Announcements</a>
+                                </li>
                             </ul>
                         </li>
                     @endif

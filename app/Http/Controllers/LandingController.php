@@ -36,8 +36,22 @@ class LandingController extends Controller
 {
     function landing()
     {
+        $announcements = \App\Models\Announcement::with('releasedBy')
+            ->where('is_active', true)
+            ->where(function ($query) {
+                $query->whereNull('valid_from')
+                      ->orWhere('valid_from', '<=', now()->toDateString());
+            })
+            ->where(function ($query) {
+                $query->whereNull('valid_until')
+                      ->orWhere('valid_until', '>=', now()->toDateString());
+            })
+            ->latest()
+            ->get();
+
         return view('pages.landing', [
             'title' => 'Home',
+            'announcements' => $announcements,
         ]);
     }
 }

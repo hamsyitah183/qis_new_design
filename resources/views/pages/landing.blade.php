@@ -3,58 +3,6 @@
 @section('content')
     <div class="qis-body">
 
-        {{-- Demo data fallback — replace by passing $announcements from a controller --}}
-        @php
-            $announcements =
-                $announcements ??
-                collect([
-                    [
-                        'title_en' => 'System maintenance on 25 July',
-                        'title_bm' => 'Penyelenggaraan sistem pada 25 Julai',
-                        'body_en' =>
-                            'QIS will be unavailable from 2:00 AM to 4:00 AM on 25 July while we perform scheduled server maintenance. Please submit urgent applications before this window.',
-                        'body_bm' =>
-                            'QIS tidak akan dapat diakses dari 2:00 pagi hingga 4:00 pagi pada 25 Julai semasa penyelenggaraan pelayan berjadual. Sila hantar permohonan segera sebelum tempoh ini.',
-                        'released_at' => '2026-07-15',
-                        'released_by' => 'QIS Admin',
-                        'expires_at' => '2026-07-26',
-                    ],
-                    [
-                        'title_en' => 'Phytosanitary certificates now sync with myPhyto',
-                        'title_bm' => 'Sijil Fitosanitasi kini disegerakkan dengan myPhyto',
-                        'body_en' =>
-                            'Phytosanitary certificates issued through QIS are now automatically synced with the national myPhyto system, removing the need for manual cross-registration.',
-                        'body_bm' =>
-                            'Sijil Fitosanitasi yang dikeluarkan melalui QIS kini disegerakkan secara automatik dengan sistem myPhyto kebangsaan, menghapuskan keperluan pendaftaran silang secara manual.',
-                        'released_at' => '2026-07-10',
-                        'released_by' => 'Plant Biosecurity Division',
-                        'expires_at' => null,
-                    ],
-                    [
-                        'title_en' => 'SabahPay now supported for all permit fees',
-                        'title_bm' => 'SabahPay kini disokong untuk semua bayaran permit',
-                        'body_en' =>
-                            'You can now settle Import Permit, Inspection Certificate and Consignment Certificate fees directly through SabahPay, in addition to existing payment methods.',
-                        'body_bm' =>
-                            'Anda kini boleh menyelesaikan bayaran Permit Import, Sijil Pemeriksaan dan Sijil Consignment terus melalui SabahPay, tambahan kepada kaedah pembayaran sedia ada.',
-                        'released_at' => '2026-07-02',
-                        'released_by' => 'QIS Admin',
-                        'expires_at' => null,
-                    ],
-                    [
-                        'title_en' => 'Update your company profile before 31 August',
-                        'title_bm' => 'Kemas kini profil syarikat anda sebelum 31 Ogos',
-                        'body_en' =>
-                            'Registered companies are required to review and confirm their company details, including Person In Charge contact information, before 31 August to avoid processing delays.',
-                        'body_bm' =>
-                            'Syarikat berdaftar dikehendaki menyemak dan mengesahkan butiran syarikat, termasuk maklumat hubungan Orang Untuk Dihubungi, sebelum 31 Ogos bagi mengelakkan kelewatan pemprosesan.',
-                        'released_at' => '2026-06-28',
-                        'released_by' => 'Plant Biosecurity Division',
-                        'expires_at' => '2026-08-31',
-                    ],
-                ]);
-        @endphp
-
         {{-- =============================== NAVBAR =============================== --}}
         <header class="qis-nav">
             <div class="qis-nav-inner">
@@ -146,39 +94,17 @@
         {{-- =============================== ANNOUNCEMENT TICKER =============================== --}}
         <div class="qis-ticker">
             <div class="qis-ticker-track" id="qisTickerTrack">
+                @foreach($announcements as $item)
                 <span class="qis-ticker-item"><b data-en="NOTICE" data-bm="NOTIS">NOTICE</b><span
-                        data-en="System maintenance on 25 July, 2:00&ndash;4:00 AM."
-                        data-bm="Penyelenggaraan sistem pada 25 Julai, 2:00&ndash;4:00 pagi.">System maintenance on 25 July,
-                        2:00&ndash;4:00 AM.</span></span>
-                <span class="qis-ticker-item"><b data-en="NEW" data-bm="BAHARU">NEW</b><span
-                        data-en="Phytosanitary certificates now sync directly with myPhyto."
-                        data-bm="Sijil Fitosanitasi kini disegerakkan terus dengan myPhyto.">Phytosanitary certificates now
-                        sync directly with myPhyto.</span></span>
-                <span class="qis-ticker-item"><b data-en="PAYMENTS" data-bm="PEMBAYARAN">PAYMENTS</b><span
-                        data-en="SabahPay is now supported for all permit fees."
-                        data-bm="SabahPay kini disokong untuk semua bayaran permit.">SabahPay is now supported for all
-                        permit fees.</span></span>
-                <span class="qis-ticker-item"><b data-en="REMINDER" data-bm="PERINGATAN">REMINDER</b><span
-                        data-en="Update your company profile before 31 August."
-                        data-bm="Kemas kini profil syarikat anda sebelum 31 Ogos.">Update your company profile before 31
-                        August.</span></span>
+                        data-en="{{ $item->title }}"
+                        data-bm="{{ $item->title }}">{{ $item->title }}</span></span>
+                @endforeach
                 <!-- duplicate for seamless loop -->
+                @foreach($announcements as $item)
                 <span class="qis-ticker-item"><b data-en="NOTICE" data-bm="NOTIS">NOTICE</b><span
-                        data-en="System maintenance on 25 July, 2:00&ndash;4:00 AM."
-                        data-bm="Penyelenggaraan sistem pada 25 Julai, 2:00&ndash;4:00 pagi.">System maintenance on 25
-                        July, 2:00&ndash;4:00 AM.</span></span>
-                <span class="qis-ticker-item"><b data-en="NEW" data-bm="BAHARU">NEW</b><span
-                        data-en="Phytosanitary certificates now sync directly with myPhyto."
-                        data-bm="Sijil Fitosanitasi kini disegerakkan terus dengan myPhyto.">Phytosanitary certificates now
-                        sync directly with myPhyto.</span></span>
-                <span class="qis-ticker-item"><b data-en="PAYMENTS" data-bm="PEMBAYARAN">PAYMENTS</b><span
-                        data-en="SabahPay is now supported for all permit fees."
-                        data-bm="SabahPay kini disokong untuk semua bayaran permit.">SabahPay is now supported for all
-                        permit fees.</span></span>
-                <span class="qis-ticker-item"><b data-en="REMINDER" data-bm="PERINGATAN">REMINDER</b><span
-                        data-en="Update your company profile before 31 August."
-                        data-bm="Kemas kini profil syarikat anda sebelum 31 Ogos.">Update your company profile before 31
-                        August.</span></span>
+                        data-en="{{ $item->title }}"
+                        data-bm="{{ $item->title }}">{{ $item->title }}</span></span>
+                @endforeach
             </div>
         </div>
 
@@ -287,8 +213,8 @@
                 <div class="qis-announcement-grid">
                     @foreach ($announcements->take(3) as $item)
                         @php
-                            $releasedAt = \Carbon\Carbon::parse($item['released_at']);
-                            $expiresAt = $item['expires_at'] ? \Carbon\Carbon::parse($item['expires_at']) : null;
+                            $releasedAt = \Carbon\Carbon::parse($item->created_at);
+                            $expiresAt = $item->valid_until ? \Carbon\Carbon::parse($item->valid_until) : null;
 
                             if ($expiresAt && $expiresAt->isPast()) {
                                 $statusClass = 'is-expired';
@@ -307,18 +233,19 @@
                                 $statusEn = 'Active';
                                 $statusBm = 'Aktif';
                             }
+                            $content = strip_tags($item->content);
                         @endphp
 
                         <button type="button" class="qis-announcement-card" data-modal="qisModalAnnouncement">
                             <span class="qis-announcement-status {{ $statusClass }}" data-en="{{ $statusEn }}"
                                 data-bm="{{ $statusBm }}">{{ $statusEn }}</span>
 
-                            <h5 data-en="{{ $item['title_en'] }}" data-bm="{{ $item['title_bm'] }}">
-                                {{ $item['title_en'] }}</h5>
+                            <h5 data-en="{{ $item->title }}" data-bm="{{ $item->title }}">
+                                {{ $item->title }}</h5>
 
-                            <p data-en="{{ \Illuminate\Support\Str::limit($item['body_en'], 100) }}"
-                                data-bm="{{ \Illuminate\Support\Str::limit($item['body_bm'], 100) }}">
-                                {{ \Illuminate\Support\Str::limit($item['body_en'], 100) }}
+                            <p data-en="{{ \Illuminate\Support\Str::limit($content, 100) }}"
+                                data-bm="{{ \Illuminate\Support\Str::limit($content, 100) }}">
+                                {{ \Illuminate\Support\Str::limit($content, 100) }}
                             </p>
 
                             <div class="qis-announcement-meta">
@@ -331,11 +258,11 @@
                             </span>
 
                             {{-- payload the shared modal reads on click --}}
-                            <span class="d-none js-announcement-payload" data-title-en="{{ $item['title_en'] }}"
-                                data-title-bm="{{ $item['title_bm'] }}" data-body-en="{{ $item['body_en'] }}"
-                                data-body-bm="{{ $item['body_bm'] }}"
+                            <span class="d-none js-announcement-payload" data-title-en="{{ $item->title }}"
+                                data-title-bm="{{ $item->title }}" data-body-en="{{ $item->content }}"
+                                data-body-bm="{{ $item->content }}"
                                 data-released-at="{{ $releasedAt->format('d M Y') }}"
-                                data-released-by="{{ $item['released_by'] }}"
+                                data-released-by="{{ $item->releasedBy ? $item->releasedBy->fullname : 'Admin' }}"
                                 data-expires-at="{{ $expiresAt ? $expiresAt->format('d M Y') : '' }}"></span>
                         </button>
                     @endforeach

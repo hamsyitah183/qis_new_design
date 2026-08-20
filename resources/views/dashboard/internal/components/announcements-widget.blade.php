@@ -5,46 +5,46 @@
                 <h6 data-en="Announcements" data-bm="Pengumuman">Announcements</h6>
                 <span class="adm-card-sub" data-en="What's currently posted to applicants" data-bm="Apa yang sedang disiarkan kepada pemohon">What's currently posted to applicants</span>
             </div>
-            <button type="button" class="btn btn-sm btn-primary adm-announce-new-btn" data-bs-toggle="modal" data-bs-target="#admAnnounceModal">
-                <i class='bx bx-plus me-1'></i> <span data-en="New" data-bm="Baru">New</span>
-            </button>
         </div>
 
         <div class="adm-announce-list" id="admAnnounceList">
-            <!-- rendered by admindashboard.js -->
+            @forelse($announcements as $a)
+                <div class="adm-announce-item">
+                    <span class="adm-icon"><i class='bx bx-bell'></i></span>
+                    <div style="width: 100%;">
+                        <b>{{ $a->title }}</b>
+                        <p>{{ \Illuminate\Support\Str::limit(strip_tags($a->content), 80) }}</p>
+                        <div class="adm-announce-meta mb-2">
+                            <span>{{ $a->created_at->format('d M Y') }}</span>
+                            <span class="adm-badge {{ $a->is_active ? 'adm-published' : 'adm-draft' }}">
+                                {{ $a->is_active ? 'Published' : 'Draft' }}
+                            </span>
+                        </div>
+                        @if($a->attachments->isNotEmpty())
+                            <div class="mt-2" style="cursor: pointer;" 
+                                 onclick="document.getElementById('dashboard_modal_image_src').src=this.querySelector('img').dataset.src; bootstrap.Modal.getOrCreateInstance(document.getElementById('dashboardImageViewModal')).show();">
+                                <img src="{{ asset('storage/' . $a->attachments->first()->file_path) }}" 
+                                     alt="attachment" 
+                                     data-src="{{ asset('storage/' . $a->attachments->first()->file_path) }}"
+                                     class="rounded border"
+                                     style="max-width: 100%; max-height: 200px; object-fit: contain;">
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @empty
+                <div class="adm-cal-empty-msg" data-en="No announcements yet." data-bm="Tiada pengumuman lagi.">No announcements yet.</div>
+            @endforelse
         </div>
     </div>
 </div>
 
-{{-- New Announcement modal — demo only: it just prepends to the in-memory list, nothing is persisted --}}
-<div class="modal fade" id="admAnnounceModal" tabindex="-1" aria-labelledby="admAnnounceModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="admAnnounceModalLabel" data-en="New Announcement" data-bm="Pengumuman Baru">New Announcement</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label for="admAnnounceTitle" class="form-label" data-en="Title" data-bm="Tajuk">Title</label>
-                    <input type="text" class="form-control" id="admAnnounceTitle" placeholder="e.g. Scheduled system maintenance" data-en="e.g. Scheduled system maintenance" data-bm="cth. Penyelenggaraan sistem berjadual" data-i18n-attr="placeholder">
-                </div>
-                <div class="mb-3">
-                    <label for="admAnnounceBody" class="form-label" data-en="Message" data-bm="Mesej">Message</label>
-                    <textarea class="form-control" id="admAnnounceBody" rows="3" placeholder="Short description shown to applicants" data-en="Short description shown to applicants" data-bm="Penerangan ringkas yang dipaparkan kepada pemohon" data-i18n-attr="placeholder"></textarea>
-                </div>
-                <div class="mb-1">
-                    <label for="admAnnounceStatus" class="form-label" data-en="Status" data-bm="Status">Status</label>
-                    <select class="form-select" id="admAnnounceStatus">
-                        <option value="published" data-en="Published" data-bm="Telah Diterbitkan">Published</option>
-                        <option value="draft" data-en="Draft" data-bm="Draf">Draft</option>
-                    </select>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Cancel" data-bm="Batal">Cancel</button>
-                <button type="button" id="admAnnounceSaveBtn" class="btn btn-primary adm-announce-new-btn" data-en="Save" data-bm="Simpan">Save</button>
-            </div>
-        </div>
+<!-- Image View Modal (Dashboard) -->
+<x-modal id="dashboardImageViewModal" title="View Image" title_en="View Image" title_bm="Lihat Gambar" size="modal-lg modal-dialog-centered">
+    <div class="text-center">
+        <img id="dashboard_modal_image_src" src="" alt="Attachment Image" class="img-fluid rounded" style="max-height: 80vh;">
     </div>
-</div>
+    <x-slot name="footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Close" data-bm="Tutup">Close</button>
+    </x-slot>
+</x-modal>
