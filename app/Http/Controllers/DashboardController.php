@@ -183,7 +183,19 @@ class DashboardController extends Controller
             $totalInspectionCerts = $inspectionCerts->count();
             $totalConsignmentCerts = $consignmentCerts->count();
 
-            $announcements = \App\Models\Announcement::latest()->take(3)->get();
+            $announcements = \App\Models\Announcement::with('attachments')
+                ->where('is_active', true)
+                ->where(function ($query) {
+                    $query->whereNull('valid_from')
+                          ->orWhere('valid_from', '<=', now()->toDateString());
+                })
+                ->where(function ($query) {
+                    $query->whereNull('valid_until')
+                          ->orWhere('valid_until', '>=', now()->toDateString());
+                })
+                ->latest()
+                ->take(3)
+                ->get();
 
             return view('dashboard.internal.main_dashboard', [
                 'latestApplications' => collect(), // empty, not used for boundary
@@ -296,7 +308,19 @@ class DashboardController extends Controller
             'pendingQueue' => $data['pendingQueue'],
             'verifiedToday' => $data['verifiedToday'],
             'permitChart' => $permitChart->build(),
-            'announcements' => \App\Models\Announcement::with('attachments')->latest()->take(3)->get(),
+            'announcements' => \App\Models\Announcement::with('attachments')
+                ->where('is_active', true)
+                ->where(function ($query) {
+                    $query->whereNull('valid_from')
+                          ->orWhere('valid_from', '<=', now()->toDateString());
+                })
+                ->where(function ($query) {
+                    $query->whereNull('valid_until')
+                          ->orWhere('valid_until', '>=', now()->toDateString());
+                })
+                ->latest()
+                ->take(3)
+                ->get(),
         ]); // Internal user dashboard
     }
 

@@ -63,6 +63,9 @@ $(document).ready(function () {
                             <button class="btn btn-sm ${toggleClass} toggle-btn" data-id="${data}" title="${toggleTitle}">
                                 <i class="ti ${toggleIcon}"></i>
                             </button>
+                            <button class="btn btn-sm btn-secondary share-email-btn" data-id="${data}" data-title="${row.title}" title="Share via Email">
+                                <i class="ti ti-mail"></i>
+                            </button>
                             <button class="btn btn-sm btn-danger delete-btn" data-id="${data}" title="Delete">
                                 <i class="ti ti-trash"></i>
                             </button>
@@ -79,29 +82,46 @@ $(document).ready(function () {
         
         // Fetch specific announcement data
         $.get(`${window.baseUrl}/internal/announcements/${id}`, function (data) {
-            $('#view_title').text(data.title);
+            const currentLang = localStorage.getItem('language') || 'en';
             
-            let dates = '';
+            $('#view_title')
+                .attr('data-en', data.title)
+                .attr('data-bm', data.title_bm || data.title)
+                .text(currentLang === 'bm' && data.title_bm ? data.title_bm : data.title);
+            
+            let dates_en = '';
+            let dates_bm = '';
             if (data.valid_from && data.valid_until) {
-                dates = `Valid: ${data.valid_from} to ${data.valid_until}`;
+                dates_en = `Valid: ${data.valid_from} to ${data.valid_until}`;
+                dates_bm = `Sah: ${data.valid_from} hingga ${data.valid_until}`;
             } else if (data.valid_from) {
-                dates = `Valid from: ${data.valid_from}`;
+                dates_en = `Valid from: ${data.valid_from}`;
+                dates_bm = `Sah dari: ${data.valid_from}`;
             } else if (data.valid_until) {
-                dates = `Valid until: ${data.valid_until}`;
+                dates_en = `Valid until: ${data.valid_until}`;
+                dates_bm = `Sah sehingga: ${data.valid_until}`;
             } else {
-                dates = 'No expiration date';
+                dates_en = 'No expiration date';
+                dates_bm = 'Tiada tarikh luput';
             }
             
-            $('#view_dates').text(dates);
-            $('#view_content').html(data.content);
+            $('#view_dates')
+                .attr('data-en', dates_en)
+                .attr('data-bm', dates_bm)
+                .text(currentLang === 'bm' ? dates_bm : dates_en);
+                
+            $('#view_content')
+                .attr('data-en', data.content)
+                .attr('data-bm', data.content_bm || data.content)
+                .html(currentLang === 'bm' && data.content_bm ? data.content_bm : data.content);
             
             if (data.attachments && data.attachments.length > 0) {
                 $('#view_attachments_container').show();
                 $('#view_attachments').empty();
                 data.attachments.forEach(function(att) {
                     $('#view_attachments').append(`
-                        <a href="/storage/${att.file_path}" target="_blank" class="border rounded p-1">
-                            <img src="/storage/${att.file_path}" style="max-height: 100px; max-width: 100px; object-fit: cover;" alt="${att.file_name}" title="${att.file_name}">
+                        <a href="javascript:void(0);" class="border rounded p-1 view-image-link text-center d-inline-block" data-src="/storage/${att.file_path}" data-name="${att.file_name}" style="width: 100%;">
+                            <img src="/storage/${att.file_path}" style="max-height: 300px; max-width: 100%; object-fit: contain;" alt="${att.file_name}" title="${att.file_name}">
                         </a>
                     `);
                 });
@@ -112,9 +132,34 @@ $(document).ready(function () {
             
             const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('viewAnnouncementModal'));
             modal.show();
-        }).fail(function() {
-            Swal.fire('Error', 'Failed to fetch announcement details', 'error');
+        }).fail(function () {
+            Swal.fire('Error!', 'Failed to fetch data.', 'error');
         });
+    });
+
+    // Handle Image Click in View Modal
+    $(document).on('click', '.view-image-link', function (e) {
+        e.preventDefault();
+        const src = $(this).data('src');
+        const name = $(this).data('name');
+        
+        $('#modal_image_src').attr('src', src);
+        
+        // Hide the view announcement modal
+        const viewModal = bootstrap.Modal.getInstance(document.getElementById('viewAnnouncementModal'));
+        if (viewModal) {
+            viewModal.hide();
+        }
+        
+        // Show the image modal
+        const imageModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('imageViewModal'));
+        imageModal.show();
+    });
+    
+    // When image modal is closed, reopen the view announcement modal
+    $('#imageViewModal').on('hidden.bs.modal', function () {
+        const viewModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('viewAnnouncementModal'));
+        viewModal.show();
     });
 
     // Handle Add Button
@@ -361,6 +406,43 @@ $(document).ready(function () {
             },
             error: function (xhr) {
                 Swal.fire('Error!', 'Something went wrong.', 'error');
+            }
+        });
+    });
+
+    // Share via Email Action
+    let shareEmailAnnouncementId = null;
+
+    $('#announcementTable').on('click', '.share-email-btn', function () {
+        shareEmailAnnouncementId = $(this).data('id');
+        const title = $(this).data('title');
+        $('#share_email_title').text(title);
+        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('shareEmailModal'));
+        modal.show();
+    });
+
+    $('#btnConfirmShareEmail').on('click', function () {
+        if (!shareEmailAnnouncementId) return;
+
+        const btn = $(this);
+        btn.prop('disabled', true).html('<i class="ti ti-loader me-1"></i> Sending...');
+
+        $.ajax({
+            url: `${window.baseUrl}/internal/announcements/${shareEmailAnnouncementId}/share-email`,
+            type: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function (response) {
+                bootstrap.Modal.getInstance(document.getElementById('shareEmailModal')).hide();
+                Swal.fire('Sent!', response.message, 'success');
+            },
+            error: function () {
+                Swal.fire('Error!', 'Failed to send emails. Please try again.', 'error');
+            },
+            complete: function () {
+                btn.prop('disabled', false).html('<i class="ti ti-send me-1"></i> Confirm Send');
+                shareEmailAnnouncementId = null;
             }
         });
     });

@@ -21,8 +21,13 @@
                             </span>
                         </div>
                         @if($a->attachments->isNotEmpty())
-                            <div class="mt-2 text-center border rounded overflow-hidden bg-light" style="max-height: 200px;">
-                                <img src="{{ asset('storage/' . $a->attachments->first()->file_path) }}" alt="attachment" style="max-width: 100%; height: auto; object-fit: contain;">
+                            <div class="mt-2" style="cursor: pointer;" 
+                                 onclick="document.getElementById('dashboard_modal_image_src').src=this.querySelector('img').dataset.src; bootstrap.Modal.getOrCreateInstance(document.getElementById('dashboardImageViewModal')).show();">
+                                <img src="{{ asset('storage/' . $a->attachments->first()->file_path) }}" 
+                                     alt="attachment" 
+                                     data-src="{{ asset('storage/' . $a->attachments->first()->file_path) }}"
+                                     class="rounded border"
+                                     style="max-width: 100%; max-height: 200px; object-fit: contain;">
                             </div>
                         @endif
                     </div>
@@ -33,3 +38,13 @@
         </div>
     </div>
 </div>
+
+<!-- Image View Modal (Dashboard) -->
+<x-modal id="dashboardImageViewModal" title="View Image" title_en="View Image" title_bm="Lihat Gambar" size="modal-lg modal-dialog-centered">
+    <div class="text-center">
+        <img id="dashboard_modal_image_src" src="" alt="Attachment Image" class="img-fluid rounded" style="max-height: 80vh;">
+    </div>
+    <x-slot name="footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Close" data-bm="Tutup">Close</button>
+    </x-slot>
+</x-modal>

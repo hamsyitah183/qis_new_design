@@ -127,4 +127,42 @@
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Close" data-bm="Tutup">Close</button>
         </x-slot>
     </x-modal>
+
+    <!-- Share via Email Confirmation Modal -->
+    <div class="modal fade" id="shareEmailModal" tabindex="-1" aria-labelledby="shareEmailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="shareEmailModalLabel" data-en="Share via Email" data-bm="Kongsi melalui E-mel">
+                        <i class="ti ti-mail me-2 text-primary"></i> Share via Email
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-1" data-en="You are about to send the following announcement to all registered public users:" data-bm="Anda akan menghantar pengumuman berikut kepada semua pengguna awam berdaftar:">
+                        You are about to send the following announcement to all registered public users:
+                    </p>
+                    <div class="alert alert-info mt-3 mb-0">
+                        <strong id="share_email_title"></strong>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Cancel" data-bm="Batal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="btnConfirmShareEmail" data-en="Confirm Send" data-bm="Hantar">
+                        <i class="ti ti-send me-1"></i> Confirm Send
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image View Modal -->
+    <x-modal id="imageViewModal" title="View Image" title_en="View Image" title_bm="Lihat Gambar" size="modal-lg modal-dialog-centered">
+        <div class="text-center">
+            <img id="modal_image_src" src="" alt="Attachment Image" class="img-fluid rounded" style="max-height: 80vh;">
+        </div>
+        <x-slot name="footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Close" data-bm="Tutup">Close</button>
+        </x-slot>
+    </x-modal>
 @endsection

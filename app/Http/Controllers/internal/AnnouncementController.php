@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\internal;
 
 use App\Http\Controllers\Controller;
+use App\Mail\AnnouncementMail;
 use App\Models\Announcement;
 use App\Models\AnnouncementAttachment;
+use App\Models\PublicUser;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -138,5 +141,28 @@ class AnnouncementController extends Controller
         $attachment->delete();
 
         return response()->json(['status' => 'success', 'message' => 'Attachment deleted successfully.']);
+    }
+
+    public function shareViaEmail($id)
+    {
+        $announcement = Announcement::with('attachments')->findOrFail($id);
+
+        $users = PublicUser::whereNotNull('email')->get();
+
+        $sent = 0;
+        foreach ($users as $user) {
+            try {
+                Mail::to($user->email)->send(new AnnouncementMail($announcement));
+                $sent++;
+            } catch (\Exception $e) {
+                // Log but don't abort the whole loop
+                \Log::warning('Failed to send announcement email to ' . $user->email . ': ' . $e->getMessage());
+            }
+        }
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => "Announcement sent to {$sent} user(s) successfully.",
+        ]);
     }
 }

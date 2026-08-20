@@ -255,6 +255,7 @@ Route::prefix('internal')
         Route::post('/announcements/{id}/attachments', [AnnouncementController::class, 'uploadAttachment'])->name('announcements.attachments.upload');
         Route::delete('/announcements/attachments/{attachmentId}', [AnnouncementController::class, 'deleteAttachment'])->name('announcements.attachments.delete');
         Route::post('/announcements/{id}/toggle', [AnnouncementController::class, 'toggleActive'])->name('announcements.toggle');
+        Route::post('/announcements/{id}/share-email', [AnnouncementController::class, 'shareViaEmail'])->name('announcements.share_email');
 
         // ======================= inspection certificates ========================
         Route::get('/inspection_certificates_list', [InspectionController::class, 'showAllInspectionList'])->name('inspection.list');
