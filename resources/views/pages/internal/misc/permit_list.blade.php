@@ -67,7 +67,6 @@
                             <li class="mb-2">
                                 <label class="form-label fw-semibold mb-1" data-en="Category" data-bm="Kategori">Category</label>
                                 <select class="form-select form-select-sm select2" id="filterPermitCategory">
-                                    <option value="" data-en="All Categories" data-bm="Semua Kategori">All Categories</option>
                                 </select>
                             </li>
 
@@ -75,7 +74,6 @@
                             <li class="mb-2">
                                 <label class="form-label fw-semibold mb-1" data-en="Usage" data-bm="Kegunaan">Usage</label>
                                 <select class="form-select form-select-sm select2" id="filterPermitUsage">
-                                    <option value="" data-en="All Usage" data-bm="Semua Kegunaan">All Usage</option>
                                 </select>
                             </li>
 

@@ -60,7 +60,8 @@ class FilterController extends Controller
      */
     public function getUserExporters($userUuid)
     {
-        $exporters = Exporter::where('registered_by', $userUuid)
+        $userUuids = explode(',', $userUuid);
+        $exporters = Exporter::whereIn('registered_by', $userUuids)
             ->select('id', 'name')
             ->orderBy('name')
             ->get();
@@ -73,8 +74,9 @@ class FilterController extends Controller
      */
     public function getUserImporters($userUuid)
     {
-        // Importers are PublicUsers excluding the user themselves
-        $importers = PublicUser::where('uuid', '!=', $userUuid)
+        $userUuids = explode(',', $userUuid);
+        // Importers are PublicUsers excluding the users themselves
+        $importers = PublicUser::whereNotIn('uuid', $userUuids)
             ->select('uuid as id', 'fullname as name')
             ->orderBy('fullname')
             ->get();
@@ -114,13 +116,14 @@ class FilterController extends Controller
      */
     public function getUserConsignmentExporters($userUuid)
     {
+        $userUuids = explode(',', $userUuid);
         // For consignment, exporter_id is a PublicUser UUID
-        // Return the selected user as an exporter option
-        $user = PublicUser::where('uuid', $userUuid)
+        // Return the selected users as exporter options
+        $users = PublicUser::whereIn('uuid', $userUuids)
             ->select('uuid as id', 'fullname as name')
-            ->first();
+            ->get();
 
-        return response()->json($user ? [$user] : []);
+        return response()->json($users);
     }
 
     /**
@@ -129,10 +132,11 @@ class FilterController extends Controller
      */
     public function getUserConsignmentImporters($userUuid)
     {
+        $userUuids = explode(',', $userUuid);
         // For consignment, importers are ConsignmentImporter records
-        // We need to find importers associated with applications from this user
-        $importerIds = \App\Models\ConsignmentApplication::where('user_id', $userUuid)
-            ->orWhere('exporter_id', $userUuid)
+        // We need to find importers associated with applications from these users
+        $importerIds = \App\Models\ConsignmentApplication::whereIn('user_id', $userUuids)
+            ->orWhereIn('exporter_id', $userUuids)
             ->distinct()
             ->pluck('importer_id')
             ->filter();

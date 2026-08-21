@@ -376,16 +376,20 @@ document.addEventListener("DOMContentLoaded", async function () {
 
             internalListTable.column(0).search(itemName);
 
-            if (category === "") {
-                internalListTable.column(1).search("");
-            } else {
-                internalListTable.column(1).search(category);
-            }
-
-            if (usage === "") {
+            if (!category || category.length === 0) {
                 internalListTable.column(2).search("");
             } else {
-                internalListTable.column(2).search(usage);
+                const categoryVals = [].concat(category);
+                const categoryRegex = categoryVals.map(v => $.fn.dataTable.util.escapeRegex(v)).join('|');
+                internalListTable.column(2).search(categoryRegex, true, false);
+            }
+
+            if (!usage || usage.length === 0) {
+                internalListTable.column(3).search("");
+            } else {
+                const usageVals = [].concat(usage);
+                const usageRegex = usageVals.map(v => $.fn.dataTable.util.escapeRegex(v)).join('|');
+                internalListTable.column(3).search(usageRegex, true, false);
             }
 
             internalListTable.draw();
@@ -399,8 +403,8 @@ document.addEventListener("DOMContentLoaded", async function () {
         .getElementById("btnResetConsignCondFilter")
         .addEventListener("click", function () {
             document.getElementById("filterConsignItemName").value = "";
-            $('#filterConsignCategory').val('').trigger('change.select2');
-            $('#filterConsignUsage').val('').trigger('change.select2');
+            $('#filterConsignCategory').val(null).trigger('change');
+            $('#filterConsignUsage').val(null).trigger('change');
 
             internalListTable.search("").columns().search("").draw();
             bootstrap.Dropdown.getInstance(

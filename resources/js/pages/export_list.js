@@ -94,7 +94,7 @@ $(document).ready(function () {
             type: "GET",
             data: function (d) {
                 d.name = $("#filterExporterName").val() || "";
-                d.country = $("#filterExporterCountry").val() || "";
+                d.country = [].concat($("#filterExporterCountry").val() || []).join(",");
             },
             dataSrc: "",
         },
@@ -137,7 +137,7 @@ $(document).ready(function () {
     $("#btnResetExporterFilter").on("click", function (e) {
         e.preventDefault();
         $("#filterExporterName").val("");
-        $("#filterExporterCountry").val("").trigger("change.select2");
+        $("#filterExporterCountry").val(null).trigger("change");
         table.ajax.reload();
     });
 

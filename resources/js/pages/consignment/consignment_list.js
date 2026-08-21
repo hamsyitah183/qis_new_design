@@ -41,13 +41,13 @@ async function data_table_init() {
         ajax: {
             url: "/consignment/list/data",
             data: function (d) {
-                d.status = $("#filterStatus").val();
+                d.status = [].concat($("#filterStatus").val() || []).join(',');
                 d.start_date = $("#filterStartDate").val();
                 d.end_date = $("#filterEndDate").val();
-                d.exporter_id = $("#filterExporter").val();
-                d.importer_id = $("#filterImporter").val();
+                d.exporter_id = [].concat($("#filterExporter").val() || []).join(',');
+                d.importer_id = [].concat($("#filterImporter").val() || []).join(',');
                 d.username = $("#filterUsername").val();
-                d.public_user_uuid = $("#filterPublicUser").val();
+                d.public_user_uuid = [].concat($("#filterPublicUser").val() || []).join(',');
             }
         },
         columns: [
@@ -94,7 +94,7 @@ async function data_table_init() {
 
     // Reset button
     $("#btnResetFilter").on("click", function () {
-        $('#filterStatus').val('').trigger('change.select2');
+        $('#filterStatus').val(null).trigger('change');
         $("#filterStartDate").val("");
         $("#filterEndDate").val("");
 
@@ -109,8 +109,8 @@ async function data_table_init() {
             $('#filterPublicUser').select2('destroy');
         }
 
-        $('#filterExporter').html('<option value="">All Exporters</option>');
-        $('#filterImporter').html('<option value="">All Importers</option>');
+        $('#filterExporter').empty();
+        $('#filterImporter').empty();
 
         if (isInternal) {
             $("#filterPublicUser").val("");
@@ -203,7 +203,7 @@ async function loadFilterData() {
             const response = await fetch('/internal/api/filters/public-users');
             const users = await response.json();
             const $select = $('#filterPublicUser');
-            $select.html('<option value="">All Users</option>');
+            $select.empty();
             users.forEach(user => {
                 $select.append(`<option value="${user.uuid}">${user.fullname} (${user.email})</option>`);
             });
@@ -222,8 +222,8 @@ async function loadFilterData() {
                     $('#filterImporter').select2('destroy');
                 }
 
-                $('#filterExporter').html('<option value="">All Exporters</option>');
-                $('#filterImporter').html('<option value="">All Importers</option>');
+                $('#filterExporter').empty();
+                $('#filterImporter').empty();
 
                 if (selectedUser) {
                     // Load consignment-specific exporters and importers for selected user
@@ -248,12 +248,12 @@ async function loadFilterData() {
         }
     } else {
         try {
-            $('#filterExporter').html('<option value="">All Exporters</option>');
+            $('#filterExporter').empty();
             const exportersResp = await fetch('/public/api/filters/my-consignment-exporters');
             const exporters = await exportersResp.json();
             exporters.forEach(exp => $('#filterExporter').append(`<option value="${exp.id}">${exp.name}</option>`));
             setupSelect2('#filterExporter', 'Select exporter');
-            $('#filterImporter').html('<option value="">All Importers</option>');
+            $('#filterImporter').empty();
             const importersResp = await fetch('/public/api/filters/my-consignment-importers');
             const importers = await importersResp.json();
             importers.forEach(imp => $('#filterImporter').append(`<option value="${imp.id}">${imp.name}</option>`));
@@ -271,7 +271,7 @@ async function loadAllConsignmentFilters() {
         const exportersResp = await fetch('/internal/api/filters/consignment/exporters');
         const exporters = await exportersResp.json();
         const $exporterSelect = $('#filterExporter');
-        $exporterSelect.html('<option value="">All Exporters</option>');
+        $exporterSelect.empty();
         exporters.forEach(exp => {
             $exporterSelect.append(`<option value="${exp.id}">${exp.name}</option>`);
         });
@@ -280,7 +280,7 @@ async function loadAllConsignmentFilters() {
         const importersResp = await fetch('/internal/api/filters/consignment/importers');
         const importers = await importersResp.json();
         const $importerSelect = $('#filterImporter');
-        $importerSelect.html('<option value="">All Importers</option>');
+        $importerSelect.empty();
         importers.forEach(imp => {
             $importerSelect.append(`<option value="${imp.id}">${imp.name}</option>`);
         });
@@ -369,16 +369,16 @@ $(document).on("click", "#btnConfirmExportPdf", function (e) {
 
 function exportConsignments(type) {
     const params = new URLSearchParams();
-    params.append("status", $("#filterStatus").val() || "");
+    params.append("status", [].concat($("#filterStatus").val() || []).join(","));
     params.append("start_date", $("#filterStartDate").val() || "");
     params.append("end_date", $("#filterEndDate").val() || "");
-    params.append("exporter_id", $("#filterExporter").val() || "");
-    params.append("importer_id", $("#filterImporter").val() || "");
+    params.append("exporter_id", [].concat($("#filterExporter").val() || []).join(","));
+    params.append("importer_id", [].concat($("#filterImporter").val() || []).join(","));
 
     const isInternal = typeof $("#filterPublicUser").val() !== "undefined";
     if (isInternal) {
         params.append("username", $("#filterUsername").val() || "");
-        params.append("public_user_uuid", $("#filterPublicUser").val() || "");
+        params.append("public_user_uuid", [].concat($("#filterPublicUser").val() || []).join(","));
     }
 
     const url = type === "excel" ? "/consignment/export-excel" : "/consignment/export-pdf";
