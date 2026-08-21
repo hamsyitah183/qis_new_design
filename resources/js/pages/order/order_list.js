@@ -92,8 +92,8 @@ async function data_table_init() {
     $("#btnOrderFilter").on("click", function (e) {
         e.preventDefault();
 
-        orderFilters.status = $("#filterOrderStatus").val() || "";
-        orderFilters.applicationType = $("#filterAppType").val() || "";
+        orderFilters.status = [].concat($("#filterOrderStatus").val() || []).join(",");
+        orderFilters.applicationType = [].concat($("#filterAppType").val() || []).join(",");
         orderFilters.startDate = $("#filterOrderStartDate").val() || "";
         orderFilters.endDate = $("#filterOrderEndDate").val() || "";
 
@@ -104,8 +104,8 @@ async function data_table_init() {
     $("#btnResetOrderFilter").on("click", function (e) {
         e.preventDefault();
 
-        $('#filterOrderStatus').val('').trigger('change.select2');
-        $('#filterAppType').val('').trigger('change.select2');
+        $('#filterOrderStatus').val(null).trigger('change');
+        $('#filterAppType').val(null).trigger('change');
         $("#filterOrderStartDate").val("");
         $("#filterOrderEndDate").val("");
 

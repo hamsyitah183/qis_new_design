@@ -68,7 +68,6 @@
                             <li class="mb-2">
                                 <label class="form-label fw-semibold mb-1" data-en="Country" data-bm="Negara">Country</label>
                                 <select class="form-select form-select-sm select2" id="filterExporterCountry">
-                                    <option value="" data-en="All Countries" data-bm="Semua Negara">All Countries</option>
                                     @foreach ($country as $coun)
                                         <option value="{{ $coun->code }}">{{ $coun->name }}</option>
                                     @endforeach

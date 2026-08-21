@@ -51,7 +51,8 @@ class InspectionController extends Controller
 
         // Apply filters from request
         if ($request->has('status') && $request->status != '') {
-            $query->where('status', $request->status);
+            $statuses = explode(',', $request->status);
+            $query->whereIn('status', $statuses);
         }
 
         if ($request->has('start_date') && $request->start_date != '') {
@@ -64,17 +65,20 @@ class InspectionController extends Controller
 
         // Filter by exporter ID
         if ($request->has('exporter_id') && $request->exporter_id != '') {
-            $query->where('exporter_id', $request->exporter_id);
+            $exporterIds = explode(',', $request->exporter_id);
+            $query->whereIn('exporter_id', $exporterIds);
         }
 
         // Filter by importer ID
         if ($request->has('importer_id') && $request->importer_id != '') {
-            $query->where('importer_id', $request->importer_id);
+            $importerIds = explode(',', $request->importer_id);
+            $query->whereIn('importer_id', $importerIds);
         }
 
         // Filter by public user UUID (for internal)
         if ($type === 'internal' && $request->has('public_user_uuid') && $request->public_user_uuid != '') {
-            $query->where('user_id', $request->public_user_uuid);
+            $userUuids = explode(',', $request->public_user_uuid);
+            $query->whereIn('user_id', $userUuids);
         }
 
         // Filter by "Submitted By" username (for internal)

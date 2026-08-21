@@ -56,7 +56,6 @@
                             <li class="mb-2">
                                 <label class="form-label fw-semibold mb-1" data-en="Country" data-bm="Negara">Country</label>
                                 <select class="form-select form-select-sm select2" id="filterExporterCountry">
-                                    <option value="" data-en="All Countries" data-bm="Semua Negara">All Countries</option>
                                     <option value="SWK" data-en="Sarawak, Malaysia" data-bm="Sarawak, Malaysia">Sarawak, Malaysia</option>
                                     <option value="BN" data-en="Brunei Darussalam" data-bm="Brunei Darussalam">Brunei Darussalam</option>
                                 </select>

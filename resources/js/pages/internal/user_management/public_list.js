@@ -311,10 +311,10 @@ async function public_user_list() {
         e.preventDefault();
         
         const filters = {
-            account_type: $("#filterAccountType").val(),
-            email_verification: $("#filterEmailVerification").val(),
-            account_verification: $("#filterAccountVerification").val(),
-            sort_by: $("#filterTime").val()
+            account_type: [].concat($("#filterAccountType").val() || []).join(","),
+            email_verification: [].concat($("#filterEmailVerification").val() || []).join(","),
+            account_verification: [].concat($("#filterAccountVerification").val() || []).join(","),
+            sort_by: $("#filterTime").val() // keeping sort as single value string
         };
 
         // Update DataTable AJAX URL with filter parameters
@@ -333,10 +333,10 @@ async function public_user_list() {
         e.preventDefault();
         
         // Reset all filter dropdowns
-        $("#filterAccountType").val("");
-        $("#filterEmailVerification").val("");
-        $("#filterAccountVerification").val("");
-        $("#filterTime").val("");
+        $("#filterAccountType").val(null).trigger("change");
+        $("#filterEmailVerification").val(null).trigger("change");
+        $("#filterAccountVerification").val(null).trigger("change");
+        $("#filterTime").val(null).trigger("change");
 
         // Reset DataTable to default URL
         publicUsersTable.ajax.url("/internal/user_public/list/data").load();

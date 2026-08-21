@@ -540,24 +540,28 @@ class ApplicationPaymentController extends Controller
 
         // Apply Order Status filter (filter by transaction_status since that's what's displayed)
         if ($request->filled('order_status') && $request->order_status != '') {
-            $status = $request->input('order_status');
+            $status = explode(',', $request->input('order_status'));
             // Match exact transaction_status name from database (case-sensitive)
-            $query->where('transaction_status', $status);
+            $query->whereIn('transaction_status', $status);
         }
 
         // Apply Application Type filter
-        if ($request->filled('application_type')) {
-            $appType = $request->input('application_type');
+        if ($request->filled('application_type') && $request->application_type != '') {
+            $appTypes = explode(',', $request->input('application_type'));
+            
+            $mappedTypes = [];
+            foreach ($appTypes as $appType) {
+                $mappedTypes[] = match (trim($appType)) {
+                    'import_permit' => 'Import Permit',
+                    'inspection' => 'Inspection Certificate',
+                    'consignment' => 'Consignment Certificate',
+                    default => null,
+                };
+            }
+            $mappedTypes = array_filter($mappedTypes);
 
-            $mappedType = match ($appType) {
-                'import_permit' => 'Import Permit',
-                'inspection' => 'Inspection Certificate',
-                'consignment' => 'Consignment Certificate',
-                default => null,
-            };
-
-            if ($mappedType) {
-                $query->where('application_type', $mappedType);
+            if (!empty($mappedTypes)) {
+                $query->whereIn('application_type', $mappedTypes);
             }
         }
 

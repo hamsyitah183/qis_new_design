@@ -34,6 +34,7 @@ export function setupSelect2(selector, placeholder = "", options = {}) {
         $el.select2({
             placeholder,
             allowClear: true,
+            multiple: true,
             width: "100%",
             // Attach to body by default so it's not clipped by .filter-dropdown bounds
             ...options,
@@ -75,8 +76,15 @@ export function autoInitFilterSelect2() {
     try {
         const selects = jq(".filter-dropdown select.select2");
         selects.each(function () {
-            const placeholder = jq(this).find("option:first").text() || "Select...";
+            let placeholder = jq(this).data("placeholder");
+            if (!placeholder) {
+                // Try to find the label for this select to use as placeholder
+                const label = jq(this).closest("li, div").find("label").text();
+                placeholder = label ? `Select ${label}` : "Select...";
+            }
             setupSelect2(this, placeholder);
+            // Clear default selection so it doesn't auto-select the first option in multi-select mode
+            jq(this).val(null).trigger("change");
         });
     } catch (e) {
         console.error("Select2 Auto Init Error:", e.message);
