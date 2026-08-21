@@ -894,10 +894,20 @@ class UserController extends Controller
     public function uploadVerificationAttachment(Request $request, VerificationService $verificationService)
     {
         // dd('upload');
-        $userId = $request->user_id;
-        $file = $request->file('attachment');
+        $userId = $request->user_id ?? auth('public')->user()->uuid;
+        
+        $filesByDocId = $request->file('attachment', []);
+        $documentTypes = $request->input('document_type', []);
+        $validFrom = $request->input('valid_from', []);
+        $validUntil = $request->input('valid_until', []);
 
-        $result = $verificationService->uploadVerificationAttachment($userId, $file);
+        $result = $verificationService->uploadVerificationAttachment(
+            $userId, 
+            $filesByDocId, 
+            $documentTypes, 
+            $validFrom, 
+            $validUntil
+        );
 
         $user = PublicUser::where('uuid', $userId)->first();
 
@@ -919,7 +929,7 @@ class UserController extends Controller
             ->useLog('user_activity')
             ->event('verified')
             ->performedOn($user)
-            ->causedBy(authUser()['user'])
+            ->causedBy(authUser()['user'] ?? $user)
             ->log("{$user->fullname} is uploading an attachment to get verification.");
 
         return response()->json($result, $result['success'] ? 200 : 500);

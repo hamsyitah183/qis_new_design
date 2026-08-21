@@ -35,15 +35,13 @@ class VerificationService
 
                     // Generate a unique filename
                     $filename = time() . '_' . Str::random(6) . '_' . $file->getClientOriginalName();
-                    
-                    // Relative path on the 'public' disk (under user_attachments/)
-                    $relativePath = 'user_attachments/' . $filename;
-                    
-                    // Store the file
-                    $stored = Storage::disk('public')->put($relativePath, file_get_contents($file));
-                    if (!$stored) {
+                    // Store the file directly using Laravel's UploadedFile storeAs method
+                    $storedPath = $file->storeAs('user_attachments', $filename, 'public');
+                    if (!$storedPath) {
                         throw new \Exception("Failed to store file: {$file->getClientOriginalName()}");
                     }
+                    
+                    $relativePath = $storedPath;
 
                     // Build the public URL path (starts with /storage/ because of the symbolic link)
                     $publicPath = '/storage/' . $relativePath;

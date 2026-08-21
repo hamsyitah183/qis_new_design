@@ -2,6 +2,10 @@
     <div class="d-flex flex-column gap-2" id="document-list-container">
 
     </div>
+    
+    <div id="document-submit-footer" class="mt-3 pt-3 border-top text-end d-none">
+        <!-- Submit button will be rendered here by JS -->
+    </div>
 </div>
 
 <div class="modal fade" id="fileLabelModal" tabindex="-1" aria-labelledby="fileLabelModalLabel" aria-hidden="true">
