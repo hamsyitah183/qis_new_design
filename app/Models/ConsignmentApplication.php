@@ -12,13 +12,29 @@ class ConsignmentApplication extends Model
     use HasFactory, HasConsignmentActivityLog;
     protected $table = 'consignment_applications';
 
-    protected $fillable = ['application_id', 'reference_no', 'eta', 'transport_type', 'entry_point', 'user_id', 
-    'exporter_id', 'importer_id', 'importer_detail', 'category_application', 'importer_verify', 'date_importer_verify', 'status'];
+    protected $fillable = [
+        'application_id',
+        'reference_no',
+        'eta',
+        'transport_type',
+        'entry_point',
+        'user_id',
+        'exporter_id',
+        'importer_id',
+        'importer_detail',
+        'category_application',
+        'importer_verify',
+        'date_importer_verify',
+        'status',
+        'vehicle_ids',
+        'ptn_number'
+    ];
 
     protected $casts = [
         'eta' => 'date',
         'importer_detail' => 'array', // JSON stored importer info
         'date_importer_verify' => 'datetime',
+        'vehicle_ids' => 'array',
     ];
 
     protected static function booted()

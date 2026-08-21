@@ -2,274 +2,337 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Consignment Permit</title>
+    <title>Perihal Konsaimen</title>
     <style>
         @page {
-            margin: 1.54cm 1.54cm; /* A4 standard margin */
+            margin: 1.4cm 1.6cm;
         }
         body {
             font-family: Arial, sans-serif;
             font-size: 10pt;
-            line-height: 1.3;
+            line-height: 1.35;
+        }
+        .asal-label {
+            text-align: right;
+            font-weight: bold;
+            font-size: 9pt;
+            margin-bottom: 6px;
         }
         .header-table {
             width: 100%;
             border-collapse: collapse;
             border: none;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
         .header-table td {
-            vertical-align: middle;
+            vertical-align: top;
+            font-size: 9pt;
+        }
+        .header-left {
+            width: 33%;
+        }
+        .header-center {
+            width: 34%;
             text-align: center;
+        }
+        .header-right {
+            width: 33%;
+            text-align: left;
         }
         .logo {
-            width: 80px;
+            width: 65px;
             height: auto;
         }
-        .title-text {
+        .sabah-title {
+            font-weight: bold;
+            margin-top: 4px;
+        }
+        .no-line {
             text-align: center;
             font-weight: bold;
+            font-size: 13pt;
+            margin: 10px 0 4px 0;
         }
-        .permit-no {
-            text-align: right;
+        .form-title {
+            text-align: center;
             font-weight: bold;
-            margin-bottom: 15px;
+            font-size: 12pt;
+            text-decoration: underline;
+            margin-bottom: 14px;
         }
-        .content-section {
-            margin-bottom: 15px;
+        .field-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 8px;
+        }
+        .field-table td {
+            padding: 2px 4px;
+            vertical-align: top;
+        }
+        .field-label {
+            width: 34%;
+            white-space: nowrap;
+        }
+        .field-value {
+            border-bottom: 1px dotted #000;
+            font-weight: bold;
+        }
+        .items-block {
+            margin-left: 34%;
+            margin-top: -2px;
+            margin-bottom: 8px;
+        }
+        .items-block table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .items-block td {
+            padding: 1px 4px;
+            border-bottom: 1px dotted #000;
+        }
+        .items-block .qty {
+            width: 25%;
+            text-align: left;
+        }
+        .declaration {
             text-align: justify;
+            margin: 16px 0;
+        }
+        .validity-line {
+            margin-bottom: 4px;
+        }
+        .sign-row {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 6px;
+        }
+        .sign-row td {
+            vertical-align: top;
+            padding: 2px 4px;
+        }
+        .sign-label {
+            width: 45%;
+        }
+        .footer-block {
+            margin-top: 40px;
+        }
+        .disahkan {
+            width: 55%;
+        }
+        .officer-name {
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-top: 30px;
+        }
+        .stamp-box {
+            float: right;
+            width: 140px;
+            height: 100px;
+            border: 1px dashed #999;
+            text-align: center;
+            font-size: 8pt;
+            color: #888;
+            padding-top: 40px;
+        }
+        .sk-block {
+            margin-top: 20px;
+            font-size: 9.5pt;
+        }
+        .form-code {
+            margin-top: 30px;
+            font-size: 8.5pt;
         }
         .underline-dots {
             border-bottom: 1px dotted #000;
             display: inline-block;
             min-width: 200px;
         }
-        .conditions-list {
-            margin-top: 10px;
-            list-style-type: decimal;
-            margin-left: 20px;
-        }
-        .conditions-list li {
-            margin-bottom: 5px;
-            text-align: justify;
-        }
-        .sub-list {
-            list-style-type: lower-alpha;
-            margin-left: 20px;
-            margin-top: 5px;
-        }
-        .schedule-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            border: 1px solid #000;
-        }
-        .schedule-table th, .schedule-table td {
-            border: 1px solid #000;
-            padding: 8px;
-            text-align: left;
-            vertical-align: top;
-        }
-        .footer {
-            margin-top: 30px;
-            width: 100%;
-        }
-        .director-sign {
-            float: right;
-            text-align: center;
-            width: 250px;
-        }
-        .page-break {
-            page-break-after: always;
-        }
     </style>
 </head>
 <body>
-    
- 
 
-    <!-- Header -->
+    <div class="asal-label">ASAL</div>
+
+    {{-- ================= HEADER ================= --}}
     <table class="header-table">
         <tr>
-            <td style="width: 15%;">
-                <img src="{{ public_path('asset/jata-svg.jpg') }}" class="logo" alt="Logo">
+            <td class="header-left">
+                Ruj.: {{ $application->reference_no ?? '-' }}<br>
+                {{-- TODO: no dedicated "vehicle number" relation yet.
+                     vehicle_ids is a JSON array of IDs — resolve against your
+                     Vehicle model once it exists. Falling back to the raw IDs. --}}
+                NO.KENDERAAN: {{ is_array($application->vehicle_ids ?? null) ? implode(', ', $application->vehicle_ids) : '-' }}<br><br>
+                Kepada:<br>
+                Pertubuhan Perlindungan Tumbuhan<br><br>
+                JABATAN PERTANIAN<br>
+                {{-- Destination state derived from the consignee's "country" field,
+                     which for domestic shipments actually stores the MY state code. --}}
+                @php
+                    $consigneeState = \App\Models\Country::select('name')->where('code', $importer['country'] ?? null)->first();
+                @endphp
+                NEGERI {{ strtoupper($consigneeState->name ?? '-') }}
             </td>
-            <td style="width: 70%;">
-                <div>PLANT BIOSECURITY AND QUARANTINE DIVISION,</div>
-                <div>DEPARTMENT OF AGRICULTURE, SABAH, MALAYSIA</div>
-                <br>
-                <div style="font-size: 14pt; font-weight: bold;">CONSIGNMENT APPLICATION</div>
-                <div style="font-size: 14pt; font-weight: bold;">REGULATED ARTICLES</div>
-                <div>SIXTH / EIGHTH SCHEDULE</div>
-                <div>Regulations 3, 5(1) and 5(4)</div>
-            </td>
-            <td style="width: 15%;">
+            <td class="header-center">
                 <img src="{{ public_path('asset/sabah-svg.jpg') }}" class="logo" alt="Sabah Logo">
+                <div class="sabah-title">SABAH, MALAYSIA</div>
+            </td>
+            <td class="header-right">
+                <img src="{{ public_path('asset/jata-svg.jpg') }}" class="logo" alt="Logo"><br>
+                Jabatan Pertanian,<br>
+                (Seksyen Biosekuriti &amp; Kuarantin Tumbuhan),<br><br>
+                {{-- TODO: $district — resolve entry point's district ID to a name
+                     once a District model/relation is wired up. --}}
+                Daerah: <span class="underline-dots" style="min-width:120px;">{{ $district ?? optional($entry)->district ?? '-' }}</span><br>
+                Tarikh: <span class="underline-dots" style="min-width:120px;">{{ now()->format('d.m.Y') }}</span>
             </td>
         </tr>
     </table>
 
-    <div class="permit-no">
-        Permit No.: {{ $items[0]->permit_number ?? '-' }}
-    </div>
+    <div class="no-line">No. {{ optional($items->first())->permit_number ?? '-' }}</div>
+    <div class="form-title">PERIHAL KONSAIMEN</div>
 
-    <!-- Content -->
-    <table style="width:100%; border-collapse:collapse; margin-bottom:10px;">
-
-    <tr>
-        <td style="white-space:nowrap; padding:2px 5px;">
-            Name of consignee
-        </td>
-        <td style="padding:2px 5px; border-bottom:1px dotted #000;">
-            {{ strtoupper($importer['name'] ?? '-') }}
-        </td>
-    </tr>
-
-    <tr>
-        @php
-             $country = \App\Models\Country::select('name')->where('code', $importer['country'])->first();
-        @endphp
-        <td style="white-space:nowrap; padding:2px 5px;">
-            And address
-        </td>
-        <td style="padding:2px 5px; border-bottom:1px dotted #000;">
-            {{ strtoupper(
-                ($importer['address'] ?? '') . ', ' .
-              
-                ( $country->name ?? '')
-            ) }}
-        </td>
-    </tr>
-
-    <tr>
-        <td style="white-space:nowrap; padding:2px 5px;">
-            Name of consignor
-        </td>
-        <td style="padding:2px 5px; border-bottom:1px dotted #000;">
-            {{ strtoupper($exporter['fullname'] ?? '-') }}
-        </td>
-    </tr>
-
-    <tr>
-        <td style="white-space:nowrap; padding:2px 5px;">
-            And address
-        </td>
-        <td style="padding:2px 5px; border-bottom:1px dotted #000;">
-            @php
-                $state = \App\Models\Country::select('name')->where('code', $exporter['state'])->first();
-            @endphp
-             {{ strtoupper(
-                ($exporter['address_1'] ?? '') . ', ' .
-                ($exporter['address_2'] ?? '') . ', ' .
-                ($exporter['postcode'] ?? '') . ' ' .
-                ($exporter['district'] ?? '') . ', ' .
-                ($exporter['state'] ?? '')
-            ) }}
-        </td>
-    </tr>
-
-    <tr>
-        <td style="white-space:nowrap; padding:2px 5px; vertical-align:top;">
-            Entry Point
-        </td>
-        <td style="padding:2px 5px; border-bottom:1px dotted #000;">
-            {{ strtoupper($application->entryPoint->entry_name ?? '-') }}
-        </td>
-    </tr>
-
-</table>
-
-
-    <div class="content-section" style="font-weight: bold;">
-        This permit is issued subject to the following conditions:
-    </div>
-
-    <ol class="conditions-list">
-        <li>Import license must be obtained from the relevant Ministry.</li>
-        <li>A copy of this Import Permit must accompany the consignment.</li>
-        <li>The regulated articles are subject to inspection prior to clearance.</li>
-        <li>
-            This permit is valid until <span class="underline-dots" style="width: 150px;">{{ $validUntil ?? '' }}</span> for one consignment only.
-        </li>
-        <li>
-    The consignment must be accompanied by a Phytosanitary Certificate or a statement from the official Plant Protection Service of the country of origin bearing the following certificate:
-    <ol class="sub-list">
-        <li>
-            (a) Treatment
-            <table style="width:100%; border-collapse:collapse; margin-top:3px; margin-bottom:5px;">
-                <tr>
-                    <td style="border-bottom:1px dotted #000; height:16px;"></td>
-                </tr>
-                <tr>
-                    <td style="border-bottom:1px dotted #000; height:16px;"></td>
-                </tr>
-            </table>
-        </li>
-        <li>
-            (b) Other declaration
-            <table style="width:100%; border-collapse:collapse; margin-top:3px; margin-bottom:5px;">
-                <tr>
-                    <td style="border-bottom:1px dotted #000; height:16px;"></td>
-                </tr>
-                <tr>
-                    <td style="border-bottom:1px dotted #000; height:16px;"></td>
-                </tr>
-            </table>
-        </li>
-    </ol>
-</li>
-
-        <li style="margin-bottom:100px;">Further conditions</li>
-
-            <span style="font-family: 'Courier New', monospace; font-size:8pt; word-break: break-word;">
-                Check Next Page for futher condition
-            </span>
-
-    </ol>
-
-    <br>
-
-    <div class="content-section" style="font-weight: bold;">
-        Schedule:
-    </div>
-
-    <table class="schedule-table">
-        <thead>
-            <tr>
-                <th style="width: 50%;">Descriptions</th>
-                <th style="width: 20%;">Quantity</th>
-                <th style="width: 30%;">Country of Origin</th>
-            </tr>
-        </thead>
-        <tbody>
-       
-
-            @foreach( $items as $detail )
-            @php
-                $itemName = $detail['consignment_detail']['item_name'] ?? '-';
-                $parts = explode('-', $itemName);
-                $afterDash = isset($parts[1]) ? trim($parts[1]) : $itemName;
-                
-                $country = \App\Models\Country::select('name')->where('code', $importer['country'])->first();
-            @endphp
-            <tr>
-                <td>{{ $afterDash }}</td>
-                <td>{{ ($detail['quantity'] ?? '-') . ' ' . ($detail['unit_measurement'] ?? '') }}</td>
-                <td>{{ $country->name ?? '-' }}</td>
-            </tr>
-            @endforeach
-        </tbody>
+    {{-- ================= MAIN FIELDS ================= --}}
+    <table class="field-table">
+        <tr>
+            <td class="field-label">Nama dan Alamat Pengeksport:</td>
+            <td class="field-value">
+                {{ strtoupper($exporter['fullname'] ?? '-') }},
+                {{ strtoupper(trim(
+                    ($exporter['address_1'] ?? '') . ' ' .
+                    ($exporter['address_2'] ?? '') . ' ' .
+                    ($exporter['postcode'] ?? '') . ' ' .
+                    ($exporter['district'] ?? '') . ', ' .
+                    ($exporter['state'] ?? '')
+                )) }}
+            </td>
+        </tr>
+        <tr>
+            <td class="field-label">Nama dan Alamat Konsigni (Penerima):</td>
+            <td class="field-value">
+                {{ strtoupper($importer['name'] ?? '-') }},
+                {{ strtoupper($importer['address'] ?? '-') }}
+            </td>
+        </tr>
+        <tr>
+            <td class="field-label">Bilangan dan Perihal Bungkusan:</td>
+            <td class="field-value">
+                {{-- Aggregates quantity across all items. If units differ this just
+                     concatenates them — flag to Ruby if mixed-unit consignments
+                     need a smarter rollup than a straight sum. --}}
+                @php
+                    $totalsByUnit = collect($items)->groupBy('unit_measurement')->map(function ($group) {
+                        return collect($group)->sum('quantity');
+                    });
+                @endphp
+                {{ $totalsByUnit->map(fn($qty, $unit) => $qty . ' ' . strtoupper($unit ?? ''))->implode(', ') ?: '-' }}
+            </td>
+        </tr>
+        <tr>
+            <td class="field-label">Tempat Asal:</td>
+            <td class="field-value">
+                {{-- TODO: no "origin place" field on the model yet — this is
+                     currently just falling back to the exporter's district/state.
+                     Add an `origin_place` column on the application (or item) if
+                     it needs to be entered separately, as in the sample photo. --}}
+                {{ strtoupper(trim(($exporter['district'] ?? '') . ', ' . ($exporter['state'] ?? ''))) ?: '-' }}
+            </td>
+        </tr>
+        <tr>
+            <td class="field-label">Cara Penghantaran Terisytihar:</td>
+            <td class="field-value">
+                @php
+                    $transportMap = [
+                        'Land' => 'MELALUI DARAT',
+                        'Sea'  => 'MELALUI LAUT',
+                        'Air'  => 'MELALUI UDARA',
+                    ];
+                @endphp
+                {{ $transportMap[$application->transport_type ?? ''] ?? strtoupper($application->transport_type ?? '-') }}
+            </td>
+        </tr>
+        <tr>
+            <td class="field-label">Nama Hasil Terisytihar:</td>
+            <td class="field-value">SEPERTI DIBAWAH</td>
+        </tr>
+        <tr>
+            <td class="field-label">Tempat Masuk/Terisytihar:</td>
+            <td class="field-value">{{ strtoupper(optional($entry)->entry_name ?? '-') }}</td>
+        </tr>
+        <tr>
+            <td class="field-label">Tarikh Bertolak/Berlepas:</td>
+            <td class="field-value">
+                {{ optional($application->eta)->format('d.m.Y') ?? '-' }}
+            </td>
+        </tr>
     </table>
 
-    <div class="footer">
-        <div style="float: left;">
-            Date of Issue: {{ now()->format('d/M/Y') }}
+    <div class="items-block">
+        <div style="font-weight:bold; margin-bottom:2px;">Nama Hasil dan Kuantiti Terisytihar:</div>
+        <table>
+            @foreach ($items as $detail)
+                @php
+                    $itemName = data_get($detail, 'consignment_detail.item_name', '-');
+                    $parts = explode('-', $itemName);
+                    $afterDash = isset($parts[1]) ? trim($parts[1]) : $itemName;
+                @endphp
+                <tr>
+                    <td>{{ strtoupper($afterDash) }}</td>
+                    <td class="qty">{{ data_get($detail, 'quantity', '-') }}</td>
+                </tr>
+            @endforeach
+        </table>
+    </div>
+
+    <div class="declaration">
+        Dengan ini Jabatan Pertanian tidak ada halangan dan memaklumkan bahawa tumbuh-tumbuhan atau
+        keluaran tumbuh-tumbuhan yang diperakui dan diperihalkan di atas telah diproses mengikut
+        prosedur-prosedur di mana yang perlu dan adalah dianggap sebagai bebas daripada makhluk
+        perosak berbahaya.
+    </div>
+
+    <div class="validity-line">
+        Surat kebenaran ini sah hanya bagi satu konsaimen/pengeluaran
+        dan mansuh pada: <span class="underline-dots">{{ $validUntil ?? '-' }}</span>
+    </div>
+
+    <table class="sign-row">
+        <tr>
+            <td class="sign-label">Nama Pegawai Pemeriksa dan Pelapor:
+                <span class="underline-dots"></span>
+            </td>
+            <td>Tandatangan:
+                <span class="underline-dots"></span>
+            </td>
+        </tr>
+    </table>
+
+    {{-- ================= AUTHORISING OFFICER / FOOTER ================= --}}
+    <div class="footer-block">
+        <div class="disahkan">
+            Disahkan
+            {{-- TODO: no "approving officer" relation exists yet. This block is
+                 static per district in the sample (e.g. a district agriculture
+                 officer's name/title/stamp). Wire this to whichever table stores
+                 the officer assigned to $entry->district once it exists. --}}
+            <div class="officer-name">{{ $approvingOfficer['name'] ?? '_____________________________' }}</div>
+            <div>{{ $approvingOfficer['title'] ?? 'Pegawai Pertanian Kanan (Pegawai Pertanian)' }}</div>
+            <div>DAERAH {{ strtoupper($district ?? optional($entry)->district ?? '-') }}</div>
         </div>
-        <div class="director-sign">
-            <div style="font-weight: bold;">Director of Agriculture</div>
-            <div>Sabah, Malaysia</div>
+
+        <div class="stamp-box">Cap Jabatan Pertanian</div>
+        <div style="clear:both;"></div>
+
+        <div class="sk-block">
+            s.k. Pengarah,<br>
+            Jabatan Pertanian Sabah,<br>
+            88632 Kota Kinabalu.<br><br>
+            (U/P: Seksyen Biosekuriti &amp; Kuarantin Tumbuhan)
         </div>
-        <div style="clear: both;"></div>
+
+        <div class="form-code">
+            YKS/ldw/agc<br>
+            P.K. 530 (L) - 2024
+        </div>
     </div>
 
 </body>

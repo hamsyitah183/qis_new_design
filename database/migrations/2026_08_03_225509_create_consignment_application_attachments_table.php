@@ -13,7 +13,10 @@ return new class extends Migration
     {
         Schema::create('consignment_application_attachments', function (Blueprint $table) {
             $table->id();
-            $table->string('application_id');
+            $table->string('application_id')
+                  ->comment('References ip_application.id')
+                ->constrained('consignment_applications')
+                ->onDelete('cascade');
             $table->string('file_name');
             $table->string('file_path');
             $table->string('file_type')->nullable();

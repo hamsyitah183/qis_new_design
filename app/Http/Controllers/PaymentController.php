@@ -147,14 +147,8 @@ class PaymentController extends Controller
                 ->get();
             // dd($permits);
         } elseif ($type == 'consignment') {
-            $application = ConsignmentApplication::findOrFail($id);
-            // $permitIds = explode(',', $permitId);
-
-            $permits = ConsignmentPermit::where('application_id', $id)
-                ->whereIn('id', $permitIds)
-                ->whereIn('status', ['pending for payment', 'payment failed', 'Payment Failed'])
-                ->get();
-            // dd($permits);
+            $application = ConsignmentApplication::with(['consignmentPermits'])->where('application_id', $id)->first();
+            $permits = $application->consignmentPermits;
         }
 
         if ($application->user_id !== authUser()['user']->uuid) {

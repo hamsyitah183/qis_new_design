@@ -413,38 +413,23 @@ class PermitGenerateController extends Controller
         }
 
         $items = $application->consignmentPermits;
-        // dd( $items );
         $importer = $application->importer;
         $exporter = $application->exporter;
         $entry = $application->entryPoint;
 
-        $validUntil = optional($items->first())->validity_date ? \Carbon\Carbon::parse($items->first()->validity_date)->format('d/M/Y') : '-';
+        $validUntil = optional($items->first())->validity_date
+            ? \Carbon\Carbon::parse($items->first()->validity_date)->format('d/M/Y')
+            : '-';
 
-        // ✅ BUILD CONDITIONS ARRAY
-        $conditions = [];
+        // TODO: replace with a real lookup once you have a District model.
+        // $entry->district is currently just an ID (see IpEntryPoint), so this
+        // is a placeholder — e.g. District::find($entry->district)->name.
+        $district = null;
 
-        foreach ($items as $permit) {
-            $conditionModel = $permit->condition();
-
-            if (!$conditionModel) {
-                continue;
-            }
-
-            $text = $conditionModel->addional_condition;
-
-            // replace variables
-            $text = str_replace(
-                ['{{import_permit_number}}', '{{ import_permit_number }}', '{{year}}', '{{ year }}'],
-                [$permit->permit_number, $permit->permit_number, now()->year, now()->year],
-                $text
-            );
-
-            $conditions[] = [
-                'permit_number' => $permit->permit_number,
-                'item_name' => data_get($permit->consignment_detail, 'item_name'),
-                'text' => $text,
-            ];
-        }
+        // TODO: replace with a real lookup for the officer authorised to sign
+        // off permits for this district/entry point, once that relation exists.
+        // Shape expected by the view: ['name' => ..., 'title' => ...]
+        $approvingOfficer = null;
 
         $pdf = Pdf::loadView(
             'pdf.permit_consignment',
@@ -455,7 +440,8 @@ class PermitGenerateController extends Controller
                 'exporter',
                 'entry',
                 'validUntil',
-                'conditions',
+                'district',
+                'approvingOfficer',
             ),
         )->setPaper('a4', 'portrait');
 

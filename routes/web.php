@@ -578,6 +578,7 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/measurement', [MiscController::class, 'measurementUnit']);
 
 
+    Route::get('/vehicles/details', [VehicleController::class, 'getVehiclesByIds'])->name('vehicles.details');
 
   
 });

@@ -53,4 +53,29 @@ class VehicleController extends Controller
             // optionally return the full vehicle object
         ], 201);
     }
+
+    public function getVehiclesByIds(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (is_string($ids)) {
+            $ids = array_filter(explode(',', $ids));
+        }
+        $ids = array_map('intval', $ids);
+        if (empty($ids)) {
+            return response()->json([]);
+        }
+
+        $userId = $request->input('user_id');
+        if (!$userId) {
+            // fallback to authenticated user (for backward compatibility)
+            $user = authUser();
+            $userId = is_array($user) ? $user['uuid'] : $user->uuid;
+        }
+
+        $vehicles = UserVehicleList::where('user_id', $userId)
+            ->whereIn('id', $ids)
+            ->get();
+
+        return response()->json($vehicles);
+    }
 }
