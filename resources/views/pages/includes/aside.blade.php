@@ -280,6 +280,9 @@
                                 <li class="slide {{ $currentRoute === 'internal.announcements.list' ? 'active' : '' }}">
                                     <a href="{{ route('internal.announcements.list') }}" class="side-menu__item" data-en="Announcements" data-bm="Pengumuman">Announcements</a>
                                 </li>
+                                <li class="slide {{ $currentRoute === 'internal.galleries.list' ? 'active' : '' }}">
+                                    <a href="{{ route('internal.galleries.list') }}" class="side-menu__item" data-en="Gallery" data-bm="Galeri">Gallery</a>
+                                </li>
                             </ul>
                         </li>
                     @endif

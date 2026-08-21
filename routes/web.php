@@ -27,6 +27,7 @@ use App\Http\Controllers\BoundaryOfficerController;
 use App\Http\Controllers\ConsignmentMiscController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FilterController;
+use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\VehicleController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -35,7 +36,7 @@ use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
 
- Route::get('/documents/data', [DocumentController::class, 'documentsList']);
+Route::get('/documents/data', [DocumentController::class, 'documentsList']);
 
 // Guest routes (Unauthenticated users)
 Route::middleware(['multi.guest'])->group(function () {
@@ -48,8 +49,8 @@ Route::middleware(['multi.guest'])->group(function () {
     Route::get('/forgot-password', [PasswordResetController::class, 'resetPage'])->name('password.request');
     Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
 
-      // list of documents
-   
+    // list of documents
+
 });
 
 // Password Reset Routes (Token verification)
@@ -80,16 +81,16 @@ Route::get('/', function () {
     // return redirect()->route('login');
 })->name('home');
 
-Route::get('/announcement', function() {
+Route::get('/announcement', function () {
     $announcements = \App\Models\Announcement::with('releasedBy')
         ->where('is_active', true)
         ->where(function ($query) {
             $query->whereNull('valid_from')
-                  ->orWhere('valid_from', '<=', now()->toDateString());
+                ->orWhere('valid_from', '<=', now()->toDateString());
         })
         ->where(function ($query) {
             $query->whereNull('valid_until')
-                  ->orWhere('valid_until', '>=', now()->toDateString());
+                ->orWhere('valid_until', '>=', now()->toDateString());
         })
         ->latest()
         ->get();
@@ -249,7 +250,7 @@ Route::prefix('internal')
         Route::get('/exporter_list/data', [ApplicationController::class, 'getInternalExporterListData'])->name('exporter.list.data');
         Route::get('/importer_list', [ApplicationController::class, 'showInternalImporterList'])->name('importer.list');
         Route::get('/importer_list/data', [ApplicationController::class, 'getInternalImporterListData'])->name('importer.list.data');
-        
+
 
         // ======================= announcements ========================
         Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.list');
@@ -263,6 +264,14 @@ Route::prefix('internal')
         Route::delete('/announcements/attachments/{attachmentId}', [AnnouncementController::class, 'deleteAttachment'])->name('announcements.attachments.delete');
         Route::post('/announcements/{id}/toggle', [AnnouncementController::class, 'toggleActive'])->name('announcements.toggle');
         Route::post('/announcements/{id}/share-email', [AnnouncementController::class, 'shareViaEmail'])->name('announcements.share_email');
+
+        // ============================== gallery ================================================
+        Route::get('/galleries', [GalleryController::class, 'index'])->name('galleries.list');
+        Route::get('/galleries/data', [GalleryController::class, 'data'])->name('galleries.data');
+        Route::get('/galleries/{id}', [GalleryController::class, 'show'])->name('galleries.show');
+        Route::post('/galleries', [GalleryController::class, 'store'])->name('galleries.store');
+        Route::put('/galleries/{id}', [GalleryController::class, 'update'])->name('galleries.update');
+        Route::delete('/galleries/{id}', [GalleryController::class, 'destroy'])->name('galleries.destroy');
 
         // ======================= inspection certificates ========================
         Route::get('/inspection_certificates_list', [InspectionController::class, 'showAllInspectionList'])->name('inspection.list');
@@ -579,8 +588,6 @@ Route::middleware(['auth.any'])->group(function () {
 
 
     Route::get('/vehicles/details', [VehicleController::class, 'getVehiclesByIds'])->name('vehicles.details');
-
-  
 });
 
 // broadcast --dont kacau---

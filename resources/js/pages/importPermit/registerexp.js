@@ -112,6 +112,70 @@ async function selfImport() {
     }
 }
 
+// ─── Category Toggle ──────────────────────────────────────
+function initCategoryToggle() {
+    // Listen to changes on the category radio/select.
+    // We assume there is an element with name="applCate" (radio or select).
+    // The hidden input #app_cate already holds the value; we sync from that too.
+    const $cateInput = $("#app_cate");
+
+    // Function to apply category
+    function applyCategory(cateValue) {
+        const isSelf = parseInt(cateValue) === 0;
+        if (isSelf) {
+            // Self: fill importer with logged-in user
+            const user = window.authUser?.user || null;
+            if (user) {
+                importer = user;
+                $("#impname").val(user.fullname || "");
+                $("#impid").val(user.id || "");
+                $("#impfonno").val(user.phone_number || "");
+                $("#impaddress1").val(user.address_1 || "");
+                $("#impaddress2").val(user.address_2 || "");
+                $("#imp_id").val(user.id || "");
+                $("#impemail").val(user.email || "");
+                $("#searchresult").hide();
+            }
+            // Disable the search button
+            $("#btnFindImp").prop("disabled", true);
+        } else {
+            // Others: clear importer and enable search
+            importer = null;
+            clearImporterFields();
+            $("#btnFindImp").prop("disabled", false);
+        }
+    }
+
+    // Listen to changes on radio/select with name "applCate"
+    $(document).on("change", 'input[name="applCate"], select[name="applCate"]', function () {
+        const val = $(this).val();
+        $cateInput.val(val); // keep hidden input in sync
+        applyCategory(val);
+        // trigger summary update if needed
+        summarySubmit();
+    });
+
+    // Also listen to direct changes on the hidden input (if set programmatically)
+    $cateInput.on("change", function () {
+        const val = $(this).val();
+        if (val !== undefined && val !== null && val !== "") {
+            applyCategory(val);
+        }
+    });
+
+    // Initial state: read from hidden input
+    const initialCate = parseInt($cateInput.val() || "0");
+    applyCategory(initialCate);
+
+    // If there is a radio that matches, set it to checked
+    $(`input[name="applCate"][value="${initialCate}"]`).prop("checked", true);
+}
+
+function clearImporterFields() {
+    $("#impname, #impid, #impfonno, #impaddress1, #impaddress2, #imp_id, #impemail").val("");
+    importer = null;
+}
+
 // ─── Exporter List ────────────────────────────────────────
 function fetchExporterList() {
     const $select = $("#selectexp");
@@ -569,6 +633,7 @@ function handleImporterResponse(data) {
         $(
             "#impname, #impid, #impfonno, #impaddress1, #impaddress2, #imp_id, #impemail",
         ).val("");
+        importer = null;
     };
 
     if (data.status !== "success") {
@@ -582,14 +647,26 @@ function handleImporterResponse(data) {
         return;
     }
 
+    // ✅ Set global importer with the found data
+    importer = data.data;
+
     $("#searchresult, #doanotver, #emailnotver").hide();
-    $("#impname").val(data.data.fullname);
-    $("#impid").val(data.data.id);
-    $("#impfonno").val(data.data.phone_number);
-    $("#impaddress1").val(data.data.address_1);
-    $("#impaddress2").val(data.data.address_2);
-    $("#imp_id").val(data.data.id);
-    $("#impemail").val(data.data.email);
+    $("#impname").val(importer.fullname);
+    $("#impid").val(importer.id);
+    $("#impfonno").val(importer.phone_number);
+    $("#impaddress1").val(importer.address_1);
+    $("#impaddress2").val(importer.address_2);
+    $("#imp_id").val(importer.id);
+    $("#impemail").val(importer.email);
+
+    // Optional success message
+    Swal.fire({
+        icon: "success",
+        title: '<span data-en="Importer Found!" data-bm="Pengimport Ditemui!">Importer Found!</span>',
+        timer: 1500,
+        showConfirmButton: false,
+        didOpen: (modal) => applyTranslations(modal),
+    });
 }
 
 // ─── Permit Details ──────────────────────────────────────
@@ -2606,6 +2683,9 @@ $(document).ready(async function () {
         await selfImport();
         await fetchExporterList();
         handleExporterChange();
+
+        // ✅ Initialize category toggle
+        initCategoryToggle();
 
         initAddExporterModal();
         initImporterSearch();

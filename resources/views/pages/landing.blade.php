@@ -94,16 +94,14 @@
         {{-- =============================== ANNOUNCEMENT TICKER =============================== --}}
         <div class="qis-ticker">
             <div class="qis-ticker-track" id="qisTickerTrack">
-                @foreach($announcements as $item)
-                <span class="qis-ticker-item"><b data-en="NOTICE" data-bm="NOTIS">NOTICE</b><span
-                        data-en="{{ $item->title }}"
-                        data-bm="{{ $item->title }}">{{ $item->title }}</span></span>
+                @foreach ($announcements as $item)
+                    <span class="qis-ticker-item"><b data-en="NOTICE" data-bm="NOTIS">NOTICE</b><span
+                            data-en="{{ $item->title }}" data-bm="{{ $item->title }}">{{ $item->title }}</span></span>
                 @endforeach
                 <!-- duplicate for seamless loop -->
-                @foreach($announcements as $item)
-                <span class="qis-ticker-item"><b data-en="NOTICE" data-bm="NOTIS">NOTICE</b><span
-                        data-en="{{ $item->title }}"
-                        data-bm="{{ $item->title }}">{{ $item->title }}</span></span>
+                @foreach ($announcements as $item)
+                    <span class="qis-ticker-item"><b data-en="NOTICE" data-bm="NOTIS">NOTICE</b><span
+                            data-en="{{ $item->title }}" data-bm="{{ $item->title }}">{{ $item->title }}</span></span>
                 @endforeach
             </div>
         </div>
@@ -278,46 +276,25 @@
                     Checkpoints, in the field</h2>
 
                 <div class="qis-gallery-grid">
-                    {{-- Tile 1: KK Port --}}
-                    <div class="qis-gallery-tile"
-                        style="background-image: url('{{ asset('images/gallery/kk-port.jpg') }}'); background-size: cover; background-position: center;"
-                        data-modal="qisModalImage" data-image-src="{{ asset('images/gallery/kk-port.jpg') }}"
-                        data-caption-en="Kota Kinabalu Port checkpoint"
-                        data-caption-bm="Titik Pemeriksaan Pelabuhan Kota Kinabalu">
-                        <span class="qis-tag">IMG_01</span>
-                        <span class="qis-tile-overlay" data-en="Kota Kinabalu Port checkpoint"
-                            data-bm="Titik Pemeriksaan Pelabuhan Kota Kinabalu">Kota Kinabalu Port checkpoint</span>
-                    </div>
-
-                    {{-- Tile 2: Quarantine lab --}}
-                    <div class="qis-gallery-tile"
-                        style="background-image: url('{{ asset('images/gallery/quarantine-lab.jpg') }}'); background-size: cover; background-position: center;"
-                        data-modal="qisModalImage" data-image-src="{{ asset('images/gallery/quarantine-lab.jpg') }}"
-                        data-caption-en="Quarantine laboratory" data-caption-bm="Makmal Kuarantin">
-                        <span class="qis-tag">IMG_02</span>
-                        <span class="qis-tile-overlay" data-en="Quarantine laboratory"
-                            data-bm="Makmal Kuarantin">Quarantine laboratory</span>
-                    </div>
-
-                    {{-- Tile 3: Cargo inspection --}}
-                    <div class="qis-gallery-tile"
-                        style="background-image: url('{{ asset('images/gallery/cargo-inspection.jpg') }}'); background-size: cover; background-position: center;"
-                        data-modal="qisModalImage" data-image-src="{{ asset('images/gallery/cargo-inspection.jpg') }}"
-                        data-caption-en="Cargo inspection" data-caption-bm="Pemeriksaan Kargo">
-                        <span class="qis-tag">IMG_03</span>
-                        <span class="qis-tile-overlay" data-en="Cargo inspection" data-bm="Pemeriksaan Kargo">Cargo
-                            inspection</span>
-                    </div>
-
-                    {{-- Tile 4: Agricultural farms --}}
-                    <div class="qis-gallery-tile"
-                        style="background-image: url('{{ asset('images/gallery/agricultural-farm.jpg') }}'); background-size: cover; background-position: center;"
-                        data-modal="qisModalImage" data-image-src="{{ asset('images/gallery/agricultural-farm.jpg') }}"
-                        data-caption-en="Agricultural farms across Sabah" data-caption-bm="Ladang Pertanian di Sabah">
-                        <span class="qis-tag">IMG_04</span>
-                        <span class="qis-tile-overlay" data-en="Agricultural farms across Sabah"
-                            data-bm="Ladang Pertanian di Sabah">Agricultural farms across Sabah</span>
-                    </div>
+                    @forelse($galleries as $gallery)
+                        <div class="qis-gallery-tile"
+                            style="background-image: url('{{ asset('storage/' . $gallery->path) }}'); background-size: cover; background-position: center;"
+                            data-modal="qisModalImage" data-image-src="{{ asset('storage/' . $gallery->path) }}"
+                            data-caption-en="{{ $gallery->name }}"
+                            data-caption-bm="{{ $gallery->description ?? $gallery->name }}">
+                            <span class="qis-tag">IMG_{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
+                            <span class="qis-tile-overlay" data-en="{{ $gallery->name }}"
+                                data-bm="{{ $gallery->description ?? $gallery->name }}">
+                                {{ $gallery->name }}
+                            </span>
+                        </div>
+                    @empty
+                        <div class="col-12 text-center text-muted py-5">
+                            <i class="bi bi-image fs-1"></i>
+                            <p class="mt-2" data-en="No gallery images available."
+                                data-bm="Tiada imej galeri tersedia.">No gallery images available.</p>
+                        </div>
+                    @endforelse
                 </div>
             </div>
         </section>
@@ -626,7 +603,7 @@
             // ---------- service modals ----------
             document.querySelectorAll(
                 '[data-modal="qisModalImport"], [data-modal="qisModalInspection"], [data-modal="qisModalConsignment"]'
-                ).forEach(function(card) {
+            ).forEach(function(card) {
                 card.addEventListener('click', function() {
                     var modal = document.getElementById(card.dataset.modal);
                     if (modal) modal.classList.add('qis-open');

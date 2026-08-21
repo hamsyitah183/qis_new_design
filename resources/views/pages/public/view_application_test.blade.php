@@ -80,9 +80,11 @@
             auth()->guard('internal')->user()->can('approve application');
         $showImporterVerifyActions =
             $application->category_application == 1 &&
-            str_contains($importerVerify, 'wait for company approval') &&
+            (str_contains($importerVerify, 'wait for company approval') ||
+                str_contains($importerVerify, 'wait for representative approval')) &&
             $isImporterVerifier;
         $showAdminRejectedActions = str_contains($status, 'rejected') && $isAdmin;
+    
     @endphp
 
     {{-- Feed real application context to test1.js instead of URL-parsing --}}
