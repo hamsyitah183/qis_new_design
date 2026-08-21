@@ -436,7 +436,7 @@ document.addEventListener("DOMContentLoaded", function () {
         ...commonOptions,
         series: [{
             name: 'Applications',
-            data: [35, 48, 32, 60, 30] // Dummy Data
+            data: @json($barData)
         }],
         chart: {
             type: 'bar',
@@ -463,7 +463,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         },
         xaxis: {
-            categories: ['1-10 Aug', '11-20 Aug', '21-30 Aug', '1-10 Sep', '11-20 Sep'],
+            categories: @json($barCategories),
             axisBorder: { show: false },
             axisTicks: { show: false },
             labels: {
@@ -485,7 +485,7 @@ document.addEventListener("DOMContentLoaded", function () {
         ...commonOptions,
         series: [{
             name: 'Submissions',
-            data: [15, 30, 22, 45, 38, 55, 48] // Dummy Data
+            data: @json($lineData)
         }],
         chart: {
             type: 'area', // Area chart looks softer and more modern
@@ -513,7 +513,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         },
         xaxis: {
-            categories: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            categories: @json($lineCategories),
             axisBorder: { show: false },
             axisTicks: { show: false },
             labels: {

@@ -126,6 +126,40 @@ class DashboardController extends Controller
 
         $recentApplications = $recentIp->concat($recentInspection)->concat($recentConsignment)->sortByDesc('created_at')->take(5);
 
+        // Data for Bar Chart: Applications Received (Last 5 Months)
+        $barCategories = [];
+        $barData = [];
+        for ($i = 4; $i >= 0; $i--) {
+            $month = now()->subMonths($i);
+            $barCategories[] = $month->format('M Y');
+            
+            $startOfMonth = $month->copy()->startOfMonth();
+            $endOfMonth = $month->copy()->endOfMonth();
+            
+            $count = IpApplication::where('user_id', $userId)->whereBetween('created_at', [$startOfMonth, $endOfMonth])->count() +
+                     InspectionApplication::where('user_id', $userId)->whereBetween('created_at', [$startOfMonth, $endOfMonth])->count() +
+                     ConsignmentApplication::where('user_id', $userId)->whereBetween('created_at', [$startOfMonth, $endOfMonth])->count();
+            
+            $barData[] = $count;
+        }
+
+        // Data for Line Chart: Application Trends (Current Week Mon-Sun)
+        $lineCategories = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        $lineData = [0, 0, 0, 0, 0, 0, 0];
+        $startOfWeek = now()->startOfWeek(); // Monday
+        $endOfWeek = now()->endOfWeek(); // Sunday
+
+        $ipApps = IpApplication::where('user_id', $userId)->whereBetween('created_at', [$startOfWeek, $endOfWeek])->get();
+        $insApps = InspectionApplication::where('user_id', $userId)->whereBetween('created_at', [$startOfWeek, $endOfWeek])->get();
+        $consApps = ConsignmentApplication::where('user_id', $userId)->whereBetween('created_at', [$startOfWeek, $endOfWeek])->get();
+        
+        $allAppsThisWeek = $ipApps->concat($insApps)->concat($consApps);
+        
+        foreach ($allAppsThisWeek as $app) {
+            $dayIndex = $app->created_at->isoWeekday() - 1; // 1 (Mon) to 7 (Sun) -> 0 to 6
+            $lineData[$dayIndex]++;
+        }
+
         return view('dashboard.public.public_dashboard', [
             'draftCount' => $draftCount,
             'pendingCount' => $pendingCount,
@@ -134,6 +168,10 @@ class DashboardController extends Controller
             'pendingPaymentCount' => $pendingPaymentCount,
             'statusChart' => $statusChart->build(),
             'recentApplications' => $recentApplications,
+            'barCategories' => $barCategories,
+            'barData' => $barData,
+            'lineCategories' => $lineCategories,
+            'lineData' => $lineData,
         ]);
     }
 
