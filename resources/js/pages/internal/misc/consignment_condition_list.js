@@ -128,6 +128,11 @@ async function data_table_init() {
                             class="btn btn-sm btn-info">
                             Show Condition
                         </button>
+                        <button type="button"
+                            onclick="deleteCondition(${id})"
+                            class="btn btn-sm btn-danger">
+                            <i class="ri-delete-bin-line"></i> Delete
+                        </button>
                     `;
                 },
             },
