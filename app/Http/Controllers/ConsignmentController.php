@@ -254,7 +254,7 @@ class ConsignmentController extends Controller
                 $viewUrl = '/view_consignment/' . $row->application_id;
                 $buttons = '<a class="btn btn-sm btn-primary me-1 viewApplication" href="' . $viewUrl . '" title="View"> <i class="ti ti-eye"></i> </a>';
 
-                // Only show delete button for internal users with FULL access (pseudocode §5)
+                // Show delete button for internal users
                 if ($type === 'internal' && $accessLevel === 'FULL') {
                     $buttons .= '<button class="btn btn-sm btn-danger delete-consignment" data-id="' . $row->application_id . '" title="Delete"> <i class="ti ti-trash"></i> </button>';
                 }
@@ -512,7 +512,9 @@ class ConsignmentController extends Controller
             // Notify internal users (admins/clerks)
             try {
                 $users = InternalUser::role(['admin', 'clerk', 'superadmin'])->get();
-                Notification::send($users, new ApplicationNotification('Consignment certificate application deleted by ' . $userName, $userName, $notificationUrl));
+                $msgEn = 'Consignment certificate application deleted by ' . $userName;
+                $msgBm = 'Permohonan sijil konsainan telah dipadam oleh ' . $userName;
+                Notification::send($users, new ApplicationNotification($msgEn, $msgBm, $userName, $notificationUrl));
             } catch (\Exception $e) {
                 \Log::warning('Failed to send notification to internal users: ' . $e->getMessage());
             }
@@ -523,7 +525,9 @@ class ConsignmentController extends Controller
                 $ownerUuid = $application->user_id;
                 $owner = PublicUser::where('uuid', $ownerUuid)->first();
                 if ($owner) {
-                    $owner->notify(new ApplicationNotification('Your consignment application with id ' . $applicationId . ' has been deleted by an administrator', 'QIS', $notificationUrl));
+                    $msgEn = 'Your consignment application with id ' . $applicationId . ' has been deleted by an administrator';
+                    $msgBm = 'Permohonan konsainan anda dengan id ' . $applicationId . ' telah dipadam oleh pentadbir';
+                    $owner->notify(new ApplicationNotification($msgEn, $msgBm, 'QIS', $notificationUrl));
                 }
             } catch (\Exception $e) {
                 \Log::warning('Failed to send notification to owner: ' . $e->getMessage());

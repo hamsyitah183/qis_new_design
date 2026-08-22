@@ -498,53 +498,65 @@ class ApplicationController extends Controller
 
     public function deleteApplication($id)
     {
-        return DB::transaction(function () use ($id) {
-            $application = IpApplication::where('application_id', $id)->firstOrFail();
+        try {
+            return DB::transaction(function () use ($id) {
+                $application = IpApplication::where('application_id', $id)->firstOrFail();
 
-            $consignments = IpConsignmentPermit::where('application_id', $application->id)->get();
+                $consignments = IpConsignmentPermit::where('application_id', $application->id)->get();
 
-            if ($consignments->isNotEmpty()) {
-                $consignmentIds = $consignments->pluck('id');
+                if ($consignments->isNotEmpty()) {
+                    $consignmentIds = $consignments->pluck('id');
 
-                // 🔥 Get attachments FIRST
-                $attachments = IpConsignmentAttachment::whereIn('permit_id', $consignmentIds)->get();
+                    // 🔥 Get attachments FIRST
+                    $attachments = IpConsignmentAttachment::whereIn('permit_id', $consignmentIds)->get();
 
-                foreach ($attachments as $attachment) {
-                    if ($attachment->file_path) {
-                        // Convert "/storage/import/xxx.pdf" → "import/xxx.pdf"
-                        $path = str_replace('/storage/', '', $attachment->file_path);
+                    foreach ($attachments as $attachment) {
+                        if ($attachment->file_path) {
+                            // Convert "/storage/import/xxx.pdf" → "import/xxx.pdf"
+                            $path = str_replace('/storage/', '', $attachment->file_path);
 
-                        if (Storage::disk('public')->exists($path)) {
-                            Storage::disk('public')->delete($path);
+                            if (Storage::disk('public')->exists($path)) {
+                                Storage::disk('public')->delete($path);
+                            }
                         }
+
+                        // Delete DB record
+                        $attachment->delete();
                     }
 
-                    // Delete DB record
-                    $attachment->delete();
+                    // Delete consignments
+                    IpConsignmentPermit::whereIn('id', $consignmentIds)->delete();
+                }
+                $user = PublicUser::where('uuid', $application->user_id)->first();
+                // Delete application
+                $application->delete();
+
+                try {
+                    // Events & notifications
+                    event(new ApplicationDeleted('Application with ID ' . $id . ' has been deleted.'));
+
+                    if ($user) {
+                        event(new PublicUserEvent('Your Application with ID ' . $id . ' has been deleted.', $user->uuid));
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Pusher connection failed but continuing application deletion: ' . $e->getMessage());
                 }
 
-                // Delete consignments
-                IpConsignmentPermit::whereIn('id', $consignmentIds)->delete();
-            }
-            $user = PublicUser::where('uuid', $application->user_id)->first();
-            // Delete application
-            $application->delete();
+                $authUserName = authUser() ? (authUser()['user']->fullname ?? 'Admin') : 'Admin';
+                if ($user) {
+                    $msgEn = 'Import Application with ID ' . $id . ' has been deleted.';
+                    $msgBm = 'Permohonan Import dengan ID ' . $id . ' telah dipadam.';
+                    Notification::send($user, new ApplicationNotification($msgEn, $msgBm, $authUserName));
+                }
 
-            try {
-                // Events & notifications
-                event(new ApplicationDeleted('Application with ID ' . $id . ' has been deleted.'));
-
-                event(new PublicUserEvent('Your Application with ID ' . $id . ' has been deleted.', $user->uuid));
-            } catch (\Exception $e) {
-                Log::warning('Pusher connection failed but continuing application deletion: ' . $e->getMessage());
-            }
-
-            Notification::send($user, new ApplicationNotification('Import Application with ID ' . $id . ' has been deleted.', authUser()['user']->fullname));
-
-            return response()->json([
-                'message' => 'Application and all attachments deleted successfully.',
-            ]);
-        });
+                return response()->json([
+                    'message' => 'Application and all attachments deleted successfully.',
+                ]);
+            });
+        } catch (\Throwable $e) {
+            Log::error('Application Deletion Failed: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            throw $e;
+        }
     }
 
     public function verifyapplication()

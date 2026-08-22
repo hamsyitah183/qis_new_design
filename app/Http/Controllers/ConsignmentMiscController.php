@@ -140,5 +140,20 @@ class ConsignmentMiscController extends Controller
 
         return response()->json(['data' => $distinct]);
     }
+
+    public function deleteCondition($id)
+    {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
+
+        $condition = ConsignmentCondition::findOrFail($id);
+        $condition->delete();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Consignment condition deleted successfully.',
+        ]);
+    }
 }
 
