@@ -90,11 +90,13 @@ function initSharedPreviewModal() {
             sharedPdfViewer.style.display = "none";
         }
         if (sharedPreviewImg) {
-            sharedPreviewImg.style.display = "none";
+            sharedPreviewImg.classList.add("d-none");
+            sharedPreviewImg.style.display = ""; // clear inline
             sharedPreviewImg.removeAttribute("src");
         }
         if (sharedPreviewIcon) {
-            sharedPreviewIcon.style.display = "none";
+            sharedPreviewIcon.classList.add("d-none");
+            sharedPreviewIcon.style.display = ""; // clear inline
         }
     });
 }
@@ -308,18 +310,18 @@ export function fileUpload(docId) {
             return;
         }
 
-        if (sharedPreviewImg) sharedPreviewImg.style.display = "none";
-        if (sharedPdfViewer) sharedPdfViewer.style.display = "none";
-        if (sharedPreviewIcon) sharedPreviewIcon.style.display = "none";
+        if (sharedPreviewImg) sharedPreviewImg.classList.add("d-none");
+        if (sharedPdfViewer) sharedPdfViewer.style.display = "none"; // Uses inline styles
+        if (sharedPreviewIcon) sharedPreviewIcon.classList.add("d-none");
 
         if (isImage(file) && sharedPreviewImg) {
             sharedPreviewImg.src = url;
-            sharedPreviewImg.style.display = "block";
+            sharedPreviewImg.classList.remove("d-none");
         } else if (isPdf(file) && sharedPdfViewer) {
             sharedPdfViewer.src = url;
             sharedPdfViewer.style.display = "block";
         } else if (sharedPreviewIcon) {
-            sharedPreviewIcon.style.display = "block";
+            sharedPreviewIcon.classList.remove("d-none");
             const iconSpan =
                 sharedPreviewIcon.querySelector("i") || sharedPreviewIcon;
             if (iconSpan.tagName === "I") {

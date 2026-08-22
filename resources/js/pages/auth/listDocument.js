@@ -25,9 +25,9 @@ function viewExistingFile(url, name) {
     const modalTitle = document.getElementById("fileLabelModalLabel");
 
     // Reset all viewers
-    if (previewImg) previewImg.style.display = "none";
-    if (pdfViewer) pdfViewer.style.display = "none";
-    if (previewIcon) previewIcon.style.display = "none";
+    if (previewImg) previewImg.classList.add("d-none");
+    if (previewIcon) previewIcon.classList.add("d-none");
+    if (pdfViewer) pdfViewer.style.display = "none"; // uses inline styles
 
     // Determine file extension
     const ext = (url || "").split(".").pop().toLowerCase();
@@ -36,18 +36,18 @@ function viewExistingFile(url, name) {
     if (["jpg", "jpeg", "png", "gif", "bmp", "svg", "webp"].includes(ext)) {
         if (previewImg) {
             previewImg.src = url;
-            previewImg.style.display = "block";
+            previewImg.classList.remove("d-none");
         }
     } else if (ext === "pdf") {
         if (pdfViewer) {
             pdfViewer.src = url;
             pdfViewer.style.display = "block";
         } else {
-            // Fallback: show icon
+            // Fallback icon for PDFs
             if (previewIcon) {
-                previewIcon.style.display = "block";
+                previewIcon.classList.remove("d-none");
                 const icon = previewIcon.querySelector("i") || previewIcon;
-                if (icon.tagName === "I") icon.className = "ti ti-file-type-pdf ti-5x text-muted";
+                if (icon.tagName === "I") icon.className = "ti ti-file-text ti-5x text-muted";
                 const msg = previewIcon.querySelector("p");
                 if (msg) msg.textContent = "PDF preview not available. Click 'Open in New Tab' to view.";
             }
@@ -55,7 +55,7 @@ function viewExistingFile(url, name) {
     } else {
         // Generic file fallback
         if (previewIcon) {
-            previewIcon.style.display = "block";
+            previewIcon.classList.remove("d-none");
             const icon = previewIcon.querySelector("i") || previewIcon;
             if (icon.tagName === "I") icon.className = "ti ti-file-text ti-5x text-muted";
             const msg = previewIcon.querySelector("p");
@@ -381,6 +381,117 @@ function renderDocumentList(user) {
         });
     } else {
         console.warn("fileUpload function not found; upload zones will not work.");
+    }
+
+    // ---- Add Submit Button & Logic ----
+    const submitFooter = document.getElementById("document-submit-footer");
+    if (submitFooter) {
+        submitFooter.innerHTML = `
+            <button type="button" class="btn btn-primary" id="submit-documents-btn" disabled>
+                <i class="ti ti-upload me-1"></i> Submit Documents
+            </button>
+        `;
+        
+        // Show footer
+        submitFooter.classList.remove("d-none");
+        
+        const submitBtn = document.getElementById("submit-documents-btn");
+        
+        // Function to check if there are any staged files across all doc types
+        const checkStagedFiles = () => {
+            let hasFiles = false;
+            document.querySelectorAll(".file-input").forEach((input) => {
+                if (input.files && input.files.length > 0) {
+                    hasFiles = true;
+                }
+            });
+            submitBtn.disabled = !hasFiles;
+        };
+
+        // Observe changes to all staged lists to enable/disable the submit button
+        document.querySelectorAll(".file-list-container").forEach((stagedList) => {
+            const submitObserver = new MutationObserver(checkStagedFiles);
+            submitObserver.observe(stagedList, {
+                childList: true,
+                subtree: true,
+            });
+        });
+
+        // Handle submission
+        submitBtn.addEventListener("click", async function () {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Submitting...`;
+
+            try {
+                const formData = new FormData();
+                let hasFiles = false;
+                
+                // Collect files and metadata
+                document.querySelectorAll(".file-input").forEach((input) => {
+                    const docId = input.dataset.docId;
+                    if (input.files && input.files.length > 0) {
+                        Array.from(input.files).forEach(file => {
+                            formData.append(`attachment[${docId}][]`, file);
+                            hasFiles = true;
+                        });
+                        
+                        // Append metadata
+                        const docTypeInput = document.querySelector(`input[name="document_type[${docId}]"]`);
+                        if (docTypeInput) formData.append(`document_type[${docId}]`, docTypeInput.value);
+                        
+                        const validFromInput = document.querySelector(`input[name="valid_from[${docId}]"]`);
+                        if (validFromInput && validFromInput.value) formData.append(`valid_from[${docId}]`, validFromInput.value);
+                        
+                        const validUntilInput = document.querySelector(`input[name="valid_until[${docId}]"]`);
+                        if (validUntilInput && validUntilInput.value) formData.append(`valid_until[${docId}]`, validUntilInput.value);
+                    }
+                });
+
+                if (!hasFiles) {
+                    throw new Error("No files selected to upload.");
+                }
+
+                // Add CSRF token manually (sometimes required if not in fetch headers)
+                const csrfToken = $('meta[name="csrf-token"]').attr("content");
+                
+                const response = await fetch("/public/upload-verification", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": csrfToken,
+                        "Accept": "application/json"
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || "Failed to upload documents.");
+                }
+
+                await Swal.fire({
+                    icon: "success",
+                    title: "Success",
+                    text: data.message || "Documents uploaded successfully.",
+                    confirmButtonText: "OK",
+                    timer: 2000
+                });
+
+                // Reload page to reflect changes
+                window.location.reload();
+
+            } catch (error) {
+                console.error("Upload error:", error);
+                Swal.fire({
+                    icon: "error",
+                    title: "Upload Failed",
+                    text: error.message || "An unexpected error occurred."
+                });
+                
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i class="ti ti-upload me-1"></i> Submit Documents`;
+            }
+        });
     }
 }
 
