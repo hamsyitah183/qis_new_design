@@ -376,6 +376,16 @@ Route::prefix('internal')
         Route::post('/inspection/{id}/status', [InspectionController::class, 'updateStatus'])->name('inspection.status');
 
         Route::post('/consignment/{id}', [ConsignmentApplicationController::class, 'accept_permit']);
+
+        // Document Requirements Management
+        Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
+        Route::get('/documents/data', [DocumentController::class, 'data'])->name('documents.data');
+        Route::get('/documents/view/{id}', [DocumentController::class, 'showView'])->name('documents.view');
+        Route::get('/documents/{id}/attachments/data', [DocumentController::class, 'attachmentsData'])->name('documents.attachments.data');
+        Route::get('/documents/{id}', [DocumentController::class, 'show'])->name('documents.show');
+        Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
+        Route::put('/documents/{id}', [DocumentController::class, 'update'])->name('documents.update');
+        Route::delete('/documents/{id}', [DocumentController::class, 'destroy'])->name('documents.destroy');
     });
 
 // Publicly accessible location routes

@@ -321,7 +321,7 @@
                     {{-- ── Document List (Superadmin only) ──────────────────── --}}
                     @if ($isSuperadmin)
                         <li class="slide {{ Str::contains($currentRoute, 'documents') ? 'open active' : '' }}">
-                            <a href="#" class="side-menu__item">
+                            <a href="{{ route('internal.documents.index') }}" class="side-menu__item">
                                 <i class="bi bi-file-earmark-text side-menu__icon"></i>
                                 <span class="side-menu__label" data-en="Document List"
                                     data-bm="Senarai Dokumen">Document List</span>
