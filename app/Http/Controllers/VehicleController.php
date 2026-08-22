@@ -78,4 +78,9 @@ class VehicleController extends Controller
 
         return response()->json($vehicles);
     }
+
+    public function showVehicleList()
+    {
+        
+    }
 }

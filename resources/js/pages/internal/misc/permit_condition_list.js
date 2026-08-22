@@ -1,6 +1,6 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
-import { autoInitFilterSelect2 } from "../../../../utils/select2Utils";
+
 import { setupSelect2 } from "../../../utils/select2Utils";
 
 let internalListTable;
