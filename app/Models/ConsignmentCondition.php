@@ -15,6 +15,7 @@ class ConsignmentCondition extends Model
         'category',
         'item_name',
         'addional_condition',
+        'scientific_name',
         'quantity_limit',
         'date_limit',
         'country',
@@ -37,7 +38,7 @@ class ConsignmentCondition extends Model
 
     public function condcategory()
     {
-        return $this->belongsTo(PublicCode::class, 'category', 'cate_code')
-                ->where('cate_name', 'condition_category');
+        return $this->belongsTo(PublicCode::class, 'category', 'id')
+            ->where('cate_name', 'consignment_category');
     }
 }

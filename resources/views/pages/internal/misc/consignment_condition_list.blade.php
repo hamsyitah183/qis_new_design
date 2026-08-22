@@ -49,7 +49,7 @@
                         <ul class="dropdown-menu p-3 filter-dropdown" aria-labelledby="consignCondFilterDropdown">
 
                             {{-- Item Name --}}
-                            <li class="mb-2">
+                            <li class="mb-2 d-none">
                                 <label class="form-label fw-semibold mb-1" data-en="Item Name" data-bm="Nama Item">Item Name</label>
                                 <input type="text" class="form-control form-control-sm" id="filterConsignItemName"
                                     placeholder="Search item name..." data-en="Search item name..." data-bm="Cari nama item..." data-i18n-attr="placeholder">
@@ -62,12 +62,7 @@
                                 </select>
                             </li>
 
-                            {{-- Usage --}}
-                            <li class="mb-2">
-                                <label class="form-label fw-semibold mb-1" data-en="Usage" data-bm="Kegunaan">Usage</label>
-                                <select class="form-select form-select-sm select2" id="filterConsignUsage">
-                                </select>
-                            </li>
+                            
 
                             <li class="d-flex justify-content-end gap-2 mt-2 pt-2 border-top">
                                 <button class="btn btn-sm btn-secondary" id="btnResetConsignCondFilter"><span data-en="Reset" data-bm="Set Semula">Reset</span></button>
@@ -90,7 +85,7 @@
                                 <th class="text-wrap" data-en="Item Name" data-bm="Nama Item">Item Name</th>
                                 <th class="text-wrap" data-en="Scientific Name" data-bm="Nama Saintifik">Scientific Name</th>
                                 <th data-en="Category" data-bm="Kategori">Category</th>
-                                <th data-en="Usage" data-bm="Kegunaan">Usage</th>
+                             
                                 <th data-en="Action" data-bm="Tindakan">Action</th>
                             </tr>
                         </thead>

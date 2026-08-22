@@ -99,35 +99,6 @@
             </div>
         </div>
 
-        <div class="col-xl-12">
-            <div class="ipa-items-card">
-                <div class="ipa-card-header" style="margin-bottom:14px">
-                    <span class="ipa-icon-badge"><i class='bx bx-paperclip'></i></span>
-                    <h6 data-en="Application Attachments" data-bm="Lampiran Permohonan">Application Attachments
-                        <span class="ipa-card-sub" data-en="Supporting documents for this application"
-                            data-bm="Dokumen sokongan untuk permohonan ini">Supporting documents for this
-                            application</span>
-                    </h6>
-                </div>
-                <div class="table-responsive">
-                    <table id="summaryAttachmentTable" class="table text-nowrap">
-                        <thead class="table-primary">
-                            <tr>
-                                <th scope="col">#</th>
-                                <th scope="col" data-en="File Name" data-bm="Nama Fail">File Name</th>
-                                <th scope="col" data-en="Size" data-bm="Saiz">Size</th>
-                                <th scope="col" data-en="Type" data-bm="Jenis">Type</th>
-                                <th scope="col" data-en="Action" data-bm="Tindakan">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
 
         <div class="col-xl-6">
             <div class="ipa-card h-100 mb-3">
@@ -198,6 +169,37 @@
                 </div>
             </div>
         </div>
+
+        <div class="col-xl-12">
+            <div class="ipa-items-card">
+                <div class="ipa-card-header" style="margin-bottom:14px">
+                    <span class="ipa-icon-badge"><i class='bx bx-paperclip'></i></span>
+                    <h6 data-en="Application Attachments" data-bm="Lampiran Permohonan">Application Attachments
+                        <span class="ipa-card-sub" data-en="Supporting documents for this application"
+                            data-bm="Dokumen sokongan untuk permohonan ini">Supporting documents for this
+                            application</span>
+                    </h6>
+                </div>
+                <div class="table-responsive">
+                    <table id="summaryAttachmentTable" class="table text-nowrap">
+                        <thead class="table-primary">
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col" data-en="File Name" data-bm="Nama Fail">File Name</th>
+                                <th scope="col" data-en="Size" data-bm="Saiz">Size</th>
+                                <th scope="col" data-en="Type" data-bm="Jenis">Type</th>
+                                <th scope="col" data-en="Action" data-bm="Tindakan">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
         <div class="col-xl-12">
             <div class="border border-bottom-0 rounded-1 mb-3 ">
                 <div class="card-body p-0">
@@ -246,7 +248,7 @@
         <div class="d-flex gap-3 align-items-end justify-content-end">
             {{-- <button id="generateSummary" type="button" class="btn btn-md btn-warning">Generate Summary</button> --}}
             <button id="submitApps" type="button" class="btn btn-md btn-info"><span data-en="Submit Application"
-                    data-bm="Hantar Permohonan"><i class="bx bx-send me-1"></i>  Submit Application</span></button>
+                    data-bm="Hantar Permohonan"><i class="bx bx-send me-1"></i> Submit Application</span></button>
         </div>
     </div>
 </div>

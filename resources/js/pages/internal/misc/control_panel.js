@@ -65,6 +65,11 @@ $(document).ready(function () {
                 document.getElementById("editICOde").disabled = true;
                 break;
 
+            case "consignment_category":
+                tableId = "#tabletab_category";
+                break;
+                
+
             default:
                 Swal.close();
                 return;

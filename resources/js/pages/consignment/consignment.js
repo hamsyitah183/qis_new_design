@@ -73,6 +73,18 @@ function measurementUnit() {
 }
 measurementUnit();
 
+// ─── Helper: convert quantity to kg ──────────────────────
+function getKgForItem(item) {
+    const qty = parseFloat(item.quantity) || 0;
+    if (!qty || !measurementUnits || !measurementUnits.unit) return 0;
+    const measure = item.measure || "";
+    const unit = measurementUnits.unit.find(
+        (u) =>
+            u.cate_code.toLowerCase() === measure.toLowerCase() && !u.is_del,
+    );
+    return unit ? qty * unit.conversion.conversion : 0;
+}
+
 // ─── Helper ──────────────────────────────────────────────
 function getCurrentLang() {
     try {
@@ -1734,7 +1746,6 @@ async function showItemAgreement(item) {
 }
 
 // ─── Save Consignment Attachment ──────────────────────────
-// ─── Save Consignment Attachment ──────────────────────────
 function saveConsignmentAttachment() {
     document
         .getElementById("saveBtn")
@@ -1873,12 +1884,19 @@ function renderAllItems() {
     const tableBody = document.querySelector("#itemListTbl tbody");
     tableBody.innerHTML = "";
 
+    let totalQty = 0;
+    let totalKg = 0;
+
     tempItems.forEach((item, index) => {
+        const qty = parseFloat(item.quantity) || 0;
+        totalQty += qty;
+        totalKg += getKgForItem(item);
+
         tableBody.insertAdjacentHTML(
             "beforeend",
             `<tr id="item-row-${item.id}">
                 <td>${item.item_name}</td>
-                <td class="text-wrap">${item.purpose}</td>
+                <td class="text-wrap">${qty} ${item.measure || ""}</td>
                 <td class="text-center">
                     <div class="d-flex justify-content-center align-items-center gap-2">
                         <button class="btn btn-icon btn-success-light view-more-item"
@@ -1902,6 +1920,26 @@ function renderAllItems() {
             </tr>`,
         );
     });
+
+    // ─── Footer row ──────────────────────────────────────────────
+    const table = document.querySelector("#itemListTbl");
+    let tfoot = table.querySelector("tfoot");
+    if (!tfoot) {
+        tfoot = document.createElement("tfoot");
+        table.appendChild(tfoot);
+    }
+    if (tempItems.length > 0) {
+        tfoot.innerHTML = `
+            <tr style="font-weight: bold; background-color: var(--gray-2);">
+                <td colspan="2" style="text-align: right; font-weight: 800">Total:</td>
+                <td class="text-center">
+                     ${totalKg.toFixed(2)} kg
+                </td>
+            </tr>
+        `;
+    } else {
+        tfoot.innerHTML = "";
+    }
 }
 
 // ─── View More Item ────────────────────────────────────────
@@ -2311,16 +2349,18 @@ export function summarySubmit() {
     const targetTable = document.querySelector("#summaryTable3 tbody");
 
     // --- IMPORTER (selected) & EXPORTER (auto-filled) ---
-    const exporterName = importer ? importer.fullname : '';
-    const exporterPhone = importer ? importer.phone_number : '';
+    const exporterName = importer ? importer.fullname : "";
+    const exporterPhone = importer ? importer.phone_number : "";
     const exporterAddress = importer
-        ? [importer.address_1, importer.address_2].filter(x => x && x.trim() !== "").join(", ")
-        : '';
+        ? [importer.address_1, importer.address_2]
+              .filter((x) => x && x.trim() !== "")
+              .join(", ")
+        : "";
 
-    const importerName = exporter ? exporter.name : '';
-    const importerPhone = exporter ? exporter.phone_no : '';
-    const importerAddress = exporter ? exporter.address : '';
-    const importerCountry = exporter ? exporter.country : '';
+    const importerName = exporter ? exporter.name : "";
+    const importerPhone = exporter ? exporter.phone_no : "";
+    const importerAddress = exporter ? exporter.address : "";
+    const importerCountry = exporter ? exporter.country : "";
 
     document.getElementById("importerName").textContent = importerName;
     document.getElementById("importerPhoneno").textContent = importerPhone;
@@ -2337,23 +2377,25 @@ export function summarySubmit() {
         eta: document.getElementById("eta").value,
         tranType: document.getElementById("trnptType").value,
         entrypoint: document.getElementById("entryPoint").value,
-        ptnNumber: $("#ptnNumber").val() || '',
+        ptnNumber: $("#ptnNumber").val() || "",
     };
 
     document.getElementById("seta").textContent = permitDetails.eta;
     document.getElementById("strty").textContent = permitDetails.tranType;
-    document.getElementById("sentryp").textContent = entryName || '';
+    document.getElementById("sentryp").textContent = entryName || "";
     document.getElementById("sptnnumber").textContent = permitDetails.ptnNumber;
 
     // --- VEHICLES ---
     const selectedIds = $("#selectVehicle").val() || [];
-    const selectedVehicles = vehicleListArray.filter(v => 
-        selectedIds.includes(String(v.id))
+    const selectedVehicles = vehicleListArray.filter((v) =>
+        selectedIds.includes(String(v.id)),
     );
-    const vehicleListStr = selectedVehicles.map(v => v.vehicle_number).join(', ');
+    const vehicleListStr = selectedVehicles
+        .map((v) => v.vehicle_number)
+        .join(", ");
     const sVehicleEl = document.getElementById("svehicle");
     if (sVehicleEl) {
-        sVehicleEl.textContent = vehicleListStr || '-';
+        sVehicleEl.textContent = vehicleListStr || "-";
     }
 
     // --- CONSIGNMENT ITEMS ---
@@ -2375,9 +2417,35 @@ export function summarySubmit() {
                     <td>${item.quantity || ""} ${item.measure || ""}</td>
                     <td>${attachmentHTML}</td>
                 </tr>
-            `
+            `,
         );
     });
+
+    // ─── Footer row for totals ──────────────────────────────
+    const table3 = document.querySelector("#summaryTable3");
+    let tfoot3 = table3.querySelector("tfoot");
+    if (!tfoot3) {
+        tfoot3 = document.createElement("tfoot");
+        table3.appendChild(tfoot3);
+    }
+    if (tempItems.length > 0) {
+        let totalQty = 0;
+        let totalKg = 0;
+        tempItems.forEach((item) => {
+            const qty = parseFloat(item.quantity) || 0;
+            totalQty += qty;
+            totalKg += getKgForItem(item);
+        });
+        tfoot3.innerHTML = `
+            <tr style="font-weight: bold; background-color: var(--gray-2);">
+                <td colspan="2" style="text-align: right; font-weight: 800;">Total:</td>
+                <td>${totalKg.toFixed(2)} kg</td>
+                <td></td>
+            </tr>
+        `;
+    } else {
+        tfoot3.innerHTML = "";
+    }
 
     // Update application attachments table
     updateAttachmentTable();

@@ -83,9 +83,7 @@ async function data_table_init() {
                 data: "scientific_name",
                 title: "Scientific Name",
                 render: function (data) {
-                    return (
-                        `<span class="text-wrap">${data ?? ""}</span>` ?? "-"
-                    );
+                    return `<span class="text-wrap">${data ?? ""}</span>` ?? "-";
                 },
             },
             {
@@ -93,23 +91,6 @@ async function data_table_init() {
                 title: "Category",
                 render: function (data) {
                     return data ?? "-";
-                },
-            },
-            {
-                data: "usage",
-                title: "Usage",
-                render: function (data) {
-                    if (Array.isArray(data)) {
-                        return data.join(", ");
-                    }
-                    try {
-                        const parsed = JSON.parse(data);
-                        return Array.isArray(parsed)
-                            ? parsed.join(", ")
-                            : parsed;
-                    } catch {
-                        return data ?? "-";
-                    }
                 },
             },
             {
@@ -128,11 +109,6 @@ async function data_table_init() {
                             class="btn btn-sm btn-info">
                             Show Condition
                         </button>
-                        <button type="button"
-                            onclick="deleteCondition(${id})"
-                            class="btn btn-sm btn-danger">
-                            <i class="ri-delete-bin-line"></i> Delete
-                        </button>
                     `;
                 },
             },
@@ -142,12 +118,13 @@ async function data_table_init() {
     });
 }
 
-// Populate Category dropdown from public_code (condition_category)
+// Populate Category dropdown from public_code (consignment_category)
 function initCategoryFilter() {
     return $.ajax({
-        url: "/internal/get_pbdata/condition_category",
+        url: "/internal/get_pbdata/consignment_category",
         method: "GET",
         success: function (response) {
+            console.log('response', response)
             const select = document.getElementById("filterConsignCategory");
             (response.data || []).forEach((item) => {
                 const opt = document.createElement("option");
@@ -155,7 +132,6 @@ function initCategoryFilter() {
                 opt.textContent = item.description;
                 select.appendChild(opt);
             });
-            // Init Select2 after options are loaded
             setupSelect2('#filterConsignCategory', 'All Categories');
         },
         error: function () {
@@ -164,7 +140,7 @@ function initCategoryFilter() {
     });
 }
 
-// Populate Usage dropdown from distinct values in consignment_conditions
+// Populate Usage dropdown – kept for UI but not used in filtering
 function initUsageFilter() {
     return $.ajax({
         url: "/internal/consignment_condition/usages",
@@ -177,7 +153,6 @@ function initUsageFilter() {
                 opt.textContent = usage;
                 select.appendChild(opt);
             });
-            // Init Select2 after options are loaded
             setupSelect2('#filterConsignUsage', 'All Usage');
         },
         error: function () {
@@ -286,7 +261,6 @@ document.addEventListener("DOMContentLoaded", async function () {
                 document.getElementById("itemNameCell").textContent =
                     condition.item_name;
 
-                // ✅ Scientific Name
                 document.getElementById("scientificNameCell").textContent =
                     condition.scientific_name || "-";
 
@@ -299,7 +273,6 @@ document.addEventListener("DOMContentLoaded", async function () {
                 document.getElementById("countryCell").textContent =
                     countryNames.join(", ");
 
-                // ✅ Quantity Limit with Measurement Unit
                 let quantityDisplay = "-";
                 if (condition.quantity_limit || condition.measurement_unit) {
                     const parts = [];
@@ -312,7 +285,6 @@ document.addEventListener("DOMContentLoaded", async function () {
                 document.getElementById("quantityLimit").textContent =
                     quantityDisplay;
 
-                // ✅ Date Range (Start Date until End Date)
                 let dateDisplay = "-";
                 if (condition.start_date && condition.end_date) {
                     const start = new Date(condition.start_date);
@@ -366,54 +338,49 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     window.condiModal = condiModal;
 
-    // Filter functionality
+    // ─── FILTER: Apply ──────────────────────────────────────────
     document
         .getElementById("btnConsignCondFilter")
         .addEventListener("click", function () {
-            const itemName = document.getElementById(
-                "filterConsignItemName",
-            ).value;
-            const category = document.getElementById(
-                "filterConsignCategory",
-            ).value;
-            const usage = document.getElementById("filterConsignUsage").value;
+            const itemName = document.getElementById("filterConsignItemName").value;
+            const category = document.getElementById("filterConsignCategory").value;
 
+            // Column 0 = Item Name
             internalListTable.column(0).search(itemName);
 
+            // Column 2 = Category (condcategory.description)
             if (!category || category.length === 0) {
                 internalListTable.column(2).search("");
             } else {
+                // If single category, just search exact match (or use regex)
                 const categoryVals = [].concat(category);
                 const categoryRegex = categoryVals.map(v => $.fn.dataTable.util.escapeRegex(v)).join('|');
                 internalListTable.column(2).search(categoryRegex, true, false);
             }
 
-            if (!usage || usage.length === 0) {
-                internalListTable.column(3).search("");
-            } else {
-                const usageVals = [].concat(usage);
-                const usageRegex = usageVals.map(v => $.fn.dataTable.util.escapeRegex(v)).join('|');
-                internalListTable.column(3).search(usageRegex, true, false);
-            }
-
             internalListTable.draw();
+
+            // Close the dropdown
             bootstrap.Dropdown.getInstance(
-                document.getElementById("consignCondFilterDropdown"),
-            ).hide();
+                document.getElementById("consignCondFilterDropdown")
+            )?.hide();
         });
 
-    // Reset filter
+    // ─── FILTER: Reset ──────────────────────────────────────────
     document
         .getElementById("btnResetConsignCondFilter")
         .addEventListener("click", function () {
+            // Clear inputs
             document.getElementById("filterConsignItemName").value = "";
             $('#filterConsignCategory').val(null).trigger('change');
             $('#filterConsignUsage').val(null).trigger('change');
 
+            // Clear all filters and redraw
             internalListTable.search("").columns().search("").draw();
+
+            // Close the dropdown
             bootstrap.Dropdown.getInstance(
-                document.getElementById("consignCondFilterDropdown"),
-            ).hide();
+                document.getElementById("consignCondFilterDropdown")
+            )?.hide();
         });
 });
-

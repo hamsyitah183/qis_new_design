@@ -7,8 +7,8 @@
                       
                         <th scope="col" data-en="Item Name" data-bm="Nama Barangan">Item Name</th>
               
-                        <th scope="col" data-en="Purpose" data-bm="Tujuan">Purpose</th>
-                        <th scope="col" data-en="View More" data-bm="Lihat Lebih Lanjut">View More</th>
+                        <th scope="col" data-en="Quantity" data-bm="Kuantiti">Quantity</th>
+                        <th scope="col" data-en="Action" data-bm="Tindakan">Action</th>
                     </tr>
                 </thead>
                 <tbody>

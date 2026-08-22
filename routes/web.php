@@ -332,6 +332,9 @@ Route::prefix('internal')
         Route::post('/branch/update', [MiscController::class, 'updateBranch']);
         Route::delete('/branch/delete/{id}', [MiscController::class, 'deleteBranch']);
 
+        // CONSIGNMENT CATEGORY
+        Route::get('/consignment_categories', [MiscController::class, 'getConsignmentCategory']);
+
         // CONSIGNMENT CONDITION
         Route::get('/consignment_condition', [ConsignmentMiscController::class, 'showConsignmentCondition']);
         Route::get('/consignment_condition/data', [ConsignmentMiscController::class, 'getConsignmentConditionData']);
