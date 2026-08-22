@@ -31,61 +31,144 @@ let tempItems = [];
 let tempAttachments = [];
 let itemPurpose = null;
 let temporaryItemsAttachment = [];
+
+// [FIX] deleteIds was dropped when this file diverged from consignment1.js.
+// Needed to tell the backend which existing permits were removed during an edit.
 let deleteIds = [];
 
+// [FIX] Edit-mode detection was missing entirely. `application` is expected to be
+// a global set by the blade view (e.g. `let application = @json($application ?? null);`)
+// when the wizard is opened against an existing draft/application.
 const isEditMode = typeof application !== 'undefined' && application !== null;
 if (isEditMode) console.log("Edit mode - loading application:", application);
 
-// Load Left side ("Me" / Exporter in UI, mapped to JS 'importer')
+// Vehicle globals
+let vehicleListArray = [];
+let selectedVehicles = [];
+
+// ─── New globals for advanced features ──────────────────
+let measurementUnits = null;
+let limit = null;
+let limitMeasurement = null;
+let currentItemCondition = null;
+let editingItemId = null;
+let applicationAttachments = [];
+let applicationAttachmentDropzone = null;
+let itemFileOffcanvas = null;
+let currentItemFile = null;
+let itemAttachmentOffcanvas = null;
+let currentItemAttachments = [];
+let currentItemAttachIndex = 0;
+let attachmentOffcanvas = null;
+let currentAttachmentIndex = 0;
+
+// ─── Measurement Units ────────────────────────────────────
+function measurementUnit() {
+    return $.ajax({
+        url: "/measurement",
+        type: "GET",
+        dataType: "json",
+        cache: false,
+        success: (data) => {
+            measurementUnits = data;
+            console.log("measurement", measurementUnits);
+        },
+        error: (xhr) => {
+            console.error(
+                "Failed to load measurement units:",
+                xhr.responseText,
+            );
+        },
+    });
+}
+measurementUnit();
+
+// ─── Helper: convert quantity to kg ──────────────────────
+function getKgForItem(item) {
+    const qty = parseFloat(item.quantity) || 0;
+    if (!qty || !measurementUnits || !measurementUnits.unit) return 0;
+    const measure = item.measure || "";
+    const unit = measurementUnits.unit.find(
+        (u) =>
+            u.cate_code.toLowerCase() === measure.toLowerCase() && !u.is_del,
+    );
+    return unit ? qty * unit.conversion.conversion : 0;
+}
+
+// ─── Helper ──────────────────────────────────────────────
+function getCurrentLang() {
+    try {
+        return localStorage.getItem("qis_lang") || "en";
+    } catch {
+        return "en";
+    }
+}
+
+// [FIX] Restored from consignment1.js. Prefills the "Me" side of the form
+// (the authenticated submitter — stored in the JS `importer` variable, which
+// maps to the DB `exporter` relation — same naming convention as the rest of
+// this file) from the draft's saved data instead of re-fetching the auth user.
 function importerDetail() {
     if (!isEditMode || !application.exporter) return;
-    importer = application.exporter; // The authenticated user
-    console.log('importer (Me) from draft', importer);
+    importer = application.exporter;
+    console.log("importer (Me) from draft", importer);
     $("#impname").val(importer.fullname);
     $("#impfonno").val(importer.phone_number);
     $("#impaddress1").val(importer.address_1);
     $("#impaddress2").val(importer.address_2 ?? "");
 }
 
-// Load existing consignment permits (edit mode)
+// [FIX] Restored from consignment1.js and adapted to the newer item shape
+// (certificateNo, condition, agreedAt) used by this file's item modal/table.
+// NOTE: `detail.certificate_no` / `detail.addional_condition` are best-guess
+// field names carried over from the rest of this file (e.g. loadDetails());
+// confirm against the real consignment_detail payload and adjust if it
+// differs.
 function loadExistingConsignments() {
     if (!isEditMode || !application.consignment_permits) return;
 
     tempItems = [];
 
     application.consignment_permits.forEach((permit) => {
-        let detail = permit.consignment_detail;
+        const detail = permit.consignment_detail || {};
 
         tempItems.push({
             id: detail.id || generateUUID(),
-            permit_id: permit.id,
+            permit_id: permit.id, // used by deleteItem() to build deleteIds
             item_id: detail.item_id,
             item_name: detail.item_name,
-            value: detail.value,
             quantity: detail.quantity,
             measure: detail.measure,
-            purpose: detail.purpose,
-            uses: detail.uses,
+            certificateNo: detail.certificate_no ?? detail.certificateNo ?? "",
+            purpose: detail.purpose ?? "",
+            uses: detail.uses ?? "",
+            value: detail.value ?? 0,
+            files: [], // existing files aren't re-uploaded; see existingAttachments
             existingAttachments: permit.attachments || [],
-            files: [], // Use new uploaded files only
+            agreedAt: permit.agreed_at ?? "Previously submitted",
+            condition: detail.addional_condition ?? null,
         });
     });
 
     renderAllItems();
 }
 
-// --------if self apply -----------
+// ─── Self Import ──────────────────────────────────────────
 async function selfImport() {
-    if (window.location.pathname.includes("public/consignment_certificate_application")) {
+    if (
+        window.location.pathname.includes(
+            "public/consignment_certificate_application",
+        )
+    ) {
         importer = await getAuthUser();
         console.log("importer", importer);
     }
 }
 
-// ------------------------- Exporter List -------------------------
+// ─── Exporter List ────────────────────────────────────────
 function fetchExporterList() {
     const $select = $("#selectexp");
-    const url = '/public/get_consignment_importers';
+    const url = "/public/get_consignment_importers";
 
     return $.ajax({
         url,
@@ -94,14 +177,15 @@ function fetchExporterList() {
         cache: false,
         success: (data) => {
             exporterListArray = data.data || [];
-
-            console.log('exporterListArray', exporterListArray)
+            console.log("exporterListArray", exporterListArray);
 
             $select
                 .empty()
                 .append('<option value="">-- Select Importer --</option>');
             exporterListArray.forEach((exp) =>
-                $select.append(`<option value="${exp.id}">${exp.name}</option>`)
+                $select.append(
+                    `<option value="${exp.id}">${exp.name}</option>`,
+                ),
             );
 
             if ($select.hasClass("xintra-select2")) {
@@ -112,23 +196,10 @@ function fetchExporterList() {
                 width: "100%",
                 placeholder: "-- Select Importer --",
                 allowClear: true,
-                // templateResult: formatExporterOption,
-                // escapeMarkup: (m) => m,
             });
-
-            // Auto-select exporter in edit mode
-            if (isEditMode && application.importer && application.importer.id) {
-                exporter = application.importer_detail;
-                $select.val(application.importer.id).trigger("change");
-            }
         },
         error: (xhr) => {
             console.error("Failed to load exporters:", xhr.responseText);
-            // Swal.fire({
-            //     icon: "error",
-            //     title: "Failed to Load Exporters",
-            //     text: "Please try again or check your connection.",
-            // });
         },
     });
 }
@@ -140,7 +211,6 @@ function handleExporterChange() {
         const selectedId = $(this).val();
         console.log("select", selectedId);
 
-        // Clear fields if no selection
         if (!selectedId) return clearExporterFields();
         exporter = null;
         exporter = exporterListArray.find((e) => e.id == selectedId);
@@ -156,6 +226,7 @@ function handleExporterChange() {
         $("#expcountry").val(exporter.country_info.name || "");
 
         change = 1;
+        summarySubmit();
     });
 }
 
@@ -164,32 +235,199 @@ function clearExporterFields() {
     $("#expcountryCode, #expcountry").val("");
 }
 
-// ------------------------- Consignment / Uses -------------------------
+// ─── Vehicle Functions ────────────────────────────────────
+function handleVehicleChange() {
+    const $select = $("#selectVehicle");
+
+    $select.on("change", function () {
+        const selectedIds = $(this).val() || [];
+        $("#vehicleIds").val(selectedIds.join(","));
+        selectedVehicles = vehicleListArray.filter((v) =>
+            selectedIds.includes(String(v.id)),
+        );
+        updateSelectedVehiclesTable(selectedIds);
+        change = 1;
+        summarySubmit();
+    });
+}
+
+function fetchVehicleList() {
+    const $select = $("#selectVehicle");
+    const url = "/public/vehicle/data";
+
+    return $.ajax({
+        url,
+        type: "GET",
+        dataType: "json",
+        cache: false,
+        success: (data) => {
+            vehicleListArray = data.vehicle || [];
+            $select.empty();
+            $select.append('<option value="">-- Select Vehicle(s) --</option>');
+            vehicleListArray.forEach((v) => {
+                $select.append(
+                    `<option value="${v.id}">${v.vehicle_number}</option>`,
+                );
+            });
+
+            if ($select.hasClass("select2-hidden-accessible")) {
+                $select.select2("destroy");
+            }
+            $select.select2({
+                width: "100%",
+                placeholder: "-- Select Vehicle(s) --",
+                allowClear: true,
+                multiple: true,
+            });
+
+            // [FIX] Previously only read a pre-populated #vehicleIds hidden input
+            // (which nothing ever wrote to on load). Fall back to the draft's
+            // vehicle_ids from `application` in edit mode.
+            const storedIds = $("#vehicleIds").val()
+                ? $("#vehicleIds").val().split(",")
+                : isEditMode && Array.isArray(application.vehicle_ids)
+                    ? application.vehicle_ids
+                    : [];
+            if (storedIds.length) {
+                $select.val(storedIds).trigger("change");
+            }
+        },
+        error: (xhr) => {
+            console.error("Failed to load vehicles:", xhr.responseText);
+        },
+    });
+}
+
+function updateSelectedVehiclesTable(selectedIds) {
+    const $tableBody = $("#selectedVehiclesBody");
+    const $container = $("#selectedVehiclesContainer");
+
+    if (!selectedIds || selectedIds.length === 0) {
+        $container.hide();
+        return;
+    }
+
+    $container.show();
+    $tableBody.empty();
+
+    const selectedVehicles = vehicleListArray.filter((v) =>
+        selectedIds.includes(String(v.id)),
+    );
+
+    selectedVehicles.forEach((v, index) => {
+        $tableBody.append(`
+            <tr>
+                <td>${index + 1}</td>
+                <td>${v.vehicle_number}</td>
+                <td>
+                    <div class = "d-flex gap-1">
+                        <button type="button" class="btn btn-icon btn-success-light view-vehicle-btn" data-id="${v.id}">
+                            <i class="ti ti-eye"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `);
+    });
+}
+
+// ─── Add Vehicle Modal ────────────────────────────────────
+function initAddVehicleModal() {
+    const modalEl = document.getElementById("addVehicleModal");
+    if (!modalEl) return;
+    const modal = new bootstrap.Modal(modalEl);
+
+    $("#openVehicleModalBtn").on("click", (e) => {
+        e.preventDefault();
+        modal.show();
+    });
+
+    $("#addVehicleBtn").on("click", function (e) {
+        e.preventDefault();
+
+        const vehicleName = $("#addVehicleName").val().trim();
+        const vehicleNumber = $("#addVehicleNumber").val().trim();
+        const vehicleType = $("#addVehicleType").val().trim();
+        const registrationNumber = $("#addVehicleRegNumber").val().trim();
+        const validFrom = $("#addValidFrom").val();
+        const validUntil = $("#addValidUntil").val();
+
+        if (!vehicleName || !vehicleNumber || !registrationNumber) {
+            Swal.fire({
+                icon: "warning",
+                title: "Missing Required Fields",
+                text: "Please fill in: Vehicle Name, Vehicle Number, and Registration Number.",
+            });
+            return;
+        }
+
+        Swal.fire({
+            title: "Saving vehicle...",
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading(),
+        });
+
+        $.ajax({
+            url: "/public/store_vehicle",
+            type: "POST",
+            data: {
+                vehicle_name: vehicleName,
+                vehicle_number: vehicleNumber,
+                vehicle_type: vehicleType || null,
+                vehicle_registration_number: registrationNumber,
+                valid_from: validFrom || null,
+                valid_until: validUntil || null,
+            },
+            headers: {
+                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+            },
+            success: (response) => {
+                fetchVehicleList().then(() => {
+                    const currentSelection = $("#selectVehicle").val() || [];
+                    currentSelection.push(String(response.id));
+                    $("#selectVehicle").val(currentSelection).trigger("change");
+
+                    Swal.fire({
+                        icon: "success",
+                        title: "Vehicle Saved!",
+                        timer: 1800,
+                        showConfirmButton: false,
+                    });
+                    modal.hide();
+                    $("#addVehicleForm")[0].reset();
+                });
+            },
+            error: (xhr) => {
+                console.error(xhr.responseText);
+                Swal.fire(
+                    "❌",
+                    "Failed to save vehicle. Please try again.",
+                    "error",
+                );
+            },
+        });
+    });
+}
+
+// ─── Consignment / Uses ──────────────────────────────────
 function loadConsignmentSelection() {
     const countryCode = $("#expcountryCode").val();
     const $select = $("#itemSelect");
 
-    console.log('the country code', countryCode);
+    console.log("the country code", countryCode);
 
     if (!countryCode) return;
 
-
-
-    // Reset select options
     $select.empty().append('<option value="">-- Select Item --</option>');
 
-    // Destroy existing Select2 (if already initiated)
     if ($select.hasClass("select2-hidden-accessible")) {
         $select.select2("destroy");
     }
 
-    // Disable select while loading
     $select.prop("disabled", true);
 
-    // Show loading Swal
     Swal.fire({
         title: "Loading...",
-        // html: "Please wait while items are loaded.",
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading(),
     });
@@ -198,24 +436,22 @@ function loadConsignmentSelection() {
         .then((res) => res.json())
         .then((data) => {
             $select.prop("disabled", false);
-
-            console.log('data', data)
+            console.log("data", data);
 
             data.data.forEach((row) => {
                 $select.append(
-                    `<option value="${row.id}">${row.item_name}</option>`
+                    `<option value="${row.id}">${row.item_name}</option>`,
                 );
             });
 
-            // Initialize Select2
             $select.select2({
                 width: "100%",
                 placeholder: "-- Select Item --",
                 allowClear: true,
-                dropdownParent: $("#addItemModal"), // Important: for modal
+                dropdownParent: $("#addItemModal"),
             });
 
-            Swal.close(); // Close loading
+            Swal.close();
         })
         .catch((e) => {
             console.error("Error loading items:", e);
@@ -248,7 +484,7 @@ function loadUses(itemId) {
                 width: "100%",
                 placeholder: "-- Select Uses --",
                 allowClear: true,
-                dropdownParent: $("#addItemModal"), // Important: for modal
+                dropdownParent: $("#addItemModal"),
             });
 
             Swal.close();
@@ -258,9 +494,93 @@ function loadUses(itemId) {
         });
 }
 
-// ------------------------- Add Exporter Modal -------------------------
+function formatDate(dateString) {
+    const options = { day: "2-digit", month: "short", year: "numeric" };
+    return new Date(dateString).toLocaleDateString("en-GB", options);
+}
+
+function loadDetails(itemId) {
+    fetch(`/public/get_item_details/${itemId}`)
+        .then((res) => res.json())
+        .then((data) => {
+            console.log("data in details", data);
+
+            let item = data.data;
+            const today = new Date();
+            const startDate = item.start_date
+                ? new Date(item.start_date)
+                : null;
+            const endDate = item.end_date ? new Date(item.end_date) : null;
+
+            const todayDate = new Date(
+                today.getFullYear(),
+                today.getMonth(),
+                today.getDate(),
+            );
+            const startDay = startDate
+                ? new Date(
+                      startDate.getFullYear(),
+                      startDate.getMonth(),
+                      startDate.getDate(),
+                  )
+                : null;
+            const endDay = endDate
+                ? new Date(
+                      endDate.getFullYear(),
+                      endDate.getMonth(),
+                      endDate.getDate(),
+                  )
+                : null;
+
+            const isWithinLimitPeriod =
+                item.quantity_limit &&
+                startDay &&
+                endDay &&
+                todayDate >= startDay &&
+                todayDate <= endDay;
+
+            currentItemCondition = item.addional_condition || null;
+
+            if (isWithinLimitPeriod) {
+                limit = item.quantity_limit;
+                limitMeasurement = item.measurement_unit;
+                startLimitDate = item.start_date;
+                endLimitDate = item.end_date;
+
+                const alertHtml = `
+                <div class="col-12 alert alert-primary">
+                    <p>
+                        <span data-en="The quantity allowed for ${item.item_name} is" 
+                              data-bm="Kuantiti yang dibenarkan untuk ${item.item_name} ialah">
+                              The quantity allowed for ${item.item_name} is
+                        </span>
+                        <span class="fw-bold">
+                            ${item.quantity_limit} ${item.measurement_unit}
+                        </span>
+                        <span data-en="from" data-bm="dari">from</span> 
+                        <span class="fw-bold">${formatDate(item.start_date)}</span> 
+                        <span data-en="until" data-bm="sehingga">until</span> 
+                        <span class="fw-bold">${formatDate(item.end_date)}</span>.
+                    </p>
+                </div>
+                `;
+
+                $("#addItemModal .modal-body .news").find(".alert").remove();
+                $("#addItemModal .modal-body .news").prepend(alertHtml);
+            } else {
+                limit = null;
+                limitMeasurement = null;
+                $("#addItemModal .modal-body .news").find(".alert").remove();
+            }
+        })
+        .catch((err) => {
+            console.error("Failed to load details:", err);
+        });
+}
+
+// ─── Add Exporter Modal ──────────────────────────────────
 function initAddExporterModal() {
-    console.log('this is the exporter modal')
+    console.log("this is the exporter modal");
     const modalEl = document.getElementById("addExporterModal");
     const modal = new bootstrap.Modal(modalEl);
 
@@ -290,26 +610,23 @@ function initAddExporterModal() {
             allowEscapeKey: false,
             didOpen: () => {
                 Swal.showLoading();
-            }
+            },
         });
 
         $.ajax({
-            url: '/public/store_consignment_importer',
+            url: "/public/store_consignment_importer",
             type: "POST",
             data: { name, phone_no, address: full_address, country },
             headers: {
                 "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
             },
             success: (response) => {
-                // response is the new importer object
                 fetchExporterList().then(() => {
-                    // Auto-select the new importer
                     const newImporterId = response.id;
                     const $select = $("#selectexp");
-                    
-                    // Set the value and trigger change
-                    $select.val(newImporterId).trigger('change');
-                    
+
+                    $select.val(newImporterId).trigger("change");
+
                     Swal.fire({
                         icon: "success",
                         title: "Importer Saved!",
@@ -331,7 +648,7 @@ function initAddExporterModal() {
     });
 }
 
-// ------------------------- Importer Lookup -------------------------
+// ─── Importer Lookup ──────────────────────────────────────
 function initImporterSearch() {
     const btn = $("#btnFindImp");
     const input = $("#findImporter");
@@ -379,7 +696,7 @@ function handleImporterResponse(data) {
     const hideAll = () => {
         $("#searchresult, #doanotver, #emailnotver").hide();
         $(
-            "#impname, #impid, #impfonno, #impaddress1, #impaddress2, #imp_id, #impemail"
+            "#impname, #impid, #impfonno, #impaddress1, #impaddress2, #imp_id, #impemail",
         ).val("");
     };
 
@@ -389,7 +706,6 @@ function handleImporterResponse(data) {
 
     if (data.status !== "success") return hideAll();
 
-    // SUCCESS
     $("#searchresult, #doanotver, #emailnotver").hide();
     $("#impname").val(data.data.fullname);
     $("#impid").val(data.data.id);
@@ -400,7 +716,7 @@ function handleImporterResponse(data) {
     $("#impemail").val(data.data.email);
 }
 
-// -------------------------Permit details ------------------------
+// ─── Permit Details ──────────────────────────────────────
 function permitDetails() {
     const trnptType = document.getElementById("trnptType");
     const detailsSelect = document.getElementById("transportDetails");
@@ -414,8 +730,8 @@ function permitDetails() {
             didOpen: () => Swal.showLoading(),
         });
 
-        const value = this.value; // Air / Sea / Land
-        const route = this.dataset.route; // /public/transport/options
+        const value = this.value;
+        const route = this.dataset.route;
 
         if (!value || route === "#") {
             detailsSelect.innerHTML =
@@ -423,19 +739,17 @@ function permitDetails() {
             return;
         }
 
-        // build URL with the selected value as query param
         const url = `${route}?type=${encodeURIComponent(value)}`;
         console.log(url);
         $.ajax({
-            url: url, // the same URL you built earlier: route + ?type=value
+            url: url,
             type: "GET",
             dataType: "json",
             success: function (data) {
                 console.log("something here");
                 console.log(data);
                 Swal.close();
-                // rebuild next dropdown
-                const detailsSelect = $("#entryPoint"); // if using jQuery
+                const detailsSelect = $("#entryPoint");
                 let options =
                     '<option value="">-- Select Entry Point --</option>';
                 data.forEach(function (item) {
@@ -446,14 +760,18 @@ function permitDetails() {
                 });
                 detailsSelect.html(options);
 
-                // Auto-select drafted entry point or the first available option
+                // [FIX] Restored edit-mode auto-select of the drafted entry point
+                // (this had regressed to always selecting the first option).
                 setTimeout(() => {
                     if (isEditMode && application.entry_point != null) {
-                        detailsSelect.val(application.entry_point.toString()).trigger("change");
-                        
-                        // Fallback: if value didn't set (e.g. strict type issue)
+                        detailsSelect
+                            .val(application.entry_point.toString())
+                            .trigger("change");
+
                         if (!detailsSelect.val() && data.length > 0) {
-                            detailsSelect.val(data[0].id.toString()).trigger("change");
+                            detailsSelect
+                                .val(data[0].id.toString())
+                                .trigger("change");
                         }
                     } else if (data.length > 0) {
                         detailsSelect.val(data[0].id.toString()).trigger("change");
@@ -462,7 +780,7 @@ function permitDetails() {
             },
             error: function (xhr, status, error) {
                 console.error("AJAX Error:", error);
-                console.log(xhr.responseText); // helpful for Laravel debug messages
+                console.log(xhr.responseText);
                 Swal.close();
                 Swal.fire("Error", "Error", "error");
                 console.error("ERROR RESPONSE:");
@@ -474,7 +792,6 @@ function permitDetails() {
     $("#entryPoint").on("change", function (e) {
         e.preventDefault();
 
-        // get the selected <option>
         entryName = $(this).find("option:selected").data("entry_name");
 
         console.log("I picked entry:", entryName);
@@ -482,18 +799,29 @@ function permitDetails() {
         summarySubmit();
     });
 
-    // ------------------- ETA Date Validation -------------------
+    // ─── ETA Date Validation ────────────────────────────
     const etaInput = document.getElementById("eta");
+    const expiredInput = document.getElementById("expiredDate");
+
     if (etaInput) {
-        // Set minimum date to today
         const today = new Date().toISOString().split("T")[0];
         etaInput.setAttribute("min", today);
 
-        // Validate on change
+        function updateExpiredDate() {
+            if (etaInput.value) {
+                const etaDate = new Date(etaInput.value);
+                etaDate.setDate(etaDate.getDate() + 3);
+                const expiredDateStr = etaDate.toISOString().split("T")[0];
+                expiredInput.value = expiredDateStr;
+            } else {
+                expiredInput.value = "";
+            }
+        }
+
         etaInput.addEventListener("change", function () {
             const selectedDate = new Date(this.value);
             const todayDate = new Date();
-            todayDate.setHours(0, 0, 0, 0); // Reset time for accurate comparison
+            todayDate.setHours(0, 0, 0, 0);
 
             if (selectedDate < todayDate) {
                 Swal.fire({
@@ -501,48 +829,84 @@ function permitDetails() {
                     title: "Invalid Date",
                     text: "Estimated Time Arrival cannot be a past date. Please select today or a future date.",
                 });
-                this.value = ""; // Clear the invalid date
+                this.value = "";
                 this.classList.add("is-invalid");
+                expiredInput.value = "";
             } else {
                 this.classList.remove("is-invalid");
+                updateExpiredDate();
             }
+
+            summarySubmit();
         });
+
+        etaInput.addEventListener("input", function () {
+            if (this.value) {
+                const selectedDate = new Date(this.value);
+                const todayDate = new Date();
+                todayDate.setHours(0, 0, 0, 0);
+                if (selectedDate >= todayDate) {
+                    updateExpiredDate();
+                }
+            } else {
+                expiredInput.value = "";
+            }
+
+            summarySubmit();
+        });
+
+        if (etaInput.value) {
+            const selectedDate = new Date(etaInput.value);
+            const todayDate = new Date();
+            todayDate.setHours(0, 0, 0, 0);
+            if (selectedDate >= todayDate) {
+                updateExpiredDate();
+                summarySubmit();
+            }
+        }
     }
 
+    // [FIX] Restored edit-mode prefill of eta / category / PTN number — this
+    // whole block was dropped when this file diverged from consignment1.js.
+    // (category_application prefill is carried over as-is; PTN number is new
+    // here since #ptnNumber didn't exist yet in the old file.)
     if (isEditMode) {
         if (application.eta) {
             const etaDate = application.eta.split("T")[0];
-            const etaInput = document.getElementById("eta");
-            if(etaInput) {
+            if (etaInput) {
                 etaInput.value = etaDate;
+                // dispatch change so the expiredDate (+3 days) calc above runs
+                etaInput.dispatchEvent(new Event("change"));
             }
         }
         if (application.category_application) {
             const catInput = document.getElementById("app_cate");
-            if(catInput) catInput.value = application.category_application;
+            if (catInput) catInput.value = application.category_application;
+        }
+        if (application.ptn_number) {
+            const ptnInput = document.getElementById("ptnNumber");
+            if (ptnInput) ptnInput.value = application.ptn_number;
         }
     }
 
-    // Automatically trigger change event for the fixed Land transport type
     if (trnptType.value) {
         trnptType.dispatchEvent(new Event("change"));
     }
 }
 
-// ============= attachment =====================
+// ─── Item Dropzone ────────────────────────────────────────
 function itemConsigment() {
     itemDropzone = new Dropzone("#itemDropzone", {
         url: "/",
         autoProcessQueue: false,
         paramName: "file",
-        maxFilesize: 10, // MB
+        maxFilesize: 10,
         acceptedFiles: ".jpg,.jpeg,.png,.pdf",
         addRemoveLinks: true,
         headers: {
             "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
                 .content,
         },
-        // --- 1. SWAL LOADING BEFORE LOAD (Processing) ---
         processing: function (file) {
             Swal.fire({
                 title: "Uploading...",
@@ -554,7 +918,6 @@ function itemConsigment() {
             });
             groupPreview();
         },
-        // --- 2. SWAL SUCCESS AFTER LOAD ---
         success: (file, response) => {
             Swal.close();
 
@@ -570,13 +933,12 @@ function itemConsigment() {
 
             file.temp_id = response.id;
 
-            // ✅ Call groupPreview here too
             groupPreview();
 
             console.log("temp", tempAttachments);
             console.log(
                 "Latest uploaded file:",
-                tempAttachments[tempAttachments.length - 1]
+                tempAttachments[tempAttachments.length - 1],
             );
             console.log("All attachments:", tempAttachments);
 
@@ -588,7 +950,6 @@ function itemConsigment() {
                 showConfirmButton: false,
             });
         },
-        // --- 3. SWAL ERROR AFTER LOAD ---
         error: (file, message, xhr) => {
             Swal.close();
             itemDropzone.removeFile(file);
@@ -601,11 +962,10 @@ function itemConsigment() {
             });
             console.error("Dropzone Error:", message);
         },
-        // --- 4. HANDLE FILE REMOVAL ---
         removedfile: function (file) {
             if (file.temp_id) {
                 const indexToRemove = tempAttachments.findIndex(
-                    (a) => a.id === file.temp_id
+                    (a) => a.id === file.temp_id,
                 );
                 if (indexToRemove > -1)
                     tempAttachments.splice(indexToRemove, 1);
@@ -617,12 +977,710 @@ function itemConsigment() {
         },
     });
 
-    // ✅ Run groupPreview every time a file is added (before upload)
     itemDropzone.on("addedfile", function (file) {
+        currentItemFile = file;
+        showItemFilePreview(file);
+        setTimeout(() => {
+            addPreviewButtons(file);
+        }, 100);
         groupPreview();
     });
 }
 
+// ─── File Preview Offcanvas ──────────────────────────────
+function addPreviewButtons(file) {
+    const preview = file.previewElement;
+    if (!preview) return;
+
+    const removeBtn = preview.querySelector(".dz-remove");
+    if (!removeBtn) return;
+
+    const attachmentGroup = document.createElement("div");
+    attachmentGroup.className = "attachment-group";
+    attachmentGroup.style.display = "flex";
+    attachmentGroup.style.gap = "5px";
+    attachmentGroup.style.alignItems = "center";
+    attachmentGroup.style.justifyContent = "end";
+
+    const viewBtn = document.createElement("a");
+    viewBtn.href = "#";
+    viewBtn.innerHTML = "<i class='ti ti-eye'></i>";
+    viewBtn.className = "btn btn-icon btn-info-light";
+    viewBtn.onclick = function (e) {
+        e.preventDefault();
+        currentItemFile = file;
+        showItemFilePreview(file);
+    };
+
+    const editBtn = document.createElement("a");
+    editBtn.href = "#";
+    editBtn.innerHTML = "<i class='ti ti-pencil'></i>";
+    editBtn.className = "btn btn-icon btn-success-light";
+    editBtn.onclick = function (e) {
+        e.preventDefault();
+        currentItemFile = file;
+        showItemFilePreview(file);
+        const modal = bootstrap.Modal.getOrCreateInstance(
+            document.getElementById("itemFilePreviewModal"),
+        );
+        modal.show();
+    };
+
+    const deleteBtn = document.createElement("a");
+    deleteBtn.href = "#";
+    deleteBtn.innerHTML = "<i class='ti ti-trash'></i>";
+    deleteBtn.className = "btn btn-icon btn-danger-light";
+    deleteBtn.onclick = function (e) {
+        e.preventDefault();
+        if (itemDropzone) {
+            itemDropzone.removeFile(file);
+        }
+    };
+
+    attachmentGroup.appendChild(viewBtn);
+    attachmentGroup.appendChild(editBtn);
+    attachmentGroup.appendChild(deleteBtn);
+
+    removeBtn.parentNode.replaceChild(attachmentGroup, removeBtn);
+}
+
+function showItemFilePreview(file) {
+    const previewContainer = document.getElementById(
+        "itemFilePreviewContainer",
+    );
+    const fileNameSpan = document.getElementById("itemFileName");
+    const fileEditInput = document.getElementById("itemFileEditName");
+    const fileDetailsDiv = document.getElementById("itemFileDetails");
+
+    if (!previewContainer || !fileNameSpan) return;
+
+    if (!itemFileOffcanvas) {
+        itemFileOffcanvas = new bootstrap.Offcanvas(
+            document.getElementById("itemFilePreviewOffcanvas"),
+            { backdrop: true, keyboard: true, scroll: false },
+        );
+    }
+
+    previewContainer.innerHTML = "";
+    fileNameSpan.textContent = file.name;
+    fileEditInput.value = file.name;
+
+    if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            previewContainer.innerHTML = `<img src="${e.target.result}" class="img-fluid rounded" alt="${file.name}">`;
+        };
+        reader.readAsDataURL(file);
+    } else if (file.type === "application/pdf") {
+        const url = URL.createObjectURL(file);
+        previewContainer.innerHTML = `<iframe src="${url}" class="w-100" style="height: calc(100vh - 220px); border: none;"></iframe>`;
+    } else {
+        previewContainer.innerHTML = `<div class="text-center"><i class="bi bi-file-earmark-fill fs-1 mb-3"></i><p>${file.name}</p></div>`;
+    }
+
+    const fileSize = (file.size / 1024).toFixed(2) + " KB";
+    const fileType = file.type || "Unknown";
+
+    fileDetailsDiv.innerHTML = `
+        <div class="mb-3">
+            <strong data-en="File Name:" data-bm="Nama Fail:">File Name:</strong>
+            <div class="text-muted">${file.name}</div>
+        </div>
+        <div class="mb-3">
+            <strong data-en="File Size:" data-bm="Saiz Fail:">File Size:</strong>
+            <div class="text-muted">${fileSize}</div>
+        </div>
+        <div class="mb-3">
+            <strong data-en="File Type:" data-bm="Jenis Fail:">File Type:</strong>
+            <div class="text-muted">${fileType}</div>
+        </div>
+    `;
+
+    itemFileOffcanvas.show();
+}
+
+$(document).on("click", "#itemFileSaveBtn", function () {
+    const newName = document.getElementById("itemFileEditName").value.trim();
+
+    if (!newName || !currentItemFile) {
+        Swal.fire({
+            icon: "warning",
+            title: "Empty Name",
+            text: "Please enter a file name",
+        });
+        return;
+    }
+
+    currentItemFile.displayName = newName;
+
+    if (currentItemFile.previewElement) {
+        const $preview = $(currentItemFile.previewElement);
+        const $filenameSpan = $preview.find(".dz-filename span");
+        if ($filenameSpan.length) {
+            $filenameSpan.text(newName);
+        }
+        const $filenameDiv = $preview.find(".dz-filename");
+        if ($filenameDiv.length) {
+            $filenameDiv.attr("data-dz-name", newName);
+        }
+    }
+
+    document.getElementById("itemFileName").textContent = newName;
+
+    Swal.fire({
+        icon: "success",
+        title: "Saved",
+        text: "File name updated",
+        timer: 1500,
+        showConfirmButton: false,
+    });
+});
+
+// ─── Application Attachments ─────────────────────────────
+function initApplicationAttachments() {
+    const dropzoneEl = document.getElementById("applicationAttachmentDropzone");
+    if (!dropzoneEl) return;
+
+    applicationAttachmentDropzone = new Dropzone(
+        "#applicationAttachmentDropzone",
+        {
+            url: "/",
+            autoProcessQueue: false,
+            addRemoveLinks: false,
+            previewsContainer: false,
+            clickable: true,
+            acceptedFiles: ".jpg,.jpeg,.png,.pdf,.doc,.docx",
+            maxFilesize: 15,
+            headers: {
+                "X-CSRF-TOKEN": document.querySelector(
+                    'meta[name="csrf-token"]',
+                ).content,
+            },
+            init: function () {
+                this.on("addedfile", function (file) {
+                    const attachment = {
+                        id: generateUUID(),
+                        file,
+                        name: file.name,
+                        displayName: file.name,
+                        size: file.size,
+                        type: file.type,
+                    };
+                    file._attachmentId = attachment.id;
+                    applicationAttachments.push(attachment);
+                    renderApplicationAttachmentTable();
+                    updateAttachmentTable();
+                });
+            },
+            error: function (file, message) {
+                console.error("Attachment Dropzone Error:", message);
+                if (file.previewElement) {
+                    file.previewElement.remove();
+                }
+            },
+        },
+    );
+
+    renderApplicationAttachmentTable();
+}
+
+function renderApplicationAttachmentTable() {
+    const $tbody = $("#applicationAttachmentTable tbody");
+    $tbody.empty();
+
+    if (!applicationAttachments.length) {
+        $tbody.append(`
+            <tr>
+                <td colspan="2" class="text-center text-muted py-3" data-en="No attachments uploaded yet." data-bm="Tiada lampiran dimuat naik lagi.">
+                    No attachments uploaded yet.
+                </td>
+            </tr>
+        `);
+        return;
+    }
+
+    applicationAttachments.forEach((attachment, index) => {
+        $tbody.append(`
+            <tr data-id="${attachment.id}" data-index="${index}">
+                <td class="text-wrap">
+                    <a href="#" class="text-decoration-none attachment-name-link" data-id="${attachment.id}">
+                        <strong>${attachment.displayName}</strong>
+                    </a>
+                    <div class="text-muted small">${attachment.name}</div>
+                </td>
+                <td class="text-end">
+                    <button type="button" class="btn btn-icon btn-success-light view-attachment-btn" data-id="${attachment.id}">
+                        <i class="ti ti-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-icon btn-info-light edit-attachment-btn ms-2" data-id="${attachment.id}">
+                        <i class="ti ti-pencil"></i>
+                    </button>
+                    <button type="button" class="btn btn-icon btn-danger-light ms-2 delete-attachment-btn" data-id="${attachment.id}">
+                        <i class="ti ti-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `);
+    });
+}
+
+function removeAttachmentFromDropzone(attachmentId) {
+    if (!applicationAttachmentDropzone) return false;
+    const fileIndex = applicationAttachmentDropzone.files.findIndex(
+        (fileItem) => fileItem._attachmentId === attachmentId,
+    );
+    if (fileIndex === -1) return false;
+    const file = applicationAttachmentDropzone.files[fileIndex];
+    try {
+        applicationAttachmentDropzone.removeFile(file);
+        return true;
+    } catch (e) {
+        applicationAttachmentDropzone.files.splice(fileIndex, 1);
+        return true;
+    }
+}
+
+function initAttachmentOffcanvas() {
+    const el = document.getElementById("attachmentOffcanvas");
+    if (!el) return;
+
+    attachmentOffcanvas = new bootstrap.Offcanvas(el, {
+        backdrop: true,
+        keyboard: true,
+        scroll: false,
+    });
+
+    el.addEventListener("hidden.bs.offcanvas", () => {
+        const viewerBody = document.getElementById("attachmentViewer");
+        if (viewerBody) {
+            const url = viewerBody.dataset.objectUrl;
+            if (url) {
+                URL.revokeObjectURL(url);
+                delete viewerBody.dataset.objectUrl;
+            }
+            viewerBody.innerHTML = `<div class="text-muted text-center"><i class="bi bi-file-earmark-fill fs-1"></i><br>Select an attachment</div>`;
+        }
+        const detailsBody = document.getElementById("attachmentDetails");
+        if (detailsBody) {
+            detailsBody.innerHTML = "";
+        }
+    });
+}
+
+function openAttachmentViewer(attachmentId) {
+    const index = applicationAttachments.findIndex(
+        (item) => item.id === attachmentId,
+    );
+    if (index === -1) return;
+
+    const attachment = applicationAttachments[index];
+    if (!attachment) return;
+
+    const viewerTitle = document.getElementById("attachmentTitle");
+    const viewerCounter = document.getElementById("attachmentCounter");
+    const viewerBody = document.getElementById("attachmentViewer");
+    const detailsBody = document.getElementById("attachmentDetails");
+
+    if (!viewerTitle || !viewerCounter || !viewerBody || !detailsBody) return;
+
+    currentAttachmentIndex = index;
+    viewerTitle.textContent = attachment.displayName;
+    viewerCounter.textContent = `${currentAttachmentIndex + 1} / ${applicationAttachments.length}`;
+    renderAttachmentPreview(attachment, viewerBody);
+    renderAttachmentDetails(attachment, detailsBody);
+
+    document.getElementById("attachmentPrevBtn").disabled =
+        currentAttachmentIndex === 0;
+    document.getElementById("attachmentNextBtn").disabled =
+        currentAttachmentIndex === applicationAttachments.length - 1;
+
+    const editNameInput = document.getElementById("attachmentEditName");
+    if (editNameInput) {
+        editNameInput.value = attachment.displayName;
+    }
+
+    if (attachmentOffcanvas) {
+        attachmentOffcanvas.show();
+    }
+}
+
+function renderAttachmentPreview(attachment, container) {
+    const file = attachment.file;
+    if (!container) return;
+
+    if (container.dataset.objectUrl) {
+        URL.revokeObjectURL(container.dataset.objectUrl);
+        delete container.dataset.objectUrl;
+    }
+
+    container.innerHTML = "";
+
+    if (!file) {
+        container.innerHTML = `<div class="text-muted text-center"><i class="bi bi-file-earmark-fill fs-1"></i><br>No preview available</div>`;
+        return;
+    }
+
+    if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            container.innerHTML = `<img src="${e.target.result}" class="img-fluid rounded" alt="${attachment.displayName}">`;
+        };
+        reader.readAsDataURL(file);
+    } else if (
+        file.type === "application/pdf" ||
+        attachment.name.toLowerCase().endsWith(".pdf")
+    ) {
+        const url = URL.createObjectURL(file);
+        container.innerHTML = `<iframe src="${url}" class="w-100" style="height:calc(100vh - 220px); border:none;"></iframe>`;
+        container.dataset.objectUrl = url;
+    } else {
+        const url = URL.createObjectURL(file);
+        container.innerHTML = `
+            <div class="text-center">
+                <i class="bi bi-file-earmark-fill fs-1 mb-3"></i>
+                <p class="mb-2">${attachment.name}</p>
+                <a href="${url}" target="_blank" download="${attachment.name}" class="btn btn-sm btn-primary">
+                    Download File
+                </a>
+            </div>
+        `;
+        container.dataset.objectUrl = url;
+    }
+}
+
+function renderAttachmentDetails(attachment, container) {
+    const fields = [
+        { label: "File Name", value: attachment.displayName },
+        { label: "Original Name", value: attachment.name },
+        { label: "File Size", value: `${attachment.size} bytes` },
+        { label: "File Type", value: attachment.type || "Unknown" },
+    ];
+    container.innerHTML = fields
+        .map(
+            (field) => `
+                <div class="mb-3">
+                    <strong>${field.label}:</strong>
+                    <div class="text-muted">${field.value}</div>
+                </div>
+            `,
+        )
+        .join("");
+}
+
+function initAttachmentNavigation() {
+    $(document).on("click", "#attachmentPrevBtn", function () {
+        if (currentAttachmentIndex > 0) {
+            const nextId =
+                applicationAttachments[currentAttachmentIndex - 1]?.id;
+            if (nextId) openAttachmentViewer(nextId);
+        }
+    });
+
+    $(document).on("click", "#attachmentNextBtn", function () {
+        if (currentAttachmentIndex < applicationAttachments.length - 1) {
+            const nextId =
+                applicationAttachments[currentAttachmentIndex + 1]?.id;
+            if (nextId) openAttachmentViewer(nextId);
+        }
+    });
+}
+
+$(document).on("click", ".view-attachment-btn", function () {
+    const attachmentId = $(this).data("id");
+    openAttachmentViewer(attachmentId);
+});
+
+$(document).on("click", ".attachment-name-link", function (e) {
+    e.preventDefault();
+    const attachmentId = $(this).data("id");
+    openAttachmentViewer(attachmentId);
+});
+
+$(document).on("click", ".edit-attachment-btn", function () {
+    const attachmentId = $(this).data("id");
+    const attachment = applicationAttachments.find(
+        (item) => item.id === attachmentId,
+    );
+    if (!attachment) return;
+    const newName = prompt("Edit file name:", attachment.displayName);
+    if (!newName) return;
+    attachment.displayName = newName.trim();
+    renderApplicationAttachmentTable();
+    updateAttachmentTable();
+});
+
+$(document).on("click", ".delete-attachment-btn", function () {
+    const attachmentId = $(this).data("id");
+    const index = applicationAttachments.findIndex(
+        (item) => item.id === attachmentId,
+    );
+    if (index === -1) return;
+
+    removeAttachmentFromDropzone(attachmentId);
+    applicationAttachments.splice(index, 1);
+    renderApplicationAttachmentTable();
+    updateAttachmentTable();
+
+    Swal.fire({
+        icon: "success",
+        title: "Attachment removed",
+        timer: 1000,
+        showConfirmButton: false,
+    });
+});
+
+$(document).on("click", "#attachmentSaveNameBtn", function () {
+    const newName = document.getElementById("attachmentEditName").value.trim();
+
+    if (!newName) {
+        Swal.fire({
+            icon: "warning",
+            title: "Empty Name",
+            text: "Please enter a file name",
+        });
+        return;
+    }
+
+    if (
+        currentAttachmentIndex >= 0 &&
+        currentAttachmentIndex < applicationAttachments.length
+    ) {
+        const attachment = applicationAttachments[currentAttachmentIndex];
+        attachment.displayName = newName;
+
+        renderApplicationAttachmentTable();
+        renderAttachmentDetails(
+            attachment,
+            document.getElementById("attachmentDetails"),
+        );
+
+        Swal.fire({
+            icon: "success",
+            title: "Saved",
+            text: "File name updated successfully",
+            timer: 1500,
+            showConfirmButton: false,
+        });
+
+        document.getElementById("attachmentEditName").value = "";
+        updateAttachmentTable();
+    }
+});
+
+// ─── Item Attachment Offcanvas ────────────────────────────
+function initItemAttachmentOffcanvas() {
+    const el = document.getElementById("itemAttachmentOffcanvas");
+    if (!el) return;
+
+    itemAttachmentOffcanvas = new bootstrap.Offcanvas(el, {
+        backdrop: true,
+        keyboard: true,
+        scroll: false,
+    });
+
+    el.addEventListener("hidden.bs.offcanvas", () => {
+        const viewerBody = document.getElementById("itemAttachViewer");
+        if (viewerBody) {
+            const url = viewerBody.dataset.objectUrl;
+            if (url) {
+                URL.revokeObjectURL(url);
+                delete viewerBody.dataset.objectUrl;
+            }
+            viewerBody.innerHTML = `<div class="text-muted text-center"><i class="bi bi-file-earmark-fill fs-1"></i><br>Select an attachment</div>`;
+        }
+        const detailsBody = document.getElementById("itemAttachDetails");
+        if (detailsBody) {
+            detailsBody.innerHTML = "";
+        }
+        currentItemAttachIndex = 0;
+    });
+}
+
+function openItemAttachmentViewer(files, startIndex = 0) {
+    if (!files || files.length === 0) return;
+
+    currentItemAttachments = files;
+    currentItemAttachIndex = startIndex;
+
+    showItemAttachment(files[startIndex], startIndex);
+
+    if (itemAttachmentOffcanvas) {
+        itemAttachmentOffcanvas.show();
+    }
+}
+
+function showItemAttachment(file, index) {
+    const viewerTitle = document.getElementById("itemAttachmentTitle");
+    const viewerCounter = document.getElementById("itemAttachCounter");
+    const viewerBody = document.getElementById("itemAttachViewer");
+    const detailsBody = document.getElementById("itemAttachDetails");
+
+    if (!viewerTitle || !viewerCounter || !viewerBody || !detailsBody) return;
+
+    const displayName = file.displayName || file.name;
+
+    currentItemAttachIndex = index;
+    viewerTitle.textContent = displayName;
+    viewerCounter.textContent = `${index + 1} / ${currentItemAttachments.length}`;
+
+    if (viewerBody.dataset.objectUrl) {
+        URL.revokeObjectURL(viewerBody.dataset.objectUrl);
+        delete viewerBody.dataset.objectUrl;
+    }
+    viewerBody.innerHTML = "";
+
+    if (file.type && file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            viewerBody.innerHTML = `<img src="${e.target.result}" class="img-fluid rounded" alt="${displayName}">`;
+        };
+        reader.readAsDataURL(file);
+    } else if (
+        file.type === "application/pdf" ||
+        file.name.toLowerCase().endsWith(".pdf")
+    ) {
+        const url = URL.createObjectURL(file);
+        viewerBody.innerHTML = `<iframe src="${url}" class="w-100" style="height: calc(100vh - 220px); border: none;"></iframe>`;
+        viewerBody.dataset.objectUrl = url;
+    } else {
+        const url = URL.createObjectURL(file);
+        viewerBody.innerHTML = `
+            <div class="text-center">
+                <i class="bi bi-file-earmark-fill fs-1 mb-3"></i>
+                <p class="mb-2">${displayName}</p>
+                <a href="${url}" target="_blank" download="${file.name}" class="btn btn-sm btn-primary">
+                    Download File
+                </a>
+            </div>
+        `;
+        viewerBody.dataset.objectUrl = url;
+    }
+
+    const fields = file.displayName
+        ? [
+              { label: "File Name", value: file.displayName },
+              { label: "Original Name", value: file.name },
+              {
+                  label: "File Size",
+                  value: (file.size / 1024).toFixed(2) + " KB",
+              },
+              { label: "File Type", value: file.type || "Unknown" },
+          ]
+        : [
+              { label: "File Name", value: file.name },
+              {
+                  label: "File Size",
+                  value: (file.size / 1024).toFixed(2) + " KB",
+              },
+              { label: "File Type", value: file.type || "Unknown" },
+          ];
+    detailsBody.innerHTML = fields
+        .map(
+            (field) => `
+                <div class="mb-3">
+                    <strong>${field.label}:</strong>
+                    <div class="text-muted">${field.value}</div>
+                </div>
+            `,
+        )
+        .join("");
+
+    document.getElementById("itemAttachPrevBtn").disabled = index === 0;
+    document.getElementById("itemAttachNextBtn").disabled =
+        index === currentItemAttachments.length - 1;
+
+    const editNameInput = document.getElementById("itemAttachEditName");
+    if (editNameInput) {
+        editNameInput.value = displayName;
+    }
+}
+
+function initItemAttachmentNavigation() {
+    $(document).on("click", "#itemAttachPrevBtn", function () {
+        if (currentItemAttachIndex > 0 && currentItemAttachments.length > 0) {
+            showItemAttachment(
+                currentItemAttachments[currentItemAttachIndex - 1],
+                currentItemAttachIndex - 1,
+            );
+        }
+    });
+
+    $(document).on("click", "#itemAttachNextBtn", function () {
+        if (
+            currentItemAttachIndex < currentItemAttachments.length - 1 &&
+            currentItemAttachments.length > 0
+        ) {
+            showItemAttachment(
+                currentItemAttachments[currentItemAttachIndex + 1],
+                currentItemAttachIndex + 1,
+            );
+        }
+    });
+
+    $(document).on("click", ".ipv-attach-chip", function () {
+        const index = $(this).data("index");
+        if (currentItemAttachments.length > 0 && index !== undefined) {
+            openItemAttachmentViewer(currentItemAttachments, index);
+        }
+    });
+
+    $(document).on("click", "#itemAttachSaveNameBtn", function () {
+        const newName = document
+            .getElementById("itemAttachEditName")
+            .value.trim();
+
+        if (!newName) {
+            Swal.fire({
+                icon: "warning",
+                title: "Empty Name",
+                text: "Please enter a file name",
+            });
+            return;
+        }
+
+        if (
+            currentItemAttachIndex >= 0 &&
+            currentItemAttachIndex < currentItemAttachments.length
+        ) {
+            const file = currentItemAttachments[currentItemAttachIndex];
+            file.displayName = newName;
+
+            document.getElementById("itemAttachmentTitle").textContent =
+                newName;
+
+            const detailsBody = document.getElementById("itemAttachDetails");
+            const fields = [
+                { label: "File Name", value: newName },
+                { label: "Original Name", value: file.name },
+                {
+                    label: "File Size",
+                    value: (file.size / 1024).toFixed(2) + " KB",
+                },
+                { label: "File Type", value: file.type || "Unknown" },
+            ];
+            detailsBody.innerHTML = fields
+                .map(
+                    (field) => `
+                        <div class="mb-3">
+                            <strong>${field.label}:</strong>
+                            <div class="text-muted">${field.value}</div>
+                        </div>
+                    `,
+                )
+                .join("");
+
+            Swal.fire({
+                icon: "success",
+                title: "Saved",
+                text: "File name updated successfully",
+                timer: 1500,
+                showConfirmButton: false,
+            });
+        }
+    });
+}
+
+// ─── Group Preview ────────────────────────────────────────
 function groupPreview() {
     $(document).ready(function () {
         Swal.fire({
@@ -634,31 +1692,22 @@ function groupPreview() {
         setTimeout(function () {
             const $dropzone = $("#itemDropzone");
             const $previews = $dropzone.find(".dz-preview");
-            const $deleteBtns = $previews.find(".dz-remove");
 
-            // Create group if it doesn't exist
             let $group = $dropzone.find(".dz-preview-group");
             if ($group.length === 0) {
                 $group = $('<div class="dz-preview-group"></div>');
                 $dropzone.find(".dz-message").after($group);
             }
 
-            // Move all previews into the group
             $previews.appendTo($group);
 
-            // Replace PDF previews with PDF logo
             for (const file of itemDropzone.getAcceptedFiles()) {
                 if (file.type === "application/pdf") {
                     const $preview = $(file.previewElement);
                     const $img = $preview.find(
-                        ".dz-image img[data-dz-thumbnail]"
+                        ".dz-image img[data-dz-thumbnail]",
                     );
-
-                    // Set your PDF logo path
-                    $img.attr(
-                        "src",
-                        "/images/pdf-logo.png" // <-- replace with your actual PDF logo path
-                    );
+                    $img.attr("src", "/images/pdf-logo.png");
                     $img.css({
                         "object-fit": "contain",
                         width: "100%",
@@ -667,113 +1716,291 @@ function groupPreview() {
                 }
             }
 
-            // Update delete buttons
-            $deleteBtns.html('<i class="ti ti-trash"></i>');
+            $previews.each(function () {
+                const $preview = $(this);
+                const $removeBtn = $preview.find(".dz-remove");
+                if ($removeBtn.length && !$removeBtn.find("i").length) {
+                    $removeBtn.html('<i class="ti ti-trash"></i>');
+                }
+            });
 
             Swal.close();
-        }, 100);
+        }, 150);
     });
 }
 
-function saveConsignmentAttachment() {
-    document.getElementById("saveBtn").addEventListener("click", function (e) {
-        e.preventDefault();
-
-        console.log("Saving consignment item...");
-
-        // ✅ Get values (Select2 fields via jQuery)
-        const itemSelectValue = $("#itemSelect").val();
-        const itemSelectText = $("#itemSelect option:selected").text();
-        const itemValue = $("#itemValue").val().trim();
-        const itemQuantity = $("#itemQuantity").val().trim();
-        const itemMeasure = $("#itemMeasure").val();
-        const itemPurpose = $("#itemPurpose").val();
-        const itemUsesValue = $("#itemUses").val();
-        const certificateNo = $("#certificateNo").val();
-
-        // ✅ Validation
-        if (
-            !itemSelectValue ||
-            !itemValue ||
-            !itemQuantity ||
-            !itemMeasure ||
-            !itemPurpose ||
-            !itemUsesValue
-        ) {
-            Swal.fire({
-                icon: "error",
-                title: "Incomplete Data",
-                text: "Please fill in all required fields before saving.",
-            });
-            return;
-        }
-
-        // ✅ Get files from Dropzone
-        const files = itemDropzone.getAcceptedFiles();
-        const itemPurposeDescription = $("#itemPurpose option:selected").data("description") || $("#itemPurpose").val();
-
-        // ✅ Build new item
-        const newItem = {
-            // id: crypto.randomUUID(),
-            id: generateUUID(),
-            item_id: itemSelectValue,
-            item_name: itemSelectText,
-            value: itemValue,
-            quantity: itemQuantity,
-            measure: itemMeasure,
-            purpose: itemPurposeDescription,
-            uses: itemUsesValue,
-            files: files,
-            certificateNo: certificateNo,
-        };
-
-        // ✅ Add to temporary array
-        tempItems.push(newItem);
-
-        // ✅ Render the list table
-        renderAllItems();
-
-        // ✅ Reset modal fields
-        resetAddItemModal();
-
-        // ✅ Hide modal
-        const modalEl = document.getElementById("addItemModal");
-        bootstrap.Modal.getInstance(modalEl).hide();
-
-        // ✅ Trigger summary / submit update if needed
-        summarySubmit();
+// ─── Show Item Agreement ──────────────────────────────────
+async function showItemAgreement(item) {
+    const now = new Date();
+    const timestamp = now.toLocaleString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
     });
+
+    const hasCondition = item.condition && item.condition.trim() !== "";
+
+    const conditionHtml = hasCondition
+        ? `
+            <div id="itemConditionScroll" class="mb-2" style="
+                white-space: pre-wrap;
+                word-break: break-word;
+                max-height: 300px;
+                overflow-y: auto;
+                background: #f8f9fa;
+                padding: 12px;
+                border-radius: 5px;
+                border: 1px solid #dee2e6;
+                font-size: 0.9rem;
+            ">${item.condition}</div>
+            <small class="text-muted d-block mb-3" data-en="Scroll to read all conditions to enable agreement" data-bm="Skrol untuk membaca semua syarat untuk membolehkan persetujuan">
+                Scroll to read all conditions to enable agreement
+            </small>
+        `
+        : "";
+
+    const result = await Swal.fire({
+        title: "Item Declaration",
+        width: 600,
+        html: `
+            <div style="text-align: left;">
+                <p class="mb-3">
+                    I confirm that the information provided for this item
+                    <strong>"${item.item_name}"</strong>
+                    is accurate and complete.
+                </p>
+                ${conditionHtml}
+                <p class="mb-3">
+                    I understand that any false declaration may result in rejection of the application or permit cancellation.
+                </p>
+                <div class="form-check mt-4">
+                    <input class="form-check-input" type="checkbox" id="itemAgreeCheckbox" ${hasCondition ? "disabled" : ""}>
+                    <label class="form-check-label" for="itemAgreeCheckbox">
+                        I agree to the above declaration
+                    </label>
+                </div>
+            </div>
+        `,
+        didOpen: (modal) => {
+            const checkbox = document.getElementById("itemAgreeCheckbox");
+            if (!checkbox) return;
+
+            if (hasCondition) {
+                const scrollDiv = document.getElementById(
+                    "itemConditionScroll",
+                );
+                if (scrollDiv) {
+                    checkbox.disabled = true;
+                    checkbox.classList.add("opacity-50");
+
+                    const handleScroll = () => {
+                        const atBottom =
+                            scrollDiv.scrollTop + scrollDiv.clientHeight >=
+                            scrollDiv.scrollHeight - 5;
+                        checkbox.disabled = !atBottom;
+                        checkbox.classList.toggle("opacity-50", !atBottom);
+                    };
+
+                    scrollDiv.addEventListener("scroll", handleScroll);
+                    handleScroll();
+
+                    checkbox.addEventListener("click", function (e) {
+                        if (this.disabled) {
+                            e.preventDefault();
+                            Swal.showValidationMessage(
+                                "Please scroll to the bottom of the conditions to enable agreement.",
+                            );
+                        }
+                    });
+                }
+            } else {
+                checkbox.disabled = false;
+                checkbox.classList.remove("opacity-50");
+            }
+        },
+        showCancelButton: true,
+        confirmButtonText: "Confirm",
+        cancelButtonText: "Cancel",
+        allowOutsideClick: false,
+        preConfirm: () => {
+            const checked =
+                document.getElementById("itemAgreeCheckbox").checked;
+            if (!checked) {
+                Swal.showValidationMessage(
+                    "Please check the agreement box to continue.",
+                );
+                return false;
+            }
+            return true;
+        },
+    });
+
+    if (result.isConfirmed) {
+        item.agreedAt = timestamp;
+        return true;
+    }
+
+    return false;
+}
+
+// ─── Save Consignment Attachment ──────────────────────────
+function saveConsignmentAttachment() {
+    document
+        .getElementById("saveBtn")
+        .addEventListener("click", async function (e) {
+            e.preventDefault();
+
+            console.log("Saving consignment item...");
+
+            const itemSelectValue = $("#itemSelect").val();
+            const itemSelectText = $("#itemSelect option:selected").text();
+            const itemQuantity = $("#itemQuantity").val().trim();
+            const itemMeasure = $("#itemMeasure").val();
+            const certificateNo = $("#certificateNo").val().trim();
+
+            const existingItem = editingItemId
+                ? tempItems.find((obj) => obj.id === editingItemId)
+                : null;
+
+            let files = itemDropzone.getAcceptedFiles();
+            if (files.length === 0 && existingItem) {
+                files = existingItem.files || [];
+            }
+
+            if (
+                !itemSelectValue ||
+                !itemQuantity ||
+                !itemMeasure ||
+                !certificateNo
+            ) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Incomplete Data",
+                    text: "Please fill in all required fields before saving.",
+                });
+                return;
+            }
+
+            // Measurement limit check
+            if (limitMeasurement) {
+                let limitInKg = null;
+                const selectedUnit = measurementUnits?.unit.find(
+                    (unit) =>
+                        unit.cate_code.toLowerCase() ===
+                            limitMeasurement.toLowerCase() &&
+                        unit.is_del === false,
+                );
+                if (selectedUnit) {
+                    limitInKg = limit * selectedUnit.conversion.conversion;
+                }
+
+                let selectedItemInKg = null;
+                const selectedItemUnit = measurementUnits?.unit.find(
+                    (unit) =>
+                        unit.cate_code.toLowerCase() ===
+                            itemMeasure.toLowerCase() && unit.is_del === false,
+                );
+                if (selectedItemUnit) {
+                    selectedItemInKg =
+                        itemQuantity * selectedItemUnit.conversion.conversion;
+                }
+
+                if (selectedItemInKg > limitInKg) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "The item is over limit",
+                        text: "Please fill in again.",
+                    });
+                    return;
+                }
+            }
+
+            const itemPayload = {
+                id: existingItem ? existingItem.id : generateUUID(),
+                item_id: itemSelectValue,
+                item_name: itemSelectText,
+                quantity: itemQuantity,
+                measure: itemMeasure,
+                certificateNo: certificateNo,
+                purpose: "",
+                uses: "",
+                value: 0,
+                files: files,
+                agreedAt: null,
+                condition: currentItemCondition,
+                // [FIX] carry the existing permit_id forward when editing so
+                // deleteItem() can still flag it for removal if the user
+                // deletes it after editing.
+                permit_id: existingItem ? existingItem.permit_id : undefined,
+            };
+
+            const agreed = await showItemAgreement(itemPayload);
+
+            if (!agreed) {
+                return;
+            }
+
+            if (existingItem) {
+                const index = tempItems.findIndex(
+                    (obj) => obj.id === existingItem.id,
+                );
+                if (index !== -1) {
+                    tempItems[index] = itemPayload;
+                }
+            } else {
+                tempItems.push(itemPayload);
+            }
+
+            editingItemId = null;
+            renderAllItems();
+            resetAddItemModal();
+
+            const modalEl = document.getElementById("addItemModal");
+            bootstrap.Modal.getInstance(modalEl).hide();
+
+            document
+                .getElementById("addItemModal")
+                .addEventListener("hidden.bs.modal", function () {
+                    editingItemId = null;
+                });
+
+            summarySubmit();
+        });
 }
 
 function resetAddItemModal() {
-    // Reset plain input fields
-    $("#itemValue").val("");
-    $("#itemQuantity").val("");
-    $("#certificateNo").val("");
-
-    // Reset Select2 fields
     $("#itemSelect").val(null).trigger("change");
+    $("#itemQuantity").val("");
     $("#itemMeasure").val("").trigger("change");
-    $("#itemPurpose").val("").trigger("change");
-    $("#itemUses").val(null).trigger("change");
+    $("#certificateNo").val("");
+    // Reset other fields if they exist (purpose, uses, value)
+    if ($("#itemPurpose").length) $("#itemPurpose").val("").trigger("change");
+    if ($("#itemUses").length) $("#itemUses").val(null).trigger("change");
+    if ($("#itemValue").length) $("#itemValue").val("");
 
-    // Clear Dropzone files
     if (itemDropzone) itemDropzone.removeAllFiles(true);
 }
 
-
+// ─── Render Items ──────────────────────────────────────────
 function renderAllItems() {
     const tableBody = document.querySelector("#itemListTbl tbody");
-    tableBody.innerHTML = ""; // Clear existing rows
+    tableBody.innerHTML = "";
+
+    let totalQty = 0;
+    let totalKg = 0;
 
     tempItems.forEach((item, index) => {
+        const qty = parseFloat(item.quantity) || 0;
+        totalQty += qty;
+        totalKg += getKgForItem(item);
+
         tableBody.insertAdjacentHTML(
             "beforeend",
             `<tr id="item-row-${item.id}">
-                
                 <td>${item.item_name}</td>
-             
-                <td class = "text-wrap">${item.purpose}</td>
+                <td class="text-wrap">${qty} ${item.measure || ""}</td>
                 <td class="text-center">
                     <div class="d-flex justify-content-center align-items-center gap-2">
                         <button class="btn btn-icon btn-success-light view-more-item"
@@ -784,13 +2011,42 @@ function renderAllItems() {
                             data-id="${item.id}">
                             <i class="ti ti-trash"></i>
                         </button>
+                        <button class="btn btn-icon btn-info-light edit-item"
+                            data-id="${item.id}">
+                            <i class="ti ti-edit"></i>
+                        </button>
+                        <button class="btn btn-icon btn-secondary-light copy-item"
+                            data-id="${item.id}">
+                            <i class="ti ti-copy"></i>
+                        </button>
                     </div>
                 </td>
-            </tr>`
+            </tr>`,
         );
     });
+
+    // ─── Footer row ──────────────────────────────────────────────
+    const table = document.querySelector("#itemListTbl");
+    let tfoot = table.querySelector("tfoot");
+    if (!tfoot) {
+        tfoot = document.createElement("tfoot");
+        table.appendChild(tfoot);
+    }
+    if (tempItems.length > 0) {
+        tfoot.innerHTML = `
+            <tr style="font-weight: bold; background-color: var(--gray-2);">
+                <td colspan="2" style="text-align: right; font-weight: 800">Total:</td>
+                <td class="text-center">
+                     ${totalKg.toFixed(2)} kg
+                </td>
+            </tr>
+        `;
+    } else {
+        tfoot.innerHTML = "";
+    }
 }
 
+// ─── View More Item ────────────────────────────────────────
 function viewMore() {
     $(document).on("click", ".view-more-item", function (e) {
         e.preventDefault();
@@ -801,94 +2057,182 @@ function viewMore() {
         let item = tempItems.find((obj) => obj.id === id);
         if (!item) return console.warn("Item not found for id:", id);
 
-        // Render item details
         const detailsDiv = document.getElementById("itemDetailsInfo");
-        detailsDiv.innerHTML = `
-            <div class="p-1 row">
-                <div class = "col-12 col-md-6">
-                    <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-tag"></i></span> Item Name:</strong> ${item.item_name}</p>
+        const attachList = document.getElementById("pdAttachList");
+        const attachmentCount = document.getElementById("attachmentCount");
+        const conditionItem = document.getElementById("pdConditionItem");
+        const conditionCount = document.getElementById("pdConditionCount");
+
+        const agreementBanner = item.agreedAt
+            ? `<div class="alert alert-success mb-3 d-flex align-items-center">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <div>
+                    <strong>Declaration Confirmed</strong>
+                    <div class="small text-muted">Agreed on: ${item.agreedAt}</div>
                 </div>
-                <div class = "col-12 col-md-6">
-                    <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-scale-balanced"></i></span> Quantity:</strong> ${item.quantity} ${item.measure}</p>
-                </div>
-                <div class = "col-12 col-md-6">
-                    <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-money-bill"></i></span> Value:</strong> ${item.value}</p>
-                </div>
-                <div class = "col-12 col-md-6">
-                    <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-pen-fancy"></i></span> Purpose:</strong> ${item.purpose}</p>
-                </div>
-                <div class = "col-12">
-                    <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-gear"></i></span> Uses:</strong> ${item.uses}</p>
-                </div>
+            </div>`
+            : `<div class="alert alert-warning mb-3">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <strong>Pending Agreement</strong>
+                - User has not confirmed this item yet.
+            </div>`;
+
+        // Build details rows – only show fields that have values
+        let detailsRows = `
+            <div class="col-12 col-lg-6">
+                <p>
+                    <strong class="me-1">
+                        <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-tag"></i></span>
+                        Item Name:
+                    </strong> ${item.item_name}
+                </p>
+            </div>
+            <div class="col-12 col-lg-6">
+                <p>
+                    <strong class="me-1">
+                        <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-scale-balanced"></i></span>
+                        Quantity:
+                    </strong> ${item.quantity} ${item.measure}
+                </p>
             </div>
         `;
 
-        // Render files in a table
-        const filesTableBody = document.querySelector("#itemFilesTable tbody");
-        filesTableBody.innerHTML = ""; // clear old rows
+        // Certificate Number (always show if present)
+        if (item.certificateNo) {
+            detailsRows += `
+                <div class="col-12 col-lg-6">
+                    <p>
+                        <strong class="me-1">
+                            <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-certificate"></i></span>
+                            Certificate No:
+                        </strong> ${item.certificateNo}
+                    </p>
+                </div>
+            `;
+        }
 
-        item.files.forEach((file) => {
-            const reader = new FileReader();
+        // Value – only if not empty and not zero
+        if (item.value && item.value != 0) {
+            detailsRows += `
+                <div class="col-12 col-lg-6">
+                    <p>
+                        <strong class="me-1">
+                            <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-money-bill"></i></span>
+                            Value:
+                        </strong> RM ${item.value}
+                    </p>
+                </div>
+            `;
+        }
 
-            reader.onload = function (e) {
-                const fileUrl = e.target.result;
+        // Purpose – only if not empty
+        if (item.purpose) {
+            detailsRows += `
+                <div class="col-12 col-lg-6">
+                    <p>
+                        <strong class="me-1">
+                            <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-pen-fancy"></i></span>
+                            Purpose:
+                        </strong> ${item.purpose}
+                    </p>
+                </div>
+            `;
+        }
 
-                filesTableBody.insertAdjacentHTML(
-                    "beforeend",
-                    `
-                    <tr>
-                        <td>${file.name}</td>
-                        <td>${file.type}</td>
-                        <td>
-                            <button class="btn btn-sm btn-primary view-file-btn" 
-                                data-url="${fileUrl}" type = "button">
-                                View
-                            </button>
-                        </td>
-                    </tr>
-                `
-                );
-            };
+        // Uses – only if not empty
+        if (item.uses) {
+            detailsRows += `
+                <div class="col-12">
+                    <p>
+                        <strong class="me-1">
+                            <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-gear"></i></span>
+                            Uses:
+                        </strong> ${item.uses}
+                    </p>
+                </div>
+            `;
+        }
 
-            reader.readAsDataURL(file);
-        });
+        detailsDiv.innerHTML = `
+            ${agreementBanner}
 
-        // Show modal
-        const modalEl = document.getElementById("ItemDetailsModal");
-        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            <div class="pd-section-label mt-4 mb-2">Consignment Info</div>
+            <div class="p-2 row" style="background: var(--gray-1); border: 1px solid var(--default-border); border-radius: 0.6rem;">
+                ${detailsRows}
+            </div>
+        `;
+
+        // ─── Conditions ────────────────────────────────
+        const hasCondition = item.condition && item.condition.trim() !== "";
+        if (conditionItem) {
+            conditionItem.innerHTML = hasCondition
+                ? `<div style="white-space: pre-wrap; word-break: break-word;">${item.condition}</div>`
+                : `No special conditions for this item.`;
+        }
+        if (conditionCount) {
+            conditionCount.textContent = hasCondition ? "1" : "0";
+        }
+
+        // ─── Attachments ─────────────────────────────────
+        attachList.innerHTML = "";
+        currentItemAttachments = item.files || [];
+
+        if (!item.files || item.files.length === 0) {
+            attachList.innerHTML = `
+                <div class="text-muted text-center py-3">
+                    No attachments
+                </div>
+            `;
+            if (attachmentCount) attachmentCount.textContent = "0";
+        } else {
+            let chipsHTML = "";
+            item.files.forEach((file, index) => {
+                const displayName = file.displayName || file.name;
+                const fileIcon =
+                    file.type === "application/pdf"
+                        ? "bi-file-earmark-pdf-fill"
+                        : "bi-file-earmark-fill";
+                const fileTypeClass =
+                    file.type === "application/pdf" ? "is-pdf" : "is-file";
+                const typeDisplay = file.type || "Unknown";
+
+                chipsHTML += `
+                    <div class="ipv-attach-chip ${fileTypeClass} view-item-attach-btn" data-index="${index}" style="cursor:pointer;">
+                        <div class="ipv-attach-icon"><i class="bi ${fileIcon}"></i></div>
+                        <div class="ipv-attach-info">
+                            <div class="ipv-attach-name" title="${displayName}">${displayName}</div>
+                            <div class="ipv-attach-size">
+                                ${typeDisplay}
+                                · ${(file.size / 1024).toFixed(1)} KB
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            attachList.innerHTML = chipsHTML;
+            if (attachmentCount)
+                attachmentCount.textContent = item.files.length;
+        }
+
+        // ─── Show the offcanvas ─────────────────────────
+        const offcanvasEl = document.getElementById("ItemDetailsOffcanvas");
+        if (offcanvasEl) {
+            bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl).show();
+        }
     });
 
-    // Handle view file button
-    $(document).on("click", ".view-file-btn", function () {
-        const base64DataUrl = $(this).data("url");
-
-        if (!base64DataUrl) {
-            console.error("No file URL found");
-            return;
+    // Click handler for attachment chips (unchanged)
+    $(document).on("click", ".view-item-attach-btn", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const index = $(this).data("index");
+        if (currentItemAttachments.length > 0 && index !== undefined) {
+            openItemAttachmentViewer(currentItemAttachments, index);
         }
-
-        // Extract Base64 & MIME type
-        const arr = base64DataUrl.split(",");
-        const mime = arr[0].match(/:(.*?);/)[1];
-        const bstr = atob(arr[1]);
-        let n = bstr.length;
-        let u8arr = new Uint8Array(n);
-
-        while (n--) {
-            u8arr[n] = bstr.charCodeAt(n);
-        }
-
-        // Convert to Blob
-        const fileBlob = new Blob([u8arr], { type: mime });
-
-        // Create temporary URL
-        const fileURL = URL.createObjectURL(fileBlob);
-
-        // Open in a new tab
-        window.open(fileURL, "_blank");
     });
 }
 
+// ─── Delete Item ───────────────────────────────────────────
 function deleteItem() {
     $(document).on("click", ".delete-item", function (e) {
         e.preventDefault();
@@ -900,7 +2244,6 @@ function deleteItem() {
             return;
         }
 
-        // Find item index in array
         let index = tempItems.findIndex((obj) => obj.id === id);
 
         if (index === -1) {
@@ -908,20 +2251,19 @@ function deleteItem() {
             return;
         }
 
-        // Track deleted permit IDs for edit mode
+        // [FIX] Restored from consignment1.js: track deleted existing permits
+        // so the backend knows to remove them (was silently lost — items
+        // removed from the temp array in edit mode were never flagged for
+        // deletion on save).
         if (isEditMode && tempItems[index].permit_id) {
-            let itemId = tempItems[index].permit_id;
-            if (!deleteIds.includes(itemId)) {
-                deleteIds.push(itemId);
+            const permitId = tempItems[index].permit_id;
+            if (!deleteIds.includes(permitId)) {
+                deleteIds.push(permitId);
             }
         }
 
-        // Remove from array
         tempItems.splice(index, 1);
-
-        // Remove from UI
         $("#item-card-" + id).remove();
-
         renderAllItems();
 
         console.log("Deleted item:", id, tempItems);
@@ -929,30 +2271,143 @@ function deleteItem() {
     });
 }
 
-// ============= attachment =====================
+// ─── Copy Item ──────────────────────────────────────────────
+function copyItem() {
+    $(document).on("click", ".copy-item", async function (e) {
+        e.preventDefault();
 
+        const id = $(this).data("id");
+
+        if (!tempItems) {
+            console.error("tempItems array not found");
+            return;
+        }
+
+        const index = tempItems.findIndex((obj) => obj.id === id);
+
+        if (index === -1) {
+            console.warn("Item not found:", id);
+            return;
+        }
+
+        const original = tempItems[index];
+
+        const duplicated = {
+            ...original,
+            id: generateUUID(),
+            files: [...(original.files || [])],
+            agreedAt: null,
+            // [FIX] a duplicate is a brand-new item, not a copy of the
+            // original DB permit — don't carry the old permit_id forward or
+            // deleting the duplicate later would incorrectly flag the
+            // original permit for deletion too.
+            permit_id: undefined,
+        };
+
+        const agreed = await showItemAgreement(duplicated);
+
+        if (!agreed) {
+            return;
+        }
+
+        tempItems.splice(index + 1, 0, duplicated);
+        renderAllItems();
+        summarySubmit();
+
+        console.log("Copied item:", id, "->", duplicated.id, tempItems);
+
+        Swal.fire({
+            icon: "success",
+            title: "Item Copied",
+            text: "A duplicate of the item has been added.",
+            timer: 1800,
+            showConfirmButton: false,
+        });
+    });
+}
+
+// ─── Edit Item ──────────────────────────────────────────────
+function editItem() {
+    $(document).on("click", ".edit-item", function (e) {
+        e.preventDefault();
+
+        const id = $(this).data("id");
+        const item = tempItems.find((obj) => obj.id === id);
+        if (!item) return console.warn("Item not found for id:", id);
+
+        editingItemId = id;
+        resetAddItemModal();
+
+        const modalEl = document.getElementById("addItemModal");
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+
+        Swal.fire({
+            title: "Loading item...",
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading(),
+        });
+
+        loadConsignmentSelection()
+            .then(() => {
+                $("#itemSelect").val(item.item_id).trigger("change");
+
+                loadUses(item.item_id).then(() => {
+                    $("#itemUses").val(item.uses).trigger("change");
+                });
+
+                $("#itemValue").val(item.value);
+                $("#itemQuantity").val(item.quantity);
+                $("#itemMeasure").val(item.measure).trigger("change");
+                $("#itemPurpose")
+                    .val(item.purposeValue || item.purpose)
+                    .trigger("change");
+                $("#certificateNo").val(item.certificateNo || "");
+
+                if (itemDropzone) {
+                    itemDropzone.removeAllFiles(true);
+                    (item.files || []).forEach((file) =>
+                        itemDropzone.addFile(file),
+                    );
+                }
+
+                Swal.close();
+            })
+            .catch(() => {
+                Swal.close();
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "Failed to load item data for editing.",
+                });
+            });
+    });
+}
+
+// ─── Save Application ──────────────────────────────────────
 function saveapplication(isDraft = false) {
     const form = document.querySelector("#wizardForm");
     if (!form) return console.error("Form not found");
 
     const formData = new FormData(form);
 
-    // 🔑 tell backend this is draft or submit
     formData.append("is_draft", isDraft ? 1 : 0);
 
-    // Collect Step 1 details manually since permitDetails is a function name clash
     const currentPermitDetails = {
-        eta: $("#eta").val() || null,
-        tranType: $("#trnptType").val() || null,
-        entrypoint: $("#entryPoint").val() || null,
-        applCate: $("#app_cate").val() || null
+        eta: $("#eta").val(),
+        tranType: $("#trnptType").val(),
+        entrypoint: $("#entryPoint").val(),
+        applCate: $("#app_cate").val(),
+        vehicle_ids: $("#selectVehicle").val() || [],
+        ptnNumber: $("#ptnNumber").val() || "",
     };
 
     formData.append("exporterData", JSON.stringify(importer));
     formData.append("importerData", JSON.stringify(exporter));
     formData.append("permitDetails", JSON.stringify(currentPermitDetails));
 
-    // Include applicationId in edit mode so backend updates instead of creating
+    // [FIX] Restored from consignment1.js — without this, saving an edited
+    // draft had no way to tell the backend it was an update rather than a
+    // brand-new application, and no way to remove permits the user deleted.
     if (isEditMode) {
         formData.append("applicationId", application.application_id);
         formData.append("deleted_item_ids", deleteIds);
@@ -967,6 +2422,13 @@ function saveapplication(isDraft = false) {
                 formData.append("files[]", file);
                 formData.append("file_item_index[]", index);
             });
+        }
+    });
+
+    // Application attachments
+    applicationAttachments.forEach((attachment) => {
+        if (attachment.file) {
+            formData.append("application_files[]", attachment.file);
         }
     });
 
@@ -992,260 +2454,370 @@ function saveapplication(isDraft = false) {
                 timer: 1500,
                 showConfirmButton: false,
             });
-            
 
             if (!isDraft) {
                 setTimeout(() => {
                     window.location.href = "/public/view_all_consignment";
                 }, 1500);
             } else {
-                window.location.href = "/public/view_all_consignment";
+                window.location.reload();
             }
         },
         error: function (xhr) {
-            const errorMessage = xhr.responseJSON?.message || "Failed to save application. Please check your connection and try again.";
+            const errorMessage =
+                xhr.responseJSON?.message ||
+                "Failed to save application. Please check your connection and try again.";
             Swal.fire("Error", errorMessage, "error");
         },
     });
 }
 
-// ------------------------- Initialize -------------------------
-// ------------------------- Initialize -------------------------
-
-    $(document).ready(async function () {
-        // Show loading swal
-        Swal.fire({
-            title: "Loading...",
-            html: "Please wait while the page initializes.",
-            allowOutsideClick: false,
-            didOpen: () => Swal.showLoading(),
-        });
-    
-        try {
-            // Load importer from draft if in edit mode
-            if (isEditMode) {
-                importerDetail();
-                loadExistingConsignments();
-            } else {
-                // Initialize self import (new application)
-                await selfImport();
-            }
-    
-            handleExporterChange();
-
-            await fetchExporterList();
-
-            if (isEditMode && application.importer_detail) {
-                const imp = application.importer_detail;
-                $("#expid").val(imp.id || "");
-                $("#expname").val(imp.name || "");
-                $("#expfonno").val(imp.phone_no || "");
-                $("#expaddress1").val(imp.address || "");
-                const matched = exporterListArray.find(e => e.id == imp.id);
-                if (matched && matched.country_info) {
-                    $("#expcountryCode").val(matched.country_info.code || "");
-                    $("#expcountry").val(matched.country_info.name || "");
-                } else {
-                    $("#expcountryCode").val(imp.country || "");
-                    $("#expcountry").val(imp.country || "");
-                }
-            }
-    
-            // Track unsaved changes
-            $("#wizardForm").on("change input", "input, select, textarea", function() {
-                change = 1;
-            });
-
-            // Initialize modals and search
-            initAddExporterModal();
-            initImporterSearch();
-            permitDetails();
-            itemConsigment();
-            saveConsignmentAttachment();
-            viewMore();
-            deleteItem();
-    
-            $("#itemMeasure").select2({
-                width: "100%",
-                placeholder: "-- Select Measurement Unit --",
-                // allowClear: true,
-                dropdownParent: $("#addItemModal"), // Important: for modal
-            });
-    
-            $("#addexpcountry").select2({
-                width: "100%",
-                placeholder: "-- Select Country --",
-                // allowClear: true,
-                dropdownParent: $("#addExporterModal"), // Important: for modal
-            });
-    
-            $("#itemPurpose").select2({
-                width: "100%",
-                placeholder: "-- Select Purpose --",
-                // allowClear: true,
-                dropdownParent: $("#addItemModal"), // Important: for modal
-            });
-    
-            // ------------------- Item Purpose -------------------
-            $("#itemPurpose").on("change", function () {
-                const selectedOption = $(this).find("option:selected");
-                itemPurpose = selectedOption.data("description") || "";
-                console.log("Item purpose selected:", itemPurpose);
-            });
-    
-            // ------------------- Item Select (Consignment) -------------------
-            $("#itemSelect").on("change", function () {
-                const itemId = $(this).val();
-                const $itemUses = $("#itemUses");
-    
-                // Reset uses dropdown
-                $itemUses
-                    .empty()
-                    .append('<option value="">-- Select Uses --</option>');
-    
-                if (!itemId) return;
-    
-                // Load uses for the selected item
-                loadUses(itemId);
-            });
-    
-         
-            $("#mdlAddItemBtn").on("click", function(e) {
-                e.preventDefault();
-                console.log('hellooo ml item is cliked');
-                loadConsignmentSelection()
-            });
-    
-            // Submit button handler
-            $(document).on("click", "#submitApps", function (e) {
-                e.preventDefault();
-                console.log("Submit clicked!");
-                saveapplication(false);
-            });
-    
-            $(document).on(
-                "click",
-                `#logoutButton, 
-                .app-sidebar.sticky button, .app-sidebar.sticky a,
-             
-                .breadcrumb .breadcrumb-item a
-                `,
-                function (e) {
-                    if (!change) return;
-    
-                    e.preventDefault();
-                    const target = this;
-    
-                    Swal.fire({
-                        title: "Unsaved Changes",
-                        text: "You have unsaved changes. What would you like to do?",
-                        icon: "warning",
-                        showCancelButton: true,
-                        showDenyButton: true,
-                        confirmButtonText: "Yes, leave",
-                        denyButtonText: "Save as Draft",
-                        cancelButtonText: "Stay",
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            // Leave page
-                            change = false;
-    
-                            if (target.tagName === "A") {
-                                window.location.href = target.href;
-                            } else {
-                                target.click();
-                            }
-                        }
-    
-                        if (result.isDenied) {
-                            saveapplication(true);
-                        }
-    
-                        // result.isDismissed → user clicked "Stay"
-                    });
-                }
-            );
-        } catch (error) {
-            console.error("Error during initialization:", error);
-            Swal.fire(
-                "Error",
-                "Failed to initialize page. Check console for details.",
-                "error"
-            );
-        } finally {
-            Swal.close();
-        }
-    });
-
-
-
-// ============= attachment =====================
-
-// ------------------------------summary details ---------------------
+// ─── Summary Submit ──────────────────────────────────────
 export function summarySubmit() {
     const targetTable = document.querySelector("#summaryTable3 tbody");
 
-    // --- IMPORTER & EXPORTER SUMMARY ---
-    impAddrs = importer
+    // --- IMPORTER (selected) & EXPORTER (auto-filled) ---
+    const exporterName = importer ? importer.fullname : "";
+    const exporterPhone = importer ? importer.phone_number : "";
+    const exporterAddress = importer
         ? [importer.address_1, importer.address_2]
               .filter((x) => x && x.trim() !== "")
               .join(", ")
         : "";
 
-    permitDetails = {
+    const importerName = exporter ? exporter.name : "";
+    const importerPhone = exporter ? exporter.phone_no : "";
+    const importerAddress = exporter ? exporter.address : "";
+    const importerCountry = exporter ? exporter.country : "";
+
+    document.getElementById("importerName").textContent = importerName;
+    document.getElementById("importerPhoneno").textContent = importerPhone;
+    document.getElementById("simpAdd").textContent = importerAddress;
+
+    document.getElementById("sexpName").textContent = exporterName;
+    document.getElementById("sexpfonno").textContent = exporterPhone;
+    document.getElementById("sexpAddress").textContent = exporterAddress;
+    document.getElementById("sexpCountry").textContent = importerCountry;
+
+    // --- PERMIT DETAILS ---
+    const permitDetails = {
         applCate: document.getElementById("app_cate").value,
         eta: document.getElementById("eta").value,
         tranType: document.getElementById("trnptType").value,
         entrypoint: document.getElementById("entryPoint").value,
+        ptnNumber: $("#ptnNumber").val() || "",
     };
 
-    // Insert importer details
-    document.getElementById("importerName").textContent = importer.fullname;
-    document.getElementById("importerPhoneno").textContent =
-        importer.phone_number;
-    document.getElementById("simpAdd").textContent = impAddrs;
-
-    // Exporter details
-    document.getElementById("sexpName").textContent = exporter.name;
-    document.getElementById("sexpfonno").textContent = exporter.phone_no;
-    document.getElementById("sexpAddress").textContent = exporter.address;
-    document.getElementById("sexpCountry").textContent = exporter.country;
-
-    // Permit details
     document.getElementById("seta").textContent = permitDetails.eta;
     document.getElementById("strty").textContent = permitDetails.tranType;
-    document.getElementById("sentryp").textContent = entryName;
+    document.getElementById("sentryp").textContent = entryName || "";
+    document.getElementById("sptnnumber").textContent = permitDetails.ptnNumber;
 
-    // --- CONSIGNMENT DETAILS ---
-    targetTable.innerHTML = ""; // clear existing rows
+    // --- VEHICLES ---
+    const selectedIds = $("#selectVehicle").val() || [];
+    const selectedVehicles = vehicleListArray.filter((v) =>
+        selectedIds.includes(String(v.id)),
+    );
+    const vehicleListStr = selectedVehicles
+        .map((v) => v.vehicle_number)
+        .join(", ");
+    const sVehicleEl = document.getElementById("svehicle");
+    if (sVehicleEl) {
+        sVehicleEl.textContent = vehicleListStr || "-";
+    }
+
+    // --- CONSIGNMENT ITEMS ---
+    targetTable.innerHTML = "";
 
     tempItems.forEach((item, index) => {
-        console.log('item summary', item)
-        // --- Build attachment list ---
-        let attachmentHTML = "";
-
-        attachmentHTML = `
-            <button class = "btn btn-sm btn-primary view-more-item" data-id = "${item.id}">
+        const attachmentHTML = `
+            <button class="btn btn-sm btn-primary view-more-item" data-id="${item.id}">
                 View More
             </button>
-            `;
+        `;
 
-        // --- Insert summary row ---
         targetTable.insertAdjacentHTML(
             "beforeend",
             `
                 <tr>
                     <td>${index + 1}</td>
                     <td>${item.item_name || ""}</td>
-                    <td>${item.quantity || ""}  ${item.measure || ""}</td>
-                    <td>${item.purpose || ""} </td>
-                    <td>${item.uses || ""}</td>
-                    <td>RM ${item.value || ""}</td>
+                    <td>${item.quantity || ""} ${item.measure || ""}</td>
                     <td>${attachmentHTML}</td>
                 </tr>
-            `
+            `,
         );
     });
+
+    // ─── Footer row for totals ──────────────────────────────
+    const table3 = document.querySelector("#summaryTable3");
+    let tfoot3 = table3.querySelector("tfoot");
+    if (!tfoot3) {
+        tfoot3 = document.createElement("tfoot");
+        table3.appendChild(tfoot3);
+    }
+    if (tempItems.length > 0) {
+        let totalQty = 0;
+        let totalKg = 0;
+        tempItems.forEach((item) => {
+            const qty = parseFloat(item.quantity) || 0;
+            totalQty += qty;
+            totalKg += getKgForItem(item);
+        });
+        tfoot3.innerHTML = `
+            <tr style="font-weight: bold; background-color: var(--gray-2);">
+                <td colspan="2" style="text-align: right; font-weight: 800;">Total:</td>
+                <td>${totalKg.toFixed(2)} kg</td>
+                <td></td>
+            </tr>
+        `;
+    } else {
+        tfoot3.innerHTML = "";
+    }
+
+    // Update application attachments table
+    updateAttachmentTable();
 }
 
-// ------------------------------summary details ---------------------
+function updateAttachmentTable() {
+    const attachmentTable = document.querySelector(
+        "#summaryAttachmentTable tbody",
+    );
+    if (attachmentTable) {
+        attachmentTable.innerHTML = "";
+
+        if (!applicationAttachments || applicationAttachments.length === 0) {
+            attachmentTable.insertAdjacentHTML(
+                "beforeend",
+                `
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-3">
+                        No attachments uploaded
+                    </td>
+                </tr>
+                `,
+            );
+        } else {
+            applicationAttachments.forEach((attachment, index) => {
+                const size = attachment.size || 0;
+                let sizeDisplay = "";
+                if (size < 1024) {
+                    sizeDisplay = size + " B";
+                } else if (size < 1024 * 1024) {
+                    sizeDisplay = (size / 1024).toFixed(1) + " KB";
+                } else {
+                    sizeDisplay = (size / (1024 * 1024)).toFixed(1) + " MB";
+                }
+
+                const type = attachment.type || "";
+                let typeDisplay = "Unknown";
+                if (type.includes("pdf")) {
+                    typeDisplay = "PDF";
+                } else if (
+                    type.includes("image") ||
+                    type.includes("jpg") ||
+                    type.includes("jpeg") ||
+                    type.includes("png")
+                ) {
+                    typeDisplay = "Image";
+                } else if (type.includes("word") || type.includes("doc")) {
+                    typeDisplay = "Document";
+                }
+
+                attachmentTable.insertAdjacentHTML(
+                    "beforeend",
+                    `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td class="text-wrap">${attachment.displayName || attachment.name || ""}</td>
+                        <td>${sizeDisplay}</td>
+                        <td>${typeDisplay}</td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-sm btn-primary view-attachment-btn" data-id="${attachment.id}">
+                                View More
+                            </button>
+                        </td>
+                    </tr>
+                    `,
+                );
+            });
+        }
+    }
+}
+
+// ─── Initialize ──────────────────────────────────────────
+$(document).ready(async function () {
+    Swal.fire({
+        title: "Loading...",
+        html: "Please wait while the page initializes.",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+    });
+
+    try {
+        // [FIX] Was unconditionally calling selfImport() — an edit-mode draft
+        // has no need (and no auth-fetched values) to overwrite what's
+        // already saved. Load from the draft instead, same split as
+        // consignment1.js.
+        if (isEditMode) {
+            importerDetail();
+            loadExistingConsignments();
+        } else {
+            await selfImport();
+        }
+
+        await fetchExporterList();
+        handleExporterChange();
+
+        // [FIX] Restored: auto-select + prefill the chosen importer (DB) /
+        // JS `exporter` var when editing a draft. Doesn't rely on
+        // handleExporterChange's own change handler firing in time — fields
+        // are set directly, same approach as consignment1.js.
+        if (isEditMode && application.importer_detail) {
+            const imp = application.importer_detail;
+            exporter = imp;
+            $("#expid").val(imp.id || "");
+            $("#expname").val(imp.name || "");
+            $("#expfonno").val(imp.phone_no || "");
+            $("#expaddress1").val(imp.address || "");
+            const matched = exporterListArray.find((e) => e.id == imp.id);
+            if (matched && matched.country_info) {
+                $("#expcountryCode").val(matched.country_info.code || "");
+                $("#expcountry").val(matched.country_info.name || "");
+            } else {
+                $("#expcountryCode").val(imp.country || "");
+                $("#expcountry").val(imp.country || "");
+            }
+            $("#selectexp").val(imp.id).trigger("change.select2");
+        }
+
+        if ($("#selectVehicle").length) {
+            await fetchVehicleList();
+            handleVehicleChange();
+            initAddVehicleModal();
+        }
+
+        $("#wizardForm").on(
+            "change input",
+            "input, select, textarea",
+            function () {
+                change = 1;
+            },
+        );
+
+        initAddExporterModal();
+        initImporterSearch();
+        permitDetails();
+        initApplicationAttachments();
+        initAttachmentOffcanvas();
+        initAttachmentNavigation();
+        initItemAttachmentOffcanvas();
+        initItemAttachmentNavigation();
+        itemConsigment();
+        saveConsignmentAttachment();
+        viewMore();
+        deleteItem();
+        copyItem();
+        editItem();
+
+        $("#itemMeasure").select2({
+            width: "100%",
+            placeholder: "-- Select Measurement Unit --",
+            dropdownParent: $("#addItemModal"),
+        });
+
+        $("#addexpcountry").select2({
+            width: "100%",
+            placeholder: "-- Select Country --",
+            dropdownParent: $("#addExporterModal"),
+        });
+
+        // Purpose dropdown (if exists)
+        if ($("#itemPurpose").length) {
+            $("#itemPurpose").select2({
+                width: "100%",
+                placeholder: "-- Select Purpose --",
+                dropdownParent: $("#addItemModal"),
+            });
+
+            $("#itemPurpose").on("change", function () {
+                const selectedOption = $(this).find("option:selected");
+                itemPurpose = selectedOption.data("description") || "";
+                console.log("Item purpose selected:", itemPurpose);
+            });
+        }
+
+        // Item Select change – load uses & details
+        $("#itemSelect").on("change", function () {
+            const itemId = $(this).val();
+            const $itemUses = $("#itemUses");
+
+            $itemUses
+                .empty()
+                .append('<option value="">-- Select Uses --</option>');
+
+            if (!itemId) return;
+
+            loadUses(itemId);
+            loadDetails(itemId);
+        });
+
+        $("#mdlAddItemBtn").on("click", function (e) {
+            e.preventDefault();
+            loadConsignmentSelection();
+        });
+
+        $(document).on("click", "#submitApps", function (e) {
+            e.preventDefault();
+            console.log("Submit clicked!");
+            saveapplication(false);
+        });
+
+        $(document).on(
+            "click",
+            `#logoutButton, 
+            .app-sidebar.sticky button, .app-sidebar.sticky a,
+            .breadcrumb .breadcrumb-item a`,
+            function (e) {
+                if (!change) return;
+
+                e.preventDefault();
+                const target = this;
+
+                Swal.fire({
+                    title: "Unsaved Changes",
+                    text: "You have unsaved changes. What would you like to do?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    showDenyButton: true,
+                    confirmButtonText: "Yes, leave",
+                    denyButtonText: "Save as Draft",
+                    cancelButtonText: "Stay",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        change = false;
+
+                        if (target.tagName === "A") {
+                            window.location.href = target.href;
+                        } else {
+                            target.click();
+                        }
+                    }
+
+                    if (result.isDenied) {
+                        saveapplication(true);
+                    }
+                });
+            },
+        );
+    } catch (error) {
+        console.error("Error during initialization:", error);
+        Swal.fire(
+            "Error",
+            "Failed to initialize page. Check console for details.",
+            "error",
+        );
+    } finally {
+        Swal.close();
+    }
+});

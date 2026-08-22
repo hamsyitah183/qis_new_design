@@ -57,7 +57,7 @@ $(document).ready(function () {
                 tableId = "#tabletab3";
                 console.log('unit measurement clicked');
                 document.getElementById("editICOde").disabled = false;
-                $('#editItemModal #editICOde').attr('disabled', false)
+                $('#editItemModal #editICOde').attr('disabled', false);
                 break;
 
             case "reject_purpose":
@@ -67,8 +67,8 @@ $(document).ready(function () {
 
             case "consignment_category":
                 tableId = "#tabletab_category";
+                document.getElementById("editICOde").disabled = true;
                 break;
-                
 
             default:
                 Swal.close();
@@ -79,6 +79,7 @@ $(document).ready(function () {
             url: `/internal/get_pbdata/${cate}`,
             type: "GET",
             success: function (response) {
+                console.log('response data consignment', response, 'in cateory', cate);
                 let tbody = $(tableId).find("tbody");
                 tbody.empty();
 
@@ -259,6 +260,7 @@ $(document).ready(function () {
             "consignment_purpose",
             "unit_measurement",
             "reject_purpose",
+            "consignment_category", // 🔥 ADDED
         ];
         categories.forEach((cate) => {
             loadPBData(cate);
@@ -373,7 +375,6 @@ $(document).ready(function () {
     }
     window.deleteBranch = deleteBranch;
 
-    // fetch Public Code to modal
     // fetch Public Code to modal
     function getspecificPBData(id) {
 
@@ -608,12 +609,11 @@ $(document).ready(function () {
                             type="number" 
                             step="0.000001"
                             name="conversion"
-                            
                             id="addConversion"
                             class="form-control">
                     </div>
                 `;
-                $('#addGenericModal #addGenericForm .modal-body').append(conversionInput)
+                $('#addGenericModal #addGenericForm .modal-body').append(conversionInput);
                 break;
             case "reject":
                 categoryTitle = "Rejection Notes";
@@ -625,11 +625,16 @@ $(document).ready(function () {
                 cateName = "branch_entry";
                 $("#addCodev").prop("disabled", true);
                 break;
+            // 🔥 NEW: Consignment Category
+            case "consignment_category":
+                categoryTitle = "Consignment Category";
+                cateName = "consignment_category";
+                $("#addCodev").prop("disabled", true);
+                break;
         }
 
         $("#addItemType").val(cateName);
 
-        // Set modal title safely
         const titleEl = modalEl.querySelector(".modal-title");
         if (titleEl) titleEl.innerText = `Add ${categoryTitle}`;
     }
@@ -749,4 +754,3 @@ $(document).ready(function () {
         });
     });
 });
-                     

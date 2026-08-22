@@ -591,6 +591,13 @@ Route::middleware(['auth.any'])->group(function () {
 
 
     Route::get('/vehicles/details', [VehicleController::class, 'getVehiclesByIds'])->name('vehicles.details');
+    Route::get('/vehicles/list', [VehicleController::class, 'index'])->name('vehicles.index');
+    Route::get('/vehicles', [VehicleController::class, 'index'])->name('vehicles.index');
+    Route::get('/vehicles/data', [VehicleController::class, 'data'])->name('vehicles.data');
+    Route::get('/vehicles/{id}', [VehicleController::class, 'show'])->name('vehicles.show');
+    Route::post('/vehicles', [VehicleController::class, 'store'])->name('vehicles.store');
+    Route::put('/vehicles/{id}', [VehicleController::class, 'update'])->name('vehicles.update');
+    Route::delete('/vehicles/{id}', [VehicleController::class, 'destroy'])->name('vehicles.destroy');
 });
 
 // broadcast --dont kacau---

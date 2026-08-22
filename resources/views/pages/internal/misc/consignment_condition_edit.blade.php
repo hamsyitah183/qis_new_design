@@ -67,8 +67,8 @@
                             <label for="blog-category" class="form-label" data-en="Category" data-bm="Kategori">Category</label>
                             <select class="form-select" name="itemCategory" id="itemCategory">
                                 @foreach ($pbdata as $cate)
-                                    <option value="{{ $cate->cate_code }}"
-                                        {{ $condition->category == $cate->cate_code ? 'selected' : '' }}>
+                                    <option value="{{ $cate->id }}"
+                                        {{ $condition->category == $cate->id ? 'selected' : '' }}>
                                         {{ $cate->description }}
                                     </option>
                                 @endforeach

@@ -18,6 +18,7 @@ use App\Models\InspectionItem;
 use App\Models\IpConsignmentPermit;
 use App\Models\ConsignmentPermit;
 use App\Models\Gallery;
+use App\Models\IpEntryPoint;
 use App\Models\Order;
 use App\Models\PublicCode;
 use App\Models\PublicUser;
@@ -39,10 +40,32 @@ class LandingController extends Controller
     {
         $announcements = \App\Models\Announcement::all();
         $galleries = Gallery::all();
+        $districts = PublicCode::where('cate_name', 'district_entry')
+            ->pluck('description', 'cate_code');
+
+        // Get one representative entry point per district
+        $entryPoints = IpEntryPoint::select('district', 'entry_name', 'transport_type')
+            ->where('is_del', false)
+            ->orderBy('district')
+            ->orderBy('id')
+            ->get()
+            ->groupBy('district')
+            ->map(function ($group) use ($districts) {
+                $first = $group->first();
+                return [
+                    'district_id' => $first->district,
+                    'district_name' => $districts[$first->district] ?? 'District ' . $first->district,
+                    'entry_name' => $first->entry_name,
+                    'transport_type' => $first->transport_type,
+                ];
+            })
+            ->values();
+
         return view('pages.landing', [
             'title' => 'Home',
             'announcements' => $announcements,
-            'galleries' => $galleries
+            'galleries' => $galleries,
+            'entryPoints' => $entryPoints
         ]);
     }
 }

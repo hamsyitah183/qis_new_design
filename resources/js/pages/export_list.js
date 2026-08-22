@@ -86,6 +86,12 @@ function initAddExporterModal() {
 }
 
 $(document).ready(function () {
+    // ─── Clear filters on page load ──────────────────────────────────
+    $("#filterExporterName").val("");
+    if ($("#filterExporterCountry").length) {
+        $("#filterExporterCountry").val(null).trigger("change");
+    }
+
     const table = $("#exporterTable").DataTable({
         processing: true,
         responsive: true,
@@ -266,5 +272,3 @@ $(document).on("click", ".editExporter", function () {
         },
     });
 });
-
-

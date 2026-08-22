@@ -1155,8 +1155,16 @@ class ApplicationController extends Controller
 
     public function getInternalExporterListData()
     {
+        $user = authUser();
         $query = Exporter::with(['countryInfo', 'registeredBy']);
 
+        // ─── Public users: only see their own registered exporters ───
+        if ($user['type'] === 'public') {
+            $query->where('registered_by', $user['user']->uuid);
+        }
+        // Internal users: see all (no additional where clause)
+
+        // ─── Apply optional filters ──────────────────────────────────
         if (request('name')) {
             $query->where('name', 'like', '%' . request('name') . '%');
         }

@@ -57,12 +57,13 @@ class ConsignmentMiscController extends Controller
         $condition = ConsignmentCondition::find($id);
 
         // dd($condition);
-        $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->where('cate_name', 'consignment_purpose')->where('is_del', false)->get();
+        $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->where('cate_name', 'consignment_category')->where('is_del', false)->get();
         $measurements = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->where('cate_name', 'unit_measurement')->where('is_del', false)->get();
 
         if (!$condition) {
             return response()->json(['error' => 'Consignment Condition not found'], 404);
         }
+
 
         return view('pages.internal.misc.consignment_condition_edit', compact('condition', 'pbdata', 'measurements'));
     }
@@ -116,7 +117,8 @@ class ConsignmentMiscController extends Controller
             abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
         }
 
-        $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->where('cate_name', 'consignment_purpose')->where('is_del', false)->get();
+        $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->where('cate_name', 'consignment_category')->where('is_del', false)->get();
+
 
         return view('pages.internal.misc.consignment_condition_add', compact('pbdata'));
     }

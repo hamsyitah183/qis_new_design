@@ -408,25 +408,48 @@
 }
 
 /* approximate positions, west coast -> east coast spread */
+/* ─── Radar Map Node Positions ────────────────────────────── */
+/* approximate geographic positions for Sabah checkpoints      */
 .qis-node--kk {
     top: 22%;
     left: 16%;
 }
-.qis-node--sep {
-    top: 14%;
-    left: 30%;
-}
-.qis-node--labu {
-    top: 58%;
-    left: 8%;
+.qis-node--kud {
+    top: 6%;
+    left: 40%;
 }
 .qis-node--sdk {
     top: 34%;
     left: 66%;
 }
+.qis-node--ld {
+    top: 52%;
+    left: 80%;
+}
 .qis-node--twu {
     top: 70%;
     left: 74%;
+}
+.qis-node--kun {
+    top: 68%;
+    left: 86%;
+}
+.qis-node--sem {
+    top: 80%;
+    left: 84%;
+}
+.qis-node--men {
+    top: 58%;
+    left: 8%;
+}
+.qis-node--sip {
+    top: 72%;
+    left: 14%;
+}
+/* fallback for any unassigned district */
+.qis-node--default {
+    top: 50%;
+    left: 50%;
 }
 
 .qis-radar-terminal {

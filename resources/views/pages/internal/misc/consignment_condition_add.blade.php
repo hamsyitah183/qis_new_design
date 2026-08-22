@@ -69,14 +69,15 @@
                             <input type="text" class="form-control" id="scientificName" name="scientificName"
                                 placeholder="">
                         </div>
-
+                     
                         <!-- Category -->
                         <div class="col-xl-6">
                             <label class="form-label" data-en="Category" data-bm="Kategori">Category</label>
                             <select class="form-select" name="itemCategory" id="itemCategory">
                                 <option value="" data-en="-- Select Category --" data-bm="-- Pilih Kategori --">-- Select Category --</option>
+                            
                                 @foreach ($pbdata as $cate)
-                                    <option value="{{ $cate->cate_code }}">
+                                    <option value="{{ $cate->id }}">
                                         {{ $cate->description }}
                                     </option>
                                 @endforeach

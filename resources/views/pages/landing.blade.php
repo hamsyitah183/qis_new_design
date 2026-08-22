@@ -79,11 +79,30 @@
 
                     <div class="qis-radar-map">
                         <div class="qis-radar-sweep"></div>
-                        <div class="qis-node qis-node--kk"><span class="qis-dot"></span><span>KK PORT</span></div>
-                        <div class="qis-node qis-node--sep"><span class="qis-dot"></span><span>SEPANGGAR</span></div>
-                        <div class="qis-node qis-node--labu"><span class="qis-dot"></span><span>LABUAN</span></div>
-                        <div class="qis-node qis-node--sdk"><span class="qis-dot"></span><span>SANDAKAN</span></div>
-                        <div class="qis-node qis-node--twu"><span class="qis-dot"></span><span>TAWAU</span></div>
+                        @foreach ($entryPoints as $node)
+                            @php
+                                // Map district ID to CSS class
+                                $classMap = [
+                                    1 => 'kk',
+                                    2 => 'kud',
+                                    3 => 'sdk',
+                                    4 => 'ld',
+                                    5 => 'twu',
+                                    6 => 'kun',
+                                    7 => 'sem',
+                                    8 => 'men',
+                                    9 => 'sip',
+                                ];
+                                $nodeClass = $classMap[$node['district_id']] ?? 'default';
+                                // Short label: use district name or first word of entry name
+                                $label = $node['district_name'];
+                            @endphp
+                            <div class="qis-node qis-node--{{ $nodeClass }}" data-district="{{ $node['district_id'] }}"
+                                data-transport="{{ $node['transport_type'] }}" title="{{ $node['entry_name'] }}">
+                                <span class="qis-dot"></span>
+                                <span>{{ $label }}</span>
+                            </div>
+                        @endforeach
                     </div>
 
                     <div class="qis-radar-terminal" id="qisTerminal">SCANNING CHECKPOINT: KK PORT&hellip;</div>
@@ -587,8 +606,24 @@
             });
 
             // ---------- checkpoint terminal rotator ----------
+            // ---------- checkpoint terminal rotator (dynamic) ----------
             var terminal = document.getElementById('qisTerminal');
-            var checkpoints = ['KK PORT', 'SEPANGGAR', 'SANDAKAN', 'TAWAU', 'LABUAN'];
+            var checkpoints = [];
+            // Collect checkpoint names from the radar nodes
+            document.querySelectorAll('.qis-node').forEach(function(node) {
+                var label = node.querySelector('span:last-child');
+                if (label) {
+                    // Use the entry name from the title attribute (full entry point name) or fallback to the district name
+                    var name = node.getAttribute('title') || label.textContent.trim();
+                    // Remove "District " prefix if present (if using district names)
+                    name = name.replace(/^District\s+/, '');
+                    if (name) checkpoints.push(name);
+                }
+            });
+            // Fallback if no nodes found (should not happen if data exists)
+            if (checkpoints.length === 0) {
+                checkpoints = ['KK PORT', 'SEPANGGAR', 'SANDAKAN', 'TAWAU', 'LABUAN'];
+            }
             var idx = 0;
             if (terminal && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
                 setInterval(function() {
