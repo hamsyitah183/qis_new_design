@@ -25,7 +25,7 @@
     $feePerItem = $order->payment_amount / $itemCount;
 
     $viewAppBaseUrl = match ($order->application_type ?? '') {
-        'Inspection Certificate', 'Inspection' => '/view_inspection/',
+        'Inspection Certificate', 'Inspection' => '/view_inspection_certificates/',
         'Consignment Certificate', 'Consignment' => '/view_consignment/',
         default => '/view_application/',
     };

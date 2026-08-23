@@ -3,7 +3,11 @@
 @section('pageName', 'View Application')
 
 @push('scripts')
-    @vite(['resources/js/pages/inspection/inspection_detail.js'])
+    @vite([
+        'resources/js/pages/inspection/inspection1.js',
+        'resources/js/pages/inspection/inspection2.js',
+        'resources/js/pages/inspection/inspection-actions.js',
+    ])
 @endpush
 
 @section('breadcrumb')
@@ -96,7 +100,7 @@
         {{-- ============================================================ --}}
         @if ($showClerkReviewActions)
             <div class="col-xl-12">
-                <div class="ipv-actions-bar">
+                <div class="ipv-actions-bar" id= "ipvBulkActionsWrap">
                     <div class="ipv-actions-bar-text">
                         <i class="bi bi-info-circle"></i>
                         <span data-en="This application is awaiting your review."

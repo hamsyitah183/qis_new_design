@@ -15,6 +15,8 @@ class UserAttachment extends Model
         'original_file_name',
         'valid_from',
         'valid_until',
+        'is_read',
+        'rejected_reason',
     ];
     protected $casts = [
         'valid_from' => 'date',

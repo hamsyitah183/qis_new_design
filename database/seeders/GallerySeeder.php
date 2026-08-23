@@ -17,22 +17,22 @@ class GallerySeeder extends Seeder
         $galleries = [
             [
                 'name'        => 'Kota Kinabalu Port checkpoint',
-                'path'        => 'images/gallery/kk-port.jpg',
+                'path'        => '/images/gallery/kk-port.jpg',
                 'description' => 'Kota Kinabalu Port checkpoint',
             ],
             [
                 'name'        => 'Quarantine laboratory',
-                'path'        => 'images/gallery/quarantine-lab.jpg',
+                'path'        => '/images/gallery/quarantine-lab.jpg',
                 'description' => 'Quarantine laboratory',
             ],
             [
                 'name'        => 'Cargo inspection',
-                'path'        => 'images/gallery/cargo-inspection.jpg',
+                'path'        => '/images/gallery/cargo-inspection.jpg',
                 'description' => 'Cargo inspection',
             ],
             [
                 'name'        => 'Agricultural farms across Sabah',
-                'path'        => 'images/gallery/agricultural-farm.jpg',
+                'path'        => '/images/gallery/agricultural-farm.jpg',
                 'description' => 'Agricultural farms across Sabah',
             ],
         ];
