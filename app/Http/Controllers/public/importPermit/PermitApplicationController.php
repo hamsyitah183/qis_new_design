@@ -333,7 +333,7 @@ class PermitApplicationController extends Controller
                     'transport_type' => $permit['tranType'] ?? null,
                     'entry_point' => $permit['entrypoint'] ?? null,
                     'category_application' => $permit['applCate'] ?? null,
-                    'user_id' => Auth::user()->uuid,
+                    'user_id' => authUser()['user']['uuid'] ?? null,
                     'exporter_id' => $exporter['id'] ?? null,
                     'importer_id' => $importer['uuid'] ?? null,
                     'importer_detail' => $importer,
@@ -363,7 +363,7 @@ class PermitApplicationController extends Controller
                     'transport_type' => $permit['tranType'] ?? null,
                     'entry_point' => $permit['entrypoint'] ?? null,
                     'category_application' => $permit['applCate'] ?? null,
-                    'user_id' => Auth::user()->uuid,
+                    'user_id' => authUser()['user']['uuid'] ?? null,
                     'exporter_id' => $exporter['id'] ?? null,
                     'importer_id' => $importer['uuid'] ?? null,
                     'importer_detail' => $importer,
@@ -505,7 +505,8 @@ class PermitApplicationController extends Controller
             }
 
             // 2. In-app Notifications (store both languages)
-            $notificationUrl = url('/view_import_permit/' . $application->application_id);
+            $internalNotificationUrl = route('viewApplication', $application->application_id);
+            $publicNotificationUrl = route('public.showallapplicationlist'); // Public user dashboard
 
             // Build bilingual messages using translation keys with placeholders
             // We need both versions, so we temporarily switch locale to get each.
@@ -526,13 +527,23 @@ class PermitApplicationController extends Controller
             // Restore original locale for the rest of the request
             app()->setLocale($originalLocale);
 
-            $internalUsers = InternalUser::permission('view dashboard')->get();
-            Notification::send($internalUsers, new ApplicationNotification(
-                $internalEn,
-                $internalBm,
-                Auth::user()->fullname ?? 'System',
-                $notificationUrl
-            ));
+            $internalUsers = InternalUser::permission('approve application')->get();
+            if (!$isDraft) {
+                Notification::send($internalUsers, new \App\Notifications\ApplicationSubmittedNotification(
+                    $internalEn,
+                    $internalBm,
+                    auth()->guard('public')->user()?->fullname ?? auth()->user()?->fullname ?? 'System',
+                    $internalNotificationUrl,
+                    $application->application_id
+                ));
+            } else {
+                Notification::send($internalUsers, new ApplicationNotification(
+                    $internalEn,
+                    $internalBm,
+                    auth()->guard('public')->user()?->fullname ?? auth()->user()?->fullname ?? 'System',
+                    $internalNotificationUrl
+                ));
+            }
 
             // Public applicant
             $publicUser = auth()->guard('public')->user();
@@ -550,7 +561,7 @@ class PermitApplicationController extends Controller
                     $publicEn,
                     $publicBm,
                     'QIS',
-                    $notificationUrl
+                    $publicNotificationUrl
                 ));
             }
 
@@ -560,6 +571,7 @@ class PermitApplicationController extends Controller
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Permit save error: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
 
             foreach ($movedFiles as $file) {
                 Storage::disk('public')->delete($file);

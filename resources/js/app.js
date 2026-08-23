@@ -245,10 +245,8 @@ function languange() {
     (function () {
         var STORAGE_KEY = "qis_lang";
         var buttons = document.querySelectorAll(".lang-btn");
-        var elements = document.querySelectorAll("[data-en]");
-
         function setLang(lang) {
-            elements.forEach(function (el) {
+            document.querySelectorAll("[data-en]").forEach(function (el) {
                 // --- Handle data-title ---
                 if (
                     el.hasAttribute("data-title-en") &&
