@@ -435,7 +435,7 @@ class InspectionController extends Controller
                     'transport_type' => $permit['tranType'] ?? null,
                     'entry_point' => $permit['entrypoint'] ?? null,
                     'category_application' => $category,
-                    'user_id' => Auth::user()->uuid,
+                    'user_id' => authUser()['user']['uuid'] ?? null,
                     'exporter_id' => $exporter['id'] ?? null,
                     'importer_id' => $importer['uuid'] ?? null,
                     'importer_detail' => $importer ?? [],
@@ -477,7 +477,7 @@ class InspectionController extends Controller
                     'transport_type' => $permit['tranType'] ?? null,
                     'entry_point' => $permit['entrypoint'] ?? null,
                     'category_application' => $category,
-                    'user_id' => Auth::user()->uuid,
+                    'user_id' => authUser()['user']['uuid'] ?? null,
                     'exporter_id' => $exporter['id'] ?? null,
                     'importer_id' => $importer['uuid'] ?? null,
                     'importer_detail' => $importer ?? [],
@@ -598,14 +598,25 @@ class InspectionController extends Controller
             // inspection send notifications
             $notificationUrl = route('public.viewInspectionApplication', ['id' => $application->application_id]);
 
-            $internalUsers = InternalUser::role(['admin', 'clerk', 'superadmin'])->get();
+            $internalUsers = InternalUser::permission('approve application')->get();
             $internalMsg = $isDraft ? ($isNewApplication ? 'New Inspection Certificate draft created' : 'Inspection Certificate draft updated') : ($isNewApplication ? 'New Inspection Certificate application submitted' : 'Inspection Certificate application updated');
+            $internalMsgBm = $isDraft ? ($isNewApplication ? 'Draf Sijil Pemeriksaan baru dibuat' : 'Draf Sijil Pemeriksaan dikemaskini') : ($isNewApplication ? 'Permohonan Sijil Pemeriksaan baru dihantar' : 'Permohonan Sijil Pemeriksaan dikemaskini');
 
-            Notification::send($internalUsers, new ApplicationNotification($internalMsg, Auth::user()->fullname, $notificationUrl));
+            if (!$isDraft) {
+                Notification::send($internalUsers, new \App\Notifications\ApplicationSubmittedNotification(
+                    $internalMsg,
+                    $internalMsgBm,
+                    auth()->guard('public')->user()?->fullname ?? auth()->user()?->fullname ?? 'System',
+                    $notificationUrl,
+                    $application->application_id
+                ));
+            } else {
+                Notification::send($internalUsers, new ApplicationNotification($internalMsg, $internalMsgBm, auth()->guard('public')->user()?->fullname ?? auth()->user()?->fullname ?? 'System', $notificationUrl));
+            }
 
             try {
-                event(new InternalUserAdminEvent($internalMsg . ' by ' . (Auth::user()->fullname ?? 'Unknown User')));
-                event(new InternalUserClerkEvent($internalMsg . ' by ' . (Auth::user()->fullname ?? 'Unknown User')));
+                event(new InternalUserAdminEvent($internalMsg . ' by ' . (auth()->guard('public')->user()?->fullname ?? auth()->user()?->fullname ?? 'Unknown User')));
+                event(new InternalUserClerkEvent($internalMsg . ' by ' . (auth()->guard('public')->user()?->fullname ?? auth()->user()?->fullname ?? 'Unknown User')));
             } catch (\Exception $e) {
                 Log::warning('Pusher connection failed but continuing internal notification: ' . $e->getMessage());
             }

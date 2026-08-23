@@ -8,7 +8,7 @@ use App\Models\IpApplication;
 class ApplicationActivityLogger
 {
     public static function log(
-        IpApplication $application,
+        \Illuminate\Database\Eloquent\Model $application,
         string $event,
         string $description,
         array $properties = [],

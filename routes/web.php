@@ -448,6 +448,7 @@ Route::middleware(['auth.any'])->group(function () {
 
     Route::get('/application/permit/{id}/data', [ApplicationController::class, 'get_application_permit']);
     Route::post('/application/verify/{id}/', [ApplicationController::class, 'verify_application_permit']);
+    Route::get('/application/{id}/email-action/{action}', [ApplicationController::class, 'handleEmailAction'])->name('application.email.action');
 
     Route::get('/notifications/data', [DashboardController::class, 'get_notifications'])->name('notifications');
     Route::get('/notifications/data/get', [DashboardController::class, 'notifications_data']);

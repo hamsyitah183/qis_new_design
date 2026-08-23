@@ -1048,7 +1048,19 @@ class ApplicationController extends Controller
         }
 
         $internalUsers = InternalUser::all();
-        Notification::send($internalUsers, new ApplicationNotification($messages['notify'], authUser()['user']->fullname, $notificationUrl));
+        Notification::send($internalUsers, new ApplicationNotification($messages['notify'], $messages['notify'], authUser()['user']->fullname ?? 'System', $notificationUrl));
+        
+        // If status became Clerk Verified, dispatch the email with buttons to Officers
+        if (strtolower($status) === 'clerk verified') {
+            $officerUsers = InternalUser::permission('approve permit')->get();
+            Notification::send($officerUsers, new \App\Notifications\ApplicationSubmittedNotification(
+                'Application verified by clerk and awaits officer verification',
+                'Permohonan telah disahkan oleh kerani dan menunggu pengesahan pegawai',
+                authUser()['user']->fullname ?? 'System',
+                $notificationUrl,
+                $application->application_id
+            ));
+        }
 
         /**
          * =====================
@@ -1063,7 +1075,7 @@ class ApplicationController extends Controller
             Log::warning('Pusher connection failed but continuing public notification: ' . $e->getMessage());
         }
 
-        Notification::send($publicUser, new ApplicationNotification($messages['public'], authUser()['user']->fullname, $notificationUrl));
+        Notification::send($publicUser, new ApplicationNotification($messages['public'], $messages['public'], authUser()['user']->fullname ?? 'System', $notificationUrl));
 
         /**
          * =====================
@@ -1078,8 +1090,7 @@ class ApplicationController extends Controller
             } catch (\Exception $e) {
                 Log::warning('Pusher connection failed but continuing importer notification: ' . $e->getMessage());
             }
-
-            Notification::send($importerUser, new ApplicationNotification($messages['public'], authUser()['user']->fullname, $notificationUrl));
+            Notification::send($importerUser, new ApplicationNotification($messages['public'], $messages['public'], authUser()['user']->fullname ?? 'System', $notificationUrl));
         }
 
         /**
@@ -1091,6 +1102,129 @@ class ApplicationController extends Controller
             'message' => 'Application status updated successfully.',
             'status' => $status,
         ]);
+    }
+
+    public function handleEmailAction($id, $action, Request $request)
+    {
+        $application = IpApplication::where('application_id', $id)->first();
+        if (!$application) {
+            $application = \App\Models\ConsignmentApplication::where('application_id', $id)->first();
+        }
+        if (!$application) {
+            $application = \App\Models\InspectionApplication::where('application_id', $id)->first();
+        }
+        if (!$application) {
+            return redirect('/')->with('error', 'Application not found.');
+        }
+
+        if (!authUser()) {
+            return redirect()->guest('/login')->with('error', 'Please login to perform this action.');
+        }
+
+        $type = authUser()['type'];
+        if ($type !== 'internal') {
+            return redirect('/')->with('error', 'Unauthorized access.');
+        }
+
+        $user = authUser()['user'];
+        $status = strtolower($application->status ?? '');
+
+        if ($action === 'approve') {
+            if (str_contains($status, 'clerk review in-progress')) {
+                // Needs Clerk Approval
+                if (!$user->hasPermissionTo('approve application')) {
+                    return redirect('/')->with('error', 'You do not have permission to approve at this stage.');
+                }
+                $application->logActivity(action: 'Clerk Approved', remark: 'Application approved by clerk via email', status: 'Clerk Verified');
+                $application->status = 'Clerk Verified';
+                $application->importer_verify = 'Accepted';
+                
+                ApplicationActivityLogger::log(
+                    application: $application,
+                    event: 'clerk_verified',
+                    description: $user->fullname . " verified application {$application->application_id} via email",
+                    properties: ['role' => 'clerk']
+                );
+                
+                // Dispatch email to Officers for next step
+                $officerUsers = \App\Models\InternalUser::permission('approve permit')->get();
+                $notificationUrl = '';
+                if ($application instanceof \App\Models\ConsignmentApplication) {
+                    $notificationUrl = route('consignment.view', $id);
+                } elseif ($application instanceof \App\Models\InspectionApplication) {
+                    $notificationUrl = route('inspection.view_details', $id);
+                } else {
+                    $notificationUrl = route('viewApplication', $id);
+                }
+                
+                \Illuminate\Support\Facades\Notification::send($officerUsers, new \App\Notifications\ApplicationSubmittedNotification(
+                    'Application verified by clerk and awaits officer verification',
+                    'Permohonan telah disahkan oleh kerani dan menunggu pengesahan pegawai',
+                    $user->fullname ?? 'System',
+                    $notificationUrl,
+                    $application->application_id
+                ));
+            } elseif (str_contains($status, 'clerk verified')) {
+                // Needs Officer Approval
+                if (!$user->hasPermissionTo('approve permit')) {
+                    return redirect('/')->with('error', 'You do not have permission to approve at this stage.');
+                }
+                $application->logActivity(action: 'Officer Approved', remark: 'Application approved by officer via email', status: 'Officer Verification Completed');
+                $application->status = 'Officer Verification Completed';
+                
+                ApplicationActivityLogger::log(
+                    application: $application,
+                    event: 'officer_verified',
+                    description: $user->fullname . " verified application {$application->application_id} via email",
+                    properties: ['role' => 'officer']
+                );
+            } else {
+                return redirect('/')->with('error', 'This application cannot be approved in its current status: ' . $application->status);
+            }
+        } elseif ($action === 'reject') {
+            $reason = 'Rejected via email';
+            if (str_contains($status, 'clerk review in-progress')) {
+                if (!$user->hasPermissionTo('approve application')) {
+                    return redirect('/')->with('error', 'You do not have permission to reject at this stage.');
+                }
+                $application->logActivity(action: 'Clerk Rejected', remark: $reason, status: 'Clerk Rejected');
+                $application->status = 'Clerk Rejected';
+                
+                ApplicationActivityLogger::log(
+                    application: $application,
+                    event: 'clerk_rejected',
+                    description: $user->fullname . " rejected application {$application->application_id} via email",
+                    properties: ['role' => 'clerk']
+                );
+            } elseif (str_contains($status, 'clerk verified')) {
+                if (!$user->hasPermissionTo('approve permit')) {
+                    return redirect('/')->with('error', 'You do not have permission to reject at this stage.');
+                }
+                $application->logActivity(action: 'Officer Rejected', remark: $reason, status: 'Rejected');
+                $application->status = 'Rejected';
+                
+                ApplicationActivityLogger::log(
+                    application: $application,
+                    event: 'officer_rejected',
+                    description: $user->fullname . " rejected application {$application->application_id} via email",
+                    properties: ['role' => 'officer']
+                );
+            } else {
+                return redirect('/')->with('error', 'This application cannot be rejected in its current status: ' . $application->status);
+            }
+        }
+
+        $application->save();
+
+        $route = 'viewApplication';
+        if ($application instanceof \App\Models\ConsignmentApplication) {
+            $route = 'consignment.view';
+        } elseif ($application instanceof \App\Models\InspectionApplication) {
+            $route = 'inspection.view_details';
+        }
+
+        return redirect(route($route, $application->application_id))
+            ->with('success', 'Application ' . ucfirst($action) . 'd successfully.');
     }
 
     function show_exporter()

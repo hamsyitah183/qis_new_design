@@ -66,6 +66,9 @@ export function notification() {
 
                 const url = notification.data.url ? notification.data.url : "#";
                 const user = notification.data.user || 'System';
+                const messageObj = typeof notification.data.message === 'object' ? notification.data.message : { en: notification.data.message, bm: notification.data.message };
+                const msgEn = messageObj.en ? messageObj.en.replace(/"/g, '&quot;') : 'Notification';
+                const msgBm = messageObj.bm ? messageObj.bm.replace(/"/g, '&quot;') : 'Notifikasi';
                 const message = getLocalizedMessage(notification.data);
 
                 listItem.innerHTML = `
@@ -77,7 +80,7 @@ export function notification() {
                         </div>
                         <div class="flex-grow-1">
                             <p class="mb-0 fw-medium">${user}</p>
-                            <div class="text-muted fs-12">${message}</div>
+                            <div class="text-muted fs-12" data-en="${msgEn}" data-bm="${msgBm}">${message}</div>
                             <div class="fw-normal fs-10 text-muted">${formatTime(
                                 notification.created_at,
                             )}</div>
@@ -190,6 +193,9 @@ export function notificationContent(hours = null) {
                 listItem.href = notification.data.url ?? "#";
 
                 const user = notification.data.user || 'System';
+                const messageObj = typeof notification.data.message === 'object' ? notification.data.message : { en: notification.data.message, bm: notification.data.message };
+                const msgEn = messageObj.en ? messageObj.en.replace(/"/g, '&quot;') : 'Notification';
+                const msgBm = messageObj.bm ? messageObj.bm.replace(/"/g, '&quot;') : 'Notifikasi';
                 const message = getLocalizedMessage(notification.data);
 
                 listItem.innerHTML = `
@@ -201,7 +207,7 @@ export function notificationContent(hours = null) {
 
                     <div class="text-wrap">
                         <span class="fw-medium">${user}</span>
-                        <p class="text-muted mb-0 fs-12 w-100 text-wrap">
+                        <p class="text-muted mb-0 fs-12 w-100 text-wrap" data-en="${msgEn}" data-bm="${msgBm}">
                             ${message}
                         </p>
                     </div>

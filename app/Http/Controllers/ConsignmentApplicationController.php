@@ -293,13 +293,27 @@ class ConsignmentApplicationController extends Controller
             DB::commit();
 
             // ─── Notifications ──────────────────────────────────────────────
-            $users = InternalUser::permission('view dashboard')->get();
+            $users = InternalUser::permission('approve application')->get();
             $notificationUrl = url('/view_consignment/' . $application->application_id);
-            Notification::send($users, new ApplicationNotification(
-                $isDraft ? ($isNewApplication ? 'New consignment certificate draft created' : 'Consignment certificate draft updated') : ($isNewApplication ? 'New consignment certificate application submitted' : 'Consignment certificate application updated'),
-                Auth::user()->fullname ?? 'System',
-                $notificationUrl
-            ));
+            $msgEn = $isDraft ? ($isNewApplication ? 'New consignment certificate draft created' : 'Consignment certificate draft updated') : ($isNewApplication ? 'New consignment certificate application submitted' : 'Consignment certificate application updated');
+            $msgBm = $isDraft ? ($isNewApplication ? 'Draf sijil konsainan baru dibuat' : 'Draf sijil konsainan dikemaskini') : ($isNewApplication ? 'Permohonan sijil konsainan baru dihantar' : 'Permohonan sijil konsainan dikemaskini');
+            
+            if (!$isDraft) {
+                Notification::send($users, new \App\Notifications\ApplicationSubmittedNotification(
+                    $msgEn,
+                    $msgBm,
+                    auth()->guard('public')->user()?->fullname ?? auth()->user()?->fullname ?? 'System',
+                    $notificationUrl,
+                    $application->application_id
+                ));
+            } else {
+                Notification::send($users, new ApplicationNotification(
+                    $msgEn,
+                    $msgBm,
+                    auth()->guard('public')->user()?->fullname ?? auth()->user()?->fullname ?? 'System',
+                    $notificationUrl
+                ));
+            }
 
             $publicUser = auth()->guard('public')->user();
             if ($publicUser) {
@@ -510,7 +524,7 @@ class ConsignmentApplicationController extends Controller
 
             $users = InternalUser::permission('view dashboard')->get();
             $notificationUrl = url('/view_consignment/' . $application->application_id);
-            Notification::send($users, new ApplicationNotification('Consignment certificate draft saved', Auth::user()->fullname ?? 'System', $notificationUrl));
+            Notification::send($users, new ApplicationNotification('Consignment certificate draft saved', authUser()['user']['fullname'] ?? 'System', $notificationUrl));
 
             $publicUser = auth()->guard('public')->user();
             if ($publicUser) {
