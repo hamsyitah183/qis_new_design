@@ -14,6 +14,7 @@ use App\Events\ApplicationCreatedPublicUser;
 use App\Events\InternalUserAdminEvent;
 use App\Events\InternalUserClerkEvent;
 use App\Events\PublicUserEvent;
+use App\Models\DocumentRequirement;
 use App\Models\ImportPermitLog;
 use App\Models\InspectionAttachment;
 use App\Models\InspectionItem;
@@ -23,6 +24,7 @@ use App\Models\IpConsignmentPermit;
 use App\Models\InternalUser;
 use App\Models\PublicUser;
 use App\Models\TempAttachment;
+use App\Models\UserAttachment;
 use App\Notifications\ApplicationNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -83,7 +85,7 @@ class InspectionController extends Controller
 
         // Filter by "Submitted By" username (for internal)
         if ($type === 'internal' && $request->has('username') && $request->username != '') {
-            $query->whereHas('user', function($q) use ($request) {
+            $query->whereHas('user', function ($q) use ($request) {
                 $q->where('fullname', 'like', '%' . $request->username . '%');
             });
         }
@@ -107,7 +109,7 @@ class InspectionController extends Controller
 
         $columns = array('Application ID', 'Date', 'Importer', 'Exporter', 'Status');
 
-        $callback = function() use($applications, $columns) {
+        $callback = function () use ($applications, $columns) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns);
 
@@ -357,27 +359,85 @@ class InspectionController extends Controller
             ->where('application_id', $id)
             ->firstOrFail();
 
+
         return view('pages.public.view_inspection', compact('pubmeasure', 'pubpurpose', 'country', 'id', 'application'));
     }
 
-    function getInspectionSelf($id = null)
+    /**
+     * Inspection certificate application for self (individual) users.
+     */
+    public function getInspectionSelf($id = null)
     {
-        if (authUser()['user']['doa_verified'] == 0) {
-            return view('pages.public.wait_for_verified');
+        $blockView = $this->checkDocumentStatusAndReturnView();
+        if ($blockView) {
+            return $blockView;
         }
+
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();
 
-        // $application = InspectionApplication::where('application_id', $id)->first();
         return view('pages.public.inspection_self', compact('pubmeasure', 'pubpurpose', 'country', 'id'));
     }
 
-    function getInspectionOthers($id = null)
+    private function checkDocumentStatusAndReturnView()
     {
-        if (authUser()['user']['doa_verified'] == 0) {
-            return view('pages.public.wait_for_verified');
+        $user = authUser()['user'];
+
+        // ✅ If the user is already DOA-verified, allow access without blocking
+        if ($user->doa_verified == 1) {
+            return null;
         }
+
+        // Not verified – check required documents
+        $requirements = DocumentRequirement::where('module', 'user')
+            ->where('is_required', true)
+            ->where('is_active', true)
+            ->get();
+
+        $attachments = UserAttachment::where('user_id', $user->uuid)
+            ->get()
+            ->keyBy('document_type');
+
+        $docStatus = [];
+        foreach ($requirements as $req) {
+            $attachment = $attachments->get($req->name);
+            if ($attachment) {
+                if (!$attachment->is_read) {
+                    $status = 'pending';
+                } else {
+                    $isExpired = $req->requires_expiry && $attachment->valid_until && now()->greaterThan($attachment->valid_until);
+                    $status = $isExpired ? 'expired' : 'uploaded';
+                }
+            } else {
+                $status = 'missing';
+            }
+            $docStatus[] = [
+                'requirement' => $req,
+                'attachment' => $attachment,
+                'status' => $status,
+            ];
+        }
+
+        $anyMissing = collect($docStatus)->contains(fn($item) => $item['status'] === 'missing');
+        $anyExpired = collect($docStatus)->contains(fn($item) => $item['status'] === 'expired');
+
+        if ($anyMissing || $anyExpired) {
+            return view('pages.public.wait_for_verified', compact('docStatus'));
+        }
+
+        return null;
+    }
+    /**
+     * Inspection certificate application for others (company / third‑party).
+     */
+    public function getInspectionOthers($id = null)
+    {
+        $blockView = $this->checkDocumentStatusAndReturnView();
+        if ($blockView) {
+            return $blockView;
+        }
+
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();
@@ -415,45 +475,32 @@ class InspectionController extends Controller
                 $importer_verify = $permit['applCate'] == 0 ? 'Clerk Review In-Progress' : 'wait for company approval';
             }
 
+            // ─── Create / Update Application ─────────────────────────────
             if ($applicationUuid) {
                 $application = InspectionApplication::where('application_id', $applicationUuid)->firstOrFail();
                 $category = $permit['applCate'] ?? 0;
-                // $importerVerify = 'pending';
                 $verifyDate = null;
 
-                // if ($status !== 'Draft') {
-                //     if ($category == 0) {
-                //         $importerVerify = 'Verified';
-                //         $verifyDate = now();
-                //     } else {
-                //         $importerVerify = 'Wait for company approval';
-                //     }
-                // }
-
                 $application->update([
-                    'eta' => $permit['eta'] ?? null,
-                    'transport_type' => $permit['tranType'] ?? null,
-                    'entry_point' => $permit['entrypoint'] ?? null,
+                    'eta'                  => $permit['eta'] ?? null,
+                    'transport_type'       => $permit['tranType'] ?? null,
+                    'entry_point'          => $permit['entrypoint'] ?? null,
                     'category_application' => $category,
-                    'user_id' => authUser()['user']['uuid'] ?? null,
-                    'exporter_id' => $exporter['id'] ?? null,
-                    'importer_id' => $importer['uuid'] ?? null,
-                    'importer_detail' => $importer ?? [],
-                    'status' => $status,
-                    'importer_verify' => $importer_verify,
+                    'user_id'              => authUser()['user']['uuid'] ?? null,
+                    'exporter_id'          => $exporter['id'] ?? null,
+                    'importer_id'          => $importer['uuid'] ?? null,
+                    'importer_detail'      => $importer ?? [],
+                    'status'               => $status,
+                    'importer_verify'      => $importer_verify,
                     'date_importer_verify' => $verifyDate,
                 ]);
 
                 activity()
-                    ->tap(function (Activity $activity) {
-                        $activity->log_name = 'user_activity';
-                    })
+                    ->tap(fn($activity) => $activity->log_name = 'user_activity')
                     ->event($isDraft ? 'update draft inspection' : 'update inspection application')
                     ->causedBy(authUser()['user'])
                     ->performedOn($application)
-                    ->withProperties([
-                        'application' => $application,
-                    ])
+                    ->withProperties(['application' => $application])
                     ->log(authUser()['user']['fullname'] . ($isDraft ? ' has updated a draft inspection (ID: ' : ' has updated an inspection application (ID: ') . $application->application_id . ')');
             } else {
                 $category = $permit['applCate'] ?? 0;
@@ -471,136 +518,174 @@ class InspectionController extends Controller
 
                 $isNewApplication = true;
                 $application = InspectionApplication::create([
-                    // 'application_id' => Str::uuid(),
-                    'application_id' => 'SP' . now()->format('ymd') . random_int(1000, 9999),
-                    'eta' => $permit['eta'] ?? null,
-                    'transport_type' => $permit['tranType'] ?? null,
-                    'entry_point' => $permit['entrypoint'] ?? null,
+                    'application_id'       => 'SP' . now()->format('ymd') . random_int(1000, 9999),
+                    'eta'                  => $permit['eta'] ?? null,
+                    'transport_type'       => $permit['tranType'] ?? null,
+                    'entry_point'          => $permit['entrypoint'] ?? null,
                     'category_application' => $category,
-                    'user_id' => authUser()['user']['uuid'] ?? null,
-                    'exporter_id' => $exporter['id'] ?? null,
-                    'importer_id' => $importer['uuid'] ?? null,
-                    'importer_detail' => $importer ?? [],
-                    'status' => $status,
-                    'importer_verify' => $importerVerify,
+                    'user_id'              => authUser()['user']['uuid'] ?? null,
+                    'exporter_id'          => $exporter['id'] ?? null,
+                    'importer_id'          => $importer['uuid'] ?? null,
+                    'importer_detail'      => $importer ?? [],
+                    'status'               => $status,
+                    'importer_verify'      => $importerVerify,
                     'date_importer_verify' => $verifyDate,
                 ]);
 
                 $notificationController = new NotificationController();
-
                 $notificationController->sendStatusMessage(
                     $application->importer_detail['fullname'] ?? 'User',
                     'Inspection Application',
                     $application->application_id,
                     'submitted',
                     'Your application has been successfully submitted.',
-                    $application->importer->phone_number ?? '60143290092', // recipient number
+                    $application->importer->phone_number ?? '60143290092',
                 );
 
                 activity()
-                    ->tap(function (Activity $activity) {
-                        $activity->log_name = 'user_activity';
-                    })
+                    ->tap(fn($activity) => $activity->log_name = 'user_activity')
                     ->event($isDraft ? 'create draft inspection' : 'create inspection application')
                     ->causedBy(authUser()['user'])
                     ->performedOn($application)
-                    ->withProperties([
-                        'application' => $application,
-                    ])
+                    ->withProperties(['application' => $application])
                     ->log(authUser()['user']['fullname'] . ($isDraft ? ' has created a new draft inspection (ID: ' : ' has created a new inspection application (ID: ') . $application->application_id . ')');
             }
 
             $appId = $application->id;
 
-            // Handle items (clear existing if updating?) - for simplicity and based on similar patterns
+            // ─── Handle old items & their attachments (on update) ──────────
             if ($applicationUuid) {
-                \App\Models\InspectionItem::where('application_id', $appId)->delete();
+                // Get existing items with their attachments
+                $oldItems = InspectionItem::with('attachments')->where('application_id', $appId)->get();
+
+                foreach ($oldItems as $oldItem) {
+                    foreach ($oldItem->attachments as $attachment) {
+                        // Delete physical file
+                        if ($attachment->file_path) {
+                            $path = str_replace('/storage/', '', $attachment->file_path);
+                            if (Storage::disk('public')->exists($path)) {
+                                Storage::disk('public')->delete($path);
+                            }
+                        }
+                        $attachment->delete();
+                    }
+                    $oldItem->delete();
+                }
             }
 
+            // ─── Save new items ────────────────────────────────────────────
+            $itemArray = [];
             if ($request->has('items')) {
-                $itemArray = [];
                 foreach ($request->items as $index => $item) {
                     $itemData = json_decode($item['data'], true);
 
-                    $inspectionItem = \App\Models\InspectionItem::create([
-                        'application_id' => $appId,
+                    $inspectionItem = InspectionItem::create([
+                        'application_id'     => $appId,
                         'consignment_detail' => $itemData,
-                        'quantity' => $itemData['quantity'] ?? 0,
-                        'unit_measurement' => $itemData['measure'] ?? null,
-                        'value' => $itemData['value'] ?? 0,
-                        'purpose' => $itemData['purpose'] ?? null,
-                        'status' => 'processing',
+                        'quantity'           => $itemData['quantity'] ?? 0,
+                        'unit_measurement'   => $itemData['measure'] ?? null,
+                        'value'              => $itemData['value'] ?? 0,
+                        'purpose'            => $itemData['purpose'] ?? null,
+                        'status'             => 'processing',
                     ]);
                     $itemArray[$index] = $inspectionItem->id;
                 }
+            }
 
-                // Handle files
-                if ($request->hasFile('files')) {
-                    foreach ($request->file('files') as $i => $file) {
-                        $itemIndex = $request->input('file_item_index')[$i] ?? null;
-                        if (isset($itemArray[$itemIndex])) {
-                            $name = uniqid() . '_' . $file->getClientOriginalName();
-                            $path = $file->storeAs('inspection', $name, 'public');
-                            $movedFiles[] = $path;
+            // ─── Item Attachments (files[]) ──────────────────────────────
+            if ($request->hasFile('files')) {
+                foreach ($request->file('files') as $i => $file) {
+                    $itemIndex = $request->input('file_item_index')[$i] ?? null;
+                    if (!isset($itemArray[$itemIndex])) continue;
 
-                            \App\Models\InspectionAttachment::create([
-                                'item_id' => $itemArray[$itemIndex],
-                                'file_name' => $file->getClientOriginalName(),
-                                'file_path' => "/storage/{$path}",
-                                'file_type' => $file->getClientOriginalExtension(),
-                            ]);
-                        }
-                    }
+                    $name = uniqid() . '_' . $file->getClientOriginalName();
+                    $path = $file->storeAs('inspection', $name, 'public');
+                    $movedFiles[] = $path;
+
+                    InspectionAttachment::create([
+                        'item_id'   => $itemArray[$itemIndex],
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_path' => "/storage/{$path}",
+                        'file_type' => $file->getClientOriginalExtension(),
+                    ]);
                 }
             }
 
-            // inspection activity log
-            if ($isDraft) {
-                $application->logActivity(action: $isNewApplication ? 'Draft Created' : 'Draft Updated', remark: $isNewApplication ? 'Inspection application saved as draft' : 'Inspection application draft updated', status: 'Draft');
-            } else {
-                $application->logActivity(action: 'Submitted', remark: 'Inspection application submitted', status: 'Clerk review in-progress');
-                $notificationController = new NotificationController();
+            // ─── APPLICATION ATTACHMENTS (application_files[]) ──────────────
+            // Using the InspectionApplicationAttachment model
+            if ($request->hasFile('application_files')) {
+                foreach ($request->file('application_files') as $file) {
+                    $name = uniqid() . '_' . $file->getClientOriginalName();
+                    $path = $file->storeAs('inspection_applications', $name, 'public');
+                    $movedFiles[] = $path;
 
+                    InspectionApplicationAttachment::create([
+                        'application_id' => $appId,
+                        'file_name'      => $file->getClientOriginalName(),
+                        'file_path'      => "/storage/{$path}",
+                        'file_type'      => $file->getClientOriginalExtension(),
+                    ]);
+                }
+            }
+
+            // ─── Logging & Notifications ──────────────────────────────────
+            if ($isDraft) {
+                $application->logActivity(
+                    action: $isNewApplication ? 'Draft Created' : 'Draft Updated',
+                    remark: $isNewApplication ? 'Inspection application saved as draft' : 'Inspection application draft updated',
+                    status: 'Draft'
+                );
+            } else {
+                $application->logActivity(
+                    action: 'Submitted',
+                    remark: 'Inspection application submitted',
+                    status: 'Clerk review in-progress'
+                );
+                $notificationController = new NotificationController();
                 $notificationController->sendStatusMessage(
                     $application->importer_detail['fullname'] ?? 'User',
                     'Inspection Application',
                     $application->application_id,
                     'submitted',
                     'Your application has been successfully submitted.',
-                    $application->importer->phone_number ?? '60143290092', // recipient number
+                    $application->importer->phone_number ?? '60143290092',
                 );
             }
 
             // Global activity log for inspection_activity
-            $actionText = $isDraft ? ($isNewApplication ? 'created a draft inspection application' : 'updated draft inspection application') : ($isNewApplication ? 'submitted a new inspection application' : 'updated inspection application');
+            $actionText = $isDraft
+                ? ($isNewApplication ? 'created a draft inspection application' : 'updated draft inspection application')
+                : ($isNewApplication ? 'submitted a new inspection application' : 'updated inspection application');
 
             activity()
-                ->tap(function ($activity) {
-                    $activity->log_name = 'inspection_activity';
-                })
+                ->tap(fn($activity) => $activity->log_name = 'inspection_activity')
                 ->event($isDraft ? ($isNewApplication ? 'draft_created' : 'draft_updated') : ($isNewApplication ? 'application_submitted' : 'application_updated'))
                 ->causedBy(authUser()['user'])
                 ->performedOn($application)
                 ->withProperties([
                     'application_id' => $application->application_id,
-                    'status' => $application->status,
-                    'user' => [
-                        'name' => authUser()['user']->fullname ?? 'Unknown',
+                    'status'         => $application->status,
+                    'user'           => [
+                        'name'  => authUser()['user']->fullname ?? 'Unknown',
                         'email' => authUser()['user']->email ?? 'N/A',
                     ],
-                    'importer' => $application->importer_detail ?? [],
-                    'exporter_id' => $application->exporter_id,
+                    'importer'       => $application->importer_detail ?? [],
+                    'exporter_id'    => $application->exporter_id,
                 ])
                 ->log(authUser()['user']->fullname . ' ' . $actionText);
 
             DB::commit();
 
-            // inspection send notifications
+            // ─── Notifications ──────────────────────────────────────────────
             $notificationUrl = route('public.viewInspectionApplication', ['id' => $application->application_id]);
 
             $internalUsers = InternalUser::permission('approve application')->get();
-            $internalMsg = $isDraft ? ($isNewApplication ? 'New Inspection Certificate draft created' : 'Inspection Certificate draft updated') : ($isNewApplication ? 'New Inspection Certificate application submitted' : 'Inspection Certificate application updated');
-            $internalMsgBm = $isDraft ? ($isNewApplication ? 'Draf Sijil Pemeriksaan baru dibuat' : 'Draf Sijil Pemeriksaan dikemaskini') : ($isNewApplication ? 'Permohonan Sijil Pemeriksaan baru dihantar' : 'Permohonan Sijil Pemeriksaan dikemaskini');
+            $internalMsg = $isDraft
+                ? ($isNewApplication ? 'New Inspection Certificate draft created' : 'Inspection Certificate draft updated')
+                : ($isNewApplication ? 'New Inspection Certificate application submitted' : 'Inspection Certificate application updated');
+            $internalMsgBm = $isDraft
+                ? ($isNewApplication ? 'Draf Sijil Pemeriksaan baru dibuat' : 'Draf Sijil Pemeriksaan dikemaskini')
+                : ($isNewApplication ? 'Permohonan Sijil Pemeriksaan baru dihantar' : 'Permohonan Sijil Pemeriksaan dikemaskini');
 
             if (!$isDraft) {
                 Notification::send($internalUsers, new \App\Notifications\ApplicationSubmittedNotification(
@@ -611,7 +696,12 @@ class InspectionController extends Controller
                     $application->application_id
                 ));
             } else {
-                Notification::send($internalUsers, new ApplicationNotification($internalMsg, $internalMsgBm, auth()->guard('public')->user()?->fullname ?? auth()->user()?->fullname ?? 'System', $notificationUrl));
+                Notification::send($internalUsers, new ApplicationNotification(
+                    $internalMsg,
+                    $internalMsgBm,
+                    auth()->guard('public')->user()?->fullname ?? auth()->user()?->fullname ?? 'System',
+                    $notificationUrl
+                ));
             }
 
             try {
@@ -623,7 +713,9 @@ class InspectionController extends Controller
 
             $applicant = auth()->guard('public')->user();
             if ($applicant) {
-                $applicantMsg = $isDraft ? 'Your Inspection Certificate Application with id ' . $application->application_id . ' is saved as draft' : 'Your Inspection Certificate Application with id ' . $application->application_id . ' is submitted';
+                $applicantMsg = $isDraft
+                    ? 'Your Inspection Certificate Application with id ' . $application->application_id . ' is saved as draft'
+                    : 'Your Inspection Certificate Application with id ' . $application->application_id . ' is submitted';
 
                 $applicant->notify(new ApplicationNotification($applicantMsg, 'QIS', $notificationUrl));
 
@@ -634,14 +726,11 @@ class InspectionController extends Controller
                 }
             }
 
-            return response()->json(
-                [
-                    'status' => 'success',
-                    'message' => $isDraft ? 'Draft saved successfully' : 'Application submitted successfully',
-                    'application_id' => $application->application_id,
-                ],
-                200,
-            );
+            return response()->json([
+                'status'  => 'success',
+                'message' => $isDraft ? 'Draft saved successfully' : 'Application submitted successfully',
+                'application_id' => $application->application_id,
+            ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
             foreach ($movedFiles as $file) {
@@ -649,13 +738,10 @@ class InspectionController extends Controller
             }
             \Log::error('Error saving inspection application: ' . $e->getMessage());
 
-            return response()->json(
-                [
-                    'status' => 'error',
-                    'message' => 'Failed to save application: ' . $e->getMessage(),
-                ],
-                500,
-            );
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Failed to save application: ' . $e->getMessage(),
+            ], 500);
         }
     }
 
@@ -1175,7 +1261,7 @@ class InspectionController extends Controller
             $application->save();
 
             $application->logActivity(action: 'Officer Verification Completed', remark: 'All inspection items processed', status: 'Officer Verification Completed');
-        
+
 
             $notificationController = new NotificationController();
 

@@ -2,7 +2,7 @@ import Dropzone from "dropzone";
 import $ from "jquery";
 window.$ = window.jQuery = $;
 import Swal from "sweetalert2";
-import { generateUUID, getAuthUser } from "../../app";
+import { generateUUID, getAuthUser, applyTranslations } from "../../app";
 import "dropzone/dist/dropzone.css";
 import { render } from "react-dom/cjs/react-dom.production.min";
 
@@ -79,8 +79,7 @@ function getKgForItem(item) {
     if (!qty || !measurementUnits || !measurementUnits.unit) return 0;
     const measure = item.measure || "";
     const unit = measurementUnits.unit.find(
-        (u) =>
-            u.cate_code.toLowerCase() === measure.toLowerCase() && !u.is_del,
+        (u) => u.cate_code.toLowerCase() === measure.toLowerCase() && !u.is_del,
     );
     return unit ? qty * unit.conversion.conversion : 0;
 }
@@ -1676,7 +1675,7 @@ async function showItemAgreement(item) {
                     I understand that any false declaration may result in rejection of the application or permit cancellation.
                 </p>
                 <div class="form-check mt-4">
-                    <input class="form-check-input" type="checkbox" id="itemAgreeCheckbox" ${hasCondition ? "disabled" : ""}>
+                    <input class="form-check-input" type="checkbox" id="itemAgreeCheckbox" >
                     <label class="form-check-label" for="itemAgreeCheckbox">
                         I agree to the above declaration
                     </label>
@@ -2608,9 +2607,40 @@ $(document).ready(async function () {
             loadConsignmentSelection();
         });
 
-        $(document).on("click", "#submitApps", function (e) {
+        // Submit button handler — now requires the final declaration to be agreed to
+        // Submit button handler
+        $(document).on("click", "#submitApps", async function (e) {
             e.preventDefault();
             console.log("Submit clicked!");
+
+            if (tempItems.length === 0) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "No Items",
+                    text: "Please add at least one item before submitting.",
+                });
+                return;
+            }
+
+            const unagreedItems = tempItems.filter((item) => !item.agreedAt);
+            if (unagreedItems.length > 0) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Incomplete Declarations",
+                    text: "Please confirm the declaration for all items before submitting.",
+                });
+                return;
+            }
+
+            // Walk through the conditions pages, then the final declaration —
+            // was calling showFinalAgreement() directly, skipping the conditions
+            // walkthrough entirely (and showItemConditions() below was unreachable
+            // dead code referencing an ITEM_CONDITIONS that didn't exist yet).
+            const agreed = await showItemConditions();
+            if (!agreed) {
+                return;
+            }
+
             saveapplication(false);
         });
 
@@ -2662,3 +2692,157 @@ $(document).ready(async function () {
         Swal.close();
     }
 });
+
+// ─── ITEM_CONDITIONS (bilingual) ────────────────────────
+const ITEM_CONDITIONS = [
+    {
+        title_en: "General Consignment Requirements",
+        title_bm: "Syarat Konsainan Umum",
+        title: '<span data-en="General Consignment Requirements" data-bm="Syarat Konsainan Umum">General Consignment Requirements</span>',
+        icon: "bi-box-seam",
+        content: `
+        <p>
+            <span data-en="The applicant shall ensure that all items declared under this consignment application are accurate, complete and compliant with the applicable import/export regulations." 
+                  data-bm="Pemohon hendaklah memastikan bahawa semua item yang diisytiharkan di bawah permohonan konsainan ini adalah tepat, lengkap dan mematuhi peraturan import/eksport yang berkenaan.">
+            The applicant shall ensure that all items declared under this consignment application are accurate, complete and compliant with the applicable import/export regulations.</span>
+        </p>
+        <p>
+            <span data-en="Any false declaration, omission of information, misleading description, incorrect quantity or inaccurate valuation may result in rejection of the application, permit cancellation, investigation, enforcement action or prosecution." 
+                  data-bm="Sebarang pengisytiharan palsu, peninggalan maklumat, keterangan yang mengelirukan, kuantiti yang tidak betul atau penilaian yang tidak tepat boleh mengakibatkan penolakan permohonan, pembatalan permit, penyiasatan, tindakan penguatkuasaan atau pendakwaan.">
+            Any false declaration, omission of information, misleading description, incorrect quantity or inaccurate valuation may result in rejection of the application, permit cancellation, investigation, enforcement action or prosecution.</span>
+        </p>
+        <p>
+            <span data-en="Applicants are responsible for maintaining supporting documentation for inspection purposes for a minimum period required by the authority." 
+                  data-bm="Pemohon bertanggungjawab untuk menyimpan dokumentasi sokongan untuk tujuan pemeriksaan bagi tempoh minimum yang diperlukan oleh pihak berkuasa.">
+            Applicants are responsible for maintaining supporting documentation for inspection purposes for a minimum period required by the authority.</span>
+        </p>
+    `,
+    },
+];
+
+async function showItemConditions() {
+    let currentPage = 0;
+    let currentLang = getCurrentLang();
+
+    while (currentPage < ITEM_CONDITIONS.length) {
+        const page = ITEM_CONDITIONS[currentPage];
+        const titleText =
+            currentLang === "bm" ? page.title_bm : page.title_en || page.title;
+        const iconClass = page.icon || "bi-info-circle";
+
+        const result = await Swal.fire({
+            title: `
+                <span data-en="${page.title_en || page.title}" data-bm="${page.title_bm || page.title}">
+                    <i class="bi ${iconClass} me-2 text-primary"></i>${titleText}
+                </span>
+            `,
+            width: 900,
+            html: `
+                <div style="text-align:left; max-height:350px; overflow:auto; padding-right:10px;">
+                    ${page.content}
+                </div>
+                <div class="mt-3 text-muted">
+                    <span data-en="Page ${currentPage + 1} of ${ITEM_CONDITIONS.length}" data-bm="Halaman ${currentPage + 1} daripada ${ITEM_CONDITIONS.length}">Page ${currentPage + 1} of ${ITEM_CONDITIONS.length}</span>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText:
+                currentPage === ITEM_CONDITIONS.length - 1
+                    ? '<span data-en="Continue" data-bm="Teruskan">Continue</span>'
+                    : '<span data-en="Next" data-bm="Seterusnya">Next</span>',
+            cancelButtonText:
+                '<span data-en="Cancel" data-bm="Batal">Cancel</span>',
+            allowOutsideClick: false,
+            didOpen: (modal) => {
+                applyTranslations(modal);
+                applyTranslations(Swal.getConfirmButton().parentElement);
+            },
+        });
+
+        if (!result.isConfirmed) {
+            return false;
+        }
+
+        currentPage++;
+    }
+
+    return await showFinalAgreement();
+}
+
+async function showFinalAgreement() {
+    let agreed = false;
+
+    const result = await Swal.fire({
+        title: '<span data-en="Declaration & Agreement" data-bm="Pengisytiharan & Persetujuan">Declaration & Agreement</span>',
+        width: 900,
+        html: `
+            <div id="agreementScroll" style="height:350px; overflow-y:auto; text-align:left; border:1px solid #ddd; padding:15px; border-radius:8px;">
+                <h5 class="mb-3"><span data-en="Terms and Conditions" data-bm="Terma dan Syarat">Terms and Conditions</span></h5>
+                <p>
+                    <span data-en="1. The applicant declares that all information provided in this application, including item descriptions, quantities, and values, is true, accurate, and complete." 
+                          data-bm="1. Pemohon mengisytiharkan bahawa semua maklumat yang diberikan dalam permohonan ini, termasuk perihalan item, kuantiti dan nilai, adalah benar, tepat dan lengkap.">
+                    1. The applicant declares that all information provided in this application is true, accurate, and complete.</span>
+                </p>
+                <p>
+                    <span data-en="2. The applicant confirms that all goods declared are compliant with current import regulations and standards enforced by the relevant authority." 
+                          data-bm="2. Pemohon mengesahkan bahawa semua barang yang diisytiharkan mematuhi peraturan import dan piawaian semasa yang dikuatkuasakan oleh pihak berkuasa berkaitan.">
+                    2. The applicant confirms that all goods declared are compliant with current import regulations and standards.</span>
+                </p>
+                <p>
+                    <span data-en="3. The applicant acknowledges that all consignments are subject to physical inspection, verification, and sampling by authorized officers at any designated entry point." 
+                          data-bm="3. Pemohon mengakui bahawa semua konsainan tertakluk kepada pemeriksaan fizikal, pengesahan dan pengambilan sampel oleh pegawai yang diberi kuasa di mana-mana pintu masuk yang ditetapkan.">
+                    3. The applicant acknowledges that all consignments are subject to inspection and sampling by authorized officers.</span>
+                </p>
+                <p>
+                    <span data-en="4. The applicant agrees to maintain all supporting documentation (invoices, certificates, permits) for audit purposes for the period required by law." 
+                          data-bm="4. Pemohon bersetuju untuk menyimpan semua dokumen sokongan (invois, sijil, permit) bagi tujuan audit untuk tempoh yang ditetapkan oleh undang-undang.">
+                    4. The applicant agrees to maintain all supporting documentation for audit purposes.</span>
+                </p>
+                <p>
+                    <span data-en="5. The authority reserves the right to suspend or revoke any permit or application if information provided is found to be false, misleading, or fraudulent, and legal action may be taken accordingly." 
+                          data-bm="5. Pihak berkuasa berhak untuk menggantung atau membatalkan sebarang permit atau permohonan jika maklumat yang diberikan didapati palsu, mengelirukan atau berunsur penipuan, dan tindakan undang-undang boleh diambil sewajarnya.">
+                    5. The authority reserves the right to revoke any application if information provided is found to be false or misleading.</span>
+                </p>
+                <p><strong><span data-en="END OF DECLARATION" data-bm="TAMAT PENGISYTIHARAN">END OF DECLARATION</span></strong></p>
+            </div>
+            <div class="form-check mt-3 text-start">
+                <input class="form-check-input" type="checkbox" id="agreeCheckbox" disabled>
+                <label class="form-check-label" for="agreeCheckbox">
+                    <span data-en="I have read and agree to all conditions." data-bm="Saya telah membaca dan bersetuju dengan semua syarat.">I have read and agree to all conditions.</span>
+                </label>
+            </div>
+        `,
+        didOpen: (modal) => {
+            applyTranslations(modal);
+            const scrollBox = document.getElementById("agreementScroll");
+            const checkbox = document.getElementById("agreeCheckbox");
+            scrollBox.addEventListener("scroll", () => {
+                const reachedBottom =
+                    scrollBox.scrollTop + scrollBox.clientHeight >=
+                    scrollBox.scrollHeight - 10;
+                if (reachedBottom) {
+                    checkbox.disabled = false;
+                }
+            });
+        },
+        preConfirm: () => {
+            const checked = document.getElementById("agreeCheckbox").checked;
+            if (!checked) {
+                Swal.showValidationMessage(
+                    '<span data-en="Please read the declaration and tick the agreement checkbox." data-bm="Sila baca pengisytiharan dan tandakan kotak persetujuan.">Please read the declaration and tick the agreement checkbox.</span>',
+                );
+                return false;
+            }
+            agreed = true;
+            return true;
+        },
+        allowOutsideClick: false,
+        showCancelButton: true,
+        confirmButtonText:
+            '<span data-en="I Agree" data-bm="Saya Setuju">I Agree</span>',
+        cancelButtonText:
+            '<span data-en="Cancel" data-bm="Batal">Cancel</span>',
+    });
+
+    return result.isConfirmed && agreed;
+}

@@ -63,7 +63,7 @@ $(document).ready(function () {
     $("#documentTable").on("click", ".edit-btn", function () {
         const id = $(this).data("id");
 
-        $.get(`${window.baseUrl}/documents/${id}`, function (data) {
+        $.get(`${window.baseUrl}/internal/documents/${id}`, function (data) {
             $("#document_id").val(data.id);
             $("#docModule").val(data.module);
             $("#docName").val(data.name);

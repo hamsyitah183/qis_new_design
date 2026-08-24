@@ -77,7 +77,7 @@ class ConsignmentSeeder extends Seeder
                 'scientific_name'   => $item['scientific_name'],
                 'addional_condition'=> '',
                 'quantity_limit'    => null,
-                'date_limit'        => null, // Use date_limit (not start_date/end_date)
+                
                 'country'           => json_encode(['SWK']),
                 'usage'             => '',
                 'created_at'        => $now,

@@ -95,8 +95,9 @@
                         <thead>
                             <tr>
                                 <th data-en="Name" data-bm="Nama">Name</th>
-                                <th data-en="Verification Attachment" data-bm="Lampiran Pengesahan">Verification Attachment
-                                </th>
+                                <th data-en="Email" data-bm="E-mel">Email</th>
+                                <th data-en="Status" data-bm="Status">Status</th>
+                                <th data-en="Documents" data-bm="Dokumen">Documents</th>
                                 <th data-en="Action" data-bm="Tindakan">Action</th>
                             </tr>
                         </thead>
@@ -156,6 +157,7 @@
             <h5 class="offcanvas-title" id="verificationOffcanvasLabel">
                 <i class="bi bi-paperclip me-2"></i>
                 <span data-en="Verification Attachment" data-bm="Lampiran Pengesahan">Verification Attachment</span>
+                <span class="badge ms-2" id="vdStatusBadge" style="display:none;"></span>
             </h5>
             <div class="d-flex align-items-center gap-2 ms-auto">
                 <button class="btn btn-sm btn-outline-secondary" id="vdPrevBtn" title="Previous">
@@ -203,7 +205,7 @@
             </div>
         </div>
         <div class="offcanvas-footer border-top p-3">
-            
+
             <div class="mt-2 d-flex gap-2">
                 <button class="btn btn-success btn-sm" id="vdAcceptBtn">
                     <i class="bi bi-check-lg"></i> <span data-en="Accept" data-bm="Terima">Accept</span>

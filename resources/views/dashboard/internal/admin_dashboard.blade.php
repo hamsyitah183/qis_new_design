@@ -29,10 +29,10 @@
 
 {{-- activity calendar + announcements --}}
 <div class="row align-items-stretch mt-4 mb-4">
-    <div class="col-12 col-lg-7 d-flex">
+    <div class="col-12 col-lg-7 d-flex d-none">
         @include('dashboard.internal.components.calendar')
     </div>
-    <div class="col-12 col-lg-5 d-flex">
+    <div class="col-12  d-flex">
         @include('dashboard.internal.components.announcements-widget')
     </div>
 </div>

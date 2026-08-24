@@ -28,6 +28,7 @@ use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Str;
 use App\Events\PublicUserEvent;
 use App\Models\BoundaryOfficer;
+use App\Models\UserAttachment;
 use App\Notifications\ApplicationNotification;
 use App\Services\VerificationService;
 use Illuminate\Support\Facades\Gate;
@@ -189,10 +190,10 @@ class UserController extends Controller
             abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
         }
 
-        $user = PublicUser::with(['attachments'])->where('uuid', $id)->firstOrFail();
-        
+        $user = PublicUser::with(['attachments', 'vehicles'])->where('uuid', $id)->firstOrFail();
+
         $activities = $user->activities()->orderBy('created_at', 'desc')->get();
-        
+
         return view('pages.internal.user_management.view_public', compact('user', 'activities'));
     }
 
@@ -229,31 +230,31 @@ class UserController extends Controller
     {
         Gate::authorize('approve public user');
 
-        $query = ApprovedPublic::with('publicUser')
+        // Get required document types (from DocumentRequirement)
+        $docTypes = DocumentRequirement::where('module', 'user')
+            ->where('is_required', true)
+            ->where('is_active', true)
+            ->pluck('name')
+            ->toArray();
+
+        // Query ApprovedPublic with publicUser and their attachments
+        $query = ApprovedPublic::with(['publicUser', 'publicUser.attachments'])
             ->where('doa_verified', '!=', 1)
             ->where('status', '!=', 'Verification is rejected')
-            ->whereHas('userAttachments'); // only those with at least one identification document
+            ->whereHas('publicUser.attachments'); // only users with at least one attachment
 
-        // Search by public user fullname
+        // Filters
         if ($request->filled('name')) {
-            $name = $request->input('name');
-            $query->whereHas('publicUser', function ($q) use ($name) {
-                $q->where('fullname', 'like', '%' . $name . '%');
+            $query->whereHas('publicUser', function ($q) use ($request) {
+                $q->where('fullname', 'like', '%' . $request->input('name') . '%');
             });
         }
-
-        // Date range filter on the approval record itself
         if ($request->filled('start_date')) {
-            $startDate = $request->input('start_date');
-            $query->whereDate('created_at', '>=', $startDate);
+            $query->whereDate('created_at', '>=', $request->input('start_date'));
         }
-
         if ($request->filled('end_date')) {
-            $endDate = $request->input('end_date');
-            $query->whereDate('created_at', '<=', $endDate);
+            $query->whereDate('created_at', '<=', $request->input('end_date'));
         }
-
-        \Log::info('Verification List Data Query Result Count: ' . $query->count());
 
         return DataTables::of($query)
             ->addColumn('fullname', function ($approved) {
@@ -262,26 +263,74 @@ class UserController extends Controller
             ->addColumn('email', function ($approved) {
                 return $approved->publicUser->email ?? '';
             })
-            ->addColumn('verification_attachment', function ($approved) {
-                // Get the latest attachment for this user (already filtered to identification documents)
-                $attachment = $approved->userAttachments()->latest()->first();
-                if ($attachment) {
-                    return '<button class="btn btn-sm btn-info view-attachment" data-id="' . $approved->user_id . '"><i class="ti ti-file-description"></i> View Attachment</button>';
+            // ─── Overall status badge ──────────────────────────────
+            ->addColumn('status_badge', function ($approved) {
+                $user = $approved->publicUser;
+                if (!$user) return '<span class="badge bg-secondary">No user</span>';
+
+                $latest = $user->attachments()->latest()->first();
+                if (!$latest) return '<span class="badge bg-secondary">No files</span>';
+
+                if ($latest->rejected_reason) {
+                    return '<span class="badge bg-danger">Rejected</span>';
                 }
-                return '-';
+                if ($latest->is_read) {
+                    if ($latest->valid_until && now()->greaterThan($latest->valid_until)) {
+                        return '<span class="badge bg-warning text-dark">Expired</span>';
+                    }
+                    return '<span class="badge bg-success">Verified</span>';
+                }
+                return '<span class="badge bg-info">Pending Review</span>';
             })
+            // ─── Document type buttons + View All ──────────────────
+            ->addColumn('documents', function ($approved) use ($docTypes) {
+                $user = $approved->publicUser;
+                $attachments = $user ? $user->attachments : collect();
+
+                $html = '<div class="d-flex flex-wrap gap-1" style="max-width:450px;">';
+
+                // Buttons for each required document type
+                foreach ($docTypes as $type) {
+                    $has = $attachments->contains('document_type', $type);
+                    if ($has) {
+                        $short = strlen($type) > 25 ? substr($type, 0, 22) . '…' : $type;
+                        $html .= '<button class="btn btn-sm btn-outline-primary view-doc-type" 
+                                data-id="' . $approved->user_id . '" 
+                                data-doc-type="' . htmlspecialchars($type) . '"
+                                title="' . htmlspecialchars($type) . '"
+                                style="font-size:0.7rem; padding:2px 6px;">
+                                ' . htmlspecialchars($short) . '
+                              </button>';
+                    } else {
+                        // Show a grey cross for missing types
+                        $html .= '<span class="badge bg-light text-muted" title="Not uploaded" style="font-size:0.7rem;">✕</span>';
+                    }
+                }
+
+                // "View All" button (always shown if there is at least one attachment)
+                if ($attachments->count() > 0) {
+                    $html .= '<button class="btn btn-sm btn-secondary view-attachment" 
+                            data-id="' . $approved->user_id . '"
+                            style="font-size:0.7rem; padding:2px 8px;">
+                            <i class="ti ti-file-description"></i> All
+                          </button>';
+                }
+
+                $html .= '</div>';
+                return $html;
+            })
+            // ─── Accept / Reject ────────────────────────────────────
             ->addColumn('action', function ($approved) {
                 return '
                 <div class="d-flex gap-2">
-                     <button class="btn btn-sm btn-success accept-btn" data-id="' . $approved->user_id . '">Accept</button>
-                     <button class="btn btn-sm btn-danger reject-btn" data-id="' . $approved->user_id . '">Reject</button>
+                    <button class="btn btn-sm btn-success accept-btn" data-id="' . $approved->user_id . '">Accept</button>
+                    <button class="btn btn-sm btn-danger reject-btn" data-id="' . $approved->user_id . '">Reject</button>
                 </div>
             ';
             })
-            ->rawColumns(['verification_attachment', 'action'])
+            ->rawColumns(['documents', 'status_badge', 'action'])
             ->make(true);
     }
-
     public function user_data($id)
     {
         if (auth()->user()->hasRole('boundary officer')) {
@@ -300,14 +349,12 @@ class UserController extends Controller
         $uuid = $request->input('uuid');
 
         if ($uuid) {
-            // dd($request->all());
             // UPDATE existing user
             $public = PublicUser::where('uuid', $uuid)->firstOrFail();
 
             $validated = $request->validate([
                 'fullname' => 'required|string|max:255',
                 'email' => 'required|email|unique:public_users,email,' . $public->id,
-                // 'password' => 'sometimes|min:8',
                 'no_ic' => 'required|unique:public_users,no_ic,' . $public->id,
                 'account_type' => 'required|in:individu,company',
                 'phone_number' => 'required|unique:public_users,phone_number,' . $public->id,
@@ -315,15 +362,42 @@ class UserController extends Controller
                 'postcode' => 'required',
                 'district' => 'required',
                 'state' => 'required',
+                // PIC fields (optional)
+                'pic_name.*' => 'nullable|string|max:255',
+                'pic_position.*' => 'nullable|string|max:255',
+                'pic_phone.*' => 'nullable|string|max:20',
             ]);
 
             try {
                 DB::beginTransaction();
 
+                // ─── Build Person In Charge ──────────────────────────────
+                $personInCharge = null;
+                if ($validated['account_type'] === 'company') {
+                    $picNames = $request->input('pic_name', []);
+                    $picPositions = $request->input('pic_position', []);
+                    $picPhones = $request->input('pic_phone', []);
+                    $pics = [];
+
+                    foreach ($picNames as $index => $name) {
+                        $name = trim($name);
+                        if (!empty($name) && isset($picPositions[$index]) && isset($picPhones[$index])) {
+                            $pics[] = [
+                                'name' => $name,
+                                'position' => trim($picPositions[$index]),
+                                'phone' => trim($picPhones[$index]),
+                            ];
+                        }
+                    }
+                    if (!empty($pics)) {
+                        $personInCharge = $pics;
+                    }
+                }
+
+                // ─── Update user ────────────────────────────────────────────
                 $public->update([
                     'fullname' => $validated['fullname'],
                     'email' => $validated['email'],
-                    // Only update password if provided
                     'password' => $request->filled('password') ? Hash::make($request->password) : $public->password,
                     'no_ic' => $validated['no_ic'],
                     'account_type' => $validated['account_type'],
@@ -334,22 +408,21 @@ class UserController extends Controller
                     'district' => $validated['district'],
                     'state' => $validated['state'],
                     'office_number' => $request->office_number,
+                    'person_in_charge' => $personInCharge,
                 ]);
 
                 DB::commit();
 
+                // ─── Events and notifications ──────────────────────────────
                 try {
                     event(new \App\Events\PublicUserEvent('Your profile has been updated', $public->uuid));
-
                     event(new \App\Events\PublicUserUpdatedForInternal('A public user updated their profile', $public->uuid));
                 } catch (\Exception $e) {
                     \Log::info('Failed to broadcast event: ' . $e->getMessage());
                 }
 
-                $users = InternalUser::all(); // or filter by role/guard
-
+                $users = InternalUser::all();
                 Notification::send($users, new UserNotification($public->fullname . ' account has been updated.', authUser()['user']->fullname, route('internal.public.list')));
-
                 Notification::send($public, new UserNotification('You update your account.', 'QIS', '/profile'));
 
                 return response()->json([
@@ -358,21 +431,16 @@ class UserController extends Controller
                 ]);
             } catch (\Exception $e) {
                 DB::rollBack();
-
-                return response()->json(
-                    [
-                        'message' => 'Update failed. Please try again.',
-                        'error' => $e->getMessage(),
-                    ],
-                    500,
-                );
+                return response()->json([
+                    'message' => 'Update failed. Please try again.',
+                    'error' => $e->getMessage(),
+                ], 500);
             }
         } else {
             // CREATE new user
             $validated = $request->validate([
                 'fullname' => 'required|string|max:255',
                 'email' => 'required|email|unique:public_users,email',
-                // 'password' => 'required|min:8',
                 'no_ic' => 'required|unique:public_users,no_ic',
                 'account_type' => 'required|in:individu,company',
                 'phone_number' => 'required|unique:public_users,phone_number',
@@ -380,11 +448,39 @@ class UserController extends Controller
                 'postcode' => 'required',
                 'district' => 'required',
                 'state' => 'required',
+                // PIC fields (optional)
+                'pic_name.*' => 'nullable|string|max:255',
+                'pic_position.*' => 'nullable|string|max:255',
+                'pic_phone.*' => 'nullable|string|max:20',
             ]);
 
             try {
                 DB::beginTransaction();
 
+                // ─── Build Person In Charge ──────────────────────────────
+                $personInCharge = null;
+                if ($validated['account_type'] === 'company') {
+                    $picNames = $request->input('pic_name', []);
+                    $picPositions = $request->input('pic_position', []);
+                    $picPhones = $request->input('pic_phone', []);
+                    $pics = [];
+
+                    foreach ($picNames as $index => $name) {
+                        $name = trim($name);
+                        if (!empty($name) && isset($picPositions[$index]) && isset($picPhones[$index])) {
+                            $pics[] = [
+                                'name' => $name,
+                                'position' => trim($picPositions[$index]),
+                                'phone' => trim($picPhones[$index]),
+                            ];
+                        }
+                    }
+                    if (!empty($pics)) {
+                        $personInCharge = $pics;
+                    }
+                }
+
+                // ─── Create user ────────────────────────────────────────────
                 $user = PublicUser::create([
                     'fullname' => $validated['fullname'],
                     'email' => $validated['email'],
@@ -397,20 +493,20 @@ class UserController extends Controller
                     'postcode' => $validated['postcode'],
                     'district' => $validated['district'],
                     'state' => $validated['state'],
+                    'person_in_charge' => $personInCharge,
                 ]);
 
                 DB::commit();
 
+                // ─── Events and notifications ──────────────────────────────
                 try {
                     event(new \App\Events\PublicUserUpdatedForInternal('A public user created an account', $user->uuid));
                 } catch (\Exception $e) {
                     \Log::info('Failed to broadcast event: ' . $e->getMessage());
                 }
 
-                $users = InternalUser::all(); // or filter by role/guard
-
+                $users = InternalUser::all();
                 Notification::send($users, new UserNotification($user->fullname . ' account has been created.', authUser()['user']->fullname, route('internal.public.list')));
-
                 Notification::send($user, new UserNotification('You created an account.', 'QIS', '#'));
                 Notification::send($user, new UserNotification('Upload your verification ID.', 'QIS', '/profile'));
 
@@ -420,14 +516,10 @@ class UserController extends Controller
                 ]);
             } catch (\Exception $e) {
                 DB::rollBack();
-
-                return response()->json(
-                    [
-                        'message' => 'Registration failed. Please try again.',
-                        'error' => $e->getMessage(),
-                    ],
-                    500,
-                );
+                return response()->json([
+                    'message' => 'Registration failed. Please try again.',
+                    'error' => $e->getMessage(),
+                ], 500);
             }
         }
     }
@@ -823,89 +915,22 @@ class UserController extends Controller
         ]);
     }
 
-    // public function uploadVerificationAttachment(Request $request, $id)
-    // {
-    //     // $userId = $request->input('user_id');
-    //     $userId = $id ?? $request->input('user_id');
-
-    //     if (!$userId) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'User ID is required.',
-    //         ], 400);
-    //     }
-
-    //     DB::beginTransaction();
-
-    //     try {
-    //         $verification = ApprovedPublic::where('user_id', $userId)->first();
-
-    //         // Create a new record if it doesn't exist yet
-    //         if (!$verification) {
-    //             $verification = new ApprovedPublic();
-    //             $verification->user_id = $userId;
-    //         }
-
-    //         if ($request->hasFile('attachment')) {
-    //             // Delete old file if it exists
-    //             if ($verification->verification_attachment && file_exists(public_path($verification->verification_attachment))) {
-    //                 unlink(public_path($verification->verification_attachment));
-    //             }
-
-    //             $file = $request->file('attachment');
-
-    //             // Make sure the directory exists
-    //             $destinationPath = public_path('storage/app/public/verifications');
-    //             if (!file_exists($destinationPath)) {
-    //                 mkdir($destinationPath, 0755, true);
-    //             }
-
-    //             $filename = time() . '_' . $file->getClientOriginalName();
-    //             $file->move($destinationPath, $filename);
-
-    //             // Save relative path for database
-    //             $verification->verification_attachment = 'storage/app/public/verifications/' . $filename;
-    //         }
-
-    //         $verification->status = 'waiting for approval';
-
-    //         $verification->save();
-
-    //         DB::commit();
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'file_url' => $verification->verification_attachment,
-    //             'message' => 'File uploaded successfully.',
-    //         ]);
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-
-    //         Log::error('Verification upload failed: ' . $e->getMessage());
-
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'An error occurred while uploading the file.',
-    //             'error' => $e->getMessage(),
-    //         ], 500);
-    //     }
-    // }
 
     public function uploadVerificationAttachment(Request $request, VerificationService $verificationService)
     {
         // dd('upload');
         $userId = $request->user_id ?? auth('public')->user()->uuid;
-        
+
         $filesByDocId = $request->file('attachment', []);
         $documentTypes = $request->input('document_type', []);
         $validFrom = $request->input('valid_from', []);
         $validUntil = $request->input('valid_until', []);
 
         $result = $verificationService->uploadVerificationAttachment(
-            $userId, 
-            $filesByDocId, 
-            $documentTypes, 
-            $validFrom, 
+            $userId,
+            $filesByDocId,
+            $documentTypes,
+            $validFrom,
             $validUntil
         );
 
@@ -961,7 +986,8 @@ class UserController extends Controller
 
         \Log::info("Fetching verification for user: {$id}");
 
-        $verification = ApprovedPublic::with(['publicUser', 'approver', 'userAttachments'])
+        // Get the verification record with publicUser
+        $verification = ApprovedPublic::with(['publicUser'])
             ->where('user_id', $id)
             ->first();
 
@@ -970,9 +996,116 @@ class UserController extends Controller
             return response()->json(['error' => 'Verification not found'], 404);
         }
 
-        return response()->json($verification);
+        // Get the user's attachments from the PublicUser model
+        $user = $verification->publicUser;
+        $attachments = $user ? $user->attachments : collect();
+
+        // ─── Build the grouped attachments ──────────────────────────────
+        $attachmentsGrouped = $attachments
+            ->groupBy('document_type')
+            ->map(function ($group, $documentType) {
+                return [
+                    'document_type' => $documentType,
+                    'attachments' => $group->map(function ($attachment) {
+                        return [
+                            'id'                  => $attachment->id,
+                            'file_path'           => $attachment->file_path,
+                            'file_type'           => $attachment->file_type,
+                            'file_size'           => $attachment->file_size,
+                            'original_file_name'  => $attachment->original_file_name,
+                            'valid_from'          => $attachment->valid_from,
+                            'valid_until'         => $attachment->valid_until,
+                            'is_read'             => $attachment->is_read,
+                            'rejected_reason'     => $attachment->rejected_reason,
+                            'created_at'          => $attachment->created_at,
+                        ];
+                    }),
+                ];
+            })
+            ->values(); // strip the keys (document_type is now a field)
+
+        // ─── Build the response ──────────────────────────────────────────
+        return response()->json([
+            'user' => $user ? [
+                'uuid'         => $user->uuid,
+                'fullname'     => $user->fullname,
+                'email'        => $user->email,
+                'phone_number' => $user->phone_number,
+                'account_type' => $user->account_type,
+                'no_ic'        => $user->no_ic,
+            ] : null,
+            'verification' => [
+                'id'           => $verification->id,
+                'user_id'      => $verification->user_id,
+                'doa_verified' => $verification->doa_verified,
+                'status'       => $verification->status,
+                'approved_by'  => $verification->approved_by,
+                'reason'       => $verification->reason,
+                'created_at'   => $verification->created_at,
+                'updated_at'   => $verification->updated_at,
+            ],
+            'attachments_grouped' => $attachmentsGrouped,
+            'attachments_count'   => $attachments->count(),
+        ]);
     }
 
+    private function updateUserVerificationStatus($userId)
+    {
+        $user = PublicUser::where('uuid', $userId)->firstOrFail();
+        $verification = ApprovedPublic::where('user_id', $userId)->firstOrFail();
+
+        // Get all required document types
+        $requiredTypes = DocumentRequirement::where('module', 'user')
+            ->where('is_required', true)
+            ->where('is_active', true)
+            ->pluck('name')
+            ->toArray();
+
+        // Get the user's attachments for those types
+        $attachments = UserAttachment::where('user_id', $userId)
+            ->whereIn('document_type', $requiredTypes)
+            ->get();
+
+        // Check if all required types are present, read, and not rejected
+        $allOk = true;
+        foreach ($requiredTypes as $type) {
+            $att = $attachments->firstWhere('document_type', $type);
+            if (!$att || !$att->is_read || $att->rejected_reason !== null) {
+                $allOk = false;
+                break;
+            }
+        }
+
+        if ($allOk && $attachments->count() === count($requiredTypes)) {
+            // All required attachments are read and accepted → verify the user
+            $verification->doa_verified = 1;
+            $verification->status = 'Verified and approved';
+            $verification->approved_by = authUser()['user']->uuid ?? null;
+            $verification->doa_approved_time = now();
+            $verification->reason = null;
+            $verification->save();
+
+            $user->doa_verified = 1;
+            $user->save();
+
+            return true;
+        }
+
+        // If not all read, ensure the user is NOT verified
+        if ($user->doa_verified == 1) {
+            $verification->doa_verified = 0;
+            $verification->status = 'Pending';
+            $verification->save();
+            $user->doa_verified = 0;
+            $user->save();
+        }
+
+        return false;
+    }
+
+    /**
+     * Bulk accept/reject all required attachments.
+     */
     public function save_attachment($id, Request $request)
     {
         if (auth()->user()->hasRole('boundary officer')) {
@@ -981,53 +1114,58 @@ class UserController extends Controller
 
         $internal = authUser()['user'];
 
-        //  dd('requesr', $request->all(), ' id', $id);
-
         DB::beginTransaction();
 
         try {
-            // 🔹 Fetch related records
-            $verification = ApprovedPublic::with(['publicUser', 'approver'])
-                ->where('user_id', $id)
-                ->firstOrFail();
-
             $user = PublicUser::where('uuid', $id)->firstOrFail();
+            $verification = ApprovedPublic::where('user_id', $id)->firstOrFail();
 
-            $isApproved = 0;
+            $requiredTypes = DocumentRequirement::where('module', 'user')
+                ->where('is_required', true)
+                ->where('is_active', true)
+                ->pluck('name')
+                ->toArray();
 
-            // 🔹 Update based on approval type
             if ($request->input('approved') === 'yes') {
-                $verification->doa_verified = 1;
-                $user->doa_verified = 1;
-                $verification->doa_approved_time = now();
-                $verification->approved_by = $internal->uuid;
-                $verification->status = 'Verified and approved';
-                $verification->reason = null;
+                // Bulk accept: mark all required attachments as read
+                UserAttachment::where('user_id', $user->uuid)
+                    ->whereIn('document_type', $requiredTypes)
+                    ->update([
+                        'is_read' => true,
+                        'rejected_reason' => null,
+                    ]);
+
+                // Re-evaluate verification status
+                $this->updateUserVerificationStatus($user->uuid);
 
                 $isApproved = 1;
+                $message = 'All required attachments accepted and user verified.';
             } else {
-                // dd('requesr', $request->all());
-                $verification->doa_verified = 0;
-                $user->doa_verified = 0;
-                $verification->doa_approved_time = now();
-                $verification->approved_by = $internal->uuid;
-                $verification->status = 'Verification is rejected';
-                $verification->reason = $request->input('reason');
+                // Bulk reject: mark all required attachments as rejected
+                $reason = $request->input('reason', 'Rejected by admin');
+
+                UserAttachment::where('user_id', $user->uuid)
+                    ->whereIn('document_type', $requiredTypes)
+                    ->update([
+                        'is_read' => true,
+                        'rejected_reason' => $reason,
+                    ]);
+
+                // This will set doa_verified = 0 if any rejected
+                $this->updateUserVerificationStatus($user->uuid);
+
+                $isApproved = 0;
+                $message = 'All required attachments rejected.';
             }
 
-            // 🔹 Save both models
-            $verification->save();
-            $user->save();
-
-            // 🔹 Commit if all good
             DB::commit();
 
+            // Notifications and events
             try {
                 event(new InternalUserAdminEvent($isApproved ? $user->fullname . ' account is verified' : $user->fullname . ' account verification is rejected'));
-
                 event(new PublicUserEvent($isApproved ? 'Your Account is verified by DOA' : 'Your Account is not verified by DOA', $user->uuid));
             } catch (\Exception $e) {
-                \Log::info('Failed to broadcast event: ' . $e->getMessage());
+                Log::info('Failed to broadcast event: ' . $e->getMessage());
             }
 
             $users = InternalUser::role(['admin', 'superadmin'])->get();
@@ -1040,33 +1178,76 @@ class UserController extends Controller
                 ->performedOn($user)
                 ->causedBy(authUser()['user'])
                 ->log($isApproved ? "{$user->fullname} was verified by " . authUser()['user']['fullname'] : "{$user->fullname}'s verification is rejected by " . authUser()['user']['fullname']);
-            $user->notify(new ApplicationNotification($isApproved ? 'Your account is verified' : 'Your account verification is rejected', 'QIS', '/profile'));
 
+            $user->notify(new ApplicationNotification($isApproved ? 'Your account is verified' : 'Your account verification is rejected', 'QIS', '/profile'));
             if ($isApproved) {
                 $user->notify(new ApplicationNotification('Start apply new application', 'QIS', '/public/new_application'));
             }
 
-            return response()->json(
-                [
-                    'success' => true,
-                    'message' => $request->input('approved') === 'yes' ? 'User successfully verified.' : 'User verification has been rejected.',
-                ],
-                200,
-            );
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+            ]);
         } catch (\Exception $e) {
-            // 🔹 Rollback on failure
             DB::rollBack();
-
             Log::error('Verification update failed: ' . $e->getMessage());
-
-            return response()->json(
-                [
-                    'success' => false,
-                    'message' => 'An error occurred while saving verification status.',
-                    'error' => $e->getMessage(),
-                ],
-                500,
-            );
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while saving verification status.',
+                'error' => $e->getMessage(),
+            ], 500);
         }
+    }
+
+    /**
+     * Accept a single attachment.
+     */
+    public function acceptAttachment($attachmentId)
+    {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
+
+        $attachment = UserAttachment::findOrFail($attachmentId);
+        $attachment->is_read = true;
+        $attachment->rejected_reason = null;
+        $attachment->save();
+
+        // Re-evaluate the user's overall verification status
+        $this->updateUserVerificationStatus($attachment->user_id);
+
+        // Optional: notifications? maybe not needed for individual actions.
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Attachment accepted.',
+        ]);
+    }
+
+    /**
+     * Reject a single attachment.
+     */
+    public function rejectAttachment($attachmentId, Request $request)
+    {
+        if (auth()->user()->hasRole('boundary officer')) {
+            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        }
+
+        $request->validate([
+            'reason' => 'required|string|max:500',
+        ]);
+
+        $attachment = UserAttachment::findOrFail($attachmentId);
+        $attachment->is_read = true;
+        $attachment->rejected_reason = $request->input('reason');
+        $attachment->save();
+
+        // Re-evaluate – user will not be verified because of rejection reason
+        $this->updateUserVerificationStatus($attachment->user_id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Attachment rejected.',
+        ]);
     }
 }

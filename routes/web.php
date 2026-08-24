@@ -232,7 +232,9 @@ Route::prefix('internal')
 
         Route::get('/verification/{id}', [UserController::class, 'verification_attachment']);
         Route::post('/verification/{id}/save', [UserController::class, 'save_attachment']);
-
+        Route::post('/verification/attachment/{attachmentId}/accept', [UserController::class, 'acceptAttachment']);
+        Route::post('/verification/attachment/{attachmentId}/reject', [UserController::class, 'rejectAttachment']);
+        
         Route::get('/roles', [RoleAndPermissionController::class, 'role'])->name('internal.role');
         Route::get('/roles/list/data', [RoleAndPermissionController::class, 'role_list_data']);
         Route::post('/roles/update', [RoleAndPermissionController::class, 'update_role']);

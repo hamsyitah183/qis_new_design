@@ -174,7 +174,7 @@
 
                 <div class="ipv-action-row">
                     @if ($isInternal && auth()->guard('internal')->user()->can('print permit'))
-                        <button type="button" class="ipv-btn-primary" id="ipvPrintPermitBtn">
+                        <button type="button" class="ipv-btn-primary d-none" id="ipvPrintPermitBtn">
                             <i class="bi bi-printer"></i> <span data-en="Print Permit" data-bm="Cetak Permit">Print
                                 Permit</span>
                         </button>
@@ -183,7 +183,7 @@
                         <i class="bi bi-download"></i> 0
                     </span>
                     <div class="schedule">
-                        <button type="button" class="ipv-icon-btn" id="scheduleBtn" title="Schedule inspection">
+                        <button type="button" class="ipv-icon-btn d-none" id="scheduleBtn" title="Schedule inspection">
                             <i class="bi bi-calendar3"></i>
                         </button>
                         <div class="ipv-cal-popover" id="ipvSchedulePopover">

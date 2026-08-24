@@ -102,7 +102,7 @@
                                                     aria-controls="permission-list-tab-pane" aria-selected="false" tabindex="-1" data-en="Permission List" data-bm="Senarai Kebenaran">Permission List</button>
                                             </li>
 
-                                            <li class="nav-item" role="presentation">
+                                            <li class="nav-item d-none" role="presentation">
                                                 <button class="nav-link w-100 text-start" id="vehicle-list-tab" data-bs-toggle="tab"
                                                     data-bs-target="#vehicle-list-tab-pane" type="button" role="tab"
                                                     aria-controls="vehicle-list-tab-pane" aria-selected="false" tabindex="-1" data-en="Vehicle List" data-bm="Senarai Kenderaan">Vehicle List</button>

@@ -25,18 +25,6 @@ class DocumentRequirementSeeder extends Seeder
             ]
         );
 
-        DocumentRequirement::updateOrCreate(
-            [
-                'module' => 'user',
-                'name' => 'myGAP Certificate (Malaysian Good Agricultural Practices)',
-            ],
-            [
-                'description' => 'Sijil myGAP (Amalan Pertanian Baik Malaysia)',
-                'is_required' => true,
-                'requires_expiry' => false,
-                'is_active' => true,
-            ]
-        );
 
         DocumentRequirement::updateOrCreate(
             [

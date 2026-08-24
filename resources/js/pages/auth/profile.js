@@ -10,7 +10,6 @@ import "select2/dist/css/select2.min.css";
 
 let user = null;
 
-
 // ---- Separate fetch function ----
 export async function fetchUserData() {
     const response = await $.ajax({
@@ -23,12 +22,64 @@ export async function fetchUserData() {
     return response; // { user: {...}, type: 'public'|'internal' }
 }
 
+// ---- Helper: escape HTML to prevent XSS ----
+function escapeHtml(unsafe) {
+    if (!unsafe) return "";
+    return unsafe.replace(/[&<>"]/g, function (m) {
+        if (m === "&") return "&amp;";
+        if (m === "<") return "&lt;";
+        if (m === ">") return "&gt;";
+        if (m === '"') return "&quot;";
+        return m;
+    });
+}
+
+// ---- PIC edit row management ----
+let editPicRowCount = 0;
+
+function addEditPICRow(name = "", position = "", phone = "") {
+    const container = document.getElementById("editPicContainer");
+    const emptyEl = document.getElementById("editPicEmpty");
+    if (!container) return;
+
+    const row = document.createElement("div");
+    row.className = "row g-3 align-items-end pic-row mb-2";
+    row.dataset.index = editPicRowCount++;
+    row.innerHTML = `
+        <div class="col-4">
+            <label class="form-label" data-en="Name" data-bm="Nama">Name</label>
+            <input type="text" class="form-control form-control-sm" name="pic_name[]" value="${escapeHtml(name)}" placeholder="e.g. Ahmad Bin Ali">
+        </div>
+        <div class="col-3">
+            <label class="form-label" data-en="Position" data-bm="Jawatan">Position</label>
+            <input type="text" class="form-control form-control-sm" name="pic_position[]" value="${escapeHtml(position)}" placeholder="Manager">
+        </div>
+        <div class="col-3">
+            <label class="form-label" data-en="Phone" data-bm="Telefon">Phone</label>
+            <input type="text" class="form-control form-control-sm" name="pic_phone[]" value="${escapeHtml(phone)}" placeholder="0123456789">
+        </div>
+        <div class="col-2 text-end">
+            <button type="button" class="btn btn-sm btn-danger-light remove-edit-pic-row" data-en="Remove" data-bm="Buang">
+                <i class="ti ti-x"></i>
+            </button>
+        </div>
+    `;
+    container.insertBefore(row, emptyEl);
+    emptyEl.style.display = "none";
+
+    if (typeof applyTranslations === "function") {
+        applyTranslations(row);
+    }
+}
+
 // ---- Updated loadProfile ----
 export async function loadProfile() {
     $(".uploadAgain").hide();
     console.log("call the load profile function");
-    
-    const allInputs = document.querySelectorAll("input, select, button, textarea");
+
+    const allInputs = document.querySelectorAll(
+        "input, select, button, textarea",
+    );
     allInputs.forEach((el) => (el.disabled = true));
 
     Swal.fire({
@@ -39,7 +90,7 @@ export async function loadProfile() {
     });
 
     try {
-        const response = await fetchUserData(); 
+        const response = await fetchUserData();
 
         user = response.user;
         user["type"] = response.type;
@@ -94,17 +145,6 @@ function fillTheData(user, type) {
     $(".address_2").val(user.address_2);
     $(".office_number").val(user.office_number);
     $(".state").val(user.state);
-    // Fetch districts if state is selected
-    // if (user.state) {
-    //     fetchDistricts(user.state, user.district, (resolvedDistrictId) => {
-    //         if (resolvedDistrictId) {
-    //             fetchPostcodes(resolvedDistrictId, user.postcode);
-    //         }
-    //     });
-    // }
-
-    // $(".district").val(user.district);
-    //$(".state").val(user.state);
     $("#account_type").val(user.account_type);
 
     if (type === "internal") {
@@ -112,139 +152,59 @@ function fillTheData(user, type) {
         $(".ic").prop("readonly", true);
     }
 
-    // if (type === "public") {
-    //     const approved = user.approved ?? {}; // ✅ Fallback to empty object
-    //     const attachments = user.attachments ?? []; // ✅ New: multiple documents
-
-    //     // 🔹 Handle DOA verification badge
-    //     let badgeVerification = `<span class="badge bg-dark-transparent ms-1" title="Not verified by DOA">
-    //             Not Verified by DOA
-    //         </span>`;
-    //     if (approved.doa_verified) {
-    //         badgeVerification = `
-    //         <span class="badge bg-success-transparent ms-1" title="Verified by DOA">
-    //             Verified by DOA
-    //         </span>`;
-    //     } else {
-    //         badgeVerification = `
-    //         <span class="badge bg-dark-transparent ms-1" title="Not verified by DOA">
-    //             Not Verified by DOA
-    //         </span>`;
-    //     }
-
-    //     // 🔹 Handle attachments (now a list, one per document type)
-    //     const container = $("#imgLink");
-    //     container.empty();
-
-    //     if (attachments.length > 0) {
-    //         attachments.forEach((attachment) => {
-    //             const fileUrl = attachment.file_path
-    //                 ? `/${attachment.file_path}`.replace("//", "/")
-    //                 : (attachment.file_url ?? null);
-    //             const ext = (attachment.original_file_name || fileUrl || "")
-    //                 .split(".")
-    //                 .pop()
-    //                 .toLowerCase();
-    //             const iconClass =
-    //                 ext === "pdf" ? "ti ti-file-type-pdf" : "ti ti-photo";
-    //             const validUntil = attachment.valid_until
-    //                 ? `<div class="text-muted fs-11">Valid until: ${formatTime(
-    //                       attachment.valid_until,
-    //                   )}</div>`
-    //                 : "";
-
-    //             container.append(`
-    //                 <div class="attachment-list-item d-flex align-items-center gap-2 border rounded-3 p-2 mb-2">
-    //                     <i class="${iconClass} fs-20 text-primary flex-shrink-0"></i>
-    //                     <div class="flex-grow-1 min-w-0">
-    //                         <div class="fw-semibold fs-13 text-truncate">
-    //                             ${attachment.document_type ?? "Document"}
-    //                         </div>
-    //                         <div class="text-muted fs-11 text-truncate">
-    //                             ${attachment.original_file_name ?? ""}
-    //                         </div>
-    //                         ${validUntil}
-    //                     </div>
-    //                     ${
-    //                         fileUrl
-    //                             ? `<a href="${fileUrl}" target="_blank" rel="noopener" class="btn btn-sm btn-icon btn-primary-light flex-shrink-0" title="View">
-    //                                 <i class="ti ti-eye"></i>
-    //                                </a>`
-    //                             : ""
-    //                     }
-    //                 </div>
-    //             `);
-    //         });
-
-    //         $(".hasImage").css("display", "block");
-    //         $(".hasNoImage").css("display", "none");
-
-    //         if (approved.status?.toLowerCase().includes("rejected")) {
-    //             $(".rejectedBtn").html(`
-    //                 <div class = "btn btn-sm btn-warning uploadAgain">
-    //                     Upload Again
-    //                 </div>
-    //             `);
-    //         }
-    //     } else {
-    //         container.append("<p>No attachment uploaded yet.</p>");
-    //         $(".hasImage").css("display", "none");
-    //         $(".hasNoImage").css("display", "block");
-    //     }
-
-    //     // 🔹 Dates and approver info
-    //     $(".submittedVerification").text(
-    //         approved.updated_at ? formatTime(approved.updated_at) : "N/A",
-    //     );
-
-    //     $(".approvedBy").text(approved.approver?.fullname ?? "N/A");
-
-    //     $(".approvedDate").text(
-    //         approved.doa_approved_time
-    //             ? `on (${formatTime(approved.doa_approved_time)})`
-    //             : "",
-    //     );
-
-    //     // 🔹 Status display
-    //     let statusText = "";
-    //     let reason = "";
-
-    //     if (approved.status?.toLowerCase().includes("waiting")) {
-    //         statusText = `
-    //         <div class="alert alert-warning" role="alert">
-    //             <i class="ti ti-alert-circle me-2 fs-16"></i>
-    //             ${approved.status}
-    //         </div>`;
-    //     } else if (approved.status?.toLowerCase().includes("approved")) {
-    //         statusText = `
-    //         <div class="alert alert-success" role="alert">
-    //             <i class="ti ti-rosette-discount-check me-2 fs-16"></i>
-    //             ${approved.status}
-    //         </div>`;
-    //     } else if (approved.status?.toLowerCase().includes("rejected")) {
-    //         statusText = `
-    //         <div class="alert alert-danger" role="alert">
-    //             <i class="ti ti-rosette-discount-x me-2 fs-16"></i>
-    //             ${approved.status}
-    //         </div>`;
-
-    //         reason = `
-    //             <div class = "me-2 mt-2 border rounded-3 p-3">
-    //             <span class = "fw-bold">Reason: </span>
-    //             <span class = "text-muted">${approved.reason}</span>
-    //            </div>`;
-    //     } else {
-    //         statusText = `
-    //         <div class="alert alert-secondary" role="alert">
-    //             No verification status available.
-    //         </div>`;
-    //     }
-
-    //     $(".status").html(statusText);
-    //     $(".reason").html(reason);
-    // }
-
     $(".mainFullName").html(badgeVerification);
+
+    // ─── Persons In Charge (display) ─────────────────────────
+    // ─── Persons In Charge (display) ─────────────────────────
+    const picListBody = document.getElementById("profilePicListBody");
+    if (picListBody) {
+        picListBody.innerHTML = "";
+        if (
+            user.account_type === "company" &&
+            user.person_in_charge &&
+            user.person_in_charge.length
+        ) {
+            user.person_in_charge.forEach((pic) => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                <td>${escapeHtml(pic.name)}</td>
+                <td>${escapeHtml(pic.position)}</td>
+                <td>${escapeHtml(pic.phone)}</td>
+            `;
+                picListBody.appendChild(tr);
+            });
+        } else {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+            <td colspan="3" class="text-center text-muted" data-en="No persons in charge" data-bm="Tiada orang bertanggungjawab">
+                No persons in charge
+            </td>
+        `;
+            picListBody.appendChild(tr);
+        }
+    }
+
+    // ─── Persons In Charge (edit rows) ──────────────────────
+    const editContainer = document.getElementById("editPicContainer");
+    const editEmpty = document.getElementById("editPicEmpty");
+    if (editContainer) {
+        // Clear existing rows (keep empty placeholder)
+        editContainer.querySelectorAll(".pic-row").forEach((el) => el.remove());
+        editPicRowCount = 0;
+
+        if (
+            user.account_type === "company" &&
+            user.person_in_charge &&
+            user.person_in_charge.length
+        ) {
+            user.person_in_charge.forEach((pic) => {
+                addEditPICRow(pic.name, pic.position, pic.phone);
+            });
+            if (editEmpty) editEmpty.style.display = "none";
+        } else {
+            if (editEmpty) editEmpty.style.display = "block";
+        }
+    }
 }
 
 async function initAddressDropdowns(user) {
@@ -259,7 +219,6 @@ async function initAddressDropdowns(user) {
     });
 
     try {
-        // ✅ Await so errors are catchable
         await loadStates(user);
     } catch (error) {
         console.error("Failed to load address dropdowns:", error);
@@ -272,7 +231,6 @@ async function initAddressDropdowns(user) {
         return;
     }
 
-    // ✅ Close only after everything succeeds
     Swal.close();
 }
 
@@ -293,7 +251,6 @@ async function loadStates(user) {
         }
     });
 
-    // ✅ FORCE value selection
     if (selectedStateId) {
         stateSelect.val(selectedStateId).trigger("change");
         loadDistricts(selectedStateId, user);
@@ -338,20 +295,15 @@ async function loadPostcodes(districtId, user) {
         postcodeSelect.append(`<option value="${p.value}">${p.value}</option>`);
     });
 
-    // ✅ Force selection
     if (user.postcode) {
         postcodeSelect.val(user.postcode).trigger("change");
     }
 }
 
 $(document).on("click", ".uploadAgain", function () {
-    // Hide the container showing existing image
     $(".hasImage").css("display", "none");
-
-    // Show the container for uploading new image
     $(".hasNoImage").css("display", "block");
 
-    // Optional: clear the previous Dropzone files if needed
     if (typeof verificationDropzone !== "undefined") {
         verificationDropzone.removeAllFiles(true);
     }
@@ -449,7 +401,6 @@ function editProfile() {
                 });
             };
 
-            // Email changed?
             if (user.email.trim() !== newEmail && user.type == "public") {
                 Swal.fire({
                     icon: "info",
@@ -470,9 +421,7 @@ function editProfile() {
 
 function formatTime(timestamp) {
     const utcDate = new Date(timestamp);
-
-    // Malaysia Time (UTC+8)
-    const malaysiaOffset = 8 * 60; // minutes
+    const malaysiaOffset = 8 * 60;
     const localTime = new Date(utcDate.getTime() + malaysiaOffset * 60 * 1000);
 
     const options = {
@@ -513,9 +462,6 @@ function changePassword() {
             allInputs.prop("disabled", true);
             $form.find(".is-invalid").removeClass("is-invalid");
             $form.find(".invalid-feedback").remove();
-
-            // $(".type").val(type);
-            // $(".uuid").val(user.uuid);
 
             const submitForm = () => {
                 Swal.fire({
@@ -602,18 +548,29 @@ export async function publicUserAddUpdate(user) {
     }, 100);
 }
 
-
-
-
+// ---- Document ready ----
 $(document).ready(function () {
-    // load profile on page load
     loadProfile();
     editProfile();
     changePassword();
 
-    
+    // ─── Edit PIC: Add button ──────────────────────────────
+    $(document).on("click", "#editAddPICBtn", function (e) {
+        e.preventDefault();
+        addEditPICRow();
+    });
 
-    // State change event listener
+    // ─── Edit PIC: Remove button ───────────────────────────
+    $(document).on("click", ".remove-edit-pic-row", function (e) {
+        e.preventDefault();
+        const row = $(this).closest(".pic-row");
+        row.remove();
+        if ($("#editPicContainer .pic-row").length === 0) {
+            $("#editPicEmpty").show();
+        }
+    });
+
+    // State change event listeners
     $(document).on("change", ".state", function () {
         const stateId = $(this).val();
         fetchDistricts(stateId);
@@ -623,9 +580,9 @@ $(document).ready(function () {
         const districtId = $(this).val();
         fetchPostcodes(districtId);
     });
-    // publicUserAddUpdate(user);
 });
 
+// ---- Address dropdown helpers ----
 function fetchDistricts(stateId, selectedDistrict = null, callback = null) {
     const $district = $(".district");
     $district.html('<option value="">Loading...</option>');
@@ -713,17 +670,14 @@ $(document).on("click", ".doc-row-toggle", function () {
     const $panel = $(`.doc-panel[data-doc-id="${docId}"]`);
 
     if (isExpanded) {
-        // Collapse
         $(this).attr("aria-expanded", "false");
         $panel.addClass("d-none");
     } else {
-        // Expand
         $(this).attr("aria-expanded", "true");
         $panel.removeClass("d-none");
     }
 });
 
-// Delete attachment
 $(document).on("click", ".delete-attachment", function (e) {
     e.preventDefault();
     const attachmentId = $(this).data("attachment-id");
@@ -743,7 +697,9 @@ $(document).on("click", ".delete-attachment", function (e) {
                 url: `/attachments/${attachmentId}`,
                 type: "DELETE",
                 headers: {
-                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
+                        "content",
+                    ),
                     Accept: "application/json",
                 },
                 success: function (response) {
@@ -756,7 +712,6 @@ $(document).on("click", ".delete-attachment", function (e) {
                             showConfirmButton: false,
                             timer: 1200,
                         });
-                        // Reload profile to refresh attachments list
                         setTimeout(() => loadProfile(), 1500);
                     });
                 },
@@ -764,7 +719,9 @@ $(document).on("click", ".delete-attachment", function (e) {
                     Swal.fire({
                         icon: "error",
                         title: "Error",
-                        text: xhr.responseJSON?.message || "Failed to delete document.",
+                        text:
+                            xhr.responseJSON?.message ||
+                            "Failed to delete document.",
                     });
                 },
             });

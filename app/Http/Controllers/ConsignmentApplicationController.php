@@ -14,8 +14,10 @@ use App\Models\ConsignmentCondition;
 use App\Models\ConsignmentImporter;
 use App\Models\PublicCode;
 use App\Models\Country;
+use App\Models\DocumentRequirement;
 use App\Models\InternalUser;
 use App\Models\PublicUser;
+use App\Models\UserAttachment;
 use App\Notifications\ApplicationNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,22 +30,82 @@ use Spatie\Activitylog\Models\Activity;
 
 class ConsignmentApplicationController extends Controller
 {
+    private function checkDocumentStatusAndReturnView()
+    {
+        $user = authUser()['user'];
+
+        // ✅ If the user is already DOA-verified, allow access without blocking
+        if ($user->doa_verified == 1) {
+            return null;
+        }
+
+        // Not verified – check required documents
+        $requirements = DocumentRequirement::where('module', 'user')
+            ->where('is_required', true)
+            ->where('is_active', true)
+            ->get();
+
+        $attachments = UserAttachment::where('user_id', $user->uuid)
+            ->get()
+            ->keyBy('document_type');
+
+        $docStatus = [];
+        foreach ($requirements as $req) {
+            $attachment = $attachments->get($req->name);
+            if ($attachment) {
+                if (!$attachment->is_read) {
+                    $status = 'pending';
+                } else {
+                    $isExpired = $req->requires_expiry && $attachment->valid_until && now()->greaterThan($attachment->valid_until);
+                    $status = $isExpired ? 'expired' : 'uploaded';
+                }
+            } else {
+                $status = 'missing';
+            }
+            $docStatus[] = [
+                'requirement' => $req,
+                'attachment' => $attachment,
+                'status' => $status,
+            ];
+        }
+
+        $anyMissing = collect($docStatus)->contains(fn($item) => $item['status'] === 'missing');
+        $anyExpired = collect($docStatus)->contains(fn($item) => $item['status'] === 'expired');
+
+        if ($anyMissing || $anyExpired) {
+            return view('pages.public.wait_for_verified', compact('docStatus'));
+        }
+
+        return null;
+    }
+    /**
+     * Consignment application for regular users.
+     */
     public function getView()
     {
-        if (authUser()['user']['doa_verified'] == 0) {
-            return view('pages.public.wait_for_verified');
+        $blockView = $this->checkDocumentStatusAndReturnView();
+        if ($blockView) {
+            return $blockView;
         }
+
+        // Proceed to consignment app
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();
         return view('pages.public.consignmentapp', compact('pubmeasure', 'pubpurpose', 'country'));
     }
 
+    /**
+     * Consignment application for "Other" (e.g., non‑standard) users.
+     */
     public function getViewOther()
     {
-        if (authUser()['user']['doa_verified'] == 0) {
-            return view('pages.public.wait_for_verified');
+        $blockView = $this->checkDocumentStatusAndReturnView();
+        if ($blockView) {
+            return $blockView;
         }
+
+        // Proceed to the "Other" consignment view
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();
@@ -293,50 +355,64 @@ class ConsignmentApplicationController extends Controller
             DB::commit();
 
             // ─── Notifications ──────────────────────────────────────────────
-            $users = InternalUser::permission('approve application')->get();
-            $notificationUrl = url('/view_consignment/' . $application->application_id);
-            $msgEn = $isDraft ? ($isNewApplication ? 'New consignment certificate draft created' : 'Consignment certificate draft updated') : ($isNewApplication ? 'New consignment certificate application submitted' : 'Consignment certificate application updated');
-            $msgBm = $isDraft ? ($isNewApplication ? 'Draf sijil konsainan baru dibuat' : 'Draf sijil konsainan dikemaskini') : ($isNewApplication ? 'Permohonan sijil konsainan baru dihantar' : 'Permohonan sijil konsainan dikemaskini');
-            
-            if (!$isDraft) {
-                Notification::send($users, new \App\Notifications\ApplicationSubmittedNotification(
-                    $msgEn,
-                    $msgBm,
-                    auth()->guard('public')->user()?->fullname ?? auth()->user()?->fullname ?? 'System',
-                    $notificationUrl,
-                    $application->application_id
-                ));
-            } else {
-                Notification::send($users, new ApplicationNotification(
-                    $msgEn,
-                    $msgBm,
-                    auth()->guard('public')->user()?->fullname ?? auth()->user()?->fullname ?? 'System',
-                    $notificationUrl
-                ));
-            }
+            // Wrapped in its own try/catch: everything above this point has
+            // already been committed to the database, so a mail/queue failure
+            // here must never roll back or be reported to the user as a save
+            // failure. Previously this block ran unprotected inside the outer
+            // try, so any exception thrown while dispatching/sending mail (bad
+            // MAIL_MAILER config, a queue connection issue, a null recipient
+            // email, etc.) fell through to the outer catch, called a no-op
+            // DB::rollBack() on an already-committed transaction, and returned
+            // a 500 "Failed to save application" response even though the
+            // application had, in fact, saved.
+            try {
+                $users = InternalUser::permission('approve application')->get();
+                $notificationUrl = url('/view_consignment/' . $application->application_id);
+                $msgEn = $isDraft ? ($isNewApplication ? 'New consignment certificate draft created' : 'Consignment certificate draft updated') : ($isNewApplication ? 'New consignment certificate application submitted' : 'Consignment certificate application updated');
+                $msgBm = $isDraft ? ($isNewApplication ? 'Draf sijil konsainan baru dibuat' : 'Draf sijil konsainan dikemaskini') : ($isNewApplication ? 'Permohonan sijil konsainan baru dihantar' : 'Permohonan sijil konsainan dikemaskini');
 
-            $publicUser = auth()->guard('public')->user();
-            if ($publicUser) {
-                $publicUser->notify(new ApplicationNotification(
-                    $isDraft ? 'Your consignment application with id ' . $application->application_id . ' is saved as draft' : 'Your consignment application with id ' . $application->application_id . ' is submitted',
-                    'QIS',
-                    $notificationUrl
-                ));
-            }
+                if (!$isDraft) {
+                    Notification::send($users, new \App\Notifications\ApplicationSubmittedNotification(
+                        $msgEn,
+                        $msgBm,
+                        auth()->guard('public')->user()?->fullname ?? auth()->user()?->fullname ?? 'System',
+                        $notificationUrl,
+                        $application->application_id
+                    ));
+                } else {
+                    Notification::send($users, new ApplicationNotification(
+                        $msgEn,
+                        $msgBm,
+                        auth()->guard('public')->user()?->fullname ?? auth()->user()?->fullname ?? 'System',
+                        $notificationUrl
+                    ));
+                }
 
-            if ($application->category_application == 1 && !$isDraft) {
-                $importer = ConsignmentImporter::find($application->importer_id);
-                if ($importer && $importer->registered_by) {
-                    $company = PublicUser::where('uuid', $importer->registered_by)->first();
-                    if ($company) {
-                        try {
-                            event(new InternalUserAdminEvent('Consignment certificate application requires company approval for ' . ($importer->name ?? 'Unknown Importer')));
-                        } catch (\Exception $e) {
-                            Log::warning('Pusher connection failed but continuing company approval notification: ' . $e->getMessage());
+                $publicUser = auth()->guard('public')->user();
+                if ($publicUser) {
+                    $publicUser->notify(new ApplicationNotification(
+                        $isDraft ? 'Your consignment application with id ' . $application->application_id . ' is saved as draft' : 'Your consignment application with id ' . $application->application_id . ' is submitted',
+                        'QIS',
+                        $notificationUrl
+                    ));
+                }
+
+                if ($application->category_application == 1 && !$isDraft) {
+                    $importer = ConsignmentImporter::find($application->importer_id);
+                    if ($importer && $importer->registered_by) {
+                        $company = PublicUser::where('uuid', $importer->registered_by)->first();
+                        if ($company) {
+                            try {
+                                event(new InternalUserAdminEvent('Consignment certificate application requires company approval for ' . ($importer->name ?? 'Unknown Importer')));
+                            } catch (\Exception $e) {
+                                Log::warning('Pusher connection failed but continuing company approval notification: ' . $e->getMessage());
+                            }
+                            $company->notify(new ApplicationNotification('A consignment certificate application requires your approval', 'System', $notificationUrl));
                         }
-                        $company->notify(new ApplicationNotification('A consignment certificate application requires your approval', 'System', $notificationUrl));
                     }
                 }
+            } catch (\Exception $e) {
+                Log::warning('Notification dispatch failed but continuing (application already saved): ' . $e->getMessage());
             }
 
             return response()->json([
@@ -355,7 +431,6 @@ class ConsignmentApplicationController extends Controller
             ], 500);
         }
     }
-
     public function saveDraft(Request $request)
     {
         DB::beginTransaction();

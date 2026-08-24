@@ -54,6 +54,7 @@ async function public_user_list() {
                     name: "doa_verified",
                     orderable: false,
                     searchable: false,
+                    visible: false,
                 },
                 {
                     data: "action",

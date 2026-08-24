@@ -28,15 +28,19 @@ import { loadProfile } from "../auth/profile";
 // ---------------------------------------------------------------
 
 const STAGE_ORDER = [
-    'submitted', 'doc_verification', 'technical_review',
-    'awaiting_payment', 'payment_processing', 'completed',
+    'submitted',
+    'doc_verification',
+    'officer_verification_completed',
+    'awaiting_payment',
+    'payment_processing',
+    'completed',
 ];
 
 export const STAGE_CONFIG = {
     submitted:           { en: 'Submitted',              bm: 'Dihantar',                  icon: 'bi-send-check',         color: 'info' },
     doc_verification:    { en: 'Clerk Review In-Progress', bm: 'Semakan Kerani Dalam Proses', icon: 'bi-file-earmark-check', color: 'secondary' },
     returned:            { en: 'Returned / Rejected',     bm: 'Dikembalikan / Ditolak',    icon: 'bi-arrow-return-left',  color: 'danger' },
-    technical_review:    { en: 'Clerk Verified',          bm: 'Disahkan Kerani',           icon: 'bi-clipboard-check',    color: 'primary' },
+    officer_verification_completed: { en: 'Officer Verified', bm: 'Disahkan Pegawai',        icon: 'bi-check-circle',       color: 'success' },
     awaiting_payment:    { en: 'Awaiting Payment',        bm: 'Menunggu Pembayaran',       icon: 'bi-hourglass-split',    color: 'warning' },
     payment_processing:  { en: 'Payment Processing',      bm: 'Proses Pengesahan Bayaran', icon: 'bi-credit-card',        color: 'orange' },
     completed:           { en: 'Completed',               bm: 'Selesai',                   icon: 'bi-check-circle',       color: 'success' },
@@ -58,13 +62,10 @@ export const PERMIT_STATUS_CONFIG = {
     queued:                   { en: 'Queued for Review',          bm: 'Dalam Proses Semakan', color: 'info' },
 };
 
-// [TODO] no confirmed fee schedule for Inspection permits — the legacy
-// stub just hardcoded a flat "RM 10.00" total. Confirm the real amount.
-export const INSPECTION_PERMIT_FEE = 10;
+// ─── Flat application fee (RM 10 for the whole application) ───
+export const INSPECTION_APPLICATION_FEE = 10;
 
 // Fixed string expected by /permit/print and /public/save-inspection/{id}
-// regardless of what application_type says in the payload — matches the
-// legacy inspection_detail.js exactly.
 export const INSPECTION_PRINT_TYPE = 'Inspection';
 
 function getLang() {
@@ -149,7 +150,7 @@ function deriveStageKey(status) {
     const s = (status || '').toLowerCase();
     if (s.includes('draft')) return 'submitted';
     if (s.includes('clerk review')) return 'doc_verification';
-    if (s.includes('clerk verified')) return 'technical_review';
+    if (s.includes('officer verification completed')) return 'officer_verification_completed';
     if (s.includes('completed')) return 'completed';
     if (s.includes('rejected') || s.includes('not approved')) return 'returned';
     if (s.includes('pending for payment')) return 'awaiting_payment';
@@ -157,8 +158,6 @@ function deriveStageKey(status) {
     return 'submitted';
 }
 
-// Self-import vs on-behalf tag, plus an importer_verify tag when present —
-// mirrors Import Permit's buildTags() but for Inspection's real fields.
 function buildTags(json) {
     const tags = [];
     const category = String(json.category_application ?? '');
@@ -182,10 +181,6 @@ function buildTags(json) {
 }
 
 function mapApplication(json) {
-    // Both `importer` and `importer_detail` came back as the SAME applicant
-    // object in the real payload (the self-import case) — importer_detail
-    // is used as the canonical source, matching how the rest of the app
-    // (e.g. importer_id) references it.
     const importer = json.importer_detail || json.importer || {};
     const exporter = json.exporter || json.user || {};
     const entryPoint = json.entry_point || {};
@@ -199,9 +194,6 @@ function mapApplication(json) {
         json.print_calc || 0;
 
     APPLICATION = {
-        // Payment flow posts the numeric PK (`id`), not the string
-        // `application_id` — kept distinct so payBulk() doesn't send the
-        // wrong value.
         id: json.id,
         application_id: json.application_id,
         application_type: json.application_type || 'Inspection Certificate',
@@ -220,9 +212,6 @@ function mapApplication(json) {
         entry_point_description: entryPoint.description || '',
         category_application: json.category_application,
         importer_verify: json.importer_verify || null,
-        // importer_id is a uuid (the applicant's PublicUser uuid); user_id
-        // matches it in the self-import case — either works as the owner
-        // check, user_id kept for parity with the other modules.
         user_id: json.user_id || json.user?.uuid || null,
         importer: {
             name: importer.fullname || importer.name || '—',
@@ -240,9 +229,6 @@ function mapApplication(json) {
                 .filter(Boolean).join(', ') || '—',
             country: exporterCountry.name || exporter.country || '—',
         },
-        // [TODO] not present in the sample payload — confirm the API
-        // actually returns an application-level attachments array before
-        // relying on the sidebar "Application Documents" section.
         attachments: (json.attachment || json.attachments || []).map(mapAttachment),
     };
 }
@@ -250,11 +236,7 @@ function mapApplication(json) {
 function mapPermits(json) {
     const permits = json.inspection_items || [];
     PERMITS = permits.map((permit) => {
-        const detail = permit.consignment_detail || {}; // field name kept as-is from the API
-
-        // Top-level quantity/purpose/value/unit_measurement are the
-        // correctly-typed source of truth (consignment_detail duplicates
-        // them as strings under different keys — measure vs unit_measurement).
+        const detail = permit.consignment_detail || {};
         const quantity = permit.quantity ?? detail.quantity ?? 0;
         const purpose = permit.purpose ?? detail.purpose ?? '—';
         const value = permit.value ?? detail.value ?? 0;
@@ -621,7 +603,7 @@ function renderHeaderInfo() {
     if (tagsEl) {
         tagsEl.innerHTML = (APPLICATION.tags || []).map((tag) => {
             const label = lang === 'bm' ? tag.label_bm : tag.label_en;
-            return `<span class="ipv-tag is-${tag.color}">${escapeHtml(label)}</span>`;
+            return `<span class="ipv-tag btn-primary is-${tag.color}">${escapeHtml(label)}</span>`;
         }).join('');
     }
 
@@ -787,9 +769,10 @@ function renderBulkActionBar() {
         return;
     }
 
+    // ─── Pay All – flat fee per application ────────────────────────
     if (isOwner && hasPendingPayment) {
         const pending = PERMITS.filter(p => ['pending for payment', 'payment failed'].includes(p.status));
-        const total = pending.length * INSPECTION_PERMIT_FEE;
+        const total = INSPECTION_APPLICATION_FEE; // flat fee
         wrap.style.display = '';
         wrap.innerHTML = `
             <div class="ipv-actions-bar-text">
@@ -798,7 +781,7 @@ function renderBulkActionBar() {
             </div>
             <div class="ipv-actions-bar-buttons">
                 <button type="button" class="ipv-btn-action is-warning pay-bulk" data-application="${APPLICATION.application_id}">
-                    <i class="bi bi-credit-card"></i> ${lang === 'bm' ? 'Bayar Semua' : 'Pay All'}
+                    <i class="bi bi-credit-card"></i> ${lang === 'bm' ? 'Bayar' : 'Pay'}
                 </button>
             </div>
         `;
@@ -994,7 +977,7 @@ function initAccordionToggle() {
 }
 
 // ---------------------------------------------------------------
-// Render: Pending Payment tab
+// Render: Pending Payment tab (flat fee per application)
 // ---------------------------------------------------------------
 
 function renderPendingPaymentTable() {
@@ -1013,27 +996,28 @@ function renderPendingPaymentTable() {
         return;
     }
 
+    // Show each permit with a dash in the fee column (since fee is flat per application)
     pending.forEach((permit) => {
         tableBody.append(`
             <tr>
                 <td>${escapeHtml(permit.permit_number)}</td>
                 <td class="text-wrap">${escapeHtml(permit.consignment_detail.item_name)}</td>
-                <td class="text-end">RM ${INSPECTION_PERMIT_FEE.toFixed(2)}</td>
+                <td class="text-end">—</td>
             </tr>
         `);
     });
 
-    const total = pending.length * INSPECTION_PERMIT_FEE;
+    const total = INSPECTION_APPLICATION_FEE;
     const $tfoot = $("#summaryTable4 tfoot");
     $tfoot.html(`
         <tr>
-            <td colspan="2" class="text-end fw-bold">${getLang() === 'bm' ? 'Jumlah:' : 'Total:'}</td>
+            <td colspan="2" class="text-end fw-bold">${getLang() === 'bm' ? 'Jumlah Yuran:' : 'Total Fee:'}</td>
             <td class="text-end fw-bold">RM ${money(total)}</td>
         </tr>
         <tr>
             <td colspan="3" class="text-end">
                 <button class="ipv-btn-primary pay-bulk" data-application="${APPLICATION.application_id}">
-                    <i class="bi bi-credit-card"></i> ${getLang() === 'bm' ? 'Bayar Semua' : 'Pay All'}
+                    <i class="bi bi-credit-card"></i> ${getLang() === 'bm' ? 'Bayar' : 'Pay'}
                 </button>
             </td>
         </tr>
@@ -1058,7 +1042,7 @@ function renderPaymentAwarenessBanner() {
         return;
     }
 
-    const total = pending.length * INSPECTION_PERMIT_FEE;
+    const total = INSPECTION_APPLICATION_FEE;
     const hasFailed = pending.some((p) => p.status === 'payment failed');
 
     el.className = `ipv-payment-banner${hasFailed ? ' is-danger' : ''}`;
@@ -1315,8 +1299,7 @@ async function init() {
 
 document.addEventListener('DOMContentLoaded', init);
 
-// Public API — used by inspection-actions.js to refresh the view after an
-// action completes without a full reload.
+// Public API
 window.ImportPermitView = window.ImportPermitView || {};
 window.ImportPermitView.reload = async function () {
     await loadApplicationData();

@@ -69,7 +69,7 @@
                     </div>
                 </div>
 
-                <div class="qis-radar-card">
+                <div class="qis-radar-card d-none">
                     <div class="qis-radar-head">
                         <span data-en="SABAH QUARANTINE NETWORK" data-bm="RANGKAIAN KUARANTIN SABAH">SABAH QUARANTINE
                             NETWORK</span>

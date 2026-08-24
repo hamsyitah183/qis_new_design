@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string('vehicle_name');
             $table->string('vehicle_number');
             $table->string('vehicle_type')->nullable();
-            $table->string('vehicle_registration_number');
+            $table->string('vehicle_registration_number')->nullable();
 
             $table->date('valid_from')->nullable();
             $table->date('valid_until')->nullable();

@@ -636,7 +636,7 @@ function renderHeaderInfo() {
     document.getElementById('ipvTags').innerHTML = APPLICATION.tags.map((tag) => {
         // The tag object might have label_en and label_bm already; use them.
         const label = lang === 'bm' ? tag.label_bm : tag.label_en;
-        return `<span class="ipv-tag is-${tag.color}">${escapeHtml(label)}</span>`;
+        return `<span class="ipv-tag btn-primary is-${tag.color}">${escapeHtml(label)}</span>`;
     }).join('');
 
     const total = PERMITS.reduce((sum, p) => sum + p.value, 0);
@@ -732,8 +732,8 @@ function renderTransportDetails() {
     const el = document.getElementById('ipvTransportDetails');
     const lang = getLang();
     const labels = {
-        en: { eta: 'ETA', transport: 'Transport Type', entry: 'Entry Point', notes: 'Entry Point Notes' },
-        bm: { eta: 'ETA', transport: 'Jenis Pengangkutan', entry: 'Pintu Masuk', notes: 'Nota Pintu Masuk' }
+        en: { eta: 'ETA', transport: 'Transport Type', entry: 'Entry Point', },
+        bm: { eta: 'ETA', transport: 'Jenis Pengangkutan', entry: 'Pintu Masuk' }
     };
     const t = labels[lang] || labels.en;
 
@@ -741,7 +741,6 @@ function renderTransportDetails() {
         { icon: 'bi-calendar-event', label: t.eta, value: APPLICATION.eta },
         { icon: 'bi-truck', label: t.transport, value: APPLICATION.transport_type },
         { icon: 'bi-geo-alt', label: t.entry, value: APPLICATION.entry_point },
-        { icon: 'bi-info-circle', label: t.notes, value: APPLICATION.entry_point_description || '—' },
     ];
     el.innerHTML = rows.map((r) => `
         <div class="ipv-detail-row">

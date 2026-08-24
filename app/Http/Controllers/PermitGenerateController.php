@@ -82,7 +82,6 @@ class PermitGenerateController extends Controller
 
         $permits = IpConsignmentPermit::where('permit_number', $decodedPermitNumber)->first();
 
-        // Backward compatibility: if an older frontend still passes numeric DB id.
         if (!$permits && is_numeric($permit_number)) {
             $permits = IpConsignmentPermit::where('id', $permit_number)->first();
         }
@@ -95,27 +94,39 @@ class PermitGenerateController extends Controller
         $importer = $application->importer_detail;
         $exporter = $application->exporter;
 
-        $itemDetails = $permits->condition();
-        $conditionText = $itemDetails->addional_condition;
+        // Fetch condition
+        $conditionItem = $permits->condition();
+        $conditionText = $conditionItem ? $conditionItem->addional_condition : null;
 
-        $conditionText = str_replace(
-            ['{{import_permit_number}}', '{{ import_permit_number }}', '{{year}}', '{{ year }}'],
-            [$permits->permit_number, $permits->permit_number, now()->year, now()->year],
-            $conditionText
-        );
+        if ($conditionText) {
+            $conditionText = str_replace(
+                ['{{import_permit_number}}', '{{ import_permit_number }}', '{{year}}', '{{ year }}'],
+                [$permits->permit_number, $permits->permit_number, now()->year, now()->year],
+                $conditionText
+            );
+        }
 
         $validityDate = $permits->validity_date ? \Carbon\Carbon::parse($permits->validity_date)->format('d/M/Y') : '-';
 
         $qrDataUri = null;
         try {
-            // Use the same encrypted payload format as the scanner flow.
             $encryptedPayload = $this->permitQrService->createEncryptedPayload((string) ($permits->permit_number ?? ''));
             $qrDataUri = $this->permitQrService->createQrDataUri($encryptedPayload);
         } catch (\Throwable $e) {
             Log::warning('Failed generating hardcopy permit QR: ' . $e->getMessage());
         }
 
-        $pdf = Pdf::loadView('pdf.permit_pdf', compact('permits', 'detail', 'application', 'importer', 'exporter', 'qrDataUri'))->setPaper('a4', 'portrait');
+        // Pass conditionText to view
+        $pdf = Pdf::loadView('pdf.permit_pdf', compact(
+            'permits',
+            'detail',
+            'application',
+            'importer',
+            'exporter',
+            'qrDataUri',
+            'conditionText',
+            'validityDate'
+        ))->setPaper('a4', 'portrait');
 
         return $pdf->stream("Import_Permit_{$application->application_id}.pdf");
     }
@@ -405,7 +416,6 @@ class PermitGenerateController extends Controller
 
     public function generateConsignmentApplication($id)
     {
-        // $id = inspection application id
         $application = ConsignmentApplication::where('application_id', $id)->first();
 
         if (!$application) {
@@ -415,20 +425,17 @@ class PermitGenerateController extends Controller
         $items = $application->consignmentPermits;
         $importer = $application->importer;
         $exporter = $application->exporter;
-        $entry = $application->entryPoint;
+        $entryPoint = $application->entryPoint; // renamed from $entry
 
+        $permitNumber = $items->first()->permit_number ?? null;
         $validUntil = optional($items->first())->validity_date
             ? \Carbon\Carbon::parse($items->first()->validity_date)->format('d/M/Y')
             : '-';
 
         // TODO: replace with a real lookup once you have a District model.
-        // $entry->district is currently just an ID (see IpEntryPoint), so this
-        // is a placeholder — e.g. District::find($entry->district)->name.
-        $district = null;
+        $district = $entryPoint ? $entryPoint->district : null;
 
         // TODO: replace with a real lookup for the officer authorised to sign
-        // off permits for this district/entry point, once that relation exists.
-        // Shape expected by the view: ['name' => ..., 'title' => ...]
         $approvingOfficer = null;
 
         $pdf = Pdf::loadView(
@@ -438,7 +445,8 @@ class PermitGenerateController extends Controller
                 'items',
                 'importer',
                 'exporter',
-                'entry',
+                'entryPoint',      // now matches the blade
+                'permitNumber',    // explicit permit number
                 'validUntil',
                 'district',
                 'approvingOfficer',
@@ -447,7 +455,6 @@ class PermitGenerateController extends Controller
 
         return $pdf->stream("Consignment_Permit_{$application->application_id}.pdf");
     }
-
     function generateConsignment($id)
     {
         $application = ConsignmentApplication::with(['importer', 'exporter', 'consignmentPermits'])

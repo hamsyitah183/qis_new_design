@@ -8,7 +8,7 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
 import { applyTranslations } from "../../app";
-import { CONSIGNMENT_PERMIT_FEE, money } from "./consignment1.js";
+import { CONSIGNMENT_APPLICATION_FEE, money } from "./consignment1.js";
 
 // ---------------------------------------------------------------
 // Helper: get current language
@@ -84,8 +84,8 @@ const t = {
         bm: { title: 'Dihantar!', text: 'Sebab telah berjaya dihantar.' }
     },
     payNow: {
-        en: { title: 'Proceed to Payment?', text: 'You are about to pay RM {amount} for {count} permit(s).', confirm: 'Yes, proceed to payment', cancel: 'Cancel' },
-        bm: { title: 'Teruskan ke Pembayaran?', text: 'Anda akan membayar RM {amount} untuk {count} permit.', confirm: 'Ya, teruskan ke pembayaran', cancel: 'Batal' }
+        en: { title: 'Proceed to Payment?', text: 'You are about to pay RM {amount} for this application.', confirm: 'Yes, proceed to payment', cancel: 'Cancel' },
+        bm: { title: 'Teruskan ke Pembayaran?', text: 'Anda akan membayar RM {amount} untuk permohonan ini.', confirm: 'Ya, teruskan ke pembayaran', cancel: 'Batal' }
     },
     processing: { en: 'Processing...', bm: 'Memproses...' },
     loading: { en: 'Loading...', bm: 'Memuat...' },
@@ -475,12 +475,14 @@ function generatePermit() {
 
 // ---------------------------------------------------------------
 // Bulk Payment – sends all pending permits in one transaction
+// Flat fee of RM 10 per application (not per permit)
 // ---------------------------------------------------------------
 
 function payBulk() {
     $(document).off('click', '.pay-bulk').on('click', '.pay-bulk', function (e) {
         e.preventDefault();
         const applicationId = $(this).data('application');
+        console.log('bulk payment');
 
         const permits = window.ImportPermitView?.getPermits() || [];
         const pending = permits.filter(p =>
@@ -496,13 +498,14 @@ function payBulk() {
             return;
         }
 
-        const total = pending.length * CONSIGNMENT_PERMIT_FEE;
+        // ─── Flat fee per application ───────────────────────────────────
+        const total = CONSIGNMENT_APPLICATION_FEE; // RM 10 flat
         const permitIds = pending.map(p => p.id);
         const amountText = money(total);
 
         const titleText = getText('payNow.title');
-        const textTemplate = getText('payNow.text') || 'You are about to pay RM {amount} for {count} permit(s).';
-        const text = textTemplate.replace('{amount}', amountText).replace('{count}', pending.length);
+        const textTemplate = getText('payNow.text') || 'You are about to pay RM {amount} for this application.';
+        const text = textTemplate.replace('{amount}', amountText);
 
         Swal.fire({
             title: titleText,

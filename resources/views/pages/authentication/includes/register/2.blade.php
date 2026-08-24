@@ -7,8 +7,8 @@
         </div>
         <div class="row gy-3">
             <div class="col-xl-12">
-                <label for="fullname" class="form-label fullnameLabel"><span data-en="Name"
-                        data-bm="Nama">Name</span> <span class="text-primary2">*</span></label>
+                <label for="fullname" class="form-label fullnameLabel"><span data-en="Name" data-bm="Nama">Name</span>
+                    <span class="text-primary2">*</span></label>
                 <input type="text" class="form-control" id="fullname" placeholder="" name="fullname">
             </div>
 
@@ -57,16 +57,16 @@
                     id="email">
             </div>
 
-           
+
 
             <!-- Address 1 -->
             <div class="col-xl-12">
-                <label class="form-label text-default"><span data-en="Address 1" data-bm="Alamat 1">Address 1</span>
+                <label class="form-label text-default"><span data-en="Address" data-bm="Alamat">Address 1</span>
                     <span class="text-primary2">*</span></label>
                 <textarea name="address_1" id="" cols="30" rows="2" class="form-control border"></textarea>
             </div>
 
-          
+
             <!-- State -->
             <div class="col-xl-6">
                 <label class="form-label text-default"><span data-en="State" data-bm="Negeri">State</span> <span
@@ -78,8 +78,8 @@
 
             <!-- District -->
             <div class="col-xl-6">
-                <label class="form-label text-default"><span data-en="District"
-                        data-bm="Daerah">District</span> <span class="text-primary2">*</span></label>
+                <label class="form-label text-default"><span data-en="District" data-bm="Daerah">District</span>
+                    <span class="text-primary2">*</span></label>
                 <select name="district" class="form-control district-register" id="district" disabled>
                     <option value="" data-en="Select District" data-bm="Pilih Daerah">Select District</option>
                 </select>
@@ -87,12 +87,35 @@
 
             <!-- Postcode -->
             <div class="col-xl-12">
-                <label class="form-label text-default"><span data-en="Postcode"
-                        data-bm="Poskod">Postcode</span> <span class="text-primary2">*</span></label>
+                <label class="form-label text-default"><span data-en="Postcode" data-bm="Poskod">Postcode</span>
+                    <span class="text-primary2">*</span></label>
                 <select name="postcode" class="form-control postcode-register" id="postcode">
                     <option value="" data-en="Select Postcode" data-bm="Pilih Poskod">Select Postcode</option>
                 </select>
             </div>
+
+
+            <!-- ========== Person In Charge (Company only) ========== -->
+            <!-- ========== Person In Charge (Company only) ========== -->
+            <div class="col-xl-12 company-details">
+                <hr>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-semibold mb-0" data-en="Persons In Charge" data-bm="Orang Bertanggungjawab">
+                        Persons In Charge
+                    </h6>
+                    <button type="button" class="btn btn-sm btn-primary" id="addPICBtn">
+                        <i class="ti ti-plus me-1"></i>
+                        <span data-en="Add Person" data-bm="Tambah Orang">Add Person</span>
+                    </button>
+                </div>
+                <div id="picContainer">
+                    <div id="picEmpty" class="text-muted text-center py-2" data-en="No persons added yet."
+                        data-bm="Tiada orang ditambah lagi.">
+                        No persons added yet.
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
     <div class="p-3 border-top border-block-start-dashed d-flex justify-content-between">

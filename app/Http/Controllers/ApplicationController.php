@@ -17,10 +17,12 @@ use App\Models\IpConsignmentAttachment;
 use App\Models\InspectionItem;
 use App\Models\IpConsignmentPermit;
 use App\Models\ConsignmentPermit;
+use App\Models\DocumentRequirement;
 use App\Models\Order;
 use App\Models\PublicCode;
 use App\Models\PublicUser;
 use App\Models\QrScanLog;
+use App\Models\UserAttachment;
 use App\Notifications\ApplicationNotification;
 use App\Services\ApplicationActivityLogger;
 use Illuminate\Http\Request;
@@ -154,12 +156,43 @@ class ApplicationController extends Controller
     //
     public function show()
     {
-        if (auth()->user()->doa_verified) {
-            // return view('pages.public.new_application');
+        $user = auth()->user();
+        // ✅ If already DOA-verified, skip document checks and go straight to the application.
+        if ($user->doa_verified) {
             return view('pages.public.apply_new');
-        } else {
-            return view('pages.public.wait_for_verified');
         }
+
+        // ─── Not verified – check required documents ──────────────────
+        $requirements = DocumentRequirement::where('module', 'user')
+            ->where('is_required', true)
+            ->where('is_active', true)
+            ->get();
+
+        $attachments = UserAttachment::where('user_id', $user->uuid)
+            ->get()
+            ->keyBy('document_type');
+
+        $docStatus = [];
+        foreach ($requirements as $req) {
+            $attachment = $attachments->get($req->name);
+            if ($attachment) {
+                if (!$attachment->is_read) {
+                    $status = 'pending';
+                } else {
+                    $isExpired = $req->requires_expiry && $attachment->valid_until && now()->greaterThan($attachment->valid_until);
+                    $status = $isExpired ? 'expired' : 'uploaded';
+                }
+            } else {
+                $status = 'missing';
+            }
+            $docStatus[] = [
+                'requirement' => $req,
+                'attachment' => $attachment,
+                'status' => $status,
+            ];
+        }
+
+        return view('pages.public.wait_for_verified', compact('docStatus'));
     }
 
     public function showthis()
@@ -1049,7 +1082,7 @@ class ApplicationController extends Controller
 
         $internalUsers = InternalUser::all();
         Notification::send($internalUsers, new ApplicationNotification($messages['notify'], $messages['notify'], authUser()['user']->fullname ?? 'System', $notificationUrl));
-        
+
         // If status became Clerk Verified, dispatch the email with buttons to Officers
         if (strtolower($status) === 'clerk verified') {
             $officerUsers = InternalUser::permission('approve permit')->get();
@@ -1138,14 +1171,14 @@ class ApplicationController extends Controller
                 $application->logActivity(action: 'Clerk Approved', remark: 'Application approved by clerk via email', status: 'Clerk Verified');
                 $application->status = 'Clerk Verified';
                 $application->importer_verify = 'Accepted';
-                
+
                 ApplicationActivityLogger::log(
                     application: $application,
                     event: 'clerk_verified',
                     description: $user->fullname . " verified application {$application->application_id} via email",
                     properties: ['role' => 'clerk']
                 );
-                
+
                 // Dispatch email to Officers for next step
                 $officerUsers = \App\Models\InternalUser::permission('approve permit')->get();
                 $notificationUrl = '';
@@ -1156,7 +1189,7 @@ class ApplicationController extends Controller
                 } else {
                     $notificationUrl = route('viewApplication', $id);
                 }
-                
+
                 \Illuminate\Support\Facades\Notification::send($officerUsers, new \App\Notifications\ApplicationSubmittedNotification(
                     'Application verified by clerk and awaits officer verification',
                     'Permohonan telah disahkan oleh kerani dan menunggu pengesahan pegawai',
@@ -1171,7 +1204,7 @@ class ApplicationController extends Controller
                 }
                 $application->logActivity(action: 'Officer Approved', remark: 'Application approved by officer via email', status: 'Officer Verification Completed');
                 $application->status = 'Officer Verification Completed';
-                
+
                 ApplicationActivityLogger::log(
                     application: $application,
                     event: 'officer_verified',
@@ -1189,7 +1222,7 @@ class ApplicationController extends Controller
                 }
                 $application->logActivity(action: 'Clerk Rejected', remark: $reason, status: 'Clerk Rejected');
                 $application->status = 'Clerk Rejected';
-                
+
                 ApplicationActivityLogger::log(
                     application: $application,
                     event: 'clerk_rejected',
@@ -1202,7 +1235,7 @@ class ApplicationController extends Controller
                 }
                 $application->logActivity(action: 'Officer Rejected', remark: $reason, status: 'Rejected');
                 $application->status = 'Rejected';
-                
+
                 ApplicationActivityLogger::log(
                     application: $application,
                     event: 'officer_rejected',

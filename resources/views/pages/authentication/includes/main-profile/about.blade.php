@@ -1,7 +1,8 @@
 <ul class="list-group list-group-flush border rounded-3">
 
     <li class="list-group-item p-3">
-        <span class="fw-medium fs-15 d-block mb-3" data-en="Contact Info :" data-bm="Maklumat Perhubungan :">Contact Info :</span>
+        <span class="fw-medium fs-15 d-block mb-3" data-en="Contact Info :" data-bm="Maklumat Perhubungan :">Contact Info
+            :</span>
         <div class="text-muted">
             <p class="mb-3">
                 <span class="avatar avatar-sm avatar-rounded text-primary p-1 bg-primary-transparent me-2">
@@ -10,7 +11,6 @@
                 <span class="fw-medium text-default" data-en="Email :" data-bm="E-mel :">Email : </span>
                 <span class="email"></span>
             </p>
-
             @if ($user['type'] === 'public')
                 <p class="mb-3">
                     <span class="avatar avatar-sm avatar-rounded text-primary2 p-1 bg-primary2-transparent me-2">
@@ -19,6 +19,8 @@
                     <span class="fw-medium text-default" data-en="Location :" data-bm="Lokasi :">Location : </span>
                     <span class="address"></span>
                 </p>
+
+                <!-- Persons In Charge (only for company public users) -->
             @endif
             <p class="mb-3">
                 <span class="avatar avatar-sm avatar-rounded text-primary3 p-1 bg-primary3-transparent me-2">
@@ -37,6 +39,29 @@
                 </p>
             @endif
         </div>
+
+        @if ($user['type'] === 'public' && $user['user']['account_type'] === 'company')
+            <div class="mt-3 pt-3 border-top">
+                <span class="fw-medium fs-15 d-block mb-2" data-en="Persons In Charge :"
+                    data-bm="Orang Bertanggungjawab :">
+                    Persons In Charge :
+                </span>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th data-en="Name" data-bm="Nama">Name</th>
+                                <th data-en="Position" data-bm="Jawatan">Position</th>
+                                <th data-en="Phone" data-bm="Telefon">Phone</th>
+                            </tr>
+                        </thead>
+                        <tbody id="profilePicListBody">
+                            <!-- Will be populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
     </li>
 
 

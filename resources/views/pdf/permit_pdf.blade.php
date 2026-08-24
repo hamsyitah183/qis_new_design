@@ -5,7 +5,7 @@
     <title>Import Permit</title>
     <style>
         @page {
-            margin: 1.54cm 1.54cm; /* A4 standard margin */
+            margin: 1.54cm 1.54cm;
         }
         body {
             font-family: Arial, sans-serif;
@@ -62,16 +62,14 @@
             width: 100%;
             border-collapse: collapse;
             border: 1px solid #000;
-            margin-top: 0; /* remove any margin above the table */
+            margin-top: 0;
         }
-
         .schedule-table th, .schedule-table td {
             border: 1px solid #000;
             padding: 8px;
             text-align: left;
             vertical-align: top;
         }
-
         .footer {
             margin-top: 30px;
             width: 100%;
@@ -84,35 +82,29 @@
         .page-break {
             page-break-after: always;
         }
-
         .qr-page {
             text-align: center;
             padding-top: 30px;
         }
-
         .qr-page-title {
             font-size: 14pt;
             font-weight: bold;
             margin-bottom: 8px;
         }
-
         .qr-page-subtitle {
             font-size: 10pt;
             color: #333;
             margin-bottom: 18px;
         }
-
         .qr-frame {
             display: inline-block;
             border: 1px solid #000;
             padding: 16px;
         }
-
         .qr-permit-no {
             margin-top: 10px;
             font-weight: bold;
         }
-
         .qr-note {
             margin-top: 10px;
             font-size: 9pt;
@@ -120,22 +112,54 @@
             display: inline-block;
             text-align: left;
         }
-
         .qr-note-verification {
             display: block;
             padding-left: 2.12rem;
         }
-
         .variable-value {
             font-family: "Courier New", monospace;
             font-size: 9pt;
-            word-break: break-word; /* allow breaking long text */
+            word-break: break-word;
         }
-
-
+        .footer-print {
+            position: fixed;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 7pt;
+            color: #666;
+            border-top: 1px solid #ccc;
+            padding-top: 4px;
+        }
+        .condition-page {
+            padding: 20px 10px;
+        }
+        .condition-page h3 {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .condition-content {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 9pt;
+            line-height: 1.5;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background: #f9f9f9;
+        }
+        .page-reference {
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
+
+    <!-- Printed On Footer -->
+    <div class="footer-print">
+        Printed on: {{ now()->format('d/m/Y H:i:s') }}
+    </div>
 
     <!-- Header -->
     <table class="header-table">
@@ -164,70 +188,63 @@
 
     <!-- Content -->
     <table style="width:100%; border-collapse:collapse; margin-bottom:5px; table-layout: fixed; word-wrap: break-word;">
-
-    <tr>
-        <td style="white-space:nowrap; padding:2px 5px; width:25%;">
-            Name of consignee
-        </td>
-        <td style="padding:2px 5px; border-bottom:1px dotted #000; width:75%;">
-            <span class="variable-value" style="display:block; font-size:9pt; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                {{ strtoupper($importer['fullname'] ?? '-') }}
-            </span>
-        </td>
-    </tr>
-
-<tr>
-    <td style="white-space:nowrap; padding:2px 5px; width:25%;">
-        And address
-    </td>
-    <td style="padding:2px 5px; border-bottom:1px dotted #000; width:75%;">
-        <span class="variable-value" style="display:block; font-size:8pt; line-height:1.1; white-space:normal; word-wrap:break-word;">
-            {{ strtoupper(
-                ($importer['address_1'] ?? '') . ', ' .
-                ($importer['address_2'] ?? '') . ', ' .
-                ($importer['postcode'] ?? '') . ' ' .
-                ($importer['district'] ?? '') . ', ' .
-                ($importer['state'] ?? '')
-            ) }}
-        </span>
-    </td>
-</tr>
-
-
-    <tr>
-        <td style="white-space:nowrap; padding:2px 5px;">
-            Name of consignor
-        </td>
-        <td style="padding:2px 5px; border-bottom:1px dotted #000;">
-            <span class="variable-value" style="display:block; font-size:9pt; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                {{ strtoupper($exporter['name'] ?? '-') }}
-            </span>
-        </td>
-    </tr>
-
-    <tr>
-        <td style="white-space:nowrap; padding:2px 5px;">
-            And address
-        </td>
-        <td style="padding:2px 5px; border-bottom:1px dotted #000; width:75%;">
-        <span class="variable-value" style="display:block; font-size:8pt; line-height:1.1; white-space:normal; word-wrap:break-word;">
-            {{ strtoupper($exporter['address'] ?? '-') }}
-        </span>
-    </td>
-    </tr>
-
-    <tr>
-        <td style="white-space:nowrap; padding:2px 5px; vertical-align:top;">
-            Entry Point
-        </td>
-        <td style="padding:2px 5px; border-bottom:1px dotted #000;">
-            <span class="variable-value" style="display:block; font-size:9pt; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                {{ strtoupper($application->entryPoint->entry_name ?? '-') }}
-            </span>
-        </td>
-    </tr>
-</table>
-
+        <tr>
+            <td style="white-space:nowrap; padding:2px 5px; width:25%;">
+                Name of consignee
+            </td>
+            <td style="padding:2px 5px; border-bottom:1px dotted #000; width:75%;">
+                <span class="variable-value" style="display:block; font-size:9pt; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                    {{ strtoupper($importer['fullname'] ?? '-') }}
+                </span>
+            </td>
+        </tr>
+        <tr>
+            <td style="white-space:nowrap; padding:2px 5px; width:25%;">
+                And address
+            </td>
+            <td style="padding:2px 5px; border-bottom:1px dotted #000; width:75%;">
+                <span class="variable-value" style="display:block; font-size:8pt; line-height:1.1; white-space:normal; word-wrap:break-word;">
+                    {{ strtoupper(
+                        ($importer['address_1'] ?? '') . ', ' .
+                        ($importer['address_2'] ?? '') . ', ' .
+                        ($importer['postcode'] ?? '') . ' ' .
+                        ($importer['district'] ?? '') . ', ' .
+                        ($importer['state'] ?? '')
+                    ) }}
+                </span>
+            </td>
+        </tr>
+        <tr>
+            <td style="white-space:nowrap; padding:2px 5px;">
+                Name of consignor
+            </td>
+            <td style="padding:2px 5px; border-bottom:1px dotted #000;">
+                <span class="variable-value" style="display:block; font-size:9pt; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                    {{ strtoupper($exporter['name'] ?? '-') }}
+                </span>
+            </td>
+        </tr>
+        <tr>
+            <td style="white-space:nowrap; padding:2px 5px;">
+                And address
+            </td>
+            <td style="padding:2px 5px; border-bottom:1px dotted #000; width:75%;">
+                <span class="variable-value" style="display:block; font-size:8pt; line-height:1.1; white-space:normal; word-wrap:break-word;">
+                    {{ strtoupper($exporter['address'] ?? '-') }}
+                </span>
+            </td>
+        </tr>
+        <tr>
+            <td style="white-space:nowrap; padding:2px 5px; vertical-align:top;">
+                Entry Point
+            </td>
+            <td style="padding:2px 5px; border-bottom:1px dotted #000;">
+                <span class="variable-value" style="display:block; font-size:9pt; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                    {{ strtoupper($application->entryPoint->entry_name ?? '-') }}
+                </span>
+            </td>
+        </tr>
+    </table>
 
     <div class="content-section" style="font-weight: bold;">
         This permit is issued subject to the following conditions:
@@ -238,38 +255,38 @@
         <li>A copy of this Import Permit must accompany the consignment.</li>
         <li>The regulated articles are subject to inspection prior to clearance.</li>
         <li>
-            This permit is valid until <span class="underline-dots" style="width: 150px;"> <span class="variable-value">{{ $validUntil ?? '' }}</span></span> for one consignment only.
+            This permit is valid until <span class="underline-dots" style="width: 150px;"> <span class="variable-value">{{ $validityDate ?? '' }}</span></span> for one consignment only.
         </li>
         <li>
-    The consignment must be accompanied by a Phytosanitary Certificate or a statement from the official Plant Protection Service of the country of origin bearing the following certificate:
-    <ol class="sub-list">
-        <li>
-            (a) Treatment
-            <table style="width:100%; border-collapse:collapse; margin-top:3px; margin-bottom:5px;">
-                <tr>
-                    <td style="border-bottom:1px dotted #000; height:16px;"></td>
-                </tr>
-                <tr>
-                    <td style="border-bottom:1px dotted #000; height:16px;"></td>
-                </tr>
-            </table>
+            The consignment must be accompanied by a Phytosanitary Certificate or a statement from the official Plant Protection Service of the country of origin bearing the following certificate:
+            <ol class="sub-list">
+                <li>
+                    (a) Treatment
+                    <table style="width:100%; border-collapse:collapse; margin-top:3px; margin-bottom:5px;">
+                        <tr>
+                            <td style="border-bottom:1px dotted #000; height:16px;"></td>
+                        </tr>
+                        <tr>
+                            <td style="border-bottom:1px dotted #000; height:16px;"></td>
+                        </tr>
+                    </table>
+                </li>
+                <li>
+                    (b) Other declaration
+                    <table style="width:100%; border-collapse:collapse; margin-top:3px; margin-bottom:5px;">
+                        <tr>
+                            <td style="border-bottom:1px dotted #000; height:16px;"></td>
+                        </tr>
+                        <tr>
+                            <td style="border-bottom:1px dotted #000; height:16px;"></td>
+                        </tr>
+                    </table>
+                </li>
+            </ol>
         </li>
         <li>
-            (b) Other declaration
-            <table style="width:100%; border-collapse:collapse; margin-top:3px; margin-bottom:5px;">
-                <tr>
-                    <td style="border-bottom:1px dotted #000; height:16px;"></td>
-                </tr>
-                <tr>
-                    <td style="border-bottom:1px dotted #000; height:16px;"></td>
-                </tr>
-            </table>
+            Further conditions – see page <span class="page-reference">[next page]</span>
         </li>
-    </ol>
-</li>
-
-       <li style="margin-bottom:100px;">Further conditions</li>
-
     </ol>
 
     <br>
@@ -279,42 +296,54 @@
     </div>
 
     <table class="schedule-table">
-    <thead>
-        <tr>
-            <th style="width: 50%;">Descriptions</th>
-            <th style="width: 20%;">Quantity</th>
-            <th style="width: 30%;">Country of Origin</th>
-        </tr>
-    </thead>
-    <tbody>
-        @php
-            $itemName = $detail['item_name'] ?? '-';
-            $parts = explode('-', $itemName);
-            $afterDash = isset($parts[1]) ? trim($parts[1]) : $itemName;
-            
-            $country = \App\Models\Country::select('name')->where('code', $exporter['country'])->first();
-        @endphp
-        <tr>
-            <td style="height:70px;"><span class="variable-value">{{ $afterDash }}</span></td>
-            <td style="height:70px;"><span class="variable-value">{{ ($permits['quantity'] ?? '-') . ' ' . ($permits['unit_measurement'] ?? '') }}</span></td>
-            <td style="height:70px;"><span class="variable-value">{{ $country->name ?? '-' }}</span></td>
-        </tr>
-    </tbody>
-</table>
-
+        <thead>
+            <tr>
+                <th style="width: 50%;">Descriptions</th>
+                <th style="width: 20%;">Quantity</th>
+                <th style="width: 30%;">Country of Origin</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php
+                $itemName = $detail['item_name'] ?? '-';
+                $parts = explode('-', $itemName);
+                $afterDash = isset($parts[1]) ? trim($parts[1]) : $itemName;
+                $country = \App\Models\Country::select('name')->where('code', $exporter['country'])->first();
+            @endphp
+            <tr>
+                <td style="height:70px;"><span class="variable-value">{{ $afterDash }}</span></td>
+                <td style="height:70px;"><span class="variable-value">{{ ($permits['quantity'] ?? '-') . ' ' . ($permits['unit_measurement'] ?? '') }}</span></td>
+                <td style="height:70px;"><span class="variable-value">{{ $country->name ?? '-' }}</span></td>
+            </tr>
+        </tbody>
+    </table>
 
     <div class="footer" style="padding-top:30px;">
-    <div style="float: left;">
-        Date of Issue: <span class="variable-value">{{ now()->format('d/M/Y') }}</span>
+        <div style="float: left;">
+            Date of Issue: <span class="variable-value">{{ now()->format('d/M/Y') }}</span>
+        </div>
+        <div class="director-sign">
+            <div style="font-weight: bold;">Director of Agriculture</div>
+            <div>Sabah, Malaysia</div>
+        </div>
+        <div style="clear: both;"></div>
     </div>
-    <div class="director-sign">
-        <div style="font-weight: bold;">Director of Agriculture</div>
-        <div>Sabah, Malaysia</div>
+
+    <!-- ========== CONDITION PAGE ========== -->
+    <div class="page-break"></div>
+
+    <div class="condition-page">
+        <h3>CONDITIONS FOR IMPORT</h3>
+        @if(!empty($conditionText))
+            <div class="condition-content">
+                {!! nl2br(e($conditionText)) !!}
+            </div>
+        @else
+            <p>No special conditions.</p>
+        @endif
     </div>
-    <div style="clear: both;"></div>
-</div>
 
-
+    <!-- ========== QR PAGE ========== -->
     <div class="page-break"></div>
 
     <div class="qr-page">
@@ -337,7 +366,6 @@
             <span class="qr-note-verification">verification.</span>
         </div>
     </div>
-
 
 </body>
 </html>

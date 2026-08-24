@@ -80,7 +80,7 @@ class VehicleController extends Controller
             'vehicle_name'               => 'required|string|max:255',
             'vehicle_number'             => 'required|string|max:255',
             'vehicle_type'               => 'nullable|string|max:255',
-            'vehicle_registration_number' => 'required|string|max:255',
+            // 'vehicle_registration_number' => 'required|string|max:255',
             'valid_from'                 => 'nullable|date',
             'valid_until'                => 'nullable|date|after_or_equal:valid_from',
         ]);

@@ -19,7 +19,7 @@ import $ from "jquery";
 import Swal from "sweetalert2";
 import Dropzone from "dropzone";
 import "dropzone/dist/dropzone.css";
-import { PERMITS, APPLICATION, INSPECTION_PERMIT_FEE, INSPECTION_PRINT_TYPE, money, escapeHtml } from "./inspection1.js";
+import { PERMITS, APPLICATION, INSPECTION_APPLICATION_FEE, INSPECTION_PRINT_TYPE, money, escapeHtml } from "./inspection1.js";
 
 Dropzone.autoDiscover = false;
 
@@ -343,7 +343,7 @@ function generatePermit() {
     });
 }
 
-// ─── Bulk payment ─────────────────────────────────────────────────────
+// ─── Bulk payment – flat fee per application ─────────────────────────
 
 function payBulk() {
     $(document).off('click', '.pay-bulk').on('click', '.pay-bulk', function (e) {
@@ -361,14 +361,14 @@ function payBulk() {
             return;
         }
 
-        const total = pending.length * INSPECTION_PERMIT_FEE;
+        const total = INSPECTION_APPLICATION_FEE; // flat fee
         const permitIds = pending.map(p => p.id);
         const amountText = money(total);
         const app = window.ImportPermitView?.getApplication() || APPLICATION;
 
         Swal.fire({
             title: 'Proceed to Payment?',
-            text: `You are about to pay RM ${amountText} for ${pending.length} permit(s).`,
+            text: `You are about to pay RM ${amountText} for this application.`,
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: 'Yes, proceed to payment',
@@ -401,12 +401,6 @@ function payBulk() {
 }
 
 // ─── Reapply ──────────────────────────────────────────────────────────
-// The legacy modal tried to pre-select #itemSelect by item *name* against
-// an empty, never-populated <select> — a no-op bug. Fixed here by seeding
-// the select with the existing item as its only option (the item itself
-// isn't meant to change on reapply, only quantity/value/purpose/uses/
-// attachments), instead of inventing an items-by-country endpoint that was
-// never evidenced for Inspection.
 
 let itemDropzone = null;
 let updateItem = null;

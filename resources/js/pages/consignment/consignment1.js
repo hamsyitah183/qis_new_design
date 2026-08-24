@@ -47,7 +47,8 @@ export const PERMIT_STATUS_CONFIG = {
     queued:                   { en: 'Queued for Review',          bm: 'Dalam Proses Semakan', color: 'info' },
 };
 
-export const CONSIGNMENT_PERMIT_FEE = 12; // exported for payment logic
+// ─── Total application fee (flat RM 10 regardless of number of items) ───
+export const CONSIGNMENT_APPLICATION_FEE = 10;
 
 function getLang() {
     try {
@@ -725,7 +726,7 @@ function renderBulkActionBar() {
     const hasPendingPayment = PERMITS.some(p => ['pending for payment', 'payment failed'].includes(p.status));
     const isCompleted = status === 'completed' || status === 'paid';
 
-    // ─── Approve / Reject All (handled by consignment-actions.js .accept / .reject) ───
+    // ─── Approve / Reject All ────────────────────────────────────────
     if (status === 'clerk verified' && hasApprovePerm && hasProcessing) {
         wrap.style.display = '';
         wrap.innerHTML = `
@@ -745,10 +746,11 @@ function renderBulkActionBar() {
         return;
     }
 
-    // ─── Pay All (handled by consignment-actions.js .pay-bulk) ──────────────────
+    // ─── Pay All ──────────────────────────────────────────────────────
+    // Flat fee: total = CONSIGNMENT_APPLICATION_FEE (RM 10) regardless of number of pending permits
     if (isOwner && hasPendingPayment) {
         const pending = PERMITS.filter(p => ['pending for payment', 'payment failed'].includes(p.status));
-        const total = pending.length * CONSIGNMENT_PERMIT_FEE;
+        const total = CONSIGNMENT_APPLICATION_FEE; // Flat RM 10
         wrap.style.display = '';
         wrap.innerHTML = `
             <div class="ipv-actions-bar-text">
@@ -764,7 +766,7 @@ function renderBulkActionBar() {
         return;
     }
 
-    // ─── Download All (handled by consignment-actions.js .generatePermit) ──────
+    // ─── Download All ─────────────────────────────────────────────────
     if (isCompleted && (hasPrintPerm || isOwner)) {
         wrap.style.display = '';
         wrap.innerHTML = `
@@ -781,7 +783,7 @@ function renderBulkActionBar() {
         return;
     }
 
-    // ─── Hide if nothing applies ──────────────────────────────────────────────────
+    // ─── Hide if nothing applies ─────────────────────────────────────
     wrap.style.display = 'none';
     wrap.innerHTML = '';
 }
@@ -937,7 +939,7 @@ function initAccordionToggle() {
 }
 
 // ---------------------------------------------------------------
-// Render: Pending Payment tab (no checkboxes, only Pay All)
+// Render: Pending Payment tab (flat fee per application)
 // ---------------------------------------------------------------
 
 function renderPendingPaymentTable() {
@@ -950,12 +952,12 @@ function renderPendingPaymentTable() {
     document.getElementById('ipvPendingPaymentCount') &&
         (document.getElementById('ipvPendingPaymentCount').textContent = pending.length);
 
-    // Update table header – remove checkbox column
+    // ─── Table header ─────────────────────────────────────────────────
     const $thead = $("#summaryTable4 thead tr");
     $thead.html(`
         <th data-en="Permit Number" data-bm="Nombor Permit">Permit Number</th>
         <th data-en="Item Name" data-bm="Nama Item">Item Name</th>
-        <th class="text-end" data-en="Value" data-bm="Nilai">Value</th>
+        <th class="text-end" data-en="Fee (RM)" data-bm="Yuran (RM)">Fee (RM)</th>
     `);
 
     if (!pending.length) {
@@ -964,27 +966,29 @@ function renderPendingPaymentTable() {
         return;
     }
 
+    // Show each permit with a dash in the fee column (since fee is flat per application)
     pending.forEach((permit) => {
         tableBody.append(`
             <tr>
                 <td>${escapeHtml(permit.permit_number)}</td>
                 <td class="text-wrap">${escapeHtml(permit.consignment_detail.item_name)}</td>
-                <td class="text-end">RM ${CONSIGNMENT_PERMIT_FEE.toFixed(2)}</td>
+                <td class="text-end">—</td>
             </tr>
         `);
     });
 
-    const total = pending.length * CONSIGNMENT_PERMIT_FEE;
+    // Total row: show flat fee
+    const total = CONSIGNMENT_APPLICATION_FEE;
     const $tfoot = $("#summaryTable4 tfoot");
     $tfoot.html(`
         <tr>
-            <td colspan="2" class="text-end fw-bold">${getLang() === 'bm' ? 'Jumlah:' : 'Total:'}</td>
+            <td colspan="2" class="text-end fw-bold">${getLang() === 'bm' ? 'Jumlah Yuran:' : 'Total Fee:'}</td>
             <td class="text-end fw-bold">RM ${money(total)}</td>
         </tr>
         <tr>
             <td colspan="3" class="text-end">
                 <button class="ipv-btn-primary pay-bulk" data-application="${APPLICATION.application_id}">
-                    <i class="bi bi-credit-card"></i> ${getLang() === 'bm' ? 'Bayar Semua' : 'Pay All'}
+                    <i class="bi bi-credit-card"></i> ${getLang() === 'bm' ? 'Bayar Sekarang' : 'Pay Now'}
                 </button>
             </td>
         </tr>
@@ -992,7 +996,7 @@ function renderPendingPaymentTable() {
 }
 
 // ---------------------------------------------------------------
-// Payment awareness banner (unchanged)
+// Payment awareness banner
 // ---------------------------------------------------------------
 
 function renderPaymentAwarenessBanner() {
@@ -1009,7 +1013,7 @@ function renderPaymentAwarenessBanner() {
         return;
     }
 
-    const total = pending.length * CONSIGNMENT_PERMIT_FEE;
+    const total = CONSIGNMENT_APPLICATION_FEE; // flat RM 10
     const hasFailed = pending.some((p) => p.status === 'payment failed');
 
     el.className = `ipv-payment-banner${hasFailed ? ' is-danger' : ''}`;
@@ -1157,7 +1161,7 @@ function initTabs() {
 }
 
 // ---------------------------------------------------------------
-// Payment checkbox + checkout wiring (removed – no longer needed)
+// Payment checkbox + checkout wiring (removed)
 // ---------------------------------------------------------------
 
 function initPaymentCheckboxes() {
@@ -1233,7 +1237,6 @@ async function init() {
     initTabs();
     initOffcanvas();
     initApplicationLogModal();
-    initPaymentCheckboxes(); // no-op
 
     Swal.close();
 

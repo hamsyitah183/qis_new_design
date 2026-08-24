@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\NotificationController;
 use App\Models\ConsignmentImporter;
 use App\Models\Country;
+use App\Models\DocumentRequirement;
 use App\Models\ImportPermitLog;
 use App\Models\InternalUser;
 use App\Models\IpApplication;
@@ -22,6 +23,7 @@ use App\Models\PublicCode;
 use App\Models\PublicUser;
 use App\Models\Exporter;
 use App\Models\TempAttachment;
+use App\Models\UserAttachment;
 use App\Notifications\ApplicationNotification;
 use App\Services\ApplicationActivityLogger;
 use Illuminate\Http\Request;
@@ -37,30 +39,88 @@ use Illuminate\Support\Facades\Artisan;
 // use App\Notifications\ApplicationNotification;
 class PermitApplicationController extends Controller
 {
+    /**
+     * Show the permit application page (for self / regular users).
+     */
     public function show()
     {
         Artisan::call('bayupay:check-pending');
-        if (authUser()['user']['doa_verified'] == 0) {
-            return view('pages.public.wait_for_verified');
+
+        $blockView = $this->checkDocumentStatusAndReturnView();
+        if ($blockView) {
+            return $blockView;
         }
 
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
-        $country = country::where('is_del', false)->get();
-        return view('pages.public.apply_permit', compact('pubmeasure', 'pubpurpose', 'country')); // , compact('')
+        $country = Country::where('is_del', false)->get();
+        return view('pages.public.apply_permit', compact('pubmeasure', 'pubpurpose', 'country'));
     }
 
+    /**
+     * Show the assigned permit application page (for others / company).
+     */
     public function showassign()
     {
-        if (authUser()['user']['doa_verified'] == 0) {
-            return view('pages.public.wait_for_verified');
+        $blockView = $this->checkDocumentStatusAndReturnView();
+        if ($blockView) {
+            return $blockView;
         }
+
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
-        $country = country::where('is_del', false)->get();
-        return view('pages.public.assigned_apply_permit', compact('pubmeasure', 'pubpurpose', 'country')); // , compact('')
+        $country = Country::where('is_del', false)->get();
+        return view('pages.public.assigned_apply_permit', compact('pubmeasure', 'pubpurpose', 'country'));
     }
 
+    private function checkDocumentStatusAndReturnView()
+    {
+        $user = authUser()['user'];
+
+        // ✅ If the user is already DOA-verified, allow access without blocking
+        if ($user->doa_verified == 1) {
+            return null;
+        }
+
+        // Not verified – check required documents
+        $requirements = DocumentRequirement::where('module', 'user')
+            ->where('is_required', true)
+            ->where('is_active', true)
+            ->get();
+
+        $attachments = UserAttachment::where('user_id', $user->uuid)
+            ->get()
+            ->keyBy('document_type');
+
+        $docStatus = [];
+        foreach ($requirements as $req) {
+            $attachment = $attachments->get($req->name);
+            if ($attachment) {
+                if (!$attachment->is_read) {
+                    $status = 'pending';
+                } else {
+                    $isExpired = $req->requires_expiry && $attachment->valid_until && now()->greaterThan($attachment->valid_until);
+                    $status = $isExpired ? 'expired' : 'uploaded';
+                }
+            } else {
+                $status = 'missing';
+            }
+            $docStatus[] = [
+                'requirement' => $req,
+                'attachment' => $attachment,
+                'status' => $status,
+            ];
+        }
+
+        $anyMissing = collect($docStatus)->contains(fn($item) => $item['status'] === 'missing');
+        $anyExpired = collect($docStatus)->contains(fn($item) => $item['status'] === 'expired');
+
+        if ($anyMissing || $anyExpired) {
+            return view('pages.public.wait_for_verified', compact('docStatus'));
+        }
+
+        return null;
+    }
     public function storeExporter(Request $request)
     {
         // dd($request['id']);

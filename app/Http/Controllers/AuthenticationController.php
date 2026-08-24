@@ -180,10 +180,11 @@ class AuthenticationController extends Controller
 
         $request->merge(['phone_number' => $fullPhoneNumber]);
 
+        // ─── Validation ────────────────────────────────────────────────
         $validated = $request->validate([
-            'fullname' => 'required|string|max:255',
-            'email' => 'required|email|unique:public_users,email',
-            'password' => [
+            'fullname'       => 'required|string|max:255',
+            'email'          => 'required|email|unique:public_users,email',
+            'password'       => [
                 'required',
                 'min:8',
                 'confirmed',
@@ -192,40 +193,69 @@ class AuthenticationController extends Controller
                 'regex:/[0-9]/',
                 'regex:/[@$!%*#?&]/',
             ],
-            'no_ic' => 'required|unique:public_users,no_ic',
-            'account_type' => 'required|in:individu,company',
-            'phone_number' => 'required|unique:public_users,phone_number',
-            'address_1' => 'required',
-            'postcode' => 'required',
-            'district' => 'required',
-            'state' => 'required',
+            'no_ic'          => 'required|unique:public_users,no_ic',
+            'account_type'   => 'required|in:individu,company',
+            'phone_number'   => 'required|unique:public_users,phone_number',
+            'address_1'      => 'required',
+            'postcode'       => 'required',
+            'district'       => 'required',
+            'state'          => 'required',
+            // PIC fields (optional)
+            'pic_name.*'     => 'nullable|string|max:255',
+            'pic_position.*' => 'nullable|string|max:255',
+            'pic_phone.*'    => 'nullable|string|max:20',
         ]);
 
         try {
             DB::beginTransaction();
 
+            // ─── Create user ─────────────────────────────────────────────
             $user = PublicUser::create([
-                'fullname' => $validated['fullname'],
-                'email' => $validated['email'],
-                'password' => Hash::make($validated['password']),
-                'no_ic' => $validated['no_ic'],
+                'fullname'    => $validated['fullname'],
+                'email'       => $validated['email'],
+                'password'    => Hash::make($validated['password']),
+                'no_ic'       => $validated['no_ic'],
                 'account_type' => $validated['account_type'],
                 'phone_number' => $validated['phone_number'],
-                'address_1' => $validated['address_1'],
-                'address_2' => $request->address_2,
-                'postcode' => $validated['postcode'],
-                'district' => $validated['district'],
-                'state' => $validated['state'],
+                'address_1'   => $validated['address_1'],
+                'address_2'   => $request->address_2,
+                'postcode'    => $validated['postcode'],
+                'district'    => $validated['district'],
+                'state'       => $validated['state'],
             ]);
 
-            // Handle attachments
+            // ─── Person In Charge (only for company) ─────────────────────
+            if ($validated['account_type'] === 'company') {
+                $picNames     = $request->input('pic_name', []);
+                $picPositions = $request->input('pic_position', []);
+                $picPhones    = $request->input('pic_phone', []);
+                $personInCharge = [];
+
+                foreach ($picNames as $index => $name) {
+                    $name = trim($name);
+                    if (!empty($name) && isset($picPositions[$index]) && isset($picPhones[$index])) {
+                        $personInCharge[] = [
+                            'name'     => $name,
+                            'position' => trim($picPositions[$index]),
+                            'phone'    => trim($picPhones[$index]),
+                        ];
+                    }
+                }
+
+                if (!empty($personInCharge)) {
+                    $user->person_in_charge = $personInCharge;
+                    $user->save();
+                }
+            }
+
+            // ─── Handle attachments ───────────────────────────────────────
             $attachmentFiles = $request->file('attachment'); // [docId => [UploadedFile, ...]]
             $result = null;
 
             if (!empty($attachmentFiles)) {
                 $documentTypes = $request->input('document_type', []);
-                $validFrom = $request->input('valid_from', []);
-                $validUntil = $request->input('valid_until', []);
+                $validFrom     = $request->input('valid_from', []);
+                $validUntil    = $request->input('valid_until', []);
 
                 $result = $verificationService->uploadVerificationAttachment(
                     $user->uuid,
@@ -235,7 +265,6 @@ class AuthenticationController extends Controller
                     $validUntil
                 );
 
-                // If upload fails, roll back and return error
                 if (!$result || $result['success'] !== true) {
                     DB::rollBack();
                     return response()->json([
@@ -244,13 +273,12 @@ class AuthenticationController extends Controller
                 }
             }
 
-            // Log in the user
+            // ─── Log in ────────────────────────────────────────────────────
             Auth::guard('public')->login($user);
 
-            // Send verification email
+            // ─── Notifications and events (unchanged) ────────────────────
             $user->notify(new VerifyEmailNotification());
 
-            // Events and notifications (unchanged)
             try {
                 event(new InternalUserAdminEvent('A new account is created'));
             } catch (\Exception $e) {
@@ -288,7 +316,7 @@ class AuthenticationController extends Controller
             DB::commit();
 
             return response()->json([
-                'message' => 'Registration successful! Please verify your email to continue.',
+                'message'  => 'Registration successful! Please verify your email to continue.',
                 'redirect' => route('verify.email'),
             ]);
         } catch (\Exception $e) {
@@ -296,10 +324,12 @@ class AuthenticationController extends Controller
             Log::error('Registration failed: ' . $e->getMessage());
             return response()->json([
                 'message' => 'Registration failed. Please try again.',
-                'error' => $e->getMessage(),
+                'error'   => $e->getMessage(),
             ], 500);
         }
     }
+
+
     public function logout(Request $request)
     {
         $user = null;

@@ -46,7 +46,6 @@ class ApprovedPublic extends Model
         )
         ->where('document_type', 'Identification Documents (IC / Passport)');
     }
-
     // --------------------------------------------------------------
     // Accessor that returns the latest verification attachment
     // --------------------------------------------------------------

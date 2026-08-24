@@ -182,31 +182,58 @@
                                                         </div>
                                                     </div>
 
+                                                    @if ($user->account_type === 'company' && !empty($user->person_in_charge))
+                                                        <hr>
+                                                        <h6 class="fw-semibold mb-3" data-en="Persons In Charge"
+                                                            data-bm="Orang Bertanggungjawab">
+                                                            Persons In Charge
+                                                        </h6>
+                                                        <div class="table-responsive">
+                                                            <table class="table table-sm table-bordered">
+                                                                <thead class="table-light">
+                                                                    <tr>
+                                                                        <th data-en="Name" data-bm="Nama">Name</th>
+                                                                        <th data-en="Position" data-bm="Jawatan">Position
+                                                                        </th>
+                                                                        <th data-en="Phone" data-bm="Telefon">Phone</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    @foreach ($user->person_in_charge as $pic)
+                                                                        <tr>
+                                                                            <td>{{ $pic['name'] }}</td>
+                                                                            <td>{{ $pic['position'] }}</td>
+                                                                            <td>{{ $pic['phone'] }}</td>
+                                                                        </tr>
+                                                                    @endforeach
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    @endif
+
                                                     <hr>
 
                                                     <h6 class="fw-semibold mb-3" data-en="Address Information"
                                                         data-bm="Maklumat Alamat">Address Information</h6>
-                                                        
+
                                                     <div class="row gy-3">
                                                         <div class="col-xl-12">
-                                                            <strong data-en="Address 1" data-bm="Alamat 1">Address
-                                                                </strong>
+                                                            <strong data-en="Address" data-bm="Alamat">Address
+                                                            </strong>
                                                             <span class="text-muted">{{ $user->address_1 ?? '—' }}</span>
                                                         </div>
-                                                        
+
                                                         <div class="col-xl-6">
                                                             <strong data-en="Postcode" data-bm="Poskod">Postcode:</strong>
                                                             <span class="text-muted">{{ $user->postcode ?? '—' }}</span>
                                                         </div>
                                                         <div class="col-xl-6">
                                                             <strong data-en="District" data-bm="Daerah">District:</strong>
-                                                            <span
-                                                                class="text-muted">{{ $user->district ?? '—' }}</span>
+                                                            <span class="text-muted">{{ $user->district ?? '—' }}</span>
                                                         </div>
                                                         <div class="col-xl-12">
                                                             <strong data-en="State" data-bm="Negeri">State:</strong>
-                                                            <span
-                                                                class="text-muted">{{ $user->state ?? '—' }}</span>
+                                                            <span class="text-muted">{{ $user->state ?? '—' }}</span>
                                                         </div>
                                                     </div>
 
@@ -235,7 +262,8 @@
                                             <div class="tab-pane p-0 border-0" id="activity-log-tab-pane" role="tabpanel"
                                                 aria-labelledby="activity-log-tab" tabindex="0">
                                                 <div class="p-3">
-                                                    <h6 class="fw-semibold mb-3">Activity Log</h6>
+                                                    <h6 class="fw-semibold mb-3" data-en="Activity Log"
+                                                        data-bm="Log Aktiviti">Activity Log</h6>
                                                     @if (isset($activities) && $activities->count() > 0)
                                                         <ul class="list-group">
                                                             @foreach ($activities as $log)
@@ -248,7 +276,9 @@
                                                             @endforeach
                                                         </ul>
                                                     @else
-                                                        <p class="text-muted">No activity logs found.</p>
+                                                        <p class="text-muted" data-en="No activity logs found."
+                                                            data-bm="Tiada log aktiviti dijumpai.">No activity logs found.
+                                                        </p>
                                                     @endif
                                                 </div>
                                             </div>
@@ -257,15 +287,19 @@
                                             <div class="tab-pane p-0 border-0" id="list-document-tab-pane"
                                                 role="tabpanel" aria-labelledby="list-document-tab" tabindex="0">
                                                 <div class="p-3">
-                                                    <h6 class="fw-semibold mb-3">Documents</h6>
+                                                    <h6 class="fw-semibold mb-3" data-en="Documents" data-bm="Dokumen">
+                                                        Documents</h6>
                                                     @if (isset($user->attachments) && $user->attachments->count() > 0)
                                                         <table class="table table-bordered">
                                                             <thead>
                                                                 <tr>
-                                                                    <th>File Name</th>
-                                                                    <th>Document Type</th>
-                                                                    <th>Uploaded At</th>
-                                                                    <th>Action</th>
+                                                                    <th data-en="File Name" data-bm="Nama Fail">File Name
+                                                                    </th>
+                                                                    <th data-en="Document Type" data-bm="Jenis Dokumen">
+                                                                        Document Type</th>
+                                                                    <th data-en="Uploaded At" data-bm="Dimuat Naik Pada">
+                                                                        Uploaded At</th>
+                                                                    <th data-en="Action" data-bm="Tindakan">Action</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
@@ -280,9 +314,12 @@
                                                                             @if ($attachment->file_path)
                                                                                 <a href="{{ asset($attachment->file_path) }}"
                                                                                     target="_blank"
-                                                                                    class="btn btn-sm btn-primary">View</a>
+                                                                                    class="btn btn-sm btn-primary"
+                                                                                    data-en="View"
+                                                                                    data-bm="Lihat">View</a>
                                                                             @else
-                                                                                N/A
+                                                                                <span data-en="N/A"
+                                                                                    data-bm="N/A">N/A</span>
                                                                             @endif
                                                                         </td>
                                                                     </tr>
@@ -290,7 +327,8 @@
                                                             </tbody>
                                                         </table>
                                                     @else
-                                                        <p class="text-muted">No documents uploaded.</p>
+                                                        <p class="text-muted" data-en="No documents uploaded."
+                                                            data-bm="Tiada dokumen dimuat naik.">No documents uploaded.</p>
                                                     @endif
                                                 </div>
                                             </div>
@@ -299,8 +337,36 @@
                                             <div class="tab-pane p-0 border-0" id="vehicle-list-tab-pane" role="tabpanel"
                                                 aria-labelledby="vehicle-list-tab" tabindex="0">
                                                 <div class="p-3">
-                                                    <h6 class="fw-semibold mb-3">Vehicle List</h6>
-                                                    <p class="text-muted">No vehicles added yet.</p>
+                                                    <h6 class="fw-semibold mb-3" data-en="Vehicle List"
+                                                        data-bm="Senarai Kenderaan">Vehicle List</h6>
+                                                    @if (isset($user->vehicles) && $user->vehicles->count() > 0)
+                                                        <table class="table table-bordered">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th data-en="Vehicle Name" data-bm="Nama Kenderaan">
+                                                                        Vehicle Name</th>
+                                                                    <th data-en="Vehicle Number"
+                                                                        data-bm="Nombor Kenderaan">Vehicle Number</th>
+                                                                    <th data-en="Created At" data-bm="Dicipta Pada">
+                                                                        Created At</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach ($user->vehicles as $vehicle)
+                                                                    <tr>
+                                                                        <td>{{ $vehicle->vehicle_name }}
+                                                                        </td>
+                                                                        <td>{{ $vehicle->vehicle_number ?? 'N/A' }}</td>
+                                                                        <td>{{ $vehicle->created_at ? $vehicle->created_at->format('d M Y, H:i') : '—' }}
+                                                                        </td>
+                                                                    </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    @else
+                                                        <p class="text-muted" data-en="No vehicles list."
+                                                            data-bm="Tiada senarai kenderaan.">No vehicles list.</p>
+                                                    @endif
                                                 </div>
                                             </div>
 

@@ -2,20 +2,15 @@
 
 @section('pageName', 'Account Verification Status')
 
-
-
 @section('content')
     <div class="row justify-content-center my-4">
-        <div class="col-xl-7 col-lg-9 col-md-12">
+        <div class="col-xl-8 col-lg-10 col-md-12">
 
             {{-- Main State Card --}}
             <div class="card custom-card verify-dashboard-card">
-
-
-
                 <div class="card-body p-5 text-center">
 
-                    {{-- Dynamic Alert Icon Wrapper using CSS design variables --}}
+                    {{-- Dynamic Alert Icon --}}
                     <div class="verification-icon-badge mb-4 animate-pulse">
                         <div class="icon-inner-bg">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor">
@@ -25,8 +20,9 @@
                         </div>
                     </div>
 
-                    <h3 class="fw-semibold mb-2" data-en="Verification Notice" data-bm="Notis Pengesahan">Verification
-                        Notice</h3>
+                    <h3 class="fw-semibold mb-2" data-en="Verification Notice" data-bm="Notis Pengesahan">
+                        Verification Notice
+                    </h3>
                     <p class="text-muted text-center max-w-md mx-auto mb-4"
                         data-en="Your account status is currently set to unverified. Access to formal dashboard functions requires an authorized record check."
                         data-bm="Status akaun anda pada masa ini ditetapkan sebagai belum disahkan. Akses kepada fungsi papan pemuka rasmi memerlukan semakan rekod yang dibenarkan.">
@@ -34,52 +30,176 @@
                         authorized record check.
                     </p>
 
-                    {{-- Status Alert Callout Block --}}
-                    <div class="verification-status-callout mb-5">
-                        <div class="callout-text text-start">
-                            @if (authUser()['user']->approved?->verification_attachment)
-                                <strong class="d-block mb-1" data-en="Status: Documents Pending Action"
-                                    data-bm="Status: Dokumen Dalam Tindakan">Status: Documents Pending Action</strong>
-                                <p class="mb-0 text-muted"
-                                    data-en="Your verification file has been uploaded successfully. A Department of Agriculture (DOA) officer will audit the record details shortly."
-                                    data-bm="Fail pengesahan anda telah berjaya dimuat naik. Pegawai Jabatan Pertanian (DOA) akan mengaudit butiran rekod tidak lama lagi.">
-                                    Your verification file has been uploaded successfully. A Department of Agriculture (DOA)
-                                    officer will audit the record details shortly.
-                                </p>
-                            @else
-                                <strong class="d-block mb-1 text-danger-custom" data-en="Status: Missing Attachment"
-                                    data-bm="Status: Lampiran Hilang">Status: Missing Attachment</strong>
-                                <p class="mb-0 text-muted"
-                                    data-en="No active verification attachment found. To request full platform clear rights, please upload your official operating credentials."
-                                    data-bm="Tiada lampiran pengesahan aktif ditemui. Untuk memohon hak pelepasan platform penuh, sila muat naik dokumen operasi rasmi anda.">
-                                    No active verification attachment found. To request full platform clear rights, please
-                                    upload your official operating credentials.
-                                </p>
-                            @endif
-                        </div>
+                    {{-- Document Requirements Table --}}
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered table-sm text-start">
+                            <thead class="table-light table-bordered">
+                                <tr>
+                                    <th data-en="Document" data-bm="Dokumen">Document</th>
+                                    <th data-en="Status" data-bm="Status">Status</th>
+                                    <th data-en="Expiry" data-bm="Tarikh Luput">Expiry</th>
+                                    <th data-en="Action" data-bm="Tindakan">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($docStatus as $item)
+                                    @php
+                                        $req = $item['requirement'];
+                                        $status = $item['status'];
+                                        $attachment = $item['attachment'];
+                                        $isMissing = $status === 'missing';
+                                        $isPending = $status === 'pending';
+                                        $isExpired = $status === 'expired';
+                                        $isValid = $status === 'uploaded';
+                                    @endphp
+                                    <tr>
+                                        <td>
+                                            <strong>{{ $req->name }}</strong>
+                                            <div class="text-muted small">{{ $req->description }}</div>
+                                        </td>
+                                        <td>
+                                            @if ($isMissing)
+                                                <span class="badge bg-danger" data-en="Missing" data-bm="Tiada">
+                                                    <i class="ri-close-circle-line me-1"></i> Missing
+                                                </span>
+                                            @elseif ($isPending)
+                                                <span class="badge bg-warning text-dark" data-en="Pending Review"
+                                                    data-bm="Dalam Semakan">
+                                                    <i class="ri-time-line me-1"></i> Pending Review
+                                                </span>
+                                            @elseif ($isExpired)
+                                                <span class="badge bg-warning text-dark" data-en="Expired"
+                                                    data-bm="Tamat tempoh">
+                                                    <i class="ri-alert-line me-1"></i> Expired
+                                                </span>
+                                            @else
+                                                <span class="badge bg-success" data-en="Verified" data-bm="Disahkan">
+                                                    <i class="ri-checkbox-circle-line me-1"></i> Verified
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if ($attachment && $req->requires_expiry)
+                                                {{ $attachment->valid_until ? \Carbon\Carbon::parse($attachment->valid_until)->format('d M Y') : '—' }}
+                                            @else
+                                                <span class="text-muted">—</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if ($isMissing || $isExpired)
+                                                <a href="{{ route('profile') }}" class="btn btn-sm btn-primary"
+                                                    data-en="Upload" data-bm="Muat Naik">
+                                                    <i class="ri-upload-line me-1"></i> Upload
+                                                </a>
+                                            @elseif ($attachment && ($isValid || $isPending))
+                                                <a href="{{ asset($attachment->file_path) }}" target="_blank"
+                                                    class="btn btn-sm btn-outline-secondary" data-en="View" data-bm="Lihat">
+                                                    <i class="ri-eye-line me-1"></i> View
+                                                </a>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-muted text-center"
+                                            data-en="No document requirements found."
+                                            data-bm="Tiada keperluan dokumen ditemui.">
+                                            No document requirements found.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
 
+                    {{-- Overall status summary --}}
+                    @php
+                        $allValid = collect($docStatus)->every(fn($item) => $item['status'] === 'uploaded');
+                        $anyMissing = collect($docStatus)->contains(fn($item) => $item['status'] === 'missing');
+                        $anyExpired = collect($docStatus)->contains(fn($item) => $item['status'] === 'expired');
+                        $anyPending = collect($docStatus)->contains(fn($item) => $item['status'] === 'pending');
+                    @endphp
+
+                    @if ($anyMissing || $anyExpired)
+                        <div class="alert alert-warning d-flex align-items-start text-start" role="alert">
+                            <i class="ri-alert-fill me-3 fs-4"></i>
+                            <div>
+                                @if ($anyMissing)
+                                    <strong data-en="Some required documents are missing."
+                                        data-bm="Beberapa dokumen wajib belum dimuat naik.">
+                                        Some required documents are missing.
+                                    </strong>
+                                    <br>
+                                @endif
+                                @if ($anyExpired)
+                                    <strong data-en="Some uploaded documents have expired."
+                                        data-bm="Beberapa dokumen yang dimuat naik telah tamat tempoh.">
+                                        Some uploaded documents have expired.
+                                    </strong>
+                                    <br>
+                                @endif
+                                <span
+                                    data-en="Please upload or update the documents marked above to complete your verification."
+                                    data-bm="Sila muat naik atau kemas kini dokumen yang ditanda di atas untuk melengkapkan pengesahan anda.">
+                                    Please upload or update the documents marked above to complete your verification.
+                                </span>
+                            </div>
+                        </div>
+                    @elseif ($anyPending)
+                        <div class="alert alert-info d-flex align-items-start text-start" role="alert">
+                            <i class="ri-information-fill me-3 fs-4"></i>
+                            <div>
+                                <strong data-en="Documents under review" data-bm="Dokumen dalam semakan">
+                                    Documents under review
+                                </strong>
+                                <br>
+                                <span
+                                    data-en="Your uploaded documents are being reviewed by a DOA officer. You will be notified once verified."
+                                    data-bm="Dokumen yang dimuat naik sedang disemak oleh pegawai DOA. Anda akan dimaklumkan setelah disahkan.">
+                                    Your uploaded documents are being reviewed by a DOA officer. You will be notified once
+                                    verified.
+                                </span>
+                            </div>
+                        </div>
+                    @elseif ($allValid && count($docStatus) > 0)  {{-- ✅ FIX: use count() --}}
+                        <div class="alert alert-success d-flex align-items-start text-start" role="alert">
+                            <i class="ri-checkbox-circle-fill me-3 fs-4"></i>
+                            <div>
+                                <strong data-en="All required documents are uploaded and valid."
+                                    data-bm="Semua dokumen wajib telah dimuat naik dan sah.">
+                                    All required documents are uploaded and valid.
+                                </strong>
+                                <br>
+                                <span data-en="Your account is pending final verification by a DOA officer."
+                                    data-bm="Akaun anda menunggu pengesahan akhir oleh pegawai DOA.">
+                                    Your account is pending final verification by a DOA officer.
+                                </span>
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- Action Group --}}
-                    <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center align-items-center">
-                        <a href="/" class="btn btn-outline-secondary-custom px-4 py-2" data-en="Return Home"
-                            data-bm="Laman Utama">
+                    <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center align-items-center mt-4">
+                        <a href="{{ route('home') }}" class="btn btn-outline-secondary-custom px-4 py-2"
+                            data-en="Return Home" data-bm="Laman Utama">
                             Return Home
                         </a>
 
-                        <a href="/profile" class="btn btn-primary-custom px-4 py-2"
-                            data-en="{{ authUser()['user']->approved?->verification_attachment ? 'View Attachment File' : 'Upload Attachment' }}"
-                            data-bm="{{ authUser()['user']->approved?->verification_attachment ? 'Lihat Fail Lampiran' : 'Muat Naik Lampiran' }}">
-                            {{ authUser()['user']->approved?->verification_attachment ? 'View Attachment File' : 'Upload Attachment' }}
-                        </a>
+                        @if ($anyMissing || $anyExpired)
+                            <a href="{{ route('profile') }}" class="btn btn-primary-custom px-4 py-2"
+                                data-en="Upload Documents" data-bm="Muat Naik Dokumen">
+                                Upload Documents
+                            </a>
+                        @else
+                            <a href="{{ route('profile') }}" class="btn btn-primary-custom px-4 py-2" data-en="View Profile"
+                                data-bm="Lihat Profil">
+                                View Profile
+                            </a>
+                        @endif
                     </div>
 
                 </div>
             </div>
-
         </div>
     </div>
 @endsection
-
-@push('scripts')
-    {{-- Language switcher logic matches the hook logic from front page asset scripts --}}
-@endpush

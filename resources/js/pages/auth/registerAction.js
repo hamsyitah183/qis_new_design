@@ -288,7 +288,8 @@ export function fileUpload(docId) {
                 label.removeAttribute("data-bm");
                 label.textContent = count + (count === 1 ? " file" : " files");
             } else {
-                statusBadge.textContent = count + (count === 1 ? " file" : " files");
+                statusBadge.textContent =
+                    count + (count === 1 ? " file" : " files");
             }
         } else {
             statusBadge.classList.remove("has-files");
@@ -529,6 +530,65 @@ $(document).ready(function () {
     });
 
     toggleAdditionalFields();
+
+    let picRowCount = 0;
+
+    function addPICRow(name = "", position = "", phone = "") {
+        const container = document.getElementById("picContainer");
+        const emptyEl = document.getElementById("picEmpty");
+        if (!container) return;
+
+        const row = document.createElement("div");
+        row.className = "row g-3 align-items-end pic-row mb-2";
+        row.dataset.index = picRowCount++;
+        row.innerHTML = `
+            <div class="col-4">
+                <label class="form-label" data-en="Name" data-bm="Nama">Name</label>
+                <input type="text" class="form-control form-control-sm" name="pic_name[]" value="${name}" placeholder="e.g. Ahmad Bin Ali">
+            </div>
+            <div class="col-3">
+                <label class="form-label" data-en="Position" data-bm="Jawatan">Position</label>
+                <input type="text" class="form-control form-control-sm" name="pic_position[]" value="${position}" placeholder="Manager">
+            </div>
+            <div class="col-3">
+                <label class="form-label" data-en="Phone" data-bm="Telefon">Phone</label>
+                <input type="text" class="form-control form-control-sm" name="pic_phone[]" value="${phone}" placeholder="0123456789">
+            </div>
+            <div class="col-2 text-end">
+                <button type="button" class="btn btn-sm btn-danger-light remove-pic-row" data-en="Remove" data-bm="Buang">
+                    <i class="ti ti-x"></i>
+                </button>
+            </div>
+        `;
+        container.insertBefore(row, emptyEl);
+        emptyEl.style.display = "none";
+
+        // If applyTranslations is globally available, call it on the row
+        if (typeof applyTranslations === "function") {
+            applyTranslations(row);
+        }
+    }
+
+    // Add button click
+    $(document).on("click", "#addPICBtn", function (e) {
+        e.preventDefault();
+        addPICRow();
+    });
+
+    // Remove row
+    $(document).on("click", ".remove-pic-row", function (e) {
+        e.preventDefault();
+        const row = $(this).closest(".pic-row");
+        row.remove();
+        // If no rows left, show the empty placeholder
+        if ($("#picContainer .pic-row").length === 0) {
+            $("#picEmpty").show();
+        }
+    });
+
+    // ================================================================
+    // END of PIC management
+    // ================================================================
 
     // State & District changes
     $(document).on("change", "#state", function () {
