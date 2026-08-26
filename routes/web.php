@@ -92,6 +92,7 @@ Route::get('/announcement', function () {
             $query->whereNull('valid_until')
                 ->orWhere('valid_until', '>=', now()->toDateString());
         })
+        ->orderBy('pin_announcement', 'desc')
         ->latest()
         ->get();
 
@@ -255,6 +256,8 @@ Route::prefix('internal')
 
         // ======================= announcements ========================
         Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.list');
+        Route::get('/announcements/create', [AnnouncementController::class, 'create'])->name('announcements.create');
+        Route::get('/announcements/{id}/edit', [AnnouncementController::class, 'edit'])->name('announcements.edit');
         Route::get('/announcements/data', [AnnouncementController::class, 'data'])->name('announcements.data');
         Route::get('/announcements/{id}', [AnnouncementController::class, 'show'])->name('announcements.show');
         Route::post('/announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
@@ -264,6 +267,7 @@ Route::prefix('internal')
         Route::post('/announcements/{id}/attachments', [AnnouncementController::class, 'uploadAttachment'])->name('announcements.attachments.upload');
         Route::delete('/announcements/attachments/{attachmentId}', [AnnouncementController::class, 'deleteAttachment'])->name('announcements.attachments.delete');
         Route::post('/announcements/{id}/toggle', [AnnouncementController::class, 'toggleActive'])->name('announcements.toggle');
+        Route::post('/announcements/{id}/toggle-pin', [AnnouncementController::class, 'togglePin'])->name('announcements.toggle_pin');
         Route::post('/announcements/{id}/share-email', [AnnouncementController::class, 'shareViaEmail'])->name('announcements.share_email');
 
         // ============================== gallery ================================================

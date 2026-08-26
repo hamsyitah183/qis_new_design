@@ -250,7 +250,6 @@
                                 $statusEn = 'Active';
                                 $statusBm = 'Aktif';
                             }
-                            $content = strip_tags($item->content);
                         @endphp
 
                         <button type="button" class="qis-announcement-card" data-modal="qisModalAnnouncement">
@@ -258,12 +257,11 @@
                                 data-bm="{{ $statusBm }}">{{ $statusEn }}</span>
 
                             <h5 data-en="{{ $item->title }}" data-bm="{{ $item->title }}">
-                                {{ $item->title }}</h5>
+                                @if($item->pin_announcement) <i class='bx bxs-pin text-warning me-1' title="Pinned"></i> @endif{{ $item->title }}</h5>
 
-                            <p data-en="{{ \Illuminate\Support\Str::limit($content, 100) }}"
-                                data-bm="{{ \Illuminate\Support\Str::limit($content, 100) }}">
-                                {{ \Illuminate\Support\Str::limit($content, 100) }}
-                            </p>
+                            <div class="qis-announcement-meta" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 14px; margin-bottom: 0.5rem; line-height: 1.5;">
+                                {!! $item->content !!}
+                            </div>
 
                             <div class="qis-announcement-meta">
                                 <i class='bx bx-calendar'></i>

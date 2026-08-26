@@ -31,9 +31,9 @@
                 <div class="card-header">
                     <div class="card-title" data-en="Announcement List" data-bm="Senarai Pengumuman">Announcement List</div>
                     <div class="ms-auto d-flex gap-2 align-items-center">
-                        <button type="button" class="btn btn-success btn-sm" id="btnAddAnnouncement">
+                        <a href="{{ route('internal.announcements.create') }}" class="btn btn-success btn-sm">
                             <i class="ti ti-plus me-1"></i> <span data-en="Add Announcement" data-bm="Tambah Pengumuman">Add Announcement</span>
-                        </button>
+                        </a>
                     </div>
                 </div>
 
@@ -56,59 +56,7 @@
         </div>
     </div>
 
-    <!-- Announcement Modal -->
-    <x-modal id="announcementModal" title="Announcement" title_en="Announcement" title_bm="Pengumuman" size="modal-lg modal-dialog-centered">
-        <form id="announcementForm">
-            <input type="hidden" id="announcement_id" name="id">
-            <div class="row gy-3">
-                <div class="col-xl-12">
-                    <label for="title" class="form-label" data-en="Title" data-bm="Tajuk">Title <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="title" name="title" required>
-                </div>
-                
-                <div class="col-xl-6">
-                    <label class="form-label" data-en="Valid From" data-bm="Sah Dari">Valid From</label>
-                    <input type="date" class="form-control" id="valid_from" name="valid_from">
-                </div>
-                <div class="col-xl-6">
-                    <label class="form-label" data-en="Valid Until" data-bm="Sah Sehingga">Valid Until</label>
-                    <input type="date" class="form-control" id="valid_until" name="valid_until">
-                </div>
 
-                <div class="col-xl-12">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="is_active" name="is_active" checked>
-                        <label class="form-check-label" for="is_active" data-en="Is Active" data-bm="Aktif">Is Active</label>
-                    </div>
-                </div>
-
-                <div class="col-xl-12">
-                    <label class="form-label d-block" data-en="Content" data-bm="Kandungan">Content <span class="text-danger">*</span></label>
-                    <div class="border rounded" style="min-height: 150px; background-color: var(--bs-body-bg);">
-                        <div id="content-editor" style="min-height: 150px; border: none;"></div>
-                    </div>
-                </div>
-
-                <div class="col-xl-12">
-                    <label class="form-label" data-en="Attachments (Images Only)" data-bm="Lampiran (Gambar Sahaja)">Attachments (Images Only)</label>
-                    <input type="file" class="form-control" id="attachments" name="attachments[]" multiple accept="image/*">
-                    
-                    <!-- Preview new attachments (add mode) -->
-                    <div id="new-attachments-preview" class="mt-2 d-flex flex-wrap gap-2"></div>
-
-                    <!-- Existing attachments preview (edit mode) -->
-                    <div id="existing-attachments" class="mt-3 d-flex flex-wrap gap-2"></div>
-                </div>
-            </div>
-        </form>
-        <x-slot name="footer">
-            <div class="w-100 d-flex justify-content-end gap-2" style="position: relative; z-index: 9999;">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Cancel" data-bm="Batal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="btnSaveAnnouncement" data-en="Save" data-bm="Simpan">Save</button>
-            </div>
-        </x-slot>
-    </x-modal>
-    <!-- View Announcement Modal -->
     <x-modal id="viewAnnouncementModal" title="View Announcement" title_en="View Announcement" title_bm="Lihat Pengumuman" size="modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="row gy-3">
             <div class="col-xl-12">
@@ -156,10 +104,16 @@
         </div>
     </div>
 
-    <!-- Image View Modal -->
-    <x-modal id="imageViewModal" title="View Image" title_en="View Image" title_bm="Lihat Gambar" size="modal-lg modal-dialog-centered">
-        <div class="text-center">
-            <img id="modal_image_src" src="" alt="Attachment Image" class="img-fluid rounded" style="max-height: 80vh;">
+    <!-- File Preview Modal -->
+    <x-modal id="filePreviewModal" title="File Preview" title_en="File Preview" title_bm="Pratonton Fail" size="modal-xl modal-dialog-centered">
+        <div class="text-center w-100 h-100" id="previewModalBody">
+            <img id="previewImageModalSrc" src="" alt="Preview" class="img-fluid rounded d-none" style="max-height: 70vh;">
+            <iframe id="previewPdfModalSrc" src="" class="w-100 d-none" style="height: 75vh; border: none;"></iframe>
+            <div id="previewUnsupportedMessage" class="d-none py-5">
+                <i class="ti ti-file-download text-primary mb-3" style="font-size: 48px;"></i>
+                <h5>This file type cannot be previewed in the browser.</h5>
+                <a id="previewDownloadLink" href="#" target="_blank" class="btn btn-primary mt-3" data-en="Download File" data-bm="Muat Turun Fail">Download File</a>
+            </div>
         </div>
         <x-slot name="footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Close" data-bm="Tutup">Close</button>
