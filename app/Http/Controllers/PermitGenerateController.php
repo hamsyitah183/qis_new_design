@@ -394,9 +394,8 @@ class PermitGenerateController extends Controller
         return response()->download($tempPath)->deleteFileAfterSend(true);
     }
 
-    public function generateInspection($id)
+    public function generateInspection($id, PermitQrService $permitQrService)
     {
-        // $id = inspection application id
         $application = InspectionApplication::where('application_id', $id)->first();
 
         if (!$application) {
@@ -404,17 +403,29 @@ class PermitGenerateController extends Controller
         }
 
         $items = $application->inspectionItems;
-        // dd( $items );
         $importer = $application->importer_detail;
         $exporter = $application->exporter;
         $entry = $application->entryPoint;
 
-        $pdf = Pdf::loadView('pdf.permit_inspection', compact('application', 'items', 'importer', 'exporter', 'entry'))->setPaper('a4', 'portrait');
+        // ─── Generate QR ──────────────────────────────────────────
+        $qrDataUri = null;
+        $permitNumber = $items->first()->id ?? $application->application_id; // use any unique reference
+        try {
+            $encryptedPayload = $permitQrService->createEncryptedPayload((string) $permitNumber);
+            $qrDataUri = $permitQrService->createQrDataUri($encryptedPayload);
+        } catch (\Throwable $e) {
+            Log::warning('Failed generating inspection certificate QR: ' . $e->getMessage());
+        }
+
+        $pdf = Pdf::loadView(
+            'pdf.permit_inspection',
+            compact('application', 'items', 'importer', 'exporter', 'entry', 'qrDataUri')
+        )->setPaper('a4', 'portrait');
 
         return $pdf->stream("Inspection_Certificate_{$application->application_id}.pdf");
     }
 
-    public function generateConsignmentApplication($id)
+    public function generateConsignmentApplication($id, PermitQrService $permitQrService)
     {
         $application = ConsignmentApplication::where('application_id', $id)->first();
 
@@ -425,18 +436,24 @@ class PermitGenerateController extends Controller
         $items = $application->consignmentPermits;
         $importer = $application->importer;
         $exporter = $application->exporter;
-        $entryPoint = $application->entryPoint; // renamed from $entry
+        $entryPoint = $application->entryPoint;
 
         $permitNumber = $items->first()->permit_number ?? null;
         $validUntil = optional($items->first())->validity_date
             ? \Carbon\Carbon::parse($items->first()->validity_date)->format('d/M/Y')
             : '-';
 
-        // TODO: replace with a real lookup once you have a District model.
         $district = $entryPoint ? $entryPoint->district : null;
-
-        // TODO: replace with a real lookup for the officer authorised to sign
         $approvingOfficer = null;
+
+        // ─── Generate QR ──────────────────────────────────────────
+        $qrDataUri = null;
+        try {
+            $encryptedPayload = $permitQrService->createEncryptedPayload((string) ($permitNumber ?? ''));
+            $qrDataUri = $permitQrService->createQrDataUri($encryptedPayload);
+        } catch (\Throwable $e) {
+            Log::warning('Failed generating consignment permit QR: ' . $e->getMessage());
+        }
 
         $pdf = Pdf::loadView(
             'pdf.permit_consignment',
@@ -445,16 +462,18 @@ class PermitGenerateController extends Controller
                 'items',
                 'importer',
                 'exporter',
-                'entryPoint',      // now matches the blade
-                'permitNumber',    // explicit permit number
+                'entryPoint',
+                'permitNumber',
                 'validUntil',
                 'district',
                 'approvingOfficer',
+                'qrDataUri', // <-- new
             ),
         )->setPaper('a4', 'portrait');
 
         return $pdf->stream("Consignment_Permit_{$application->application_id}.pdf");
     }
+
     function generateConsignment($id)
     {
         $application = ConsignmentApplication::with(['importer', 'exporter', 'consignmentPermits'])

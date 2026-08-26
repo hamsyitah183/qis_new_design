@@ -181,10 +181,45 @@
             font-size: 8pt;
             font-style: italic;
         }
+
+        /* ─── QR PAGE STYLES ────────────────────────────────────── */
+        .page-break {
+            page-break-after: always;
+        }
+        .qr-page {
+            text-align: center;
+            padding-top: 30px;
+        }
+        .qr-page-title {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .qr-frame {
+            display: inline-block;
+            border: 1px solid #000;
+            padding: 16px;
+        }
+        .qr-permit-no {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .qr-note {
+            margin-top: 10px;
+            font-size: 9pt;
+            line-height: 1.4;
+            display: inline-block;
+            text-align: left;
+        }
+        .qr-note-verification {
+            display: block;
+            padding-left: 2.12rem;
+        }
     </style>
 </head>
 <body>
 
+    <!-- MAIN CONTENT (unchanged) -->
     <div class="original-box">ORIGINAL</div>
 
     <table class="ref-table">
@@ -375,6 +410,30 @@
     </table>
 
     <div class="doc-code">P.K. 628 (L) - 2026</div>
+
+    <!-- ========== QR PAGE ========== -->
+    <div class="page-break"></div>
+
+    <div class="qr-page">
+        <div class="qr-page-title">QR CODE</div>
+
+        @if (!empty($qrDataUri))
+            <div class="qr-frame">
+                <img src="{{ $qrDataUri }}" alt="QR Code" style="width: 300px; height: 300px;">
+            </div>
+        @else
+            <p>QR code is unavailable.</p>
+        @endif
+
+        <div class="qr-permit-no">
+            Certificate No.: <span class="variable-value">{{ $application->serial_number ?? $application->application_id }}</span>
+        </div>
+
+        <div class="qr-note">
+            <strong>Note:</strong> Please ensure both pages of this certificate (form details and QR code page) are printed and brought together for
+            <span class="qr-note-verification">verification.</span>
+        </div>
+    </div>
 
 </body>
 </html>
