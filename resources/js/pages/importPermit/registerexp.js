@@ -147,13 +147,17 @@ function initCategoryToggle() {
     }
 
     // Listen to changes on radio/select with name "applCate"
-    $(document).on("change", 'input[name="applCate"], select[name="applCate"]', function () {
-        const val = $(this).val();
-        $cateInput.val(val); // keep hidden input in sync
-        applyCategory(val);
-        // trigger summary update if needed
-        summarySubmit();
-    });
+    $(document).on(
+        "change",
+        'input[name="applCate"], select[name="applCate"]',
+        function () {
+            const val = $(this).val();
+            $cateInput.val(val); // keep hidden input in sync
+            applyCategory(val);
+            // trigger summary update if needed
+            summarySubmit();
+        },
+    );
 
     // Also listen to direct changes on the hidden input (if set programmatically)
     $cateInput.on("change", function () {
@@ -172,7 +176,9 @@ function initCategoryToggle() {
 }
 
 function clearImporterFields() {
-    $("#impname, #impid, #impfonno, #impaddress1, #impaddress2, #imp_id, #impemail").val("");
+    $(
+        "#impname, #impid, #impfonno, #impaddress1, #impaddress2, #imp_id, #impemail",
+    ).val("");
     importer = null;
 }
 
@@ -327,6 +333,8 @@ function loadConsignmentSelection() {
         didOpen: () => Swal.showLoading(),
     });
 
+    loadUses();
+
     return $.ajax({
         url: `/public/get_consignment/${countryCode}`,
         method: "GET",
@@ -376,7 +384,11 @@ function loadConsignmentSelection() {
 // ─── Load Uses (no itemId needed) ─────────────────────────
 async function loadUses() {
     const $select = $("#itemUses");
-    $select.empty().append('<option value="" data-en="-- Select Uses --" data-bm="-- Pilih Kegunaan --">-- Select Uses --</option>');
+    $select
+        .empty()
+        .append(
+            '<option value="" data-en="-- Select Uses --" data-bm="-- Pilih Kegunaan --">-- Select Uses --</option>',
+        );
 
     Swal.fire({
         title: '<span data-en="Loading..." data-bm="Memuat...">Loading...</span>',
@@ -393,19 +405,20 @@ async function loadUses() {
                 const display = row.name;
                 const value = row.name;
                 $select.append(
-                    `<option value="${value}" data-en="${display}" data-bm="${display}">${display}</option>`
+                    `<option value="${value}" data-en="${display}" data-bm="${display}">${display}</option>`,
                 );
             });
 
             const lang = getCurrentLang();
-            const placeholder = lang === "bm" ? "-- Pilih Kegunaan --" : "-- Select Uses --";
+            const placeholder =
+                lang === "bm" ? "-- Pilih Kegunaan --" : "-- Select Uses --";
             $select.select2({
                 width: "100%",
                 placeholder: placeholder,
                 allowClear: true,
                 dropdownParent: $("#addItemModal"),
             });
-            console.log('the uses', data.data);
+            console.log("the uses", data.data);
             Swal.close();
         })
         .catch((err) => {
@@ -585,9 +598,7 @@ function initAddExporterModal() {
     // Init Select2 for country dropdown with bilingual placeholder
     const lang = getCurrentLang();
     const placeCountry =
-        lang === "bm"
-            ? "-- Pilih Negara --"
-            : "-- Select Country --";
+        lang === "bm" ? "-- Pilih Negara --" : "-- Select Country --";
     $("#addexpcountry").select2({
         width: "100%",
         placeholder: placeCountry,
@@ -2780,7 +2791,9 @@ $(document).ready(async function () {
         $("#itemSelect").on("change", function () {
             const selectedVal = $(this).val();
             const $itemUses = $("#itemUses");
-            $itemUses.empty().append('<option value="">-- Select Uses --</option>');
+            $itemUses
+                .empty()
+                .append('<option value="">-- Select Uses --</option>');
 
             if (!selectedVal) {
                 toggleCustomItemInput(false);
@@ -2795,7 +2808,7 @@ $(document).ready(async function () {
                     .html(
                         `<span style="color:red;" data-en="Attachment is mandatory for custom items. Please upload the item image or document"
                            data-bm="Lampiran adalah wajib untuk item yang tiada dalam senarai. Sila muat naik gambar atau dokumen">
-                        * Attachment is mandatory for custom items. Please upload the item image or document.</span>`
+                        * Attachment is mandatory for custom items. Please upload the item image or document.</span>`,
                     )
                     .show();
                 return;
