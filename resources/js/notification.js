@@ -1,5 +1,6 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
+import { applyTranslations } from "./app";
 
 // Helper to get the current language from localStorage (same as used in app.js)
 function getCurrentLanguage() {
@@ -90,6 +91,8 @@ export function notification() {
 
                 notificationContent.appendChild(listItem);
             });
+
+            applyTranslations(notificationContent);
         })
         .catch((error) => console.error("Notification error:", error));
 
@@ -219,6 +222,8 @@ export function notificationContent(hours = null) {
 
                 notificationList.appendChild(listItem);
             });
+
+            applyTranslations(notificationList);
         })
         .catch(() => {
             console.log("error fetch notification");

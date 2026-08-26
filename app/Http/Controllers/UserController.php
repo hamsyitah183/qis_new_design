@@ -946,9 +946,9 @@ class UserController extends Controller
 
         $users = InternalUser::role(['admin', 'superadmin'])->get();
         $notificationUrl = route('internal.public.list');
-        Notification::send($users, new ApplicationNotification('A user upload a verification attachment', $user->fullname, $notificationUrl));
+        Notification::send($users, new ApplicationNotification('A user upload a verification attachment', 'A user upload a verification attachment', $user->fullname, $notificationUrl));
 
-        $user->notify(new ApplicationNotification('You Upload a verification attachment', 'QIS', '/profile'));
+        $user->notify(new ApplicationNotification('You Upload a verification attachment', 'You Upload a verification attachment', 'QIS', '/profile'));
 
         activity()
             ->useLog('user_activity')
@@ -1170,7 +1170,7 @@ class UserController extends Controller
 
             $users = InternalUser::role(['admin', 'superadmin'])->get();
             $notificationUrl = route('internal.public.list');
-            Notification::send($users, new ApplicationNotification($isApproved ? $user->fullname . ' account is verified' : $user->fullname . ' account verification is rejected', $user->fullname, $notificationUrl));
+            Notification::send($users, new ApplicationNotification($isApproved ? $user->fullname . ' account is verified' : $user->fullname . ' account verification is rejected', $isApproved ? $user->fullname . ' account is verified' : $user->fullname . ' account verification is rejected', $user->fullname, $notificationUrl));
 
             activity()
                 ->useLog('user_activity')
@@ -1179,9 +1179,9 @@ class UserController extends Controller
                 ->causedBy(authUser()['user'])
                 ->log($isApproved ? "{$user->fullname} was verified by " . authUser()['user']['fullname'] : "{$user->fullname}'s verification is rejected by " . authUser()['user']['fullname']);
 
-            $user->notify(new ApplicationNotification($isApproved ? 'Your account is verified' : 'Your account verification is rejected', 'QIS', '/profile'));
+            $user->notify(new ApplicationNotification($isApproved ? 'Your account is verified' : 'Your account verification is rejected', $isApproved ? 'Your account is verified' : 'Your account verification is rejected', 'QIS', '/profile'));
             if ($isApproved) {
-                $user->notify(new ApplicationNotification('Start apply new application', 'QIS', '/public/new_application'));
+                $user->notify(new ApplicationNotification('Start apply new application', 'Start apply new application', 'QIS', '/public/new_application'));
             }
 
             return response()->json([

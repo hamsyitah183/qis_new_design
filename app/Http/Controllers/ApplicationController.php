@@ -953,23 +953,31 @@ class ApplicationController extends Controller
         $statusMessages = [
             'Clerk Review In-Progress' => [
                 'public' => 'Your application has been verified by the importer and is now pending clerk review.',
+                'public_bm' => 'Permohonan anda telah disahkan oleh pengimport dan kini menunggu semakan kerani.',
                 'internal' => 'Application verified by importer and awaiting clerk review.',
                 'notify' => 'Import application is now awaiting clerk review.',
+                'notify_bm' => 'Permohonan import kini menunggu semakan kerani.',
             ],
             'Not Approved' => [
                 'public' => 'Your application was not approved by the importer.',
+                'public_bm' => 'Permohonan anda tidak diluluskan oleh pengimport.',
                 'internal' => 'Application was not approved by the importer.',
                 'notify' => 'Import application was not approved by the importer.',
+                'notify_bm' => 'Permohonan import tidak diluluskan oleh pengimport.',
             ],
             'Clerk Verified' => [
                 'public' => 'Your application has been approved by the clerk.',
+                'public_bm' => 'Permohonan anda telah diluluskan oleh kerani.',
                 'internal' => 'Application approved by clerk.',
                 'notify' => 'Import application has been approved by clerk.',
+                'notify_bm' => 'Permohonan import telah diluluskan oleh kerani.',
             ],
             'Clerk Rejected' => [
                 'public' => 'Your application has been rejected by the clerk.',
+                'public_bm' => 'Permohonan anda telah ditolak oleh kerani.',
                 'internal' => 'Application rejected by clerk.',
                 'notify' => 'Import application has been rejected by clerk.',
+                'notify_bm' => 'Permohonan import telah ditolak oleh kerani.',
             ],
         ];
 
@@ -1080,7 +1088,7 @@ class ApplicationController extends Controller
         }
 
         $internalUsers = InternalUser::all();
-        Notification::send($internalUsers, new ApplicationNotification($messages['notify'], $messages['notify'], authUser()['user']->fullname ?? 'System', $notificationUrl));
+        Notification::send($internalUsers, new ApplicationNotification($messages['notify'], $messages['notify_bm'], authUser()['user']->fullname ?? 'System', $notificationUrl));
 
         // If status became Clerk Verified, dispatch the email with buttons to Officers
         if (strtolower($status) === 'clerk verified') {
@@ -1107,7 +1115,7 @@ class ApplicationController extends Controller
             Log::warning('Pusher connection failed but continuing public notification: ' . $e->getMessage());
         }
 
-        Notification::send($publicUser, new ApplicationNotification($messages['public'], $messages['public'], authUser()['user']->fullname ?? 'System', $notificationUrl));
+        Notification::send($publicUser, new ApplicationNotification($messages['public'], $messages['public_bm'], authUser()['user']->fullname ?? 'System', $notificationUrl));
 
         /**
          * =====================
@@ -1122,7 +1130,7 @@ class ApplicationController extends Controller
             } catch (\Exception $e) {
                 Log::warning('Pusher connection failed but continuing importer notification: ' . $e->getMessage());
             }
-            Notification::send($importerUser, new ApplicationNotification($messages['public'], $messages['public'], authUser()['user']->fullname ?? 'System', $notificationUrl));
+            Notification::send($importerUser, new ApplicationNotification($messages['public'], $messages['public_bm'], authUser()['user']->fullname ?? 'System', $notificationUrl));
         }
 
         /**

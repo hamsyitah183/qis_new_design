@@ -359,11 +359,11 @@ class MiscController extends Controller
             $url = '#';
 
             foreach ($publicUsers as $user) {
-                Notification::send($user, new ApplicationNotification('A permit condition of item ' . $itemName . ' has been deleted', $title, $url));
+                Notification::send($user, new ApplicationNotification('A permit condition of item ' . $itemName . ' has been deleted', 'A permit condition of item ' . $itemName . ' has been deleted', $title, $url));
             }
 
             foreach ($internalUsers as $user) {
-                Notification::send($user, new ApplicationNotification('A permit condition of item ' . $itemName . ' has been deleted', $title, '/internal/permit_condition'));
+                Notification::send($user, new ApplicationNotification('A permit condition of item ' . $itemName . ' has been deleted', 'A permit condition of item ' . $itemName . ' has been deleted', $title, '/internal/permit_condition'));
             }
 
             // same behavior as shareNews() (emails to Gmail)
@@ -443,13 +443,13 @@ class MiscController extends Controller
         event(new ApplicationDeleted('Permit in ' . $permit->application->application_id . ' is ' . $status));
 
         $users = InternalUser::role(['admin', 'officer', 'superadmin'])->get();
-        Notification::send($users, new ApplicationNotification('A permit with application ID ' . $permit->application->application_id . ' has been ' . $status, authUser()['user']->fullname, $url));
+        Notification::send($users, new ApplicationNotification('A permit with application ID ' . $permit->application->application_id . ' has been ' . $status, 'A permit with application ID ' . $permit->application->application_id . ' has been ' . $status, authUser()['user']->fullname, $url));
 
         $user = PublicUser::where('uuid', $permit->application->user_id)->first();
 
         event(new PublicUserEvent('A permit in application with ID ' . $permit->application->application_id . ' has been ' . $status, $user->uuid));
 
-        Notification::send($user, new ApplicationNotification('A permit in application with ID ' . $permit->application->application_id . ' has been ' . $status, authUser()['user']->fullname, $url));
+        Notification::send($user, new ApplicationNotification('A permit in application with ID ' . $permit->application->application_id . ' has been ' . $status, 'A permit in application with ID ' . $permit->application->application_id . ' has been ' . $status, authUser()['user']->fullname, $url));
 
         $application->logActivity(action: 'Officer Verification', remark: $request['reason'] ?? 'Permit approved by officer', status: 'Officer Verified');
 
@@ -609,7 +609,7 @@ class MiscController extends Controller
                 //     new QISNewsMail($title, $detailsMessage)
                 // );
 
-                Notification::send($user, new ApplicationNotification('A condition of item ' . $item->item_name . ' ' . $notificationActionText, $title, $url));
+                Notification::send($user, new ApplicationNotification('A condition of item ' . $item->item_name . ' ' . $notificationActionText, 'A condition of item ' . $item->item_name . ' ' . $notificationActionText, $title, $url));
                 Mail::to($user->email)->send(
                     new QISNewsMail($title, $detailsMessage)
                 );
@@ -617,6 +617,7 @@ class MiscController extends Controller
 
             foreach ($internalUsers as $user) {
                 Notification::send($user, new ApplicationNotification(
+                    'A condition of item ' . $item->item_name . ' ' . $notificationActionText,
                     'A condition of item ' . $item->item_name . ' ' . $notificationActionText,
                     $title,
                     '/internal/permit_edit_condition/' . $item->id
