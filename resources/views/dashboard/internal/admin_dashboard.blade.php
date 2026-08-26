@@ -2,6 +2,8 @@
 
 @endpush
 
+
+
 {{-- finance and application data --}}
 @include('dashboard.internal.components.finance_application_data')
 {{-- @dd($data) --}}

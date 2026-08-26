@@ -19,6 +19,7 @@ use App\Charts\ClerkDailyWorkloadChart;
 use App\Charts\ClerkDailyVolumeChart;
 use App\Charts\PublicApplicationStatusChart;
 use App\Charts\PermitDailyProcessChart;
+use App\Models\Announcement;
 use App\Models\Country;
 use App\Models\IpEntryPoint;
 use App\Models\Order;
@@ -67,14 +68,14 @@ class DashboardController extends Controller
 
         $pendingCount =
             IpApplication::whereIn('status', ['Clerk Review In-Progress', 'Awaiting Approval'])
-                ->where('user_id', '=', $userId)
-                ->count() +
+            ->where('user_id', '=', $userId)
+            ->count() +
             InspectionApplication::whereIn('status', ['Clerk review in-progress', 'wait for company approval'])
-                ->where('user_id', '=', $userId)
-                ->count() +
+            ->where('user_id', '=', $userId)
+            ->count() +
             ConsignmentApplication::whereIn('status', ['Clerk Review In-Progress', 'wait for company approval'])
-                ->where('user_id', '=', $userId)
-                ->count();
+            ->where('user_id', '=', $userId)
+            ->count();
 
         $verifiedCount = IpApplication::where('status', '=', 'Clerk Verified')->where('user_id', '=', $userId)->count() + InspectionApplication::where('status', '=', 'Clerk Verified')->where('user_id', '=', $userId)->count() + ConsignmentApplication::where('status', '=', 'Clerk Verified')->where('user_id', '=', $userId)->count();
 
@@ -82,20 +83,20 @@ class DashboardController extends Controller
 
         $pendingPaymentCount =
             IpApplication::where('user_id', $userId)
-                ->whereHas('consignmentPermits', function ($q) {
-                    $q->where('status', 'pending for payment');
-                })
-                ->count() +
+            ->whereHas('consignmentPermits', function ($q) {
+                $q->where('status', 'pending for payment');
+            })
+            ->count() +
             InspectionApplication::where('user_id', $userId)
-                ->whereHas('inspectionItems', function ($q) {
-                    $q->where('status', 'pending for payment');
-                })
-                ->count() +
+            ->whereHas('inspectionItems', function ($q) {
+                $q->where('status', 'pending for payment');
+            })
+            ->count() +
             ConsignmentApplication::where('user_id', $userId)
-                ->whereHas('consignmentPermits', function ($q) {
-                    $q->where('status', 'pending for payment');
-                })
-                ->count();
+            ->whereHas('consignmentPermits', function ($q) {
+                $q->where('status', 'pending for payment');
+            })
+            ->count();
         $rejectedCount = IpApplication::where('status', '=', 'Clerk Rejected')->where('user_id', '=', $userId)->count() + InspectionApplication::where('status', '=', 'Clerk Rejected')->where('user_id', '=', $userId)->count() + ConsignmentApplication::where('status', '=', 'Clerk Rejected')->where('user_id', '=', $userId)->count();
 
         // Recent Applications
@@ -132,14 +133,14 @@ class DashboardController extends Controller
         for ($i = 4; $i >= 0; $i--) {
             $month = now()->subMonths($i);
             $barCategories[] = $month->format('M Y');
-            
+
             $startOfMonth = $month->copy()->startOfMonth();
             $endOfMonth = $month->copy()->endOfMonth();
-            
+
             $count = IpApplication::where('user_id', $userId)->whereBetween('created_at', [$startOfMonth, $endOfMonth])->count() +
-                     InspectionApplication::where('user_id', $userId)->whereBetween('created_at', [$startOfMonth, $endOfMonth])->count() +
-                     ConsignmentApplication::where('user_id', $userId)->whereBetween('created_at', [$startOfMonth, $endOfMonth])->count();
-            
+                InspectionApplication::where('user_id', $userId)->whereBetween('created_at', [$startOfMonth, $endOfMonth])->count() +
+                ConsignmentApplication::where('user_id', $userId)->whereBetween('created_at', [$startOfMonth, $endOfMonth])->count();
+
             $barData[] = $count;
         }
 
@@ -152,9 +153,9 @@ class DashboardController extends Controller
         $ipApps = IpApplication::where('user_id', $userId)->whereBetween('created_at', [$startOfWeek, $endOfWeek])->get();
         $insApps = InspectionApplication::where('user_id', $userId)->whereBetween('created_at', [$startOfWeek, $endOfWeek])->get();
         $consApps = ConsignmentApplication::where('user_id', $userId)->whereBetween('created_at', [$startOfWeek, $endOfWeek])->get();
-        
+
         $allAppsThisWeek = $ipApps->concat($insApps)->concat($consApps);
-        
+
         foreach ($allAppsThisWeek as $app) {
             $dayIndex = $app->created_at->isoWeekday() - 1; // 1 (Mon) to 7 (Sun) -> 0 to 6
             $lineData[$dayIndex]++;
@@ -175,30 +176,22 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function internal_dashboard(LineUserChart $lineChart, OrderDonutChart $orderChart, PaymentMethodBarChart $paymentChart, ApplicationHorizontalChart $applicationChart, ClerkApplicationStatusChart $clerkStatusChart, ClerkDailyWorkloadChart $clerkWorkloadChart, ClerkDailyVolumeChart $clerkVolumeChart, PermitDailyProcessChart $permitChart)
-    {
-        // $notifications = Notification::where('notifiable_type', 'internal')
-        //     ->where('notifiable_id', authUser()['user']->uuid)
-        //     ->latest()
-        //     ->take(10)
-        //     ->get();
+    public function internal_dashboard(
+        LineUserChart $lineChart,
+        OrderDonutChart $orderChart,
+        PaymentMethodBarChart $paymentChart,
+        ApplicationHorizontalChart $applicationChart,
+        ClerkApplicationStatusChart $clerkStatusChart,
+        ClerkDailyWorkloadChart $clerkWorkloadChart,
+        ClerkDailyVolumeChart $clerkVolumeChart,
+        PermitDailyProcessChart $permitChart
+    ) {
+        // ─── Fetch completed applications ──────────────────────────────────
+        $importPermits = IpApplication::with('user')->where('status', 'Completed')->get();
+        $inspectionCerts = InspectionApplication::with('user')->where('status', 'Completed')->get();
+        $consignmentCerts = ConsignmentApplication::with('user')->where('status', 'Completed')->get();
 
-        // Fetch latest applications from all three types
-        $importPermits = \App\Models\IpApplication::with('user')
-            ->where('status', 'Completed')
-            ->get();
-
-        $inspectionCerts = \App\Models\InspectionApplication::with('user')
-            ->where('status', 'Completed')
-            ->get();
-
-
-        $consignmentCerts = \App\Models\ConsignmentApplication::with('user')
-            ->where('status', 'Completed')
-            ->get();
-
-
-        // Combine and sort all applications
+        // ─── Boundary officer filter ──────────────────────────────────────
         if (authUser()['roles'][0] == 'boundary officer') {
             $boundary = InternalUser::with(['boundaryOfficer.entryPoint'])
                 ->where('uuid', authUser()['user']['uuid'])
@@ -206,7 +199,6 @@ class DashboardController extends Controller
 
             $entryPoint = $boundary?->boundaryOfficer?->ip_entry_id;
 
-            // If entry point is set, filter by it; otherwise show all
             if ($entryPoint) {
                 $importPermits = $importPermits->filter(fn($app) => $app->entry_point == $entryPoint)->sortByDesc('created_at')->values();
                 $inspectionCerts = $inspectionCerts->filter(fn($app) => $app->entry_point == $entryPoint)->sortByDesc('created_at')->values();
@@ -221,115 +213,131 @@ class DashboardController extends Controller
             $totalInspectionCerts = $inspectionCerts->count();
             $totalConsignmentCerts = $consignmentCerts->count();
 
-            $announcements = \App\Models\Announcement::with('attachments')
-                ->where('is_active', true)
-                ->where(function ($query) {
-                    $query->whereNull('valid_from')
-                          ->orWhere('valid_from', '<=', now()->toDateString());
-                })
-                ->where(function ($query) {
-                    $query->whereNull('valid_until')
-                          ->orWhere('valid_until', '>=', now()->toDateString());
-                })
-                ->latest()
-                ->take(3)
-                ->get();
-
             return view('dashboard.internal.main_dashboard', [
-                'latestApplications' => collect(), // empty, not used for boundary
+                'latestApplications' => collect(),
                 'importPermits' => $importPermits,
                 'inspectionCerts' => $inspectionCerts,
                 'consignmentCerts' => $consignmentCerts,
                 'totalImportPermits' => $totalImportPermits,
                 'totalInspectionCerts' => $totalInspectionCerts,
                 'totalConsignmentCerts' => $totalConsignmentCerts,
-                'announcements' => $announcements,
+                'announcements' => Announcement::with('attachments')
+                    ->where('is_active', true)
+                    ->where(function ($q) {
+                        $q->whereNull('valid_from')->orWhere('valid_from', '<=', now()->toDateString());
+                    })
+                    ->where(function ($q) {
+                        $q->whereNull('valid_until')->orWhere('valid_until', '>=', now()->toDateString());
+                    })
+                    ->latest()
+                    ->take(3)
+                    ->get(),
             ]);
-        } else {
-            $latestApplications = $importPermits
-                ->concat($inspectionCerts)
-                ->concat($consignmentCerts)
-                ->sortByDesc('created_at')
-                ->take(5)
-                ->values();
         }
 
+        // ─── For other roles: latest 5 completed applications ────────────
+        $latestApplications = $importPermits
+            ->concat($inspectionCerts)
+            ->concat($consignmentCerts)
+            ->sortByDesc('created_at')
+            ->take(5)
+            ->values();
 
-        // Get statistics counts
-        $totalImportPermits = \App\Models\IpApplication::count();
-        $totalInspectionCerts = \App\Models\InspectionApplication::count();
-        $totalConsignmentCerts = \App\Models\ConsignmentApplication::count();
+        // ─── Statistics ────────────────────────────────────────────────────
+        $totalImportPermits = IpApplication::count();
+        $totalInspectionCerts = InspectionApplication::count();
+        $totalConsignmentCerts = ConsignmentApplication::count();
 
-        // Count all approved/accepted applications across all types
-        $totalAccepted = \App\Models\IpApplication::where('status', 'Approved')->count() + \App\Models\InspectionApplication::where('status', 'Approved')->count() + \App\Models\ConsignmentApplication::where('status', 'Approved')->count();
+        $totalAccepted = IpApplication::where('status', 'Approved')->count()
+            + InspectionApplication::where('status', 'Approved')->count()
+            + ConsignmentApplication::where('status', 'Approved')->count();
 
-        // Get recent activity logs
+        // ─── Recent activity logs ─────────────────────────────────────────
         try {
             $recentActivities = Activity::with('causer')->latest()->take(10)->get();
         } catch (\Exception $e) {
-            // If activity log fails, just show empty array
             $recentActivities = collect([]);
         }
 
-        $role = authUser()['roles'][0];
+        // ─── KPI Counts ────────────────────────────────────────────────────
+        $data['pendingPermits'] = IpApplication::where('status', 'Clerk Review In-Progress')->count();
+        $data['pendingInspections'] = InspectionApplication::where('status', 'Clerk review in-progress')->count();
+        $data['pendingConsignments'] = ConsignmentApplication::where('status', 'Clerk Review In-Progress')->count();
 
-        // KPI Counts
-        $data['pendingPermits'] = IpApplication::where('status', '=', 'Clerk Review In-Progress')->count();
-        $data['pendingInspections'] = InspectionApplication::where('status', '=', 'Clerk review in-progress')->count();
-        $data['pendingConsignments'] = ConsignmentApplication::where('status', '=', 'Clerk Review In-Progress')->count();
-
-        // Verified Today (example logic: applications updated to a "verified" status today)
         $today = Carbon::today();
-        $verifiedTodayPermits = IpApplication::where('status', '=', 'Clerk Verified')->whereDate('updated_at', '=', $today)->count();
-        $verifiedTodayInspections = InspectionApplication::where('status', '=', 'Clerk Verified')->whereDate('updated_at', '=', $today)->count();
-        $verifiedTodayConsignments = ConsignmentApplication::where('status', '=', 'Clerk Verified')->whereDate('updated_at', '=', $today)->count();
+        $verifiedTodayPermits = IpApplication::where('status', 'Clerk Verified')->whereDate('updated_at', $today)->count();
+        $verifiedTodayInspections = InspectionApplication::where('status', 'Clerk Verified')->whereDate('updated_at', $today)->count();
+        $verifiedTodayConsignments = ConsignmentApplication::where('status', 'Clerk Verified')->whereDate('updated_at', $today)->count();
 
         $data['verifiedToday'] = $verifiedTodayPermits + $verifiedTodayInspections + $verifiedTodayConsignments;
 
-        // Charts
+        // ─── Charts ────────────────────────────────────────────────────────
         $data['clerkStatusChart'] = $clerkStatusChart->build();
         $data['clerkWorkloadChart'] = $clerkWorkloadChart->build();
         $data['clerkVolumeChart'] = $clerkVolumeChart->build();
 
-        // Action Needed Queue (Oldest 5 pending applications)
-        $pendingApps = collect();
+        // ─── Action Needed Queue (pending applications with overdue flag) ──
+        $pendingQueue = collect();
 
-        $permits = IpApplication::with('user')
-            ->where('status', '=', 'Clerk Review In-Progress')
-            ->orderBy('created_at', 'asc')
+        // Fetch pending permits
+        $pendingQueue = $pendingQueue->concat(
+            IpApplication::with('user')
+                ->where('status', 'Clerk Review In-Progress')
+                ->orderBy('created_at', 'asc')
+                ->take(5)
+                ->get()
+                ->map(fn($item) => tap($item, fn($i) => $i->type = 'Import Permit'))
+        );
+
+        // Fetch pending inspections
+        $pendingQueue = $pendingQueue->concat(
+            InspectionApplication::with('user')
+                ->where('status', 'Clerk review in-progress')
+                ->orderBy('created_at', 'asc')
+                ->take(5)
+                ->get()
+                ->map(fn($item) => tap($item, fn($i) => $i->type = 'Inspection'))
+        );
+
+        // Fetch pending consignments
+        $pendingQueue = $pendingQueue->concat(
+            ConsignmentApplication::with('user')
+                ->where('status', 'Clerk Review In-Progress')
+                ->orderBy('created_at', 'asc')
+                ->take(5)
+                ->get()
+                ->map(fn($item) => tap($item, fn($i) => $i->type = 'Consignment'))
+        );
+
+        // Sort and take top 5, adding overdue flag
+        $pendingQueue = $pendingQueue
+            ->sortBy('created_at')
             ->take(5)
-            ->get()
             ->map(function ($item) {
-                $item->type = 'Import Permit';
+                $item->is_overdue = $item->created_at->diffInDays(now()) > 2;
                 return $item;
             });
 
-        $inspections = InspectionApplication::with('user')
-            ->where('status', '=', 'Clerk review in-progress')
-            ->orderBy('created_at', 'asc')
-            ->take(5)
-            ->get()
-            ->map(function ($item) {
-                $item->type = 'Inspection';
-                return $item;
-            });
-
-        $consignments = ConsignmentApplication::with('user')
-            ->where('status', '=', 'Clerk Review In-Progress')
-            ->orderBy('created_at', 'asc')
-            ->take(5)
-            ->get()
-            ->map(function ($item) {
-                $item->type = 'Consignment';
-                return $item;
-            });
-
-        $data['pendingQueue'] = $pendingApps->concat($permits)->concat($inspections)->concat($consignments)->sortBy('created_at')->take(5);
-
+        // ─── Total payment (completed orders) ────────────────────────────
         $totalPayment = Order::where('status', 'payment complete')->sum('payment_amount');
 
+        // ─── Announcements ─────────────────────────────────────────────────
+        $announcements = Announcement::with('attachments')
+            ->where('is_active', true)
+            ->where(function ($q) {
+                $q->whereNull('valid_from')->orWhere('valid_from', '<=', now()->toDateString());
+            })
+            ->where(function ($q) {
+                $q->whereNull('valid_until')->orWhere('valid_until', '>=', now()->toDateString());
+            })
+            ->latest()
+            ->take(3)
+            ->get();
+
+        $overduePendingApps = $this->getOverduePendingAppsCount();
+
+        // ─── Return view ───────────────────────────────────────────────────
         return view('dashboard.internal.main_dashboard', [
-            // 'notifications' => $notifications,
             'userLineChart' => $lineChart->build(),
             'orderChart' => $orderChart->build(),
             'paymentChart' => $paymentChart->build(),
@@ -343,23 +351,16 @@ class DashboardController extends Controller
             'clerkVolumeChart' => $data['clerkVolumeChart'],
             'clerkStatusChart' => $data['clerkStatusChart'],
             'clerkWorkloadChart' => $data['clerkWorkloadChart'],
-            'pendingQueue' => $data['pendingQueue'],
+            'pendingQueue' => $pendingQueue,
             'verifiedToday' => $data['verifiedToday'],
             'permitChart' => $permitChart->build(),
-            'announcements' => \App\Models\Announcement::with('attachments')
-                ->where('is_active', true)
-                ->where(function ($query) {
-                    $query->whereNull('valid_from')
-                          ->orWhere('valid_from', '<=', now()->toDateString());
-                })
-                ->where(function ($query) {
-                    $query->whereNull('valid_until')
-                          ->orWhere('valid_until', '>=', now()->toDateString());
-                })
-                ->latest()
-                ->take(3)
-                ->get(),
-        ]); // Internal user dashboard
+            'announcements' => $announcements,
+            'pendingPermits' => $data['pendingPermits'],
+            'pendingInspections' => $data['pendingInspections'],
+            'pendingConsignments' => $data['pendingConsignments'],
+            'totalPayment' => $totalPayment,
+            'overduePendingApps' => $overduePendingApps
+        ]);
     }
 
     public function get_country($code)
@@ -514,4 +515,28 @@ class DashboardController extends Controller
     }
 
 
+    /**
+     * Get applications that have been pending in Clerk review for more than 3 days.
+     * Status is compared case‑insensitively.
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    private function getOverduePendingAppsCount(): int
+    {
+        $count = 0;
+
+        $count += IpApplication::whereRaw('LOWER(status) = ?', ['clerk review in-progress'])
+            ->where('created_at', '<', now()->subDays(3))
+            ->count();
+
+        $count += InspectionApplication::whereRaw('LOWER(status) = ?', ['clerk review in-progress'])
+            ->where('created_at', '<', now()->subDays(3))
+            ->count();
+
+        $count += ConsignmentApplication::whereRaw('LOWER(status) = ?', ['clerk review in-progress'])
+            ->where('created_at', '<', now()->subDays(3))
+            ->count();
+
+        return $count;
+    }
 }
