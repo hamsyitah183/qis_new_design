@@ -22,6 +22,7 @@ use App\Models\PublicUser;
 use App\Models\TempAttachment;
 use App\Notifications\ApplicationNotification;
 use App\Services\ApplicationActivityLogger;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -278,6 +279,8 @@ class ConsignmentController extends Controller
         $application = ConsignmentApplication::where('application_id', $id)
             ->with(['user', 'importer', 'exporter', 'entryPoint.districtCode', 'consignmentPermits.attachments', 'activity_log.causer'])
             ->firstOrFail();
+
+        $application['print_calc'] = $application->print_calc;
 
         if ($type === 'internal') {
             return response()->json($application);
@@ -883,5 +886,22 @@ class ConsignmentController extends Controller
             'status' => $status,
             'application_id' => $application->application_id,
         ]);
+    }
+
+    public function printApplication($id)
+    {
+        $application = ConsignmentApplication::with([
+            'user',
+            'exporter',
+            'importer',
+            'entryPoint',
+            'consignmentPermits',
+        ])->where('application_id', $id)->firstOrFail();
+
+
+        $pdf = Pdf::loadView('pdf.consignment_application', compact('application'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->stream("Consignment_Application_{$application->application_id}.pdf");
     }
 }

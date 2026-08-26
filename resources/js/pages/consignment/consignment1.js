@@ -21,7 +21,7 @@ import { loadProfile } from "../auth/profile";
 // ---------------------------------------------------------------
 
 const STAGE_ORDER = [
-    'submitted', 'doc_verification', 'technical_review',
+    'submitted', 'doc_verification',
     'officer_verified',   
     'awaiting_payment', 'payment_processing', 'completed',
 ];
@@ -30,7 +30,6 @@ export const STAGE_CONFIG = {
     submitted:           { en: 'Submitted',              bm: 'Dihantar',                  icon: 'bi-send-check',         color: 'info' },
     doc_verification:    { en: 'Clerk Review In-Progress', bm: 'Semakan Kerani Dalam Proses', icon: 'bi-file-earmark-check', color: 'secondary' },
     returned:            { en: 'Returned / Rejected',     bm: 'Dikembalikan / Ditolak',    icon: 'bi-arrow-return-left',  color: 'danger' },
-    technical_review:    { en: 'Clerk Verified',          bm: 'Disahkan Kerani',           icon: 'bi-clipboard-check',    color: 'primary' },
     officer_verified:    { en: 'Officer Verification Completed', bm: 'Pengesahan Pegawai Selesai', icon: 'bi-person-check', color: 'primary' },
     awaiting_payment:    { en: 'Awaiting Payment',        bm: 'Menunggu Pembayaran',       icon: 'bi-hourglass-split',    color: 'warning' },
     payment_processing:  { en: 'Payment Processing',      bm: 'Proses Pengesahan Bayaran', icon: 'bi-credit-card',        color: 'orange' },
@@ -168,12 +167,12 @@ function deriveStageKey(status) {
     const s = (status || '').toLowerCase();
     if (s.includes('draft')) return 'submitted';
     if (s.includes('clerk review')) return 'doc_verification';
-    if (s.includes('clerk verified')) return 'technical_review';
-    // ─── Map officer verification to awaiting payment ───
+    // ─── Map clerk verified to doc_verification ───
+    if (s.includes('clerk verified')) return 'doc_verification';
+    // ──────────────────────────────────────────────
     if (s.includes('officer verification') || s === 'officer verification completed') {
         return 'awaiting_payment';
     }
-    // ────────────────────────────────────────────────────────
     if (s.includes('completed')) return 'completed';
     if (s.includes('rejected') || s.includes('not approved')) return 'returned';
     if (s.includes('pending for payment')) return 'awaiting_payment';
@@ -200,7 +199,7 @@ function mapApplication(json) {
             pricesTotal = [];
         }
     }
-
+    console.log('application in', json)
 
     APPLICATION = {
         application_id: json.application_id,
@@ -213,7 +212,7 @@ function mapApplication(json) {
         tags: [],
         submitted_by: exporter.fullname || exporter.name || '—',
         submitted_at: formatDateTime(json.created_at),
-        downloaded_count: json.print_calc || 0,
+        downloaded_count:  0,
         assigned_officer: json.assigned_officer?.name || json.officer?.name || '—',
         sla_due: json.sla_due || '—',
         eta: formatDate(json.eta),
@@ -243,6 +242,7 @@ function mapApplication(json) {
         vehicleIds: json.vehicle_ids || [],
         vehicles: [],
         prices_total: pricesTotal,   // <-- stored here
+        print_calc: json.print_calc
     };
 }
 
@@ -610,16 +610,17 @@ document.addEventListener('click', (e) => {
 // ---------------------------------------------------------------
 
 function renderHeaderInfo() {
+    console.log('application info', APPLICATION)
     const lang = getLang();
     document.getElementById('ipvAppId').textContent = APPLICATION.application_id;
     document.getElementById('ipvSubmittedBy').textContent = APPLICATION.submitted_by;
-    document.getElementById('ipvDownloadBadge').innerHTML = `<i class="bi bi-download"></i> ${APPLICATION.downloaded_count}`;
+    document.getElementById('ipvDownloadBadge').innerHTML = `<i class="bi bi-download"></i> ${APPLICATION.print_calc}`;
 
     const submittedLabel = lang === 'bm' ? 'Permohonan dihantar pada' : 'Application submitted on';
     document.getElementById('ipvCreatedAt').textContent = `${submittedLabel} ${APPLICATION.submitted_at}`;
 
     const total = PERMITS.reduce((sum, p) => sum + p.value, 0);
-    document.getElementById('ipvTotalValue').textContent = `RM ${money(total)}`;
+ 
 
     const printBtn = document.getElementById('ipvPrintPermitBtn');
     if (printBtn) {
@@ -726,7 +727,7 @@ function renderTransportDetails() {
     const rows = [
         { icon: 'bi-calendar-event', label: t.eta, value: APPLICATION.eta },
         { icon: 'bi-truck', label: t.transport, value: APPLICATION.transport_type },
-        { icon: 'bi-info-circle', label: t.notes, value: APPLICATION.entry_point_description || '—' },
+        // { icon: 'bi-info-circle', label: t.notes, value: APPLICATION.entry_point_description || '—' },
         { icon: 'bi-hash', label: t.ptn, value: APPLICATION.ptnNumber || '—' },
         { icon: 'bi-car-front', label: t.vehicles, value: vehicleList },
     ];
@@ -1189,9 +1190,9 @@ function renderApplicationPrices() {
 
     container.innerHTML = `
         <table class="table text-nowrap">
-            <thead class="table-primary">
+            <thead class="table-primary" style="font-weight: 800">
                 <tr>
-                    <th scope="col">#</th>
+                  
                     <th scope="col" data-en="Category" data-bm="Kategori">Category</th>
                     <th scope="col" data-en="Quantity" data-bm="Kuantiti">Quantity</th>
                     <th scope="col" data-en="Price (RM)" data-bm="Harga (RM)">Price (RM)</th>
@@ -1200,7 +1201,7 @@ function renderApplicationPrices() {
             <tbody>
                 ${data.map((item, idx) => `
                     <tr>
-                        <td>${idx + 1}</td>
+                       
                         <td>${escapeHtml(item.category_name)}</td>
                         <td>${Number(item.quantity).toLocaleString()}</td>
                         <td>${Number(item.price).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -1209,9 +1210,9 @@ function renderApplicationPrices() {
             </tbody>
             <tfoot>
                 <tr style="font-weight: 800; background-color: var(--gray-2);">
-                    <td colspan="2" class="text-end">Total:</td>
+                    <td colspan="1" class="text-end" style="font-weight: 800">Total:</td>
                     <td>${totalQty.toLocaleString()}</td>
-                    <td>RM ${totalPrice.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td style = "color: var(--primary-color); font-weight: 800">RM ${totalPrice.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 </tr>
             </tfoot>
         </table>
@@ -1221,6 +1222,8 @@ function renderApplicationPrices() {
 
     $('#checkoutPage').attr('data-total', totalPrice);
     $('#checkoutPage').attr('data-application', APPLICATION.application_id)
+
+    document.getElementById('ipvTotalValue').textContent = `RM ${money(totalPrice)}`;
 }
 
 // ---------------------------------------------------------------

@@ -18,10 +18,10 @@ $(document).ready(function () {
         columns: [
             { data: 'id', name: 'id' },
             { data: 'owner_name', name: 'owner_name' },
-            { data: 'vehicle_name', name: 'vehicle_name' },
+            { data: 'vehicle_name', name: 'vehicle_name', visible: false },
             { data: 'vehicle_number', name: 'vehicle_number' },
-            { data: 'vehicle_type', name: 'vehicle_type' },
-            { data: 'vehicle_registration_number', name: 'vehicle_registration_number' },
+            { data: 'vehicle_type', name: 'vehicle_type', visible: false  },
+            { data: 'vehicle_registration_number', name: 'vehicle_registration_number' , visible: false },
             { data: 'valid_from_formatted', name: 'valid_from' },
             { data: 'valid_until_formatted', name: 'valid_until' },
             {
@@ -96,10 +96,9 @@ $(document).ready(function () {
         }
 
         const formData = {
-            vehicle_name: name,
+
             vehicle_number: number,
-            vehicle_type: $('#vehicleType').val().trim(),
-            vehicle_registration_number: regNumber,
+          
             valid_from: $('#validFrom').val(),
             valid_until: $('#validUntil').val(),
         };

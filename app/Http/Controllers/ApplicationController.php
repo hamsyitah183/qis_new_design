@@ -1354,8 +1354,16 @@ class ApplicationController extends Controller
 
     public function getInternalImporterListData()
     {
+        $user = authUser();
         $query = ConsignmentImporter::with(['countryInfo', 'registeredBy']);
 
+        // ─── Public users: only see their own registered importers ───
+        if ($user['type'] === 'public') {
+            $query->where('registered_by', $user['user']->uuid);
+        }
+        // Internal users: see all (no additional where clause)
+
+        // ─── Apply optional filters ──────────────────────────────────
         if (request('name')) {
             $query->where('name', 'like', '%' . request('name') . '%');
         }

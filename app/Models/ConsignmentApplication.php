@@ -87,4 +87,11 @@ class ConsignmentApplication extends Model
         return $this->hasOne(ConsignmentLog::class, 'application_id', 'application_id')
             ->latestOfMany();
     }
+
+    // In ConsignmentApplication.php
+    public function getPrintCalcAttribute()
+    {
+        $firstPermit = $this->consignmentPermits()->first();
+        return $firstPermit ? $firstPermit->print_calc : 0;
+    }
 }

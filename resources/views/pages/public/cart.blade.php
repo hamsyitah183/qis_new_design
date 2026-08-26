@@ -142,7 +142,9 @@
                                     <div class="apy-order-row-meta">
                                         <span class="apy-permit-no">{{ $permit->permit_number ?? '—' }}</span>
                                         <span class="apy-meta-sep">·</span>
-                                        <span>{{ $permit->consignment_detail['category'] ?? 'Import Permit' }}</span>
+                                        <span>{{ $application->application_type }}</span>
+                                        <span class="apy-meta-sep">·</span>
+                                        <span>{{ $permit->consignment_detail['category'] ?? '' }}</span>
                                         <span class="apy-meta-sep">·</span>
                                         <span>{{ $permit->consignment_detail['quantity'] ?? ($permit->consignment_detail['weight'] ?? '—') }}
                                             KG</span>
@@ -241,6 +243,15 @@
                                 <div class="apy-summary-line">
                                     <span>{{ $permit->permit_number ?? 'Item ' . ($loop->index + 1) }}</span>
                                     <span>RM 12.00</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    @elseif($application->application_type == 'Inspection Certificate')
+                        <div class="apy-summary-lines" id="apySummaryLines">
+                            @foreach ($permits as $permit)
+                                <div class="apy-summary-line">
+                                    <span>{{ $permit->permit_number ?? 'Item ' . ($loop->index + 1) }}</span>
+                                   
                                 </div>
                             @endforeach
                         </div>

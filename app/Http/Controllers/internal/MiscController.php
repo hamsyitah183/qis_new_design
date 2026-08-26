@@ -27,6 +27,9 @@ use App\Mail\QISNewsMail;
 use App\Models\Branch;
 use Illuminate\Support\Facades\Gate;
 
+use App\Exports\PermitConditionExport;
+use Maatwebsite\Excel\Facades\Excel;
+
 class MiscController extends Controller
 {
     public function showcontrolpanel()
@@ -34,7 +37,7 @@ class MiscController extends Controller
         // if (auth()->user()->hasRole('boundary officer')) {
         //     abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
         // }
-        
+
         Gate::authorize('manage settings');
 
 
@@ -121,7 +124,7 @@ class MiscController extends Controller
             }
         }
 
-        
+
 
         activity()
             ->useLog('user_activity')
@@ -543,7 +546,7 @@ class MiscController extends Controller
             $itemName = $item->item_name; // "AVOCADO"
 
             // Get the country names from the stored codes in JSON
-            $countryCodes = $item['country'];// ["AU","KE","MX",...]
+            $countryCodes = $item['country']; // ["AU","KE","MX",...]
             // dd($countryCodes);
             $countries = Country::whereIn('code', $countryCodes)->pluck('name')->toArray();
 
@@ -603,7 +606,6 @@ class MiscController extends Controller
                 Mail::to($user->email)->send(
                     new QISNewsMail($title, $detailsMessage)
                 );
-
             }
 
             foreach ($internalUsers as $user) {
@@ -639,8 +641,6 @@ class MiscController extends Controller
                 500,
             );
         }
-
-
     }
 
     public function getBranches()
@@ -765,5 +765,16 @@ class MiscController extends Controller
             'data' => $item,
         ]);
     }
-}
 
+    public function exportExcel(Request $request)
+    {
+        return Excel::download(
+            new PermitConditionExport(
+                $request->query('item_name'),
+                $request->query('category'),
+                $request->query('usage'),
+            ),
+            'permit_conditions_' . now()->format('Ymd_His') . '.xlsx'
+        );
+    }
+}

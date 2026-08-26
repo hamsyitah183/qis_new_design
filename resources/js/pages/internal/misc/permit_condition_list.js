@@ -185,11 +185,27 @@ function initUsageFilter() {
     });
 }
 
+function exportToExcel() {
+    document.getElementById("btnExportExcel")?.addEventListener("click", function () {
+    const itemName = document.getElementById("filterPermitItemName").value;
+    const category = document.getElementById("filterPermitCategory").value;
+    const usage = document.getElementById("filterPermitUsage").value;
+
+    const params = new URLSearchParams();
+    if (itemName) params.append("item_name", itemName);
+    if (category) params.append("category", category);
+    if (usage) params.append("usage", usage);
+
+    window.location.href = `/permit_condition/export?${params.toString()}`;
+});
+}
+
 document.addEventListener("DOMContentLoaded", async function () {
     await initCountryLookup();
     await data_table_init();
     initCategoryFilter();
     initUsageFilter();
+    exportToExcel();
 
     function deleteCondition(id) {
         Swal.fire({

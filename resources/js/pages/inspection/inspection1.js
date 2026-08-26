@@ -168,14 +168,7 @@ function buildTags(json) {
         tags.push({ label_en: 'Apply for Others', label_bm: 'Mohon untuk Pihak Lain', color: 'primary' });
     }
 
-    const verify = (json.importer_verify || '').toLowerCase();
-    if (verify.includes('not')) {
-        tags.push({ label_en: 'Importer Not Verified', label_bm: 'Pengimport Tidak Disahkan', color: 'danger' });
-    } else if (verify.includes('wait')) {
-        tags.push({ label_en: 'Awaiting Company Approval', label_bm: 'Menunggu Kelulusan Syarikat', color: 'warning' });
-    } else if (verify.includes('verified')) {
-        tags.push({ label_en: 'Importer Verified', label_bm: 'Pengimport Disahkan', color: 'success' });
-    }
+   
 
     return tags;
 }
@@ -714,7 +707,7 @@ function renderTransportDetails() {
         { icon: 'bi-calendar-event', label: t.eta, value: APPLICATION.eta },
         { icon: 'bi-truck', label: t.transport, value: APPLICATION.transport_type },
         { icon: 'bi-geo-alt', label: t.entry, value: APPLICATION.entry_point },
-        { icon: 'bi-info-circle', label: t.notes, value: APPLICATION.entry_point_description || '—' },
+        // { icon: 'bi-info-circle', label: t.notes, value: APPLICATION.entry_point_description || '—' },
     ];
 
     el.innerHTML = rows.map(r => `
@@ -1002,7 +995,7 @@ function renderPendingPaymentTable() {
             <tr>
                 <td>${escapeHtml(permit.permit_number)}</td>
                 <td class="text-wrap">${escapeHtml(permit.consignment_detail.item_name)}</td>
-                <td class="text-end">—</td>
+               
             </tr>
         `);
     });
@@ -1011,11 +1004,11 @@ function renderPendingPaymentTable() {
     const $tfoot = $("#summaryTable4 tfoot");
     $tfoot.html(`
         <tr>
-            <td colspan="2" class="text-end fw-bold">${getLang() === 'bm' ? 'Jumlah Yuran:' : 'Total Fee:'}</td>
+            <td colspan="1" class="text-end fw-bold">${getLang() === 'bm' ? 'Jumlah Yuran:' : 'Total Fee:'}</td>
             <td class="text-end fw-bold">RM ${money(total)}</td>
         </tr>
         <tr>
-            <td colspan="3" class="text-end">
+            <td colspan="2" class="text-end">
                 <button class="ipv-btn-primary pay-bulk" data-application="${APPLICATION.application_id}">
                     <i class="bi bi-credit-card"></i> ${getLang() === 'bm' ? 'Bayar' : 'Pay'}
                 </button>

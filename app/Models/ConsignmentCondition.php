@@ -21,7 +21,8 @@ class ConsignmentCondition extends Model
         'country',
         'usage',
         'start_date',
-        'end_date'
+        'end_date',
+        'item_bahasa',
     ];
 
     protected $casts = [

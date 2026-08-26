@@ -150,14 +150,19 @@
                         </button>
                     @endif
                     <span class="ipv-download-badge" id="ipvDownloadBadge" title="Certificates downloaded">
-                        <i class="bi bi-download"></i> 0
+                        <i class="bi bi-download"></i> {{ $application->printCalc }}
                     </span>
+
+                    <button class="btn ipv-btn-primary btn-info" id="printApplication" 
+                    data-type = "{{ $application->type }}" data-application = "{{ $application->application_id }}">
+                        <i class="fa-solid fa-print"></i>  <span data-en='Print Application' data-bm="Cetak Permohonan" >Print Application</span> 
+                    </button>
                 </div>
 
-                <div class="ipv-value-box d-none">
+                <div class="ipv-value-box">
                     <div>
                         <div class="ipv-value-label" data-en="Total Consignment Value" data-bm="Jumlah Nilai Konsainan">
-                            Total Consignment Value</div>
+                            Total Consignment Application</div>
                         <div class="ipv-value-amount" id="ipvTotalValue">RM 0.00</div>
                     </div>
                     <button type="button" class="ipv-value-link" id="ipvViewPermitsLink" data-en="View"
@@ -187,8 +192,9 @@
                 {{-- EDIT APPLICATION BUTTON – FIXED CONDITION                    --}}
                 {{-- ============================================================ --}}
                 @if (
-                    (($application->status == 'Draft' || $application->status == 'Clerk Rejected') &&
-                        $application->user_id === $authUuid) ||
+                    (strtolower($application->status) !== 'completed' &&
+                        (($application->status == 'Draft' || $application->status == 'Clerk Rejected') &&
+                            $application->user_id === $authUuid)) ||
                         $canEditInternal)
                     <a class="ipv-btn-outline w-100 justify-content-center mt-3 btn btn-primary" id="editButton"
                         href="/edit_consignment/{{ $application->application_id }}">
@@ -223,8 +229,8 @@
 
                 <div class="ipv-tabnav" role="tablist">
                     <button type="button" class="ipv-tabnav-item is-active" data-ipv-tab="permits" role="tab">
-                        <span data-en="Certificate List" data-bm="Senarai Sijil">Certificate List</span> <span
-                            class="ipv-tab-count" id="ipvPermitCount">0</span>
+                        <span data-en="Item List" data-bm="Senarai Item">Item List</span> <span class="ipv-tab-count"
+                            id="ipvPermitCount">0</span>
                     </button>
                     <button type="button" class="ipv-tabnav-item" data-ipv-tab="application_prices" role="tab"
                         id="applicationPrices">
@@ -244,7 +250,7 @@
                         <button type="button" class="ipv-tabnav-item" data-ipv-tab="payment" role="tab">
                             <span data-en="Pending Payment" data-bm="Pembayaran Tertangguh">Pending Payment</span> <span
                                 class="ipv-tab-count" id="ipvPendingPaymentCount">
-                               
+
                             </span>
                         </button>
                     @endif

@@ -286,7 +286,7 @@
                                         <tr>
                                             <th data-en="Permit Number" data-bm="Nombor Permit">Permit Number</th>
                                             <th data-en="Item Name" data-bm="Nama Item">Item Name</th>
-                                            <th class="text-end" data-en="Value" data-bm="Nilai">Value</th>
+                                            {{-- <th class="text-end" data-en="Value" data-bm="Nilai">Value</th> --}}
                                         </tr>
                                     </thead>
                                     <tbody></tbody>

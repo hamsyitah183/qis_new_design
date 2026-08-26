@@ -20,7 +20,8 @@ class IpCondition extends Model
         'usage',
         'start_date',
         'end_date',
-        'measurement_unit'
+        'measurement_unit',
+        'item_bahasa',
     ];
 
     protected $casts = [
@@ -38,6 +39,11 @@ class IpCondition extends Model
     public function condcategory()
     {
         return $this->belongsTo(PublicCode::class, 'category', 'cate_code')
-                ->where('cate_name', 'condition_category');
+            ->where('cate_name', 'condition_category');
+    }
+
+    public function countries()
+    {
+        return Country::whereIn('code', $this->country ?? []);
     }
 }

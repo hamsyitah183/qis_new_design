@@ -755,40 +755,20 @@ class ConsignmentApplicationController extends Controller
             'importer', // importer user
             'exporter', // exporter record
             'entryPoint.districtCode',
+            
         ])
             ->where('application_id', $uuid)
             ->orderBy('created_at', 'desc')
             ->firstOrFail();
 
-        // if(authUser()['type'] == 'public') {
-        //     if ($application->user->uuid !== authUser()['user']['uuid']) {
-        //         abort(403, 'You are not authorized to access this application.');
-        //     } 
-
-        //     elseif($application->)
-        // }
-
-        // $allStatuses = [];
-
-        // $permits = $application->consignmentPermits;
-
-        // foreach ($permits as $permit) {
-        //     $allStatuses[] = $permit->status;
-        // }
-
-        // // dd($allStatuses);
+     
 
         $itemId = $application->id;
 
-        // dd($application->consignmentPermits);
-
-        // $consignment = IpConsignmentPermit::with(['unit', 'purposeCode'])
-        //     ->where('application_id', $itemId)
-        //     ->get();
+    
         $consignment = [];
 
-        // dd($consignment);
-        // dd($application->exporter);
+    
 
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
@@ -800,8 +780,8 @@ class ConsignmentApplicationController extends Controller
             'pubmeasure' => $pubmeasure,
             'pubpurpose' => $pubpurpose,
             'country' => $country,
-            // 'consignmentDetails' => $consignment[0]->attachments
-        ]); //, 'consignment', 'attachment'
+            
+        ]); 
     }
     public function deleteApplication($id)
     {

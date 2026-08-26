@@ -766,6 +766,20 @@ function wireReapplySave() {
     });
 }
 
+function generatePDF() {
+    $('#printApplication').on('click', function (e) {
+        e.preventDefault();
+
+        const applicationId = $(this).data('application');
+
+        if (!applicationId) {
+            console.warn('No application id found on #printApplication (expected data-application attribute).');
+            return;
+        }
+
+        window.open(`/consignment/application/${applicationId}/print`, '_blank');
+    });
+}
 // ---------------------------------------------------------------
 // Wire everything up
 // ---------------------------------------------------------------
@@ -781,6 +795,8 @@ function initActions() {
     generatePermit();
     reapply();
     payBulk(); 
+
+    generatePDF();
 }
 
 document.addEventListener('DOMContentLoaded', initActions);

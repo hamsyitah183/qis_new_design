@@ -25,16 +25,17 @@
 
 
 @section('breadcrumb')
-    <x-breadcrumb 
-        :items="[
-            ['label' => 'Dashboard', 'url' => '/', 'data-en' => 'Dashboard', 'data-bm' => 'Dashboard'],
-            ['label' => 'Permit Condition List', 'url' => '#', 'data-en' => 'Permit Condition List', 'data-bm' => 'Senarai Syarat Permit']
-        ]" 
-        title="Permit Condition List"
-        title_en="Permit Condition List"
-        title_bm="Senarai Syarat Permit"
-    >
-     
+    <x-breadcrumb :items="[
+        ['label' => 'Dashboard', 'url' => '/', 'data-en' => 'Dashboard', 'data-bm' => 'Dashboard'],
+        [
+            'label' => 'Permit Condition List',
+            'url' => '#',
+            'data-en' => 'Permit Condition List',
+            'data-bm' => 'Senarai Syarat Permit',
+        ],
+    ]" title="Permit Condition List" title_en="Permit Condition List"
+        title_bm="Senarai Syarat Permit">
+
     </x-breadcrumb>
 @endsection
 
@@ -44,7 +45,8 @@
         <div class="col-xl-12">
             <div class="card custom-card">
                 <div class="card-header">
-                    <div class="card-title" data-en="Permit Condition List" data-bm="Senarai Syarat Permit">Permit Condition List</div>
+                    <div class="card-title" data-en="Permit Condition List" data-bm="Senarai Syarat Permit">Permit Condition
+                        List</div>
                     <div class="ms-auto d-flex gap-2 align-items-center">
 
                         <button class="btn btn-sm btn-primary filter dropdown-toggle" type="button"
@@ -54,18 +56,23 @@
                             <span data-en="Filter" data-bm="Tapis">Filter</span>
                         </button>
 
+
+
                         <ul class="dropdown-menu p-3 filter-dropdown" aria-labelledby="permitFilterDropdown">
 
                             {{-- Item Name --}}
                             <li class="mb-2">
-                                <label class="form-label fw-semibold mb-1" data-en="Item Name" data-bm="Nama Item">Item Name</label>
+                                <label class="form-label fw-semibold mb-1" data-en="Item Name" data-bm="Nama Item">Item
+                                    Name</label>
                                 <input type="text" class="form-control form-control-sm" id="filterPermitItemName"
-                                    placeholder="Search item name..." data-en="Search item name..." data-bm="Cari nama item..." data-i18n-attr="placeholder">
+                                    placeholder="Search item name..." data-en="Search item name..."
+                                    data-bm="Cari nama item..." data-i18n-attr="placeholder">
                             </li>
 
                             {{-- Category --}}
                             <li class="mb-2">
-                                <label class="form-label fw-semibold mb-1" data-en="Category" data-bm="Kategori">Category</label>
+                                <label class="form-label fw-semibold mb-1" data-en="Category"
+                                    data-bm="Kategori">Category</label>
                                 <select class="form-select form-select-sm select2" id="filterPermitCategory">
                                 </select>
                             </li>
@@ -78,13 +85,21 @@
                             </li>
 
                             <li class="d-flex justify-content-end gap-2 mt-2 pt-2 border-top">
-                                <button class="btn btn-sm btn-secondary" id="btnResetPermitFilter"><span data-en="Reset" data-bm="Set Semula">Reset</span></button>
-                                <button class="btn btn-sm btn-primary" id="btnPermitFilter"><span data-en="Apply" data-bm="Cari">Apply</span></button>
+                                <button class="btn btn-sm btn-secondary" id="btnResetPermitFilter"><span data-en="Reset"
+                                        data-bm="Set Semula">Reset</span></button>
+                                <button class="btn btn-sm btn-primary" id="btnPermitFilter"><span data-en="Apply"
+                                        data-bm="Cari">Apply</span></button>
                             </li>
                         </ul>
 
+                        <button type="button" id="btnExportExcel" class="btn btn-primary btn-sm">
+                            <i class="ti ti-file-earmark-excel me-1"></i>
+                            <span data-en="Export to Excel" data-bm="Eksport ke Excel">Export to Excel</span>
+                        </button>
+
                         <a type="button" href="{{ url('internal/permit_add_condition') }}" class="btn btn-success btn-sm">
-                            <i class="ti ti-plus me-1"></i> <span data-en="Add Permit Condition" data-bm="Tambah Syarat Permit">Add Permit Condition</span>
+                            <i class="ti ti-plus me-1"></i> <span data-en="Add Permit Condition"
+                                data-bm="Tambah Syarat Permit">Add Permit Condition</span>
                         </a>
                     </div>
                 </div>
@@ -95,7 +110,8 @@
                             <tr>
                                 {{-- <th>#</th> --}}
                                 <th class="text-wrap" data-en="Item Name" data-bm="Nama Item">Item Name</th>
-                                <th class="text-wrap" data-en="Scientific Name" data-bm="Nama Saintifik">Scientific Name</th>
+                                <th class="text-wrap" data-en="Scientific Name" data-bm="Nama Saintifik">Scientific Name
+                                </th>
                                 <th data-en="Category" data-bm="Kategori">Category</th>
                                 <th data-en="Usage" data-bm="Kegunaan">Usage</th>
                                 <th data-en="Action" data-bm="Tindakan">Action</th>
@@ -121,7 +137,8 @@
                     <!-- Your content here -->
                     <!-- ITEM DETAILS -->
                     <div class="mb-4">
-                        <h5 class="fw-bold text-muted" data-en="Item Information" data-bm="Maklumat Item">Item Information</h5>
+                        <h5 class="fw-bold text-muted" data-en="Item Information" data-bm="Maklumat Item">Item
+                            Information</h5>
                         <table class="table table-bordered align-middle">
                             <tbody>
                                 <tr>
@@ -133,7 +150,8 @@
                                     <td id="categoryCell"></td>
                                 </tr>
                                 <tr>
-                                    <th data-en="Usage / Consignment Application" data-bm="Kegunaan / Permohonan Konsainan">Usage / Consignment Application</th>
+                                    <th data-en="Usage / Consignment Application"
+                                        data-bm="Kegunaan / Permohonan Konsainan">Usage / Consignment Application</th>
                                     <td id="usageCell"></td>
                                 </tr>
                                 <tr>
@@ -154,16 +172,16 @@
 
                     <!-- PERMIT CONDITION -->
                     <div class="mt-4">
-                        <h5 class="fw-bold text-muted" data-en="Permit Condition" data-bm="Syarat Permit">Permit Condition</h5>
-                        <div id="conditionHtml" 
-                            class="border rounded p-3 bg-light"
-                            style="min-height: 150px;">
+                        <h5 class="fw-bold text-muted" data-en="Permit Condition" data-bm="Syarat Permit">Permit
+                            Condition</h5>
+                        <div id="conditionHtml" class="border rounded p-3 bg-light" style="min-height: 150px;">
                         </div>
                     </div>
                 </div>
 
                 <div class="modal-footer">
-                    <button class="btn btn-primary" data-bs-dismiss="modal" data-en="Close" data-bm="Tutup">Close</button>
+                    <button class="btn btn-primary" data-bs-dismiss="modal" data-en="Close"
+                        data-bm="Tutup">Close</button>
                 </div>
 
             </div>

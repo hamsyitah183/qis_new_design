@@ -620,6 +620,17 @@ Route::middleware(['auth.any'])->group(function () {
     // get importers
     Route::get('/get_consignment_importers', [ConsignmentApplicationController::class, 'getConsignmentImporters'])->name('getConsignmentImporters');
     Route::get('/vehicle/data', [VehicleController::class, 'getVehicleList']);
+
+
+
+    // export
+    Route::get('/permit_condition/export', [MiscController::class, 'exportExcel'])
+        ->name('permit_condition.export');
+
+
+    // download to pdf
+    Route::get('/consignment/application/{id}/print', [ConsignmentController::class, 'printApplication'])
+    ->name('consignment.application.print');
 });
 
 // broadcast --dont kacau---
