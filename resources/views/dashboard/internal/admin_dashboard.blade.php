@@ -1,6 +1,5 @@
 @push('style')
-    {{-- adjust the path if your project loads dashboard CSS differently --}}
-    @vite(['resources/css/pages/dashboard/admin-dashboard.css'])
+
 @endpush
 
 {{-- finance and application data --}}

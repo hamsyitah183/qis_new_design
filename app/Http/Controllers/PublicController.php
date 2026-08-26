@@ -6,6 +6,7 @@ use App\Models\Country;
 use App\Models\IpApplication;
 use App\Models\IpConsignmentAttachment;
 use App\Models\IpConsignmentPermit;
+use App\Models\IpUses;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -24,11 +25,11 @@ class PublicController extends Controller
     public function showallapplicationlist()
     {
         $application = IpApplication::with([
-                'user',         // submitted by
-                'importer',     // importer user
-                'exporter',       // exporter record
-                'entryPoint.districtCode'
-            ])
+            'user',         // submitted by
+            'importer',     // importer user
+            'exporter',       // exporter record
+            'entryPoint.districtCode'
+        ])
             ->where('user_id', auth()->id())
             ->get();
 
@@ -38,11 +39,11 @@ class PublicController extends Controller
     public function verifyapplication()
     {
         $application = IpApplication::with([
-                'user',         // submitted by
-                'importer',     // importer user
-                'exporter',       // exporter record
-                'entryPoint.districtCode'
-            ])
+            'user',         // submitted by
+            'importer',     // importer user
+            'exporter',       // exporter record
+            'entryPoint.districtCode'
+        ])
             ->where('importer_id', auth()->id())
             ->where('category_application', true)
             ->get();
@@ -53,24 +54,24 @@ class PublicController extends Controller
     public function viewapplication($uuid)
     {
         $application = IpApplication::with([
-                'user',         // submitted by
-                'importer',     // importer user
-                'exporter',       // exporter record
-                // 'exporter.country',
-                'entryPoint.districtCode'
-            ])
+            'user',         // submitted by
+            'importer',     // importer user
+            'exporter',       // exporter record
+            // 'exporter.country',
+            'entryPoint.districtCode'
+        ])
             ->where('application_id', $uuid)
             ->orderBy('created_at', 'desc')
             ->firstOrFail();
-        
+
         $itemId = $application->id;
-        
+
         $consignment = IpConsignmentPermit::with([
-                    'unit',
-                    'purposeCode'
-                    ])
-                    ->where('application_id', $itemId)
-                    ->get();
+            'unit',
+            'purposeCode'
+        ])
+            ->where('application_id', $itemId)
+            ->get();
 
         $allDetails = [];
 
@@ -101,23 +102,25 @@ class PublicController extends Controller
         }
         // dd($allDetails);
         return view('pages.public.view_application', [
-                        'application'        => $application,
-                        'consignment'        => $consignment,
-                        'consignmentDetails' => $allDetails
-                    ]); //, 'consignment', 'attachment'
+            'application'        => $application,
+            'consignment'        => $consignment,
+            'consignmentDetails' => $allDetails
+        ]); //, 'consignment', 'attachment'
     }
 
-    public function modalspeItem($id){
+    public function modalspeItem($id)
+    {
         $cons = IpConsignmentPermit::with(['attachments'])
             ->findOrFail($id);
-        
-            return response()->json([
-                'status' => 'success',
-                'data'   => $cons
-            ]);
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $cons
+        ]);
     }
 
-    public function getCountry(){
+    public function getCountry()
+    {
         $country = country::select('code as value', 'name')->get();
 
         return response()->json([
@@ -135,5 +138,11 @@ class PublicController extends Controller
     {
         return view('pages.public.checkout');
     }
-    
+
+    public function getConsignmentUses()
+    {
+        $uses = IpUses::all();
+
+        return response()->json(['data' => $uses ?: []]);
+    }
 }

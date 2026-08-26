@@ -631,6 +631,10 @@ Route::middleware(['auth.any'])->group(function () {
     // download to pdf
     Route::get('/consignment/application/{id}/print', [ConsignmentController::class, 'printApplication'])
     ->name('consignment.application.print');
+
+
+    // uses
+    Route::get('/consignment_uses', [PublicController::class, 'getConsignmentUses'])->name('consignment.uses');
 });
 
 // broadcast --dont kacau---

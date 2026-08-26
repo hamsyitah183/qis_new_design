@@ -286,6 +286,18 @@ function clearExporterFields() {
     $("#expcountryCode, #expcountry").val("");
 }
 
+// ─── Toggle Custom Item Input ─────────────────────────────
+function toggleCustomItemInput(show) {
+    const $customWrapper = $("#customItemWrapper");
+    if (show) {
+        $customWrapper.show();
+        $("#customItemName").val("").focus();
+    } else {
+        $customWrapper.hide();
+        $("#customItemName").val("");
+    }
+}
+
 // ─── Consignment / Uses ──────────────────────────────────
 function loadConsignmentSelection() {
     limitMeasurement = null;
@@ -322,6 +334,11 @@ function loadConsignmentSelection() {
         success: function (data) {
             $select.prop("disabled", false);
 
+            // ─── Prepend "Others" option ───
+            $select.append(
+                `<option value="others" data-en="Others" data-bm="Lain-lain">Others</option>`,
+            );
+
             data.forEach((row) => {
                 const en = row.entry_en || row.entry_display;
                 const bm = row.entry_bm || row.entry_display;
@@ -356,15 +373,10 @@ function loadConsignmentSelection() {
     });
 }
 
-async function loadUses(itemId) {
+// ─── Load Uses (no itemId needed) ─────────────────────────
+async function loadUses() {
     const $select = $("#itemUses");
-    $select
-        .empty()
-        .append(
-            '<option value="" data-en="-- Select Uses --" data-bm="-- Pilih Kegunaan --">-- Select Uses --</option>',
-        );
-
-    if (!itemId) return Promise.resolve();
+    $select.empty().append('<option value="" data-en="-- Select Uses --" data-bm="-- Pilih Kegunaan --">-- Select Uses --</option>');
 
     Swal.fire({
         title: '<span data-en="Loading..." data-bm="Memuat...">Loading...</span>',
@@ -372,27 +384,28 @@ async function loadUses(itemId) {
         didOpen: () => Swal.showLoading(),
     });
 
-    return fetch(`/public/consignment_uses/${itemId}`)
+    return fetch(`/consignment_uses`)
         .then((res) => res.json())
         .then((data) => {
             if (!data.data) return;
 
             data.data.forEach((row) => {
+                const display = row.name;
+                const value = row.name;
                 $select.append(
-                    `<option value="${row}" data-en="${row}" data-bm="${row}">${row}</option>`,
+                    `<option value="${value}" data-en="${display}" data-bm="${display}">${display}</option>`
                 );
             });
 
             const lang = getCurrentLang();
-            const placeholder =
-                lang === "bm" ? "-- Pilih Kegunaan --" : "-- Select Uses --";
+            const placeholder = lang === "bm" ? "-- Pilih Kegunaan --" : "-- Select Uses --";
             $select.select2({
                 width: "100%",
                 placeholder: placeholder,
                 allowClear: true,
                 dropdownParent: $("#addItemModal"),
             });
-
+            console.log('the uses', data.data);
             Swal.close();
         })
         .catch((err) => {
@@ -572,7 +585,9 @@ function initAddExporterModal() {
     // Init Select2 for country dropdown with bilingual placeholder
     const lang = getCurrentLang();
     const placeCountry =
-        lang === "bm" ? "-- Pilih Negara --" : "-- Select Country --";
+        lang === "bm"
+            ? "-- Pilih Negara --"
+            : "-- Select Country --";
     $("#addexpcountry").select2({
         width: "100%",
         placeholder: placeCountry,
@@ -1671,12 +1686,40 @@ function saveConsignmentAttachment() {
                 files = existingItem.files || [];
             }
 
+            // ─── Custom item detection ────────────────────────────────
+            const isCustom = itemSelectValue === "others";
+            let itemName = isCustom
+                ? $("#customItemName").val().trim()
+                : itemSelectText;
+            let itemId = isCustom ? null : itemSelectValue;
+
+            // Validate custom item name
+            if (isCustom && !itemName) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Custom Item Name Required",
+                    text: "Please enter a custom item name.",
+                });
+                return;
+            }
+
+            // For custom items, attachment is mandatory
+            if (isCustom && files.length === 0) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Attachment Required",
+                    text: "Please upload an image/document for the custom item.",
+                });
+                return;
+            }
+
             const itemPurposeDescription =
                 $("#itemPurpose option:selected").data("description") ||
                 $("#itemPurpose").val();
 
+            // ─── Validation ────────────────────────────────────────────
             if (
-                !itemSelectValue ||
+                (!isCustom && !itemSelectValue) ||
                 !itemValue ||
                 !itemQuantity ||
                 !itemMeasure ||
@@ -1688,12 +1731,11 @@ function saveConsignmentAttachment() {
                     icon: "error",
                     title: '<span data-en="Incomplete Data" data-bm="Data Tidak Lengkap">Incomplete Data</span>',
                     html: '<span data-en="Please fill in all required fields and upload an attachment before saving." data-bm="Sila isi semua ruangan wajib dan muat naik lampiran sebelum menyimpan.">Please fill in all required fields and upload an attachment before saving.</span>',
-                    didOpen: (modal) => {
-                        applyTranslations(modal);
-                    },
+                    didOpen: (modal) => applyTranslations(modal),
                 });
                 return;
             }
+
             if (limitMeasurement) {
                 let limitInKg = null;
                 const selectedUnit = measurementUnits.unit.find(
@@ -1722,19 +1764,16 @@ function saveConsignmentAttachment() {
                         icon: "error",
                         title: '<span data-en="The item is over limit" data-bm="Item melebihi had">The item is over limit</span>',
                         html: '<span data-en="Please fill in again." data-bm="Sila isi semula.">Please fill in again.</span>',
-                        didOpen: (modal) => {
-                            applyTranslations(modal);
-                        },
+                        didOpen: (modal) => applyTranslations(modal),
                     });
                     return;
                 }
             }
-            console.log("in save cons", currentItemCondition);
 
             const itemPayload = {
                 id: existingItem ? existingItem.id : generateUUID(),
-                item_id: itemSelectValue,
-                item_name: itemSelectText,
+                item_id: itemId,
+                item_name: itemName,
                 value: itemValue,
                 quantity: itemQuantity,
                 measure: itemMeasure,
@@ -1744,6 +1783,7 @@ function saveConsignmentAttachment() {
                 files: files,
                 agreedAt: null,
                 condition: currentItemCondition,
+                isCustom: isCustom, // optional flag
             };
 
             const agreed = await showItemAgreement(itemPayload);
@@ -1900,6 +1940,7 @@ async function showItemAgreement(item) {
     return false;
 }
 
+// ─── Reset Add Item Modal ──────────────────────────────────
 function resetAddItemModal() {
     $("#itemValue").val("");
     $("#itemQuantity").val("");
@@ -1907,6 +1948,10 @@ function resetAddItemModal() {
     $("#itemMeasure").val("").trigger("change");
     $("#itemPurpose").val("").trigger("change");
     $("#itemUses").val(null).trigger("change");
+    // Reset custom fields
+    $("#customItemName").val("");
+    toggleCustomItemInput(false);
+    $(".attachmentInstruction").html("").hide();
 
     if (itemDropzone) itemDropzone.removeAllFiles(true);
 }
@@ -1962,7 +2007,6 @@ function renderAllItems() {
     });
 }
 
-// ─── View More Item ────────────────────────────────────────
 // ─── View More Item ────────────────────────────────────────
 function viewMore() {
     $(document).on("click", ".view-more-item", function (e) {
@@ -2151,7 +2195,6 @@ function deleteItem() {
 }
 
 // ─── Copy Item ──────────────────────────────────────────────
-// ─── Copy Item ──────────────────────────────────────────────
 function copyItem() {
     $(document).on("click", ".copy-item", async function (e) {
         e.preventDefault();
@@ -2228,8 +2271,11 @@ function editItem() {
             .done(() => {
                 $("#itemSelect").val(item.item_id).trigger("change");
 
-                loadUses(item.item_id).then(() => {
-                    $("#itemUses").val(item.uses).trigger("change");
+                // ─── Load uses and then set the selected value ──────
+                loadUses().then(() => {
+                    if (item.uses) {
+                        $("#itemUses").val(item.uses).trigger("change");
+                    }
                 });
 
                 $("#itemValue").val(item.value);
@@ -2732,16 +2778,35 @@ $(document).ready(async function () {
 
         // ─── Item Select change ─────────────────────────
         $("#itemSelect").on("change", function () {
-            const itemId = $(this).val();
+            const selectedVal = $(this).val();
             const $itemUses = $("#itemUses");
-            $itemUses
-                .empty()
-                .append('<option value="">-- Select Uses --</option>');
+            $itemUses.empty().append('<option value="">-- Select Uses --</option>');
 
-            if (!itemId) return;
+            if (!selectedVal) {
+                toggleCustomItemInput(false);
+                $(".attachmentInstruction").html("").hide();
+                return;
+            }
 
-            loadUses(itemId);
-            loadDetails(itemId);
+            if (selectedVal === "others") {
+                // Show custom input
+                toggleCustomItemInput(true);
+                $(".attachmentInstruction")
+                    .html(
+                        `<span style="color:red;" data-en="Attachment is mandatory for custom items. Please upload the item image or document"
+                           data-bm="Lampiran adalah wajib untuk item yang tiada dalam senarai. Sila muat naik gambar atau dokumen">
+                        * Attachment is mandatory for custom items. Please upload the item image or document.</span>`
+                    )
+                    .show();
+                return;
+            }
+
+            // Normal item selected – hide custom input
+            toggleCustomItemInput(false);
+            $(".attachmentInstruction").html("").hide();
+            loadDetails(selectedVal);
+            // ─── Load the uses list (static) ─────────────────────────
+            loadUses();
         });
 
         $("#mdlAddItemBtn").on("click", loadConsignmentSelection);
