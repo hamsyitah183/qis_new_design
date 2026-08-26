@@ -333,14 +333,13 @@ function loadConsignmentSelection() {
         didOpen: () => Swal.showLoading(),
     });
 
-    loadUses();
-
     return $.ajax({
         url: `/public/get_consignment/${countryCode}`,
         method: "GET",
         dataType: "json",
         success: function (data) {
             $select.prop("disabled", false);
+            console.log('the loses data', data);
 
             // ─── Prepend "Others" option ───
             $select.append(
@@ -350,19 +349,48 @@ function loadConsignmentSelection() {
             data.forEach((row) => {
                 const en = row.entry_en || row.entry_display;
                 const bm = row.entry_bm || row.entry_display;
+                const anotherNames = row.another_name ? JSON.stringify(row.another_name) : '[]';
                 $select.append(
-                    `<option value="${row.id}" data-en="${en}" data-bm="${bm}">${row.entry_display}</option>`,
+                    `<option value="${row.id}" data-en="${en}" data-bm="${bm}" data-another-names='${anotherNames}'>${row.entry_display}</option>`
                 );
             });
 
             const lang = getCurrentLang();
-            const placeholder =
-                lang === "bm" ? "-- Pilih Item --" : "-- Select Item --";
+            const placeholder = lang === "bm" ? "-- Pilih Item --" : "-- Select Item --";
             $select.select2({
                 width: "100%",
                 placeholder: placeholder,
                 allowClear: true,
                 dropdownParent: $("#addItemModal"),
+                matcher: function(params, data) {
+                    if ($.trim(params.term) === '') {
+                        return data;
+                    }
+                    const text = data.text || '';
+                    const term = params.term.toLowerCase();
+                    if (text.toLowerCase().indexOf(term) > -1) {
+                        return data;
+                    }
+                    const element = data.element;
+                    if (element) {
+                        const anotherNamesAttr = element.getAttribute('data-another-names');
+                        if (anotherNamesAttr) {
+                            try {
+                                const names = JSON.parse(anotherNamesAttr);
+                                if (Array.isArray(names)) {
+                                    for (let name of names) {
+                                        if (name.toLowerCase().indexOf(term) > -1) {
+                                            return data;
+                                        }
+                                    }
+                                }
+                            } catch (e) {
+                                // ignore
+                            }
+                        }
+                    }
+                    return null;
+                }
             });
 
             Swal.close();
@@ -400,7 +428,7 @@ async function loadUses() {
         .then((res) => res.json())
         .then((data) => {
             if (!data.data) return;
-
+            console.log("load uses", data);
             data.data.forEach((row) => {
                 const display = row.name;
                 const value = row.name;
@@ -1794,7 +1822,7 @@ function saveConsignmentAttachment() {
                 files: files,
                 agreedAt: null,
                 condition: currentItemCondition,
-                isCustom: isCustom, // optional flag
+                isCustom: isCustom, // <-- flag added
             };
 
             const agreed = await showItemAgreement(itemPayload);
@@ -2257,7 +2285,7 @@ function copyItem() {
     });
 }
 
-// ─── Edit Item ──────────────────────────────────────────────
+// ─── Edit Item (FIX: handle custom items) ─────────────────
 function editItem() {
     $(document).on("click", ".edit-item", function (e) {
         e.preventDefault();
@@ -2280,7 +2308,27 @@ function editItem() {
 
         loadConsignmentSelection()
             .done(() => {
-                $("#itemSelect").val(item.item_id).trigger("change");
+                // ─── Set the selected value or "others" ──────────────
+                if (item.isCustom) {
+                    // It's a custom item – select "others" in the dropdown
+                    $("#itemSelect").val("others").trigger("change");
+                    // Show custom input and fill with saved name
+                    toggleCustomItemInput(true);
+                    $("#customItemName").val(item.item_name);
+                    // Show the attachment instruction
+                    $(".attachmentInstruction")
+                        .html(
+                            `<span style="color:red;" data-en="Attachment is mandatory for custom items. Please upload the item image or document"
+                               data-bm="Lampiran adalah wajib untuk item yang tiada dalam senarai. Sila muat naik gambar atau dokumen">
+                            * Attachment is mandatory for custom items. Please upload the item image or document.</span>`
+                        )
+                        .show();
+                } else {
+                    // Normal item: select the saved item_id
+                    $("#itemSelect").val(item.item_id).trigger("change");
+                    toggleCustomItemInput(false);
+                    $(".attachmentInstruction").html("").hide();
+                }
 
                 // ─── Load uses and then set the selected value ──────
                 loadUses().then(() => {
@@ -2289,6 +2337,7 @@ function editItem() {
                     }
                 });
 
+                // ─── Fill other fields ──────────────────────────────
                 $("#itemValue").val(item.value);
                 $("#itemQuantity").val(item.quantity);
                 $("#itemMeasure").val(item.measure).trigger("change");
@@ -2296,6 +2345,7 @@ function editItem() {
                     .val(item.purposeValue || item.purpose)
                     .trigger("change");
 
+                // ─── Restore files in Dropzone ──────────────────────
                 if (itemDropzone) {
                     itemDropzone.removeAllFiles(true);
                     (item.files || []).forEach((file) =>
@@ -2328,6 +2378,7 @@ function saveapplication(isDraft = false) {
     formData.append("importerData", JSON.stringify(importer));
     formData.append("permitDetails", JSON.stringify(permitDetails));
 
+    // ─── Send each item ──────────────────────────────────────────────
     tempItems.forEach((item, index) => {
         const { files, ...otherData } = item;
         formData.append(`items[${index}][data]`, JSON.stringify(otherData));
@@ -2340,11 +2391,16 @@ function saveapplication(isDraft = false) {
         }
     });
 
+    // ─── Application attachments ────────────────────────────────────
     applicationAttachments.forEach((attachment) => {
         if (attachment.file) {
             formData.append("application_files[]", attachment.file);
         }
     });
+
+    // ─── NEW: Check if any custom item exists ──────────────────────
+    const hasNewItem = tempItems.some((item) => item.isCustom === true) ? 1 : 0;
+    formData.append("hasNewItem", hasNewItem);
 
     Swal.fire({
         title: isDraft
@@ -2802,15 +2858,16 @@ $(document).ready(async function () {
             }
 
             if (selectedVal === "others") {
-                // Show custom input
                 toggleCustomItemInput(true);
                 $(".attachmentInstruction")
                     .html(
                         `<span style="color:red;" data-en="Attachment is mandatory for custom items. Please upload the item image or document"
-                           data-bm="Lampiran adalah wajib untuk item yang tiada dalam senarai. Sila muat naik gambar atau dokumen">
-                        * Attachment is mandatory for custom items. Please upload the item image or document.</span>`,
+                   data-bm="Lampiran adalah wajib untuk item yang tiada dalam senarai. Sila muat naik gambar atau dokumen">
+                * Attachment is mandatory for custom items. Please upload the item image or document.</span>`,
                     )
                     .show();
+                // ─── Load the uses list (static) ─────────────────────────
+                loadUses(); // <-- ensures uses are loaded even for custom
                 return;
             }
 

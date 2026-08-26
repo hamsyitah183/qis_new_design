@@ -234,30 +234,37 @@ class MiscController extends Controller
             'itemName' => 'required|string',
             'itemCategory' => 'required|integer',
             'permit_condition' => 'required|string',
+            'anotherNameTags' => 'nullable|string',
         ]);
 
         // Decode Tagify arrays
         $countryArr = json_decode($request->countryTag, true) ?? [];
         $usageArr = json_decode($request->usageTags, true) ?? [];
+        $anotherNameArr = json_decode($request->anotherNameTags, true) ?? [];
 
         $countryValues = array_map(fn($i) => $i['value'] ?? ($i['name'] ?? null), $countryArr);
         $usageValues = array_map(fn($i) => $i['value'] ?? ($i['name'] ?? null), $usageArr);
+
+        $anotherNameValues = array_map(fn($i) => $i['value'] ?? ($i['name'] ?? null), $anotherNameArr);
+        $anotherNameValues = array_filter($anotherNameValues, fn($v) => !empty(trim($v)));
+
+        // ─── FIX: quantity_limit should be just the numeric value ──────
+        $quantityLimit = $request->quanLimit ? (float) $request->quanLimit : null;
 
         $data = [
             'category' => $request->itemCategory,
             'item_name' => $request->itemName,
             'scientific_name' => $request->scientificName,
             'addional_condition' => $request->permit_condition,
-            'quantity_limit' => $request->quanLimit ?: null . ' ' . $request->measurement ?: null,
-            // 'date_limit' => $request->spedate ?: null,
+            'quantity_limit' => $quantityLimit,  // <-- numeric only
             'start_date' => $request->start_date ?: null,
             'end_date' => $request->end_date ?: null,
             'country' => $countryValues,
             'usage' => $usageValues,
             'measurement_unit' => $request->quanmunit,
+            'another_name' => $anotherNameValues,
         ];
-        // dd($data);
-        // UPDATE
+
         if ($request->filled('id')) {
             $ipCondition = IpCondition::find($request->id);
 

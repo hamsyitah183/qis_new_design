@@ -23,6 +23,9 @@ class ConsignmentCondition extends Model
         'start_date',
         'end_date',
         'item_bahasa',
+
+        'another_name',
+        'attachment'
     ];
 
     protected $casts = [
@@ -30,6 +33,9 @@ class ConsignmentCondition extends Model
         'usage'   => 'array', // JSON
         'quantity_limit' => 'float',
         'date_limit'     => 'date',
+
+        'another_name' => 'array',  // <-- added
+        'attachment'   => 'array',  // <-- added
     ];
 
     public function code()

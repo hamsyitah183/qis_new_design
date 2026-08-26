@@ -341,7 +341,11 @@ class PermitApplicationController extends Controller
     {
         $countryCode = strtoupper(trim($countryCode));
         //dd($countryCode);
-        $data = IpCondition::whereJsonContains('country', $countryCode)->leftJoin('public_code', 'ip_condition.category', '=', 'public_code.cate_code')->where('public_code.cate_name', 'condition_category')->select('ip_condition.id', \DB::raw('CONCAT(ip_condition.item_name) AS entry_display'), 'ip_condition.usage')->get();
+        $data = IpCondition::whereJsonContains('country', $countryCode)->leftJoin('public_code', 'ip_condition.category', '=', 'public_code.cate_code')
+        ->where('public_code.cate_name', 'condition_category')->select('ip_condition.id', \DB::raw('CONCAT(ip_condition.item_name) AS entry_display'), 
+        'ip_condition.usage', 
+        'ip_condition.another_name'
+        )->get();
 
         return response()->json($data);
     }

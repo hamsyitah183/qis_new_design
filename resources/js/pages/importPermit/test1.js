@@ -244,6 +244,7 @@ function mapPermits(json) {
             })),
             conditions: detail.condition || [],
             agreedAt: detail.agreedAt,
+            isCustom: detail.isCustom,
             _raw: permit,
         };
     });
@@ -761,7 +762,7 @@ function permitActionsHtml(permit) {
 
     // ─── Permission helper ────────────────────────────────
     function hasPermission(permissionName) {
-        const user = window.fullUser;   // set by your auth system
+        const user = window.fullUser;
         if (!user || !user.permissions) return false;
         return user.permissions.some(p => p.name === permissionName);
     }
@@ -769,22 +770,47 @@ function permitActionsHtml(permit) {
     const isOwner = getCurrentUserType() === 'public';
     const lang = getLang();
 
+    let user =  window.authUser ;
+
     let actions = '';
 
-    // ─── Approve / Reject – requires 'approve permit' permission ───
+    // ─── Accept Custom Item to List ──────────────────────────
+    // Only for internal users with 'approve permit' permission.
+    if (
+        permit.isCustom === true &&
+        user.type === 'internal'
+    ) {
+        actions += `
+            <button type="button" class="ipv-btn-action is-success accept-custom" data-permit="${permit.id}">
+                <i class="bi bi-check-lg"></i> ${lang === 'bm' ? 'Terima Item ke Senarai' : 'Accept Item to List'}
+            </button>
+        `;
+    }
+
+    // ─── Standard Approve / Reject ──────────────────────────
     if (
         applicationStatus === 'clerk verified' &&
         (status === 'processing' || status === 'reapplied') &&
         hasPermission('approve permit')
     ) {
-        actions += `
-            <button type="button" class="ipv-btn-action is-success accept" data-permit="${permit.id}">
-                <i class="bi bi-check-lg"></i> ${lang === 'bm' ? 'Lulus' : 'Approve'}
-            </button>
-            <button type="button" class="ipv-btn-action is-danger reject" data-permit="${permit.id}">
-                <i class="bi bi-x-lg"></i> ${lang === 'bm' ? 'Tolak' : 'Reject'}
-            </button>
-        `;
+        // Standard approve/reject for non-custom permits only
+        if (!permit.isCustom) {
+            actions += `
+                <button type="button" class="ipv-btn-action is-success accept" data-permit="${permit.id}">
+                    <i class="bi bi-check-lg"></i> ${lang === 'bm' ? 'Lulus' : 'Approve'}
+                </button>
+                <button type="button" class="ipv-btn-action is-danger reject" data-permit="${permit.id}">
+                    <i class="bi bi-x-lg"></i> ${lang === 'bm' ? 'Tolak' : 'Reject'}
+                </button>
+            `;
+        } else {
+            // For custom permits, keep the standard Reject button
+            actions += `
+                <button type="button" class="ipv-btn-action is-danger reject" data-permit="${permit.id}">
+                    <i class="bi bi-x-lg"></i> ${lang === 'bm' ? 'Tolak' : 'Reject'}
+                </button>
+            `;
+        }
     }
 
     // ─── Reapply (owner only) ──────────────────────────────
@@ -805,7 +831,7 @@ function permitActionsHtml(permit) {
         `;
     }
 
-    // ─── Print / Download – requires 'print permit' permission OR owner ───
+    // ─── Print / Download ──────────────────────────────────
     if (
         ['paid', 'completed'].includes(status) &&
         (hasPermission('print permit') || isOwner)

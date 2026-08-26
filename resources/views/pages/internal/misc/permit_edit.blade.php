@@ -9,7 +9,6 @@
         ['label' => 'Permit Condition List', 'url' => '/internal/permit_condition', 'data-en' => 'Permit Condition List', 'data-bm' => 'Senarai Syarat Permit'],
         ['label' => 'Edit Permit Condition', 'url' => '#', 'data-en' => 'Edit Permit Condition', 'data-bm' => 'Sunting Syarat Permit'],
     ]" title="Edit Permit Condition" title_en="Edit Permit Condition" title_bm="Sunting Syarat Permit">
-
     </x-breadcrumb>
 @endsection
 
@@ -40,6 +39,25 @@
             min-height: 150px;
             padding: 12px 15px;
         }
+
+        /* Tagify custom styling to match Bootstrap */
+        .tagify {
+            --tag-bg: var(--bs-primary);
+            --tag-hover: var(--bs-primary-dark);
+            --tag-text-color: #fff;
+            --tags-border-color: var(--bs-border-color);
+            --tag-remove-bg: var(--bs-danger);
+            --tag-remove-btn-color: #fff;
+            --tag-remove-btn-bg--hover: var(--bs-danger-dark);
+            border-radius: .375rem;
+            padding: .25rem .5rem;
+        }
+        .tagify__tag {
+            margin: 2px 4px 2px 0;
+        }
+        .tagify__input {
+            min-width: 80px;
+        }
     </style>
 
     <div class="row">
@@ -51,7 +69,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <input type="hidden" name="id" value={{ $condition->id }} id="id">
+                    <input type="hidden" name="id" value="{{ $condition->id }}" id="id">
                     <div class="row gy-3">
                         <div class="col-xl-12">
                             <label for="blog-title" class="form-label" data-en="Item Name" data-bm="Nama Item">Item Name</label>
@@ -65,6 +83,18 @@
                             value="{{ $condition->scientific_name }}"
                                 placeholder=" ">
                         </div>
+
+                        {{-- ─── NEW: Another Name (Tagify) ─────────────────────────── --}}
+                        <div class="col-xl-12">
+                            <label class="form-label" data-en="Another Name(s)" data-bm="Nama Lain">Another Name(s)</label>
+                            <input id="anotherNameTags" name="anotherNameTags" class="form-control"
+                                placeholder="Type alternate names...">
+                            <small class="form-text text-muted" data-en="Add alternate names for this item (e.g., local names, synonyms)."
+                                   data-bm="Tambah nama alternatif untuk item ini (contoh: nama tempatan, sinonim).">
+                                Add alternate names for this item (e.g., local names, synonyms).
+                            </small>
+                        </div>
+
                         <div class="col-xl-6">
                             <label for="blog-category" class="form-label" data-en="Category" data-bm="Kategori">Category</label>
                             <select class="form-select" name="itemCategory" id="itemCategory">
@@ -80,12 +110,11 @@
                         <div class="col-xl-3">
                             <label for="quanLimit" class="form-label" data-en="Quantity Limit (Special case)" data-bm="Had Kuantiti (Kes Khas)">Quantity Limit (Special case)</label>
                             <input type="number" class="form-control" id="quanLimit"
-                                value="{{ $condition->quantity_limit ?? null }}" name="quanLimit" min = '0'>
+                                value="{{ $condition->quantity_limit ?? null }}" name="quanLimit" min='0'>
 
                         </div>
                         <div class="col-xl-3">
                             <label for="quanmunit" class="form-label" data-en="Measurement Unit (Special case)" data-bm="Unit Ukuran (Kes Khas)">Measurement Unit (Special case)</label>
-                            {{-- <input type="text" class="form-control" id="quanmunit" name="quanmunit"> --}}
                             <select class="form-select" name="quanmunit" id="quanmunit">
                                 @foreach ($measurements as $measurement)
                                     <option value="{{ $measurement->cate_code }}"
@@ -94,23 +123,18 @@
                                     </option>
                                 @endforeach
                             </select>
-
-
                         </div>
-                        {{-- @dd($condition) --}}
                         <div class="col-xl-3">
                             <label class="form-label" data-en="Start Date" data-bm="Tarikh Mula">Start Date</label>
-                            <input type="date" class="form-control" name="start_date" id = "start_date"
+                            <input type="date" class="form-control" name="start_date" id="start_date"
                                 value="{{ old('start_date', $condition->start_date) }}">
                         </div>
 
                         <div class="col-xl-3">
                             <label class="form-label" data-en="End Date" data-bm="Tarikh Tamat">End Date</label>
-                            <input type="date" class="form-control" name="end_date" id = "end_date"
+                            <input type="date" class="form-control" name="end_date" id="end_date"
                                 value="{{ old('end_date', $condition->end_date) }}">
                         </div>
-
-
 
                         <div class="col-xl-12">
                             <label class="form-label" data-en="Country" data-bm="Negara">Country</label>
@@ -119,20 +143,14 @@
                         </div>
                         <div class="col-xl-12">
                             <label class="form-label d-block" data-en="Consignment Application (Usage)" data-bm="Permohonan Konsainan (Kegunaan)">Consignment Application (Usage)</label>
-
-                            <!-- Your Tagify input -->
                             <input id="usageTags" name="usageTags" class="form-control"
                                 placeholder="Select or type usage...">
                         </div>
-                        <div class="col-xl-12"> <!-- style="display:none" -->
+                        <div class="col-xl-12">
                             <label class="form-label d-block" data-en="Permit Condition" data-bm="Syarat Permit">Permit Condition</label>
-                            <!-- Quill editor -->
-                            <!-- <div id="permit-condition-editor" style="min-height:150px; border:1px solid var(--bs-border-color); border-radius:.5rem; background:var(--bs-body-bg);"></div> -->
                             <div class="quill-wrapper">
                                 <div id="permit-condition-editor"></div>
                             </div>
-
-                            <!-- hidden input to submit HTML -->
                             <input type="hidden" name="permit_condition" id="permit-condition-input">
                             <small class="form-text text-muted mt-2" data-en="You may use simple formatting — bold, lists, links." data-bm="Anda boleh menggunakan pemformatan ringkas — tebal, senarai, pautan.">You may use simple formatting — bold, lists,
                                 links.</small>
@@ -163,30 +181,56 @@
     <script>
         window.countryTagify = null;
         window.usageTagify = null;
+        window.anotherNameTagify = null;
     </script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
 
-
-            // 1. Raw data from Laravel
+            // ─── 1. Country Tagify ──────────────────────────────────────
             const theCountryRaw = {!! json_encode($condition->country) !!};
-            // console.log("Raw Country this:", theCountryRaw);
-
-            // 2. Fix: convert string "['CN','ID']" → real array
             const theCountry = Array.isArray(theCountryRaw) ?
                 theCountryRaw :
                 JSON.parse(theCountryRaw ?? "[]");
 
-            // 3. Build the {value,name} pair list
-            const conditionCountry = theCountry.map(i => ({
-                value: i,
-                name: i
-            }));
+            $.ajax({
+                url: '/get_country',
+                method: 'GET',
+                success: function(response) {
+                    const countryList = response.data.map(c => ({
+                        value: c.value,
+                        name: c.name
+                    }));
 
+                    const conditionCountry = theCountry
+                        .map(code => countryList.find(c => c.value === code))
+                        .filter(Boolean);
 
+                    countryTagify = new Tagify(document.getElementById("countryTag"), {
+                        whitelist: countryList,
+                        tagTextProp: 'name',
+                        enforceWhitelist: true,
+                        editTags: false,
+                        dropdown: {
+                            enabled: 1,
+                            maxItems: 20,
+                            highlightFirst: true,
+                            mapValueTo: 'name',
+                        },
+                        dropdownFilter: (item, value) => {
+                            const search = value.toLowerCase();
+                            return (
+                                item.value.toLowerCase().includes(search) ||
+                                item.name.toLowerCase().includes(search)
+                            );
+                        }
+                    });
 
+                    countryTagify.addTags(conditionCountry);
+                }
+            });
 
+            // ─── 2. Usage Tagify ────────────────────────────────────────
             const theusageraw = {!! json_encode($condition->usage) !!};
             const theusage = Array.isArray(theusageraw) ?
                 theusageraw :
@@ -197,55 +241,6 @@
                 name: i
             }));
 
-            $.ajax({
-                url: '/get_country',
-                method: 'GET',
-                success: function(response) {
-
-                    // ✅ normalized whitelist
-                    const countryList = response.data.map(c => ({
-                        value: c.value,
-                        name: c.name
-                    }));
-
-                    // ✅ build selected tags using whitelist lookup
-                    const conditionCountry = theCountry
-                        .map(code => countryList.find(c => c.value === code))
-                        .filter(Boolean); // remove nulls
-
-                    countryTagify = new Tagify(document.getElementById("countryTag"), {
-                        whitelist: countryList,
-                        tagTextProp: 'name', // show country name in tag
-                        enforceWhitelist: true,
-                        editTags: false,
-
-                        dropdown: {
-                            enabled: 1,
-                            maxItems: 20,
-                            highlightFirst: true,
-                            mapValueTo: 'name',
-                        },
-
-                        // 🔥 THIS enables searching by BOTH code & name
-                        dropdownFilter: (item, value) => {
-                            const search = value.toLowerCase();
-
-                            return (
-                                item.value.toLowerCase().includes(search) ||
-                                // code (MY, CN)
-                                item.name.toLowerCase().includes(search) // country name
-                            );
-                        }
-                    });
-
-
-                    // ✅ NOW it shows Malaysia instead of MY
-                    countryTagify.addTags(conditionCountry);
-                }
-            });
-
-
-            // --- 2. Get usage list ---
             $.ajax({
                 url: `/internal/get_pbdata/consignment_application`,
                 method: 'GET',
@@ -269,10 +264,38 @@
                             item.name.toLowerCase().includes(value.toLowerCase())
                     });
                     usageTagify.addTags(conditionUsage);
-
-                    // console.log("Usage loaded:", usageList);
                 }
             });
+
+            // ─── 3. Another Name Tagify ──────────────────────────────────
+            const anotherNameRaw = {!! json_encode($condition->another_name) !!};
+            const anotherNameArray = Array.isArray(anotherNameRaw) ?
+                anotherNameRaw :
+                JSON.parse(anotherNameRaw ?? "[]");
+
+            const anotherNameTags = anotherNameArray.map(name => ({
+                value: name,
+                name: name
+            }));
+
+            // No whitelist – free text entry
+            anotherNameTagify = new Tagify(document.getElementById("anotherNameTags"), {
+                tagTextProp: 'name',
+                enforceWhitelist: false,
+                editTags: false,
+                dropdown: {
+                    enabled: 0, // no dropdown, just free typing
+                },
+                // Allow any text
+                patterns: {
+                    text: /^.+$/ // any non-empty string
+                }
+            });
+
+            // Add existing tags
+            if (anotherNameTags.length) {
+                anotherNameTagify.addTags(anotherNameTags);
+            }
 
         });
     </script>
@@ -304,10 +327,7 @@
                 theme: 'snow'
             });
 
-            // Your long text from backend
             const longText = `{!! $condition->addional_condition !!}`;
-
-            // Insert into Quill with formatting
             quill.clipboard.dangerouslyPasteHTML(longText);
         });
     </script>

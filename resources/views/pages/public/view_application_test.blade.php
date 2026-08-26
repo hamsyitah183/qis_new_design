@@ -120,6 +120,13 @@
                             <span data-en="This application is awaiting your review."
                                 data-bm="Permohonan ini sedang menunggu semakan anda.">This application is awaiting your
                                 review.</span>
+                            @if ($application->has_custom_items)
+                              
+                                <span class="" data-en="There is an item that is not in the Import Permit item list."
+                                    data-bm="Terdapat item yang tiada dalam senarai Import Permit item.">
+                                    <i class="bi bi-exclamation-triangle me-1"></i> There is an item that is not in the Import Permit item list.
+                                </span>
+                            @endif
                         @elseif ($showImporterVerifyActions)
                             <span data-en="This application is awaiting your verification as the importer."
                                 data-bm="Permohonan ini sedang menunggu pengesahan anda sebagai pengimport.">This

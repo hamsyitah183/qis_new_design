@@ -86,4 +86,26 @@ class IpApplication extends Model
             'application_id', // ip_application.application_id
         )->where('application_type', 'Import Permit');
     }
+
+    /**
+     * Check if any consignment permit in this application has a custom item.
+     *
+     * @return bool
+     */
+    public function hasCustomItems()
+    {
+        return $this->consignmentPermits()->where('isCustom', true)->exists();
+    }
+
+    /**
+     * Accessor to use as a property: $application->has_custom_items
+     *
+     * @return bool
+     */
+    public function getHasCustomItemsAttribute()
+    {
+        return $this->consignmentPermits()
+            ->whereJsonContains('consignment_detail->isCustom', true)
+            ->exists();
+    }
 }

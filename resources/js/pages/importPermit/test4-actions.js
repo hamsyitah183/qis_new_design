@@ -590,6 +590,16 @@ function payNowSingle() {
     });
 }
 
+function acceptItemToList() {
+    $(document).on('click', '.accept-custom', function(e) {
+        e.preventDefault();
+
+        const id = $(this).data('permit');
+
+        console.log('id click', id, 'application', window.APPLICATION_ID)
+    })
+}
+
 // ---------------------------------------------------------------
 // Wire everything up
 // ---------------------------------------------------------------
@@ -599,6 +609,8 @@ function initActions() {
     adminRejectApplication();
     verifyApplication();
     rejectApplication();
+
+    acceptItemToList()
 
     acceptPermit();
     rejectPermit();
