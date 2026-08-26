@@ -19,6 +19,17 @@ class AnnouncementController extends Controller
         return view('pages.internal.announcement.announcement');
     }
 
+    public function create()
+    {
+        return view('pages.internal.announcement.form');
+    }
+
+    public function edit($id)
+    {
+        $announcement = Announcement::findOrFail($id);
+        return view('pages.internal.announcement.form', compact('announcement'));
+    }
+
     public function data(Request $request)
     {
         $query = Announcement::with('releasedBy')->latest();
@@ -52,6 +63,7 @@ class AnnouncementController extends Controller
             'valid_from' => $request->valid_from,
             'valid_until' => $request->valid_until,
             'is_active' => $request->has('is_active') ? true : false,
+            'pin_announcement' => $request->has('pin_announcement') ? true : false,
         ]);
 
         return response()->json(['status' => 'success', 'message' => 'Announcement created successfully.', 'id' => $announcement->id]);
@@ -74,6 +86,7 @@ class AnnouncementController extends Controller
             'valid_from' => $request->valid_from,
             'valid_until' => $request->valid_until,
             'is_active' => $request->has('is_active') ? true : false,
+            'pin_announcement' => $request->has('pin_announcement') ? true : false,
         ]);
 
         return response()->json(['status' => 'success', 'message' => 'Announcement updated successfully.', 'id' => $announcement->id]);
@@ -96,6 +109,15 @@ class AnnouncementController extends Controller
         return response()->json(['status' => 'success', 'message' => 'Status updated successfully.']);
     }
 
+    public function togglePin($id)
+    {
+        $announcement = Announcement::findOrFail($id);
+        $announcement->pin_announcement = !$announcement->pin_announcement;
+        $announcement->save();
+
+        return response()->json(['status' => 'success', 'message' => 'Pin status updated successfully.']);
+    }
+
     // --- Attachment Methods ---
 
     public function getAttachments($id)
@@ -107,7 +129,7 @@ class AnnouncementController extends Controller
     public function uploadAttachment(Request $request, $id)
     {
         $request->validate([
-            'attachments.*' => 'required|image',
+            'attachments.*' => 'required|file',
         ]);
 
         $announcement = Announcement::findOrFail($id);

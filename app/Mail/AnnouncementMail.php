@@ -78,6 +78,12 @@ class AnnouncementMail extends Mailable
      */
     public function attachments(): array
     {
-        return [];
+        $attachments = [];
+        foreach ($this->announcement->attachments as $att) {
+            $attachments[] = \Illuminate\Mail\Mailables\Attachment::fromStorageDisk('public', $att->file_path)
+                ->as($att->file_name)
+                ->withMime($att->file_type);
+        }
+        return $attachments;
     }
 }

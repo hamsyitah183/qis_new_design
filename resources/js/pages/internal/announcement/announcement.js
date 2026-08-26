@@ -3,25 +3,12 @@ import "datatables.net-bs5";
 import "datatables.net-responsive-bs5";
 import "datatables.net-bs5/css/dataTables.bootstrap5.min.css";
 import "datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css";
-import "quill/dist/quill.snow.css";
 import Swal from "sweetalert2";
 
 const $ = jQuery;
 window.$ = window.jQuery = jQuery;
 
 $(document).ready(function () {
-    // Initialize Quill
-    const quill = new Quill('#content-editor', {
-        theme: 'snow',
-        modules: {
-            toolbar: [
-                [{ 'header': [1, 2, 3, false] }],
-                ['bold', 'italic', 'underline', 'strike'],
-                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                ['link', 'clean']
-            ]
-        }
-    });
 
     const table = $('#announcementTable').DataTable({
         processing: true,
@@ -51,6 +38,9 @@ $(document).ready(function () {
                     const toggleClass = row.is_active ? 'btn-warning' : 'btn-info';
                     const toggleIcon = row.is_active ? 'ti-eye-off' : 'ti-eye';
                     const toggleTitle = row.is_active ? 'Deactivate' : 'Activate';
+                    
+                    const togglePinClass = row.pin_announcement ? 'btn-warning' : 'btn-danger';
+                    const togglePinTitle = row.pin_announcement ? 'Unpin' : 'Pin';
 
                     return `
                         <div class="d-flex gap-2">
@@ -62,6 +52,9 @@ $(document).ready(function () {
                             </button>
                             <button class="btn btn-sm ${toggleClass} toggle-btn" data-id="${data}" title="${toggleTitle}">
                                 <i class="ti ${toggleIcon}"></i>
+                            </button>
+                            <button class="btn btn-sm ${togglePinClass} toggle-pin-btn" data-id="${data}" title="${togglePinTitle}">
+                                <i class="ti ti-pin"></i>
                             </button>
                             <button class="btn btn-sm btn-secondary share-email-btn" data-id="${data}" data-title="${row.title}" title="Share via Email">
                                 <i class="ti ti-mail"></i>
@@ -119,11 +112,35 @@ $(document).ready(function () {
                 $('#view_attachments_container').show();
                 $('#view_attachments').empty();
                 data.attachments.forEach(function(att) {
-                    $('#view_attachments').append(`
-                        <a href="javascript:void(0);" class="border rounded p-1 view-image-link text-center d-inline-block" data-src="/storage/${att.file_path}" data-name="${att.file_name}" style="width: 100%;">
-                            <img src="/storage/${att.file_path}" style="max-height: 300px; max-width: 100%; object-fit: contain;" alt="${att.file_name}" title="${att.file_name}">
-                        </a>
-                    `);
+                    let previewContent = '';
+                    let fileType = att.file_type || '';
+                    let filePath = `/storage/${att.file_path}`;
+
+                    if (fileType.startsWith('image/')) {
+                        previewContent = `
+                            <div class="border rounded p-1 d-inline-block text-center me-2 mb-2">
+                                <img src="${filePath}" class="preview-file-click" data-type="image" data-src="${filePath}" style="height: 140px; width: 140px; object-fit: cover; cursor: pointer;" alt="${att.file_name}" title="${att.file_name}">
+                            </div>`;
+                    } else {
+                        let iconClass = 'ti-file-description text-secondary';
+                        let typeCategory = 'other';
+                        if (fileType === 'application/pdf' || att.file_name.toLowerCase().endsWith('.pdf')) {
+                            iconClass = 'ti-file-type-pdf text-danger';
+                            typeCategory = 'pdf';
+                        } else if (fileType.includes('word') || fileType.includes('document')) {
+                            iconClass = 'ti-file-type-doc text-primary';
+                        } else if (fileType.includes('excel') || fileType.includes('spreadsheet')) {
+                            iconClass = 'ti-file-type-xls text-success';
+                        }
+
+                        previewContent = `
+                            <div class="border rounded p-2 d-inline-flex align-items-center me-2 mb-2 preview-file-click" data-type="${typeCategory}" data-src="${filePath}" style="cursor: pointer; max-width: 100%;" title="${att.file_name}">
+                                <i class="ti ${iconClass} fs-24"></i>
+                                <span class="ms-2 text-dark text-truncate" style="max-width: 250px;">${att.file_name}</span>
+                            </div>`;
+                    }
+
+                    $('#view_attachments').append(previewContent);
                 });
             } else {
                 $('#view_attachments_container').hide();
@@ -137,218 +154,46 @@ $(document).ready(function () {
         });
     });
 
-    // Handle Image Click in View Modal
-    $(document).on('click', '.view-image-link', function (e) {
+    // Handle File Preview Click inside View Modal
+    $(document).on('click', '.preview-file-click', function (e) {
         e.preventDefault();
         const src = $(this).data('src');
-        const name = $(this).data('name');
+        const type = $(this).data('type');
         
-        $('#modal_image_src').attr('src', src);
-        
+        $('#previewImageModalSrc').addClass('d-none');
+        $('#previewPdfModalSrc').addClass('d-none');
+        $('#previewUnsupportedMessage').addClass('d-none');
+
+        if (type === 'image') {
+            $('#previewImageModalSrc').attr('src', src).removeClass('d-none');
+        } else if (type === 'pdf') {
+            $('#previewPdfModalSrc').attr('src', src).removeClass('d-none');
+        } else {
+            $('#previewDownloadLink').attr('href', src).attr('download', '');
+            $('#previewUnsupportedMessage').removeClass('d-none');
+        }
+
         // Hide the view announcement modal
         const viewModal = bootstrap.Modal.getInstance(document.getElementById('viewAnnouncementModal'));
         if (viewModal) {
             viewModal.hide();
         }
         
-        // Show the image modal
-        const imageModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('imageViewModal'));
-        imageModal.show();
+        // Show the file preview modal
+        const previewModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('filePreviewModal'));
+        previewModal.show();
     });
     
-    // When image modal is closed, reopen the view announcement modal
-    $('#imageViewModal').on('hidden.bs.modal', function () {
+    // When preview modal is closed, reopen the view announcement modal
+    $('#filePreviewModal').on('hidden.bs.modal', function () {
         const viewModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('viewAnnouncementModal'));
         viewModal.show();
-    });
-
-    // Handle Add Button
-    $('#btnAddAnnouncement').on('click', function () {
-        $('#announcementForm')[0].reset();
-        $('#announcement_id').val('');
-        quill.root.innerHTML = '';
-        $('#is_active').prop('checked', true);
-        $('#existing-attachments').empty();
-        $('#new-attachments-preview').empty();
-        $('#attachments').val('');
-        
-        $('#announcementModalLabel').text('Add Announcement');
-        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('announcementModal'));
-        modal.show();
     });
 
     // Handle Edit Button
     $('#announcementTable').on('click', '.edit-btn', function () {
         const id = $(this).data('id');
-        
-        // Fetch specific announcement data
-        $.get(`${window.baseUrl}/internal/announcements/${id}`, function (data) {
-            $('#announcement_id').val(data.id);
-            $('#title').val(data.title);
-            $('#valid_from').val(data.valid_from);
-            $('#valid_until').val(data.valid_until);
-            $('#is_active').prop('checked', data.is_active);
-            quill.root.innerHTML = data.content;
-            
-            // Fetch and show attachments
-            $('#existing-attachments').empty();
-            $('#new-attachments-preview').empty();
-            $('#attachments').val('');
-            $.get(`${window.baseUrl}/internal/announcements/${id}/attachments`, function (attachments) {
-                attachments.forEach(function(att) {
-                    $('#existing-attachments').append(`
-                        <div class="position-relative border rounded p-1 attachment-item" data-id="${att.id}">
-                            <img src="/storage/${att.file_path}" style="max-height: 80px; max-width: 80px; object-fit: cover;" alt="${att.file_name}">
-                            <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 translate-middle rounded-circle py-0 px-1 btn-delete-attachment" data-id="${att.id}" style="font-size: 10px;">
-                                <i class="ti ti-x"></i>
-                            </button>
-                        </div>
-                    `);
-                });
-            });
-            
-            $('#announcementModalLabel').text('Edit Announcement');
-            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('announcementModal'));
-            modal.show();
-        }).fail(function() {
-            Swal.fire('Error', 'Failed to fetch announcement details', 'error');
-        });
-    });
-
-    // Handle New Attachment Previews
-    $('#attachments').on('change', function() {
-        $('#new-attachments-preview').empty();
-        const files = this.files;
-        if (files) {
-            Array.from(files).forEach(file => {
-                if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        $('#new-attachments-preview').append(`
-                            <div class="position-relative border rounded p-1">
-                                <img src="${e.target.result}" style="max-height: 80px; max-width: 80px; object-fit: cover;" alt="${file.name}" title="${file.name}">
-                            </div>
-                        `);
-                    }
-                    reader.readAsDataURL(file);
-                }
-            });
-        }
-    });
-
-    // Handle Delete Attachment
-    $('#existing-attachments').on('click', '.btn-delete-attachment', function(e) {
-        e.preventDefault();
-        const id = $(this).data('id');
-        const container = $(this).closest('.attachment-item');
-        
-        Swal.fire({
-            title: 'Delete image?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Yes'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    url: `${window.baseUrl}/internal/announcements/attachments/${id}`,
-                    type: 'DELETE',
-                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                    success: function() {
-                        container.remove();
-                    }
-                });
-            }
-        });
-    });
-
-    // Handle Save Form
-    $('#btnSaveAnnouncement').on('click', function (e) {
-        e.preventDefault();
-
-        // Basic validation
-        const title = $('#title').val();
-        if (!title) {
-            Swal.fire('Error', 'Title is required', 'error');
-            return;
-        }
-
-        const content = quill.root.innerHTML;
-        if (quill.getText().trim().length === 0) {
-            Swal.fire('Error', 'Content is required', 'error');
-            return;
-        }
-        
-        const valid_from = $('#valid_from').val();
-        const valid_until = $('#valid_until').val();
-        
-        if (valid_from && valid_until && valid_until < valid_from) {
-            Swal.fire('Error', 'Valid Until date cannot be earlier than Valid From date', 'error');
-            return;
-        }
-
-        const id = $('#announcement_id').val();
-        const isEdit = id !== '';
-        
-        const formData = {
-            title: title,
-            content: content,
-            valid_from: valid_from,
-            valid_until: valid_until,
-            is_active: $('#is_active').is(':checked')
-        };
-
-        const url = isEdit 
-            ? `${window.baseUrl}/internal/announcements/${id}`
-            : `${window.baseUrl}/internal/announcements`;
-        
-        const method = isEdit ? 'PUT' : 'POST';
-
-        $.ajax({
-            url: url,
-            type: method,
-            data: JSON.stringify(formData),
-            contentType: 'application/json',
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function (response) {
-                const announcementId = response.id;
-                
-                // Upload files if any
-                const fileInput = document.getElementById('attachments');
-                if (fileInput.files.length > 0) {
-                    const uploadData = new FormData();
-                    for (let i = 0; i < fileInput.files.length; i++) {
-                        uploadData.append('attachments[]', fileInput.files[i]);
-                    }
-                    
-                    $.ajax({
-                        url: `${window.baseUrl}/internal/announcements/${announcementId}/attachments`,
-                        type: 'POST',
-                        data: uploadData,
-                        processData: false,
-                        contentType: false,
-                        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                        success: function() {
-                            bootstrap.Modal.getInstance(document.getElementById('announcementModal')).hide();
-                            Swal.fire('Success!', response.message, 'success');
-                            table.ajax.reload();
-                        }
-                    });
-                } else {
-                    bootstrap.Modal.getInstance(document.getElementById('announcementModal')).hide();
-                    Swal.fire('Success!', response.message, 'success');
-                    table.ajax.reload();
-                }
-            },
-            error: function (xhr) {
-                let errorMsg = 'Something went wrong';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMsg = xhr.responseJSON.message;
-                }
-                Swal.fire('Error!', errorMsg, 'error');
-            }
-        });
+        window.location.href = `${window.baseUrl}/internal/announcements/${id}/edit`;
     });
 
     // Delete Action
@@ -389,6 +234,33 @@ $(document).ready(function () {
         
         $.ajax({
             url: `${window.baseUrl}/internal/announcements/${id}/toggle`,
+            type: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function (response) {
+                const toastMessage = document.getElementById('toastMessage');
+                if (toastMessage) {
+                    toastMessage.textContent = response.message;
+                    const toastElement = new bootstrap.Toast(document.getElementById('editToast'));
+                    toastElement.show();
+                } else {
+                    Swal.fire('Success', response.message, 'success');
+                }
+                table.ajax.reload(null, false);
+            },
+            error: function (xhr) {
+                Swal.fire('Error!', 'Something went wrong.', 'error');
+            }
+        });
+    });
+
+    // Toggle Pin Action
+    $('#announcementTable').on('click', '.toggle-pin-btn', function () {
+        const id = $(this).data('id');
+        
+        $.ajax({
+            url: `${window.baseUrl}/internal/announcements/${id}/toggle-pin`,
             type: 'POST',
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')

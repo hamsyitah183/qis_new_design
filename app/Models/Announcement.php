@@ -13,6 +13,7 @@ class Announcement extends Model
         'valid_from',
         'valid_until',
         'is_active',
+        'pin_announcement',
     ];
 
     /**
