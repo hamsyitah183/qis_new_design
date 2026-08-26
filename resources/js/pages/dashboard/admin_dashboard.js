@@ -378,7 +378,6 @@ export async function admin_dashboard() {
     loadDailyVolumeChart();
     loadUserRegistrationChart();
     initCalendar();
-    initAnnouncements();
 }
 
 admin_dashboard();

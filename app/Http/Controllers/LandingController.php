@@ -38,13 +38,26 @@ class LandingController extends Controller
 {
     function landing()
     {
-        $announcements = \App\Models\Announcement::all();
-        $galleries = Gallery::all();
-        $districts = PublicCode::where('cate_name', 'district_entry')
+        $announcements = \App\Models\Announcement::with('releasedBy')
+            ->where('is_active', true)
+            ->where(function ($query) {
+                $query->whereNull('valid_from')
+                      ->orWhere('valid_from', '<=', now()->toDateString());
+            })
+            ->where(function ($query) {
+                $query->whereNull('valid_until')
+                      ->orWhere('valid_until', '>=', now()->toDateString());
+            })
+            ->orderBy('pin_announcement', 'desc')
+            ->latest()
+            ->get();
+
+        $galleries = \App\Models\Gallery::all();
+        $districts = \App\Models\PublicCode::where('cate_name', 'district_entry')
             ->pluck('description', 'cate_code');
 
         // Get one representative entry point per district
-        $entryPoints = IpEntryPoint::select('district', 'entry_name', 'transport_type')
+        $entryPoints = \App\Models\IpEntryPoint::select('district', 'entry_name', 'transport_type')
             ->where('is_del', false)
             ->orderBy('district')
             ->orderBy('id')
