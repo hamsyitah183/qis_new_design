@@ -61,6 +61,11 @@ class RoleAndPermissionSeeder extends Seeder
             'view notification',
 
             // ==================================================
+            // Application
+            // ==================================================
+            'edit application',
+
+            // ==================================================
             // Permit
             // ==================================================
             'approve permit',
@@ -168,6 +173,7 @@ class RoleAndPermissionSeeder extends Seeder
                     'read application',
                     'approve application',
                     'delete application',
+                    'edit application',
 
                     // Notification
                     'view notification',

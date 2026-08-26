@@ -152,7 +152,6 @@ Route::prefix('public')
         Route::get('/view_application/{uuid}', [ConsignmentApplicationController::class, 'viewapplication'])->name('viewApplication');
 
         // get importer
-        Route::get('/get_consignment_importers', [ConsignmentApplicationController::class, 'getConsignmentImporters'])->name('getConsignmentImporters');
         Route::post('/store_consignment_importer', [ConsignmentApplicationController::class, 'storeConsignmentImporter'])->name('storeImporter');
         Route::get('/get_consignment_certificate/{countryCode}', [ConsignmentApplicationController::class, 'getConsignmentFromCountry']);
         Route::delete('/delete_importer/{id}', [ConsignmentApplicationController::class, 'deleteImporter']);
@@ -234,7 +233,7 @@ Route::prefix('internal')
         Route::post('/verification/{id}/save', [UserController::class, 'save_attachment']);
         Route::post('/verification/attachment/{attachmentId}/accept', [UserController::class, 'acceptAttachment']);
         Route::post('/verification/attachment/{attachmentId}/reject', [UserController::class, 'rejectAttachment']);
-        
+
         Route::get('/roles', [RoleAndPermissionController::class, 'role'])->name('internal.role');
         Route::get('/roles/list/data', [RoleAndPermissionController::class, 'role_list_data']);
         Route::post('/roles/update', [RoleAndPermissionController::class, 'update_role']);
@@ -611,6 +610,16 @@ Route::middleware(['auth.any'])->group(function () {
     Route::post('/vehicles', [VehicleController::class, 'store'])->name('vehicles.store');
     Route::put('/vehicles/{id}', [VehicleController::class, 'update'])->name('vehicles.update');
     Route::delete('/vehicles/{id}', [VehicleController::class, 'destroy'])->name('vehicles.destroy');
+
+
+    // consignment item
+    Route::get('/get_pbdata/{cate}', [MiscController::class, 'getpbdata']);
+    Route::get('/consignment_condition/category/{category}/{countryCode}/data', [ConsignmentMiscController::class, 'getConsignmentConditionDataByCategory']);
+
+
+    // get importers
+    Route::get('/get_consignment_importers', [ConsignmentApplicationController::class, 'getConsignmentImporters'])->name('getConsignmentImporters');
+    Route::get('/vehicle/data', [VehicleController::class, 'getVehicleList']);
 });
 
 // broadcast --dont kacau---

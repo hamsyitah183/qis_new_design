@@ -37,7 +37,7 @@
                                 <tr>
                                     <th data-en="Document" data-bm="Dokumen">Document</th>
                                     <th data-en="Status" data-bm="Status">Status</th>
-                                    <th data-en="Expiry" data-bm="Tarikh Luput">Expiry</th>
+                                   
                                     <th data-en="Action" data-bm="Tindakan">Action</th>
                                 </tr>
                             </thead>
@@ -78,13 +78,7 @@
                                                 </span>
                                             @endif
                                         </td>
-                                        <td>
-                                            @if ($attachment && $req->requires_expiry)
-                                                {{ $attachment->valid_until ? \Carbon\Carbon::parse($attachment->valid_until)->format('d M Y') : '—' }}
-                                            @else
-                                                <span class="text-muted">—</span>
-                                            @endif
-                                        </td>
+                                       
                                         <td>
                                             @if ($isMissing || $isExpired)
                                                 <a href="{{ route('profile') }}" class="btn btn-sm btn-primary"

@@ -66,7 +66,7 @@
                 <div class="row gy-3">
                     <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                         <label for="selectexp" class="form-label" data-en="Select Importer" data-bm="Pilih Pengimport">Select Importer</label>
-                        <select id="selectexp" data-route="{{ route('public.getConsignmentImporters') }}"
+                        <select id="selectexp" data-route="{{ route('getConsignmentImporters') }}"
                             class="form-select xintra-select2" name="selectexp" style="width:100%;" required>
                             <option value="" data-bm="-- Pilih Pengimport --" data-en="-- Select Importer --">-- Select Importer --</option>
                         </select>
@@ -79,7 +79,7 @@
                     </div>
                     <div class="col-xl-12">
                         <input type="hidden" id="expid">
-                        <label for="expname" class="form-label" data-en="Name" data-bm="Nama">Name</label>
+                        <label for="expname" class="form-label" data-en="Name" data-bm="Nama">Name <span class="text-danger">*</span></label>
                         <input type="text" class="form-control " id="expname" name="expname" disabled>
                     </div>
                     <div class="col-xl-12">
@@ -87,13 +87,13 @@
                         <input type="text" class="form-control " id="expfonno" name="expfonno" disabled>
                     </div>
                     <div class="col-xl-12">
-                        <label for="expaddress" class="form-label" data-en="Address" data-bm="Alamat">Address</label>
+                        <label for="expaddress" class="form-label" data-en="Address" data-bm="Alamat">Address <span class="text-danger">*</span></label>
                         {{-- <input type="text" class="form-control mb-2" id="expaddress1" name="expaddress1" disabled> --}}
                         <textarea name="expadress1" id="expaddress1" class="form-control" cols="30" rows="3" disabled></textarea>
                         <!-- <input type="text" class="form-control " id="expaddress2"  name="expaddress2"> -->
                     </div>
                     <div class="col-lg-12">
-                        <label for="expcountry" class="form-label" data-en="Country" data-bm="Negara">Country</label>
+                        <label for="expcountry" class="form-label" data-en="Country" data-bm="Negara">Country <span class="text-danger">*</span></label>
                         <input type="hidden" class="form-control mb-2" id="expcountryCode" name="expcountryCode">
                         <input type="text" class="form-control" id="expcountry" name="expcountry" disabled>
                     </div>
@@ -102,13 +102,13 @@
         </div>
 
 
-        <x-modal id="addExporterModal" title="Add Importer">
+        <x-modal id="addExporterModal" title="Add Exporter">
             <form id="addExporterForm">
                 @csrf
 
                 {{-- Name --}}
                 <div class="mb-3">
-                    <label for="addexpName" class="form-label" data-bm="Nama" data-en="Name">Name</label>
+                    <label for="addexpName" class="form-label" data-bm="Nama" data-en="Name">Name <span class="text-danger">*</span></label>
                     <input type="text" id="addexpName" name="addexpName" class="form-control">
                 </div>
 
@@ -120,14 +120,14 @@
 
                 {{-- Address --}}
                 <div class="mb-3">
-                    <label for="addexpaddress" class="form-label" data-bm="Alamat" data-en="Address">Address</label>
+                    <label for="addexpaddress" class="form-label" data-bm="Alamat" data-en="Address">Address <span class="text-danger">*</span></label>
                     <input type="text" id="addexpaddress1" name="addexpaddress1" class="form-control mb-2">
                     <input type="text" id="addexpaddress2" name="addexpaddress2" class="form-control">
                 </div>
 
                 {{-- Country --}}
                 <div class="mb-3">
-                    <label for="addexpcountry" class="form-label" data-bm="Negara" data-en="Country">Country</label>
+                    <label for="addexpcountry" class="form-label" data-bm="Negara" data-en="Country">Country <span class="text-danger">*</span></label>
                     <select class="form-select" id="addexpcountry" name="addexpcountry">
                         <option value="" data-bm="-- Pilih Negara --" data-en="-- Select Country --">-- Select Country --</option>
                         {{-- @foreach ($country as $coun)

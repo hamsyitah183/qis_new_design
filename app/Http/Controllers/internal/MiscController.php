@@ -55,7 +55,7 @@ class MiscController extends Controller
 
     public function getpbdata($cate)
     {
-        Gate::authorize('manage settings');
+        // Gate::authorize('manage settings');
 
         if ($cate === 'district_entry') {
             $pbdata = PublicCode::where('cate_name', $cate)

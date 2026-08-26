@@ -32,6 +32,10 @@ let tempAttachments = [];
 let itemPurpose = null;
 let temporaryItemsAttachment = [];
 
+// [FIX] categoryAmount now actually gets populated — see
+// recalculateCategoryAmounts() near saveConsignmentAttachment().
+let categoryAmount = [];
+
 // Vehicle globals
 let vehicleListArray = [];
 let selectedVehicles = [];
@@ -108,7 +112,7 @@ async function selfImport() {
 // ─── Exporter List ────────────────────────────────────────
 function fetchExporterList() {
     const $select = $("#selectexp");
-    const url = "/public/get_consignment_importers";
+    const url = "/get_consignment_importers";
 
     return $.ajax({
         url,
@@ -185,7 +189,7 @@ function handleVehicleChange() {
         selectedVehicles = vehicleListArray.filter((v) =>
             selectedIds.includes(String(v.id)),
         );
-        updateSelectedVehiclesTable(selectedIds);
+       
         change = 1;
         summarySubmit();
     });
@@ -193,7 +197,7 @@ function handleVehicleChange() {
 
 function fetchVehicleList() {
     const $select = $("#selectVehicle");
-    const url = "/public/vehicle/data";
+    const url = "/vehicle/data";
 
     return $.ajax({
         url,
@@ -233,38 +237,6 @@ function fetchVehicleList() {
     });
 }
 
-function updateSelectedVehiclesTable(selectedIds) {
-    const $tableBody = $("#selectedVehiclesBody");
-    const $container = $("#selectedVehiclesContainer");
-
-    if (!selectedIds || selectedIds.length === 0) {
-        $container.hide();
-        return;
-    }
-
-    $container.show();
-    $tableBody.empty();
-
-    const selectedVehicles = vehicleListArray.filter((v) =>
-        selectedIds.includes(String(v.id)),
-    );
-
-    selectedVehicles.forEach((v, index) => {
-        $tableBody.append(`
-            <tr>
-                <td>${index + 1}</td>
-                <td>${v.vehicle_number}</td>
-                <td>
-                    <div class = "d-flex gap-1">
-                        <button type="button" class="btn btn-icon btn-success-light view-vehicle-btn" data-id="${v.id}">
-                            <i class="ti ti-eye"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `);
-    });
-}
 
 // ─── Add Vehicle Modal ────────────────────────────────────
 function initAddVehicleModal() {
@@ -280,21 +252,10 @@ function initAddVehicleModal() {
     $("#addVehicleBtn").on("click", function (e) {
         e.preventDefault();
 
-        const vehicleName = $("#addVehicleName").val().trim();
         const vehicleNumber = $("#addVehicleNumber").val().trim();
-        const vehicleType = $("#addVehicleType").val().trim();
-        const registrationNumber = $("#addVehicleRegNumber").val().trim();
+
         const validFrom = $("#addValidFrom").val();
         const validUntil = $("#addValidUntil").val();
-
-        if (!vehicleName || !vehicleNumber || !registrationNumber) {
-            Swal.fire({
-                icon: "warning",
-                title: "Missing Required Fields",
-                text: "Please fill in: Vehicle Name, Vehicle Number, and Registration Number.",
-            });
-            return;
-        }
 
         Swal.fire({
             title: "Saving vehicle...",
@@ -306,10 +267,8 @@ function initAddVehicleModal() {
             url: "/public/store_vehicle",
             type: "POST",
             data: {
-                vehicle_name: vehicleName,
                 vehicle_number: vehicleNumber,
-                vehicle_type: vehicleType || null,
-                vehicle_registration_number: registrationNumber,
+
                 valid_from: validFrom || null,
                 valid_until: validUntil || null,
             },
@@ -344,9 +303,55 @@ function initAddVehicleModal() {
     });
 }
 
+function loadCategory() {
+    const $select = $("#itemCategory");
+
+    $select.empty().append('<option value="">-- Select Category --</option>');
+
+    if ($select.hasClass("select2-hidden-accessible")) {
+        $select.select2("destroy");
+    }
+
+    $select.prop("disabled", true);
+
+    Swal.fire({
+        title: "Loading...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+    });
+
+    fetch(`/get_pbdata/consignment_category`)
+        .then((res) => res.json())
+        .then((data) => {
+            $select.prop("disabled", false);
+            console.log("data in loadcategory", data);
+
+            data.data.forEach((row) => {
+                $select.append(
+                    `<option value="${row.id}">${row.description}</option>`,
+                );
+            });
+
+            $select.select2({
+                width: "100%",
+                placeholder: "-- Select Item --",
+                allowClear: true,
+                dropdownParent: $("#addItemModal"),
+            });
+
+            Swal.close();
+        })
+        .catch((e) => {
+            console.error("Error loading items:", e);
+            $select.prop("disabled", false);
+            Swal.fire("Error", "Failed to load consignment items.", "error");
+        });
+}
+
 // ─── Consignment / Uses ──────────────────────────────────
-function loadConsignmentSelection() {
+function loadConsignmentSelection(itemId) {
     const countryCode = $("#expcountryCode").val();
+
     const $select = $("#itemSelect");
 
     console.log("the country code", countryCode);
@@ -367,11 +372,14 @@ function loadConsignmentSelection() {
         didOpen: () => Swal.showLoading(),
     });
 
-    fetch(`/public/get_consignment_certificate/${countryCode}`)
+    fetch(`/consignment_condition/category/${itemId}/${countryCode}/data`)
         .then((res) => res.json())
         .then((data) => {
             $select.prop("disabled", false);
             console.log("data", data);
+
+            // ===== [OTHERS] Prepend "Others" option at the top =====
+            $select.append(`<option value="others">Others</option>`);
 
             data.data.forEach((row) => {
                 $select.append(
@@ -392,40 +400,6 @@ function loadConsignmentSelection() {
             console.error("Error loading items:", e);
             $select.prop("disabled", false);
             Swal.fire("Error", "Failed to load consignment items.", "error");
-        });
-}
-
-function loadUses(itemId) {
-    const $select = $("#itemUses");
-    $select.empty().append('<option value="">-- Select Uses --</option>');
-
-    if (!itemId) return;
-
-    Swal.fire({
-        title: "Loading...",
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading(),
-    });
-
-    fetch(`/public/consignment_uses/${itemId}`)
-        .then((res) => res.json())
-        .then((data) => {
-            if (!data.data) return;
-            data.data.forEach((row) => {
-                $select.append(`<option value="${row}">${row}</option>`);
-            });
-
-            $select.select2({
-                width: "100%",
-                placeholder: "-- Select Uses --",
-                allowClear: true,
-                dropdownParent: $("#addItemModal"),
-            });
-
-            Swal.close();
-        })
-        .catch((err) => {
-            console.error("Failed to load uses:", err);
         });
 }
 
@@ -1744,6 +1718,114 @@ async function showItemAgreement(item) {
     return false;
 }
 
+// ─── Category Pricing ──────────────────────────────────────
+const CATEGORY_TIER_KG = 3000;
+const CATEGORY_TIER_BASE_PRICE = 10;
+
+function calculateCategoryPrice(totalQuantity) {
+    const tierCount = Math.ceil(totalQuantity / CATEGORY_TIER_KG);
+    if (tierCount <= 0) return 0;
+    // Linear pricing: each tier costs BASE_PRICE
+    return tierCount * CATEGORY_TIER_BASE_PRICE;
+}
+
+function recalculateCategoryAmounts() {
+    const totals = {};
+
+    tempItems.forEach((item) => {
+        const cat = item.category || "Uncategorized";
+        const qty = parseFloat(item.quantity) || 0;
+        totals[cat] = (totals[cat] || 0) + qty;
+    });
+
+    categoryAmount = Object.keys(totals).map((categoryName) => {
+        const quantity = totals[categoryName];
+        return {
+            category_name: categoryName,
+            quantity,
+            price: calculateCategoryPrice(quantity),
+        };
+    });
+
+    console.log("categoryAmount", categoryAmount);
+    return categoryAmount;
+}
+
+// Optional helper (if you need it elsewhere)
+function categoryPrice(categoryName, quantity) {
+    // This is just a wrapper if you want to call it directly
+    return calculateCategoryPrice(quantity);
+}
+
+function tablePrice() {
+    const table = document.getElementById('summaryTable4');
+    if (!table) return;
+    const tbody = table.querySelector('tbody');
+    if (!tbody) return;
+
+    // Clear existing rows
+    tbody.innerHTML = '';
+
+    // No data – show placeholder
+    if (!categoryAmount || categoryAmount.length === 0) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 4;
+        td.textContent = 'No categories found';
+        td.className = 'text-center';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+    }
+
+    // Loop through each category
+    categoryAmount.forEach((cat, index) => {
+        const tr = document.createElement('tr');
+
+        const tdIndex = document.createElement('td');
+        tdIndex.textContent = index + 1;
+        tr.appendChild(tdIndex);
+
+        const tdCategory = document.createElement('td');
+        tdCategory.textContent = cat.category_name || 'Uncategorized';
+        tr.appendChild(tdCategory);
+
+        const tdQuantity = document.createElement('td');
+        tdQuantity.textContent = cat.quantity || 0;
+        tr.appendChild(tdQuantity);
+
+        const tdPrice = document.createElement('td');
+        tdPrice.textContent = cat.price || 0;
+        tr.appendChild(tdPrice);
+
+        tbody.appendChild(tr);
+    });
+
+    // ─── TOTAL ROW (single merged cell) ───
+    const totalQty = categoryAmount.reduce((sum, cat) => sum + (cat.quantity || 0), 0);
+    const totalPrice = categoryAmount.reduce((sum, cat) => sum + (cat.price || 0), 0);
+
+    const trTotal = document.createElement('tr');
+    const tdTotal = document.createElement('td');
+    tdTotal.colSpan = 4;                      // merge all columns
+    tdTotal.className = 'fw-bold text-end';   // bold + right-aligned (optional)
+    tdTotal.textContent = `Total: ${totalQty} kg  |  Total Price: RM ${totalPrice}`;
+    trTotal.appendChild(tdTotal);
+    tbody.appendChild(trTotal);
+}
+
+function toggleCustomItemInput(showCustom) {
+    const $customWrapper = $("#customItemWrapper");
+
+    if (showCustom) {
+        $customWrapper.show();
+        $("#customItemName").val("").focus();
+    } else {
+        $customWrapper.hide();
+        $("#customItemName").val("");
+    }
+}
+
 // ─── Save Consignment Attachment ──────────────────────────
 function saveConsignmentAttachment() {
     document
@@ -1753,11 +1835,30 @@ function saveConsignmentAttachment() {
 
             console.log("Saving consignment item...");
 
+            const selected = $("#itemCategory").select2("data");
+            const itemCategoryText = selected[0]?.text;
             const itemSelectValue = $("#itemSelect").val();
             const itemSelectText = $("#itemSelect option:selected").text();
             const itemQuantity = $("#itemQuantity").val().trim();
-            const itemMeasure = $("#itemMeasure").val();
+            const itemMeasure = "kg";
             const certificateNo = $("#certificateNo").val().trim();
+
+            // [OTHERS] Determine if custom item
+            const isCustom = itemSelectValue === "others";
+            let itemName = isCustom
+                ? $("#customItemName").val().trim()
+                : itemSelectText;
+            let itemId = isCustom ? null : itemSelectValue;
+
+            // [OTHERS] Validate custom item name
+            if (isCustom && !itemName) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Custom Item Name Required",
+                    text: "Please enter a custom item name.",
+                });
+                return;
+            }
 
             const existingItem = editingItemId
                 ? tempItems.find((obj) => obj.id === editingItemId)
@@ -1768,21 +1869,48 @@ function saveConsignmentAttachment() {
                 files = existingItem.files || [];
             }
 
+            // [OTHERS] Attachment compulsory for custom items
+            if (isCustom && files.length === 0) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Attachment Required",
+                    text: "Please upload an image/document for the custom item.",
+                });
+                return;
+            }
+
+            // Normal validation (existing)
             if (
                 !itemSelectValue ||
                 !itemQuantity ||
                 !itemMeasure ||
                 !certificateNo
             ) {
-                Swal.fire({
-                    icon: "error",
-                    title: "Incomplete Data",
-                    text: "Please fill in all required fields before saving.",
-                });
-                return;
+                // But if custom, itemSelectValue may be "others", so we need to treat it as valid
+                // Adjust validation: for custom, we only need custom name, quantity, measure, certNo, and attachment.
+                // The condition above would fail for custom because itemSelectValue === "others" is truthy so it passes.
+                // However we already validated custom name and attachment, so it's fine.
+                // But we still need to check if itemSelectValue is empty or "others" and we have name.
+                // Let's rewrite validation:
+                if (!isCustom && (!itemSelectValue || itemSelectValue === "")) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Incomplete Data",
+                        text: "Please select an item.",
+                    });
+                    return;
+                }
+                if (!itemQuantity || !itemMeasure || !certificateNo) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Incomplete Data",
+                        text: "Please fill in all required fields before saving.",
+                    });
+                    return;
+                }
             }
 
-            // Measurement limit check
+            // Measurement limit check (same as before)
             if (limitMeasurement) {
                 let limitInKg = null;
                 const selectedUnit = measurementUnits?.unit.find(
@@ -1818,17 +1946,18 @@ function saveConsignmentAttachment() {
 
             const itemPayload = {
                 id: existingItem ? existingItem.id : generateUUID(),
-                item_id: itemSelectValue,
-                item_name: itemSelectText,
+                item_id: itemId,
+                item_name: itemName,
                 quantity: itemQuantity,
                 measure: itemMeasure,
                 certificateNo: certificateNo,
-                purpose: "",
-                uses: "",
+                category: itemCategoryText,
                 value: 0,
                 files: files,
                 agreedAt: null,
                 condition: currentItemCondition,
+                // [OTHERS] flag to identify custom items if needed later
+                isCustom: isCustom,
             };
 
             const agreed = await showItemAgreement(itemPayload);
@@ -1870,16 +1999,22 @@ function resetAddItemModal() {
     $("#itemQuantity").val("");
     $("#itemMeasure").val("").trigger("change");
     $("#certificateNo").val("");
-    // Reset other fields if they exist (purpose, uses, value)
     if ($("#itemPurpose").length) $("#itemPurpose").val("").trigger("change");
     if ($("#itemUses").length) $("#itemUses").val(null).trigger("change");
     if ($("#itemValue").length) $("#itemValue").val("");
+
+    // Custom item state – hide and clear
+    $("#customItemName").val("");
+    toggleCustomItemInput(false);
+    $(".attachmentInstruction").html("");
 
     if (itemDropzone) itemDropzone.removeAllFiles(true);
 }
 
 // ─── Render Items ──────────────────────────────────────────
 function renderAllItems() {
+    recalculateCategoryAmounts();
+
     const tableBody = document.querySelector("#itemListTbl tbody");
     tableBody.innerHTML = "";
 
@@ -1894,8 +2029,11 @@ function renderAllItems() {
         tableBody.insertAdjacentHTML(
             "beforeend",
             `<tr id="item-row-${item.id}">
+            
+                <td>${item.category}</td>
                 <td>${item.item_name}</td>
                 <td class="text-wrap">${qty} ${item.measure || ""}</td>
+              
                 <td class="text-center">
                     <div class="d-flex justify-content-center align-items-center gap-2">
                         <button class="btn btn-icon btn-success-light view-more-item"
@@ -1920,7 +2058,6 @@ function renderAllItems() {
         );
     });
 
-    // ─── Footer row ──────────────────────────────────────────────
     const table = document.querySelector("#itemListTbl");
     let tfoot = table.querySelector("tfoot");
     if (!tfoot) {
@@ -1972,8 +2109,15 @@ function viewMore() {
                 - User has not confirmed this item yet.
             </div>`;
 
-        // Build details rows – only show fields that have values
         let detailsRows = `
+            <div class="col-12 col-lg-6">
+                <p>
+                    <strong class="me-1">
+                        <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-scale-balanced"></i></span>
+                        Category:
+                    </strong> ${item.category}
+                </p>
+            </div>
             <div class="col-12 col-lg-6">
                 <p>
                     <strong class="me-1">
@@ -1990,9 +2134,9 @@ function viewMore() {
                     </strong> ${item.quantity} ${item.measure}
                 </p>
             </div>
+            
         `;
 
-        // Certificate Number (always show if present)
         if (item.certificateNo) {
             detailsRows += `
                 <div class="col-12 col-lg-6">
@@ -2006,7 +2150,6 @@ function viewMore() {
             `;
         }
 
-        // Value – only if not empty and not zero
         if (item.value && item.value != 0) {
             detailsRows += `
                 <div class="col-12 col-lg-6">
@@ -2020,33 +2163,7 @@ function viewMore() {
             `;
         }
 
-        // Purpose – only if not empty
-        if (item.purpose) {
-            detailsRows += `
-                <div class="col-12 col-lg-6">
-                    <p>
-                        <strong class="me-1">
-                            <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-pen-fancy"></i></span>
-                            Purpose:
-                        </strong> ${item.purpose}
-                    </p>
-                </div>
-            `;
-        }
-
-        // Uses – only if not empty
-        if (item.uses) {
-            detailsRows += `
-                <div class="col-12">
-                    <p>
-                        <strong class="me-1">
-                            <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-gear"></i></span>
-                            Uses:
-                        </strong> ${item.uses}
-                    </p>
-                </div>
-            `;
-        }
+     
 
         detailsDiv.innerHTML = `
             ${agreementBanner}
@@ -2057,7 +2174,6 @@ function viewMore() {
             </div>
         `;
 
-        // ─── Conditions ────────────────────────────────
         const hasCondition = item.condition && item.condition.trim() !== "";
         if (conditionItem) {
             conditionItem.innerHTML = hasCondition
@@ -2068,7 +2184,6 @@ function viewMore() {
             conditionCount.textContent = hasCondition ? "1" : "0";
         }
 
-        // ─── Attachments ─────────────────────────────────
         attachList.innerHTML = "";
         currentItemAttachments = item.files || [];
 
@@ -2109,14 +2224,12 @@ function viewMore() {
                 attachmentCount.textContent = item.files.length;
         }
 
-        // ─── Show the offcanvas ─────────────────────────
         const offcanvasEl = document.getElementById("ItemDetailsOffcanvas");
         if (offcanvasEl) {
             bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl).show();
         }
     });
 
-    // Click handler for attachment chips (unchanged)
     $(document).on("click", ".view-item-attach-btn", function (e) {
         e.preventDefault();
         e.stopPropagation();
@@ -2230,10 +2343,6 @@ function editItem() {
             .then(() => {
                 $("#itemSelect").val(item.item_id).trigger("change");
 
-                loadUses(item.item_id).then(() => {
-                    $("#itemUses").val(item.uses).trigger("change");
-                });
-
                 $("#itemValue").val(item.value);
                 $("#itemQuantity").val(item.quantity);
                 $("#itemMeasure").val(item.measure).trigger("change");
@@ -2277,7 +2386,7 @@ function saveapplication(isDraft = false) {
         entrypoint: $("#entryPoint").val(),
         applCate: $("#app_cate").val(),
         vehicle_ids: $("#selectVehicle").val() || [],
-        ptnNumber: $("#ptnNumber").val() || "", // <-- add this
+        ptnNumber: $("#ptnNumber").val() || "",
     };
 
     formData.append("exporterData", JSON.stringify(importer));
@@ -2296,12 +2405,13 @@ function saveapplication(isDraft = false) {
         }
     });
 
-    // Application attachments
     applicationAttachments.forEach((attachment) => {
         if (attachment.file) {
             formData.append("application_files[]", attachment.file);
         }
     });
+
+    formData.append("categoryAmount", JSON.stringify(categoryAmount));
 
     Swal.fire({
         title: isDraft ? "Saving Draft..." : "Submitting...",
@@ -2420,7 +2530,6 @@ export function summarySubmit() {
         );
     });
 
-    // ─── Footer row for totals ──────────────────────────────
     const table3 = document.querySelector("#summaryTable3");
     let tfoot3 = table3.querySelector("tfoot");
     if (!tfoot3) {
@@ -2446,8 +2555,52 @@ export function summarySubmit() {
         tfoot3.innerHTML = "";
     }
 
-    // Update application attachments table
     updateAttachmentTable();
+    renderCategoryPriceSummary();
+    tablePrice();
+}
+
+function renderCategoryPriceSummary() {
+    const container = document.getElementById("summaryCategoryPrices");
+    if (!container) return;
+
+    if (!categoryAmount.length) {
+        container.innerHTML = `<p class="text-muted mb-0">No items added yet.</p>`;
+        return;
+    }
+
+    const total = categoryAmount.reduce((sum, c) => sum + c.price, 0);
+
+    container.innerHTML = `
+        <table class="table table-sm mb-2">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th class="text-end">Total Quantity (kg)</th>
+                    <th class="text-end">Price (RM)</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${categoryAmount
+                    .map(
+                        (c) => `
+                    <tr>
+                        <td>${c.category_name}</td>
+                        <td class="text-end">${c.quantity.toLocaleString()}</td>
+                        <td class="text-end">${c.price.toFixed(2)}</td>
+                    </tr>
+                `,
+                    )
+                    .join("")}
+            </tbody>
+            <tfoot>
+                <tr style="font-weight: 800;">
+                    <td colspan="2" class="text-end">Total:</td>
+                    <td class="text-end">RM ${total.toFixed(2)}</td>
+                </tr>
+            </tfoot>
+        </table>
+    `;
 }
 
 function updateAttachmentTable() {
@@ -2572,7 +2725,6 @@ $(document).ready(async function () {
             dropdownParent: $("#addExporterModal"),
         });
 
-        // Purpose dropdown (if exists)
         if ($("#itemPurpose").length) {
             $("#itemPurpose").select2({
                 width: "100%",
@@ -2587,27 +2739,55 @@ $(document).ready(async function () {
             });
         }
 
-        // Item Select change – load uses & details
-        $("#itemSelect").on("change", function () {
+        $("#itemCategory").on("change", function () {
             const itemId = $(this).val();
+            loadConsignmentSelection(itemId);
+        });
+
+        // ===== [OTHERS] Item Select change handler – detect "others" =====
+        // ===== [OTHERS] Item Select change handler – show/hide custom input =====
+        $("#itemSelect").on("change", function () {
+            const selectedVal = $(this).val();
             const $itemUses = $("#itemUses");
 
             $itemUses
                 .empty()
                 .append('<option value="">-- Select Uses --</option>');
 
-            if (!itemId) return;
+            if (!selectedVal) {
+                toggleCustomItemInput(false);
+                $(".attachmentInstruction").html("");
+                return;
+            }
 
-            loadUses(itemId);
-            loadDetails(itemId);
+            if (selectedVal === "others") {
+                // Show custom input, keep select visible
+                toggleCustomItemInput(true);
+                $(".attachmentInstruction").html(
+                    `<span style="color:red;" data-en="Attachment is mandatory for custom items. Please upload the item image or document"
+                   data-bm="Lampiran adalah wajib untuk item yang tiada dalam senarai. Sila muat naik gambar atau dokumen">
+                * Attachment is mandatory for custom items. Please upload the item image or document.</span>`,
+                );
+                return;
+            }
+
+            // Normal item selected – hide custom input
+            toggleCustomItemInput(false);
+            $(".attachmentInstruction").html("");
+            loadDetails(selectedVal);
         });
 
         $("#mdlAddItemBtn").on("click", function (e) {
             e.preventDefault();
+            loadCategory();
             loadConsignmentSelection();
         });
 
-        // Submit button handler — now requires the final declaration to be agreed to
+        // [OTHERS] Reset custom state when modal is closed
+        $("#addItemModal").on("hidden.bs.modal", function () {
+            resetAddItemModal();
+        });
+
         // Submit button handler
         $(document).on("click", "#submitApps", async function (e) {
             e.preventDefault();
@@ -2632,10 +2812,6 @@ $(document).ready(async function () {
                 return;
             }
 
-            // Walk through the conditions pages, then the final declaration —
-            // was calling showFinalAgreement() directly, skipping the conditions
-            // walkthrough entirely (and showItemConditions() below was unreachable
-            // dead code referencing an ITEM_CONDITIONS that didn't exist yet).
             const agreed = await showItemConditions();
             if (!agreed) {
                 return;

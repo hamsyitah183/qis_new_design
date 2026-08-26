@@ -77,10 +77,9 @@ class VehicleController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'vehicle_name'               => 'required|string|max:255',
+          
             'vehicle_number'             => 'required|string|max:255',
-            'vehicle_type'               => 'nullable|string|max:255',
-            // 'vehicle_registration_number' => 'required|string|max:255',
+    
             'valid_from'                 => 'nullable|date',
             'valid_until'                => 'nullable|date|after_or_equal:valid_from',
         ]);
@@ -94,10 +93,9 @@ class VehicleController extends Controller
 
         $vehicle = UserVehicleList::create([
             'user_id'                      => $userId,
-            'vehicle_name'                 => $request->vehicle_name,
+         
             'vehicle_number'               => $request->vehicle_number,
-            'vehicle_type'                 => $request->vehicle_type,
-            'vehicle_registration_number'  => $request->vehicle_registration_number,
+        
             'valid_from'                   => $request->valid_from,
             'valid_until'                  => $request->valid_until,
         ]);
@@ -125,10 +123,9 @@ class VehicleController extends Controller
         $vehicle = UserVehicleList::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
-            'vehicle_name'               => 'required|string|max:255',
+         
             'vehicle_number'             => 'required|string|max:255',
-            'vehicle_type'               => 'nullable|string|max:255',
-            'vehicle_registration_number' => 'required|string|max:255',
+           
             'valid_from'                 => 'nullable|date',
             'valid_until'                => 'nullable|date|after_or_equal:valid_from',
         ]);
@@ -138,10 +135,9 @@ class VehicleController extends Controller
         }
 
         $vehicle->update([
-            'vehicle_name'               => $request->vehicle_name,
+          
             'vehicle_number'             => $request->vehicle_number,
-            'vehicle_type'               => $request->vehicle_type,
-            'vehicle_registration_number' => $request->vehicle_registration_number,
+           
             'valid_from'                 => $request->valid_from,
             'valid_until'                => $request->valid_until,
         ]);
@@ -177,9 +173,9 @@ class VehicleController extends Controller
     public function storeVehicle(Request $request)
     {
         $request->validate([
-            'vehicle_name'               => 'required|string|max:255',
+          
             'vehicle_number'             => 'required|string|max:255',
-            'vehicle_registration_number' => 'nullable|string|max:255',
+          
             'valid_from'                 => 'nullable|date',
             'valid_until'                => 'nullable|date|after_or_equal:valid_from',
         ]);
@@ -190,10 +186,9 @@ class VehicleController extends Controller
 
         $vehicle = UserVehicleList::create([
             'user_id'                      => $userId,
-            'vehicle_name'                 => $request->vehicle_name,
+           
             'vehicle_number'               => $request->vehicle_number,
-            'vehicle_type'                 => $request->vehicle_type,
-            'vehicle_registration_number'  => $request->vehicle_registration_number,
+            
             'valid_from'                   => $request->valid_from,
             'valid_until'                  => $request->valid_until,
         ]);

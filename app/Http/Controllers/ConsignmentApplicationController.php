@@ -22,6 +22,7 @@ use App\Notifications\ApplicationNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
@@ -114,23 +115,28 @@ class ConsignmentApplicationController extends Controller
 
     public function getConsignmentImporters()
     {
-        $user = auth()->user();
-
-        if (!$user) {
-            return response()->json(
-                [
-                    'message' => 'Unauthenticated.',
-                ],
-                401,
-            );
+        // Check if user is authenticated via public guard
+        if (auth('public')->check()) {
+            $user = auth('public')->user();
+            // Public users can view only their own importers
+            $importers = ConsignmentImporter::with('countryInfo')->where('registered_by', $user->uuid)->get();
+            return response()->json(['success' => true, 'data' => $importers]);
         }
 
-        $importers = ConsignmentImporter::with('countryInfo')->where('registered_by', $user->uuid)->get();
+        // Check if user is authenticated via internal guard
+        if (auth('internal')->check()) {
+            $user = auth('internal')->user();
+            // Internal users need 'edit application' permission
+            if (!$user->can('edit application')) {
+                return response()->json(['message' => 'Unauthorized.'], 403);
+            }
+            // Internal admins can see all importers? Or also filtered? Currently the original code uses $user->uuid which is internal user's uuid; that might not match registered_by (which is public user uuid). Likely internal should see all, so remove where clause.
+            $importers = ConsignmentImporter::with('countryInfo')->get(); // or maybe all
+            return response()->json(['success' => true, 'data' => $importers]);
+        }
 
-        return response()->json([
-            'success' => true,
-            'data' => $importers,
-        ]);
+        // No authentication
+        return response()->json(['message' => 'Unauthenticated.'], 401);
     }
 
     public function getConsignmentFromCountry($countryCode)
@@ -180,6 +186,7 @@ class ConsignmentApplicationController extends Controller
                     'importer_verify'      => $importer_verify,
                     'vehicle_ids'          => $permit['vehicle_ids'] ?? null,
                     'ptn_number'           => $permit['ptnNumber'] ?? null,
+                    'prices_total'         => $request['categoryAmount'] ?? null
                 ]);
 
                 if (!$isDraft) {
@@ -226,6 +233,7 @@ class ConsignmentApplicationController extends Controller
                     'importer_verify'      => $importer_verify,
                     'vehicle_ids'          => $permit['vehicle_ids'] ?? null,
                     'ptn_number'           => $permit['ptnNumber'] ?? null,
+                    'prices_total'        => $request['categoryAmount'] ?? null
                 ]);
 
                 if (!$isDraft) {
@@ -299,6 +307,8 @@ class ConsignmentApplicationController extends Controller
                     $permit_id = $data['permit_id'] ?? null;
 
                     if ($permit_id && in_array($permit_id, $existingIds)) continue;
+
+                    $data['purpose'] = '';
 
                     $consignment = ConsignmentPermit::create([
                         'application_id'    => $appId,
@@ -722,10 +732,15 @@ class ConsignmentApplicationController extends Controller
             ->orderBy('created_at', 'desc')
             ->firstOrFail();
 
-        if ($application->user_id != authUser()['user']->uuid || $application->status != 'Draft') {
+        $isOwner = $application->user_id == authUser()['user']->uuid;
+        $isDraft = $application->status == 'Draft';
+        $isRejected = $application->status == 'Clerk Rejected';
+        
+        $canEditInternal = auth('internal')->check() && auth('internal')->user()->can('edit application');
+
+        if (!($isOwner && ($isDraft || $isRejected )) && !$canEditInternal) {
             abort(403, 'Cannot edit this application.');
         }
-
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();

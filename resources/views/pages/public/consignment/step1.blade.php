@@ -139,28 +139,7 @@
                                 </div>
                             </div>
 
-                            {{-- Optional: show selected vehicles in a compact table (optional) --}}
-                            <div class="row mt-3" id="selectedVehiclesContainer" style="display: none;">
-                                <div class="col-xl-12">
-                                    <label class="form-label" data-en="Selected Vehicles"
-                                        data-bm="Kenderaan Dipilih">Selected Vehicles</label>
-                                    <div class="table-responsive">
-                                        <table class="table table-sm table-bordered" id="selectedVehiclesTable">
-                                            <thead>
-                                                <tr>
-                                                    <th>#</th>
-                                                    <th data-en="Registration No" data-bm="Nombor Pendaftaran">
-                                                        Registration No</th>
-                                                    <th data-en="Action"  data-bm="Tindakan" >Action</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="selectedVehiclesBody">
-                                                <!-- dynamically filled -->
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
+                           
 
                             <input type="hidden" id="vehicleIds" name="vehicleIds" value="">
                         </div>
@@ -179,33 +158,16 @@
     <form id="addVehicleForm">
         @csrf
 
-        <div class="mb-3">
-            <label for="addVehicleName" class="form-label" data-en="Vehicle Name" data-bm="Nama Kenderaan">
-                Vehicle Name <a style="color:red"> * </a>
-            </label>
-            <input type="text" id="addVehicleName" name="addVehicleName" class="form-control" required>
-        </div>
-
+        
         <div class="mb-3">
             <label for="addVehicleNumber" class="form-label" data-en="Vehicle Number (License Plate)" data-bm="Nombor Kenderaan (Plat)">
-                Vehicle Number <a style="color:red"> * </a>
-            </label>
+                Vehicle Number
+            </label> <a style="color:red"> * </a>
             <input type="text" id="addVehicleNumber" name="addVehicleNumber" class="form-control" required>
         </div>
 
-        <div class="mb-3">
-            <label for="addVehicleType" class="form-label" data-en="Vehicle Type" data-bm="Jenis Kenderaan">
-                Vehicle Type <a style="color:red"> * </a>
-            </label>
-            <input type="text" id="addVehicleType" name="addVehicleType" class="form-control" required>
-        </div>
-
-        <div class="mb-3">
-            <label for="addVehicleRegNumber" class="form-label" data-en="Registration Document Number" data-bm="Nombor Pendaftaran Dokumen">
-                Registration Number (optional)
-            </label>
-            <input type="text" id="addVehicleRegNumber" name="addVehicleRegNumber" class="form-control">
-        </div>
+       
+        
 
         <div class="row mb-3">
             <div class="col-md-6">

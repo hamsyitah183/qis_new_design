@@ -70,11 +70,7 @@
             <input type="hidden" name="id" id="vehicle_id">
 
             <div class="row gy-3">
-                <div class="col-xl-12">
-                    <label for="vehicleName" class="form-label" data-en="Vehicle Name" data-bm="Nama Kenderaan">Vehicle Name
-                        <span class="text-danger">*</span></label>
-                    <input type="text" id="vehicleName" name="vehicleName" class="form-control" required>
-                </div>
+              
 
                 <div class="col-xl-6">
                     <label for="vehicleNumber" class="form-label" data-en="Vehicle Number (License Plate)"
@@ -82,18 +78,9 @@
                     <input type="text" id="vehicleNumber" name="vehicleNumber" class="form-control" required>
                 </div>
 
-                <div class="col-xl-6">
-                    <label for="vehicleType" class="form-label" data-en="Vehicle Type" data-bm="Jenis Kenderaan">Vehicle
-                        Type</label>
-                    <input type="text" id="vehicleType" name="vehicleType" class="form-control">
-                </div>
+               
 
-                <div class="col-xl-12">
-                    <label for="vehicleRegNumber" class="form-label" data-en="Registration Document Number"
-                        data-bm="Nombor Pendaftaran Dokumen">Registration Document Number <span
-                            class="text-danger">*</span></label>
-                    <input type="text" id="vehicleRegNumber" name="vehicleRegNumber" class="form-control" required>
-                </div>
+             
 
                 <div class="col-xl-6">
                     <label for="validFrom" class="form-label" data-en="Valid From" data-bm="Berkuatkuasa Dari">Valid
@@ -121,14 +108,11 @@
     <x-modal id="viewVehicleModal" title="View Vehicle" title_en="View Vehicle" title_bm="Lihat Kenderaan"
         size="modal-lg modal-dialog-centered">
         <div class="row gy-3">
-            <div class="col-xl-6"><strong data-en="Vehicle Name" data-bm="Nama Kenderaan">Vehicle Name:</strong> <span
-                    id="view_vehicle_name"></span></div>
+           
             <div class="col-xl-6"><strong data-en="Vehicle Number" data-bm="Nombor Kenderaan">Vehicle Number:</strong>
                 <span id="view_vehicle_number"></span></div>
-            <div class="col-xl-6"><strong data-en="Vehicle Type" data-bm="Jenis Kenderaan">Vehicle Type:</strong> <span
-                    id="view_vehicle_type"></span></div>
-            <div class="col-xl-6"><strong data-en="Registration No." data-bm="No. Pendaftaran">Registration No.:</strong>
-                <span id="view_vehicle_reg_number"></span></div>
+          
+          
             <div class="col-xl-6"><strong data-en="Valid From" data-bm="Berkuatkuasa Dari">Valid From:</strong> <span
                     id="view_valid_from"></span></div>
             <div class="col-xl-6"><strong data-en="Valid Until" data-bm="Berkuatkuasa Hingga">Valid Until:</strong> <span

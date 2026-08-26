@@ -5,9 +5,11 @@
                 <thead class="table-primary">
                     <tr>
                       
+                        <th scope="col" data-en="Category" data-bm="Kategori">Category</th>
                         <th scope="col" data-en="Item Name" data-bm="Nama Barangan">Item Name</th>
               
                         <th scope="col" data-en="Quantity" data-bm="Kuantiti">Quantity</th>
+                        {{-- <th scope="col" data-en="Item Price" data-bm="Harga Item">Item Price</th> --}}
                         <th scope="col" data-en="Action" data-bm="Tindakan">Action</th>
                     </tr>
                 </thead>

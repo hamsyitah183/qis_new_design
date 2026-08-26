@@ -479,10 +479,11 @@ function generatePermit() {
 // ---------------------------------------------------------------
 
 function payBulk() {
-    $(document).off('click', '.pay-bulk').on('click', '.pay-bulk', function (e) {
+    $(document).off('click', '#checkoutPage').on('click', '#checkoutPage', function (e) {
         e.preventDefault();
         const applicationId = $(this).data('application');
-        console.log('bulk payment');
+        const total = $(this).data('total')
+        console.log('bulk payment', total);
 
         const permits = window.ImportPermitView?.getPermits() || [];
         const pending = permits.filter(p =>
@@ -499,7 +500,6 @@ function payBulk() {
         }
 
         // ─── Flat fee per application ───────────────────────────────────
-        const total = CONSIGNMENT_APPLICATION_FEE; // RM 10 flat
         const permitIds = pending.map(p => p.id);
         const amountText = money(total);
 
@@ -780,7 +780,7 @@ function initActions() {
     rejectCertificates();
     generatePermit();
     reapply();
-    payBulk(); // <-- added
+    payBulk(); 
 }
 
 document.addEventListener('DOMContentLoaded', initActions);

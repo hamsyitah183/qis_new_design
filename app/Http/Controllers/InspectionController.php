@@ -380,16 +380,14 @@ class InspectionController extends Controller
         return view('pages.public.inspection_self', compact('pubmeasure', 'pubpurpose', 'country', 'id'));
     }
 
-    private function checkDocumentStatusAndReturnView()
+   private function checkDocumentStatusAndReturnView()
     {
-        $user = authUser()['user'];
-
-        // ✅ If the user is already DOA-verified, allow access without blocking
-        if ($user->doa_verified == 1) {
-            return null;
+        $user = auth()->user();
+        if ($user->doa_verified) {
+            return view('pages.public.apply_new');
         }
 
-        // Not verified – check required documents
+        // ─── Not verified – check required documents ──────────────────
         $requirements = DocumentRequirement::where('module', 'user')
             ->where('is_required', true)
             ->where('is_active', true)
@@ -419,14 +417,8 @@ class InspectionController extends Controller
             ];
         }
 
-        $anyMissing = collect($docStatus)->contains(fn($item) => $item['status'] === 'missing');
-        $anyExpired = collect($docStatus)->contains(fn($item) => $item['status'] === 'expired');
+        return view('pages.public.wait_for_verified', compact('docStatus'));
 
-        if ($anyMissing || $anyExpired) {
-            return view('pages.public.wait_for_verified', compact('docStatus'));
-        }
-
-        return null;
     }
     /**
      * Inspection certificate application for others (company / third‑party).

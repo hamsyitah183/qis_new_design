@@ -117,7 +117,7 @@
 
             {{-- Name --}}
             <div class="mb-3">
-                <label for="addimpName" class="form-label" data-en="Name" data-bm="Nama">Name</label>
+                <label for="addimpName" class="form-label" data-en="Name" data-bm="Nama">Name <span class="text-danger">*</span> </label>
                 <input type="text" id="addimpName" name="name" class="form-control">
             </div>
 
@@ -129,7 +129,7 @@
 
             {{-- Address --}}
             <div class="mb-3">
-                <label for="addimpaddress" class="form-label" data-en="Address" data-bm="Alamat">Address</label>
+                <label for="addimpaddress" class="form-label" data-en="Address" data-bm="Alamat">Address <span class="text-danger">*</span></label>
                 <input type="text" id="addimpaddress1" name="address1" class="form-control mb-2"
                     placeholder="Address Line 1" data-en="Address Line 1" data-bm="Alamat Baris 1" data-i18n-attr="placeholder">
                 <input type="text" id="addimpaddress2" name="address2" class="form-control" placeholder="Address Line 2" data-en="Address Line 2" data-bm="Alamat Baris 2" data-i18n-attr="placeholder">
@@ -137,7 +137,7 @@
 
             {{-- Country --}}
             <div class="mb-3">
-                <label for="addimpcountry" class="form-label" data-en="Country" data-bm="Negara">Country</label>
+                <label for="addimpcountry" class="form-label" data-en="Country" data-bm="Negara">Country <span class="text-danger">*</span></label>
                 <select class="form-select" id="addimpcountry" name="country">
                     <option value="" data-en="-- Select Country --" data-bm="-- Pilih Negara --">-- Select Country --</option>
                     @foreach ($country as $coun)

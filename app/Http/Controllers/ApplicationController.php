@@ -157,7 +157,6 @@ class ApplicationController extends Controller
     public function show()
     {
         $user = auth()->user();
-        // ✅ If already DOA-verified, skip document checks and go straight to the application.
         if ($user->doa_verified) {
             return view('pages.public.apply_new');
         }

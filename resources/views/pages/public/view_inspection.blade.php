@@ -12,6 +12,7 @@
 
 @section('breadcrumb')
     @php
+        use Illuminate\Support\Facades\Gate;
         $internalUser = auth('internal')->user();
         $isInternal = auth('internal')->check();
         // Kept as-is from the original blade — these were hardcoded URLs, not named routes.
@@ -72,6 +73,9 @@
         // application" admin flow ($showAdminRejectedActions). Nothing in the
         // old Inspection blade/JS evidenced an equivalent — omitted here. Add
         // it back if Inspection gets the same feature.
+
+        // ---------- FIX: Edit Application permission check ----------
+        $canEditInternal = $isInternal && auth('internal')->user()->can('edit application');
     @endphp
 
     {{-- Feed real application context to inspection_detail.js instead of URL-parsing --}}
@@ -141,6 +145,7 @@
                     {{-- [TODO] Old blade had no dedicated print-permit permission check for
                          Inspection — reusing the same role-based gate as elsewhere on this
                          page rather than guessing a permission name. --}}
+
                     @if ($isAdminOrClerk)
                         <button type="button" class="ipv-btn-primary" id="ipvPrintPermitBtn">
                             <i class="bi bi-printer"></i> <span data-en="Print Certificate" data-bm="Cetak Sijil">Print
@@ -182,7 +187,10 @@
 
                 <div class="ipv-divider"></div>
 
-                @if ($application->status == 'Draft' && $application->user_id === $authUuid)
+                {{-- ============================================================ --}}
+                {{-- EDIT APPLICATION BUTTON – FIXED CONDITION                    --}}
+                {{-- ============================================================ --}}
+                @if (($application->status == 'Draft' && $application->user_id === $authUuid) || $canEditInternal)
                     @if ($application->category_application == '0')
                         <a class="ipv-btn-outline w-100 justify-content-center mt-3 btn btn-primary" id="editButton"
                             href="{{ route('public.inspectionApplicationSelf', ['id' => $application->application_id]) }}">

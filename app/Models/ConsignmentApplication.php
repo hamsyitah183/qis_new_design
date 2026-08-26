@@ -27,7 +27,8 @@ class ConsignmentApplication extends Model
         'date_importer_verify',
         'status',
         'vehicle_ids',
-        'ptn_number'
+        'ptn_number',
+        'prices_total'
     ];
 
     protected $casts = [

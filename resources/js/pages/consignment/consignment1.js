@@ -16,8 +16,13 @@ import { loadProfile } from "../auth/profile";
 // Config
 // ---------------------------------------------------------------
 
+// ---------------------------------------------------------------
+// Config
+// ---------------------------------------------------------------
+
 const STAGE_ORDER = [
     'submitted', 'doc_verification', 'technical_review',
+    'officer_verified',   
     'awaiting_payment', 'payment_processing', 'completed',
 ];
 
@@ -26,6 +31,7 @@ export const STAGE_CONFIG = {
     doc_verification:    { en: 'Clerk Review In-Progress', bm: 'Semakan Kerani Dalam Proses', icon: 'bi-file-earmark-check', color: 'secondary' },
     returned:            { en: 'Returned / Rejected',     bm: 'Dikembalikan / Ditolak',    icon: 'bi-arrow-return-left',  color: 'danger' },
     technical_review:    { en: 'Clerk Verified',          bm: 'Disahkan Kerani',           icon: 'bi-clipboard-check',    color: 'primary' },
+    officer_verified:    { en: 'Officer Verification Completed', bm: 'Pengesahan Pegawai Selesai', icon: 'bi-person-check', color: 'primary' },
     awaiting_payment:    { en: 'Awaiting Payment',        bm: 'Menunggu Pembayaran',       icon: 'bi-hourglass-split',    color: 'warning' },
     payment_processing:  { en: 'Payment Processing',      bm: 'Proses Pengesahan Bayaran', icon: 'bi-credit-card',        color: 'orange' },
     completed:           { en: 'Completed',               bm: 'Selesai',                   icon: 'bi-check-circle',       color: 'success' },
@@ -124,6 +130,8 @@ async function loadApplicationData() {
     mapActivityLog(json);
 
     await fetchVehicleDetails();
+
+    console.log('application prices', json.prices_total)
 }
 
 async function fetchVehicleDetails() {
@@ -161,13 +169,17 @@ function deriveStageKey(status) {
     if (s.includes('draft')) return 'submitted';
     if (s.includes('clerk review')) return 'doc_verification';
     if (s.includes('clerk verified')) return 'technical_review';
+    // ─── Map officer verification to awaiting payment ───
+    if (s.includes('officer verification') || s === 'officer verification completed') {
+        return 'awaiting_payment';
+    }
+    // ────────────────────────────────────────────────────────
     if (s.includes('completed')) return 'completed';
     if (s.includes('rejected') || s.includes('not approved')) return 'returned';
     if (s.includes('pending for payment')) return 'awaiting_payment';
     if (s.includes('payment processing')) return 'payment_processing';
     return 'submitted';
 }
-
 function mapApplication(json) {
     const importer = json.importer_detail || {};
     const exporter = json.exporter_detail || json.exporter || json.user || {};
@@ -175,6 +187,20 @@ function mapApplication(json) {
     const country = importer.country_info || {};
 
     const rawStatus = json.status || '';
+
+    // Parse prices_total – it comes as a JSON string from the API
+    let pricesTotal = [];
+    if (json.prices_total) {
+        try {
+            pricesTotal = typeof json.prices_total === 'string'
+                ? JSON.parse(json.prices_total)
+                : json.prices_total;
+        } catch (e) {
+            console.warn('Failed to parse prices_total:', e);
+            pricesTotal = [];
+        }
+    }
+
 
     APPLICATION = {
         application_id: json.application_id,
@@ -216,6 +242,7 @@ function mapApplication(json) {
         ptnNumber: json.ptn_number || null,
         vehicleIds: json.vehicle_ids || [],
         vehicles: [],
+        prices_total: pricesTotal,   // <-- stored here
     };
 }
 
@@ -242,6 +269,7 @@ function mapPermits(json) {
             conditions: detail.condition || [],
             agreedAt: detail.agreedAt,
             _raw: permit,
+            category: detail.category
         };
     });
 }
@@ -267,6 +295,17 @@ function guessStage(text) {
     if (t.includes('submit')) return 'submitted';
     if (t.includes('email') || t.includes('notif')) return 'email';
     return 'doc_verification';
+}
+
+function toggleApplicationPricesTab() {
+    const tab = document.querySelector('.ipv-tabnav-item[data-ipv-tab="application_prices"]');
+    if (!tab) return;
+    const userType = getCurrentUserType();   // returns 'public' for applicants
+    if (userType === 'public' && APPLICATION.status_key === 'awaiting_payment') {
+        tab.style.display = 'none';
+    } else {
+        tab.style.display = '';   // show for officers/admins, or when not awaiting payment
+    }
 }
 
 function formatDate(value) {
@@ -687,7 +726,6 @@ function renderTransportDetails() {
     const rows = [
         { icon: 'bi-calendar-event', label: t.eta, value: APPLICATION.eta },
         { icon: 'bi-truck', label: t.transport, value: APPLICATION.transport_type },
-        { icon: 'bi-geo-alt', label: t.entry, value: APPLICATION.entry_point },
         { icon: 'bi-info-circle', label: t.notes, value: APPLICATION.entry_point_description || '—' },
         { icon: 'bi-hash', label: t.ptn, value: APPLICATION.ptnNumber || '—' },
         { icon: 'bi-car-front', label: t.vehicles, value: vehicleList },
@@ -862,6 +900,15 @@ function renderPermitAccordion() {
                             <p class="mb-2">
                                 <strong class="me-1">
                                     <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-scale-balanced"></i></span>
+                                    <span data-en="Category:" data-bm="Kategori:">Category:</span>
+                                </strong>
+                                <span class="text-break">${escapeHtml(permit.category)}</span>
+                            </p>
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <p class="mb-2">
+                                <strong class="me-1">
+                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-scale-balanced"></i></span>
                                     <span data-en="Quantity:" data-bm="Kuantiti:">Quantity:</span>
                                 </strong>
                                 <span class="text-break">${permit.quantity.toLocaleString()} ${escapeHtml(permit.unit_measurement)}</span>
@@ -942,57 +989,44 @@ function initAccordionToggle() {
 // Render: Pending Payment tab (flat fee per application)
 // ---------------------------------------------------------------
 
+
+// ─── Render: Payment Table (Category Summary) ──────────────────────
 function renderPendingPaymentTable() {
-    const tableBody = $("#summaryTable4 tbody");
-    if (!tableBody.length) return;
-    tableBody.empty();
+    const tableBody = document.querySelector('#summaryTable4 tbody');
+    if (!tableBody) return;
 
-    const pending = PERMITS.filter((p) => ['pending for payment', 'payment failed'].includes(p.status));
+    const data = APPLICATION.prices_total || [];
+    tableBody.innerHTML = '';
 
-    document.getElementById('ipvPendingPaymentCount') &&
-        (document.getElementById('ipvPendingPaymentCount').textContent = pending.length);
-
-    // ─── Table header ─────────────────────────────────────────────────
-    const $thead = $("#summaryTable4 thead tr");
-    $thead.html(`
-        <th data-en="Permit Number" data-bm="Nombor Permit">Permit Number</th>
-        <th data-en="Item Name" data-bm="Nama Item">Item Name</th>
-        <th class="text-end" data-en="Fee (RM)" data-bm="Yuran (RM)">Fee (RM)</th>
-    `);
-
-    if (!pending.length) {
-        tableBody.append(`<tr><td colspan="3" class="text-center text-muted">No permits pending payment.</td></tr>`);
-        $("#summaryTable4 tfoot").html('');
+    if (!data.length) {
+        tableBody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No payment data available.</td></tr>`;
+        document.getElementById('totalPaymentValue').textContent = 'RM 0.00';
+        document.getElementById('checkoutPage').disabled = true;
         return;
     }
 
-    // Show each permit with a dash in the fee column (since fee is flat per application)
-    pending.forEach((permit) => {
-        tableBody.append(`
-            <tr>
-                <td>${escapeHtml(permit.permit_number)}</td>
-                <td class="text-wrap">${escapeHtml(permit.consignment_detail.item_name)}</td>
-                <td class="text-end">—</td>
-            </tr>
-        `);
+    let totalQty = 0;
+    let totalPrice = 0;
+
+    data.forEach((item, idx) => {
+        const qty = Number(item.quantity) || 0;
+        const price = Number(item.price) || 0;
+        totalQty += qty;
+        totalPrice += price;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${idx + 1}</td>
+            <td>${escapeHtml(item.category_name)}</td>
+            <td>${qty.toLocaleString()}</td>
+            <td class="text-end">${price.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+        `;
+        tableBody.appendChild(tr);
     });
 
-    // Total row: show flat fee
-    const total = CONSIGNMENT_APPLICATION_FEE;
-    const $tfoot = $("#summaryTable4 tfoot");
-    $tfoot.html(`
-        <tr>
-            <td colspan="2" class="text-end fw-bold">${getLang() === 'bm' ? 'Jumlah Yuran:' : 'Total Fee:'}</td>
-            <td class="text-end fw-bold">RM ${money(total)}</td>
-        </tr>
-        <tr>
-            <td colspan="3" class="text-end">
-                <button class="ipv-btn-primary pay-bulk" data-application="${APPLICATION.application_id}">
-                    <i class="bi bi-credit-card"></i> ${getLang() === 'bm' ? 'Bayar Sekarang' : 'Pay Now'}
-                </button>
-            </td>
-        </tr>
-    `);
+    document.getElementById('totalPaymentValue').textContent =
+        `RM ${totalPrice.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    document.getElementById('checkoutPage').disabled = false;
 }
 
 // ---------------------------------------------------------------
@@ -1137,6 +1171,59 @@ function initApplicationLogModal() {
 }
 
 // ---------------------------------------------------------------
+// Render: Application Prices (Category Table)
+// ---------------------------------------------------------------
+
+function renderApplicationPrices() {
+    const container = document.getElementById('categoryTable');
+    if (!container) return;
+
+    const data = APPLICATION.prices_total || [];
+    if (!data.length) {
+        container.innerHTML = `<p class="text-muted">No price data available.</p>`;
+        return;
+    }
+
+    const totalQty = data.reduce((sum, item) => sum + (item.quantity || 0), 0);
+    const totalPrice = data.reduce((sum, item) => sum + (item.price || 0), 0);
+
+    container.innerHTML = `
+        <table class="table text-nowrap">
+            <thead class="table-primary">
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col" data-en="Category" data-bm="Kategori">Category</th>
+                    <th scope="col" data-en="Quantity" data-bm="Kuantiti">Quantity</th>
+                    <th scope="col" data-en="Price (RM)" data-bm="Harga (RM)">Price (RM)</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${data.map((item, idx) => `
+                    <tr>
+                        <td>${idx + 1}</td>
+                        <td>${escapeHtml(item.category_name)}</td>
+                        <td>${Number(item.quantity).toLocaleString()}</td>
+                        <td>${Number(item.price).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+            <tfoot>
+                <tr style="font-weight: 800; background-color: var(--gray-2);">
+                    <td colspan="2" class="text-end">Total:</td>
+                    <td>${totalQty.toLocaleString()}</td>
+                    <td>RM ${totalPrice.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                </tr>
+            </tfoot>
+        </table>
+    `;
+
+    applyTranslations(container);
+
+    $('#checkoutPage').attr('data-total', totalPrice);
+    $('#checkoutPage').attr('data-application', APPLICATION.application_id)
+}
+
+// ---------------------------------------------------------------
 // Tabs
 // ---------------------------------------------------------------
 
@@ -1164,10 +1251,6 @@ function initTabs() {
 // Payment checkbox + checkout wiring (removed)
 // ---------------------------------------------------------------
 
-function initPaymentCheckboxes() {
-    // No-op – payment is now handled by the pay-bulk button
-}
-
 // ---------------------------------------------------------------
 // Refresh UI on language change
 // ---------------------------------------------------------------
@@ -1182,7 +1265,9 @@ function refreshUI() {
     renderPendingPaymentTable();
     renderActivityTimeline();
     renderPaymentAwarenessBanner();
+    renderApplicationPrices();   // <-- added
     initAccordionToggle();
+    toggleApplicationPricesTab();
     const container = document.querySelector('.ipv-wrapper');
     if (container) applyTranslations(container);
 }
@@ -1209,7 +1294,9 @@ async function renderAll() {
     renderPendingPaymentTable();
     renderActivityTimeline();
     renderPaymentAwarenessBanner();
+    renderApplicationPrices();   // <-- added
     initAccordionToggle();
+    toggleApplicationPricesTab();
     const container = document.querySelector('.ipv-wrapper');
     if (container) applyTranslations(container);
 }

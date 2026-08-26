@@ -134,7 +134,7 @@
 }
 
 .dz-preview-group .dz-filename {
-    width: 70%;
+    width: 50%;
     text-wrap: wrap !important;
     color: var(--text-muted) !important;
     margin-bottom: 15px;

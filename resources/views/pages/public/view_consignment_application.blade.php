@@ -66,6 +66,9 @@
             $isInternal &&
             auth()->guard('internal')->user()->can('approve application');
         $showAdminRejectedActions = str_contains($status, 'rejected') && $isAdmin;
+
+        // ---------- FIX: Add permission check for internal users ----------
+        $canEditInternal = $isInternal && auth('internal')->user()->can('edit application');
     @endphp
 
     {{-- Feed real application context to consignment1.js instead of URL-parsing --}}
@@ -178,11 +181,15 @@
                 </div>
                 <div class="ipv-attach-list" id="ipvAppAttachments"></div>
 
-               
-
                 <div class="ipv-divider"></div>
 
-                @if ($application->status == 'Draft' && $application->user_id === $authUuid)
+                {{-- ============================================================ --}}
+                {{-- EDIT APPLICATION BUTTON – FIXED CONDITION                    --}}
+                {{-- ============================================================ --}}
+                @if (
+                    (($application->status == 'Draft' || $application->status == 'Clerk Rejected') &&
+                        $application->user_id === $authUuid) ||
+                        $canEditInternal)
                     <a class="ipv-btn-outline w-100 justify-content-center mt-3 btn btn-primary" id="editButton"
                         href="/edit_consignment/{{ $application->application_id }}">
                         <i class="bi bi-pencil"></i> <span data-en="Edit Application" data-bm="Kemaskini Permohonan">Edit
@@ -219,6 +226,11 @@
                         <span data-en="Certificate List" data-bm="Senarai Sijil">Certificate List</span> <span
                             class="ipv-tab-count" id="ipvPermitCount">0</span>
                     </button>
+                    <button type="button" class="ipv-tabnav-item" data-ipv-tab="application_prices" role="tab"
+                        id="applicationPrices">
+                        <span data-en="Consignment Application Prices" data-bm="Harga Permohonan Konsainan"
+                            class="text-wrap">Consignment Application Prices</span>
+                    </button>
                     <button type="button" class="ipv-tabnav-item" data-ipv-tab="importer_exporter" role="tab"
                         data-en="Importer & Exporter" data-bm="Pengimport & Pengeksport">
                         Importer & Exporter
@@ -246,6 +258,10 @@
                         <div class="ipv-permit-accordion" id="ipvPermitAccordion"></div>
                     </div>
 
+                    <div class="ipv-tabpane" data-ipv-pane="application_prices">
+                        <div id="categoryTable"></div>
+                    </div>
+
                     <div class="ipv-tabpane" data-ipv-pane="importer_exporter">
                         <div id="importerExporterDetails">
                             <div class="ipv-section-label" data-en="Importer & Exporter Details"
@@ -270,12 +286,11 @@
                                 <table id="summaryTable4" class="table ipv-payment-table text-nowrap">
                                     <thead>
                                         <tr>
-                                            <th style="width:40px">
-                                                <input class="form-check-input" type="checkbox" id="checkAllPermits">
-                                            </th>
-                                            <th data-en="Permit Number" data-bm="Nombor Permit">Permit Number</th>
-                                            <th data-en="Item Name" data-bm="Nama Item">Item Name</th>
-                                            <th class="text-end" data-en="Value" data-bm="Nilai">Value</th>
+                                            <th scope="col">#</th>
+                                            <th scope="col" data-en="Category" data-bm="Kategori">Category</th>
+                                            <th scope="col" data-en="Quantity" data-bm="Kuantiti">Quantity</th>
+                                            <th scope="col" class="text-end" data-en="Price (RM)"
+                                                data-bm="Harga (RM)">Price (RM)</th>
                                         </tr>
                                     </thead>
                                     <tbody></tbody>
@@ -283,16 +298,15 @@
                                         <tr>
                                             <td colspan="3" class="text-end fw-bold" data-en="Total:"
                                                 data-bm="Jumlah:">Total:</td>
-                                            <td class="text-end fw-bold" id="totalValue">RM 0</td>
+                                            <td class="text-end fw-bold" id="totalPaymentValue">RM 0.00</td>
                                         </tr>
                                     </tfoot>
                                 </table>
                             </div>
-
                             <div class="ipv-checkout-bar">
                                 <button class="ipv-btn-primary" id="checkoutPage" disabled>
-                                    <i class="bi bi-credit-card"></i> <span data-en="Go To Checkout"
-                                        data-bm="Pergi Ke Bayaran">Go To Checkout</span>
+                                    <i class="bi bi-credit-card"></i>
+                                    <span data-en="Go To Checkout" data-bm="Pergi Ke Bayaran">Go To Checkout</span>
                                 </button>
                             </div>
                         </div>

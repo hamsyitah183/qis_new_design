@@ -73,6 +73,7 @@ class PaymentController extends Controller
                 'application_id' => $application->application_id,
                 'status' => $application->status,
                 'application_type' => $application->application_type,
+                'prices_total' => $application->prices_total
             ],
 
             'user' => [

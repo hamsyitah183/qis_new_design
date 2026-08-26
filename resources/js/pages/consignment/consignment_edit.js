@@ -2,16 +2,13 @@ import Dropzone from "dropzone";
 import $ from "jquery";
 window.$ = window.jQuery = $;
 import Swal from "sweetalert2";
-import { generateUUID, getAuthUser } from "../../app";
+import { generateUUID, getAuthUser, applyTranslations } from "../../app"; // <-- added applyTranslations
 import "dropzone/dist/dropzone.css";
 import { render } from "react-dom/cjs/react-dom.production.min";
 
 // Import Select2 module
 import select2 from "select2";
-
-// Force Select2 to attach to THIS jQuery:
 select2(window.jQuery);
-
 import "select2/dist/css/select2.min.css";
 import { public_dashboard } from "../dashboard/public_dashboard";
 
@@ -32,13 +29,10 @@ let tempAttachments = [];
 let itemPurpose = null;
 let temporaryItemsAttachment = [];
 
-// [FIX] deleteIds was dropped when this file diverged from consignment1.js.
-// Needed to tell the backend which existing permits were removed during an edit.
+// [FIX] Added deleteIds to track removed permits in edit mode
 let deleteIds = [];
 
-// [FIX] Edit-mode detection was missing entirely. `application` is expected to be
-// a global set by the blade view (e.g. `let application = @json($application ?? null);`)
-// when the wizard is opened against an existing draft/application.
+// [FIX] Edit-mode detection from the blade (application variable)
 const isEditMode = typeof application !== 'undefined' && application !== null;
 if (isEditMode) console.log("Edit mode - loading application:", application);
 
@@ -62,6 +56,7 @@ let currentItemAttachIndex = 0;
 let attachmentOffcanvas = null;
 let currentAttachmentIndex = 0;
 
+
 // ─── Measurement Units ────────────────────────────────────
 function measurementUnit() {
     return $.ajax({
@@ -74,10 +69,7 @@ function measurementUnit() {
             console.log("measurement", measurementUnits);
         },
         error: (xhr) => {
-            console.error(
-                "Failed to load measurement units:",
-                xhr.responseText,
-            );
+            console.error("Failed to load measurement units:", xhr.responseText);
         },
     });
 }
@@ -85,12 +77,12 @@ measurementUnit();
 
 // ─── Helper: convert quantity to kg ──────────────────────
 function getKgForItem(item) {
+    console.log('item kg', item)
     const qty = parseFloat(item.quantity) || 0;
     if (!qty || !measurementUnits || !measurementUnits.unit) return 0;
     const measure = item.measure || "";
     const unit = measurementUnits.unit.find(
-        (u) =>
-            u.cate_code.toLowerCase() === measure.toLowerCase() && !u.is_del,
+        (u) => u.cate_code.toLowerCase() === measure.toLowerCase() && !u.is_del,
     );
     return unit ? qty * unit.conversion.conversion : 0;
 }
@@ -104,10 +96,7 @@ function getCurrentLang() {
     }
 }
 
-// [FIX] Restored from consignment1.js. Prefills the "Me" side of the form
-// (the authenticated submitter — stored in the JS `importer` variable, which
-// maps to the DB `exporter` relation — same naming convention as the rest of
-// this file) from the draft's saved data instead of re-fetching the auth user.
+// [FIX] Restored importerDetail – loads the "Me" side from the draft
 function importerDetail() {
     if (!isEditMode || !application.exporter) return;
     importer = application.exporter;
@@ -118,12 +107,7 @@ function importerDetail() {
     $("#impaddress2").val(importer.address_2 ?? "");
 }
 
-// [FIX] Restored from consignment1.js and adapted to the newer item shape
-// (certificateNo, condition, agreedAt) used by this file's item modal/table.
-// NOTE: `detail.certificate_no` / `detail.addional_condition` are best-guess
-// field names carried over from the rest of this file (e.g. loadDetails());
-// confirm against the real consignment_detail payload and adjust if it
-// differs.
+// [FIX] Restored loadExistingConsignments – loads saved permits into tempItems
 function loadExistingConsignments() {
     if (!isEditMode || !application.consignment_permits) return;
 
@@ -143,10 +127,11 @@ function loadExistingConsignments() {
             purpose: detail.purpose ?? "",
             uses: detail.uses ?? "",
             value: detail.value ?? 0,
-            files: [], // existing files aren't re-uploaded; see existingAttachments
+            files: [],
             existingAttachments: permit.attachments || [],
-            agreedAt: permit.agreed_at ?? "Previously submitted",
+            agreedAt: detail.agreedAt ?? "Previously submitted",
             condition: detail.addional_condition ?? null,
+            category: detail.category
         });
     });
 
@@ -168,7 +153,7 @@ async function selfImport() {
 // ─── Exporter List ────────────────────────────────────────
 function fetchExporterList() {
     const $select = $("#selectexp");
-    const url = "/public/get_consignment_importers";
+    const url = "/get_consignment_importers";
 
     return $.ajax({
         url,
@@ -245,7 +230,6 @@ function handleVehicleChange() {
         selectedVehicles = vehicleListArray.filter((v) =>
             selectedIds.includes(String(v.id)),
         );
-        updateSelectedVehiclesTable(selectedIds);
         change = 1;
         summarySubmit();
     });
@@ -253,7 +237,7 @@ function handleVehicleChange() {
 
 function fetchVehicleList() {
     const $select = $("#selectVehicle");
-    const url = "/public/vehicle/data";
+    const url = "/vehicle/data";
 
     return $.ajax({
         url,
@@ -280,9 +264,7 @@ function fetchVehicleList() {
                 multiple: true,
             });
 
-            // [FIX] Previously only read a pre-populated #vehicleIds hidden input
-            // (which nothing ever wrote to on load). Fall back to the draft's
-            // vehicle_ids from `application` in edit mode.
+            // [FIX] Edit-mode fallback for vehicle IDs from the draft
             const storedIds = $("#vehicleIds").val()
                 ? $("#vehicleIds").val().split(",")
                 : isEditMode && Array.isArray(application.vehicle_ids)
@@ -295,39 +277,6 @@ function fetchVehicleList() {
         error: (xhr) => {
             console.error("Failed to load vehicles:", xhr.responseText);
         },
-    });
-}
-
-function updateSelectedVehiclesTable(selectedIds) {
-    const $tableBody = $("#selectedVehiclesBody");
-    const $container = $("#selectedVehiclesContainer");
-
-    if (!selectedIds || selectedIds.length === 0) {
-        $container.hide();
-        return;
-    }
-
-    $container.show();
-    $tableBody.empty();
-
-    const selectedVehicles = vehicleListArray.filter((v) =>
-        selectedIds.includes(String(v.id)),
-    );
-
-    selectedVehicles.forEach((v, index) => {
-        $tableBody.append(`
-            <tr>
-                <td>${index + 1}</td>
-                <td>${v.vehicle_number}</td>
-                <td>
-                    <div class = "d-flex gap-1">
-                        <button type="button" class="btn btn-icon btn-success-light view-vehicle-btn" data-id="${v.id}">
-                            <i class="ti ti-eye"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `);
     });
 }
 
@@ -345,21 +294,9 @@ function initAddVehicleModal() {
     $("#addVehicleBtn").on("click", function (e) {
         e.preventDefault();
 
-        const vehicleName = $("#addVehicleName").val().trim();
         const vehicleNumber = $("#addVehicleNumber").val().trim();
-        const vehicleType = $("#addVehicleType").val().trim();
-        const registrationNumber = $("#addVehicleRegNumber").val().trim();
         const validFrom = $("#addValidFrom").val();
         const validUntil = $("#addValidUntil").val();
-
-        if (!vehicleName || !vehicleNumber || !registrationNumber) {
-            Swal.fire({
-                icon: "warning",
-                title: "Missing Required Fields",
-                text: "Please fill in: Vehicle Name, Vehicle Number, and Registration Number.",
-            });
-            return;
-        }
 
         Swal.fire({
             title: "Saving vehicle...",
@@ -371,10 +308,7 @@ function initAddVehicleModal() {
             url: "/public/store_vehicle",
             type: "POST",
             data: {
-                vehicle_name: vehicleName,
                 vehicle_number: vehicleNumber,
-                vehicle_type: vehicleType || null,
-                vehicle_registration_number: registrationNumber,
                 valid_from: validFrom || null,
                 valid_until: validUntil || null,
             },
@@ -409,9 +343,55 @@ function initAddVehicleModal() {
     });
 }
 
+function loadCategory() {
+    const $select = $("#itemCategory");
+
+    $select.empty().append('<option value="">-- Select Category --</option>');
+
+    if ($select.hasClass("select2-hidden-accessible")) {
+        $select.select2("destroy");
+    }
+
+    $select.prop("disabled", true);
+
+    Swal.fire({
+        title: "Loading...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+    });
+
+    fetch(`/get_pbdata/consignment_category`)
+        .then((res) => res.json())
+        .then((data) => {
+            $select.prop("disabled", false);
+            console.log("data in loadcategory", data);
+
+            data.data.forEach((row) => {
+                $select.append(
+                    `<option value="${row.id}">${row.description}</option>`,
+                );
+            });
+
+            $select.select2({
+                width: "100%",
+                placeholder: "-- Select Item --",
+                allowClear: true,
+                dropdownParent: $("#addItemModal"),
+            });
+
+            Swal.close();
+        })
+        .catch((e) => {
+            console.error("Error loading items:", e);
+            $select.prop("disabled", false);
+            Swal.fire("Error", "Failed to load consignment items.", "error");
+        });
+}
+
 // ─── Consignment / Uses ──────────────────────────────────
-function loadConsignmentSelection() {
+function loadConsignmentSelection(itemId) {
     const countryCode = $("#expcountryCode").val();
+
     const $select = $("#itemSelect");
 
     console.log("the country code", countryCode);
@@ -432,11 +412,14 @@ function loadConsignmentSelection() {
         didOpen: () => Swal.showLoading(),
     });
 
-    fetch(`/public/get_consignment_certificate/${countryCode}`)
+    fetch(`/consignment_condition/category/${itemId}/${countryCode}/data`)
         .then((res) => res.json())
         .then((data) => {
             $select.prop("disabled", false);
             console.log("data", data);
+
+            // ===== [OTHERS] Prepend "Others" option at the top =====
+            $select.append(`<option value="others">Others</option>`);
 
             data.data.forEach((row) => {
                 $select.append(
@@ -457,40 +440,6 @@ function loadConsignmentSelection() {
             console.error("Error loading items:", e);
             $select.prop("disabled", false);
             Swal.fire("Error", "Failed to load consignment items.", "error");
-        });
-}
-
-function loadUses(itemId) {
-    const $select = $("#itemUses");
-    $select.empty().append('<option value="">-- Select Uses --</option>');
-
-    if (!itemId) return;
-
-    Swal.fire({
-        title: "Loading...",
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading(),
-    });
-
-    fetch(`/public/consignment_uses/${itemId}`)
-        .then((res) => res.json())
-        .then((data) => {
-            if (!data.data) return;
-            data.data.forEach((row) => {
-                $select.append(`<option value="${row}">${row}</option>`);
-            });
-
-            $select.select2({
-                width: "100%",
-                placeholder: "-- Select Uses --",
-                allowClear: true,
-                dropdownParent: $("#addItemModal"),
-            });
-
-            Swal.close();
-        })
-        .catch((err) => {
-            console.error("Failed to load uses:", err);
         });
 }
 
@@ -760,8 +709,7 @@ function permitDetails() {
                 });
                 detailsSelect.html(options);
 
-                // [FIX] Restored edit-mode auto-select of the drafted entry point
-                // (this had regressed to always selecting the first option).
+                // [FIX] Edit-mode auto-select of entry point
                 setTimeout(() => {
                     if (isEditMode && application.entry_point != null) {
                         detailsSelect
@@ -866,16 +814,12 @@ function permitDetails() {
         }
     }
 
-    // [FIX] Restored edit-mode prefill of eta / category / PTN number — this
-    // whole block was dropped when this file diverged from consignment1.js.
-    // (category_application prefill is carried over as-is; PTN number is new
-    // here since #ptnNumber didn't exist yet in the old file.)
+    // [FIX] Edit-mode prefill of eta / category / PTN number
     if (isEditMode) {
         if (application.eta) {
             const etaDate = application.eta.split("T")[0];
             if (etaInput) {
                 etaInput.value = etaDate;
-                // dispatch change so the expiredDate (+3 days) calc above runs
                 etaInput.dispatchEvent(new Event("change"));
             }
         }
@@ -1096,6 +1040,7 @@ function showItemFilePreview(file) {
         </div>
     `;
 
+    // applyTranslations would be here if available – we skip as not imported
     itemFileOffcanvas.show();
 }
 
@@ -1776,7 +1721,7 @@ async function showItemAgreement(item) {
                     I understand that any false declaration may result in rejection of the application or permit cancellation.
                 </p>
                 <div class="form-check mt-4">
-                    <input class="form-check-input" type="checkbox" id="itemAgreeCheckbox" ${hasCondition ? "disabled" : ""}>
+                    <input class="form-check-input" type="checkbox" id="itemAgreeCheckbox" >
                     <label class="form-check-label" for="itemAgreeCheckbox">
                         I agree to the above declaration
                     </label>
@@ -1845,6 +1790,148 @@ async function showItemAgreement(item) {
     return false;
 }
 
+// ─── Category Pricing ──────────────────────────────────────
+const CATEGORY_TIER_KG = 3000;
+const CATEGORY_TIER_BASE_PRICE = 10;
+
+function calculateCategoryPrice(totalQuantity) {
+    const tierCount = Math.ceil(totalQuantity / CATEGORY_TIER_KG);
+    if (tierCount <= 0) return 0;
+    return tierCount * CATEGORY_TIER_BASE_PRICE;
+}
+
+let categoryAmount = []; // [FIX] defined here
+
+function recalculateCategoryAmounts() {
+    const totals = {};
+
+    tempItems.forEach((item) => {
+        const cat = item.category || "Uncategorized";
+        const qty = parseFloat(item.quantity) || 0;
+        totals[cat] = (totals[cat] || 0) + qty;
+    });
+
+    categoryAmount = Object.keys(totals).map((categoryName) => {
+        const quantity = totals[categoryName];
+        return {
+            category_name: categoryName,
+            quantity,
+            price: calculateCategoryPrice(quantity),
+        };
+    });
+
+    console.log("categoryAmount", categoryAmount);
+    return categoryAmount;
+}
+
+function tablePrice() {
+    const table = document.getElementById('summaryTable4');
+    if (!table) return;
+    const tbody = table.querySelector('tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    if (!categoryAmount || categoryAmount.length === 0) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 4;
+        td.textContent = 'No categories found';
+        td.className = 'text-center';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+    }
+
+    categoryAmount.forEach((cat, index) => {
+        const tr = document.createElement('tr');
+
+        const tdIndex = document.createElement('td');
+        tdIndex.textContent = index + 1;
+        tr.appendChild(tdIndex);
+
+        const tdCategory = document.createElement('td');
+        tdCategory.textContent = cat.category_name || 'Uncategorized';
+        tr.appendChild(tdCategory);
+
+        const tdQuantity = document.createElement('td');
+        tdQuantity.textContent = cat.quantity || 0;
+        tr.appendChild(tdQuantity);
+
+        const tdPrice = document.createElement('td');
+        tdPrice.textContent = cat.price || 0;
+        tr.appendChild(tdPrice);
+
+        tbody.appendChild(tr);
+    });
+
+    const totalQty = categoryAmount.reduce((sum, cat) => sum + (cat.quantity || 0), 0);
+    const totalPrice = categoryAmount.reduce((sum, cat) => sum + (cat.price || 0), 0);
+
+    const trTotal = document.createElement('tr');
+    const tdTotal = document.createElement('td');
+    tdTotal.colSpan = 4;
+    tdTotal.className = 'fw-bold text-end';
+    tdTotal.textContent = `Total: ${totalQty} kg  |  Total Price: RM ${totalPrice}`;
+    trTotal.appendChild(tdTotal);
+    tbody.appendChild(trTotal);
+}
+
+function renderCategoryPriceSummary() {
+    const container = document.getElementById("summaryCategoryPrices");
+    if (!container) return;
+
+    if (!categoryAmount.length) {
+        container.innerHTML = `<p class="text-muted mb-0">No items added yet.</p>`;
+        return;
+    }
+
+    const total = categoryAmount.reduce((sum, c) => sum + c.price, 0);
+
+    container.innerHTML = `
+        <table class="table table-sm mb-2">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th class="text-end">Total Quantity (kg)</th>
+                    <th class="text-end">Price (RM)</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${categoryAmount
+                    .map(
+                        (c) => `
+                    <tr>
+                        <td>${c.category_name}</td>
+                        <td class="text-end">${c.quantity.toLocaleString()}</td>
+                        <td class="text-end">${c.price.toFixed(2)}</td>
+                    </tr>
+                `,
+                    )
+                    .join("")}
+            </tbody>
+            <tfoot>
+                <tr style="font-weight: 800;">
+                    <td colspan="2" class="text-end">Total:</td>
+                    <td class="text-end">RM ${total.toFixed(2)}</td>
+                </tr>
+            </tfoot>
+        </table>
+    `;
+}
+
+function toggleCustomItemInput(showCustom) {
+    const $customWrapper = $("#customItemWrapper");
+
+    if (showCustom) {
+        $customWrapper.show();
+        $("#customItemName").val("").focus();
+    } else {
+        $customWrapper.hide();
+        $("#customItemName").val("");
+    }
+}
+
 // ─── Save Consignment Attachment ──────────────────────────
 function saveConsignmentAttachment() {
     document
@@ -1854,11 +1941,28 @@ function saveConsignmentAttachment() {
 
             console.log("Saving consignment item...");
 
+            const selected = $("#itemCategory").select2("data");
+            const itemCategoryText = selected[0]?.text;
             const itemSelectValue = $("#itemSelect").val();
             const itemSelectText = $("#itemSelect option:selected").text();
             const itemQuantity = $("#itemQuantity").val().trim();
-            const itemMeasure = $("#itemMeasure").val();
+            const itemMeasure = "kg";
             const certificateNo = $("#certificateNo").val().trim();
+
+            const isCustom = itemSelectValue === "others";
+            let itemName = isCustom
+                ? $("#customItemName").val().trim()
+                : itemSelectText;
+            let itemId = isCustom ? null : itemSelectValue;
+
+            if (isCustom && !itemName) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Custom Item Name Required",
+                    text: "Please enter a custom item name.",
+                });
+                return;
+            }
 
             const existingItem = editingItemId
                 ? tempItems.find((obj) => obj.id === editingItemId)
@@ -1869,21 +1973,39 @@ function saveConsignmentAttachment() {
                 files = existingItem.files || [];
             }
 
+            if (isCustom && files.length === 0) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Attachment Required",
+                    text: "Please upload an image/document for the custom item.",
+                });
+                return;
+            }
+
             if (
                 !itemSelectValue ||
                 !itemQuantity ||
                 !itemMeasure ||
                 !certificateNo
             ) {
-                Swal.fire({
-                    icon: "error",
-                    title: "Incomplete Data",
-                    text: "Please fill in all required fields before saving.",
-                });
-                return;
+                if (!isCustom && (!itemSelectValue || itemSelectValue === "")) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Incomplete Data",
+                        text: "Please select an item.",
+                    });
+                    return;
+                }
+                if (!itemQuantity || !itemMeasure || !certificateNo) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Incomplete Data",
+                        text: "Please fill in all required fields before saving.",
+                    });
+                    return;
+                }
             }
 
-            // Measurement limit check
             if (limitMeasurement) {
                 let limitInKg = null;
                 const selectedUnit = measurementUnits?.unit.find(
@@ -1919,20 +2041,18 @@ function saveConsignmentAttachment() {
 
             const itemPayload = {
                 id: existingItem ? existingItem.id : generateUUID(),
-                item_id: itemSelectValue,
-                item_name: itemSelectText,
+                item_id: itemId,
+                item_name: itemName,
                 quantity: itemQuantity,
                 measure: itemMeasure,
                 certificateNo: certificateNo,
-                purpose: "",
-                uses: "",
+                category: itemCategoryText,
                 value: 0,
                 files: files,
                 agreedAt: null,
                 condition: currentItemCondition,
-                // [FIX] carry the existing permit_id forward when editing so
-                // deleteItem() can still flag it for removal if the user
-                // deletes it after editing.
+                isCustom: isCustom,
+                // [FIX] preserve permit_id for edit-mode deletion tracking
                 permit_id: existingItem ? existingItem.permit_id : undefined,
             };
 
@@ -1975,16 +2095,21 @@ function resetAddItemModal() {
     $("#itemQuantity").val("");
     $("#itemMeasure").val("").trigger("change");
     $("#certificateNo").val("");
-    // Reset other fields if they exist (purpose, uses, value)
     if ($("#itemPurpose").length) $("#itemPurpose").val("").trigger("change");
     if ($("#itemUses").length) $("#itemUses").val(null).trigger("change");
     if ($("#itemValue").length) $("#itemValue").val("");
+
+    $("#customItemName").val("");
+    toggleCustomItemInput(false);
+    $(".attachmentInstruction").html("");
 
     if (itemDropzone) itemDropzone.removeAllFiles(true);
 }
 
 // ─── Render Items ──────────────────────────────────────────
 function renderAllItems() {
+    recalculateCategoryAmounts();
+
     const tableBody = document.querySelector("#itemListTbl tbody");
     tableBody.innerHTML = "";
 
@@ -1996,11 +2121,16 @@ function renderAllItems() {
         totalQty += qty;
         totalKg += getKgForItem(item);
 
+        console.log('item category', item)
+
         tableBody.insertAdjacentHTML(
             "beforeend",
             `<tr id="item-row-${item.id}">
+            
+                <td>${item.category}</td>
                 <td>${item.item_name}</td>
                 <td class="text-wrap">${qty} ${item.measure || ""}</td>
+              
                 <td class="text-center">
                     <div class="d-flex justify-content-center align-items-center gap-2">
                         <button class="btn btn-icon btn-success-light view-more-item"
@@ -2025,7 +2155,6 @@ function renderAllItems() {
         );
     });
 
-    // ─── Footer row ──────────────────────────────────────────────
     const table = document.querySelector("#itemListTbl");
     let tfoot = table.querySelector("tfoot");
     if (!tfoot) {
@@ -2077,8 +2206,15 @@ function viewMore() {
                 - User has not confirmed this item yet.
             </div>`;
 
-        // Build details rows – only show fields that have values
         let detailsRows = `
+            <div class="col-12 col-lg-6">
+                <p>
+                    <strong class="me-1">
+                        <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-scale-balanced"></i></span>
+                        Category:
+                    </strong> ${item.category}
+                </p>
+            </div>
             <div class="col-12 col-lg-6">
                 <p>
                     <strong class="me-1">
@@ -2095,9 +2231,9 @@ function viewMore() {
                     </strong> ${item.quantity} ${item.measure}
                 </p>
             </div>
+            
         `;
 
-        // Certificate Number (always show if present)
         if (item.certificateNo) {
             detailsRows += `
                 <div class="col-12 col-lg-6">
@@ -2111,7 +2247,6 @@ function viewMore() {
             `;
         }
 
-        // Value – only if not empty and not zero
         if (item.value && item.value != 0) {
             detailsRows += `
                 <div class="col-12 col-lg-6">
@@ -2120,34 +2255,6 @@ function viewMore() {
                             <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-money-bill"></i></span>
                             Value:
                         </strong> RM ${item.value}
-                    </p>
-                </div>
-            `;
-        }
-
-        // Purpose – only if not empty
-        if (item.purpose) {
-            detailsRows += `
-                <div class="col-12 col-lg-6">
-                    <p>
-                        <strong class="me-1">
-                            <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-pen-fancy"></i></span>
-                            Purpose:
-                        </strong> ${item.purpose}
-                    </p>
-                </div>
-            `;
-        }
-
-        // Uses – only if not empty
-        if (item.uses) {
-            detailsRows += `
-                <div class="col-12">
-                    <p>
-                        <strong class="me-1">
-                            <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-gear"></i></span>
-                            Uses:
-                        </strong> ${item.uses}
                     </p>
                 </div>
             `;
@@ -2162,7 +2269,6 @@ function viewMore() {
             </div>
         `;
 
-        // ─── Conditions ────────────────────────────────
         const hasCondition = item.condition && item.condition.trim() !== "";
         if (conditionItem) {
             conditionItem.innerHTML = hasCondition
@@ -2173,7 +2279,6 @@ function viewMore() {
             conditionCount.textContent = hasCondition ? "1" : "0";
         }
 
-        // ─── Attachments ─────────────────────────────────
         attachList.innerHTML = "";
         currentItemAttachments = item.files || [];
 
@@ -2214,14 +2319,12 @@ function viewMore() {
                 attachmentCount.textContent = item.files.length;
         }
 
-        // ─── Show the offcanvas ─────────────────────────
         const offcanvasEl = document.getElementById("ItemDetailsOffcanvas");
         if (offcanvasEl) {
             bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl).show();
         }
     });
 
-    // Click handler for attachment chips (unchanged)
     $(document).on("click", ".view-item-attach-btn", function (e) {
         e.preventDefault();
         e.stopPropagation();
@@ -2251,10 +2354,7 @@ function deleteItem() {
             return;
         }
 
-        // [FIX] Restored from consignment1.js: track deleted existing permits
-        // so the backend knows to remove them (was silently lost — items
-        // removed from the temp array in edit mode were never flagged for
-        // deletion on save).
+        // [FIX] Track deleted existing permits for edit mode
         if (isEditMode && tempItems[index].permit_id) {
             const permitId = tempItems[index].permit_id;
             if (!deleteIds.includes(permitId)) {
@@ -2297,10 +2397,7 @@ function copyItem() {
             id: generateUUID(),
             files: [...(original.files || [])],
             agreedAt: null,
-            // [FIX] a duplicate is a brand-new item, not a copy of the
-            // original DB permit — don't carry the old permit_id forward or
-            // deleting the duplicate later would incorrectly flag the
-            // original permit for deletion too.
+            // [FIX] Duplicate should not carry the original permit_id
             permit_id: undefined,
         };
 
@@ -2351,10 +2448,6 @@ function editItem() {
             .then(() => {
                 $("#itemSelect").val(item.item_id).trigger("change");
 
-                loadUses(item.item_id).then(() => {
-                    $("#itemUses").val(item.uses).trigger("change");
-                });
-
                 $("#itemValue").val(item.value);
                 $("#itemQuantity").val(item.quantity);
                 $("#itemMeasure").val(item.measure).trigger("change");
@@ -2383,6 +2476,160 @@ function editItem() {
     });
 }
 
+// ─── ITEM_CONDITIONS (bilingual) ────────────────────────
+const ITEM_CONDITIONS = [
+    {
+        title_en: "General Consignment Requirements",
+        title_bm: "Syarat Konsainan Umum",
+        title: '<span data-en="General Consignment Requirements" data-bm="Syarat Konsainan Umum">General Consignment Requirements</span>',
+        icon: "bi-box-seam",
+        content: `
+        <p>
+            <span data-en="The applicant shall ensure that all items declared under this consignment application are accurate, complete and compliant with the applicable import/export regulations." 
+                  data-bm="Pemohon hendaklah memastikan bahawa semua item yang diisytiharkan di bawah permohonan konsainan ini adalah tepat, lengkap dan mematuhi peraturan import/eksport yang berkenaan.">
+            The applicant shall ensure that all items declared under this consignment application are accurate, complete and compliant with the applicable import/export regulations.</span>
+        </p>
+        <p>
+            <span data-en="Any false declaration, omission of information, misleading description, incorrect quantity or inaccurate valuation may result in rejection of the application, permit cancellation, investigation, enforcement action or prosecution." 
+                  data-bm="Sebarang pengisytiharan palsu, peninggalan maklumat, keterangan yang mengelirukan, kuantiti yang tidak betul atau penilaian yang tidak tepat boleh mengakibatkan penolakan permohonan, pembatalan permit, penyiasatan, tindakan penguatkuasaan atau pendakwaan.">
+            Any false declaration, omission of information, misleading description, incorrect quantity or inaccurate valuation may result in rejection of the application, permit cancellation, investigation, enforcement action or prosecution.</span>
+        </p>
+        <p>
+            <span data-en="Applicants are responsible for maintaining supporting documentation for inspection purposes for a minimum period required by the authority." 
+                  data-bm="Pemohon bertanggungjawab untuk menyimpan dokumentasi sokongan untuk tujuan pemeriksaan bagi tempoh minimum yang diperlukan oleh pihak berkuasa.">
+            Applicants are responsible for maintaining supporting documentation for inspection purposes for a minimum period required by the authority.</span>
+        </p>
+    `,
+    },
+];
+
+async function showItemConditions() {
+    let currentPage = 0;
+    let currentLang = getCurrentLang();
+
+    while (currentPage < ITEM_CONDITIONS.length) {
+        const page = ITEM_CONDITIONS[currentPage];
+        const titleText =
+            currentLang === "bm" ? page.title_bm : page.title_en || page.title;
+        const iconClass = page.icon || "bi-info-circle";
+
+        const result = await Swal.fire({
+            title: `
+                <span data-en="${page.title_en || page.title}" data-bm="${page.title_bm || page.title}">
+                    <i class="bi ${iconClass} me-2 text-primary"></i>${titleText}
+                </span>
+            `,
+            width: 900,
+            html: `
+                <div style="text-align:left; max-height:350px; overflow:auto; padding-right:10px;">
+                    ${page.content}
+                </div>
+                <div class="mt-3 text-muted">
+                    <span data-en="Page ${currentPage + 1} of ${ITEM_CONDITIONS.length}" data-bm="Halaman ${currentPage + 1} daripada ${ITEM_CONDITIONS.length}">Page ${currentPage + 1} of ${ITEM_CONDITIONS.length}</span>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText:
+                currentPage === ITEM_CONDITIONS.length - 1
+                    ? '<span data-en="Continue" data-bm="Teruskan">Continue</span>'
+                    : '<span data-en="Next" data-bm="Seterusnya">Next</span>',
+            cancelButtonText:
+                '<span data-en="Cancel" data-bm="Batal">Cancel</span>',
+            allowOutsideClick: false,
+            didOpen: (modal) => {
+                applyTranslations(modal);
+                applyTranslations(Swal.getConfirmButton().parentElement);
+            },
+        });
+
+        if (!result.isConfirmed) {
+            return false;
+        }
+
+        currentPage++;
+    }
+
+    return await showFinalAgreement();
+}
+
+async function showFinalAgreement() {
+    let agreed = false;
+
+    const result = await Swal.fire({
+        title: '<span data-en="Declaration & Agreement" data-bm="Pengisytiharan & Persetujuan">Declaration & Agreement</span>',
+        width: 900,
+        html: `
+            <div id="agreementScroll" style="height:350px; overflow-y:auto; text-align:left; border:1px solid #ddd; padding:15px; border-radius:8px;">
+                <h5 class="mb-3"><span data-en="Terms and Conditions" data-bm="Terma dan Syarat">Terms and Conditions</span></h5>
+                <p>
+                    <span data-en="1. The applicant declares that all information provided in this application, including item descriptions, quantities, and values, is true, accurate, and complete." 
+                          data-bm="1. Pemohon mengisytiharkan bahawa semua maklumat yang diberikan dalam permohonan ini, termasuk perihalan item, kuantiti dan nilai, adalah benar, tepat dan lengkap.">
+                    1. The applicant declares that all information provided in this application is true, accurate, and complete.</span>
+                </p>
+                <p>
+                    <span data-en="2. The applicant confirms that all goods declared are compliant with current import regulations and standards enforced by the relevant authority." 
+                          data-bm="2. Pemohon mengesahkan bahawa semua barang yang diisytiharkan mematuhi peraturan import dan piawaian semasa yang dikuatkuasakan oleh pihak berkuasa berkaitan.">
+                    2. The applicant confirms that all goods declared are compliant with current import regulations and standards.</span>
+                </p>
+                <p>
+                    <span data-en="3. The applicant acknowledges that all consignments are subject to physical inspection, verification, and sampling by authorized officers at any designated entry point." 
+                          data-bm="3. Pemohon mengakui bahawa semua konsainan tertakluk kepada pemeriksaan fizikal, pengesahan dan pengambilan sampel oleh pegawai yang diberi kuasa di mana-mana pintu masuk yang ditetapkan.">
+                    3. The applicant acknowledges that all consignments are subject to inspection and sampling by authorized officers.</span>
+                </p>
+                <p>
+                    <span data-en="4. The applicant agrees to maintain all supporting documentation (invoices, certificates, permits) for audit purposes for the period required by law." 
+                          data-bm="4. Pemohon bersetuju untuk menyimpan semua dokumen sokongan (invois, sijil, permit) bagi tujuan audit untuk tempoh yang ditetapkan oleh undang-undang.">
+                    4. The applicant agrees to maintain all supporting documentation for audit purposes.</span>
+                </p>
+                <p>
+                    <span data-en="5. The authority reserves the right to suspend or revoke any permit or application if information provided is found to be false, misleading, or fraudulent, and legal action may be taken accordingly." 
+                          data-bm="5. Pihak berkuasa berhak untuk menggantung atau membatalkan sebarang permit atau permohonan jika maklumat yang diberikan didapati palsu, mengelirukan atau berunsur penipuan, dan tindakan undang-undang boleh diambil sewajarnya.">
+                    5. The authority reserves the right to revoke any application if information provided is found to be false or misleading.</span>
+                </p>
+                <p><strong><span data-en="END OF DECLARATION" data-bm="TAMAT PENGISYTIHARAN">END OF DECLARATION</span></strong></p>
+            </div>
+            <div class="form-check mt-3 text-start">
+                <input class="form-check-input" type="checkbox" id="agreeCheckbox" disabled>
+                <label class="form-check-label" for="agreeCheckbox">
+                    <span data-en="I have read and agree to all conditions." data-bm="Saya telah membaca dan bersetuju dengan semua syarat.">I have read and agree to all conditions.</span>
+                </label>
+            </div>
+        `,
+        didOpen: (modal) => {
+            applyTranslations(modal);
+            const scrollBox = document.getElementById("agreementScroll");
+            const checkbox = document.getElementById("agreeCheckbox");
+            scrollBox.addEventListener("scroll", () => {
+                const reachedBottom =
+                    scrollBox.scrollTop + scrollBox.clientHeight >=
+                    scrollBox.scrollHeight - 10;
+                if (reachedBottom) {
+                    checkbox.disabled = false;
+                }
+            });
+        },
+        preConfirm: () => {
+            const checked = document.getElementById("agreeCheckbox").checked;
+            if (!checked) {
+                Swal.showValidationMessage(
+                    '<span data-en="Please read the declaration and tick the agreement checkbox." data-bm="Sila baca pengisytiharan dan tandakan kotak persetujuan.">Please read the declaration and tick the agreement checkbox.</span>',
+                );
+                return false;
+            }
+            agreed = true;
+            return true;
+        },
+        allowOutsideClick: false,
+        showCancelButton: true,
+        confirmButtonText:
+            '<span data-en="I Agree" data-bm="Saya Setuju">I Agree</span>',
+        cancelButtonText:
+            '<span data-en="Cancel" data-bm="Batal">Cancel</span>',
+    });
+
+    return result.isConfirmed && agreed;
+}
+
 // ─── Save Application ──────────────────────────────────────
 function saveapplication(isDraft = false) {
     const form = document.querySelector("#wizardForm");
@@ -2405,9 +2652,7 @@ function saveapplication(isDraft = false) {
     formData.append("importerData", JSON.stringify(exporter));
     formData.append("permitDetails", JSON.stringify(currentPermitDetails));
 
-    // [FIX] Restored from consignment1.js — without this, saving an edited
-    // draft had no way to tell the backend it was an update rather than a
-    // brand-new application, and no way to remove permits the user deleted.
+    // [FIX] Edit-mode: send applicationId and deleted IDs
     if (isEditMode) {
         formData.append("applicationId", application.application_id);
         formData.append("deleted_item_ids", deleteIds);
@@ -2425,12 +2670,13 @@ function saveapplication(isDraft = false) {
         }
     });
 
-    // Application attachments
     applicationAttachments.forEach((attachment) => {
         if (attachment.file) {
             formData.append("application_files[]", attachment.file);
         }
     });
+
+    formData.append("categoryAmount", JSON.stringify(categoryAmount));
 
     Swal.fire({
         title: isDraft ? "Saving Draft..." : "Submitting...",
@@ -2549,7 +2795,6 @@ export function summarySubmit() {
         );
     });
 
-    // ─── Footer row for totals ──────────────────────────────
     const table3 = document.querySelector("#summaryTable3");
     let tfoot3 = table3.querySelector("tfoot");
     if (!tfoot3) {
@@ -2575,8 +2820,9 @@ export function summarySubmit() {
         tfoot3.innerHTML = "";
     }
 
-    // Update application attachments table
     updateAttachmentTable();
+    renderCategoryPriceSummary(); // [FIX] added
+    tablePrice(); // [FIX] added
 }
 
 function updateAttachmentTable() {
@@ -2655,10 +2901,7 @@ $(document).ready(async function () {
     });
 
     try {
-        // [FIX] Was unconditionally calling selfImport() — an edit-mode draft
-        // has no need (and no auth-fetched values) to overwrite what's
-        // already saved. Load from the draft instead, same split as
-        // consignment1.js.
+        // [FIX] Edit-mode vs new mode
         if (isEditMode) {
             importerDetail();
             loadExistingConsignments();
@@ -2669,10 +2912,7 @@ $(document).ready(async function () {
         await fetchExporterList();
         handleExporterChange();
 
-        // [FIX] Restored: auto-select + prefill the chosen importer (DB) /
-        // JS `exporter` var when editing a draft. Doesn't rely on
-        // handleExporterChange's own change handler firing in time — fields
-        // are set directly, same approach as consignment1.js.
+        // [FIX] Prefill importer (exporter in DB) in edit mode
         if (isEditMode && application.importer_detail) {
             const imp = application.importer_detail;
             exporter = imp;
@@ -2732,7 +2972,6 @@ $(document).ready(async function () {
             dropdownParent: $("#addExporterModal"),
         });
 
-        // Purpose dropdown (if exists)
         if ($("#itemPurpose").length) {
             $("#itemPurpose").select2({
                 width: "100%",
@@ -2747,29 +2986,80 @@ $(document).ready(async function () {
             });
         }
 
-        // Item Select change – load uses & details
-        $("#itemSelect").on("change", function () {
+        $("#itemCategory").on("change", function () {
             const itemId = $(this).val();
+            loadConsignmentSelection(itemId);
+        });
+
+        // [OTHERS] Item Select change handler
+        $("#itemSelect").on("change", function () {
+            const selectedVal = $(this).val();
             const $itemUses = $("#itemUses");
 
             $itemUses
                 .empty()
                 .append('<option value="">-- Select Uses --</option>');
 
-            if (!itemId) return;
+            if (!selectedVal) {
+                toggleCustomItemInput(false);
+                $(".attachmentInstruction").html("");
+                return;
+            }
 
-            loadUses(itemId);
-            loadDetails(itemId);
+            if (selectedVal === "others") {
+                toggleCustomItemInput(true);
+                $(".attachmentInstruction").html(
+                    `<span style="color:red;" data-en="Attachment is mandatory for custom items. Please upload the item image or document"
+                   data-bm="Lampiran adalah wajib untuk item yang tiada dalam senarai. Sila muat naik gambar atau dokumen">
+                * Attachment is mandatory for custom items. Please upload the item image or document.</span>`,
+                );
+                return;
+            }
+
+            toggleCustomItemInput(false);
+            $(".attachmentInstruction").html("");
+            loadDetails(selectedVal);
         });
 
         $("#mdlAddItemBtn").on("click", function (e) {
             e.preventDefault();
+            loadCategory();
             loadConsignmentSelection();
         });
 
-        $(document).on("click", "#submitApps", function (e) {
+        $("#addItemModal").on("hidden.bs.modal", function () {
+            resetAddItemModal();
+        });
+
+        // Submit button handler
+        $(document).on("click", "#submitApps", async function (e) {
             e.preventDefault();
             console.log("Submit clicked!");
+
+            if (tempItems.length === 0) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "No Items",
+                    text: "Please add at least one item before submitting.",
+                });
+                return;
+            }
+
+            const unagreedItems = tempItems.filter((item) => !item.agreedAt);
+            if (unagreedItems.length > 0) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Incomplete Declarations",
+                    text: "Please confirm the declaration for all items before submitting.",
+                });
+                return;
+            }
+
+            const agreed = await showItemConditions();
+            if (!agreed) {
+                return;
+            }
+
             saveapplication(false);
         });
 

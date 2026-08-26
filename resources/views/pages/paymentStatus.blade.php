@@ -8,8 +8,11 @@
 
 @php
     $user = $order->order_details['user'];
-    $permits = $order->order_details['permits'];
+
+    $permits = $order->application->consignmentPermits;
     $status = $paymentData['transaction_status'];
+
+
 
     $isSuccess = $status === 'SUCCESSFUL';
     $isFailed = $status === 'UNSUCCESSFUL';
@@ -29,6 +32,15 @@
         'Consignment Certificate', 'Consignment' => '/view_consignment/',
         default => '/view_application/',
     };
+
+    // ─── Consignment category data ──────────────────────────────────────
+    $isConsignment = ($order->application_type === 'Consignment Certificate');
+    $prices = [];
+    $totalFromPrices = 0;
+    if ($isConsignment && $order->application) {
+        $prices = json_decode($order->application->prices_total, true) ?? [];
+        $totalFromPrices = array_sum(array_column($prices, 'price'));
+    }
 @endphp
 
 @section('breadcrumb')
@@ -149,7 +161,7 @@
                     </div>
                     <div class="apr-ref-cell">
                         <div class="apr-ref-label" data-en="Payment Method" data-bm="Kaedah Pembayaran">Payment Method</div>
-                        <div class="apr-ref-value">{{ $paymentMethod }}</div>
+                        <div class="apr-ref-value">{{ $order->payment_type }}</div>
                     </div>
                     <div class="apr-ref-cell">
                         <div class="apr-ref-label" data-en="Status" data-bm="Status">Status</div>
@@ -179,15 +191,25 @@
 
                 <div class="apr-receipt-divider"></div>
 
+                {{-- ─── Items Paid ───────────────────────────────────────────────── --}}
+                @php
+                    $showFeeColumn = ($order->application_type === 'Import Permit');
+                @endphp
+
                 <div class="apr-section-label" data-en="Items Paid" data-bm="Item Dibayar">Items Paid</div>
                 <div class="apr-item-table">
                     <div class="apr-item-row apr-item-row-head">
                         <span data-en="Permit" data-bm="Permit">Permit</span>
                         <span data-en="Item" data-bm="Item">Item</span>
-                        <span class="apr-col-right" data-en="Fee" data-bm="Yuran">Fee</span>
+                        @if ($showFeeColumn)
+                            <span class="apr-col-right" data-en="Fee" data-bm="Yuran">Fee</span>
+                        @else
+                            <span data-en="Quantity" data-bm="Kuantiti">Quantity</span>
+                        @endif
                     </div>
                     @foreach ($permits as $item)
                         @php
+                        
                             $itemName = $item['item_name'] ?? ($item['consignment_detail']['item_name'] ?? '—');
                             $category = $item['category'] ?? ($item['consignment_detail']['category'] ?? null);
                             $quantity = $item['quantity'] ?? ($item['consignment_detail']['quantity'] ?? null);
@@ -209,10 +231,42 @@
                                     </span>
                                 @endif
                             </span>
-                            <span class="apr-col-right apr-item-fee">RM {{ number_format($feePerItem, 2) }}</span>
+                            @if ($showFeeColumn)
+                                <span class="apr-col-right apr-item-fee">RM {{ number_format($feePerItem, 2) }}</span>
+                            @else
+                                <span>{{ number_format($quantity ?? 0) }} {{ $unit }}</span>
+                            @endif
                         </div>
                     @endforeach
                 </div>
+
+                {{-- ─── Category Summary (Consignment only) ───────────────────── --}}
+                @if ($isConsignment && !empty($prices))
+                    <div class="apr-section-label" style="margin-top:1.5rem;" data-en="Category Summary" data-bm="Ringkasan Kategori">Category Summary</div>
+                    <div class="apr-item-table">
+                        <div class="apr-item-row apr-item-row-head">
+                        
+                            <span data-en="Category" data-bm="Kategori">Category</span>
+                            <span data-en="Quantity" data-bm="Kuantiti">Quantity</span>
+                            <span class="apr-col-right" data-en="Total" data-bm="Jumlah">Total</span>
+                        </div>
+                        @foreach ($prices as $idx => $cat)
+                            <div class="apr-item-row">
+                              
+                                <span class="apr-item-name-cell">
+                                    <span class="apr-item-name">{{ $cat['category_name'] ?? 'Uncategorized' }}</span>
+                                </span>
+                                <span>{{ number_format($cat['quantity'] ?? 0) }} kg</span>
+                                <span class="apr-col-right apr-item-fee">RM {{ number_format($cat['price'] ?? 0, 2) }}</span>
+                            </div>
+                        @endforeach
+                        <div class="apr-item-row" style="font-weight: 700; background-color: var(--gray-1);">
+                            <span colspan="2" class="text-end" data-en="Total" data-bm="Jumlah">Total</span>
+                            <span>{{ number_format(array_sum(array_column($prices, 'quantity'))) }} kg</span>
+                            <span class="apr-col-right">RM {{ number_format(array_sum(array_column($prices, 'price')), 2) }}</span>
+                        </div>
+                    </div>
+                @endif
 
                 <div class="apr-totals-block">
                     <div class="apr-totals-row">

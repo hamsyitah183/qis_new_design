@@ -20,22 +20,24 @@ class ConsignmentMiscController extends Controller
         return view('pages.internal.misc.consignment_condition_list');
     }
 
+    public function getConsignmentConditionDataByCategory($category, $country)
+    {
+        $query = ConsignmentCondition::where('category', $category)
+            ->whereJsonContains('country', $country)
+            ->get();
+
+        return DataTables::of($query)->make(true);
+    }
     public function getConsignmentConditionData()
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
 
-        $query = ConsignmentCondition::with(['condcategory'])->select('id', 'scientific_name' , 'item_name', 'category', 'usage', 'country');
+        $query = ConsignmentCondition::with(['condcategory'])->select('id', 'scientific_name', 'item_name', 'category', 'usage', 'country');
 
         return DataTables::of($query)->make(true);
     }
 
     public function getConsignmentConditionDataById($id)
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
-        }
 
         $condition = ConsignmentCondition::with(['code', 'condcategory'])->find($id);
 
@@ -79,7 +81,7 @@ class ConsignmentMiscController extends Controller
 
         $condition = ConsignmentCondition::find($data['id']);
 
-        
+
 
         $countryArr = json_decode($request->country, true) ?? [];
         $usageArr = json_decode($request->usage, true) ?? [];
@@ -88,7 +90,7 @@ class ConsignmentMiscController extends Controller
         $usageValues = array_map(fn($i) => $i['value'] ?? ($i['name'] ?? null), $usageArr);
 
 
-        if( $condition) {
+        if ($condition) {
             $condition = ConsignmentCondition::find($request->id);
         } else {
             $condition = new ConsignmentCondition();
@@ -158,4 +160,3 @@ class ConsignmentMiscController extends Controller
         ]);
     }
 }
-
