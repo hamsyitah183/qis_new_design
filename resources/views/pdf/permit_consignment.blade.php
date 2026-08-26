@@ -366,10 +366,11 @@
             </td>
         </tr>
 
+        
         <tr>
             <td class="field-label">Nama Hasil dan Kuantiti Terisytihar:</td>
-            <td>
-                <table>
+            <td class="field-value">
+                <table style="width:100%; border-collapse:collapse;">
                     @foreach ($items as $detail)
                         @php
                             $itemName = data_get(
@@ -382,13 +383,18 @@
                             $qty = data_get($detail, 'quantity', data_get($detail, 'consignment_detail.quantity', '-'));
                         @endphp
                         <tr>
-                            <td>{{ strtoupper($afterDash) }}</td>
-                            <td class="qty">{{ $qty }}</td>
+                            <td class="mono" style="border-bottom:1px dotted #000; padding:2px 4px; width:70%;">
+                                {{ strtoupper($afterDash) }}
+                            </td>
+                            <td class="mono" style="border-bottom:1px dotted #000; padding:2px 4px; width:30%;">
+                                {{ $qty }} KG
+                            </td>
                         </tr>
                     @endforeach
                 </table>
             </td>
         </tr>
+     
     </table>
 
 

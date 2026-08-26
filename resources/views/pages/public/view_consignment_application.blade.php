@@ -243,7 +243,9 @@
                     @if ($showPaymentTab)
                         <button type="button" class="ipv-tabnav-item" data-ipv-tab="payment" role="tab">
                             <span data-en="Pending Payment" data-bm="Pembayaran Tertangguh">Pending Payment</span> <span
-                                class="ipv-tab-count" id="ipvPendingPaymentCount">0</span>
+                                class="ipv-tab-count" id="ipvPendingPaymentCount">
+                               
+                            </span>
                         </button>
                     @endif
                     <button type="button" class="ipv-tabnav-item" data-ipv-tab="activity" role="tab"
