@@ -13,6 +13,8 @@ services:
       - "6001:6001"  # Reverb WebSocket port
     volumes:
       - .:/var/www/html                                    # Mount local code for live updates
+      - /var/www/html/node_modules                         # Prevent local from overwriting container's node_modules
+      - /var/www/html/vendor                               # Prevent local from overwriting container's vendor
       - storage:/var/www/html/storage                      # Persist storage (uploads, logs, etc)
       - ./.docker/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini
     working_dir: /var/www/html
