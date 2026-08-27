@@ -14,7 +14,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Force HTTPS scheme early in production/when using tunnel
+        if ($this->app->environment('production') || 
+            str_contains(config('app.url', ''), 'https://')) {
+            URL::forceScheme('https');
+        }
     }
 
     /**
