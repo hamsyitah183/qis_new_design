@@ -49,8 +49,12 @@ RUN npm run build
 # Copy Supervisor config
 COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
+# Copy entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Expose PHP-FPM port
 EXPOSE 9000
 
-# Start supervisord to run Reverb and Queue workers
-CMD ["/usr/bin/supervisord", "-n"]
+# Start with entrypoint script
+ENTRYPOINT ["docker-entrypoint.sh"]
