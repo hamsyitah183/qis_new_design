@@ -7,6 +7,8 @@ services:
       dockerfile: Dockerfile
     container_name: qis_app_web        # fixed container name
     image: qis_app_web:latest
+    ports:
+      - "6001:6001"  # Reverb WebSocket port
     volumes:
       - .:/var/www/html
       # - storage:/var/www/html/storage

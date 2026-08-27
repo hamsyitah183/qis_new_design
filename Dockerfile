@@ -37,8 +37,8 @@ RUN mkdir -p /var/www/html/vendor /var/www/html/node_modules /var/www/html/stora
 # Run storage link
 RUN php artisan storage:link
 
-# Copy .env if needed
-# COPY .env.example .env
+# Copy Docker-specific .env
+COPY .env.docker .env
 RUN chown www-data:www-data /var/www/html/.env
 
 # Build frontend assets inside the container
