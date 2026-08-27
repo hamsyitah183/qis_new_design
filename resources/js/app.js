@@ -13,7 +13,7 @@ import "datatables.net-bs5/css/dataTables.bootstrap5.min.css";
 import "datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css";
 import "datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css";
 import { public_dashboard } from "./pages/dashboard/public_dashboard";
-
+import "./pages/gallery.js";
 // resources/js/app.js
 import ApexCharts from "apexcharts";
 

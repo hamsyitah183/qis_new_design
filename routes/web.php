@@ -81,6 +81,8 @@ Route::get('/', function () {
     // return redirect()->route('login');
 })->name('home');
 
+Route::get('/gallery', [LandingController::class, 'gallery'])->name('public.gallery');
+
 Route::get('/announcement', function () {
     $announcements = \App\Models\Announcement::with('releasedBy')
         ->where('is_active', true)
