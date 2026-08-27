@@ -24,6 +24,7 @@ export function activityLogDesign(activityLogs, qrScanLogs = []) {
             ? "px-0 pt-0 accordion-button-custom active-accordion"
             : "px-0 pt-0 collapsed accordion-button-custom";
 
+        const titleBm = getStatusBm(title);
         html += `
         <div class="accordion position-relative" id="accordion-${index}">
             <div class="accordion-item border-0 bg-transparent mb-2">
@@ -36,7 +37,7 @@ export function activityLogDesign(activityLogs, qrScanLogs = []) {
                                 ${iconHtml}
                             </div>
                             <div class="flex-fill d-flex align-items-center justify-content-between">
-                                <p class="fw-semibold mb-0 fs-14 text-dark">${escapeHtml(title)}</p>
+                                <p class="fw-semibold mb-0 fs-14 text-dark" data-en="${escapeHtml(title)}" data-bm="${escapeHtml(titleBm)}">${escapeHtml(title)}</p>
                                 <span class="text-muted fs-12">${time}</span>
                             </div>
                         </div>
@@ -112,23 +113,23 @@ function renderTimelineEntryDetails(entry) {
             <div class="timeline-details">
                 <div class="row g-2">
                     <div class="col-12">
-                        <span class="fw-semibold text-muted">User:</span>
+                        <span class="fw-semibold text-muted" data-en="User:" data-bm="Pengguna:">User:</span>
                         <span class="text-primary">${escapeHtml(entry.user)}</span>
                     </div>
                     <div class="col-12">
-                        <span class="fw-semibold text-muted">Position:</span>
+                        <span class="fw-semibold text-muted" data-en="Position:" data-bm="Jawatan:">Position:</span>
                         <span>${escapeHtml(entry.position)}</span>
                     </div>
                     <div class="col-12">
-                        <span class="fw-semibold text-muted">Scanned Value:</span>
+                        <span class="fw-semibold text-muted" data-en="Scanned Value:" data-bm="Nilai Diimbas:">Scanned Value:</span>
                         <span>${escapeHtml(entry.scannedValue)}</span>
                     </div>
                     <div class="col-12">
-                        <span class="fw-semibold text-muted">Result:</span>
-                        <span class="badge bg-success">${escapeHtml(entry.result)}</span>
+                        <span class="fw-semibold text-muted" data-en="Result:" data-bm="Keputusan:">Result:</span>
+                        <span class="badge bg-success" data-en="${escapeHtml(entry.result)}" data-bm="${escapeHtml(entry.result) === 'Valid' ? 'Sah' : escapeHtml(entry.result)}">${escapeHtml(entry.result)}</span>
                     </div>
                     <div class="col-12">
-                        <span class="fw-semibold text-muted">Date & Time:</span>
+                        <span class="fw-semibold text-muted" data-en="Date & Time:" data-bm="Tarikh & Masa:">Date & Time:</span>
                         <span>${entry.createdAt ? formatTime(entry.createdAt) : "-"}</span>
                     </div>
                 </div>
@@ -140,12 +141,12 @@ function renderTimelineEntryDetails(entry) {
         <div class="timeline-details">
             <div class="row g-2">
                 <div class="col-12">
-                    <span class="fw-semibold text-muted">User:</span>
+                    <span class="fw-semibold text-muted" data-en="User:" data-bm="Pengguna:">User:</span>
                     <span class="text-primary">${escapeHtml(entry.causer)}</span>
                 </div>
                 <div class="col-12">
-                    <span class="fw-semibold text-muted">Remark:</span>
-                    <span class="text-secondary">${escapeHtml(entry.remark)}</span>
+                    <span class="fw-semibold text-muted" data-en="Remark:" data-bm="Catatan:">Remark:</span>
+                    <span class="text-secondary" data-en="${escapeHtml(entry.remark)}" data-bm="${escapeHtml(getRemarkBm(entry.remark))}">${escapeHtml(entry.remark)}</span>
                 </div>
             </div>
         </div>
@@ -173,25 +174,26 @@ function getIcon(status, kind = "activity") {
     const s = status.toLowerCase().trim();
     let iconHtml = '';
 
-    // Map statuses to icons
+    // Map statuses to icons and bm translations
     const statusMap = {
-        'submitted': { icon: 'bi bi-send', bg: 'bg-primary-transparent', border: 'border-primary' },
-        'clerk review in-progress': { icon: 'bi bi-person-fill-gear', bg: 'bg-secondary-transparent', border: 'border-secondary' },
-        'clerk verified': { icon: 'bi bi-person-check-fill', bg: 'bg-info-transparent', border: 'border-info' },
-        'clerk approved': { icon: 'bi bi-person-check-fill', bg: 'bg-info-transparent', border: 'border-info' },
-        'item accepted': { icon: 'bi bi-check2-all', bg: 'bg-success-transparent', border: 'border-success' },
-        'officer verification completed': { icon: 'bx bx-box', bg: 'bg-success-transparent', border: 'border-success' },
-        'officer verified': { icon: 'bi bi-file-earmark-check', bg: 'bg-warning-transparent', border: 'border-warning' },
-        'officer rejected': { icon: 'bi bi-file-earmark-excel', bg: 'bg-danger-transparent', border: 'border-danger' },
-        'user reapply consignment': { icon: 'bi bi-file-earmark-arrow-up', bg: 'bg-info-transparent', border: 'border-info' },
-        'user payment': { icon: 'bi bi-wallet2', bg: 'bg-primary-transparent', border: 'border-primary' },
-        'payment successful': { icon: 'bi bi-cash', bg: 'bg-success-transparent', border: 'border-success' },
-        'payment unsuccessful': { icon: 'bi bi-cash', bg: 'bg-danger-transparent', border: 'border-danger' },
-        'payment is pending for authorization': { icon: 'bi bi-cash', bg: 'bg-warning-transparent', border: 'border-warning' },
-        'completed': { icon: 'bi bi-check2-circle', bg: 'bg-success-transparent', border: 'border-success' },
-        'printed': { icon: 'bi bi-printer', bg: 'bg-primary-transparent', border: 'border-primary' },
-        'approved': { icon: 'bi bi-check-circle', bg: 'bg-success-transparent', border: 'border-success' },
-        'rejected': { icon: 'bi bi-x-circle', bg: 'bg-danger-transparent', border: 'border-danger' },
+        'submitted': { icon: 'bi bi-send', bg: 'bg-primary-transparent', border: 'border-primary', bm: 'Dihantar' },
+        'clerk review in-progress': { icon: 'bi bi-person-fill-gear', bg: 'bg-secondary-transparent', border: 'border-secondary', bm: 'Semakan Kerani Dalam Proses' },
+        'clerk verified': { icon: 'bi bi-person-check-fill', bg: 'bg-info-transparent', border: 'border-info', bm: 'Disahkan Kerani' },
+        'clerk approved': { icon: 'bi bi-person-check-fill', bg: 'bg-info-transparent', border: 'border-info', bm: 'Diluluskan Kerani' },
+        'item accepted': { icon: 'bi bi-check2-all', bg: 'bg-success-transparent', border: 'border-success', bm: 'Item Diterima' },
+        'officer verification completed': { icon: 'bx bx-box', bg: 'bg-success-transparent', border: 'border-success', bm: 'Pengesahan Pegawai Selesai' },
+        'officer verified': { icon: 'bi bi-file-earmark-check', bg: 'bg-warning-transparent', border: 'border-warning', bm: 'Disahkan Pegawai' },
+        'officer rejected': { icon: 'bi bi-file-earmark-excel', bg: 'bg-danger-transparent', border: 'border-danger', bm: 'Ditolak Pegawai' },
+        'user reapply consignment': { icon: 'bi bi-file-earmark-arrow-up', bg: 'bg-info-transparent', border: 'border-info', bm: 'Pengguna Mohon Semula Konsainan' },
+        'user payment': { icon: 'bi bi-wallet2', bg: 'bg-primary-transparent', border: 'border-primary', bm: 'Pembayaran Pengguna' },
+        'payment successful': { icon: 'bi bi-cash', bg: 'bg-success-transparent', border: 'border-success', bm: 'Pembayaran Berjaya' },
+        'payment unsuccessful': { icon: 'bi bi-cash', bg: 'bg-danger-transparent', border: 'border-danger', bm: 'Pembayaran Gagal' },
+        'payment is pending for authorization': { icon: 'bi bi-cash', bg: 'bg-warning-transparent', border: 'border-warning', bm: 'Pembayaran Menunggu Pengesahan' },
+        'completed': { icon: 'bi bi-check2-circle', bg: 'bg-success-transparent', border: 'border-success', bm: 'Selesai' },
+        'printed': { icon: 'bi bi-printer', bg: 'bg-primary-transparent', border: 'border-primary', bm: 'Dicetak' },
+        'approved': { icon: 'bi bi-check-circle', bg: 'bg-success-transparent', border: 'border-success', bm: 'Diluluskan' },
+        'rejected': { icon: 'bi bi-x-circle', bg: 'bg-danger-transparent', border: 'border-danger', bm: 'Ditolak' },
+        'draft': { icon: 'bi bi-file-earmark', bg: 'bg-secondary-transparent', border: 'border-secondary', bm: 'Draf' },
     };
 
     // Find matching status (partial match)
@@ -213,6 +215,70 @@ function getIcon(status, kind = "activity") {
     }
 
     return iconHtml;
+}
+
+export function getStatusBm(status) {
+    if (!status) return status;
+    const s = status.toLowerCase().trim();
+    const statusMap = {
+        'submitted': 'Dihantar',
+        'clerk review in-progress': 'Semakan Kerani Dalam Proses',
+        'clerk verified': 'Disahkan Kerani',
+        'clerk approved': 'Diluluskan Kerani',
+        'item accepted': 'Item Diterima',
+        'officer verification completed': 'Pengesahan Pegawai Selesai',
+        'officer verified': 'Disahkan Pegawai',
+        'officer rejected': 'Ditolak Pegawai',
+        'user reapply consignment': 'Pengguna Mohon Semula Konsainan',
+        'user payment': 'Pembayaran Pengguna',
+        'payment successful': 'Pembayaran Berjaya',
+        'payment unsuccessful': 'Pembayaran Gagal',
+        'payment is pending for authorization': 'Pembayaran Menunggu Pengesahan',
+        'completed': 'Selesai',
+        'printed': 'Dicetak',
+        'approved': 'Diluluskan',
+        'rejected': 'Ditolak',
+        'draft': 'Draf',
+        'qr permit validated': 'Permit QR Disahkan'
+    };
+
+    for (const key of Object.keys(statusMap)) {
+        if (s.includes(key) || key.includes(s)) {
+            return statusMap[key];
+        }
+    }
+    return status;
+}
+
+export function getRemarkBm(remark) {
+    if (!remark) return remark;
+    const r = remark.toLowerCase().trim();
+    const remarkMap = {
+        'application approved by clerk via email': 'Permohonan diluluskan oleh kerani melalui e-mel',
+        'application approved by officer via email': 'Permohonan diluluskan oleh pegawai melalui e-mel',
+        'application approved by clerk': 'Permohonan diluluskan oleh kerani',
+        'application verified by importer': 'Permohonan disahkan oleh pengimport',
+        'application rejected by importer': 'Permohonan ditolak oleh pengimport',
+        'all permits have completed processing': 'Semua permit telah selesai diproses',
+        'user reapply the consignment': 'Pengguna memohon semula konsainan',
+        'inspection application saved as draft': 'Permohonan pemeriksaan disimpan sebagai draf',
+        'inspection application draft updated': 'Draf permohonan pemeriksaan dikemas kini',
+        'inspection application submitted': 'Permohonan pemeriksaan dihantar',
+        'inspection application deleted': 'Permohonan pemeriksaan dipadam',
+        'all inspection item are accepted': 'Semua item pemeriksaan diterima',
+        'all inspection items processed': 'Semua item pemeriksaan telah diproses',
+        'application is ready to be paid': 'Permohonan sedia untuk dibayar',
+        'all permits under this application have been completed': 'Semua permit di bawah permohonan ini telah selesai',
+        'officer verification completed': 'Pengesahan Pegawai Selesai',
+        'fully processed': 'Selesai Diproses'
+    };
+
+    for (const key of Object.keys(remarkMap)) {
+        if (r.includes(key)) {
+            return remarkMap[key]; // Return standard translation
+        }
+    }
+    return remark; // Return original if custom (like a custom rejection reason)
 }
 
 function defaultIcon() {

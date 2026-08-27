@@ -134,7 +134,7 @@
                         <ul class="slide-menu child1">
                             <li class="slide">
                                 <a href="{{ route('public.verifyapplication') }}" class="side-menu__item"
-                                    id="toReviewCount" data-bm="Untuk Disemak" data-en="To Review">To Review</a>
+                                    id="toReviewCount"><span data-bm="Untuk Disemak" data-en="To Review">To Review</span></a>
                             </li>
                             <li class="slide">
                                 <a href="/public/agent_list" class="side-menu__item" data-en="Representative List"

@@ -154,25 +154,14 @@ class InspectionController extends Controller
         return $pdf->download('inspection_certificates_' . date('d_m_Y_H_i_s') . '.pdf');
     }
 
-    private function badge($color, $label, $time, $user, $id)
+    private function bilingualBadge($color, $en, $bm, $time, $user, $id)
     {
         return '
-        <span class="badge bg-' .
-            $color .
-            ' fs-12 p-1 activityLog"  data-log = ' .
-            $id .
-            '
-         >' .
-            $label .
-            '</span>
-        <br class = "mt-1">
-        <small class="text-muted">at ' .
-            $time .
-            '</small><br>
-        <small class="text-muted">by ' .
-            e($user) .
-            '</small>
-    ';
+        <span class="badge bg-' . $color . ' fs-12 p-1 activityLog" data-log="' . $id . '" data-en="' . $en . '" data-bm="' . $bm . '">' . $en . '</span>
+        <br class="mt-1">
+        <small class="text-muted"><span data-en="at" data-bm="pada">at</span> ' . $time . '</small><br>
+        <small class="text-muted"><span data-en="by" data-bm="oleh">by</span> ' . e($user) . '</small>
+        ';
     }
 
     public function showAllInspectionList()
@@ -189,49 +178,70 @@ class InspectionController extends Controller
         $type = authUser()['type'];
         $query = $this->getFilteredInspectionQuery(request());
 
+        // Bilingual mappings for status labels
+        $statusTranslations = [
+            'pending'                       => ['en' => 'Pending', 'bm' => 'Menunggu'],
+            'rejected'                      => ['en' => 'Rejected', 'bm' => 'Ditolak'],
+            'not approved'                  => ['en' => 'Not Approved', 'bm' => 'Tidak Diluluskan'],
+            'accepted'                      => ['en' => 'Accepted', 'bm' => 'Diterima'],
+            'officer verification completed' => ['en' => 'Officer Verification Completed', 'bm' => 'Pengesahan Pegawai Selesai'],
+            'clerk verified'                => ['en' => 'Clerk Verified', 'bm' => 'Disahkan Kerani'],
+            'awaiting approval'             => ['en' => 'Awaiting approval', 'bm' => 'Menunggu Kelulusan'],
+            'draft'                         => ['en' => 'Draft', 'bm' => 'Draf'],
+            'clerk review in-progress'      => ['en' => 'Clerk review in-progress', 'bm' => 'Semakan Kerani Dalam Proses'],
+            'wait for company approval'     => ['en' => 'Wait for company approval', 'bm' => 'Menunggu Kelulusan Syarikat'],
+        ];
+
+        // Bilingual mappings for permit status tooltips
+        $permitStatusTranslations = [
+            'processing'          => ['en' => 'processing', 'bm' => 'Sedang Diproses'],
+            'pending for payment' => ['en' => 'pending for payment', 'bm' => 'Menunggu Bayaran'],
+            'rejected'            => ['en' => 'rejected', 'bm' => 'Ditolak'],
+            'paid'                => ['en' => 'paid', 'bm' => 'Telah Dibayar'],
+        ];
+
         $datatable = DataTables::eloquent($query)
             ->addIndexColumn()
             ->addColumn('importer', fn($row) => $row->importer->fullname ?? '-')
             ->addColumn('exporter', fn($row) => $row->exporter->name ?? '-')
-            ->addColumn('status', function ($row) {
+            ->addColumn('status', function ($row) use ($statusTranslations) {
                 $status = strtolower($row->status ?? 'pending');
 
                 $latestLog = $row->latestLog;
                 $id = $row->application_id;
-
                 $latestTime = $latestLog?->updated_at?->format('d M Y, h:i A') ?? '-';
-
                 $causerName = $latestLog?->causer?->fullname ?? '-';
 
-                return match (true) {
-                    str_contains($status, 'pending') => $this->badge('warning', 'Pending', $latestTime, $causerName, $id),
+                // Find matching translation key
+                $matchedKey = null;
+                foreach ($statusTranslations as $key => $trans) {
+                    if (str_contains($status, $key)) {
+                        $matchedKey = $key;
+                        break;
+                    }
+                }
 
-                    str_contains($status, 'rejected') => $this->badge('danger', 'Rejected', $latestTime, $causerName, $id),
+                if ($matchedKey) {
+                    $en = $statusTranslations[$matchedKey]['en'];
+                    $bm = $statusTranslations[$matchedKey]['bm'];
+                    $color = match ($matchedKey) {
+                        'pending'     => 'warning',
+                        'rejected', 'not approved' => 'danger',
+                        'accepted', 'officer verification completed', 'awaiting approval', 'draft', 'clerk review in-progress', 'wait for company approval' => 'success',
+                        'clerk verified' => 'info',
+                        default => 'secondary',
+                    };
+                    return $this->bilingualBadge($color, $en, $bm, $latestTime, $causerName, $id);
+                }
 
-                    str_contains($status, 'not approved') => $this->badge('danger', 'Not Approved', $latestTime, $causerName, $id),
-
-                    str_contains($status, 'accepted') => $this->badge('success', 'Accepted', $latestTime, $causerName, $id),
-
-                    str_contains($status, 'officer verification completed') => $this->badge('success', 'Officer Verification Completed', $latestTime, $causerName, $id),
-
-                    str_contains($status, 'clerk verified') => $this->badge('info', 'Clerk Verified', $latestTime, $causerName, $id),
-
-                    str_contains($status, 'clerk review in-progress') => '<span class="badge bg-secondary fs-12 p-1 activityLog" data-log="' . $id . '">Clerk review in-progress</span>',
-
-                    str_contains($status, 'draft') => '<span class="badge bg-secondary fs-12 p-1 activityLog" data-log="' . $id . '">Draft</span>',
-
-                    default => '<span class="badge bg-secondary fs-12 p-1  activityLog"  data-log = "' . $id . '">' . ucfirst($status) . '</span>',
-                };
+                return '<span class="badge bg-secondary fs-12 p-1  activityLog"  data-log = "' . $id . '">' . ucfirst($status) . '</span>';
             })
-
-            ->addColumn('inspection_status', function ($row) {
+            ->addColumn('inspection_status', function ($row) use ($permitStatusTranslations) {
                 // Map statuses to colors
                 $statusColors = [
                     'processing' => 'bg-info', // blue
-
                     'pending for payment' => 'bg-warning', // green
                     'rejected' => 'bg-danger', // red
-                    // 'completed'  => 'bg-success', // green
                     'paid' => 'bg-success', // green
                 ];
 
@@ -263,17 +273,19 @@ class InspectionController extends Controller
                 $boxesHtml = '';
                 foreach ($statusColors as $status => $color) {
                     $count = $statusCounts[$status] ?? 0;
-                    $boxesHtml .=
-                        '<div class="badge ' .
-                        $color .
-                        ' text-white text-center"  data-bs-toggle="tooltip"
-                            data-bs-placement="top" title="' .
-                        $status .
-                        '"
-                           style="height:20px; width:20px; display:inline-flex; align-items:center; justify-content:center; margin-right:5px;">
-                           ' .
-                        $count .
-                        '
+                    $trans = $permitStatusTranslations[$status] ?? ['en' => $status, 'bm' => $status];
+                    $en = $trans['en'];
+                    $bm = $trans['bm'];
+
+                    $boxesHtml .= '<div class="badge ' . $color . ' text-white text-center" 
+                            data-bs-toggle="tooltip" 
+                            data-bs-placement="top" 
+                            data-en="' . $count . '" 
+                            data-title-en="' . $en . '" 
+                            data-title-bm="' . $bm . '" 
+                            title="' . $en . '" 
+                            style="height:20px; width:20px; display:inline-flex; align-items:center; justify-content:center; margin-right:5px;">
+                            ' . $count . '
                        </div>';
                 }
 

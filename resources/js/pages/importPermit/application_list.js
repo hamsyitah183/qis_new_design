@@ -72,91 +72,6 @@ function getText(key) {
 }
 
 // ---------------------------------------------------------------
-// DataTable language strings (bilingual)
-// ---------------------------------------------------------------
-function getDataTableLanguage() {
-    const lang = getLang();
-    if (lang === 'bm') {
-        return {
-            "sEmptyTable": "Tiada entri",
-            "sInfo": "Menunjukkan _START_ hingga _END_ daripada _TOTAL_ entri",
-            "sInfoEmpty": "Menunjukkan 0 hingga 0 daripada 0 entri",
-            "sInfoFiltered": "(ditapis daripada _MAX_ jumlah entri)",
-            "sInfoPostFix": "",
-            "sInfoThousands": ",",
-            "sLengthMenu": "Papar _MENU_ entri",
-            "sLoadingRecords": "Memuatkan...",
-            "sProcessing": "Sedang diproses...",
-            "sSearch": "Cari:",
-            "sZeroRecords": "Tiada rekod yang sepadan",
-            
-            "oAria": {
-                "sSortAscending": ": aktifkan untuk menyusun lajur menaik",
-                "sSortDescending": ": aktifkan untuk menyusun lajur menurun"
-            },
-            "select": {
-                "rows": {
-                    "_": "%d baris dipilih",
-                    "0": "",
-                    "1": "1 baris dipilih"
-                }
-            },
-            "buttons": {
-                "copy": "Salin",
-                "copyTitle": "Salin ke papan klip",
-                "copyKeys": "Tekan Ctrl atau Cmd + C untuk menyalin data jadual ke papan klip sistem. <br /><br />Untuk membatalkan, klik mesej ini atau tekan Esc.",
-                "copySuccess": {
-                    "_": "%d baris disalin",
-                    "1": "1 baris disalin"
-                },
-                "print": "Cetak"
-            }
-        };
-    }
-    // Default English
-    return {
-        "sEmptyTable": "No data available in table",
-        "sInfo": "Showing _START_ to _END_ of _TOTAL_ entries",
-        "sInfoEmpty": "Showing 0 to 0 of 0 entries",
-        "sInfoFiltered": "(filtered from _MAX_ total entries)",
-        "sInfoPostFix": "",
-        "sInfoThousands": ",",
-        "sLengthMenu": "Show _MENU_ entries",
-        "sLoadingRecords": "Loading...",
-        "sProcessing": "Processing...",
-        "sSearch": "Search:",
-        "sZeroRecords": "No matching records found",
-        "oPaginate": {
-            "sFirst": "First",
-            "sLast": "Last",
-            "sNext": "Next",
-            "sPrevious": "Previous"
-        },
-        "oAria": {
-            "sSortAscending": ": activate to sort column ascending",
-            "sSortDescending": ": activate to sort column descending"
-        },
-        "select": {
-            "rows": {
-                "_": "%d rows selected",
-                "0": "",
-                "1": "1 row selected"
-            }
-        },
-        "buttons": {
-            "copy": "Copy",
-            "copyTitle": "Copy to clipboard",
-            "copyKeys": "Press Ctrl or Cmd + C to copy table data to system clipboard. <br /><br />To cancel, click this message or press Esc.",
-            "copySuccess": {
-                "_": "%d rows copied",
-                "1": "1 row copied"
-            },
-            "print": "Print"
-        }
-    };
-}
-
-// ---------------------------------------------------------------
 // DataTable instances
 // ---------------------------------------------------------------
 let applicationListTable;
@@ -183,13 +98,9 @@ async function createDataTables() {
         agentApplicationListTable.destroy();
         agentApplicationListTable = null;
     }
-
-    const lang = getDataTableLanguage();
-
     applicationListTable = new DataTable("#applicationListTable", {
         processing: true,
         serverSide: true,
-        language: lang,
         ajax: {
             url: "/application/list/data",
             data: function (d) {
@@ -234,11 +145,9 @@ async function createDataTables() {
         initTooltips();
         applyTranslations(document.querySelector('#applicationListTable_wrapper'));
     });
-
     reviewApplicationListTable = new DataTable("#reviewApplicationListTable", {
         processing: true,
         serverSide: true,
-        language: lang,
         ajax: "/application/review/list/data",
         columns: [
             {
@@ -271,11 +180,9 @@ async function createDataTables() {
         initTooltips();
         applyTranslations(document.querySelector('#reviewApplicationListTable_wrapper'));
     });
-
     agentApplicationListTable = new DataTable("#agentApplicationListTable", {
         processing: true,
         serverSide: true,
-        language: lang,
         ajax: "/application/agent/list/data",
         columns: [
             {

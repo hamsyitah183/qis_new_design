@@ -74,13 +74,16 @@ export function destroySelect2(selector) {
  */
 export function autoInitFilterSelect2() {
     try {
+        const lang = localStorage.getItem("qis_lang") || "en";
+        const prefix = lang === 'bm' ? "Pilih" : "Select";
+
         const selects = jq(".filter-dropdown select.select2");
         selects.each(function () {
             let placeholder = jq(this).data("placeholder");
             if (!placeholder) {
                 // Try to find the label for this select to use as placeholder
                 const label = jq(this).closest("li, div").find("label").text();
-                placeholder = label ? `Select ${label}` : "Select...";
+                placeholder = label ? `${prefix} ${label}` : `${prefix}...`;
             }
             setupSelect2(this, placeholder);
             // Clear default selection so it doesn't auto-select the first option in multi-select mode
@@ -90,3 +93,21 @@ export function autoInitFilterSelect2() {
         console.error("Select2 Auto Init Error:", e.message);
     }
 }
+
+// Re-init placeholders dynamically when language changes
+document.addEventListener("lang-changed", function() {
+    try {
+        const selects = jq(".filter-dropdown select.select2");
+        selects.each(function() {
+            if (jq(this).data("select2")) {
+                jq(this).select2('destroy');
+                // Remove data-placeholder so it gets recalculated with the new label
+                jq(this).removeData('placeholder');
+                jq(this).removeAttr('data-placeholder');
+            }
+        });
+        autoInitFilterSelect2();
+    } catch (e) {
+        console.error("Error re-initializing select2 on lang change:", e.message);
+    }
+});

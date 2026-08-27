@@ -43,10 +43,6 @@ $(document).ready(function () {
             },
         ],
         order: [[1, "asc"]],
-        language: {
-            emptyTable: "No branches found.",
-            zeroRecords: "No matching branches.",
-        },
     });
 
     // ─── Add Branch ──────────────────────────────────────────────────────

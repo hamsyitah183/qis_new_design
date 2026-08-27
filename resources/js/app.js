@@ -2,6 +2,7 @@ import "./bootstrap";
 import { initInactivityTimeout } from "./inactivity_timeout";
 import { IconHome, IconUser } from "tabler-icons";
 import "@fortawesome/fontawesome-free/css/all.min.css";
+import { getRemarkBm, getStatusBm } from "./appLog";
 
 import $ from "jquery";
 window.$ = window.jQuery = $; // make it global
@@ -19,6 +20,131 @@ import ApexCharts from "apexcharts";
 
 // Make it globally available
 window.ApexCharts = ApexCharts;
+
+import DataTable from "datatables.net-bs5";
+window.DataTable = DataTable;
+
+export function getRoleBm(role) {
+    const rolesMap = {
+        "admin": "Pentadbir",
+        "boundary officer": "Pegawai Sempadan",
+        "clerk": "Kerani",
+        "finance": "Kewangan",
+        "officer": "Pegawai",
+        "strict-clerk-tester": "Penguji-Kerani-Ketat",
+        "strict-officer-tester": "Penguji-Pegawai-Ketat",
+        "superadmin": "Pentadbir Sistem",
+    };
+    return rolesMap[role.toLowerCase()] || role;
+}
+
+export function getPermissionBm(permission) {
+    const permMap = {
+        "approve application": "luluskan permohonan",
+        "approve permit": "luluskan permit",
+        "approve public user": "luluskan pengguna awam",
+        "control panel": "panel kawalan",
+        "create internal user": "cipta pengguna dalaman",
+        "create public user": "cipta pengguna awam",
+        "delete application": "padam permohonan",
+        "delete internal user": "padam pengguna dalaman",
+        "delete public user": "padam pengguna awam",
+        "generate financial report": "jana laporan kewangan",
+        "generate operational report": "jana laporan operasi",
+        "generate performance report": "jana laporan prestasi",
+        "manage announcement": "urus pengumuman",
+        "manage consignment item": "urus item konsainan",
+        "manage import permit item": "urus item permit import",
+        "manage role and permission": "urus peranan dan kebenaran",
+        "manage settings": "urus tetapan",
+        "print permit": "cetak permit",
+        "read activity log": "papar log aktiviti",
+        "read application": "papar permohonan",
+        "read internal user": "papar pengguna dalaman",
+        "read public user": "papar pengguna awam",
+        "scan permit": "imbas permit",
+        "update internal user": "kemas kini pengguna dalaman",
+        "update public user": "kemas kini pengguna awam",
+        "view dashboard": "lihat papan pemuka",
+        "view exporter list": "papar senarai pengeksport",
+        "view importer list": "papar senarai pengimport",
+        "view notification": "papar notifikasi",
+        "view orders invoices": "papar pesanan dan invois",
+        "more...": "lebih..."
+    };
+    return permMap[permission.toLowerCase()] || permission;
+}
+
+// Set up global DataTables bilingual defaults
+function getGlobalDataTableLanguage() {
+    return {
+        "sEmptyTable": "<span data-en='No data available in table' data-bm='Tiada data tersedia dalam jadual'>No data available in table</span>",
+        "sInfo": "<span data-en='Showing' data-bm='Menunjukkan'>Showing</span> _START_ <span data-en='to' data-bm='hingga'>to</span> _END_ <span data-en='of' data-bm='daripada'>of</span> _TOTAL_ <span data-en='entries' data-bm='entri'>entries</span>",
+        "sInfoEmpty": "<span data-en='Showing 0 to 0 of 0 entries' data-bm='Menunjukkan 0 hingga 0 daripada 0 entri'>Showing 0 to 0 of 0 entries</span>",
+        "sInfoFiltered": "<span data-en='(filtered from _MAX_ total entries)' data-bm='(ditapis daripada _MAX_ jumlah entri)'>(filtered from _MAX_ total entries)</span>",
+        "sLengthMenu": "<span data-en='Show' data-bm='Papar'>Show</span> _MENU_ <span data-en='entries' data-bm='entri'>entries</span>",
+        "sLoadingRecords": "<span data-en='Loading...' data-bm='Memuatkan...'>Loading...</span>",
+        "sProcessing": "<span data-en='Processing...' data-bm='Sedang diproses...'>Processing...</span>",
+        "sSearch": "<span data-en='Search:' data-bm='Cari:'>Search:</span>",
+        "sZeroRecords": "<span data-en='No matching records found' data-bm='Tiada rekod yang sepadan'>No matching records found</span>",
+        "oPaginate": {
+            "sFirst": "First",
+            "sLast": "Last",
+            "sNext": "Next",
+            "sPrevious": "Previous"
+        },
+        "oAria": {
+            "sSortAscending": "<span data-en=': activate to sort column ascending' data-bm=': aktifkan untuk menyusun lajur menaik'>: activate to sort column ascending</span>",
+            "sSortDescending": "<span data-en=': activate to sort column descending' data-bm=': aktifkan untuk menyusun lajur menurun'>: activate to sort column descending</span>"
+        },
+        "select": {
+            "rows": {
+                "_": "<span data-en='%d rows selected' data-bm='%d baris dipilih'>%d rows selected</span>",
+                "0": "",
+                "1": "<span data-en='1 row selected' data-bm='1 baris dipilih'>1 row selected</span>"
+            },
+            "print": "<span data-en='Print' data-bm='Cetak'>Print</span>"
+        }
+    };
+}
+
+if ($.fn.dataTable) {
+    $.extend(true, $.fn.dataTable.defaults, {
+        language: getGlobalDataTableLanguage()
+    });
+}
+
+$(document).on('draw.dt', function(e, settings) {
+    if (typeof applyTranslations === 'function' && settings.nTableWrapper) {
+        applyTranslations(settings.nTableWrapper);
+    }
+});
+
+// Forcefully translate DataTables pagination buttons when language changes
+document.addEventListener("lang-changed", function(e) {
+    const lang = e.detail.lang;
+
+    // Apply unified translation sweep globally
+    if (typeof applyTranslations === 'function') {
+        applyTranslations(document);
+    }
+
+    setTimeout(() => {
+        const dtLabels = {
+            en: { first: "First", last: "Last", next: "Next", previous: "Previous" },
+            bm: { first: "Pertama", last: "Terakhir", next: "Seterusnya", previous: "Sebelumnya" }
+        };
+        const t = dtLabels[lang] || dtLabels.en;
+
+        document.querySelectorAll(".page-link").forEach(el => {
+            const txt = el.textContent.trim();
+            if (txt.includes("First") || txt.includes("Pertama")) el.textContent = t.first;
+            if (txt.includes("Previous") || txt.includes("Sebelumnya")) el.textContent = t.previous;
+            if (txt.includes("Next") || txt.includes("Seterusnya")) el.textContent = t.next;
+            if (txt.includes("Last") || txt.includes("Terakhir")) el.textContent = t.last;
+        });
+    }, 50);
+});
 
 $("#redirectProfile").on("click", function (e) {
     e.preventDefault();
@@ -342,6 +468,8 @@ function languange() {
             try {
                 localStorage.setItem(STORAGE_KEY, lang);
             } catch (e) {}
+
+            document.dispatchEvent(new CustomEvent("lang-changed", { detail: { lang: lang } }));
         }
 
         buttons.forEach(function (btn) {
@@ -391,6 +519,50 @@ export function applyTranslations(container) {
             el.textContent = text;
         }
     });
+
+    container.querySelectorAll(".ipv-role").forEach(el => {
+        const text = el.getAttribute("data-original") || el.textContent.trim();
+        if (!el.hasAttribute("data-original")) el.setAttribute("data-original", text);
+        el.textContent = lang === "bm" ? getRoleBm(text) : text;
+    });
+
+    container.querySelectorAll(".ipv-permission, .ipv-more").forEach(el => {
+        const text = el.getAttribute("data-original") || el.textContent.trim();
+        if (!el.hasAttribute("data-original")) el.setAttribute("data-original", text);
+        el.textContent = lang === "bm" ? getPermissionBm(text) : text;
+    });
+
+    // Translating timeline items without data attributes
+    container.querySelectorAll(".ipv-timeline-title").forEach(el => {
+        const text = el.getAttribute("data-original") || el.textContent.trim();
+        if (!el.hasAttribute("data-original")) el.setAttribute("data-original", text);
+        el.textContent = lang === "bm" ? getStatusBm(text) : text;
+    });
+
+    container.querySelectorAll(".ipv-timeline-desc").forEach(el => {
+        const text = el.getAttribute("data-original") || el.textContent.trim();
+        if (!el.hasAttribute("data-original")) el.setAttribute("data-original", text);
+        el.textContent = lang === "bm" ? getRemarkBm(text) : text;
+    });
+
+    // Forcefully translate DataTables pagination buttons by matching their text content
+    // Use setTimeout because DataTables v2 might render pagination *after* draw.dt fires.
+    setTimeout(() => {
+        const dtLabels = {
+            en: { first: "First", last: "Last", next: "Next", previous: "Previous" },
+            bm: { first: "Pertama", last: "Terakhir", next: "Seterusnya", previous: "Sebelumnya" }
+        };
+        const t = dtLabels[lang] || dtLabels.en;
+
+        container.querySelectorAll(".page-link").forEach(el => {
+            // Check includes() just to be safe against spaces or non-breaking chars
+            const txt = el.textContent.trim();
+            if (txt.includes("First") || txt.includes("Pertama")) el.textContent = t.first;
+            if (txt.includes("Previous") || txt.includes("Sebelumnya")) el.textContent = t.previous;
+            if (txt.includes("Next") || txt.includes("Seterusnya")) el.textContent = t.next;
+            if (txt.includes("Last") || txt.includes("Terakhir")) el.textContent = t.last;
+        });
+    }, 50);
 }
 
 function updateWizardButtons(lang) {

@@ -703,7 +703,7 @@ function renderStageStepper() {
     const noteEl = document.getElementById('ipvReturnedNote');
     if (key === 'returned') {
         noteEl.classList.remove('d-none');
-        noteEl.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i> ${escapeHtml(APPLICATION.returned_reason || 'Application returned for correction.')}`;
+        noteEl.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i> ${APPLICATION.returned_reason ? escapeHtml(APPLICATION.returned_reason) : '<span data-en="Application returned for correction." data-bm="Permohonan dikembalikan untuk pembetulan.">Application returned for correction.</span>'}`;
     } else {
         noteEl.classList.add('d-none');
     }

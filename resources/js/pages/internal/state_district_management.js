@@ -42,15 +42,11 @@ $(document).ready(function () {
                 render: (data, type, row) =>
                     `<button class="btn btn-sm btn-primary manage-state-btn"
                         data-id="${row.id}" data-name="${row.name}">
-                        <i class="ri-edit-line me-1"></i>Manage
+                        <i class="ri-edit-line me-1"></i><span data-en="Manage" data-bm="Urus">Manage</span>
                     </button>`,
             },
         ],
         order: [[1, "asc"]],
-        language: {
-            emptyTable: "No states found.",
-            zeroRecords: "No matching states found.",
-        },
     });
 
     // Manage button  
@@ -112,10 +108,6 @@ function openDistrictModal() {
             },
         ],
         order: [[1, "asc"]],
-        language: {
-            emptyTable: "No districts found for this state.",
-            zeroRecords: "No matching districts.",
-        },
     });
 
     // Delete button

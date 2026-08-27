@@ -218,8 +218,10 @@ class ApplicationController extends Controller
             'accepted'                      => ['en' => 'Accepted', 'bm' => 'Diterima'],
             'officer verification completed' => ['en' => 'Officer Verification Completed', 'bm' => 'Pengesahan Pegawai Selesai'],
             'clerk verified'                => ['en' => 'Clerk Verified', 'bm' => 'Disahkan Kerani'],
-
-            // Add any other statuses you have
+            'awaiting approval'             => ['en' => 'Awaiting approval', 'bm' => 'Menunggu Kelulusan'],
+            'draft'                         => ['en' => 'Draft', 'bm' => 'Draf'],
+            'clerk review in-progress'      => ['en' => 'Clerk review in-progress', 'bm' => 'Semakan Kerani Dalam Proses'],
+            'wait for company approval'     => ['en' => 'Wait for company approval', 'bm' => 'Menunggu Kelulusan Syarikat'],
         ];
 
         // Bilingual mappings for permit status tooltips
@@ -256,7 +258,7 @@ class ApplicationController extends Controller
                     $color = match ($matchedKey) {
                         'pending'     => 'warning',
                         'rejected', 'not approved' => 'danger',
-                        'accepted', 'officer verification completed' => 'success',
+                        'accepted', 'officer verification completed', 'awaiting approval', 'draft', 'clerk review in-progress', 'wait for company approval' => 'success',
                         'clerk verified' => 'info',
                         default => 'secondary',
                     };
@@ -296,13 +298,15 @@ class ApplicationController extends Controller
                     $en = $trans['en'];
                     $bm = $trans['bm'];
 
-                    // Tooltip (title) is bilingual via data-en/data-bm;
+                    // Tooltip (title) is bilingual via data-title-en/data-title-bm;
                     // the visible text is just the numeric count.
                     $boxesHtml .= '<div class="badge ' . $color . ' text-white text-center" 
                             data-bs-toggle="tooltip" 
                             data-bs-placement="top" 
-                            title="' . $status . '" 
-                        
+                            data-en="' . $count . '" 
+                            data-title-en="' . $en . '" 
+                            data-title-bm="' . $bm . '" 
+                            title="' . $en . '" 
                             style="height:20px; width:20px; display:inline-flex; align-items:center; justify-content:center; margin-right:5px;">
                             ' . $count . '
                        </div>';
@@ -334,8 +338,8 @@ class ApplicationController extends Controller
         return '
         <span class="badge bg-' . $color . ' fs-12 p-1 activityLog" data-log="' . $id . '" data-en="' . $en . '" data-bm="' . $bm . '">' . $en . '</span>
         <br class="mt-1">
-        <small class="text-muted">at ' . $time . '</small><br>
-        <small class="text-muted">by ' . e($user) . '</small>
+        <small class="text-muted"><span data-en="at" data-bm="pada">at</span> ' . $time . '</small><br>
+        <small class="text-muted"><span data-en="by" data-bm="oleh">by</span> ' . e($user) . '</small>
     ';
     }
 
@@ -406,9 +410,9 @@ class ApplicationController extends Controller
 
             ->addColumn('application_type', function ($row) {
                 return match ($row->application_source) {
-                    'import_permit' => '<span class="badge bg-info">Import Permit</span>',
-                    'consignment' => '<span class="badge bg-warning">Consignment</span>',
-                    'inspection' => '<span class="badge bg-success">Inspection</span>',
+                    'import_permit' => '<span class="badge bg-info" data-en="Import Permit" data-bm="Permit Import">Import Permit</span>',
+                    'consignment' => '<span class="badge bg-warning" data-en="Consignment Certificate" data-bm="Sijil Konsainan">Consignment Certificate</span>',
+                    'inspection' => '<span class="badge bg-success" data-en="Inspection Certificate" data-bm="Sijil Pemeriksaan">Inspection Certificate</span>',
                 };
             })
 
@@ -427,19 +431,52 @@ class ApplicationController extends Controller
             ->addColumn('status', function ($row) {
                 $status = strtolower($row->status ?? 'pending');
 
-                return match (true) {
-                    str_contains($status, 'pending') => '<span class="badge bg-warning fs-11 p-2">Pending</span>',
-                    str_contains($status, 'rejected') => '<span class="badge bg-danger fs-11 p-2">Rejected</span>',
-                    str_contains($status, 'approved'), str_contains($status, 'success') => '<span class="badge bg-success fs-11 p-2">Approved</span>',
-                    default => '<span class="badge bg-secondary fs-11 p-2">' . ucfirst($status) . '</span>',
-                };
+                $statusTranslations = [
+                    'pending'                       => ['en' => 'Pending', 'bm' => 'Menunggu'],
+                    'rejected'                      => ['en' => 'Rejected', 'bm' => 'Ditolak'],
+                    'not approved'                  => ['en' => 'Not Approved', 'bm' => 'Tidak Diluluskan'],
+                    'accepted'                      => ['en' => 'Accepted', 'bm' => 'Diterima'],
+                    'officer verification completed' => ['en' => 'Officer Verification Completed', 'bm' => 'Pengesahan Pegawai Selesai'],
+                    'clerk verified'                => ['en' => 'Clerk Verified', 'bm' => 'Disahkan Kerani'],
+                    'awaiting approval'             => ['en' => 'Awaiting approval', 'bm' => 'Menunggu Kelulusan'],
+                    'draft'                         => ['en' => 'Draft', 'bm' => 'Draf'],
+                    'clerk review in-progress'      => ['en' => 'Clerk review in-progress', 'bm' => 'Semakan Kerani Dalam Proses'],
+                    'wait for company approval'     => ['en' => 'Wait for company approval', 'bm' => 'Menunggu Kelulusan Syarikat'],
+                    'approved'                      => ['en' => 'Approved', 'bm' => 'Diluluskan'],
+                    'success'                       => ['en' => 'Success', 'bm' => 'Berjaya'],
+                    'submitted'                     => ['en' => 'Submitted', 'bm' => 'Dihantar'],
+                ];
+
+                $matchedKey = null;
+                foreach ($statusTranslations as $key => $trans) {
+                    if (str_contains($status, $key)) {
+                        $matchedKey = $key;
+                        break;
+                    }
+                }
+
+                if ($matchedKey) {
+                    $en = $statusTranslations[$matchedKey]['en'];
+                    $bm = $statusTranslations[$matchedKey]['bm'];
+                    
+                    $color = match (true) {
+                        str_contains($matchedKey, 'pending') => 'warning',
+                        str_contains($matchedKey, 'rejected') => 'danger',
+                        str_contains($matchedKey, 'approved') || str_contains($matchedKey, 'success') => 'success',
+                        default => 'secondary',
+                    };
+                    
+                    return '<span class="badge bg-' . $color . ' fs-11 p-2" data-en="' . $en . '" data-bm="' . $bm . '">' . $en . '</span>';
+                }
+
+                return '<span class="badge bg-secondary fs-11 p-2">' . ucfirst($status) . '</span>';
             })
 
             ->addColumn('action', function ($row) {
                 return '<a class="btn btn-sm btn-primary viewApplication"
                             href="' .
                     $row->url .
-                    '">
+                    '" data-en="View" data-bm="Lihat">
                             View
                         </a>';
             })
@@ -486,9 +523,9 @@ class ApplicationController extends Controller
 
             ->addColumn('application_type', function ($row) {
                 return match ($row->application_source) {
-                    'import_permit' => '<span class="badge bg-info">Import Permit</span>',
-                    'consignment' => '<span class="badge bg-warning">Consignment</span>',
-                    'inspection' => '<span class="badge bg-success">Inspection</span>',
+                    'import_permit' => '<span class="badge bg-info" data-en="Import Permit" data-bm="Permit Import">Import Permit</span>',
+                    'consignment' => '<span class="badge bg-warning" data-en="Consignment Certificate" data-bm="Sijil Konsainan">Consignment Certificate</span>',
+                    'inspection' => '<span class="badge bg-success" data-en="Inspection Certificate" data-bm="Sijil Pemeriksaan">Inspection Certificate</span>',
                 };
             })
 
@@ -507,19 +544,52 @@ class ApplicationController extends Controller
             ->addColumn('status', function ($row) {
                 $status = strtolower($row->status ?? 'pending');
 
-                return match (true) {
-                    str_contains($status, 'pending') => '<span class="badge bg-warning fs-11 p-2">Pending</span>',
-                    str_contains($status, 'rejected') => '<span class="badge bg-danger fs-11 p-2">Rejected</span>',
-                    str_contains($status, 'approved'), str_contains($status, 'success') => '<span class="badge bg-success fs-11 p-2">Approved</span>',
-                    default => '<span class="badge bg-secondary fs-11 p-2">' . ucfirst($status) . '</span>',
-                };
+                $statusTranslations = [
+                    'pending'                       => ['en' => 'Pending', 'bm' => 'Menunggu'],
+                    'rejected'                      => ['en' => 'Rejected', 'bm' => 'Ditolak'],
+                    'not approved'                  => ['en' => 'Not Approved', 'bm' => 'Tidak Diluluskan'],
+                    'accepted'                      => ['en' => 'Accepted', 'bm' => 'Diterima'],
+                    'officer verification completed' => ['en' => 'Officer Verification Completed', 'bm' => 'Pengesahan Pegawai Selesai'],
+                    'clerk verified'                => ['en' => 'Clerk Verified', 'bm' => 'Disahkan Kerani'],
+                    'awaiting approval'             => ['en' => 'Awaiting approval', 'bm' => 'Menunggu Kelulusan'],
+                    'draft'                         => ['en' => 'Draft', 'bm' => 'Draf'],
+                    'clerk review in-progress'      => ['en' => 'Clerk review in-progress', 'bm' => 'Semakan Kerani Dalam Proses'],
+                    'wait for company approval'     => ['en' => 'Wait for company approval', 'bm' => 'Menunggu Kelulusan Syarikat'],
+                    'approved'                      => ['en' => 'Approved', 'bm' => 'Diluluskan'],
+                    'success'                       => ['en' => 'Success', 'bm' => 'Berjaya'],
+                    'submitted'                     => ['en' => 'Submitted', 'bm' => 'Dihantar'],
+                ];
+
+                $matchedKey = null;
+                foreach ($statusTranslations as $key => $trans) {
+                    if (str_contains($status, $key)) {
+                        $matchedKey = $key;
+                        break;
+                    }
+                }
+
+                if ($matchedKey) {
+                    $en = $statusTranslations[$matchedKey]['en'];
+                    $bm = $statusTranslations[$matchedKey]['bm'];
+                    
+                    $color = match (true) {
+                        str_contains($matchedKey, 'pending') => 'warning',
+                        str_contains($matchedKey, 'rejected') => 'danger',
+                        str_contains($matchedKey, 'approved') || str_contains($matchedKey, 'success') => 'success',
+                        default => 'secondary',
+                    };
+                    
+                    return '<span class="badge bg-' . $color . ' fs-11 p-2" data-en="' . $en . '" data-bm="' . $bm . '">' . $en . '</span>';
+                }
+
+                return '<span class="badge bg-secondary fs-11 p-2">' . ucfirst($status) . '</span>';
             })
 
             ->addColumn('action', function ($row) {
                 return '<a class="btn btn-sm btn-primary viewApplication"
                             href="' .
                     $row->url .
-                    '">
+                    '" data-en="View" data-bm="Lihat">
                             View
                         </a>';
             })
@@ -1348,8 +1418,8 @@ class ApplicationController extends Controller
 
         return DataTables::eloquent($query)
             ->addIndexColumn()
-            ->addColumn('country_name', fn($row) => $row->countryInfo->name ?? '-')
-            ->addColumn('registered_by_name', fn($row) => $row->registeredBy->fullname ?? '-')
+            ->addColumn('country_name', fn($row) => $row->countryInfo?->name ?? '-')
+            ->addColumn('registered_by_name', fn($row) => $row->registeredBy?->fullname ?? '-')
             ->make(true);
     }
 
@@ -1381,8 +1451,8 @@ class ApplicationController extends Controller
 
         return DataTables::eloquent($query)
             ->addIndexColumn()
-            ->addColumn('country_name', fn($row) => $row->countryInfo->name ?? '-')
-            ->addColumn('registered_by_name', fn($row) => $row->registeredBy->fullname ?? '-')
+            ->addColumn('country_name', fn($row) => $row->countryInfo?->name ?? '-')
+            ->addColumn('registered_by_name', fn($row) => $row->registeredBy?->fullname ?? '-')
             ->make(true);
     }
 }

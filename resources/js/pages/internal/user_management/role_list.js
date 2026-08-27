@@ -95,6 +95,8 @@ async function role_list() {
 
         roleTable.on("draw.dt", function () {
             initTooltips();
+            const currentLang = localStorage.getItem("qis_lang") || "en";
+            document.dispatchEvent(new CustomEvent("lang-changed", { detail: { lang: currentLang } }));
         });
     }
 
@@ -111,9 +113,9 @@ async function role_list() {
 
         // Build modal content
         const detailsHtml = `
-        <div class="mb-2 fw-bold fs-6">${rowData.name}</div>
-            <p><strong>users:</strong> ${listUser(rowData.user_count)}
-            <p><strong>Permissions:</strong> ${listPermission(
+        <div class="mb-2 fw-bold fs-6"><span class="ipv-role" data-original="${rowData.name}">${rowData.name}</span></div>
+            <p><strong data-en="users:" data-bm="pengguna:">users:</strong> ${listUser(rowData.user_count)}
+            <p><strong data-en="Permissions:" data-bm="Kebenaran:">Permissions:</strong> ${listPermission(
                 rowData.permission_names
             )}
         `;
@@ -122,6 +124,10 @@ async function role_list() {
         $("#roleDetailsContentModal").html(detailsHtml);
 
         initTooltips();
+
+        // Trigger translation
+        const currentLang = localStorage.getItem("qis_lang") || "en";
+        document.dispatchEvent(new CustomEvent("lang-changed", { detail: { lang: currentLang } }));
 
         const modal = new bootstrap.Modal(
             document.getElementById("roleDetailsModal")
@@ -174,7 +180,7 @@ function listPermission(permissions) {
     let permissionHTML = `<div class="d-flex gap-2 flex-wrap">`;
 
     permissions.forEach((permission) => {
-        permissionHTML += `<span class="badge bg-dark-transparent p-1">
+        permissionHTML += `<span class="badge bg-dark-transparent p-1 ipv-permission" data-original="${permission}">
             ${permission}
         </span>`;
     });
@@ -207,7 +213,7 @@ function listUserModal() {
         await new Promise((resolve) => setTimeout(resolve, 300)); // small delay for UX
 
         let html = `
-            <div class="fw-bold mb-2">Assign Users to Role: ${roleName}</div>
+            <div class="fw-bold mb-2"><span data-en="Assign Users to Role:" data-bm="Umpuk Pengguna ke Peranan:">Assign Users to Role:</span> <span class="ipv-role" data-original="${roleName}">${roleName}</span></div>
             <div class="list-group scrollable-grey">
         `;
 
@@ -229,6 +235,10 @@ function listUserModal() {
         html += `</div>`;
 
         $("#userListContainer").html(html);
+
+        // Trigger translation
+        const currentLang = localStorage.getItem("qis_lang") || "en";
+        document.dispatchEvent(new CustomEvent("lang-changed", { detail: { lang: currentLang } }));
 
         Swal.close();
 
@@ -339,10 +349,10 @@ function listPermissionModal() {
 
         // Build modal content with search input
         let html = `
-            <div class="fw-bold mb-2">Permission List for: ${roleName}</div>
+            <div class="fw-bold mb-2"><span data-en="Permission List for:" data-bm="Senarai Kebenaran untuk:">Permission List for:</span> <span class="ipv-role" data-original="${roleName}">${roleName}</span></div>
 
             <!-- Search box -->
-            <input type="text" id="permissionSearch" class="form-control mb-2" placeholder="Search permission...">
+            <input type="text" id="permissionSearch" class="form-control mb-2" placeholder="Search permission..." data-en="Search permission..." data-bm="Cari kebenaran..." data-i18n-attr="placeholder">
 
             <div class="list-group scrollable-grey" style="max-height: 400px; overflow-y: scroll;">
         `;
@@ -357,7 +367,7 @@ function listPermissionModal() {
                         name="permission[]"
                         value="${permission}"
                         ${checked}>
-                    <span>${permission}</span>
+                    <span class="ipv-permission" data-original="${permission}">${permission}</span>
                 </label>
             `;
         });
@@ -365,6 +375,10 @@ function listPermissionModal() {
         html += `</div>`;
 
         $("#permissionListContainer").html(html);
+
+        // Trigger translation
+        const currentLang = localStorage.getItem("qis_lang") || "en";
+        document.dispatchEvent(new CustomEvent("lang-changed", { detail: { lang: currentLang } }));
 
         // Add search functionality
         $("#permissionSearch").on("input", function () {

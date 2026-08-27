@@ -53,19 +53,19 @@
                     </div>
                     <div class="col-xl-4">
                         <strong data-en="Required" data-bm="Wajib">Required:</strong>
-                        <span class="badge bg-{{ $document->is_required ? 'warning' : 'secondary' }}">
+                        <span class="badge bg-{{ $document->is_required ? 'warning' : 'secondary' }}" data-en="{{ $document->is_required ? 'Required' : 'Optional' }}" data-bm="{{ $document->is_required ? 'Wajib' : 'Pilihan' }}">
                             {{ $document->is_required ? 'Required' : 'Optional' }}
                         </span>
                     </div>
                     <div class="col-xl-4">
                         <strong data-en="Requires Expiry" data-bm="Memerlukan Tarikh Luput">Requires Expiry:</strong>
-                        <span class="badge bg-{{ $document->requires_expiry ? 'info' : 'secondary' }}">
+                        <span class="badge bg-{{ $document->requires_expiry ? 'info' : 'secondary' }}" data-en="{{ $document->requires_expiry ? 'Has Expiry' : 'No Expiry' }}" data-bm="{{ $document->requires_expiry ? 'Ada Tarikh Luput' : 'Tiada Tarikh Luput' }}">
                             {{ $document->requires_expiry ? 'Has Expiry' : 'No Expiry' }}
                         </span>
                     </div>
                     <div class="col-xl-4">
                         <strong data-en="Status" data-bm="Status">Status:</strong>
-                        <span class="badge bg-{{ $document->is_active ? 'success' : 'danger' }}">
+                        <span class="badge bg-{{ $document->is_active ? 'success' : 'danger' }}" data-en="{{ $document->is_active ? 'Active' : 'Inactive' }}" data-bm="{{ $document->is_active ? 'Aktif' : 'Tidak Aktif' }}">
                             {{ $document->is_active ? 'Active' : 'Inactive' }}
                         </span>
                     </div>

@@ -120,17 +120,17 @@ async function data_table_init() {
                     return `
                         <a href="/internal/permit_edit_condition/${id}"
                             class="btn btn-sm btn-primary">
-                            <i class="ri-edit-line"></i> Edit
+                            <i class="ri-edit-line"></i> <span data-en="Edit" data-bm="Kemaskini">Edit</span>
                         </a>
                         <button type="button"
                             onclick="condiModal(${id})"
                             class="btn btn-sm btn-info">
-                            Show Condition
+                            <span data-en="Show Condition" data-bm="Papar Syarat">Show Condition</span>
                         </button>
                         <button type="button"
                             onclick="deleteCondition(${id})"
                             class="btn btn-sm btn-danger">
-                            <i class="ri-delete-bin-line"></i> Delete
+                            <i class="ri-delete-bin-line"></i> <span data-en="Delete" data-bm="Padam">Delete</span>
                         </button>
                     `;
                 },

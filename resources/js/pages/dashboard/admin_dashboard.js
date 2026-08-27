@@ -378,6 +378,44 @@ export async function admin_dashboard() {
     loadDailyVolumeChart();
     loadUserRegistrationChart();
     initCalendar();
+
+    // Give LarapexCharts a tiny delay to initialize on first load
+    setTimeout(() => {
+        translateCharts(localStorage.getItem('qis_lang') || 'en');
+    }, 500);
 }
 
 admin_dashboard();
+
+// ===================================================================
+// DYNAMIC TRANSLATIONS FOR CHARTS
+// ===================================================================
+function translateCharts(lang) {
+    // 1. Translate dailyVolumeChart (defined in this file)
+    if (typeof dailyVolumeChart !== 'undefined' && dailyVolumeChart !== null) {
+        if (lang === "bm") {
+            dailyVolumeChart.updateOptions({
+                series: [
+                    { name: "Jumlah Serahan", data: dailyVolumeChart.w.config.series[0].data },
+                    { name: "Permit Import", data: dailyVolumeChart.w.config.series[1].data },
+                    { name: "Pemeriksaan", data: dailyVolumeChart.w.config.series[2].data },
+                    { name: "Konsainan", data: dailyVolumeChart.w.config.series[3].data },
+                ]
+            });
+        } else {
+            dailyVolumeChart.updateOptions({
+                series: [
+                    { name: "Total Submissions", data: dailyVolumeChart.w.config.series[0].data },
+                    { name: "Import Permit", data: dailyVolumeChart.w.config.series[1].data },
+                    { name: "Inspection", data: dailyVolumeChart.w.config.series[2].data },
+                    { name: "Consignment", data: dailyVolumeChart.w.config.series[3].data },
+                ]
+            });
+        }
+    }
+}
+
+document.addEventListener("lang-changed", function(e) {
+    const lang = e.detail.lang || "en";
+    translateCharts(lang);
+});

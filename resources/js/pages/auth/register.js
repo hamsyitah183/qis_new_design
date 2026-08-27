@@ -32,7 +32,9 @@ $(document).ready(function () {
             url: "/get_states",
             type: "GET",
             success: function (data) {
-                $(".state-register").empty().append('<option value="">Select State</option>');
+                const lang = localStorage.getItem("qis_lang") || "en";
+                const selectStateText = lang === "bm" ? "Pilih Negeri" : "Select State";
+                $(".state-register").empty().append(`<option value="" data-en="Select State" data-bm="Pilih Negeri">${selectStateText}</option>`);
                 data.forEach(state => {
                     $(".state-register").append(`<option value="${state.id}">${state.name}</option>`);
                 });

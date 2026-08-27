@@ -289,7 +289,7 @@
         <section class="qis-section" id="qis-gallery">
             <div class="qis-container">
                 <span class="qis-eyebrow" data-en="Gallery" data-bm="Galeri">Gallery</span>
-                <h2 class="qis-h2 mt-2" data-en="Checkpoints, in the field" data-bm="Titik Pemeriksaan, di Lapangan">
+                <h2 class="qis-h2 mt-2" data-en="Checkpoints, in the field" data-bm="Pusat Pemeriksaan di Lapangan">
                     Checkpoints, in the field</h2>
 
 

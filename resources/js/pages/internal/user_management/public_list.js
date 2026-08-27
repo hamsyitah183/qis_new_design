@@ -105,7 +105,9 @@ async function public_user_list() {
             $("#userUuid").val("");
             // Load states for new user
             fetchStatesModal().then((states) => {
-                $(".state-modal").empty().append('<option value="">Select State</option>');
+                const lang = localStorage.getItem("qis_lang") || "en";
+                const selectStateText = lang === "bm" ? "Pilih Negeri" : "Select State";
+                $(".state-modal").empty().append(`<option value="" data-en="Select State" data-bm="Pilih Negeri">${selectStateText}</option>`);
                 states.forEach(state => {
                     $(".state-modal").append(`<option value="${state.id}">${state.name}</option>`);
                 });
@@ -143,7 +145,9 @@ async function public_user_list() {
 
                 // Load location dropdowns in sequence
                 fetchStatesModal().then((states) => {
-                    $(".state-modal").empty().append('<option value="">Select State</option>');
+                    const lang = localStorage.getItem("qis_lang") || "en";
+                    const selectStateText = lang === "bm" ? "Pilih Negeri" : "Select State";
+                    $(".state-modal").empty().append(`<option value="" data-en="Select State" data-bm="Pilih Negeri">${selectStateText}</option>`);
                     states.forEach(state => {
                         const isSelected = user.state && (user.state == state.id || user.state == state.name);
                         $(".state-modal").append(`<option value="${state.id}" ${isSelected ? 'selected' : ''}>${state.name}</option>`);
@@ -682,7 +686,9 @@ function fetchDistrictsModal(stateId, selectedDistrict = null, callback = null) 
         url: `/get_districts/${stateId}`,
         type: "GET",
         success: function (data) {
-            $(".district-modal").empty().append('<option value="">Select District</option>');
+            const lang = localStorage.getItem("qis_lang") || "en";
+            const selectDistText = lang === "bm" ? "Pilih Daerah" : "Select District";
+            $(".district-modal").empty().append(`<option value="" data-en="Select District" data-bm="Pilih Daerah">${selectDistText}</option>`);
             let matchedId = null;
 
             data.forEach(district => {
@@ -708,7 +714,9 @@ function fetchPostcodesModal(districtId, selectedPostcode = null) {
     $(".postcode-modal").html('<option value="">Loading...</option>');
 
     if (!districtId) {
-        $(".postcode-modal").html('<option value="">Select Postcode</option>');
+        const lang = localStorage.getItem("qis_lang") || "en";
+        const selectPostcodeText = lang === "bm" ? "Pilih Poskod" : "Select Postcode";
+        $(".postcode-modal").html(`<option value="" data-en="Select Postcode" data-bm="Pilih Poskod">${selectPostcodeText}</option>`);
         return;
     }
 
@@ -722,7 +730,9 @@ function fetchPostcodesModal(districtId, selectedPostcode = null) {
         url: `/get_postcodes/${districtId}`,
         type: "GET",
         success: function (data) {
-            $(".postcode-modal").empty().append('<option value="">Select Postcode</option>');
+            const lang = localStorage.getItem("qis_lang") || "en";
+            const selectPostcodeText = lang === "bm" ? "Pilih Poskod" : "Select Postcode";
+            $(".postcode-modal").empty().append(`<option value="" data-en="Select Postcode" data-bm="Pilih Poskod">${selectPostcodeText}</option>`);
             data.forEach(postcode => {
                 const isSelected = selectedPostcode && (selectedPostcode == postcode.id || selectedPostcode == postcode.value) ? 'selected' : '';
                 $(".postcode-modal").append(`<option value="${postcode.value}" ${isSelected}>${postcode.value}</option>`);
