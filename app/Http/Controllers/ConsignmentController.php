@@ -256,9 +256,11 @@ class ConsignmentController extends Controller
                 $buttons = '<a class="btn btn-sm btn-primary me-1 viewApplication" href="' . $viewUrl . '" title="View"> <i class="ti ti-eye"></i> </a>';
 
                 // Show delete button for internal users
-                if ($type === 'internal' && $accessLevel === 'FULL') {
-                    $buttons .= '<button class="btn btn-sm btn-danger delete-consignment" data-id="' . $row->application_id . '" title="Delete"> <i class="ti ti-trash"></i> </button>';
+                if ($type === 'internal') {
+                    $buttons .= '<button class="btn btn-sm btn-danger  me-1 delete-consignment" data-id="' . $row->application_id . '" title="Delete"> <i class="ti ti-trash"></i> </button>';
                 }
+
+                $buttons .= '<button class="btn btn-sm btn-secondary downloadApplication" data-id="' . $row->application_id . '" title="Download Application"> <i class="fa-solid fa-print"></i> </button>';
 
                 return $buttons;
             });

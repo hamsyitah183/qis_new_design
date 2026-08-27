@@ -28,6 +28,9 @@ let change = false;
 let tempItems = [];
 let tempAttachments = [];
 let itemPurpose = null;
+let currentItemFile = null;
+let itemFileOffcanvas = null;
+
 let temporaryItemsAttachment = [];
 let currentItemAttachments = []; // for the item details offcanvas
 let currentItemAttachIndex = 0; // for navigation inside item attachment viewer
@@ -478,6 +481,11 @@ function itemConsigment() {
     });
 
     itemDropzone.on("addedfile", function (file) {
+        currentItemFile = file;
+        showItemFilePreview(file);
+        setTimeout(() => {
+            addPreviewButtons(file);
+        }, 100);
         groupPreview();
     });
 }
@@ -2104,4 +2112,170 @@ $(document).ready(function () {
     };
 
     console.log("[QIS] Inspection draft saver registered.");
+});
+
+function showItemFilePreview(file) {
+    const previewContainer = document.getElementById(
+        "itemFilePreviewContainer",
+    );
+    const fileNameSpan = document.getElementById("itemFileName");
+    const fileEditInput = document.getElementById("itemFileEditName");
+    const fileDetailsDiv = document.getElementById("itemFileDetails");
+
+    if (!previewContainer || !fileNameSpan) return;
+
+    if (!itemFileOffcanvas) {
+        itemFileOffcanvas = new bootstrap.Offcanvas(
+            document.getElementById("itemFilePreviewOffcanvas"),
+            { backdrop: true, keyboard: true, scroll: false },
+        );
+    }
+
+    previewContainer.innerHTML = "";
+    fileNameSpan.textContent = file.name;
+    fileEditInput.value = file.name;
+
+    // ---- Preview ----
+    if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            previewContainer.innerHTML = `<img src="${e.target.result}" class="img-fluid rounded" alt="${file.name}">`;
+        };
+        reader.readAsDataURL(file);
+    } else if (file.type === "application/pdf") {
+        const url = URL.createObjectURL(file);
+        previewContainer.innerHTML = `<iframe src="${url}" class="w-100" style="height: calc(100vh - 220px); border: none;"></iframe>`;
+    } else {
+        previewContainer.innerHTML = `<div class="text-center"><i class="bi bi-file-earmark-fill fs-1 mb-3"></i><p>${file.name}</p></div>`;
+    }
+
+    // ---- File Details (bilingual) ----
+    const fileSize = (file.size / 1024).toFixed(2) + " KB";
+    const fileType = file.type || "Unknown";
+
+    fileDetailsDiv.innerHTML = `
+        <div class="mb-3">
+            <strong data-en="File Name:" data-bm="Nama Fail:">File Name:</strong>
+            <div class="text-muted">${file.name}</div>
+        </div>
+        <div class="mb-3">
+            <strong data-en="File Size:" data-bm="Saiz Fail:">File Size:</strong>
+            <div class="text-muted">${fileSize}</div>
+        </div>
+        <div class="mb-3">
+            <strong data-en="File Type:" data-bm="Jenis Fail:">File Type:</strong>
+            <div class="text-muted">${fileType}</div>
+        </div>
+    `;
+
+    // Apply current language to the newly added labels
+    applyTranslations(fileDetailsDiv);
+
+    itemFileOffcanvas.show();
+}
+
+function addPreviewButtons(file) {
+    const preview = file.previewElement;
+    if (!preview) return;
+
+    const removeBtn = preview.querySelector(".dz-remove");
+    if (!removeBtn) return;
+
+    // Create the action group
+    const attachmentGroup = document.createElement("div");
+    attachmentGroup.className = "attachment-group";
+    attachmentGroup.style.display = "flex";
+    attachmentGroup.style.gap = "5px";
+    // attachmentGroup.style.alignItems = "center";
+    // attachmentGroup.style.justifyContent = "end";
+
+    // View button
+    const viewBtn = document.createElement("a");
+    viewBtn.href = "#";
+    viewBtn.innerHTML = "<i class='ti ti-eye'></i>";
+    viewBtn.className = "btn btn-icon btn-info-light";
+    viewBtn.onclick = function (e) {
+        e.preventDefault();
+        console.log("click item", file);
+        currentItemFile = file;
+        showItemFilePreview(file);
+    };
+
+    // Edit button
+    const editBtn = document.createElement("a");
+    editBtn.href = "#";
+    editBtn.innerHTML = "<i class='ti ti-pencil'></i>";
+    editBtn.className = "btn btn-icon btn-success-light";
+    editBtn.onclick = function (e) {
+        e.preventDefault();
+        currentItemFile = file;
+        showItemFilePreview(file);
+        const modal = bootstrap.Modal.getOrCreateInstance(
+            document.getElementById("itemFilePreviewModal"),
+        );
+        modal.show();
+    };
+
+    // Delete button – custom handler that removes the file from Dropzone
+    const deleteBtn = document.createElement("a");
+    deleteBtn.href = "#";
+    deleteBtn.innerHTML = "<i class='ti ti-trash'></i>";
+    deleteBtn.className = "btn btn-icon btn-danger-light"; // or keep dz-remove class? We'll use our own
+    deleteBtn.onclick = function (e) {
+        e.preventDefault();
+        if (itemDropzone) {
+            itemDropzone.removeFile(file);
+        }
+    };
+
+    attachmentGroup.appendChild(viewBtn);
+    attachmentGroup.appendChild(editBtn);
+    attachmentGroup.appendChild(deleteBtn);
+
+    // Replace the original .dz-remove with our group
+    removeBtn.parentNode.replaceChild(attachmentGroup, removeBtn);
+}
+
+$(document).on("click", "#itemFileSaveBtn", function () {
+    const newName = document.getElementById("itemFileEditName").value.trim();
+
+    if (!newName || !currentItemFile) {
+        Swal.fire({
+            icon: "warning",
+            title: '<span data-en="Empty Name" data-bm="Nama Kosong">Empty Name</span>',
+            html: '<span data-en="Please enter a file name" data-bm="Sila masukkan nama fail">Please enter a file name</span>',
+            didOpen: (modal) => applyTranslations(modal),
+        });
+        return;
+    }
+
+    // Update the file object
+    currentItemFile.displayName = newName;
+
+    // ----- NEW: Update Dropzone preview filename -----
+    if (currentItemFile.previewElement) {
+        const $preview = $(currentItemFile.previewElement);
+        // Dropzone places filename in .dz-filename span
+        const $filenameSpan = $preview.find(".dz-filename span");
+        if ($filenameSpan.length) {
+            $filenameSpan.text(newName);
+        }
+        // Also update the .dz-filename data-dz-name attribute if used
+        const $filenameDiv = $preview.find(".dz-filename");
+        if ($filenameDiv.length) {
+            $filenameDiv.attr("data-dz-name", newName);
+        }
+    }
+
+    // Update offcanvas title
+    document.getElementById("itemFileName").textContent = newName;
+
+    Swal.fire({
+        icon: "success",
+        title: '<span data-en="Saved" data-bm="Disimpan">Saved</span>',
+        html: '<span data-en="File name updated" data-bm="Nama fail dikemas kini">File name updated</span>',
+        timer: 1500,
+        showConfirmButton: false,
+        didOpen: (modal) => applyTranslations(modal),
+    });
 });

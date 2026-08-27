@@ -186,3 +186,62 @@
         </div>
     </div>
 </div>
+
+
+<!-- Item File Preview & Rename Offcanvas -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="itemFilePreviewOffcanvas" aria-labelledby="itemFilePreviewOffcanvasLabel" style="width: 70%; max-width: 900px;">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title" id="itemFilePreviewOffcanvasLabel">
+            <i class="bi bi-file-earmark me-2"></i> <span id="itemFileName" data-en="File Preview" data-bm="Pratonton Fail">File Preview</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0 d-flex" style="height: calc(100% - 60px);">
+        <div class="pd-nav flex-shrink-0">
+            <ul class="nav nav-pills flex-column" id="itemFileTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="ifile-view-tab" data-bs-toggle="tab"
+                        data-bs-target="#ifile-view" type="button" role="tab" aria-selected="true"
+                        data-bs-placement="right" title="View" >
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="ifile-details-tab" data-bs-toggle="tab"
+                        data-bs-target="#ifile-details" type="button" role="tab" aria-selected="false"
+                        data-bs-placement="right" title="Details" >
+                        <i class="bi bi-info-circle"></i>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="ifile-edit-tab" data-bs-toggle="tab"
+                        data-bs-target="#ifile-edit" type="button" role="tab" aria-selected="false"
+                        data-bs-placement="right" title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        <div class="tab-content flex-grow-1 p-3 overflow-auto" id="itemFileTabContent">
+            <div class="tab-pane fade show active" id="ifile-view" role="tabpanel">
+                <div id="itemFilePreviewContainer" class="d-flex align-items-center justify-content-center h-100">
+                    <div class="text-muted text-center"><i class="bi bi-file-earmark-fill fs-1"></i><br><span data-en="Select a file" data-bm="Pilih fail">Select a file</span></div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="ifile-details" role="tabpanel">
+                <div id="itemFileDetails" class="py-2"></div>
+            </div>
+            <div class="tab-pane fade" id="ifile-edit" role="tabpanel">
+                <div class="p-3">
+                    <div class="mb-3">
+                        <label for="itemFileEditName" class="form-label" data-en="File Name" data-bm="Nama Fail">File Name</label>
+                        <input type="text" class="form-control" id="itemFileEditName" data-en="Enter new file name" data-bm="Masukkan nama fail baharu" placeholder="Enter new file name">
+                    </div>
+                    <button type="button" class="btn btn-primary" id="itemFileSaveBtn" data-en="Save Changes" data-bm="Simpan Perubahan">
+                        <i class="bi bi-check me-2"></i> Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

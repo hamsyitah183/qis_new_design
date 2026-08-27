@@ -119,7 +119,7 @@
 
 .dz-preview-group .dz-image {
     height: 100px;
-    width: 100%;
+    width: fit-content;
     object-fit: cover;
     border: 1px solid var(--default-border) !important;
     border-radius: 5px;

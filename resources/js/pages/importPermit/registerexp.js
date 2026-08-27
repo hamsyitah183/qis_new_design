@@ -924,8 +924,8 @@ function addPreviewButtons(file) {
     attachmentGroup.className = "attachment-group";
     attachmentGroup.style.display = "flex";
     attachmentGroup.style.gap = "5px";
-    attachmentGroup.style.alignItems = "center";
-    attachmentGroup.style.justifyContent = "end";
+    // attachmentGroup.style.alignItems = "center";
+    // attachmentGroup.style.justifyContent = "end";
 
     // View button
     const viewBtn = document.createElement("a");

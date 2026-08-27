@@ -144,7 +144,7 @@
 
                 <div class="ipv-action-row">
                     @if ($isInternal && auth()->guard('internal')->user()->can('print permit'))
-                        <button type="button" class="ipv-btn-primary" id="ipvPrintPermitBtn">
+                        <button type="button" class="ipv-btn-primary btn-info" id="ipvPrintPermitBtn">
                             <i class="bi bi-printer"></i> <span data-en="Print Certificate" data-bm="Cetak Sijil">Print
                                 Certificate</span>
                         </button>
@@ -153,7 +153,7 @@
                         <i class="bi bi-download"></i> {{ $application->printCalc }}
                     </span>
 
-                    <button class="btn ipv-btn-primary btn-info" id="printApplication" 
+                    <button class="btn ipv-btn-primary btn-secondary" id="printApplication" 
                     data-type = "{{ $application->type }}" data-application = "{{ $application->application_id }}">
                         <i class="fa-solid fa-print"></i>  <span data-en='Print Application' data-bm="Cetak Permohonan" >Print Application</span> 
                     </button>
