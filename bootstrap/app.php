@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         //
+        $middleware->trustProxies(at: '*');
+        
         $middleware->alias([
             'redirect.other.guard' => \App\Http\Middleware\RedirectIfOtherGuardAuthenticated::class,
             'multi.guest' => \App\Http\Middleware\RedirectIfAuthenticatedMulti::class,
