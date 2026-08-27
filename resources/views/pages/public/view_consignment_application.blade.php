@@ -57,9 +57,16 @@
         // In Consignment, the applicant/owner is the EXPORTER (roles are reversed vs Import Permit).
         $isOwner = $isPublic && $application->exporter_id === auth()->guard('public')->user()->uuid;
 
+        // ---------- NEW: Officer Verification Completed ----------
+        $isOfficerVerified = str_contains(strtolower($application->status ?? ''), 'officer verification completed');
+
         $allPending = $application->consignmentPermits->every(fn($permit) => $permit->status === 'pending for payment');
 
-        $showPaymentTab = $isPublic && $application->user_id === $authUuid && $allPending;
+        $showPaymentTab = $isPublic && $application->user_id === $authUuid && ($allPending || $isOfficerVerified);
+
+        $showPaybulkAction = $isPublic && $isOwner && $isOfficerVerified;
+
+        $paymentTabActive = $isOfficerVerified && $showPaymentTab;
 
         $showClerkReviewActions =
             str_contains($status, 'clerk review in-progress') &&
@@ -93,7 +100,7 @@
         </div>
 
         {{-- ============================================================ --}}
-        {{-- APPLICATION-LEVEL ACTIONS BAR --}}
+        {{-- APPLICATION-LEVEL ACTIONS BAR (Clerk / Admin)               --}}
         {{-- ============================================================ --}}
         @if ($showClerkReviewActions || $showAdminRejectedActions)
             <div class="col-xl-12">
@@ -121,6 +128,30 @@
                                     data-bm="Tolak Permohonan">Reject Application</span>
                             </button>
                         @endif
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        {{-- ============================================================ --}}
+        {{-- PAYBULK ACTION BAR (Officer Verified)                        --}}
+        {{-- ============================================================ --}}
+        @if ($showPaybulkAction)
+            <div class="col-xl-12">
+                <div class="ipv-actions-bar">
+                    <div class="ipv-actions-bar-text">
+                        <i class="bi bi-info-circle"></i>
+                        <span data-en="Your application has been verified. Please proceed to payment."
+                              data-bm="Permohonan anda telah disahkan. Sila teruskan ke pembayaran.">
+                            Your application has been verified. Please proceed to payment.
+                        </span>
+                    </div>
+                    <div class="ipv-actions-bar-buttons">
+                        <a href="#"
+                           class="ipv-btn-action btn-primary" id="payBulkUser">
+                            <i class="bi bi-credit-card"></i>
+                            <span data-en="Go to Payment" data-bm="Pergi ke Pembayaran">Go to Payment</span>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -191,11 +222,7 @@
                 {{-- ============================================================ --}}
                 {{-- EDIT APPLICATION BUTTON – FIXED CONDITION                    --}}
                 {{-- ============================================================ --}}
-                @if (
-                    (strtolower($application->status) !== 'completed' &&
-                        (($application->status == 'Draft' || $application->status == 'Clerk Rejected') &&
-                            $application->user_id === $authUuid)) ||
-                        $canEditInternal)
+                @if (($application->status == 'Draft' || $application->status == 'Clerk Rejected') &&$application->user_id === $authUuid )
                     <a class="ipv-btn-outline w-100 justify-content-center mt-3 btn btn-primary" id="editButton"
                         href="/edit_consignment/{{ $application->application_id }}">
                         <i class="bi bi-pencil"></i> <span data-en="Edit Application" data-bm="Kemaskini Permohonan">Edit
@@ -227,49 +254,69 @@
                 <div class="ipv-stage-stepper" id="ipvStageStepper"></div>
                 <div class="ipv-returned-note d-none" id="ipvReturnedNote"></div>
 
+                {{-- ============================================================ --}}
+                {{-- TAB NAVIGATION – with dynamic active class on Payment tab     --}}
+                {{-- ============================================================ --}}
                 <div class="ipv-tabnav" role="tablist">
-                    <button type="button" class="ipv-tabnav-item is-active" data-ipv-tab="permits" role="tab">
-                        <span data-en="Item List" data-bm="Senarai Item">Item List</span> <span class="ipv-tab-count"
-                            id="ipvPermitCount">0</span>
+                    {{-- Permits tab --}}
+                    <button type="button" class="ipv-tabnav-item {{ $paymentTabActive ? '' : 'is-active' }}"
+                            data-ipv-tab="permits" role="tab">
+                        <span data-en="Item List" data-bm="Senarai Item">Item List</span>
+                        <span class="ipv-tab-count" id="ipvPermitCount">0</span>
                     </button>
+
+                    {{-- Application Prices tab --}}
                     <button type="button" class="ipv-tabnav-item" data-ipv-tab="application_prices" role="tab"
-                        id="applicationPrices">
+                            id="applicationPrices">
                         <span data-en="Consignment Application Prices" data-bm="Harga Permohonan Konsainan"
                             class="text-wrap">Consignment Application Prices</span>
                     </button>
+
+                    {{-- Importer & Exporter tab --}}
                     <button type="button" class="ipv-tabnav-item" data-ipv-tab="importer_exporter" role="tab"
-                        data-en="Importer & Exporter" data-bm="Pengimport & Pengeksport">
+                            data-en="Importer & Exporter" data-bm="Pengimport & Pengeksport">
                         Importer & Exporter
                     </button>
+
+                    {{-- Transportation Details tab --}}
                     <button type="button" class="ipv-tabnav-item" data-ipv-tab="transport" role="tab"
-                        data-en="Transportation Details" data-bm="Butiran Pengangkutan">
+                            data-en="Transportation Details" data-bm="Butiran Pengangkutan">
                         Transportation Details
                     </button>
 
+                    {{-- Payment tab (conditionally shown) --}}
                     @if ($showPaymentTab)
-                        <button type="button" class="ipv-tabnav-item" data-ipv-tab="payment" role="tab">
-                            <span data-en="Pending Payment" data-bm="Pembayaran Tertangguh">Pending Payment</span> <span
-                                class="ipv-tab-count" id="ipvPendingPaymentCount">
-
-                            </span>
+                        <button type="button" class="ipv-tabnav-item {{ $paymentTabActive ? 'is-active' : '' }}"
+                                data-ipv-tab="payment" role="tab">
+                            <span data-en="Pending Payment" data-bm="Pembayaran Tertangguh">Pending Payment</span>
+                            <span class="ipv-tab-count" id="ipvPendingPaymentCount"></span>
                         </button>
                     @endif
+
+                    {{-- Activity tab --}}
                     <button type="button" class="ipv-tabnav-item" data-ipv-tab="activity" role="tab"
-                        data-en="Activity" data-bm="Aktiviti">
+                            data-en="Activity" data-bm="Aktiviti">
                         Activity
                     </button>
                 </div>
 
+                {{-- ============================================================ --}}
+                {{-- TAB PANES – with dynamic active class on Payment pane        --}}
+                {{-- ============================================================ --}}
                 <div class="ipv-tabbody">
 
-                    <div class="ipv-tabpane is-active" data-ipv-pane="permits">
+                    {{-- Permits pane --}}
+                    <div class="ipv-tabpane {{ $paymentTabActive ? '' : 'is-active' }}"
+                         data-ipv-pane="permits">
                         <div class="ipv-permit-accordion" id="ipvPermitAccordion"></div>
                     </div>
 
+                    {{-- Application Prices pane --}}
                     <div class="ipv-tabpane" data-ipv-pane="application_prices">
                         <div id="categoryTable"></div>
                     </div>
 
+                    {{-- Importer & Exporter pane --}}
                     <div class="ipv-tabpane" data-ipv-pane="importer_exporter">
                         <div id="importerExporterDetails">
                             <div class="ipv-section-label" data-en="Importer & Exporter Details"
@@ -284,12 +331,15 @@
                         </div>
                     </div>
 
+                    {{-- Transportation pane --}}
                     <div class="ipv-tabpane" data-ipv-pane="transport">
                         <div id="ipvTransportDetails"></div>
                     </div>
 
+                    {{-- Payment pane (conditionally shown) --}}
                     @if ($showPaymentTab)
-                        <div class="ipv-tabpane" data-ipv-pane="payment">
+                        <div class="ipv-tabpane {{ $paymentTabActive ? 'is-active' : '' }}"
+                             data-ipv-pane="payment">
                             <div class="table-responsive">
                                 <table id="summaryTable4" class="table ipv-payment-table text-nowrap">
                                     <thead>
@@ -320,15 +370,16 @@
                         </div>
                     @endif
 
+                    {{-- Activity pane --}}
                     <div class="ipv-tabpane" data-ipv-pane="activity">
                         <div class="ipv-timeline" id="ipvActivityTimeline"></div>
                     </div>
 
-                </div>
-            </div>
-        </div>
+                </div> <!-- end ipv-tabbody -->
+            </div> <!-- end ipv-main-card -->
+        </div> <!-- end col -->
 
-    </div>
+    </div> <!-- end ipv-wrapper -->
 
     <!-- ============================================================ -->
     <!-- ATTACHMENT VIEWER OFFCANVAS (Vertical Tabs)                   -->

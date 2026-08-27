@@ -110,9 +110,12 @@ function paymentCtaHtml(permit) {
 
     return '';
 }
-export function openPermitDetail(permitNumber) {
-    const permit = PERMITS.find((p) => p.permit_number === permitNumber);
-    if (!permit) return;
+export function openPermitDetail(permitId) {
+    const permit = PERMITS.find((p) => String(p.id) === String(permitId));
+    if (!permit) {
+        console.warn(`Permit with id ${permitId} not found.`);
+        return;
+    }
 
     const cfg =
         PERMIT_STATUS_CONFIG[permit.status] || PERMIT_STATUS_CONFIG.queued;

@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
                 PublicCodeSeeder::class,
                 CountrySeeder::class,
                 IpConditionSeeder::class,
+                IpUsesSeeder::class,
                 // ExporterSeeder::class,
                 StateDistrictSeeder::class,
                 PaymentSeeder::class,

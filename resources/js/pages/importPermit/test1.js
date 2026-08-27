@@ -894,7 +894,7 @@ function renderPermitAccordion() {
                     </div>
                     <span class="ipv-badge is-${cfg.color}">${escapeHtml(statusText)}</span>
                     <div class="ipv-permit-value">RM ${money(permit.value)}</div>
-                    <button type="button" class="ipv-view-detail-btn" data-permit-number="${escapeHtml(permit.permit_number)}" title="View full details">
+                    <button type="button" class="ipv-view-detail-btn" data-permit-id="${permit.id}" title="View full details">
                         <i class="bi bi-eye"></i>
                     </button>
                     <i class="bi bi-chevron-down ipv-chevron"></i>
@@ -996,8 +996,8 @@ function initAccordionToggle() {
         const viewBtn = e.target.closest('.ipv-view-detail-btn');
         if (viewBtn) {
             e.stopPropagation();
-            const permitNumber = viewBtn.dataset.permitNumber;
-            if (permitNumber) openPermitDetail(permitNumber);
+            const permitId = viewBtn.dataset.permitId;
+            if (permitId) openPermitDetail(permitId);
             return;
         }
 
