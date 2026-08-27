@@ -10,13 +10,12 @@ services:
     ports:
       - "6001:6001"  # Reverb WebSocket port
     volumes:
-      - .:/var/www/html
-      # - storage:/var/www/html/storage
+      - .:/var/www/html                                    # Sync code for development
+      - storage:/var/www/html/storage                      # Persist storage (uploads, logs, etc)
+      - /var/www/html/vendor                               # Don't sync vendor
+      - /var/www/html/node_modules                         # Don't sync node_modules
       - ./.docker/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini
-      - storage:/var/www/html/storage/app/public  # named volume for storage
-      - cache:/var/www/html/bootstrap/cache
     working_dir: /var/www/html
-    # remove user here if PHP-FPM fails; permissions handled in Dockerfile
     depends_on:
       - db
     networks:
@@ -28,8 +27,8 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - .:/var/www/html
-      - storage:/var/www/html/storage/app/public  # same volume for Nginx
+      - .:/var/www/html                                    # Sync code
+      - storage:/var/www/html/storage                      # Same storage volume
       - ./.docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - web
@@ -54,7 +53,6 @@ services:
 volumes:
   dbdata:
   storage:
-  cache:
 
 networks:
   app-network:
