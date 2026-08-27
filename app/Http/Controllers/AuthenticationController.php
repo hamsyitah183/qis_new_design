@@ -287,8 +287,8 @@ class AuthenticationController extends Controller
 
             $admins = InternalUser::role(['admin', 'superadmin'])->get();
             $notificationUrl = route('internal.public.list');
-            Notification::send($admins, new ApplicationNotification('A new account is created', $user->fullname, $notificationUrl));
-            $user->notify(new ApplicationNotification('You created an account', 'QIS', '/profile'));
+            Notification::send($admins, new ApplicationNotification('A new account is created', 'A new account is created', $user->fullname, $notificationUrl));
+            $user->notify(new ApplicationNotification('You created an account', 'You created an account', 'QIS', '/profile'));
 
             if (!empty($result) && $result['success'] === true) {
                 try {
@@ -301,12 +301,14 @@ class AuthenticationController extends Controller
                 $adminUsers = InternalUser::role(['admin'])->get();
                 Notification::send($adminUsers, new ApplicationNotification(
                     'A user uploaded a verification attachment',
+                    'A user uploaded a verification attachment',
                     $user->fullname,
                     '/internal/user_public/verification'
                 ));
-                $user->notify(new ApplicationNotification('You uploaded a verification attachment', 'QIS', '/profile'));
+                $user->notify(new ApplicationNotification('You uploaded a verification attachment', 'You uploaded a verification attachment', 'QIS', '/profile'));
             } else {
                 $user->notify(new ApplicationNotification(
+                    'Upload a verification attachment to get verified by DOA.',
                     'Upload a verification attachment to get verified by DOA.',
                     'QIS',
                     '/profile'

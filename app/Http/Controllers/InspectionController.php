@@ -717,7 +717,7 @@ class InspectionController extends Controller
                     ? 'Your Inspection Certificate Application with id ' . $application->application_id . ' is saved as draft'
                     : 'Your Inspection Certificate Application with id ' . $application->application_id . ' is submitted';
 
-                $applicant->notify(new ApplicationNotification($applicantMsg, 'QIS', $notificationUrl));
+                $applicant->notify(new ApplicationNotification($applicantMsg, $applicantMsg, 'QIS', $notificationUrl));
 
                 try {
                     event(new PublicUserEvent($applicantMsg, $applicant->uuid));
@@ -872,7 +872,7 @@ class InspectionController extends Controller
         }
 
         $internalUsers = InternalUser::role(['admin', 'clerk', 'superadmin'])->get();
-        Notification::send($internalUsers, new ApplicationNotification($messages['notify'], authUser()['user']->fullname, $notificationUrl));
+        Notification::send($internalUsers, new ApplicationNotification($messages['notify'], $messages['notify'], authUser()['user']->fullname, $notificationUrl));
 
         /**
          * =====================
@@ -887,7 +887,7 @@ class InspectionController extends Controller
             Log::warning('Pusher connection failed but continuing public notification: ' . $e->getMessage());
         }
 
-        Notification::send($publicUser, new ApplicationNotification($messages['public'], authUser()['user']->fullname, $notificationUrl));
+        Notification::send($publicUser, new ApplicationNotification($messages['public'], $messages['public'], authUser()['user']->fullname, $notificationUrl));
 
 
         activity()
@@ -991,12 +991,12 @@ class InspectionController extends Controller
 
             $notificationUrl = route('public.showallinspectionlist');
             $internalUsers = InternalUser::role(['admin', 'clerk', 'superadmin'])->get();
-            Notification::send($internalUsers, new ApplicationNotification("Inspection application {$applicationId} has been deleted", authUser()['user']->fullname, $notificationUrl));
+            Notification::send($internalUsers, new ApplicationNotification("Inspection application {$applicationId} has been deleted", "Inspection application {$applicationId} has been deleted", authUser()['user']->fullname, $notificationUrl));
 
             $applicant = PublicUser::where('uuid', $applicantUuid)->first();
             if ($applicant) {
                 $applicantMsg = "Your inspection application with id {$applicationId} has been deleted";
-                $applicant->notify(new ApplicationNotification($applicantMsg, 'QIS', $notificationUrl));
+                $applicant->notify(new ApplicationNotification($applicantMsg, $applicantMsg, 'QIS', $notificationUrl));
 
                 try {
                     event(new PublicUserEvent($applicantMsg, $applicant->uuid));
@@ -1114,7 +1114,7 @@ class InspectionController extends Controller
         }
 
         $internalUsers = InternalUser::role(['admin', 'clerk', 'superadmin'])->get();
-        Notification::send($internalUsers, new ApplicationNotification($msg, $user->fullname, $notificationUrl));
+        Notification::send($internalUsers, new ApplicationNotification($msg, $msg, $user->fullname, $notificationUrl));
 
         // Public Notification
         $publicUser = PublicUser::where('uuid', $inspectionApplication->user_id)->first();
@@ -1124,7 +1124,7 @@ class InspectionController extends Controller
             } catch (\Exception $e) {
                 Log::warning('Pusher connection failed: ' . $e->getMessage());
             }
-            Notification::send($publicUser, new ApplicationNotification($msg, $user->fullname, $notificationUrl));
+            Notification::send($publicUser, new ApplicationNotification($msg, $msg, $user->fullname, $notificationUrl));
         }
 
         // Check if all items are processed (either approved or rejected)
@@ -1238,7 +1238,7 @@ class InspectionController extends Controller
         }
 
         $internalUsers = InternalUser::role(['admin', 'clerk', 'superadmin'])->get();
-        Notification::send($internalUsers, new ApplicationNotification($msg, $user->fullname, $notificationUrl));
+        Notification::send($internalUsers, new ApplicationNotification($msg, $msg, $user->fullname, $notificationUrl));
 
         // Public Notification
         $publicUser = PublicUser::where('uuid', $application->user_id)->first();
@@ -1248,7 +1248,7 @@ class InspectionController extends Controller
             } catch (\Exception $e) {
                 Log::warning('Pusher connection failed: ' . $e->getMessage());
             }
-            Notification::send($publicUser, new ApplicationNotification($msg, $user->fullname, $notificationUrl));
+            Notification::send($publicUser, new ApplicationNotification($msg, $msg, $user->fullname, $notificationUrl));
         }
 
         // Check if all items are processed (either approved or rejected)

@@ -244,6 +244,7 @@ class DashboardController extends Controller
                     ->where(function ($q) {
                         $q->whereNull('valid_until')->orWhere('valid_until', '>=', now()->toDateString());
                     })
+                    ->orderBy('pin_announcement', 'desc')
                     ->latest()
                     ->take(3)
                     ->get(),
@@ -345,6 +346,7 @@ class DashboardController extends Controller
             ->where(function ($q) {
                 $q->whereNull('valid_until')->orWhere('valid_until', '>=', now()->toDateString());
             })
+            ->orderBy('pin_announcement', 'desc')
             ->latest()
             ->take(3)
             ->get();

@@ -43,7 +43,7 @@ class PermitConsignmentController extends Controller
         $url = '/view_application' . '/' . $permit->application->application_id;
 
         $users = InternalUser::role(['admin', 'officer', 'superadmin'])->get();
-        Notification::send($users, new ApplicationNotification('A permit with application ID ' . $permit->application->application_id . ' has been ' . $status, authUser()['user']->fullname, $url));
+        Notification::send($users, new ApplicationNotification('A permit with application ID ' . $permit->application->application_id . ' has been ' . $status, 'A permit with application ID ' . $permit->application->application_id . ' has been ' . $status, authUser()['user']->fullname, $url));
 
         $user = PublicUser::where('uuid', $permit->application->user_id)->first();
 
@@ -56,7 +56,7 @@ class PermitConsignmentController extends Controller
             Log::warning('Pusher connection failed but continuing permit acceptance: ' . $e->getMessage());
         }
 
-        Notification::send($user, new ApplicationNotification('A permit in application with ID ' . $permit->application->application_id . ' has been ' . $status, authUser()['user']->fullname, $url));
+        Notification::send($user, new ApplicationNotification('A permit in application with ID ' . $permit->application->application_id . ' has been ' . $status, 'A permit in application with ID ' . $permit->application->application_id . ' has been ' . $status, authUser()['user']->fullname, $url));
 
         activity()
             ->tap(function (Activity $activity) {

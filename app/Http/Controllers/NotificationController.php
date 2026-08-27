@@ -13,6 +13,20 @@ class NotificationController extends Controller
 {
     public function sendStatusMessage($fullname, $type, $applicationId, $status, $messageText, $phoneNumber)
     {
+        $normalizedPhone = preg_replace('/^\+/', '', $phoneNumber);
+
+        $user = PublicUser::where('phone_number', $phoneNumber)
+            ->orWhere('phone_number', $normalizedPhone)
+            ->orWhere('phone_number', '+' . $normalizedPhone)
+            ->first();
+
+        if ($user) {
+            $msgEn = "Your {$type} application (ID: {$applicationId}) status has been updated to {$status}. {$messageText}";
+            $msgBm = "Status permohonan {$type} anda (ID: {$applicationId}) telah dikemaskini kepada {$status}. {$messageText}";
+            
+            $user->notify(new \App\Notifications\ApplicationNotification($msgEn, $msgBm, 'System', '#'));
+        }
+
         // $whatsappSuccess = $this->sendWhatsapp($fullname, $type, $applicationId, $status, $messageText, $phoneNumber);
 
         // if (!$whatsappSuccess) {

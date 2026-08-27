@@ -402,6 +402,7 @@ class ConsignmentApplicationController extends Controller
                 if ($publicUser) {
                     $publicUser->notify(new ApplicationNotification(
                         $isDraft ? 'Your consignment application with id ' . $application->application_id . ' is saved as draft' : 'Your consignment application with id ' . $application->application_id . ' is submitted',
+                        $isDraft ? 'Your consignment application with id ' . $application->application_id . ' is saved as draft' : 'Your consignment application with id ' . $application->application_id . ' is submitted',
                         'QIS',
                         $notificationUrl
                     ));
@@ -417,7 +418,7 @@ class ConsignmentApplicationController extends Controller
                             } catch (\Exception $e) {
                                 Log::warning('Pusher connection failed but continuing company approval notification: ' . $e->getMessage());
                             }
-                            $company->notify(new ApplicationNotification('A consignment certificate application requires your approval', 'System', $notificationUrl));
+                            $company->notify(new ApplicationNotification('A consignment certificate application requires your approval', 'A consignment certificate application requires your approval', 'System', $notificationUrl));
                         }
                     }
                 }
@@ -609,11 +610,11 @@ class ConsignmentApplicationController extends Controller
 
             $users = InternalUser::permission('view dashboard')->get();
             $notificationUrl = url('/view_consignment/' . $application->application_id);
-            Notification::send($users, new ApplicationNotification('Consignment certificate draft saved', authUser()['user']['fullname'] ?? 'System', $notificationUrl));
+            Notification::send($users, new ApplicationNotification('Consignment certificate draft saved', 'Consignment certificate draft saved', authUser()['user']['fullname'] ?? 'System', $notificationUrl));
 
             $publicUser = auth()->guard('public')->user();
             if ($publicUser) {
-                $publicUser->notify(new ApplicationNotification('Your consignment application with id ' . $application->application_id . ' is saved as draft', 'QIS', $notificationUrl));
+                $publicUser->notify(new ApplicationNotification('Your consignment application with id ' . $application->application_id . ' is saved as draft', 'Your consignment application with id ' . $application->application_id . ' is saved as draft', 'QIS', $notificationUrl));
             }
 
             return response()->json([
@@ -864,7 +865,7 @@ class ConsignmentApplicationController extends Controller
             // Notify internal users (admins/clerks)
             try {
                 $users = InternalUser::role(['admin', 'clerk', 'superadmin'])->get();
-                Notification::send($users, new ApplicationNotification('Consignment certificate application deleted by ' . $userName, $userName, $notificationUrl));
+                Notification::send($users, new ApplicationNotification('Consignment certificate application deleted by ' . $userName, 'Consignment certificate application deleted by ' . $userName, $userName, $notificationUrl));
             } catch (\Exception $e) {
                 Log::warning('Failed to send notification to internal users: ' . $e->getMessage());
             }
@@ -872,7 +873,7 @@ class ConsignmentApplicationController extends Controller
             // Notify the public user who deleted the application
             if ($publicUser) {
                 try {
-                    $publicUser->notify(new ApplicationNotification('Your consignment application with id ' . $applicationId . ' has been successfully deleted', 'QIS', $notificationUrl));
+                    $publicUser->notify(new ApplicationNotification('Your consignment application with id ' . $applicationId . ' has been successfully deleted', 'Your consignment application with id ' . $applicationId . ' has been successfully deleted', 'QIS', $notificationUrl));
                 } catch (\Exception $e) {
                     Log::warning('Failed to send notification to public user: ' . $e->getMessage());
                 }
