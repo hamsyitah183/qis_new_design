@@ -934,6 +934,7 @@ function addPreviewButtons(file) {
     viewBtn.className = "btn btn-icon btn-info-light";
     viewBtn.onclick = function (e) {
         e.preventDefault();
+        console.log('click item', file)
         currentItemFile = file;
         showItemFilePreview(file);
     };

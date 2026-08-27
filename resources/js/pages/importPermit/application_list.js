@@ -213,7 +213,7 @@ async function createDataTables() {
             { data: "importer" },
             { data: "exporter" },
             { data: "status" },
-            { data: "permit_status" },
+            { data: "permit_status"},
             ...(isInternal ? [{ data: "submitted_by" }] : []),
             { data: "action" },
         ],
