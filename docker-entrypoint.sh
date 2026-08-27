@@ -17,6 +17,10 @@ if [ ! -d "node_modules" ]; then
     npm install
 fi
 
+# Rebuild frontend assets with environment variables
+echo "Building frontend assets..."
+npm run build
+
 # Clear Laravel caches
 php artisan config:clear
 php artisan cache:clear
