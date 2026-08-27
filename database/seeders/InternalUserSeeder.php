@@ -48,6 +48,17 @@ class InternalUserSeeder extends Seeder
                 'email_verified_at' => Carbon::now(),
             ],
             [
+                'email' => 'chong@temadigital.my',
+                'fullname' => 'Chong 123',
+                'phone_number' => '+60130000001',
+                'position' => 'Administrator',
+                'office' => 'HQ',
+                'no_ic' => '900101010031',
+                'password' => 'password123',
+                'role' => 'superadmin',
+                'email_verified_at' => Carbon::now(),
+            ],
+            [
                 'email' => 'hamsyitahnur@gmail.com',
                 'fullname' => 'Hamsyitah Internal',
                 'phone_number' => '+60130400001',
