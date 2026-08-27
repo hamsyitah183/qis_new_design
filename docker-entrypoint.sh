@@ -11,8 +11,8 @@ if [ ! -d "vendor" ]; then
     composer install --no-dev --optimize-autoloader --no-interaction
 fi
 
-# Install npm dependencies if node_modules doesn't exist
-if [ ! -d "node_modules" ]; then
+# Install npm dependencies if node_modules doesn't exist or is empty
+if [ ! -d "node_modules" ] || [ ! -d "node_modules/.bin" ]; then
     echo "Installing npm dependencies..."
     npm install
 fi
