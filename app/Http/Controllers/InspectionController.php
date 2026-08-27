@@ -26,6 +26,7 @@ use App\Models\PublicUser;
 use App\Models\TempAttachment;
 use App\Models\UserAttachment;
 use App\Notifications\ApplicationNotification;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -1344,5 +1345,22 @@ class InspectionController extends Controller
             'status' => 'success',
             'message' => 'Permit updated and files uploaded successfully',
         ]);
+    }
+
+
+    public function printInspection($id)
+    {
+        $application = InspectionApplication::with([
+            'user',
+            'exporter',
+            'importer',
+            'entryPoint',
+            'inspectionItems',
+        ])->where('application_id', $id)->firstOrFail();
+
+        $pdf = Pdf::loadView('pdf.inspection_application', compact('application'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->stream("Import_Permit_Application_{$application->application_id}.pdf");
     }
 }
