@@ -28,6 +28,12 @@ COPY . .
 # Copy Docker-specific .env (needed for artisan commands)
 COPY .env.docker .env
 
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Install Node dependencies
+RUN npm install
+
 # Ensure Laravel directories exist & are writable
 RUN mkdir -p /var/www/html/storage/logs /var/run \
     && chown -R www-data:www-data /var/www/html /var/run \

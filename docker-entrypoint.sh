@@ -5,18 +5,6 @@ set -e
 echo "Waiting for database..."
 sleep 5
 
-# Install composer dependencies if vendor doesn't exist
-if [ ! -d "vendor" ]; then
-    echo "Installing composer dependencies..."
-    composer install --no-dev --optimize-autoloader --no-interaction
-fi
-
-# Install npm dependencies if node_modules doesn't exist or is empty
-if [ ! -d "node_modules" ] || [ ! -d "node_modules/.bin" ]; then
-    echo "Installing npm dependencies..."
-    npm install
-fi
-
 # Remove old build cache and rebuild frontend assets with environment variables
 echo "Cleaning old builds..."
 rm -rf public/build public/build2 public/hot
