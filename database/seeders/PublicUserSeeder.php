@@ -34,7 +34,7 @@ class PublicUserSeeder extends Seeder
                 'no_ic' => '800111123456',
                 'email' => 'chong@temadigital.my',
                 'account_type' => 'individu',
-                'phone_number' => '0123456789',
+                'phone_number' => '9123456789',
                 'office_number' => null,
                 'address_1' => 'Kg. Example Address',
                 'address_2' => null,

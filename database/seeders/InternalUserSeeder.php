@@ -50,7 +50,7 @@ class InternalUserSeeder extends Seeder
             [
                 'email' => 'chong@temadigital.my',
                 'fullname' => 'Chong 123',
-                'phone_number' => '+60130000001',
+                'phone_number' => '+60130900101',
                 'position' => 'Administrator',
                 'office' => 'HQ',
                 'no_ic' => '900101010031',
