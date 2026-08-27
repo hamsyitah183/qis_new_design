@@ -22,8 +22,14 @@ RUN apt-get update && apt-get install -y \
 # Install Composer from the official Composer image
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copy Node dependency files and install
+# Copy dependency files first (for better layer caching)
+COPY composer.json composer.lock ./
 COPY package.json package-lock.json ./
+
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Install Node dependencies
 RUN npm install
 
 # Copy the rest of the application
@@ -32,8 +38,8 @@ COPY . .
 # Copy Docker-specific .env first (needed for artisan commands)
 COPY .env.docker .env
 
-# Ensure Laravel directories and Supervisor directories exist & are writable
-RUN mkdir -p /var/www/html/vendor /var/www/html/node_modules /var/www/html/storage/logs /var/run \
+# Ensure Laravel directories exist & are writable
+RUN mkdir -p /var/www/html/storage/logs /var/run \
     && chown -R www-data:www-data /var/www/html /var/run \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
