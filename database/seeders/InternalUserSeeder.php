@@ -58,6 +58,7 @@ class InternalUserSeeder extends Seeder
                 'role' => 'superadmin',
                 'email_verified_at' => Carbon::now(),
             ],
+           
             [
                 'email' => 'hamsyitahnur@gmail.com',
                 'fullname' => 'Hamsyitah Internal',
