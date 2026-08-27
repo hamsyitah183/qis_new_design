@@ -36,9 +36,9 @@ class AppServiceProvider extends ServiceProvider
         // Force HTTPS URL generation and trust the Cloudflare Tunnel
         // as a proxy, so asset()/url()/route() and the request's own
         // scheme detection all resolve to https:// instead of http://.
-        // Only applied when actually tunneling through a *.trycloudflare.com
-        // host, so normal local development (plain http://localhost) is unaffected.
-        if (str_contains(request()->getHost(), 'trycloudflare.com')) {
+        // Applied when using Cloudflare Tunnel with custom domain
+        if (str_contains(request()->getHost(), 'trycloudflare.com') || 
+            str_contains(request()->getHost(), 'geovidia.my')) {
             URL::forceScheme('https');
             request()->server->set('HTTPS', 'on');
         }
