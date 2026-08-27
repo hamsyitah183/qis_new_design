@@ -24,6 +24,12 @@ rm -rf public/build public/build2 public/hot
 echo "Building frontend assets..."
 npm run build
 
+# Create storage link if it doesn't exist
+if [ ! -L "public/storage" ]; then
+    echo "Creating storage link..."
+    php artisan storage:link
+fi
+
 # Run migrations BEFORE clearing cache (cache table needs to exist)
 echo "Running migrations..."
 php artisan migrate --force
