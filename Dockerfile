@@ -29,17 +29,16 @@ RUN npm install
 # Copy the rest of the application
 COPY . .
 
+# Copy Docker-specific .env first (needed for artisan commands)
+COPY .env.docker .env
+
 # Ensure Laravel directories and Supervisor directories exist & are writable
 RUN mkdir -p /var/www/html/vendor /var/www/html/node_modules /var/www/html/storage/logs /var/run \
     && chown -R www-data:www-data /var/www/html /var/run \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Run storage link
+# Run storage link (now .env is available)
 RUN php artisan storage:link
-
-# Copy Docker-specific .env
-COPY .env.docker .env
-RUN chown www-data:www-data /var/www/html/.env
 
 # Build frontend assets inside the container
 RUN npm run build
