@@ -1,8 +1,6 @@
 @extends('pages.app')
 
 @push('style')
-    {{-- adjust the path if your project loads CSS differently --}}
-    @vite(['resources/css/pages/order/order-details.css'])
 @endpush
 
 @push('scripts')
@@ -56,11 +54,13 @@
 
                 <div class="ipv-divider"></div>
 
-                <div class="ipv-section-label" data-bm="Permohonan Berkaitan" data-en="Linked Application">Linked Application</div>
+                <div class="ipv-section-label" data-bm="Permohonan Berkaitan" data-en="Linked Application">Linked
+                    Application</div>
                 <div class="ipv-detail-row">
                     <div class="ipv-detail-icon"><i class="bi bi-file-earmark-text"></i></div>
                     <span class="ipv-detail-label" data-bm="ID Permohonan" data-en="Application ID">Application ID</span>
-                    <span class="ipv-detail-value">{{ $order->order_details['application']['application_id'] ?? ($application->application_id ?? '—') }}</span>
+                    <span
+                        class="ipv-detail-value">{{ $order->order_details['application']['application_id'] ?? ($application->application_id ?? '—') }}</span>
                 </div>
                 <div class="ipv-detail-row">
                     <div class="ipv-detail-icon"><i class="bi bi-box-seam"></i></div>
@@ -79,10 +79,27 @@
                     </div>
                 </div>
 
-                @if ($order->order_details['application']['application_id'] ?? $application->application_id ?? null)
-                    <a href="/view_application/{{ $order->order_details['application']['application_id'] ?? $application->application_id }}"
-                        class="ipv-btn-outline w-100 justify-content-center mt-3">
-                        <i class="bi bi-arrow-up-right-square"></i> <span data-bm="Lihat Permohonan" data-en="View Application">View Application</span>
+                @if ($order->order_details['application']['application_id'] ?? ($application->application_id ?? null))
+                    @php
+                        $appId = $order->order_details['application']['application_id'] ?? $application->application_id;
+                        // Determine application type – check both possible sources
+                        $appType =
+                            $order->order_details['application']['application_type'] ?? ($application->type ?? '');
+                        // Build the correct URL based on type
+                        $url = '#';
+                        if (str_contains($appType, 'Consignment')) {
+                            $url = "/view_consignment/{$appId}";
+                        } elseif (str_contains($appType, 'Inspection')) {
+                            $url = "/view_inspection_certificates/{$appId}";
+                        } else {
+                            // Default fallback – Import Permit (or generic view)
+                            $url = "/view_application/{$appId}";
+                        }
+                    @endphp
+                    <a href="{{ $url }}"
+                        class="ipv-btn-action btn-primary ipv-btn-outline w-100 justify-content-center mt-3">
+                        <i class="bi bi-arrow-up-right-square"></i>
+                        <span data-bm="Lihat Permohonan" data-en="View Application">View Application</span>
                     </a>
                 @endif
             </div>
@@ -96,7 +113,8 @@
 
                 <!-- ---------- Payment Details ---------- -->
                 <div class="ipv-section-label-row">
-                    <span class="ipv-section-label" data-bm="Butiran Bayaran" data-en="Payment Details">Payment Details</span>
+                    <span class="ipv-section-label" data-bm="Butiran Bayaran" data-en="Payment Details">Payment
+                        Details</span>
                 </div>
                 <div class="apr-ref-grid mb-2">
                     <div class="apr-ref-cell">
@@ -104,7 +122,8 @@
                         <div class="apr-ref-value">{{ $order->seller_ref ?? '—' }}</div>
                     </div>
                     <div class="apr-ref-cell">
-                        <div class="apr-ref-label" data-bm="Rujukan Penjual FPX" data-en="FPX Seller Reference">FPX Seller Reference</div>
+                        <div class="apr-ref-label" data-bm="Rujukan Penjual FPX" data-en="FPX Seller Reference">FPX Seller
+                            Reference</div>
                         <div class="apr-ref-value">{{ $order->fpx_seller_reference ?? '—' }}</div>
                     </div>
                     <div class="apr-ref-cell">
@@ -120,7 +139,8 @@
                         <div class="apr-ref-value">{{ $order->phone ?? '—' }}</div>
                     </div>
                     <div class="apr-ref-cell">
-                        <div class="apr-ref-label" data-bm="Status Transaksi" data-en="Transaction Status">Transaction Status</div>
+                        <div class="apr-ref-label" data-bm="Status Transaksi" data-en="Transaction Status">Transaction
+                            Status</div>
                         <div class="apr-ref-value">{{ $order->transaction_status ?? '—' }}</div>
                     </div>
                     @if ($isInternal)
@@ -134,9 +154,11 @@
                 @if (!empty($order->transaction_data))
                     <details class="ipv-hint-note mb-3">
                         <summary style="cursor:pointer;color:var(--text-muted);font-size:.8rem;">
-                            <i class="bi bi-code-slash"></i> <span data-bm="Lihat data transaksi asal" data-en="View raw transaction data">View raw transaction data</span>
+                            <i class="bi bi-code-slash"></i> <span data-bm="Lihat data transaksi asal"
+                                data-en="View raw transaction data">View raw transaction data</span>
                         </summary>
-                        <pre class="mt-2 p-2" style="background:var(--gray-1);border-radius:8px;font-size:.72rem;white-space:pre-wrap;word-break:break-all;">{{ $order->transaction_data }}</pre>
+                        <pre class="mt-2 p-2"
+                            style="background:var(--gray-1);border-radius:8px;font-size:.72rem;white-space:pre-wrap;word-break:break-all;">{{ $order->transaction_data }}</pre>
                     </details>
                 @endif
 
@@ -144,7 +166,8 @@
 
                 <!-- ---------- Application Details (importer / exporter) ---------- -->
                 <div class="ipv-section-label-row">
-                    <span class="ipv-section-label" data-bm="Butiran Permohonan" data-en="Application Details">Application Details</span>
+                    <span class="ipv-section-label" data-bm="Butiran Permohonan" data-en="Application Details">Application
+                        Details</span>
                 </div>
 
                 <div class="row g-3 mb-2">
@@ -155,7 +178,10 @@
                                     {{ strtoupper(substr(optional($application->importer)->fullname ?? '?', 0, 1)) }}
                                 </div>
                                 <div>
-                                    <div class="ipv-party-name">{{ optional($application->importer)->fullname ?? '—' }}</div>
+                                    {{-- @dd($application->importer) --}}
+                                    <div class="ipv-party-name">
+                                        {{ optional($application->importer)->fullname ?? (optional($application->importer)->name ?? '—') }}
+                                    </div>
                                     <div class="ipv-party-sub" data-bm="Pengimport" data-en="Importer">Importer</div>
                                 </div>
                             </div>
@@ -164,11 +190,20 @@
                                 <div>
                                     <div class="ipv-contact-label" data-bm="Alamat" data-en="Address">Address</div>
                                     <div class="ipv-contact-value">
-                                        {{ optional($application->importer)->address_1 ?? '—' }}
-                                        @if (!empty(optional($application->importer)->address_2)), {{ $application->importer->address_2 }} @endif
-                                        @if (!empty(optional($application->importer)->postcode)), {{ $application->importer->postcode }} @endif
-                                        @if (!empty(optional($application->importer)->districtInfo)), {{ $application->importer->districtInfo->name }} @endif
-                                        @if (!empty(optional($application->importer)->stateInfo)), {{ $application->importer->stateInfo->name }} @endif
+                                        {{ optional($application->importer)->address_1 ?? (optional($application->importer)->address ?? '—') }}
+                                        @if (!empty(optional($application->importer)->address_2))
+                                            , {{ $application->importer->address_2 }}
+                                        @endif
+                                        @if (!empty(optional($application->importer)->postcode))
+                                            , {{ $application->importer->postcode }}
+                                        @endif
+                                        @if (!empty(optional($application->importer)->districtInfo))
+                                            , {{ $application->importer->districtInfo->name }}
+                                        @endif
+                                        @if (!empty(optional($application->importer)->stateInfo))
+                                            ,
+                                            {{ $application->importer->stateInfo->name ?? $application->importer->country }}
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -179,10 +214,13 @@
                         <div class="ipv-party is-exporter">
                             <div class="ipv-party-header">
                                 <div class="ipv-party-avatar">
-                                    {{ strtoupper(substr(optional($application->exporter)->name ?? $fullname ?? '?', 0, 1)) }}
+                                    {{-- @dd($application->exporter) --}}
+                                    {{ strtoupper(substr(optional($application->exporter)->name ?? ($fullname ?? (optional($application->exporter)->fullname ?? '?')), 0, 1)) }}
                                 </div>
                                 <div>
-                                    <div class="ipv-party-name">{{ optional($application->exporter)->name ?? $fullname ?? '—' }}</div>
+                                    <div class="ipv-party-name">
+                                        {{ optional($application->exporter)->name ?? ($fullname ?? (optional($application->exporter)->fullname ?? '—')) }}
+                                    </div>
                                     <div class="ipv-party-sub" data-bm="Pengeksport" data-en="Exporter">Exporter</div>
                                 </div>
                             </div>
@@ -190,7 +228,9 @@
                                 <div class="ipv-contact-icon"><i class="bi bi-telephone"></i></div>
                                 <div>
                                     <div class="ipv-contact-label" data-bm="Telefon" data-en="Phone">Phone</div>
-                                    <div class="ipv-contact-value">{{ optional($application->exporter)->phone_no ?? $fullname ?? '—' }}</div>
+                                    <div class="ipv-contact-value">
+                                        {{ optional($application->exporter)->phone_no ?? ($fullname ?? (optional($application->exporter)->phone_number ?? '—')) }}
+                                    </div>
                                 </div>
                             </div>
                             <div class="ipv-contact-row">
@@ -198,8 +238,8 @@
                                 <div>
                                     <div class="ipv-contact-label" data-bm="Alamat" data-en="Address">Address</div>
                                     <div class="ipv-contact-value">
-                                        {{ optional($application->exporter)->address ?? '—' }},
-                                        {{ optional(optional($application->exporter)->countryInfo)->name ?? '—' }}
+                                        {{ optional($application->exporter)->address ?? (optional($application->exporter)->address_1 ?? '—') }},
+                                        {{ optional(optional($application->exporter)->countryInfo)->name ?? (optional($application->exporter)->state ?? '—') }}
                                     </div>
                                 </div>
                             </div>
@@ -211,13 +251,15 @@
 
                 <!-- ---------- Permit Details ---------- -->
                 <div class="ipv-section-label-row">
-                    <span class="ipv-section-label"><span data-bm="Butiran Permit" data-en="Permit Details">Permit Details</span> ({{ $permits->count() }})</span>
+                    <span class="ipv-section-label"><span data-bm="Butiran Permit" data-en="Permit Details">Permit
+                            Details</span> ({{ $permits->count() }})</span>
                 </div>
 
                 @if ($permits->isEmpty())
                     <div class="ipv-empty-state">
                         <i class="bi bi-inbox"></i>
-                        <p data-bm="Tiada permit dijumpai untuk pesanan ini." data-en="No permits found on this order.">No permits found on this order.</p>
+                        <p data-bm="Tiada permit dijumpai untuk pesanan ini." data-en="No permits found on this order.">No
+                            permits found on this order.</p>
                     </div>
                 @else
                     <div class="apr-item-table">
@@ -229,7 +271,8 @@
                             <div class="apr-item-row">
                                 <span class="apr-item-permit-no">{{ $permit->permit_number ?? '—' }}</span>
                                 <span class="apr-item-name-cell">
-                                    <span class="apr-item-name">{{ $permit->consignment_detail['item_name'] ?? '—' }}</span>
+                                    <span
+                                        class="apr-item-name">{{ $permit->consignment_detail['item_name'] ?? '—' }}</span>
                                 </span>
                             </div>
                         @endforeach

@@ -545,6 +545,73 @@ function payBulk() {
     });
 }
 
+function payBulkUser() {
+    $(document).off('click', '#payBulkUser').on('click', '#payBulkUser', function (e) {
+        e.preventDefault();
+        const applicationId = $(this).data('application');
+        const total = $(this).data('total')
+        console.log('bulk payment', total);
+
+        const permits = window.ImportPermitView?.getPermits() || [];
+        const pending = permits.filter(p =>
+            ['pending for payment', 'payment failed'].includes(p.status)
+        );
+
+        if (!pending.length) {
+            Swal.fire({
+                icon: 'info',
+                title: getLang() === 'bm' ? 'Tiada permit tertunggak' : 'No pending permits',
+                text: getLang() === 'bm' ? 'Tiada permit yang memerlukan pembayaran.' : 'There are no permits awaiting payment.',
+            });
+            return;
+        }
+
+        // ─── Flat fee per application ───────────────────────────────────
+        const permitIds = pending.map(p => p.id);
+        const amountText = money(total);
+
+        const titleText = getText('payNow.title');
+        const textTemplate = getText('payNow.text') || 'You are about to pay RM {amount} for this application.';
+        const text = textTemplate.replace('{amount}', amountText);
+
+        Swal.fire({
+            title: titleText,
+            text: text,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: getText('payNow.confirm'),
+            cancelButtonText: getText('payNow.cancel'),
+        }).then((result) => {
+            if (!result.isConfirmed) return;
+
+            Swal.fire({ title: getText('processing'), allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            $.ajax({
+                url: '/payment/signed-url',
+                method: 'POST',
+                data: {
+                    application_id: applicationId,
+                    permit_ids: permitIds,
+                    total: Number(total).toFixed(2),
+                    type: 'consignment',
+                    _token: csrfToken(),
+                },
+                success: function (res) {
+                    window.location.href = res.url;
+                },
+                error: function () {
+                    Swal.close();
+                    Swal.fire({
+                        icon: 'error',
+                        title: getText('error'),
+                        text: getText('unableCheckout') || 'Unable to proceed to checkout.',
+                    });
+                },
+            });
+        });
+    });
+}
+
 // ---------------------------------------------------------------
 // Reapply – reopens the item modal (kept from legacy wizard)
 // ---------------------------------------------------------------
@@ -795,6 +862,7 @@ function initActions() {
     generatePermit();
     reapply();
     payBulk(); 
+    payBulkUser();
 
     generatePDF();
 }
