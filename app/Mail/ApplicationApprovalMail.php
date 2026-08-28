@@ -63,7 +63,7 @@ class ApplicationApprovalMail extends Mailable
             ];
         }
 
-        $logoPath = public_path('images/logo-DOA.png');
+        $logoPath = public_path('images/Logo-DOA.png');
         $logoBase64 = null;
         if (file_exists($logoPath)) {
             $logoData = file_get_contents($logoPath);

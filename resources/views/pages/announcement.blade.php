@@ -67,7 +67,7 @@
     <header class="qis-nav">
         <div class="qis-nav-inner">
             <a href="/" class="qis-brand">
-                <img src="{{ asset('images/logo-DOA.png') }}" alt="Logo">
+                <img src="{{ asset('images/Logo_DOA.png') }}" alt="Logo">
                 <span class="qis-brand-text">
                     <b>QIS</b>
                     <small data-en="Plant Quarantine Info &amp; Services" data-bm="Maklumat &amp; Perkhidmatan Kuarantin">Plant Quarantine Info &amp; Services</small>

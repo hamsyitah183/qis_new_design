@@ -220,7 +220,7 @@
             {{-- Left visual panel --}}
             <div class="auth-card-visual d-none">
                 <div class="brand">
-                    <img src="{{ asset('images/logo-DOA.png') }}" alt="Logo">
+                    <img src="{{ asset('images/Logo_DOA.png') }}" alt="Logo">
                     <span>QIS</span>
                 </div>
 
