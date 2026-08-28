@@ -21,26 +21,22 @@ const PALETTE = {
 // 1. STAT CARDS (finance_application_data) — dummy counts + trends
 // ===================================================================
 function loadStatCards() {
-    const dummy = {
-        total: 128450,
-        ip: 342,
-        ic: 118,
-        cc: 76,
-        ipTrend: { dir: "up", pct: 8.4 },
-        icTrend: { dir: "down", pct: 3.1 },
-        ccTrend: { dir: "up", pct: 12.9 },
-        revenueTrend: { dir: "up", pct: 5.6 },
-    };
+    $.ajax({
+        url: "/application/count",
+        method: "GET",
+        success: function (res) {
+            const data = res.data;
+            $("#amountRevenue").text(`RM ${(data.total || 0).toLocaleString()}`);
+            $("#ipCount").text((data.ipCount || 0).toLocaleString());
+            $("#icCount").text((data.icCount || 0).toLocaleString());
+            $("#ccCount").text((data.ccCount || 0).toLocaleString());
 
-    $("#amountRevenue").text(`RM ${dummy.total.toLocaleString()}`);
-    $("#ipCount").text(dummy.ip.toLocaleString());
-    $("#icCount").text(dummy.ic.toLocaleString());
-    $("#ccCount").text(dummy.cc.toLocaleString());
-
-    renderTrend("#revenueTrend", dummy.revenueTrend);
-    renderTrend("#ipTrend", dummy.ipTrend);
-    renderTrend("#icTrend", dummy.icTrend);
-    renderTrend("#ccTrend", dummy.ccTrend);
+            // Trends are not provided by the API yet, so we can hide or omit them
+        },
+        error: function (err) {
+            console.error("Error fetching stat cards data", err);
+        }
+    });
 }
 
 function renderTrend(selector, trend) {
@@ -59,80 +55,46 @@ function renderTrend(selector, trend) {
 // ===================================================================
 let dailyVolumeChart = null;
 
-function buildDailyVolumeDummy() {
-    const days = [];
-    const ipData = [];
-    const inspectionData = [];
-    const consignmentData = [];
-    const totalData = [];
-
-    for (let i = 6; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        days.push(
-            d.toLocaleDateString("en-GB", {
-                weekday: "short",
-                day: "2-digit",
-                month: "short",
-            }),
-        );
-
-        const ip = Math.floor(Math.random() * 12) + 4;
-        const inspection = Math.floor(Math.random() * 8) + 2;
-        const consignment = Math.floor(Math.random() * 6) + 1;
-
-        ipData.push(ip);
-        inspectionData.push(inspection);
-        consignmentData.push(consignment);
-        totalData.push(ip + inspection + consignment);
-    }
-
-    return {
-        days,
-        series: [
-            { name: "Total Submissions", data: totalData },
-            { name: "Import Permit", data: ipData },
-            { name: "Inspection", data: inspectionData },
-            { name: "Consignment", data: consignmentData },
-        ],
-    };
-}
-
 function loadDailyVolumeChart() {
     const container = document.querySelector("#dailyVolumeChart");
     if (!container) return;
 
-    const data = buildDailyVolumeDummy();
+    $.ajax({
+        url: "/internal/admin/dashboard/daily-volume",
+        method: "GET",
+        success: function (data) {
+            $("#dailyVolumeChart").empty();
 
-    $("#dailyVolumeChart .spinner-wrapper").remove();
+            dailyVolumeChart = new ApexCharts(container, {
+                chart: {
+                    id: "dailyVolumeChart",
+                    type: "area",
+                    height: 300,
+                    fontFamily: "inherit",
+                    toolbar: { show: false },
+                },
 
-    dailyVolumeChart = new ApexCharts(container, {
-        chart: {
-            id: "dailyVolumeChart",
-            type: "area",
-            height: 300,
-            fontFamily: "inherit",
-            toolbar: { show: false },
+                series: data.series,
+                xaxis: { categories: data.days },
+                stroke: { curve: "smooth", width: 2.5 },
+                fill: {
+                    type: "gradient",
+                    gradient: { opacityFrom: 0.35, opacityTo: 0.02 },
+                },
+                dataLabels: { enabled: false },
+                legend: { position: "top", horizontalAlign: "right" },
+                colors: [PALETTE.primary, PALETTE.tint2, PALETTE.tint3, PALETTE.info],
+            });
+
+            dailyVolumeChart.render().then(() => {
+                dailyVolumeChart.hideSeries("Import Permit");
+                dailyVolumeChart.hideSeries("Inspection");
+                dailyVolumeChart.hideSeries("Consignment");
+            });
         },
-
-        series: data.series,
-        xaxis: { categories: data.days },
-        stroke: { curve: "smooth", width: 2.5 },
-        fill: {
-            type: "gradient",
-            gradient: { opacityFrom: 0.35, opacityTo: 0.02 },
-        },
-        dataLabels: { enabled: false },
-        legend: { position: "top", horizontalAlign: "right" },
-        colors: [PALETTE.primary, PALETTE.tint2, PALETTE.tint3, PALETTE.info],
-    });
-
-    dailyVolumeChart.render().then(() => {
-        // keep the sub-series hidden by default so "Total" reads clearly first,
-        // same behaviour as before — user can click the legend to reveal them
-        dailyVolumeChart.hideSeries("Import Permit");
-        dailyVolumeChart.hideSeries("Inspection");
-        dailyVolumeChart.hideSeries("Consignment");
+        error: function (err) {
+            console.error("Error fetching daily volume data", err);
+        }
     });
 }
 
@@ -141,43 +103,41 @@ function loadDailyVolumeChart() {
 // ===================================================================
 let userRegistrationChart = null;
 
-function buildUserRegistrationDummy() {
-    const months = [];
-    const data = [];
-    for (let m = 0; m < 12; m++) {
-        months.push(
-            new Date(2000, m, 1).toLocaleDateString("en-GB", {
-                month: "short",
-            }),
-        );
-        data.push(Math.floor(Math.random() * 80) + 20);
-    }
-    return { months, data };
-}
-
 function loadUserRegistrationChart() {
     const container = document.querySelector("#userLineChart");
     if (!container) return;
 
-    const { months, data } = buildUserRegistrationDummy();
+    $.ajax({
+        url: "/internal/admin/dashboard/user-registration",
+        method: "GET",
+        success: function (res) {
+            const months = res.months;
+            const data = res.data || Array(12).fill(0); // Use 0s if backend doesn't supply data yet
 
-    userRegistrationChart = new ApexCharts(container, {
-        chart: {
-            type: "bar",
-            height: 300,
-            fontFamily: "inherit",
-            toolbar: { show: false },
+            $("#userLineChart").empty();
+
+            userRegistrationChart = new ApexCharts(container, {
+                chart: {
+                    type: "bar",
+                    height: 300,
+                    fontFamily: "inherit",
+                    toolbar: { show: false },
+                },
+                title: { text: "User Registrations", style: { fontWeight: 700 } },
+                subtitle: { text: "New public accounts per month" },
+                series: [{ name: "New Users", data }],
+                xaxis: { categories: months },
+                plotOptions: { bar: { borderRadius: 5, columnWidth: "55%" } },
+                dataLabels: { enabled: false },
+                colors: [PALETTE.tint2],
+            });
+
+            userRegistrationChart.render();
         },
-        title: { text: "User Registrations", style: { fontWeight: 700 } },
-        subtitle: { text: "New public accounts per month — demo data" },
-        series: [{ name: "New Users", data }],
-        xaxis: { categories: months },
-        plotOptions: { bar: { borderRadius: 5, columnWidth: "55%" } },
-        dataLabels: { enabled: false },
-        colors: [PALETTE.tint2],
+        error: function (err) {
+            console.error("Error fetching user registration data", err);
+        }
     });
-
-    userRegistrationChart.render();
 }
 
 // ===================================================================
