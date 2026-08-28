@@ -290,7 +290,7 @@
             {{-- Left visual panel: hidden on tablet/mobile, background image to be set later --}}
             <div class="login-card-visual">
                 <div class="brand">
-                    <img src="{{ asset('images/Logo_DOA.png') }}" alt="Logo">
+                    <img src="{{ asset('images/Logo-DOA.png') }}" alt="Logo">
                     <span>QIS</span>
                 </div>
 

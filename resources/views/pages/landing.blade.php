@@ -7,7 +7,7 @@
         <header class="qis-nav">
             <div class="qis-nav-inner">
                 <a href="/" class="qis-brand">
-                    <img src="{{ asset('images/Logo_DOA.png') }}" alt="Logo">
+                    <img src="{{ asset('images/Logo-DOA.png') }}" alt="Logo">
                     <span class="qis-brand-text">
                         <b>QIS</b>
                         <small data-en="Plant Quarantine Info &amp; Services"
@@ -399,7 +399,7 @@
             <div class="qis-container">
                 <div class="qis-footer-top">
                     <div class="qis-footer-brand">
-                        <img src="{{ asset('images/Logo_DOA.png') }}" alt="Logo" style="height:28px">
+                        <img src="{{ asset('images/Logo-DOA.png') }}" alt="Logo" style="height:28px">
                         <span>QIS &middot; Jabatan Pertanian Sabah</span>
                     </div>
                     <ul class="qis-footer-links">

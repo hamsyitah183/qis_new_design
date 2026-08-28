@@ -298,7 +298,7 @@
             {{-- Left visual panel: caption changes per wizard step --}}
             <div class="auth-card-visual">
                 <div class="brand">
-                    <img src="{{ asset('images/Logo_DOA.png') }}" alt="Logo">
+                    <img src="{{ asset('images/Logo-DOA.png') }}" alt="Logo">
                     <span>QIS</span>
                 </div>
 
