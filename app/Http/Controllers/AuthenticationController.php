@@ -156,6 +156,55 @@ class AuthenticationController extends Controller
         ]);
     }
 
+    public function internalLoginApi(Request $request)
+    {
+        $credentials = $request->validate([
+            'username' => 'required|string',
+            'password' => 'required|string',
+            'remember_me' => 'sometimes|boolean',
+        ]);
+
+        $user = InternalUser::query()
+            ->where('username', $credentials['username'])
+            ->first();
+
+        if (!$user || !Hash::check($credentials['password'], $user->password)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid credentials.',
+            ], 422);
+        }
+
+        $expiresAt = !empty($credentials['remember_me'])
+            ? now()->addDays(30)
+            : now()->addHours(24);
+
+        $token = $user->createToken('scanner-app', ['*'], $expiresAt)->plainTextToken;
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Login successful.',
+            'token' => $token,
+            'expires_at' => $expiresAt->toIso8601String(),
+            'user' => [
+                'uuid' => $user->uuid,
+                'name' => $user->fullname,
+                'email' => $user->email,
+                'position' => $user->position,
+            ],
+        ]);
+    }
+
+    public function internalLogoutApi(Request $request)
+    {
+        $request->user()?->currentAccessToken()?->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Logged out.',
+        ]);
+    }
+
     // public function register()
     // {
     //     return view('pages.authentication.register', [

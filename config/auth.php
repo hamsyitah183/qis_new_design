@@ -49,6 +49,11 @@ return [
             'driver' => 'session',
             'provider' => 'public_users',
         ],
+
+        'internal-api' => [
+            'driver' => 'sanctum',
+            'provider' => 'internal_users',
+        ],
     ],
 
     /*
