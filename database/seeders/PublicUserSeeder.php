@@ -29,6 +29,20 @@ class PublicUserSeeder extends Seeder
                 'state' => 'Sabah',
                 'doa_verified' => 1
             ],
+            [
+                'fullname' => 'Chong',
+                'no_ic' => '800111123456',
+                'email' => 'chong@temadigital.my',
+                'account_type' => 'individu',
+                'phone_number' => '9123456789',
+                'office_number' => null,
+                'address_1' => 'Kg. Example Address',
+                'address_2' => null,
+                'postcode' => '89657',
+                'district' => 'Tambunan',
+                'state' => 'Sabah',
+                'doa_verified' => 1
+            ],
         ];
 
         // ==================================================

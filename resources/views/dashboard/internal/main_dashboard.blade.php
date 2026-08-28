@@ -12,7 +12,7 @@
 @endsection
 
 @section('content')
-
+    {{-- @dd($overduePendingApps) --}}
     @if ($overduePendingApps > 0)
         <div class="row mb-3">
             <div class="col-12">
