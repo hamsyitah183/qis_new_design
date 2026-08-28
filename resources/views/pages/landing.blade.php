@@ -29,14 +29,14 @@
                         <button type="button" class="qis-lang-btn" data-lang="bm">BM</button>
                     </div>
                     @if (Auth::guard('public')->check() || Auth::guard('internal')->check())
-                        <a href="/dashboard" class="qis-btn-ghost d-none d-md-inline-flex" data-en="Dashboard"
+                        <a href="/dashboard" class="qis-btn-ghost d-md-inline-flex" data-en="Dashboard"
                             data-bm="Dashboard">Dashboard</a>
                     @else
-                        <a href="/login" class="qis-btn-ghost d-none d-md-inline-flex" data-en="Sign In"
+                        <a href="/login" class="qis-btn-ghost d-md-inline-flex" data-en="Sign In"
                             data-bm="Log Masuk">Sign In</a>
                     @endif
-                    <a href="/public/new_application" class="qis-btn-primary" data-en="Apply Now"
-                        data-bm="Mohon Sekarang">Apply Now</a>
+
+                  
                 </div>
             </div>
         </header>
@@ -120,7 +120,8 @@
                 <!-- duplicate for seamless loop -->
                 @foreach ($announcements as $item)
                     <span class="qis-ticker-item"><b data-en="NOTICE" data-bm="NOTIS">NOTICE</b><span
-                            data-en="{{ $item->title }}" data-bm="{{ $item->title }}">{{ $item->title }}</span></span>
+                            data-en="{{ $item->title }}"
+                            data-bm="{{ $item->title }}">{{ $item->title }}</span></span>
                 @endforeach
             </div>
         </div>
@@ -257,9 +258,13 @@
                                 data-bm="{{ $statusBm }}">{{ $statusEn }}</span>
 
                             <h5 data-en="{{ $item->title }}" data-bm="{{ $item->title }}">
-                                @if($item->pin_announcement) <i class='bx bxs-pin text-warning me-1' title="Pinned"></i> @endif{{ $item->title }}</h5>
+                                @if ($item->pin_announcement)
+                                    <i class='bx bxs-pin text-warning me-1' title="Pinned"></i>
+                                @endif{{ $item->title }}
+                            </h5>
 
-                            <div class="qis-announcement-meta" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 14px; margin-bottom: 0.5rem; line-height: 1.5;">
+                            <div class="qis-announcement-meta"
+                                style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 14px; margin-bottom: 0.5rem; line-height: 1.5;">
                                 {!! $item->content !!}
                             </div>
 

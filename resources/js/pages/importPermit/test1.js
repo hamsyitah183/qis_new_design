@@ -863,6 +863,7 @@ function renderPermitAccordion() {
         const cfg = PERMIT_STATUS_CONFIG[permit.status] || PERMIT_STATUS_CONFIG.queued;
         const detail = permit.consignment_detail;
         const statusText = cfg[lang] || cfg.en;
+        let isCustom = ' ';
 
         const agreementBanner = permit.agreedAt
             ? `<div class="alert alert-success mb-3 d-flex align-items-center">
@@ -883,6 +884,10 @@ function renderPermitAccordion() {
                 </strong>
                 - <span data-en="User has not confirmed this item yet." data-bm="Pengguna belum mengesahkan item ini lagi.">User has not confirmed this item yet.</span>
             </div>`;
+        
+        if(permit.isCustom === true) {
+            isCustom += `<span class = "ipv-badge alert alert-warning" data-en = "Custom Item"  data-bm="Item Khas" >Custom Item</span>`
+        }
 
         return `
             <div class="ipv-permit-item" data-permit="${escapeHtml(permit.permit_number)}">
@@ -890,9 +895,14 @@ function renderPermitAccordion() {
                     <div class="ipv-permit-icon"><i class="bi bi-box-seam"></i></div>
                     <div class="ipv-permit-id-group">
                         <div class="ipv-permit-id">#${escapeHtml(permit.permit_number)}</div>
-                        <div class="ipv-permit-name">${escapeHtml(detail.item_name)}</div>
+                        <div class="ipv-permit-name">
+                            ${escapeHtml(detail.item_name)}
+
+                            <div> ${isCustom}</div>
+                        </div>
                     </div>
                     <span class="ipv-badge is-${cfg.color}">${escapeHtml(statusText)}</span>
+                   
                     <div class="ipv-permit-value">RM ${money(permit.value)}</div>
                     <button type="button" class="ipv-view-detail-btn" data-permit-id="${permit.id}" title="View full details">
                         <i class="bi bi-eye"></i>
