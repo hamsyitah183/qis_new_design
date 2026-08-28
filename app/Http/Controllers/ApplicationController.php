@@ -25,6 +25,7 @@ use App\Models\QrScanLog;
 use App\Models\UserAttachment;
 use App\Notifications\ApplicationNotification;
 use App\Services\ApplicationActivityLogger;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -1454,5 +1455,23 @@ class ApplicationController extends Controller
             ->addColumn('country_name', fn($row) => $row->countryInfo?->name ?? '-')
             ->addColumn('registered_by_name', fn($row) => $row->registeredBy?->fullname ?? '-')
             ->make(true);
+    }
+
+
+
+    public function printImportPermit($id)
+    {
+        $application = IpApplication::with([
+            'user',
+            'exporter',
+            'importer',
+            'entryPoint',
+            'consignmentPermits',
+        ])->where('application_id', $id)->firstOrFail();
+
+        $pdf = Pdf::loadView('pdf.import_permit_application', compact('application'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->stream("Import_Permit_Application_{$application->application_id}.pdf");
     }
 }

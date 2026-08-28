@@ -114,12 +114,30 @@ class ApplicationPaymentController extends Controller
         $enforceOneTime = $this->isQrOneTimeEnforced();
 
         $rawPermit = (string) $request->query('permit_number', '');
+        $qrPayload = trim((string) $request->query('qr_payload', ''));
+
+        if ($qrPayload !== '') {
+            try {
+                $decodedPayload = $this->permitQrService->decryptPayload($qrPayload);
+                $rawPermit = (string) ($decodedPayload['permit_number'] ?? '');
+            } catch (\Throwable $e) {
+                return response()->json([
+                    'status' => 'success',
+                    'valid' => false,
+                    'message' => 'Invalid or Tampered QR Code',
+                    'permit_number' => '-',
+                    'item_name' => '-',
+                    'is_used' => false,
+                ]);
+            }
+        }
+
         $rawPermit = trim($rawPermit);
 
         if ($rawPermit === '') {
             return response()->json([
                 'status' => 'error',
-                'message' => 'permit_number is required.',
+                'message' => 'permit_number or qr_payload is required.',
             ], 422);
         }
 
@@ -182,7 +200,7 @@ class ApplicationPaymentController extends Controller
             return response()->json([
                 'status' => 'success',
                 'valid' => false,
-                'message' => 'Not listed',
+                'message' => 'Permit Not Found',
                 'permit_number' => '-',
                 'item_name' => '-',
                 'is_used' => false,
@@ -207,7 +225,7 @@ class ApplicationPaymentController extends Controller
             return response()->json([
                 'status' => 'success',
                 'valid' => false,
-                'message' => 'Not listed',
+                'message' => 'Permit Not Found',
                 'permit_number' => '-',
                 'item_name' => '-',
                 'is_used' => false,
@@ -236,7 +254,7 @@ class ApplicationPaymentController extends Controller
             return response()->json([
                 'status' => 'success',
                 'valid' => false,
-                'message' => 'Not listed',
+                'message' => 'Permit Not Found',
                 'permit_number' => '-',
                 'is_used' => false,
             ]);
@@ -276,6 +294,10 @@ class ApplicationPaymentController extends Controller
                 ->first();
 
             if ($existingUsage) {
+                $endorser = InternalUser::query()
+                    ->where('uuid', $existingUsage->used_by_uuid)
+                    ->first();
+
                 return response()->json([
                     'status' => 'success',
                     'valid' => false,
@@ -285,28 +307,14 @@ class ApplicationPaymentController extends Controller
                     'application_type' => $order->application_type,
                     'item_name' => $itemName,
                     'is_used' => true,
+                    // Audit details of the earlier scan for the scanner app.
+                    'action' => $existingUsage->inspection_status, // endorsed | ignored | null
+                    'endorsed_by' => $endorser?->fullname ?: $endorser?->name,
+                    'endorsed_at' => optional($existingUsage->used_at)->format('d-m-Y h:i:s A'),
+                    'endorsed_location' => $existingUsage->used_location,
+                    'endorsed_lat' => $existingUsage->used_lat,
+                    'endorsed_lng' => $existingUsage->used_lng,
                 ]);
-            }
-
-            QrPermitUsage::query()->create([
-                'application_type' => $applicationType,
-                'permit_number' => $resolvedPermitNumber,
-                'permit_number_key' => $permitNumberKey,
-                'order_number' => $order->order_number,
-                'used_by_uuid' => $internalScanner->uuid,
-                'used_at' => now(),
-            ]);
-        }
-
-        if ($enforceOneTime) {
-            try {
-                event(new OrderQrUsed(
-                    orderNumber: (string) $order->order_number,
-                    permitNumber: $resolvedPermitNumber,
-                    usedAt: now()->format('d-m-Y h:i:s A'),
-                ));
-            } catch (\Throwable $e) {
-                Log::warning('Failed to broadcast OrderQrUsed event: ' . $e->getMessage());
             }
         }
 
@@ -326,6 +334,90 @@ class ApplicationPaymentController extends Controller
     {
         // Default true to enforce one-time QR usage in production behavior.
         return filter_var((string) env('QIS_QR_ENFORCE_ONE_TIME', 'true'), FILTER_VALIDATE_BOOL);
+    }
+
+    /**
+     * Lists issued permits (status = paid) that have NOT yet been endorsed or
+     * ignored, grouped by application type, for the scanner's pending screen.
+     */
+    public function pendingPermitsApi(Request $request)
+    {
+        $scannerUserType = trim((string) $request->query('scanner_user_type', ''));
+        $scannerUserUuid = trim((string) $request->query('scanner_user_uuid', ''));
+
+        if ($scannerUserType !== 'internal' || $scannerUserUuid === '') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Internal scanner identity is required.',
+            ], 403);
+        }
+
+        $types = [
+            'Import Permit' => IpConsignmentPermit::class,
+            'Inspection Certificate' => InspectionItem::class,
+            'Consignment Certificate' => ConsignmentPermit::class,
+        ];
+
+        // Permit-number keys already endorsed/ignored, grouped by type.
+        $usedKeys = QrPermitUsage::query()
+            ->get(['application_type', 'permit_number_key'])
+            ->groupBy('application_type')
+            ->map(fn ($group) => $group->pluck('permit_number_key')->all());
+
+        $normalize = fn ($permitNumber) => strtoupper(
+            str_replace('/', '', preg_replace('/\s+/', '', (string) $permitNumber))
+        );
+
+        // Order numbers live on the order's `order_details` JSON, not on the
+        // permit tables, so build a permit-key => order-number lookup once
+        // rather than searching the orders for every row.
+        $orderNumbers = [];
+        foreach (Order::query()->get(['order_number', 'order_details']) as $order) {
+            foreach (($order->order_details['permits'] ?? []) as $permit) {
+                $key = $normalize($permit['permit_number'] ?? '');
+                if ($key !== '' && !isset($orderNumbers[$key])) {
+                    $orderNumbers[$key] = (string) $order->order_number;
+                }
+            }
+        }
+
+        $filterType = trim((string) $request->query('application_type', ''));
+
+        $counts = [];
+        $permits = [];
+
+        foreach ($types as $type => $model) {
+            $used = $usedKeys[$type] ?? [];
+
+            $rows = $model::query()
+                ->where('status', 'paid') // issued = has a scannable QR
+                ->get(['permit_number', 'consignment_detail']);
+
+            $pending = [];
+            foreach ($rows as $row) {
+                $key = $normalize($row->permit_number);
+                if (in_array($key, $used, true)) {
+                    continue; // already endorsed/ignored
+                }
+                $pending[] = [
+                    'permit_number' => (string) $row->permit_number,
+                    'order_number' => $orderNumbers[$key] ?? '-',
+                    'item_name' => (string) data_get($row->consignment_detail, 'item_name', '-'),
+                    'application_type' => $type,
+                ];
+            }
+
+            $counts[$type] = count($pending);
+            if ($filterType === '' || $filterType === $type) {
+                $permits = array_merge($permits, $pending);
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'counts' => $counts,
+            'permits' => $permits,
+        ]);
     }
 
     private function recordQrScanLog(Request $request, array $payload): void
@@ -540,28 +632,24 @@ class ApplicationPaymentController extends Controller
 
         // Apply Order Status filter (filter by transaction_status since that's what's displayed)
         if ($request->filled('order_status') && $request->order_status != '') {
-            $status = explode(',', $request->input('order_status'));
+            $status = $request->input('order_status');
             // Match exact transaction_status name from database (case-sensitive)
-            $query->whereIn('transaction_status', $status);
+            $query->where('transaction_status', $status);
         }
 
         // Apply Application Type filter
-        if ($request->filled('application_type') && $request->application_type != '') {
-            $appTypes = explode(',', $request->input('application_type'));
-            
-            $mappedTypes = [];
-            foreach ($appTypes as $appType) {
-                $mappedTypes[] = match (trim($appType)) {
-                    'import_permit' => 'Import Permit',
-                    'inspection' => 'Inspection Certificate',
-                    'consignment' => 'Consignment Certificate',
-                    default => null,
-                };
-            }
-            $mappedTypes = array_filter($mappedTypes);
+        if ($request->filled('application_type')) {
+            $appType = $request->input('application_type');
 
-            if (!empty($mappedTypes)) {
-                $query->whereIn('application_type', $mappedTypes);
+            $mappedType = match ($appType) {
+                'import_permit' => 'Import Permit',
+                'inspection' => 'Inspection Certificate',
+                'consignment' => 'Consignment Certificate',
+                default => null,
+            };
+
+            if ($mappedType) {
+                $query->where('application_type', $mappedType);
             }
         }
 
@@ -780,6 +868,64 @@ class ApplicationPaymentController extends Controller
                     'status' => 'error',
                     'message' => 'Order not found.',
                 ], 404);
+            }
+
+            $permitNumberKey = strtoupper(str_replace('/', '', preg_replace('/\s+/', '', $permitNumber)));
+            if ($this->isQrOneTimeEnforced()) {
+                $existingUsage = QrPermitUsage::query()
+                    ->where('application_type', $applicationType)
+                    ->where('permit_number_key', $permitNumberKey)
+                    ->first();
+
+                if ($existingUsage) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'QR code has already been used.',
+                    ], 409);
+                }
+
+                // Live GPS location captured by the scanner app. There is no
+                // fallback: a real fix is required to record an endorsement.
+                $usedLat = $request->input('used_lat');
+                $usedLng = $request->input('used_lng');
+                $usedLocation = trim((string) $request->input('used_location', ''));
+
+                if (!is_numeric($usedLat) || !is_numeric($usedLng)) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'A live GPS location is required to record this scan.',
+                    ], 422);
+                }
+
+                QrPermitUsage::query()->create([
+                    'application_type' => $applicationType,
+                    'permit_number' => $permitNumber,
+                    'permit_number_key' => $permitNumberKey,
+                    'order_number' => $orderNumber,
+                    'used_by_uuid' => $internalUser->uuid,
+                    'used_at' => now(),
+                    'used_lat' => $usedLat,
+                    'used_lng' => $usedLng,
+                    'used_location' => $usedLocation !== '' ? $usedLocation : null,
+                    'inspection_status' => $inspectionStatus === 'approved'
+                        ? 'endorsed'
+                        : 'ignored',
+                ]);
+
+                $order->forceFill([
+                    'qr_used_at' => now(),
+                    'qr_used_by_uuid' => $internalUser->uuid,
+                ])->save();
+
+                try {
+                    event(new OrderQrUsed(
+                        orderNumber: (string) $order->order_number,
+                        permitNumber: $permitNumber,
+                        usedAt: now()->format('d-m-Y h:i:s A'),
+                    ));
+                } catch (\Throwable $e) {
+                    Log::warning('Failed to broadcast OrderQrUsed event: ' . $e->getMessage());
+                }
             }
 
             // Only log to Application Log if inspection was approved

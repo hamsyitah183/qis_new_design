@@ -664,19 +664,19 @@ function fetchPostcodes(districtId, selectedPostcode = null) {
 // Document List Management - Expandable Sections & Delete Functionality
 // ============================================================================
 
-$(document).on("click", ".doc-row-toggle", function () {
-    const docId = $(this).data("doc-id");
-    const isExpanded = $(this).attr("aria-expanded") === "true";
-    const $panel = $(`.doc-panel[data-doc-id="${docId}"]`);
+// $(document).on("click", ".doc-row-toggle", function () {
+//     const docId = $(this).data("doc-id");
+//     const isExpanded = $(this).attr("aria-expanded") === "true";
+//     const $panel = $(`.doc-panel[data-doc-id="${docId}"]`);
 
-    if (isExpanded) {
-        $(this).attr("aria-expanded", "false");
-        $panel.addClass("d-none");
-    } else {
-        $(this).attr("aria-expanded", "true");
-        $panel.removeClass("d-none");
-    }
-});
+//     if (isExpanded) {
+//         $(this).attr("aria-expanded", "false");
+//         $panel.addClass("d-none");
+//     } else {
+//         $(this).attr("aria-expanded", "true");
+//         $panel.removeClass("d-none");
+//     }
+// });
 
 $(document).on("click", ".delete-attachment", function (e) {
     e.preventDefault();

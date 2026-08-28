@@ -3,11 +3,7 @@
 @section('pageName', 'View Application')
 
 @push('scripts')
-    @vite([
-        'resources/js/pages/inspection/inspection1.js',
-        'resources/js/pages/inspection/inspection2.js',
-        'resources/js/pages/inspection/inspection-actions.js',
-    ])
+    @vite(['resources/js/pages/inspection/inspection1.js', 'resources/js/pages/inspection/inspection2.js', 'resources/js/pages/inspection/inspection-actions.js'])
 @endpush
 
 @section('breadcrumb')
@@ -16,7 +12,9 @@
         $internalUser = auth('internal')->user();
         $isInternal = auth('internal')->check();
         // Kept as-is from the original blade — these were hardcoded URLs, not named routes.
-        $applicationUrl = $isInternal ? '/internal/inspection_certificates_list' : '/public/inspection_certificates_list';
+        $applicationUrl = $isInternal
+            ? '/internal/inspection_certificates_list'
+            : '/public/inspection_certificates_list';
     @endphp
 
     <x-breadcrumb :items="[
@@ -67,15 +65,15 @@
         // rather than inventing a permission name that may not exist for this
         // guard. If Inspection later gets its own "approve application"
         // permission, add it here to match Consignment's stricter gating.
-        $showClerkReviewActions = $isAdminOrClerk && str_contains($status, 'clerk review in-progress');
+$showClerkReviewActions = $isAdminOrClerk && str_contains($status, 'clerk review in-progress');
 
-        // [TODO] Consignment has a separate "re-evaluate a rejected
-        // application" admin flow ($showAdminRejectedActions). Nothing in the
-        // old Inspection blade/JS evidenced an equivalent — omitted here. Add
-        // it back if Inspection gets the same feature.
+// [TODO] Consignment has a separate "re-evaluate a rejected
+// application" admin flow ($showAdminRejectedActions). Nothing in the
+// old Inspection blade/JS evidenced an equivalent — omitted here. Add
+// it back if Inspection gets the same feature.
 
-        // ---------- FIX: Edit Application permission check ----------
-        $canEditInternal = $isInternal && auth('internal')->user()->can('edit application');
+// ---------- FIX: Edit Application permission check ----------
+$canEditInternal = $isInternal && auth('internal')->user()->can('edit application');
     @endphp
 
     {{-- Feed real application context to inspection_detail.js instead of URL-parsing --}}
@@ -117,8 +115,8 @@
                                 data-bm="Terima Permohonan">Accept Application</span>
                         </button>
                         <button id="rejectAdminAppl" class="ipv-btn-action is-danger">
-                            <i class="bi bi-x-lg"></i> <span data-en="Reject Application"
-                                data-bm="Tolak Permohonan">Reject Application</span>
+                            <i class="bi bi-x-lg"></i> <span data-en="Reject Application" data-bm="Tolak Permohonan">Reject
+                                Application</span>
                         </button>
                     </div>
                 </div>
@@ -155,6 +153,12 @@
                     <span class="ipv-download-badge" id="ipvDownloadBadge" title="Certificates downloaded">
                         <i class="bi bi-download"></i> 0
                     </span>
+
+                    <button class="btn ipv-btn-primary btn-secondary" id="printApplication"
+                        data-type = "{{ $application->type }}" data-application = "{{ $application->application_id }}">
+                        <i class="fa-solid fa-print"></i> <span data-en='Print Application' data-bm="Cetak Permohonan">Print
+                            Application</span>
+                    </button>
                 </div>
 
                 <div class="ipv-value-box d-none">
@@ -194,13 +198,15 @@
                     @if ($application->category_application == '0')
                         <a class="ipv-btn-outline w-100 justify-content-center mt-3 btn btn-primary" id="editButton"
                             href="{{ route('public.inspectionApplicationSelf', ['id' => $application->application_id]) }}">
-                            <i class="bi bi-pencil"></i> <span data-en="Edit Application" data-bm="Kemaskini Permohonan">Edit
+                            <i class="bi bi-pencil"></i> <span data-en="Edit Application"
+                                data-bm="Kemaskini Permohonan">Edit
                                 Application</span>
                         </a>
                     @else
                         <a class="ipv-btn-outline w-100 justify-content-center mt-3 btn btn-primary" id="editButton"
                             href="{{ route('public.inspectionApplicationOthers', ['id' => $application->application_id]) }}">
-                            <i class="bi bi-pencil"></i> <span data-en="Edit Application" data-bm="Kemaskini Permohonan">Edit
+                            <i class="bi bi-pencil"></i> <span data-en="Edit Application"
+                                data-bm="Kemaskini Permohonan">Edit
                                 Application</span>
                         </a>
                     @endif
@@ -216,7 +222,8 @@
 
                 <div class="ipv-status-header">
                     <div>
-                        <span class="ipv-status-eyebrow" data-en="Application Type:" data-bm="Jenis Permohonan:">Application
+                        <span class="ipv-status-eyebrow" data-en="Application Type:"
+                            data-bm="Jenis Permohonan:">Application
                             Type:</span>
                         <strong data-en="Inspection Certificate" data-bm="Sijil Pemeriksaan">Inspection
                             Certificate</strong>
@@ -488,7 +495,8 @@
                                     Select Purpose --</option>
                                 @foreach ($pubpurpose ?? [] as $purpose)
                                     <option value="{{ $purpose->cate_code }}"
-                                        data-description="{{ $purpose->description }}">{{ $purpose->description }}</option>
+                                        data-description="{{ $purpose->description }}">{{ $purpose->description }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>

@@ -84,7 +84,6 @@
                 str_contains($importerVerify, 'wait for representative approval')) &&
             $isImporterVerifier;
         $showAdminRejectedActions = str_contains($status, 'rejected') && $isAdmin;
-    
     @endphp
 
     {{-- Feed real application context to test1.js instead of URL-parsing --}}
@@ -121,10 +120,10 @@
                                 data-bm="Permohonan ini sedang menunggu semakan anda.">This application is awaiting your
                                 review.</span>
                             @if ($application->has_custom_items)
-                              
                                 <span class="" data-en="There is an item that is not in the Import Permit item list."
                                     data-bm="Terdapat item yang tiada dalam senarai Import Permit item.">
-                                    <i class="bi bi-exclamation-triangle me-1"></i> There is an item that is not in the Import Permit item list.
+                                    <i class="bi bi-exclamation-triangle me-1"></i> There is an item that is not in the
+                                    Import Permit item list.
                                 </span>
                             @endif
                         @elseif ($showImporterVerifyActions)
@@ -189,6 +188,12 @@
                     <span class="ipv-download-badge" id="ipvDownloadBadge" title="Permits downloaded">
                         <i class="bi bi-download"></i> 0
                     </span>
+
+                    <button class="btn ipv-btn-primary btn-secondary" id="printApplication"
+                        data-type = "{{ $application->type }}" data-application = "{{ $application->application_id }}">
+                        <i class="fa-solid fa-print"></i> <span data-en='Print Application' data-bm="Cetak Permohonan">Print
+                            Application</span>
+                    </button>
                     <div class="schedule">
                         <button type="button" class="ipv-icon-btn d-none" id="scheduleBtn" title="Schedule inspection">
                             <i class="bi bi-calendar3"></i>
@@ -617,7 +622,8 @@
                                     Select Purpose --</option>
                                 @foreach ($pubpurpose ?? [] as $purpose)
                                     <option value="{{ $purpose->cate_code }}"
-                                        data-description="{{ $purpose->description }}">{{ $purpose->description }}</option>
+                                        data-description="{{ $purpose->description }}">{{ $purpose->description }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>

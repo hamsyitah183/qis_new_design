@@ -638,6 +638,8 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/consignment/application/{id}/print', [ConsignmentController::class, 'printApplication'])
     ->name('consignment.application.print');
 
+    Route::get('/import/application/{id}/print', [ApplicationController::class, 'printImportPermit'])->name('import-permit.print');
+    Route::get('/inspection/application/{id}/print', [InspectionController::class, 'printInspection'])->name('inspection.print');
 
     // uses
     Route::get('/consignment_uses', [PublicController::class, 'getConsignmentUses'])->name('consignment.uses');

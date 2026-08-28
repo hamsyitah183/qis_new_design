@@ -77,9 +77,12 @@ function reapplyCtaHtml(permit) {
     `;
 }
 
-export function openPermitDetail(permitNumber) {
-    const permit = PERMITS.find((p) => p.permit_number === permitNumber);
-    if (!permit) return;
+export function openPermitDetail(permitId) {  // parameter is now id
+    const permit = PERMITS.find((p) => String(p.id) === String(permitId));
+    if (!permit) {
+        console.warn(`Permit with id ${permitId} not found.`);
+        return;
+    }
 
     const cfg = PERMIT_STATUS_CONFIG[permit.status] || PERMIT_STATUS_CONFIG.queued;
     const detail = permit.consignment_detail;
