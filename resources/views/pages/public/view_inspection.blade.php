@@ -194,7 +194,7 @@ $canEditInternal = $isInternal && auth('internal')->user()->can('edit applicatio
                 {{-- ============================================================ --}}
                 {{-- EDIT APPLICATION BUTTON – FIXED CONDITION                    --}}
                 {{-- ============================================================ --}}
-                @if (($application->status == 'Draft' && $application->user_id === $authUuid) || $canEditInternal)
+                @if ( ($application->status == 'Draft' || $application->status == 'Clerk Rejected') && $application->user_id === $authUuid) 
                     @if ($application->category_application == '0')
                         <a class="ipv-btn-outline w-100 justify-content-center mt-3 btn btn-primary" id="editButton"
                             href="{{ route('public.inspectionApplicationSelf', ['id' => $application->application_id]) }}">
