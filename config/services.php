@@ -40,4 +40,8 @@ return [
         'from' => env('MOCEAN_WHATSAPP_FROM'),
     ],
 
+    'qis' => [
+        'qr_key' => env('QIS_QR_KEY'),
+    ],
+
 ];
