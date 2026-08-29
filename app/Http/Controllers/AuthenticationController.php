@@ -100,72 +100,16 @@ class AuthenticationController extends Controller
         ], 422);
     }
 
-    public function loginActionApi(Request $request)
-    {
-        // Get language from request (default 'en')
-        $lang = $request->input('lang', 'en');
-        app()->setLocale($lang);
-
-
-        $credentials = $request->validate([
-            'userType' => 'required|in:public,internal',
-            'email' => 'required|email',
-            'password' => 'required|string',
-        ]);
-
-        $guard = $credentials['userType'];
-
-        // Retrieve user first
-        $user = ($guard === 'public' ? PublicUser::class : InternalUser::class)::where('email', $credentials['email'])->first();
-
-        if (!$user) {
-            return response()->json([
-                'status' => 'error',
-                'message' => __('auth.user_not_found'), // translated
-            ], 422);
-        }
-
-        // API login is stateless: verify credentials without creating a session.
-        if (!Hash::check($credentials['password'], $user->password)) {
-            return response()->json([
-                'status' => 'error',
-                'message' => __('auth.invalid_credentials'), // translated
-            ], 422);
-        }
-
-        // After login, check if email not verified
-        if (method_exists($user, 'hasVerifiedEmail') && !$user->hasVerifiedEmail()) {
-            $user->notify(new VerifyEmailNotification());
-            return response()->json([
-                'status' => 'unverified',
-                'message' => __('auth.email_unverified'), // translated
-                'redirect' => route('verify.email'),
-            ]);
-        }
-
-        // Return user payload expected by mobile app.
-        return response()->json([
-            'status' => 'success',
-            'message' => __('auth.login_success'), // translated
-            'user' => [
-                'uuid' => $user->uuid,
-                'name' => $user->name ?? $user->fullname,
-                'email' => $user->email,
-                'userType' => $guard,
-            ],
-        ]);
-    }
-
     public function internalLoginApi(Request $request)
     {
         $credentials = $request->validate([
-            'username' => 'required|string',
+            'email' => 'required|email',
             'password' => 'required|string',
             'remember_me' => 'sometimes|boolean',
         ]);
 
         $user = InternalUser::query()
-            ->where('username', $credentials['username'])
+            ->where('email', $credentials['email'])
             ->first();
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
@@ -190,7 +134,7 @@ class AuthenticationController extends Controller
                 'uuid' => $user->uuid,
                 'name' => $user->fullname,
                 'email' => $user->email,
-                'position' => $user->position,
+                'roles' => $user->getRoleNames()->first() ?? null,
             ],
         ]);
     }

@@ -74,6 +74,91 @@ class ApplicationPaymentController extends Controller
         ]);
     }
 
+    public function getScanHistoryApi(Request $request)
+    {
+        $internalUser = $request->user();
+
+        if (!$internalUser) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthenticated.',
+            ], 401);
+        }
+
+        $query = QrScanLog::query()
+            ->where('internal_user_uuid', $internalUser->uuid)
+            ->latest('scanned_at');
+
+        return $this->scanHistoryResponse($request, $query);
+    }
+
+    public function getAllScanHistoryApi(Request $request)
+    {
+        $internalUser = $request->user();
+
+        if (!$internalUser) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthenticated.',
+            ], 401);
+        }
+
+        if (!$internalUser->hasAnyRole(['admin', 'superadmin'])) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized: admins only.',
+            ], 403);
+        }
+
+        $query = QrScanLog::query()
+            ->with('internalUser:id,uuid,fullname,position,roles:id,name')
+            ->latest('scanned_at');
+
+        return $this->scanHistoryResponse($request, $query);
+    }
+
+    private function scanHistoryResponse(Request $request, $query)
+    {
+        $result = strtolower(trim((string) $request->query('result', '')));
+        if ($result !== '' && !in_array($result, ['approved', 'rejected'])) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'result must be "approved" or "rejected".',
+            ], 422);
+        }
+
+        if ($result !== '') {
+            $query->where('result', $result);
+        }
+
+        $logs = $query->paginate((int) $request->query('per_page', 15))
+            ->through(function ($log) {
+                return [
+                    'id' => $log->id,
+                    'scanner' => $log->relationLoaded('internalUser') && $log->internalUser
+                        ? [
+                            'name' => $log->internalUser->fullname ?? '-',
+                            'roles' => $log->internalUser->getRoleNames()->first() ?? null,
+                        ]
+                        : null,
+                    'permit_number' => $log->permit_number ?? '-',
+                    'order_number' => $log->order_number ?? '-',
+                    'application_type' => $log->application_type ?? '-',
+                    'result' => $log->result,
+                    'is_valid' => (bool) $log->is_valid,
+                    'used_lat' => $log->used_lat,
+                    'used_lng' => $log->used_lng,
+                    'used_location' => $log->used_location,
+                    'scanned_at' => optional($log->scanned_at)->format('d-m-Y h:i:s A') ?? '-',
+                ];
+            });
+
+        return response()->json([
+            'status' => 'success',
+            'logs' => $logs,
+        ]);
+    }
+
     public function getEncryptedPermitPayload(Request $request)
     {
         $type = authUser()['type'] ?? null;
@@ -288,15 +373,7 @@ class ApplicationPaymentController extends Controller
         }
 
         // One-time consume is restricted to known internal scanner users only.
-        $scannerUserType = trim((string) $request->query('scanner_user_type', ''));
-        $scannerUserUuid = trim((string) $request->query('scanner_user_uuid', ''));
-
-        $internalScanner = null;
-        if ($scannerUserType === 'internal' && $scannerUserUuid !== '') {
-            $internalScanner = InternalUser::query()
-                ->where('uuid', $scannerUserUuid)
-                ->first();
-        }
+        $internalScanner = $request->user();
 
         if (!$internalScanner) {
             return response()->json([
@@ -387,10 +464,7 @@ class ApplicationPaymentController extends Controller
      */
     public function pendingPermitsApi(Request $request)
     {
-        $scannerUserType = trim((string) $request->query('scanner_user_type', ''));
-        $scannerUserUuid = trim((string) $request->query('scanner_user_uuid', ''));
-
-        if ($scannerUserType !== 'internal' || $scannerUserUuid === '') {
+        if (!$request->user()) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Internal scanner identity is required.',
@@ -471,20 +545,7 @@ class ApplicationPaymentController extends Controller
             $internalUser = $request->user();
 
             if (!$internalUser) {
-                $userType = (string) $request->query('scanner_user_type', '');
-                $scannerUserUuid = trim((string) $request->query('scanner_user_uuid', ''));
-
-                if ($userType !== 'internal' || $scannerUserUuid === '') {
-                    return;
-                }
-
-                $internalUser = InternalUser::query()
-                    ->where('uuid', $scannerUserUuid)
-                    ->first();
-
-                if (!$internalUser) {
-                    return;
-                }
+                return;
             }
 
             QrScanLog::create([

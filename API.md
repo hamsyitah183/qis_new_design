@@ -2,31 +2,29 @@
 
 Base URL: `https://your-host/api`
 
-All responses are JSON. Unless noted, endpoints are unauthenticated except `GET /api/user`.
+All responses are JSON. Scanner endpoints marked **🔒 Auth required** need `Authorization: Bearer <token>` header (token from `POST /api/internal/login`).
 
 ---
 
-## 1. POST `/api/login`
+## 1. POST `/api/internal/login`
 
-Authenticate a public or internal user. Stateless (no session created); returns a user payload for the mobile app.
+Authenticate an internal user for the scanner app. Returns a Sanctum Bearer token.
 
 **Request body (JSON):**
 
 | Field | Type | Required | Rules |
 |---|---|---|---|
-| `userType` | string | yes | `in:public,internal` |
 | `email` | string | yes | valid email |
 | `password` | string | yes | string |
-| `lang` | string | no | default `en` |
+| `remember_me` | boolean | no | `true` → token valid 30 days; absent/`false` → 24 hours |
 
 **Example payload:**
 
 ```json
 {
-  "userType": "internal",
   "email": "scanner@qis.gov.my",
   "password": "secret123",
-  "lang": "en"
+  "remember_me": true
 }
 ```
 
@@ -36,26 +34,20 @@ Authenticate a public or internal user. Stateless (no session created); returns 
 {
   "status": "success",
   "message": "Login successful.",
+  "token": "1|abc123...",
+  "expires_at": "2026-09-27T14:30:00+08:00",
   "user": {
     "uuid": "6f0c...",
     "name": "Ali Bin Ahmad",
     "email": "scanner@qis.gov.my",
-    "userType": "internal"
+    "roles": "enforcement officer"
   }
 }
 ```
 
-**Response `200` (email unverified):** status `unverified`, includes `redirect` to verify page.
+`token` is a Sanctum plain-text token: store it securely (Keychain/Keystore), send as `Authorization: Bearer <token>`. `user.uuid` is the `scanner_user_uuid` value. Token expires after 24h (or 30d with `remember_me`), then API returns `401` and app must re-login.
 
-```json
-{
-  "status": "unverified",
-  "message": "Please verify your email.",
-  "redirect": "http://host/verify-email"
-}
-```
-
-**Response `422` (errors):**
+**Response `422` (bad credentials):**
 
 ```json
 {
@@ -64,7 +56,33 @@ Authenticate a public or internal user. Stateless (no session created); returns 
 }
 ```
 
-Error messages are translated based on `lang` (en/ms).
+**Response `422` (validation):**
+
+```json
+{
+  "message": "The email field is required.",
+  "errors": {
+    "email": ["The email field is required."]
+  }
+}
+```
+
+---
+
+## 1b. POST `/api/internal/logout` 🔒 Auth required
+
+Revoke the current token (kills it immediately, even before expiry).
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response `200`:**
+
+```json
+{
+  "status": "success",
+  "message": "Logged out."
+}
+```
 
 ---
 
@@ -79,7 +97,18 @@ Return the currently authenticated user. Requires `auth:sanctum` (Bearer token).
 | `Authorization` | `Bearer <token>` |
 | `Accept` | `application/json` |
 
-**Response `200`:** The authenticated `PublicUser` / `InternalUser` model as JSON.
+**Response `200`:** The authenticated `PublicUser` / `InternalUser` as JSON, without `position`:
+
+```json
+{
+  "uuid": "6f0c...",
+  "name": "Ali Bin Ahmad",
+  "email": "scanner@qis.gov.my",
+  "roles": "enforcement officer"
+}
+```
+
+`roles` present for internal users; `null` for public users.
 
 **Response `401`:** `{"message": "Unauthenticated."}`
 
@@ -257,9 +286,11 @@ Delete a state and all its districts.
 
 ---
 
-## 9. GET `/api/permit/validate`
+## 9. GET `/api/permit/validate` 🔒 Auth required
 
 Validate a permit by number or by encrypted QR payload. Used by the scanner app.
+
+**Headers:** `Authorization: Bearer <token>`. Scanner identity comes from the token; `scanner_user_type` / `scanner_user_uuid` params no longer needed.
 
 **Query params:**
 
@@ -267,18 +298,19 @@ Validate a permit by number or by encrypted QR payload. Used by the scanner app.
 |---|---|---|---|
 | `permit_number` | string | yes* | Permit number, e.g. `IPO/123` or `IPO123` |
 | `qr_payload` | string | yes* | Encrypted `QIS1:` payload (see QR Payload Format below). Overrides `permit_number` |
-| `scanner_user_type` | string | no | Must be `internal` to allow one-time QR consumption |
-| `scanner_user_uuid` | string | no | Internal user UUID; required for full validation |
 
 \* At least one of `permit_number` / `qr_payload` required.
+
+**Scan logging:** every call writes a `qr_scan_logs` row — `result` is `valid`, `used`, or `invalid`.
 
 **Examples:**
 
 ```
 GET /api/permit/validate?permit_number=IPO/123
 GET /api/permit/validate?qr_payload=QIS1:eyJpdiI6...
-GET /api/permit/validate?permit_number=IPO/123&scanner_user_type=internal&scanner_user_uuid=6f0c...
 ```
+
+**Response `401`:** `{"message": "Unauthenticated."}`
 
 **Response `200` valid:**
 
@@ -337,23 +369,23 @@ Permit lookup tables searched in order: `IpConsignmentPermit`, `InspectionItem`,
 
 ---
 
-## 10. GET `/api/permits/pending`
+## 10. GET `/api/permits/pending` 🔒 Auth required
 
 List issued permits (status `paid`) not yet endorsed/ignored, grouped by application type. For scanner pending screen.
+
+**Headers:** `Authorization: Bearer <token>`.
 
 **Query params:**
 
 | Param | Type | Required | Description |
 |---|---|---|---|
-| `scanner_user_type` | string | yes | Must be `internal` |
-| `scanner_user_uuid` | string | yes | Internal user UUID |
 | `application_type` | string | no | Filter to one type; empty = all |
 
 **Example:**
 
 ```
-GET /api/permits/pending?scanner_user_type=internal&scanner_user_uuid=6f0c...
-GET /api/permits/pending?scanner_user_type=internal&scanner_user_uuid=6f0c...&application_type=Import%20Permit
+GET /api/permits/pending
+GET /api/permits/pending?application_type=Import%20Permit
 ```
 
 **Response `200`:**
@@ -377,27 +409,15 @@ GET /api/permits/pending?scanner_user_type=internal&scanner_user_uuid=6f0c...&ap
 }
 ```
 
-**Response `403`:**
-
-```json
-{
-  "status": "error",
-  "message": "Internal scanner identity is required."
-}
-```
+**Response `401`:** `{"message": "Unauthenticated."}`
 
 ---
 
-## 11. POST `/api/qr-scan/complete-scan`
+## 11. POST `/api/qr-scan/complete-scan` 🔒 Auth required
 
 Record the result of a scanned permit inspection (approve/reject), with live GPS. Consumes the QR one-time.
 
-**Query params:**
-
-| Param | Type | Required | Description |
-|---|---|---|---|
-| `scanner_user_type` | string | yes | Must be `internal` |
-| `scanner_user_uuid` | string | yes | Internal user UUID |
+**Headers:** `Authorization: Bearer <token>` (token from `/api/internal/login`). Scanner identity comes from the token — `scanner_user_type` / `scanner_user_uuid` query params no longer needed.
 
 **Request body (JSON):**
 
@@ -440,25 +460,130 @@ Record the result of a scanned permit inspection (approve/reject), with live GPS
 
 | Code | Body |
 |---|---|
+| `401` | `{"message": "Unauthenticated."}` (missing/expired token) |
 | `422` | `{"status":"error","message":"permit_number, order_number, and application_type are required."}` |
 | `422` | `{"status":"error","message":"inspection_status must be either \"approved\" or \"rejected\"."}` |
 | `422` | `{"status":"error","message":"A live GPS location is required to record this scan."}` |
-| `403` | `{"status":"error","message":"Internal scanner identity is required."}` |
-| `403` | `{"status":"error","message":"Invalid scanner user."}` |
 | `404` | `{"status":"error","message":"Order not found."}` |
 | `409` | `{"status":"error","message":"QR code has already been used."}` |
 | `500` | `{"status":"error","message":"Failed to log scan completion."}` |
 
 Behavior:
-- `inspection_status=approved` → records `endorsed`, writes `QrScanLog`, fires `OrderQrUsed` broadcast event.
-- `inspection_status=rejected` → records `ignored`, no log, no event.
+- `inspection_status=approved` → records `endorsed`, writes `QrScanLog` (`result=approved`), fires `OrderQrUsed` broadcast event.
+- `inspection_status=rejected` → records `ignored`, writes `QrScanLog` (`result=rejected`).
+- Both statuses log GPS + location into `qr_scan_logs`.
 - Marks `orders.qr_used_at` / `qr_used_by_uuid`.
 
 ---
 
-## 12. GET `/api/order/details/{order_number}`
+## 12. GET `/api/qr-scan/history` 🔒 Auth required
+
+Scan history for the logged-in internal user (non-admin). Only own scans.
+
+**Headers:** `Authorization: Bearer <token>`.
+
+**Query params:**
+
+| Param | Type | Required | Description |
+|---|---|---|---|
+| `result` | string | no | `approved` or `rejected` — filter by scan outcome |
+| `per_page` | int | no | Items per page (default `15`) |
+
+**Response `200`:** Laravel paginator under `logs`, each item:
+
+```json
+{
+  "status": "success",
+  "logs": {
+    "current_page": 1,
+    "data": [
+      {
+        "id": 1,
+        "scanner": null,
+        "permit_number": "IPO/123",
+        "order_number": "ORD-0001",
+        "application_type": "Import Permit",
+        "result": "approved",
+        "is_valid": true,
+        "used_lat": 3.043,
+        "used_lng": 101.445,
+        "used_location": "Port Klang Gate 3",
+        "scanned_at": "29-08-2026 10:00:00 AM"
+      }
+    ],
+    "per_page": 15,
+    "total": 1,
+    "last_page": 1
+  }
+}
+```
+
+`scanned_at` format `d-m-Y h:i:s A`. Logs restricted to the authenticated user's `internal_user_uuid`; `scanner` is `null`.
+
+**Error responses:**
+
+| Code | Body |
+|---|---|
+| `401` | `{"status":"error","message":"Unauthenticated."}` (missing/expired token) |
+| `422` | `{"status":"error","message":"result must be \"approved\" or \"rejected\"."}` |
+
+---
+
+## 13. GET `/api/qr-scan/history/all` 🔒 Auth required, admins only
+
+All scan history across every internal user. Requires `admin` or `superadmin` role.
+
+**Headers:** `Authorization: Bearer <token>`.
+
+**Query params:** same as `/api/qr-scan/history` (`result`, `per_page`).
+
+**Response `200`:** paginator, each item includes `scanner`:
+
+```json
+{
+  "status": "success",
+  "logs": {
+    "current_page": 1,
+    "data": [
+      {
+        "id": 1,
+        "scanner": {
+          "name": "Ali Bin Ahmad",
+          "roles": "boundary officer"
+        },
+        "permit_number": "IPO/123",
+        "order_number": "ORD-0001",
+        "application_type": "Import Permit",
+        "result": "approved",
+        "is_valid": true,
+        "used_lat": 3.043,
+        "used_lng": 101.445,
+        "used_location": "Port Klang Gate 3",
+        "scanned_at": "29-08-2026 10:00:00 AM"
+      }
+    ],
+    "per_page": 15,
+    "total": 1,
+    "last_page": 1
+  }
+}
+```
+
+**Error responses:**
+
+| Code | Body |
+|---|---|
+| `401` | `{"status":"error","message":"Unauthenticated."}` (missing/expired token) |
+| `403` | `{"status":"error","message":"Unauthorized: admins only."}` (non-admin token) |
+| `422` | `{"status":"error","message":"result must be \"approved\" or \"rejected\"."}` |
+
+---
+
+## 14. GET `/api/order/details/{order_number}` 🔒 Auth required
 
 Fetch full order details: header, payment, application, permits, QR usage.
+
+**Headers:** `Authorization: Bearer <token>`.
 
 **Path params:**
 
@@ -581,6 +706,8 @@ Env vars: `QIS_QR_KEY` (required), `QIS_QR_ENFORCE_ONE_TIME` (default `true`).
 
 ## Auth Notes
 
-- `/api/login` returns user identity (no token). Sanctum token issuance not shown in these routes.
-- `GET /api/user` requires `auth:sanctum` middleware.
-- Scanner endpoints (`/permit/validate`, `/permits/pending`, `/qr-scan/complete-scan`) gate one-time QR actions behind `scanner_user_type=internal` + valid `scanner_user_uuid`.
+- **Token auth (Sanctum):** `POST /api/internal/login` returns a Bearer token (24h, or 30d with `remember_me`). Send as `Authorization: Bearer <token>` on protected routes. `POST /api/internal/logout` revokes it.
+- 🔒 Protected: `/api/permit/validate`, `/api/permits/pending`, `/api/qr-scan/complete-scan`, `/api/qr-scan/history`, `/api/qr-scan/history/all`, `/api/order/details/{order_number}`, `/api/internal/logout` — `auth:internal-api`.
+- Public: `/api/internal/login`, `/api/states`, `/api/districts/{stateId}`, `/api/all-districts`.
+- **Scan logging:** every scanner call writes `qr_scan_logs` — `validate` logs `valid` / `used` / `invalid`; `complete-scan` logs `approved` / `rejected` (with GPS + location).
+- `GET /api/user` requires `auth:sanctum`.
