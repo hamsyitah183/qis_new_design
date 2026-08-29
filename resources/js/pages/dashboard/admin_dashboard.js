@@ -26,6 +26,7 @@ function loadStatCards() {
         method: "GET",
         success: function (res) {
             const data = res.data;
+            console.log('log the application count', data)
             $("#amountRevenue").text(`RM ${(data.total || 0).toLocaleString()}`);
             $("#ipCount").text((data.ipCount || 0).toLocaleString());
             $("#icCount").text((data.icCount || 0).toLocaleString());

@@ -32,7 +32,7 @@
         <div class="col-xl-12">
             <div class="card custom-card">
                 <div class="card-header">
-                    <div class="card-title" data-en="Document Requirements" data-bm="Keperluan Dokumen">Document Requirements</div>
+                    {{-- <div class="card-title" data-en="Document Requirements" data-bm="Keperluan Dokumen">Document Requirements</div> --}}
                     <div class="ms-auto d-flex gap-2 align-items-center">
                         <button class="btn btn-primary btn-sm" id="btnAddDocument">
                             <i class="ti ti-plus me-1"></i> <span data-en="Add Document" data-bm="Tambah Dokumen">Add Document</span>
@@ -64,7 +64,7 @@
     </div>
 
     <!-- Add/Edit Modal -->
-    <x-modal id="addDocumentModal" title="Document" title_en="Document" title_bm="Dokumen" size="modal-lg modal-dialog-centered">
+    <x-modal id="addDocumentModal" title="Document" title_en="Document" title_bm="Dokumen" size="modal-lg modal-dialog-centered" title_en="">
         <form id="documentForm">
             @csrf
             <input type="hidden" name="id" id="document_id">
@@ -74,7 +74,7 @@
                     <label for="docModule" class="form-label" data-en="Module" data-bm="Modul">Module <span class="text-danger">*</span></label>
                     <select id="docModule" name="module" class="form-select" required>
                         <option value="user" data-en="User" data-bm="Pengguna">User</option>
-                        <option value="application" data-en="Application" data-bm="Permohonan">Application</option>
+                        <option value="import" data-en="Import Permit" data-bm="Permit Import">Import Permit</option>
                         <option value="inspection" data-en="Inspection" data-bm="Pemeriksaan">Inspection</option>
                         <option value="consignment" data-en="Consignment" data-bm="Konsainan">Consignment</option>
                         <option value="permit" data-en="Permit" data-bm="Permit">Permit</option>

@@ -137,7 +137,8 @@ class DashboardController extends Controller
             $startOfMonth = $month->copy()->startOfMonth();
             $endOfMonth = $month->copy()->endOfMonth();
 
-            $count = IpApplication::where('user_id', $userId)->whereBetween('created_at', [$startOfMonth, $endOfMonth])->count() +
+            $count = 
+                IpApplication::where('user_id', $userId)->whereBetween('created_at', [$startOfMonth, $endOfMonth])->count() +
                 InspectionApplication::where('user_id', $userId)->whereBetween('created_at', [$startOfMonth, $endOfMonth])->count() +
                 ConsignmentApplication::where('user_id', $userId)->whereBetween('created_at', [$startOfMonth, $endOfMonth])->count();
 

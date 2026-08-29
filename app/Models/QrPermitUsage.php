@@ -20,4 +20,6 @@ class QrPermitUsage extends Model
     protected $casts = [
         'used_at' => 'datetime',
     ];
+
+    
 }

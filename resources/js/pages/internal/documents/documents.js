@@ -16,7 +16,7 @@ $(document).ready(function () {
         responsive: true,
         ajax: `${window.baseUrl}/internal/documents/data`,
         columns: [
-            { data: "id", name: "id" },
+            { data: "id", name: "id", visible: false,},
             { data: "module", name: "module" },
             { data: "name", name: "name" },
             { data: "description", name: "description" },

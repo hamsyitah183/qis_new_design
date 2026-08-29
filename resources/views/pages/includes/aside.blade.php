@@ -142,18 +142,18 @@
                             </li>
                             <li class="slide">
                                 <a href="{{ route('public.showallapplicationlist') }}" class="side-menu__item"
-                                    data-en="Import Permit List" data-bm="Senarai Permit Import">Import Permit
-                                    List</a>
+                                    data-en="Import Permit List" data-bm="Permit Import">Import Permit
+                                    </a>
                             </li>
                             <li class="slide">
                                 <a href="{{ route('public.showallinspectionlist') }}" class="side-menu__item"
                                     data-en="Inspection Certificate List"
-                                    data-bm="Senarai Sijil Pemeriksaan">Inspection Certificate List</a>
+                                    data-bm="Sijil Pemeriksaan">Inspection Certificate</a>
                             </li>
                             <li class="slide">
                                 <a href="{{ route('public.showallconsignmentlist') }}" class="side-menu__item"
                                     data-en="Consignment Certificate List"
-                                    data-bm="Senarai Sijil Konsainan">Consignment Certificate List</a>
+                                    data-bm="Sijil Konsainan">Consignment Certificate</a>
                             </li>
                         </ul>
                     </li>
