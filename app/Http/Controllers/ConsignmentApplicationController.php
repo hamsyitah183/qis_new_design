@@ -89,11 +89,21 @@ class ConsignmentApplicationController extends Controller
             return $blockView;
         }
 
-        // Proceed to consignment app
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();
-        return view('pages.public.consignmentapp', compact('pubmeasure', 'pubpurpose', 'country'));
+
+        // Documents required for the consignment module
+        $consignmentDocuments = DocumentRequirement::forModule('consignment')
+            ->orderBy('name')
+            ->get();
+
+        return view('pages.public.consignmentapp', compact(
+            'pubmeasure',
+            'pubpurpose',
+            'country',
+            'consignmentDocuments'
+        ));
     }
 
     /**
@@ -346,9 +356,11 @@ class ConsignmentApplicationController extends Controller
             }
 
             // ─── APPLICATION ATTACHMENTS (application_files[]) ─────────────
-            //   Using the separate ConsignmentApplicationAttachment model
             if ($request->hasFile('application_files')) {
-                foreach ($request->file('application_files') as $file) {
+                $documentTypes = $request->input('application_files_document_type', []);
+                $descriptions  = $request->input('application_files_description', []);
+
+                foreach ($request->file('application_files') as $i => $file) {
                     $name = uniqid() . '_' . $file->getClientOriginalName();
                     $path = $file->storeAs('consignment_applications', $name, 'public');
                     $movedFiles[] = $path;
@@ -358,6 +370,7 @@ class ConsignmentApplicationController extends Controller
                         'file_name'      => $file->getClientOriginalName(),
                         'file_path'      => "/storage/{$path}",
                         'file_type'      => $file->getClientOriginalExtension(),
+                        'description'    => $descriptions[$i] ?? ($documentTypes[$i] ?? null),
                     ]);
                 }
             }
@@ -736,10 +749,10 @@ class ConsignmentApplicationController extends Controller
         $isOwner = $application->user_id == authUser()['user']->uuid;
         $isDraft = $application->status == 'Draft';
         $isRejected = $application->status == 'Clerk Rejected';
-        
+
         $canEditInternal = auth('internal')->check() && auth('internal')->user()->can('edit application');
 
-        if (!($isOwner && ($isDraft || $isRejected )) && !$canEditInternal) {
+        if (!($isOwner && ($isDraft || $isRejected)) && !$canEditInternal) {
             abort(403, 'Cannot edit this application.');
         }
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
@@ -756,20 +769,21 @@ class ConsignmentApplicationController extends Controller
             'importer', // importer user
             'exporter', // exporter record
             'entryPoint.districtCode',
-            
+            'attachments',
+
         ])
             ->where('application_id', $uuid)
             ->orderBy('created_at', 'desc')
             ->firstOrFail();
 
-     
+    
 
         $itemId = $application->id;
 
-    
+
         $consignment = [];
 
-    
+
 
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
@@ -781,8 +795,8 @@ class ConsignmentApplicationController extends Controller
             'pubmeasure' => $pubmeasure,
             'pubpurpose' => $pubpurpose,
             'country' => $country,
-            
-        ]); 
+
+        ]);
     }
     public function deleteApplication($id)
     {

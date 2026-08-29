@@ -265,91 +265,126 @@
                                                     @if (isset($activities) && $activities->count() > 0)
                                                         @php
                                                             $activityTranslations = [
-                                                                'logged in to the system' => 'telah log masuk ke sistem',
-                                                                'logged out from the system' => 'telah log keluar dari sistem',
+                                                                'logged in to the system' =>
+                                                                    'telah log masuk ke sistem',
+                                                                'logged out from the system' =>
+                                                                    'telah log keluar dari sistem',
                                                                 'internal user' => 'pengguna dalaman',
                                                                 'public user ' => 'pengguna awam ',
                                                                 'public user' => 'pengguna awam',
-                                                                'is new user for boundary officer' => 'pengguna baharu untuk pegawai sempadan',
-                                                                'has created a new import permit application draft' => 'telah mencipta draf permohonan permit import baharu',
-                                                                'has created a new inspection certificate application draft' => 'telah mencipta draf permohonan sijil pemeriksaan baharu',
-                                                                'has created a new consignment application draft' => 'telah mencipta draf permohonan konsainan baharu',
-                                                                'has submitted an import permit application' => 'telah menghantar permohonan permit import',
-                                                                'has submitted an inspection certificate application' => 'telah menghantar permohonan sijil pemeriksaan',
-                                                                'has submitted a consignment application' => 'telah menghantar permohonan konsainan',
-                                                                'has updated an import permit application draft' => 'telah mengemas kini draf permohonan permit import',
-                                                                'has updated an inspection certificate application draft' => 'telah mengemas kini draf permohonan sijil pemeriksaan',
-                                                                'has updated a consignment application draft' => 'telah mengemas kini draf permohonan konsainan',
-                                                                'verification is in-progress by' => 'pengesahan sedang dijalankan oleh',
+                                                                'is new user for boundary officer' =>
+                                                                    'pengguna baharu untuk pegawai sempadan',
+                                                                'has created a new import permit application draft' =>
+                                                                    'telah mencipta draf permohonan permit import baharu',
+                                                                'has created a new inspection certificate application draft' =>
+                                                                    'telah mencipta draf permohonan sijil pemeriksaan baharu',
+                                                                'has created a new consignment application draft' =>
+                                                                    'telah mencipta draf permohonan konsainan baharu',
+                                                                'has submitted an import permit application' =>
+                                                                    'telah menghantar permohonan permit import',
+                                                                'has submitted an inspection certificate application' =>
+                                                                    'telah menghantar permohonan sijil pemeriksaan',
+                                                                'has submitted a consignment application' =>
+                                                                    'telah menghantar permohonan konsainan',
+                                                                'has updated an import permit application draft' =>
+                                                                    'telah mengemas kini draf permohonan permit import',
+                                                                'has updated an inspection certificate application draft' =>
+                                                                    'telah mengemas kini draf permohonan sijil pemeriksaan',
+                                                                'has updated a consignment application draft' =>
+                                                                    'telah mengemas kini draf permohonan konsainan',
+                                                                'verification is in-progress by' =>
+                                                                    'pengesahan sedang dijalankan oleh',
                                                                 'was verified by' => 'telah disahkan oleh',
-                                                                'verification is rejected by' => 'pengesahan ditolak oleh',
+                                                                'verification is rejected by' =>
+                                                                    'pengesahan ditolak oleh',
                                                                 'is not approved by' => 'tidak diluluskan oleh',
-                                                                'is uploading an attachment to get verification' => 'sedang memuat naik lampiran untuk mendapatkan pengesahan',
+                                                                'is uploading an attachment to get verification' =>
+                                                                    'sedang memuat naik lampiran untuk mendapatkan pengesahan',
                                                                 'has added an exporter' => 'telah menambah pengeksport',
-                                                                'has updated an exporter' => 'telah mengemas kini pengeksport',
-                                                                'has deleted an exporter' => 'telah memadam pengeksport',
+                                                                'has updated an exporter' =>
+                                                                    'telah mengemas kini pengeksport',
+                                                                'has deleted an exporter' =>
+                                                                    'telah memadam pengeksport',
                                                                 'has added an importer' => 'telah menambah pengimport',
-                                                                'has updated an importer' => 'telah mengemas kini pengimport',
-                                                                'has approved consignment application' => 'telah meluluskan permohonan konsainan',
-                                                                'has rejected consignment application' => 'telah menolak permohonan konsainan',
-                                                                'has verified consignment application' => 'telah mengesahkan permohonan konsainan',
-                                                                'has deleted a consignment application' => 'telah memadam permohonan konsainan',
-                                                                'has submitted a drafted consignment application' => 'telah menghantar draf permohonan konsainan',
-                                                                'has deleted an inspection application' => 'telah memadam permohonan pemeriksaan',
-                                                                'deleted inspection application' => 'memadam permohonan pemeriksaan',
-                                                                'accepted inspection item' => 'menerima item pemeriksaan',
-                                                                'rejected inspection item' => 'menolak item pemeriksaan',
-                                                                'has successfully completed payment for order' => 'telah berjaya melengkapkan pembayaran untuk pesanan',
-                                                                'payment failed for order' => 'pembayaran gagal untuk pesanan',
+                                                                'has updated an importer' =>
+                                                                    'telah mengemas kini pengimport',
+                                                                'has approved consignment application' =>
+                                                                    'telah meluluskan permohonan konsainan',
+                                                                'has rejected consignment application' =>
+                                                                    'telah menolak permohonan konsainan',
+                                                                'has verified consignment application' =>
+                                                                    'telah mengesahkan permohonan konsainan',
+                                                                'has deleted a consignment application' =>
+                                                                    'telah memadam permohonan konsainan',
+                                                                'has submitted a drafted consignment application' =>
+                                                                    'telah menghantar draf permohonan konsainan',
+                                                                'has deleted an inspection application' =>
+                                                                    'telah memadam permohonan pemeriksaan',
+                                                                'deleted inspection application' =>
+                                                                    'memadam permohonan pemeriksaan',
+                                                                'accepted inspection item' =>
+                                                                    'menerima item pemeriksaan',
+                                                                'rejected inspection item' =>
+                                                                    'menolak item pemeriksaan',
+                                                                'has successfully completed payment for order' =>
+                                                                    'telah berjaya melengkapkan pembayaran untuk pesanan',
+                                                                'payment failed for order' =>
+                                                                    'pembayaran gagal untuk pesanan',
                                                                 'reapplied for permit' => 'memohon semula permit',
                                                                 'updated application' => 'mengemas kini permohonan',
                                                                 'created application' => 'mencipta permohonan',
                                                             ];
-                                                            
+
                                                             $filterCategories = [
                                                                 'Authentication' => [
                                                                     'en' => 'Authentication',
                                                                     'bm' => 'Log Masuk / Keluar',
-                                                                    'keywords' => 'logged in,logged out'
+                                                                    'keywords' => 'logged in,logged out',
                                                                 ],
                                                                 'Applications' => [
                                                                     'en' => 'Applications & Drafts',
                                                                     'bm' => 'Permohonan & Draf',
-                                                                    'keywords' => 'draft,submitted,reapplied,application,permit,inspection,consignment'
+                                                                    'keywords' =>
+                                                                        'draft,submitted,reapplied,application,permit,inspection,consignment',
                                                                 ],
                                                                 'Approvals' => [
                                                                     'en' => 'Approvals & Verifications',
                                                                     'bm' => 'Kelulusan & Pengesahan',
-                                                                    'keywords' => 'approved,rejected,verified,accepted'
+                                                                    'keywords' => 'approved,rejected,verified,accepted',
                                                                 ],
                                                                 'Payments' => [
                                                                     'en' => 'Payments',
                                                                     'bm' => 'Pembayaran',
-                                                                    'keywords' => 'payment'
+                                                                    'keywords' => 'payment',
                                                                 ],
                                                                 'ImportersExporters' => [
                                                                     'en' => 'Importers & Exporters',
                                                                     'bm' => 'Pengimport & Pengeksport',
-                                                                    'keywords' => 'importer,exporter'
+                                                                    'keywords' => 'importer,exporter',
                                                                 ],
                                                                 'Attachments' => [
                                                                     'en' => 'Attachments',
                                                                     'bm' => 'Lampiran',
-                                                                    'keywords' => 'attachment'
-                                                                ]
+                                                                    'keywords' => 'attachment',
+                                                                ],
                                                             ];
                                                         @endphp
-                                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                                        <h6 class="fw-semibold mb-0" data-en="Activity Log"
-                                                            data-bm="Log Aktiviti">Activity Log</h6>
-                                                        <div class="w-50">
-                                                            <select id="activitySearch" class="form-select select2" multiple="multiple">
-                                                                @foreach($filterCategories as $cat => $data)
-                                                                    <option value="{{ $data['keywords'] }}" data-en="{{ $data['en'] }}" data-bm="{{ $data['bm'] }}">{{ $data['en'] }}</option>
-                                                                @endforeach
-                                                            </select>
+                                                        <div
+                                                            class="d-flex justify-content-between align-items-center mb-3">
+                                                            <h6 class="fw-semibold mb-0" data-en="Activity Log"
+                                                                data-bm="Log Aktiviti">Activity Log</h6>
+                                                            <div class="w-50">
+                                                                <select id="activitySearch" class="form-select select2"
+                                                                    multiple="multiple">
+                                                                    @foreach ($filterCategories as $cat => $data)
+                                                                        <option value="{{ $data['keywords'] }}"
+                                                                            data-en="{{ $data['en'] }}"
+                                                                            data-bm="{{ $data['bm'] }}">
+                                                                            {{ $data['en'] }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
                                                         </div>
-                                                    </div>
                                                         <ul class="list-group" id="activityListGroup">
                                                             @foreach ($activities as $log)
                                                                 @php
@@ -361,7 +396,9 @@
                                                                 @endphp
                                                                 <li
                                                                     class="list-group-item d-flex justify-content-between align-items-center">
-                                                                    <span class="activity-desc" data-en="{{ $descEn }}" data-bm="{{ $descBm }}">{{ $descEn }}</span>
+                                                                    <span class="activity-desc"
+                                                                        data-en="{{ $descEn }}"
+                                                                        data-bm="{{ $descBm }}">{{ $descEn }}</span>
                                                                     <span
                                                                         class="text-muted small">{{ $log->created_at->format('d M Y, H:i') }}</span>
                                                                 </li>
@@ -656,88 +693,166 @@
             </div>
         </div>
     </div>
+
+    <!-- File Preview Modal -->
+    <div class="modal fade" id="fileLabelModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="fileLabelModalLabel">File Preview</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="fileLabelPreview" src="" class="img-fluid rounded d-none" alt="Preview">
+                    <iframe id="fileLabelPdfViewer" src="" class="w-100 d-none"
+                        style="height: 70vh; border: none;"></iframe>
+                    <div id="filePreviewIcon" class="d-none py-5">
+                        <i class="ti ti-file-text ti-5x text-muted"></i>
+                        <p class="text-muted mt-3 mb-0">Preview not available. Use 'Open in New Tab' to view it.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <span id="fileLabelName" class="me-auto text-muted fs-13"></span>
+                    <a id="fileLabelOpenBtn" href="#" target="_blank" class="btn btn-primary btn-sm"
+                        style="display: none;">
+                        <i class="ti ti-download"></i> Open / Download
+                    </a>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
     @vite(['resources/js/pages/internal/user_management/view_public.js'])
-@push('style')
-    <style>
-        .doc-accordion-toggle {
-            cursor: pointer;
-            user-select: none;
-        }
+    @push('style')
+        <style>
+            .doc-accordion-toggle {
+                cursor: pointer;
+                user-select: none;
+            }
 
-        .doc-accordion-icon {
-            transition: transform 0.2s ease;
-        }
+            .doc-accordion-icon {
+                transition: transform 0.2s ease;
+            }
 
-        .detail-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            color: #6c757d;
-            margin-bottom: 4px;
-        }
+            .detail-label {
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                letter-spacing: 0.03em;
+                color: #6c757d;
+                margin-bottom: 4px;
+            }
 
-        .detail-value {
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-    </style>
-@endpush
+            .detail-value {
+                font-size: 0.9rem;
+                font-weight: 500;
+            }
+        </style>
+    @endpush
 
-@push('scripts')
-    <script>
-        window.baseUrl = "{{ url('/') }}";
-        window.csrfToken = "{{ csrf_token() }}";
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // ─── Accordion toggle ───────────────────────────────
-            document.querySelectorAll('.doc-accordion-toggle').forEach((toggle) => {
-                toggle.addEventListener('click', function() {
-                    const targetId = this.dataset.target;
-                    const panel = document.getElementById(targetId);
-                    const icon = this.querySelector('.doc-accordion-icon');
-                    const isExpanded = this.getAttribute('aria-expanded') === 'true';
+    @push('scripts')
+        <script>
+            window.baseUrl = "{{ url('/') }}";
+            window.csrfToken = "{{ csrf_token() }}";
+        </script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // ─── Accordion toggle ───────────────────────────────
+                document.querySelectorAll('.doc-accordion-toggle').forEach((toggle) => {
+                    toggle.addEventListener('click', function() {
+                        const targetId = this.dataset.target;
+                        const panel = document.getElementById(targetId);
+                        const icon = this.querySelector('.doc-accordion-icon');
+                        const isExpanded = this.getAttribute('aria-expanded') === 'true';
 
-                    panel.classList.toggle('d-none', isExpanded);
-                    this.setAttribute('aria-expanded', String(!isExpanded));
-                    icon.classList.toggle('ti-chevron-up', !isExpanded);
-                    icon.classList.toggle('ti-chevron-down', isExpanded);
-                });
-            });
-
-            // ─── Approve ────────────────────────────────────────
-            document.querySelectorAll('.approve-attachment-btn').forEach((btn) => {
-                btn.addEventListener('click', async function(e) {
-                    e.stopPropagation();
-                    const id = this.dataset.id;
-
-                    const result = await Swal.fire({
-                        title: 'Approve this document?',
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonText: 'Yes, approve',
-                        confirmButtonColor: '#198754',
+                        panel.classList.toggle('d-none', isExpanded);
+                        this.setAttribute('aria-expanded', String(!isExpanded));
+                        icon.classList.toggle('ti-chevron-up', !isExpanded);
+                        icon.classList.toggle('ti-chevron-down', isExpanded);
                     });
+                });
 
-                    if (!result.isConfirmed) return;
+                // ─── Approve ────────────────────────────────────────
+                document.querySelectorAll('.approve-attachment-btn').forEach((btn) => {
+                    btn.addEventListener('click', async function(e) {
+                        e.stopPropagation();
+                        const id = this.dataset.id;
+
+                        const result = await Swal.fire({
+                            title: 'Approve this document?',
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonText: 'Yes, approve',
+                            confirmButtonColor: '#198754',
+                        });
+
+                        if (!result.isConfirmed) return;
+
+                        try {
+                            const response = await fetch(
+                                `${window.baseUrl}/internal/attachments/${id}/approve`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': window.csrfToken,
+                                        'Accept': 'application/json',
+                                    },
+                                });
+                            const data = await response.json();
+                            if (!response.ok) throw new Error(data.message || 'Failed to approve.');
+
+                            await Swal.fire('Approved!', data.message || 'Document approved.',
+                                'success');
+                            window.location.reload();
+                        } catch (err) {
+                            Swal.fire('Error', err.message, 'error');
+                        }
+                    });
+                });
+
+                // ─── Reject — open modal ────────────────────────────
+                document.querySelectorAll('.reject-attachment-btn').forEach((btn) => {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        document.getElementById('rejectAttachmentId').value = this.dataset.id;
+                        document.getElementById('rejectReasonInput').value = '';
+
+                        const modal = new bootstrap.Modal(document.getElementById(
+                            'rejectAttachmentModal'));
+                        modal.show();
+                    });
+                });
+
+                // ─── Reject — confirm submission ────────────────────
+                document.getElementById('confirmRejectBtn').addEventListener('click', async function() {
+                    const id = document.getElementById('rejectAttachmentId').value;
+                    const reason = document.getElementById('rejectReasonInput').value.trim();
+
+                    if (!reason) {
+                        Swal.fire('Error', 'Please provide a reason for rejection.', 'error');
+                        return;
+                    }
 
                     try {
                         const response = await fetch(
-                            `${window.baseUrl}/internal/attachments/${id}/approve`, {
+                            `${window.baseUrl}/internal/attachments/${id}/reject`, {
                                 method: 'POST',
                                 headers: {
                                     'X-CSRF-TOKEN': window.csrfToken,
                                     'Accept': 'application/json',
+                                    'Content-Type': 'application/json',
                                 },
+                                body: JSON.stringify({
+                                    rejected_reason: reason
+                                }),
                             });
                         const data = await response.json();
-                        if (!response.ok) throw new Error(data.message || 'Failed to approve.');
+                        if (!response.ok) throw new Error(data.message || 'Failed to reject.');
 
-                        await Swal.fire('Approved!', data.message || 'Document approved.',
-                            'success');
+                        bootstrap.Modal.getInstance(document.getElementById('rejectAttachmentModal'))
+                            .hide();
+                        await Swal.fire('Rejected', data.message || 'Document rejected.', 'success');
                         window.location.reload();
                     } catch (err) {
                         Swal.fire('Error', err.message, 'error');
@@ -745,53 +860,50 @@
                 });
             });
 
-            // ─── Reject — open modal ────────────────────────────
-            document.querySelectorAll('.reject-attachment-btn').forEach((btn) => {
-                btn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    document.getElementById('rejectAttachmentId').value = this.dataset.id;
-                    document.getElementById('rejectReasonInput').value = '';
-
-                    const modal = new bootstrap.Modal(document.getElementById(
-                        'rejectAttachmentModal'));
-                    modal.show();
-                });
-            });
-
-            // ─── Reject — confirm submission ────────────────────
-            document.getElementById('confirmRejectBtn').addEventListener('click', async function() {
-                const id = document.getElementById('rejectAttachmentId').value;
-                const reason = document.getElementById('rejectReasonInput').value.trim();
-
-                if (!reason) {
-                    Swal.fire('Error', 'Please provide a reason for rejection.', 'error');
+            function viewExistingFile(url, name) {
+                const modalEl = document.getElementById("fileLabelModal");
+                if (!modalEl) {
+                    window.open(url, "_blank", "noopener,noreferrer");
                     return;
                 }
 
-                try {
-                    const response = await fetch(
-                    `${window.baseUrl}/internal/attachments/${id}/reject`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': window.csrfToken,
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            rejected_reason: reason
-                        }),
-                    });
-                    const data = await response.json();
-                    if (!response.ok) throw new Error(data.message || 'Failed to reject.');
+                const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
 
-                    bootstrap.Modal.getInstance(document.getElementById('rejectAttachmentModal'))
-                .hide();
-                    await Swal.fire('Rejected', data.message || 'Document rejected.', 'success');
-                    window.location.reload();
-                } catch (err) {
-                    Swal.fire('Error', err.message, 'error');
+                const previewImg = document.getElementById("fileLabelPreview");
+                const previewIcon = document.getElementById("filePreviewIcon");
+                const pdfViewer = document.getElementById("fileLabelPdfViewer");
+                const fileNameDisplay = document.getElementById("fileLabelName");
+                const openBtn = document.getElementById("fileLabelOpenBtn");
+                const modalTitle = document.getElementById("fileLabelModalLabel");
+
+                // Reset all viewers
+                previewImg.classList.add("d-none");
+                previewIcon.classList.add("d-none");
+                pdfViewer.classList.add("d-none");
+                previewImg.src = "";
+                pdfViewer.src = "";
+
+                const ext = (url || "").split(".").pop().toLowerCase().split("?")[0];
+
+                if (["jpg", "jpeg", "png", "gif", "bmp", "svg", "webp"].includes(ext)) {
+                    previewImg.src = url;
+                    previewImg.classList.remove("d-none");
+                } else if (ext === "pdf") {
+                    pdfViewer.src = url;
+                    pdfViewer.classList.remove("d-none");
+                } else {
+                    previewIcon.classList.remove("d-none");
                 }
-            });
-        });
-    </script>
-@endpush
+
+                fileNameDisplay.textContent = name || "Document";
+                openBtn.href = url;
+                openBtn.download = name || "document";
+                openBtn.style.display = "inline-block";
+                modalTitle.textContent = "File Preview";
+
+                modal.show();
+            }
+
+            window.viewExistingFile = viewExistingFile;
+        </script>
+    @endpush

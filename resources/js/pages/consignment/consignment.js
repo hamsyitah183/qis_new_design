@@ -189,7 +189,7 @@ function handleVehicleChange() {
         selectedVehicles = vehicleListArray.filter((v) =>
             selectedIds.includes(String(v.id)),
         );
-       
+
         change = 1;
         summarySubmit();
     });
@@ -236,7 +236,6 @@ function fetchVehicleList() {
         },
     });
 }
-
 
 // ─── Add Vehicle Modal ────────────────────────────────────
 function initAddVehicleModal() {
@@ -1010,61 +1009,86 @@ $(document).on("click", "#itemFileSaveBtn", function () {
 });
 
 // ─── Application Attachments ─────────────────────────────
+let applicationDropzones = {}; // keyed by doc.id
+
 function initApplicationAttachments() {
-    const dropzoneEl = document.getElementById("applicationAttachmentDropzone");
-    if (!dropzoneEl) return;
+    document
+        .querySelectorAll(".application-attachment-dropzone")
+        .forEach((dropzoneEl) => {
+            const docId = dropzoneEl.dataset.docId;
+            const docName = dropzoneEl.dataset.docName;
 
-    applicationAttachmentDropzone = new Dropzone(
-        "#applicationAttachmentDropzone",
-        {
-            url: "/",
-            autoProcessQueue: false,
-            addRemoveLinks: false,
-            previewsContainer: false,
-            clickable: true,
-            acceptedFiles: ".jpg,.jpeg,.png,.pdf,.doc,.docx",
-            maxFilesize: 15,
-            headers: {
-                "X-CSRF-TOKEN": document.querySelector(
-                    'meta[name="csrf-token"]',
-                ).content,
-            },
-            init: function () {
-                this.on("addedfile", function (file) {
-                    const attachment = {
-                        id: generateUUID(),
-                        file,
-                        name: file.name,
-                        displayName: file.name,
-                        size: file.size,
-                        type: file.type,
-                    };
-                    file._attachmentId = attachment.id;
-                    applicationAttachments.push(attachment);
-                    renderApplicationAttachmentTable();
-                    updateAttachmentTable();
-                });
-            },
-            error: function (file, message) {
-                console.error("Attachment Dropzone Error:", message);
-                if (file.previewElement) {
-                    file.previewElement.remove();
-                }
-            },
-        },
-    );
+            const dz = new Dropzone(`#${dropzoneEl.id}`, {
+                url: "/",
+                autoProcessQueue: false,
+                addRemoveLinks: false,
+                previewsContainer: false,
+                clickable: true,
+                acceptedFiles: ".jpg,.jpeg,.png,.pdf,.doc,.docx",
+                maxFilesize: 15,
+                headers: {
+                    "X-CSRF-TOKEN": document.querySelector(
+                        'meta[name="csrf-token"]',
+                    ).content,
+                },
+                init: function () {
+                    this.on("addedfile", function (file) {
+                        const attachment = {
+                            id: generateUUID(),
+                            file,
+                            name: file.name,
+                            displayName: file.name,
+                            size: file.size,
+                            type: file.type,
+                            document_type: docName,
+                            document_id: docId,
+                            description: docName, // default description = document requirement name
+                        };
+                        file._attachmentId = attachment.id;
+                        applicationAttachments.push(attachment);
+                        renderApplicationAttachmentTable(docId);
+                        updateDocFileCountBadge(docId);
+                        updateAttachmentTable();
+                    });
+                },
+                error: function (file, message) {
+                    console.error("Attachment Dropzone Error:", message);
+                    if (file.previewElement) {
+                        file.previewElement.remove();
+                    }
+                },
+            });
 
-    renderApplicationAttachmentTable();
+            applicationDropzones[docId] = dz;
+            renderApplicationAttachmentTable(docId);
+        });
 }
 
-function renderApplicationAttachmentTable() {
-    const $tbody = $("#applicationAttachmentTable tbody");
+function updateDocFileCountBadge(docId) {
+    const badge = document.querySelector(
+        `.doc-file-count[data-doc-id="${docId}"]`,
+    );
+    if (!badge) return;
+    const count = applicationAttachments.filter(
+        (a) => String(a.document_id) === String(docId),
+    ).length;
+    badge.textContent = count > 0 ? `${count} file(s)` : "No files";
+}
+
+function renderApplicationAttachmentTable(docId) {
+    const $tbody = $(
+        `.application-attachment-table[data-doc-id="${docId}"] tbody`,
+    );
     $tbody.empty();
 
-    if (!applicationAttachments.length) {
+    const docAttachments = applicationAttachments.filter(
+        (a) => String(a.document_id) === String(docId),
+    );
+
+    if (!docAttachments.length) {
         $tbody.append(`
-            <tr>
-                <td colspan="2" class="text-center text-muted py-3" data-en="No attachments uploaded yet." data-bm="Tiada lampiran dimuat naik lagi.">
+            <tr class="empty-row">
+                <td colspan="2" class="text-center text-muted py-2" data-en="No attachments uploaded yet." data-bm="Tiada lampiran dimuat naik lagi.">
                     No attachments uploaded yet.
                 </td>
             </tr>
@@ -1072,9 +1096,9 @@ function renderApplicationAttachmentTable() {
         return;
     }
 
-    applicationAttachments.forEach((attachment, index) => {
+    docAttachments.forEach((attachment) => {
         $tbody.append(`
-            <tr data-id="${attachment.id}" data-index="${index}">
+            <tr data-id="${attachment.id}">
                 <td class="text-wrap">
                     <a href="#" class="text-decoration-none attachment-name-link" data-id="${attachment.id}">
                         <strong>${attachment.displayName}</strong>
@@ -1289,9 +1313,12 @@ $(document).on("click", ".delete-attachment-btn", function () {
     );
     if (index === -1) return;
 
-    removeAttachmentFromDropzone(attachmentId);
+    const docId = applicationAttachments[index].document_id;
+
+    removeAttachmentFromDropzone(attachmentId, docId);
     applicationAttachments.splice(index, 1);
-    renderApplicationAttachmentTable();
+    renderApplicationAttachmentTable(docId);
+    updateDocFileCountBadge(docId);
     updateAttachmentTable();
 
     Swal.fire({
@@ -1758,21 +1785,21 @@ function categoryPrice(categoryName, quantity) {
 }
 
 function tablePrice() {
-    const table = document.getElementById('summaryTable4');
+    const table = document.getElementById("summaryTable4");
     if (!table) return;
-    const tbody = table.querySelector('tbody');
+    const tbody = table.querySelector("tbody");
     if (!tbody) return;
 
     // Clear existing rows
-    tbody.innerHTML = '';
+    tbody.innerHTML = "";
 
     // No data – show placeholder
     if (!categoryAmount || categoryAmount.length === 0) {
-        const tr = document.createElement('tr');
-        const td = document.createElement('td');
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
         td.colSpan = 4;
-        td.textContent = 'No categories found';
-        td.className = 'text-center';
+        td.textContent = "No categories found";
+        td.className = "text-center";
         tr.appendChild(td);
         tbody.appendChild(tr);
         return;
@@ -1780,21 +1807,21 @@ function tablePrice() {
 
     // Loop through each category
     categoryAmount.forEach((cat, index) => {
-        const tr = document.createElement('tr');
+        const tr = document.createElement("tr");
 
-        const tdIndex = document.createElement('td');
+        const tdIndex = document.createElement("td");
         tdIndex.textContent = index + 1;
         tr.appendChild(tdIndex);
 
-        const tdCategory = document.createElement('td');
-        tdCategory.textContent = cat.category_name || 'Uncategorized';
+        const tdCategory = document.createElement("td");
+        tdCategory.textContent = cat.category_name || "Uncategorized";
         tr.appendChild(tdCategory);
 
-        const tdQuantity = document.createElement('td');
+        const tdQuantity = document.createElement("td");
         tdQuantity.textContent = cat.quantity || 0;
         tr.appendChild(tdQuantity);
 
-        const tdPrice = document.createElement('td');
+        const tdPrice = document.createElement("td");
         tdPrice.textContent = cat.price || 0;
         tr.appendChild(tdPrice);
 
@@ -1802,13 +1829,19 @@ function tablePrice() {
     });
 
     // ─── TOTAL ROW (single merged cell) ───
-    const totalQty = categoryAmount.reduce((sum, cat) => sum + (cat.quantity || 0), 0);
-    const totalPrice = categoryAmount.reduce((sum, cat) => sum + (cat.price || 0), 0);
+    const totalQty = categoryAmount.reduce(
+        (sum, cat) => sum + (cat.quantity || 0),
+        0,
+    );
+    const totalPrice = categoryAmount.reduce(
+        (sum, cat) => sum + (cat.price || 0),
+        0,
+    );
 
-    const trTotal = document.createElement('tr');
-    const tdTotal = document.createElement('td');
-    tdTotal.colSpan = 4;                      // merge all columns
-    tdTotal.className = 'fw-bold text-end';   // bold + right-aligned (optional)
+    const trTotal = document.createElement("tr");
+    const tdTotal = document.createElement("td");
+    tdTotal.colSpan = 4; // merge all columns
+    tdTotal.className = "fw-bold text-end"; // bold + right-aligned (optional)
     tdTotal.textContent = `Total: ${totalQty} kg  |  Total Price: RM ${totalPrice}`;
     trTotal.appendChild(tdTotal);
     tbody.appendChild(trTotal);
@@ -2163,8 +2196,6 @@ function viewMore() {
             `;
         }
 
-     
-
         detailsDiv.innerHTML = `
             ${agreementBanner}
 
@@ -2408,6 +2439,14 @@ function saveapplication(isDraft = false) {
     applicationAttachments.forEach((attachment) => {
         if (attachment.file) {
             formData.append("application_files[]", attachment.file);
+            formData.append(
+                "application_files_document_type[]",
+                attachment.document_type || "",
+            );
+            formData.append(
+                "application_files_description[]",
+                attachment.description || "",
+            );
         }
     });
 
@@ -2654,6 +2693,7 @@ function updateAttachmentTable() {
                     <tr>
                         <td>${index + 1}</td>
                         <td class="text-wrap">${attachment.displayName || attachment.name || ""}</td>
+                        <td class="text-wrap">${attachment.description || "—"}</td>
                         <td>${sizeDisplay}</td>
                         <td>${typeDisplay}</td>
                         <td class="text-end">
@@ -2857,6 +2897,34 @@ $(document).ready(async function () {
                 });
             },
         );
+
+        $(document).on("click", ".doc-details-btn", function () {
+            const name = $(this).data("doc-name");
+            const targetId = $(this).data("description-target");
+            const sourceHtml =
+                document.getElementById(targetId)?.innerHTML || "";
+
+            $("#docDescriptionModalLabel").text(name);
+            $(".doc-description-modal-body").html(
+                sourceHtml.trim() ||
+                    "<p class='text-muted mb-0'>No description available.</p>",
+            );
+
+            const modal = bootstrap.Modal.getOrCreateInstance(
+                document.getElementById("docDescriptionModal"),
+            );
+            modal.show();
+        });
+
+        $(document).on("input", ".attachment-description-input", function () {
+            const attachmentId = $(this).data("id");
+            const attachment = applicationAttachments.find(
+                (a) => a.id === attachmentId,
+            );
+            if (attachment) {
+                attachment.description = $(this).val();
+            }
+        });
     } catch (error) {
         console.error("Error during initialization:", error);
         Swal.fire(

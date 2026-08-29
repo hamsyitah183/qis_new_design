@@ -128,3 +128,19 @@
 .file-list-item.existing-file i {
     color: var(--success-color, #1ec379);
 }
+
+.doc-description-modal-body img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 8px 0;
+}
+.doc-description-modal-body h1,
+.doc-description-modal-body h2,
+.doc-description-modal-body h3 {
+    font-size: 1.1rem;
+    margin-top: 0.75rem;
+}
+.doc-description-modal-body p:last-child {
+    margin-bottom: 0;
+}

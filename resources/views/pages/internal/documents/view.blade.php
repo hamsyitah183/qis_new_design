@@ -57,7 +57,7 @@
                             </div>
                         </div>
 
-                        <div class="col-xl-4">
+                        <div class="col-xl-6">
                             <div class="border rounded p-3 h-100">
                                 <div class="detail-label" data-en="Required" data-bm="Wajib">Required</div>
                                 <span class="badge bg-{{ $document->is_required ? 'warning text-dark' : 'secondary' }}">
@@ -65,7 +65,7 @@
                                 </span>
                             </div>
                         </div>
-                        <div class="col-xl-4">
+                        <div class="col-xl-6">
                             <div class="border rounded p-3 h-100">
                                 <div class="detail-label" data-en="Requires Expiry" data-bm="Memerlukan Tarikh Luput">
                                     Requires Expiry</div>
@@ -74,14 +74,7 @@
                                 </span>
                             </div>
                         </div>
-                        <div class="col-xl-4">
-                            <div class="border rounded p-3 h-100">
-                                <div class="detail-label" data-en="Status" data-bm="Status">Status</div>
-                                <span class="badge bg-{{ $document->is_active ? 'success' : 'danger' }}">
-                                    {{ $document->is_active ? 'Active' : 'Inactive' }}
-                                </span>
-                            </div>
-                        </div>
+                       
 
                         <div class="col-xl-6">
                             <div class="border rounded p-3 h-100">

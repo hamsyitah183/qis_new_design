@@ -88,10 +88,25 @@ class ConsignmentApplication extends Model
             ->latestOfMany();
     }
 
+    public function attachments()
+    {
+        return $this->hasMany(ConsignmentApplicationAttachment::class, 'application_id', 'id');
+    }
+
+    
+
     // In ConsignmentApplication.php
     public function getPrintCalcAttribute()
     {
         $firstPermit = $this->consignmentPermits()->first();
         return $firstPermit ? $firstPermit->print_calc : 0;
+    }
+
+    public function getConsignmentDocuments()
+    {
+        return DocumentRequirement::where('module', 'consignment')
+            // ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
     }
 }

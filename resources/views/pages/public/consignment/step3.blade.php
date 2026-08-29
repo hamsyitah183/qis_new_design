@@ -168,6 +168,7 @@
                             <tr>
                                 <th scope="col">#</th>
                                 <th scope="col" data-en="File Name" data-bm="Nama Fail">File Name</th>
+                                <th scope="col" data-en="Description" data-bm="Maklumat">Description</th>
                                 <th scope="col" data-en="Size" data-bm="Saiz">Size</th>
                                 <th scope="col" data-en="Type" data-bm="Jenis">Type</th>
                                 <th scope="col" data-en="Action" data-bm="Tindakan">Action</th>

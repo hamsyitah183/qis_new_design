@@ -11,6 +11,7 @@ import $ from "jquery";
 import Swal from "sweetalert2";
 import { applyTranslations } from "../../app";
 import { loadProfile } from "../auth/profile";
+import { renderActivityTimeline } from "../applicationActivityLog";
 
 // ---------------------------------------------------------------
 // Config
@@ -236,10 +237,9 @@ function mapAttachment(f) {
     return {
         name: f.file_name || f.name,
         size: f.file_size || f.size || "",
-        path: f.id
-            ? `/consignment/attachment/${f.id}`
-            : f.file_path || f.path || "",
+        path: f.file_path,
         mime: f.file_type || f.mime,
+        description: f.description || "",
     };
 }
 
@@ -393,6 +393,8 @@ function mapActivityLog(json) {
             title: entry.action || entry.title || "Update",
             description: entry.remark || entry.description || "",
             time: formatDateTime(entry.time || entry.created_at),
+            causer: entry.causer.fullname,
+            causer_email: entry.causer.email,
         }));
 }
 
@@ -582,12 +584,14 @@ function renderDetails(file, lang) {
             size: "File Size",
             type: "File Type",
             path: "Path",
+            description: "Description",
         },
         bm: {
             name: "Nama Fail",
             size: "Saiz Fail",
             type: "Jenis Fail",
             path: "Laluan",
+            description: "Maklumat"
         },
     };
     const t = labels[lang] || labels.en;
@@ -597,6 +601,7 @@ function renderDetails(file, lang) {
         { key: "size", value: file.size },
         { key: "type", value: file.mime || "Unknown" },
         { key: "path", value: file.path || "—" },
+        { key: "description", value: file.description || "—" },
     ];
 
     container.innerHTML = fields
@@ -815,8 +820,7 @@ function renderHeaderInfo() {
     document.getElementById("ipvSubmittedBy").textContent =
         APPLICATION.submitted_by;
     document.getElementById("ipvDownloadBadge").innerHTML =
-        `<i class="bi bi-download"></i> ${APPLICATION.print_calc}`;
-
+    `<i class="bi bi-download"></i> ${APPLICATION.print_calc || 0}`;
     const submittedLabel =
         lang === "bm" ? "Permohonan dihantar pada" : "Application submitted on";
     document.getElementById("ipvCreatedAt").textContent =
@@ -1382,35 +1386,7 @@ function renderPaymentAwarenessBanner() {
     }
 }
 
-// ---------------------------------------------------------------
-// Render: Activity tab + Application Log modal
-// ---------------------------------------------------------------
 
-function renderActivityTimeline() {
-    const el = document.getElementById("ipvActivityTimeline");
-    if (!ACTIVITY_LOG.length) {
-        el.innerHTML =
-            '<div class="ipv-empty-state"><i class="bi bi-clock-history"></i><p>No activity recorded yet.</p></div>';
-        return;
-    }
-    const lang = getLang();
-    el.innerHTML = ACTIVITY_LOG.map((entry) => {
-        const cfg = STAGE_CONFIG[entry.stage] || STAGE_CONFIG.email;
-        const title = cfg[lang] || cfg.en;
-        return `
-            <div class="ipv-timeline-item">
-                <div class="ipv-timeline-icon is-${cfg.color}"><i class="bi ${cfg.icon}"></i></div>
-                <div class="ipv-timeline-body">
-                    <div>
-                        <div class="ipv-timeline-title">${escapeHtml(title)}</div>
-                        <p class="ipv-timeline-desc">${escapeHtml(entry.description)}</p>
-                    </div>
-                    <span class="ipv-timeline-time">${escapeHtml(entry.time)}</span>
-                </div>
-            </div>
-        `;
-    }).join("");
-}
 
 function renderApplicationLogTable() {
     const tbody = $("#applicationLogTable tbody");
@@ -1562,7 +1538,7 @@ function refreshUI() {
     renderTransportDetails();
     renderPermitAccordion();
     renderPendingPaymentTable();
-    renderActivityTimeline();
+    renderActivityTimeline(STAGE_CONFIG, ACTIVITY_LOG);
     renderPaymentAwarenessBanner();
     renderApplicationPrices(); // <-- added
     initAccordionToggle();
@@ -1594,7 +1570,7 @@ async function renderAll() {
     renderTransportDetails();
     renderPermitAccordion();
     renderPendingPaymentTable();
-    renderActivityTimeline();
+    renderActivityTimeline(STAGE_CONFIG, ACTIVITY_LOG);
     renderPaymentAwarenessBanner();
     renderApplicationPrices(); // <-- added
     initAccordionToggle();
