@@ -262,14 +262,106 @@
                                             <div class="tab-pane p-0 border-0" id="activity-log-tab-pane" role="tabpanel"
                                                 aria-labelledby="activity-log-tab" tabindex="0">
                                                 <div class="p-3">
-                                                    <h6 class="fw-semibold mb-3" data-en="Activity Log"
-                                                        data-bm="Log Aktiviti">Activity Log</h6>
                                                     @if (isset($activities) && $activities->count() > 0)
-                                                        <ul class="list-group">
+                                                        @php
+                                                            $activityTranslations = [
+                                                                'logged in to the system' => 'telah log masuk ke sistem',
+                                                                'logged out from the system' => 'telah log keluar dari sistem',
+                                                                'internal user' => 'pengguna dalaman',
+                                                                'public user ' => 'pengguna awam ',
+                                                                'public user' => 'pengguna awam',
+                                                                'is new user for boundary officer' => 'pengguna baharu untuk pegawai sempadan',
+                                                                'has created a new import permit application draft' => 'telah mencipta draf permohonan permit import baharu',
+                                                                'has created a new inspection certificate application draft' => 'telah mencipta draf permohonan sijil pemeriksaan baharu',
+                                                                'has created a new consignment application draft' => 'telah mencipta draf permohonan konsainan baharu',
+                                                                'has submitted an import permit application' => 'telah menghantar permohonan permit import',
+                                                                'has submitted an inspection certificate application' => 'telah menghantar permohonan sijil pemeriksaan',
+                                                                'has submitted a consignment application' => 'telah menghantar permohonan konsainan',
+                                                                'has updated an import permit application draft' => 'telah mengemas kini draf permohonan permit import',
+                                                                'has updated an inspection certificate application draft' => 'telah mengemas kini draf permohonan sijil pemeriksaan',
+                                                                'has updated a consignment application draft' => 'telah mengemas kini draf permohonan konsainan',
+                                                                'verification is in-progress by' => 'pengesahan sedang dijalankan oleh',
+                                                                'was verified by' => 'telah disahkan oleh',
+                                                                'verification is rejected by' => 'pengesahan ditolak oleh',
+                                                                'is not approved by' => 'tidak diluluskan oleh',
+                                                                'is uploading an attachment to get verification' => 'sedang memuat naik lampiran untuk mendapatkan pengesahan',
+                                                                'has added an exporter' => 'telah menambah pengeksport',
+                                                                'has updated an exporter' => 'telah mengemas kini pengeksport',
+                                                                'has deleted an exporter' => 'telah memadam pengeksport',
+                                                                'has added an importer' => 'telah menambah pengimport',
+                                                                'has updated an importer' => 'telah mengemas kini pengimport',
+                                                                'has approved consignment application' => 'telah meluluskan permohonan konsainan',
+                                                                'has rejected consignment application' => 'telah menolak permohonan konsainan',
+                                                                'has verified consignment application' => 'telah mengesahkan permohonan konsainan',
+                                                                'has deleted a consignment application' => 'telah memadam permohonan konsainan',
+                                                                'has submitted a drafted consignment application' => 'telah menghantar draf permohonan konsainan',
+                                                                'has deleted an inspection application' => 'telah memadam permohonan pemeriksaan',
+                                                                'deleted inspection application' => 'memadam permohonan pemeriksaan',
+                                                                'accepted inspection item' => 'menerima item pemeriksaan',
+                                                                'rejected inspection item' => 'menolak item pemeriksaan',
+                                                                'has successfully completed payment for order' => 'telah berjaya melengkapkan pembayaran untuk pesanan',
+                                                                'payment failed for order' => 'pembayaran gagal untuk pesanan',
+                                                                'reapplied for permit' => 'memohon semula permit',
+                                                                'updated application' => 'mengemas kini permohonan',
+                                                                'created application' => 'mencipta permohonan',
+                                                            ];
+                                                            
+                                                            $filterCategories = [
+                                                                'Authentication' => [
+                                                                    'en' => 'Authentication',
+                                                                    'bm' => 'Log Masuk / Keluar',
+                                                                    'keywords' => 'logged in,logged out'
+                                                                ],
+                                                                'Applications' => [
+                                                                    'en' => 'Applications & Drafts',
+                                                                    'bm' => 'Permohonan & Draf',
+                                                                    'keywords' => 'draft,submitted,reapplied,application,permit,inspection,consignment'
+                                                                ],
+                                                                'Approvals' => [
+                                                                    'en' => 'Approvals & Verifications',
+                                                                    'bm' => 'Kelulusan & Pengesahan',
+                                                                    'keywords' => 'approved,rejected,verified,accepted'
+                                                                ],
+                                                                'Payments' => [
+                                                                    'en' => 'Payments',
+                                                                    'bm' => 'Pembayaran',
+                                                                    'keywords' => 'payment'
+                                                                ],
+                                                                'ImportersExporters' => [
+                                                                    'en' => 'Importers & Exporters',
+                                                                    'bm' => 'Pengimport & Pengeksport',
+                                                                    'keywords' => 'importer,exporter'
+                                                                ],
+                                                                'Attachments' => [
+                                                                    'en' => 'Attachments',
+                                                                    'bm' => 'Lampiran',
+                                                                    'keywords' => 'attachment'
+                                                                ]
+                                                            ];
+                                                        @endphp
+                                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                                        <h6 class="fw-semibold mb-0" data-en="Activity Log"
+                                                            data-bm="Log Aktiviti">Activity Log</h6>
+                                                        <div class="w-50">
+                                                            <select id="activitySearch" class="form-select select2" multiple="multiple">
+                                                                @foreach($filterCategories as $cat => $data)
+                                                                    <option value="{{ $data['keywords'] }}" data-en="{{ $data['en'] }}" data-bm="{{ $data['bm'] }}">{{ $data['en'] }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                        <ul class="list-group" id="activityListGroup">
                                                             @foreach ($activities as $log)
+                                                                @php
+                                                                    $descEn = $log->description;
+                                                                    $descBm = $descEn;
+                                                                    foreach ($activityTranslations as $en => $bm) {
+                                                                        $descBm = str_replace($en, $bm, $descBm);
+                                                                    }
+                                                                @endphp
                                                                 <li
                                                                     class="list-group-item d-flex justify-content-between align-items-center">
-                                                                    {{ $log->description }}
+                                                                    <span class="activity-desc" data-en="{{ $descEn }}" data-bm="{{ $descBm }}">{{ $descEn }}</span>
                                                                     <span
                                                                         class="text-muted small">{{ $log->created_at->format('d M Y, H:i') }}</span>
                                                                 </li>
@@ -566,6 +658,8 @@
     </div>
 @endsection
 
+@push('scripts')
+    @vite(['resources/js/pages/internal/user_management/view_public.js'])
 @push('style')
     <style>
         .doc-accordion-toggle {
