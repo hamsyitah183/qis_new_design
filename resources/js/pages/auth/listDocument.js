@@ -5,18 +5,35 @@ import { fileUpload } from "./registerAction.js";
 let documents = null;
 
 // ---- Shared modal preview for existing files ----
+function resolveFileUrl(path) {
+    if (!path) return "";
+
+    // Already a full URL
+    if (/^https?:\/\//i.test(path)) {
+        return path;
+    }
+
+    const origin = window.location.origin;
+
+    // Already an absolute path like "/storage/user_attachments/xxx.png"
+    if (path.startsWith("/")) {
+        return origin + path;
+    }
+
+    // Bare relative path like "user_attachments/xxx.png"
+    return `${origin}/storage/${path}`;
+}
+
 function viewExistingFile(url, name) {
     const modalEl = document.getElementById("fileLabelModal");
     if (!modalEl) {
-        // Fallback: open in new tab if modal not found
-        window.open(url, "_blank", "noopener,noreferrer");
+        window.open(resolveFileUrl(url), "_blank", "noopener,noreferrer");
         return;
     }
 
-    // Get or create Bootstrap Modal instance
-    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    const modal =
+        bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
 
-    // Get modal elements
     const previewImg = document.getElementById("fileLabelPreview");
     const previewIcon = document.getElementById("filePreviewIcon");
     const pdfViewer = document.getElementById("fileLabelPdfViewer");
@@ -27,50 +44,92 @@ function viewExistingFile(url, name) {
     // Reset all viewers
     if (previewImg) previewImg.classList.add("d-none");
     if (previewIcon) previewIcon.classList.add("d-none");
-    if (pdfViewer) pdfViewer.style.display = "none"; // uses inline styles
+    if (pdfViewer) pdfViewer.style.display = "none";
 
-    // Determine file extension
-    const ext = (url || "").split(".").pop().toLowerCase();
+    const fullUrl = resolveFileUrl(url);
+    const ext = (fullUrl || "").split(".").pop().toLowerCase();
 
-    // Show appropriate viewer
     if (["jpg", "jpeg", "png", "gif", "bmp", "svg", "webp"].includes(ext)) {
         if (previewImg) {
-            previewImg.src = url;
+            previewImg.src = fullUrl;
             previewImg.classList.remove("d-none");
         }
     } else if (ext === "pdf") {
         if (pdfViewer) {
-            pdfViewer.src = url;
+            pdfViewer.src = fullUrl;
             pdfViewer.style.display = "block";
         } else {
-            // Fallback icon for PDFs
             if (previewIcon) {
                 previewIcon.classList.remove("d-none");
                 const icon = previewIcon.querySelector("i") || previewIcon;
-                if (icon.tagName === "I") icon.className = "ti ti-file-text ti-5x text-muted";
+                if (icon.tagName === "I")
+                    icon.className = "ti ti-file-text ti-5x text-muted";
                 const msg = previewIcon.querySelector("p");
-                if (msg) msg.textContent = "PDF preview not available. Click 'Open in New Tab' to view.";
+                if (msg)
+                    msg.textContent =
+                        "PDF preview not available. Click 'Open in New Tab' to view.";
             }
         }
     } else {
-        // Generic file fallback
         if (previewIcon) {
             previewIcon.classList.remove("d-none");
             const icon = previewIcon.querySelector("i") || previewIcon;
-            if (icon.tagName === "I") icon.className = "ti ti-file-text ti-5x text-muted";
+            if (icon.tagName === "I")
+                icon.className = "ti ti-file-text ti-5x text-muted";
             const msg = previewIcon.querySelector("p");
-            if (msg) msg.textContent = "Preview not available. Use 'Open in New Tab' to view it.";
+            if (msg)
+                msg.textContent =
+                    "Preview not available. Use 'Open in New Tab' to view it.";
         }
     }
 
     if (fileNameDisplay) fileNameDisplay.textContent = name || "Document";
     if (openBtn) {
-        openBtn.href = url;
+        openBtn.href = fullUrl;
         openBtn.download = name || "document";
         openBtn.style.display = "inline-block";
     }
     if (modalTitle) modalTitle.textContent = "File Preview";
 
+    modal.show();
+}
+
+window.viewExistingFile = viewExistingFile;
+
+// ---- Shared modal for document description ----
+function ensureDescriptionModal() {
+    if (document.getElementById("docDescriptionModal")) return;
+
+    const modalHtml = `
+        <div class="modal fade" id="docDescriptionModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="docDescriptionModalLabel">Document Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body doc-description-modal-body"></div>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML("beforeend", modalHtml);
+}
+
+function showDocumentDescription(doc) {
+    ensureDescriptionModal();
+
+    const modalEl = document.getElementById("docDescriptionModal");
+    const titleEl = document.getElementById("docDescriptionModalLabel");
+    const bodyEl = modalEl.querySelector(".doc-description-modal-body");
+
+    titleEl.textContent = doc.name;
+    bodyEl.innerHTML =
+        doc.description ||
+        "<p class='text-muted mb-0'>No description available.</p>";
+
+    const modal =
+        bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
     modal.show();
 }
 
@@ -147,14 +206,16 @@ function renderDocumentList(user) {
                 <i class="ti ti-file-text fs-18 text-muted flex-shrink-0"></i>
                 <div class="min-w-0">
                     <div class="fw-semibold fs-14">${doc.name}</div>
-                    ${
-                        doc.description
-                            ? `<div class="text-muted fs-12 text-truncate">${doc.description}</div>`
-                            : ""
-                    }
                 </div>
             </div>
             <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                ${
+                    doc.description
+                        ? `<button type="button" class="badge rounded-pill bg-light-primary text-primary border-0 doc-details-btn d-flex align-items-center gap-1" data-doc-id="${doc.id}">
+                            <i class="ti ti-info-circle fs-14"></i> Details
+                        </button>`
+                        : ""
+                }
                 <span class="badge rounded-pill bg-light text-muted doc-status-badge" data-doc-id="${doc.id}">
                     ${existingFiles.length > 0 ? `${existingFiles.length} file(s)` : "No files"}
                 </span>
@@ -191,14 +252,14 @@ function renderDocumentList(user) {
                                 ${
                                     file.file_size
                                         ? `<div class="file-size">${formatFileSize(
-                                              file.file_size
+                                              file.file_size,
                                           )}</div>`
                                         : ""
                                 }
 
                                 <div class="file-uploaded-date text-muted fs-12">
                                     Uploaded on: ${new Date(
-                                        file.created_at
+                                        file.created_at,
                                     ).toLocaleDateString()}
                                 </div>
                             </div>
@@ -206,13 +267,13 @@ function renderDocumentList(user) {
                                 <button class="btn btn-sm btn-icon btn-success-light btn-wave file-view-btn" data-url="${
                                     file.file_path
                                 }" data-name="${
-                                file.original_file_name || "Document"
-                            }" onclick="window.viewExistingFile(this.dataset.url, this.dataset.name)">
+                                    file.original_file_name || "Document"
+                                }" onclick="window.viewExistingFile(this.dataset.url, this.dataset.name)">
                                     <i class="ti ti-eye"></i>
                                 </button>
                             </div>
                         </li>
-                    `
+                    `,
                         )
                         .join("")}
                 </ul>
@@ -302,7 +363,7 @@ function renderDocumentList(user) {
             const docId = this.dataset.docId;
             const isExpanded = this.getAttribute("aria-expanded") === "true";
             const panel = document.querySelector(
-                `.doc-panel[data-doc-id="${docId}"]`
+                `.doc-panel[data-doc-id="${docId}"]`,
             );
             if (panel) {
                 panel.classList.toggle("d-none", isExpanded);
@@ -316,16 +377,14 @@ function renderDocumentList(user) {
         btn.addEventListener("click", function () {
             const docId = this.dataset.docId;
             const uploadZone = document.querySelector(
-                `.upload-zone-wrapper[data-doc-id="${docId}"]`
+                `.upload-zone-wrapper[data-doc-id="${docId}"]`,
             );
             if (!uploadZone) return;
 
             const isHidden = uploadZone.classList.contains("d-none");
             uploadZone.classList.toggle("d-none", !isHidden);
 
-            this.innerHTML = isHidden
-                ? `Cancel`
-                : `Add Document`;
+            this.innerHTML = isHidden ? `Cancel` : `Add Document`;
         });
     });
 
@@ -336,16 +395,14 @@ function renderDocumentList(user) {
 
             // ---- Set up badge observer to track total files (existing + staged) ----
             const card = document.querySelector(
-                `.document-upload-section[data-doc-id="${doc.id}"]`
+                `.document-upload-section[data-doc-id="${doc.id}"]`,
             );
             if (card) {
                 const badge = card.querySelector(".doc-status-badge");
                 const existingList = card.querySelector(
-                    ".existing-file-list-container"
+                    ".existing-file-list-container",
                 );
-                const stagedList = card.querySelector(
-                    ".file-list-container"
-                );
+                const stagedList = card.querySelector(".file-list-container");
 
                 function updateBadge() {
                     const existingCount = existingList
@@ -380,7 +437,9 @@ function renderDocumentList(user) {
             }
         });
     } else {
-        console.warn("fileUpload function not found; upload zones will not work.");
+        console.warn(
+            "fileUpload function not found; upload zones will not work.",
+        );
     }
 
     // ---- Add Submit Button & Logic ----
@@ -391,12 +450,12 @@ function renderDocumentList(user) {
                 <i class="ti ti-upload me-1"></i> Submit Documents
             </button>
         `;
-        
+
         // Show footer
         submitFooter.classList.remove("d-none");
-        
+
         const submitBtn = document.getElementById("submit-documents-btn");
-        
+
         // Function to check if there are any staged files across all doc types
         const checkStagedFiles = () => {
             let hasFiles = false;
@@ -409,13 +468,15 @@ function renderDocumentList(user) {
         };
 
         // Observe changes to all staged lists to enable/disable the submit button
-        document.querySelectorAll(".file-list-container").forEach((stagedList) => {
-            const submitObserver = new MutationObserver(checkStagedFiles);
-            submitObserver.observe(stagedList, {
-                childList: true,
-                subtree: true,
+        document
+            .querySelectorAll(".file-list-container")
+            .forEach((stagedList) => {
+                const submitObserver = new MutationObserver(checkStagedFiles);
+                submitObserver.observe(stagedList, {
+                    childList: true,
+                    subtree: true,
+                });
             });
-        });
 
         // Handle submission
         submitBtn.addEventListener("click", async function () {
@@ -425,25 +486,43 @@ function renderDocumentList(user) {
             try {
                 const formData = new FormData();
                 let hasFiles = false;
-                
+
                 // Collect files and metadata
                 document.querySelectorAll(".file-input").forEach((input) => {
                     const docId = input.dataset.docId;
                     if (input.files && input.files.length > 0) {
-                        Array.from(input.files).forEach(file => {
+                        Array.from(input.files).forEach((file) => {
                             formData.append(`attachment[${docId}][]`, file);
                             hasFiles = true;
                         });
-                        
+
                         // Append metadata
-                        const docTypeInput = document.querySelector(`input[name="document_type[${docId}]"]`);
-                        if (docTypeInput) formData.append(`document_type[${docId}]`, docTypeInput.value);
-                        
-                        const validFromInput = document.querySelector(`input[name="valid_from[${docId}]"]`);
-                        if (validFromInput && validFromInput.value) formData.append(`valid_from[${docId}]`, validFromInput.value);
-                        
-                        const validUntilInput = document.querySelector(`input[name="valid_until[${docId}]"]`);
-                        if (validUntilInput && validUntilInput.value) formData.append(`valid_until[${docId}]`, validUntilInput.value);
+                        const docTypeInput = document.querySelector(
+                            `input[name="document_type[${docId}]"]`,
+                        );
+                        if (docTypeInput)
+                            formData.append(
+                                `document_type[${docId}]`,
+                                docTypeInput.value,
+                            );
+
+                        const validFromInput = document.querySelector(
+                            `input[name="valid_from[${docId}]"]`,
+                        );
+                        if (validFromInput && validFromInput.value)
+                            formData.append(
+                                `valid_from[${docId}]`,
+                                validFromInput.value,
+                            );
+
+                        const validUntilInput = document.querySelector(
+                            `input[name="valid_until[${docId}]"]`,
+                        );
+                        if (validUntilInput && validUntilInput.value)
+                            formData.append(
+                                `valid_until[${docId}]`,
+                                validUntilInput.value,
+                            );
                     }
                 });
 
@@ -453,20 +532,22 @@ function renderDocumentList(user) {
 
                 // Add CSRF token manually (sometimes required if not in fetch headers)
                 const csrfToken = $('meta[name="csrf-token"]').attr("content");
-                
+
                 const response = await fetch("/public/upload-verification", {
                     method: "POST",
                     headers: {
                         "X-CSRF-TOKEN": csrfToken,
-                        "Accept": "application/json"
+                        Accept: "application/json",
                     },
-                    body: formData
+                    body: formData,
                 });
 
                 const data = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(data.message || "Failed to upload documents.");
+                    throw new Error(
+                        data.message || "Failed to upload documents.",
+                    );
                 }
 
                 await Swal.fire({
@@ -474,20 +555,19 @@ function renderDocumentList(user) {
                     title: "Success",
                     text: data.message || "Documents uploaded successfully.",
                     confirmButtonText: "OK",
-                    timer: 2000
+                    timer: 2000,
                 });
 
                 // Reload page to reflect changes
                 window.location.reload();
-
             } catch (error) {
                 console.error("Upload error:", error);
                 Swal.fire({
                     icon: "error",
                     title: "Upload Failed",
-                    text: error.message || "An unexpected error occurred."
+                    text: error.message || "An unexpected error occurred.",
                 });
-                
+
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = `<i class="ti ti-upload me-1"></i> Submit Documents`;
             }
@@ -504,4 +584,13 @@ function formatFileSize(bytes) {
 export async function userDocument(user) {
     await listDocuments();
     renderDocumentList(user);
+
+    document.querySelectorAll(".doc-details-btn").forEach((btn) => {
+        btn.addEventListener("click", function (e) {
+            e.stopPropagation(); // prevent the row's expand/collapse toggle from firing
+            const docId = this.dataset.docId;
+            const doc = documents.find((d) => String(d.id) === String(docId));
+            if (doc) showDocumentDescription(doc);
+        });
+    });
 }

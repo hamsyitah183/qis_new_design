@@ -1,0 +1,63 @@
+.doc-file-card {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 14px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background: #f8f9fa;
+    text-decoration: none;
+    color: #212529;
+    margin: 6px 0;
+    max-width: 320px;
+}
+.doc-file-card:hover {
+    background: #eef1f4;
+    text-decoration: none;
+    color: #212529;
+}
+.doc-file-card-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Images inside the Quill editor */
+#content-editor .ql-editor img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    display: block;
+    margin: 12px 0;
+    border: 1px solid #dee2e6;
+}
+
+/* Keep the editor from growing unbounded when a tall image is inserted */
+#content-editor .ql-editor {
+    /* max-height: 600px; */
+    overflow-y: auto;
+}
+
+.document-description-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    display: block;
+    margin: 12px 0;
+    border: 1px solid #dee2e6;
+    cursor: zoom-in;
+}
+
+
+.doc-details-btn {
+    cursor: pointer;
+    padding: 4px 10px;
+}
+.doc-details-btn:hover {
+    background-color: var(--bs-primary-bg-subtle, #e7f1ff) !important;
+}
+.doc-description-modal-body img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 8px 0;
+}

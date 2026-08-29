@@ -4,6 +4,7 @@ import "datatables.net-responsive-bs5";
 import "datatables.net-bs5/css/dataTables.bootstrap5.min.css";
 import "datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css";
 import Swal from "sweetalert2";
+import { applyTranslations } from "../../../app";
 
 const $ = jQuery;
 window.$ = window.jQuery = jQuery;
@@ -16,13 +17,13 @@ $(document).ready(function () {
         responsive: true,
         ajax: `${window.baseUrl}/internal/documents/data`,
         columns: [
-            { data: "id", name: "id", visible: false,},
+            { data: "id", name: "id", visible: false },
             { data: "module", name: "module" },
             { data: "name", name: "name" },
             { data: "description", name: "description" },
             { data: "required_badge", name: "is_required" },
             { data: "expiry_badge", name: "requires_expiry" },
-            { data: "status_badge", name: "is_active" },
+            { data: "status_badge", name: "is_active", visible: false },
             {
                 data: "id",
                 name: "action",
@@ -52,34 +53,19 @@ $(document).ready(function () {
         $("#documentForm")[0].reset();
         $("#document_id").val("");
         $("#docActive").prop("checked", true);
-        $("#addDocumentModalLabel").text("Add Document");
+        // $("#addDocumentModalLabel").text("Add Document");
         const modal = bootstrap.Modal.getOrCreateInstance(
             document.getElementById("addDocumentModal"),
         );
         modal.show();
+
+        applyTranslations(modal);
     });
 
     // ─── Edit Button ─────────────────────────────────────────────
     $("#documentTable").on("click", ".edit-btn", function () {
         const id = $(this).data("id");
-
-        $.get(`${window.baseUrl}/internal/documents/${id}`, function (data) {
-            $("#document_id").val(data.id);
-            $("#docModule").val(data.module);
-            $("#docName").val(data.name);
-            $("#docDescription").val(data.description);
-            $("#docRequired").prop("checked", data.is_required);
-            $("#docExpiry").prop("checked", data.requires_expiry);
-            $("#docActive").prop("checked", data.is_active);
-
-            $("#addDocumentModalLabel").text("Edit Document");
-            const modal = bootstrap.Modal.getOrCreateInstance(
-                document.getElementById("addDocumentModal"),
-            );
-            modal.show();
-        }).fail(function () {
-            Swal.fire("Error", "Failed to fetch document details", "error");
-        });
+        window.location.href = `${window.baseUrl}/internal/documents/${id}/edit`;
     });
 
     // ─── Save Form ───────────────────────────────────────────────
