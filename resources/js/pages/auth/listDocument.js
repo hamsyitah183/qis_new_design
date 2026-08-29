@@ -4,36 +4,83 @@ import { fileUpload } from "./registerAction.js";
 
 let documents = null;
 
-// ---- Shared modal preview for existing files ----
+// =============================================================
+// Helpers
+// =============================================================
+
 function resolveFileUrl(path) {
     if (!path) return "";
-
-    // Already a full URL
-    if (/^https?:\/\//i.test(path)) {
-        return path;
-    }
-
+    if (/^https?:\/\//i.test(path)) return path;
     const origin = window.location.origin;
-
-    // Already an absolute path like "/storage/user_attachments/xxx.png"
-    if (path.startsWith("/")) {
-        return origin + path;
-    }
-
-    // Bare relative path like "user_attachments/xxx.png"
+    if (path.startsWith("/")) return origin + path;
     return `${origin}/storage/${path}`;
 }
 
+function formatFileSize(bytes) {
+    if (!bytes) return "";
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+}
+
+function isFileStillValid(file) {
+    if (!file.valid_until) return true;
+    const today = new Date().setHours(0, 0, 0, 0);
+    const validUntil = new Date(file.valid_until).setHours(0, 0, 0, 0);
+    return validUntil >= today;
+}
+
+function getExistingFiles(user, docName) {
+    return (user.attachments || []).filter(att => att.document_type === docName);
+}
+
+function hasValidReadFile(user, docName) {
+    return getExistingFiles(user, docName).some(
+        file => Number(file.is_read) === 1 && isFileStillValid(file)
+    );
+}
+
+// =============================================================
+// Modals & Preview
+// =============================================================
+
+function ensureDescriptionModal() {
+    if (document.getElementById("docDescriptionModal")) return;
+    const html = `
+        <div class="modal fade" id="docDescriptionModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="docDescriptionModalLabel">Document Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body doc-description-modal-body"></div>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML("beforeend", html);
+}
+
+function showDocumentDescription(doc) {
+    ensureDescriptionModal();
+    const modalEl = document.getElementById("docDescriptionModal");
+    document.getElementById("docDescriptionModalLabel").textContent = doc.name;
+    const body = modalEl.querySelector(".doc-description-modal-body");
+    body.innerHTML = doc.description || `<p class="text-muted mb-0">No description available.</p>`;
+    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    modal.show();
+}
+
 function viewExistingFile(url, name) {
+    const fullUrl = resolveFileUrl(url);
     const modalEl = document.getElementById("fileLabelModal");
     if (!modalEl) {
-        window.open(resolveFileUrl(url), "_blank", "noopener,noreferrer");
+        window.open(fullUrl, "_blank", "noopener,noreferrer");
         return;
     }
 
-    const modal =
-        bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-
+    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
     const previewImg = document.getElementById("fileLabelPreview");
     const previewIcon = document.getElementById("filePreviewIcon");
     const pdfViewer = document.getElementById("fileLabelPdfViewer");
@@ -46,7 +93,6 @@ function viewExistingFile(url, name) {
     if (previewIcon) previewIcon.classList.add("d-none");
     if (pdfViewer) pdfViewer.style.display = "none";
 
-    const fullUrl = resolveFileUrl(url);
     const ext = (fullUrl || "").split(".").pop().toLowerCase();
 
     if (["jpg", "jpeg", "png", "gif", "bmp", "svg", "webp"].includes(ext)) {
@@ -62,24 +108,18 @@ function viewExistingFile(url, name) {
             if (previewIcon) {
                 previewIcon.classList.remove("d-none");
                 const icon = previewIcon.querySelector("i") || previewIcon;
-                if (icon.tagName === "I")
-                    icon.className = "ti ti-file-text ti-5x text-muted";
+                if (icon.tagName === "I") icon.className = "ti ti-file-text ti-5x text-muted";
                 const msg = previewIcon.querySelector("p");
-                if (msg)
-                    msg.textContent =
-                        "PDF preview not available. Click 'Open in New Tab' to view.";
+                if (msg) msg.textContent = "PDF preview not available. Click 'Open in New Tab' to view.";
             }
         }
     } else {
         if (previewIcon) {
             previewIcon.classList.remove("d-none");
             const icon = previewIcon.querySelector("i") || previewIcon;
-            if (icon.tagName === "I")
-                icon.className = "ti ti-file-text ti-5x text-muted";
+            if (icon.tagName === "I") icon.className = "ti ti-file-text ti-5x text-muted";
             const msg = previewIcon.querySelector("p");
-            if (msg)
-                msg.textContent =
-                    "Preview not available. Use 'Open in New Tab' to view it.";
+            if (msg) msg.textContent = "Preview not available. Use 'Open in New Tab' to view it.";
         }
     }
 
@@ -94,49 +134,13 @@ function viewExistingFile(url, name) {
     modal.show();
 }
 
+// Attach to window for inline onclick
 window.viewExistingFile = viewExistingFile;
 
-// ---- Shared modal for document description ----
-function ensureDescriptionModal() {
-    if (document.getElementById("docDescriptionModal")) return;
+// =============================================================
+// Document List API
+// =============================================================
 
-    const modalHtml = `
-        <div class="modal fade" id="docDescriptionModal" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="docDescriptionModalLabel">Document Details</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body doc-description-modal-body"></div>
-                </div>
-            </div>
-        </div>
-    `;
-    document.body.insertAdjacentHTML("beforeend", modalHtml);
-}
-
-function showDocumentDescription(doc) {
-    ensureDescriptionModal();
-
-    const modalEl = document.getElementById("docDescriptionModal");
-    const titleEl = document.getElementById("docDescriptionModalLabel");
-    const bodyEl = modalEl.querySelector(".doc-description-modal-body");
-
-    titleEl.textContent = doc.name;
-    bodyEl.innerHTML =
-        doc.description ||
-        "<p class='text-muted mb-0'>No description available.</p>";
-
-    const modal =
-        bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-    modal.show();
-}
-
-// Attach to window so it can be called from inline onclick
-window.viewExistingFile = viewExistingFile;
-
-// ---- Document listing functions ----
 async function listDocuments() {
     try {
         const response = await fetch("/documents/data", {
@@ -146,14 +150,9 @@ async function listDocuments() {
                 "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
             },
         });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         const data = await response.json();
         documents = data.document ?? data;
-
         console.log("📄 Document requirements loaded:", documents);
         return documents;
     } catch (error) {
@@ -167,430 +166,347 @@ async function listDocuments() {
     }
 }
 
+// =============================================================
+// UI Rendering
+// =============================================================
+
+function createDocumentCard(doc, user) {
+    const existingFiles = getExistingFiles(user, doc.name);
+    const hasValidRead = hasValidReadFile(user, doc.name);
+
+    const card = document.createElement("div");
+    card.className = "card custom-card border shadow-sm mb-0 document-upload-section p-3 mb-2";
+    card.dataset.docId = doc.id;
+
+    // Header
+    const header = document.createElement("div");
+    header.className = "d-flex align-items-center justify-content-between doc-row-toggle";
+    header.setAttribute("role", "button");
+    header.setAttribute("aria-expanded", "false");
+    header.dataset.docId = doc.id;
+
+    header.innerHTML = `
+        <div class="d-flex align-items-center gap-2 min-w-0">
+            <i class="ti ti-file-text fs-18 text-muted flex-shrink-0"></i>
+            <div class="min-w-0">
+                <div class="fw-semibold fs-14">${doc.name}</div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-shrink-0">
+            ${doc.description ? `<button type="button" class="badge rounded-pill bg-light-primary text-primary border-0 doc-details-btn d-flex align-items-center gap-1" data-doc-id="${doc.id}">
+                <i class="ti ti-info-circle fs-14"></i> Details
+            </button>` : ""}
+            <span class="badge rounded-pill bg-light text-muted doc-status-badge" data-doc-id="${doc.id}">
+                ${existingFiles.length > 0 ? `${existingFiles.length} file(s)` : "No files"}
+            </span>
+            <i class="ti ti-chevron-down doc-toggle-icon fs-16 text-muted"></i>
+        </div>
+    `;
+
+    // Panel
+    const panel = document.createElement("div");
+    panel.className = "doc-panel d-none";
+    panel.dataset.docId = doc.id;
+
+    // Existing files list
+    let existingHtml = existingFiles.length > 0
+        ? `
+            <div class="existing-file-list-empty text-muted fs-12 mb-2" data-doc-id="${doc.id}">
+                <p class="text-primary">Previously uploaded:</p>
+            </div>
+            <ul class="existing-file-list-container list-unstyled d-flex flex-column gap-2 mb-3" data-doc-id="${doc.id}">
+                ${existingFiles.map(file => `
+                    <li class="file-list-item existing-file">
+                        <i class="${file.file_path?.endsWith(".pdf") ? "ti ti-file-type-pdf" : "ti ti-photo"}"></i>
+                        <div class="file-meta">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="file-name">${file.original_file_name || "Document"}</div>
+                                ${Number(file.is_read) === 1 ? `<span class="badge bg-success-transparent fs-11 py-0 px-1"><i class="ti ti-check fs-11"></i> Read</span>` : ""}
+                            </div>
+                            ${file.file_size ? `<div class="file-size">${formatFileSize(file.file_size)}</div>` : ""}
+                            <div class="file-uploaded-date text-muted fs-12">
+                                Uploaded on: ${new Date(file.created_at).toLocaleDateString()}
+                            </div>
+                        </div>
+                        <div class="file-actions">
+                            <button class="btn btn-sm btn-icon btn-success-light btn-wave file-view-btn" 
+                                    data-url="${file.file_path}" 
+                                    data-name="${file.original_file_name || "Document"}" 
+                                    onclick="window.viewExistingFile(this.dataset.url, this.dataset.name)">
+                                <i class="ti ti-eye"></i>
+                            </button>
+                        </div>
+                    </li>
+                `).join("")}
+            </ul>
+        `
+        : `
+            <div class="existing-file-list-empty text-muted fs-12 mb-2 d-none" data-doc-id="${doc.id}">
+                Previously uploaded:
+            </div>
+            <ul class="existing-file-list-container list-unstyled d-flex flex-column gap-2 mb-3" data-doc-id="${doc.id}"></ul>
+        `;
+
+    const lockedNotice = hasValidRead
+        ? `<div class="text-success fs-12 d-flex align-items-center gap-1 mt-1">
+            <i class="ti ti-circle-check"></i> Verified and valid — no action needed.
+        </div>`
+        : "";
+
+    const addBtn = hasValidRead
+        ? ""
+        : `<button type="button" class="btn btn-sm btn-outline-primary add-document-btn d-flex ms-auto" data-doc-id="${doc.id}">
+            <i class="ti ti-plus me-1"></i> Add Document
+        </button>`;
+
+    const uploadZone = hasValidRead
+        ? ""
+        : `
+            <div class="upload-zone-wrapper d-none mt-3" data-doc-id="${doc.id}">
+                <div class="file-drop-area p-4 text-center border border-dashed rounded-3" style="cursor: pointer;" data-doc-id="${doc.id}">
+                    <h5 class="display-3 text-muted mb-2"><i class="ti ti-folder-down"></i></h5>
+                    <div class="text-muted">Drop files here or click to upload.</div>
+                    <div class="text-muted fs-12 mt-1">You can select multiple files at once.</div>
+                    <input type="file" class="file-input" style="display: none;" accept=".jpg,.jpeg,.png,.pdf" multiple name="attachment[${doc.id}][]" data-doc-id="${doc.id}">
+                    <input type="hidden" name="document_type[${doc.id}]" value="${doc.name}">
+                </div>
+                <div class="file-list-empty text-center text-muted fs-13 py-2" data-doc-id="${doc.id}">
+                    No files added yet.
+                </div>
+                <ul class="file-list-container list-unstyled d-flex flex-column gap-2 mb-0" data-doc-id="${doc.id}"></ul>
+                ${doc.requires_expiry ? `
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label for="valid_from_${doc.id}" class="form-label">Valid From</label>
+                            <input type="date" class="form-control" id="valid_from_${doc.id}" name="valid_from[${doc.id}]">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="valid_until_${doc.id}" class="form-label">Valid Until</label>
+                            <input type="date" class="form-control" id="valid_until_${doc.id}" name="valid_until[${doc.id}]">
+                        </div>
+                    </div>
+                ` : ""}
+            </div>
+        `;
+
+    panel.innerHTML = `
+        <div class="pt-3 mt-3 border-top border-block-start-dashed">
+            ${existingHtml}
+            ${lockedNotice}
+            ${addBtn}
+            ${uploadZone}
+        </div>
+    `;
+
+    card.appendChild(header);
+    card.appendChild(panel);
+    return card;
+}
+
 function renderDocumentList(user) {
     const container = document.getElementById("document-list-container");
     if (!container) {
         console.warn("Container #document-list-container not found");
         return;
     }
-
-    // Clear container
     container.innerHTML = "";
 
-    // Create the outer wrapper
     const wrapper = document.createElement("div");
     wrapper.className = "d-flex flex-column gap-2";
 
-    documents.forEach((doc) => {
-        // Find existing attachments for this document type
-        const existingFiles =
-            user.attachments?.filter((att) => att.document_type === doc.name) ||
-            [];
-
-        // Build the card
-        const card = document.createElement("div");
-        card.className =
-            "card custom-card border shadow-sm mb-0 document-upload-section p-3 mb-2";
-        card.dataset.docId = doc.id;
-
-        // Header
-        const header = document.createElement("div");
-        header.className =
-            "d-flex align-items-center justify-content-between doc-row-toggle";
-        header.setAttribute("role", "button");
-        header.setAttribute("aria-expanded", "false");
-        header.dataset.docId = doc.id;
-
-        header.innerHTML = `
-            <div class="d-flex align-items-center gap-2 min-w-0">
-                <i class="ti ti-file-text fs-18 text-muted flex-shrink-0"></i>
-                <div class="min-w-0">
-                    <div class="fw-semibold fs-14">${doc.name}</div>
-                </div>
-            </div>
-            <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                ${
-                    doc.description
-                        ? `<button type="button" class="badge rounded-pill bg-light-primary text-primary border-0 doc-details-btn d-flex align-items-center gap-1" data-doc-id="${doc.id}">
-                            <i class="ti ti-info-circle fs-14"></i> Details
-                        </button>`
-                        : ""
-                }
-                <span class="badge rounded-pill bg-light text-muted doc-status-badge" data-doc-id="${doc.id}">
-                    ${existingFiles.length > 0 ? `${existingFiles.length} file(s)` : "No files"}
-                </span>
-                <i class="ti ti-chevron-down doc-toggle-icon fs-16 text-muted"></i>
-            </div>
-        `;
-
-        // Panel
-        const panel = document.createElement("div");
-        panel.className = "doc-panel d-none";
-        panel.dataset.docId = doc.id;
-
-        // Existing files list – NO DELETE BUTTON, uses modal preview
-        let existingHtml = "";
-        if (existingFiles.length > 0) {
-            existingHtml = `
-                <div class="existing-file-list-empty text-muted fs-12 mb-2" data-doc-id="${doc.id}">
-                    <p class="text-primary">Previously uploaded:</p>
-                </div>
-                <ul class="existing-file-list-container list-unstyled d-flex flex-column gap-2 mb-3" data-doc-id="${doc.id}">
-                    ${existingFiles
-                        .map(
-                            (file) => `
-                        <li class="file-list-item existing-file">
-                            <i class="${
-                                file.file_path?.endsWith(".pdf")
-                                    ? "ti ti-file-type-pdf"
-                                    : "ti ti-photo"
-                            }"></i>
-                            <div class="file-meta">
-                                <div class="file-name">${
-                                    file.original_file_name || "Document"
-                                }</div>
-                                ${
-                                    file.file_size
-                                        ? `<div class="file-size">${formatFileSize(
-                                              file.file_size,
-                                          )}</div>`
-                                        : ""
-                                }
-
-                                <div class="file-uploaded-date text-muted fs-12">
-                                    Uploaded on: ${new Date(
-                                        file.created_at,
-                                    ).toLocaleDateString()}
-                                </div>
-                            </div>
-                            <div class="file-actions">
-                                <button class="btn btn-sm btn-icon btn-success-light btn-wave file-view-btn" data-url="${
-                                    file.file_path
-                                }" data-name="${
-                                    file.original_file_name || "Document"
-                                }" onclick="window.viewExistingFile(this.dataset.url, this.dataset.name)">
-                                    <i class="ti ti-eye"></i>
-                                </button>
-                            </div>
-                        </li>
-                    `,
-                        )
-                        .join("")}
-                </ul>
-            `;
-        } else {
-            existingHtml = `
-                <div class="existing-file-list-empty text-muted fs-12 mb-2 d-none" data-doc-id="${doc.id}">
-                    Previously uploaded:
-                </div>
-                <ul class="existing-file-list-container list-unstyled d-flex flex-column gap-2 mb-3" data-doc-id="${doc.id}"></ul>
-            `;
-        }
-
-        // "Add Document" trigger button — reveals the dropzone/staged
-        // list/expiry fields on click instead of showing them by default
-        const addDocumentBtnHtml = `
-            <button type="button" class="btn btn-sm btn-outline-primary add-document-btn d-flex ms-auto" data-doc-id="${doc.id}">
-                <i class="ti ti-plus me-1"></i> Add Document
-            </button>
-        `;
-
-        // Drag & Drop area – the dropzone
-        const dropZoneHtml = `
-            <div class="file-drop-area p-4 text-center border border-dashed rounded-3" style="cursor: pointer;" data-doc-id="${doc.id}">
-                <h5 class="display-3 text-muted mb-2"><i class="ti ti-folder-down"></i></h5>
-                <div class="text-muted">Drop files here or click to upload.</div>
-                <div class="text-muted fs-12 mt-1">You can select multiple files at once.</div>
-                <input type="file" class="file-input" style="display: none;" accept=".jpg,.jpeg,.png,.pdf" multiple name="attachment[${doc.id}][]" data-doc-id="${doc.id}">
-                <input type="hidden" name="document_type[${doc.id}]" value="${doc.name}">
-            </div>
-        `;
-
-        // New files list – staged, with REMOVE button
-        const stagedHtml = `
-            <div class="file-list-empty text-center text-muted fs-13 py-2" data-doc-id="${doc.id}">
-                No files added yet.
-            </div>
-            <ul class="file-list-container list-unstyled d-flex flex-column gap-2 mb-0" data-doc-id="${doc.id}"></ul>
-        `;
-
-        // Expiry dates (if required)
-        let expiryHtml = "";
-        if (doc.requires_expiry) {
-            expiryHtml = `
-                <div class="row mt-3">
-                    <div class="col-md-6">
-                        <label for="valid_from_${doc.id}" class="form-label">Valid From</label>
-                        <input type="date" class="form-control" id="valid_from_${doc.id}" name="valid_from[${doc.id}]">
-                    </div>
-                    <div class="col-md-6">
-                        <label for="valid_until_${doc.id}" class="form-label">Valid Until</label>
-                        <input type="date" class="form-control" id="valid_until_${doc.id}" name="valid_until[${doc.id}]">
-                    </div>
-                </div>
-            `;
-        }
-
-        // Everything below the "Add Document" button stays hidden until
-        // that button is clicked — same d-none pattern as the outer
-        // .doc-panel, just one level deeper and scoped to the upload zone.
-        const uploadZoneHtml = `
-            <div class="upload-zone-wrapper d-none mt-3" data-doc-id="${doc.id}">
-                ${dropZoneHtml}
-                ${stagedHtml}
-                ${expiryHtml}
-            </div>
-        `;
-
-        panel.innerHTML = `
-            <div class="pt-3 mt-3 border-top border-block-start-dashed">
-                ${existingHtml}
-                ${addDocumentBtnHtml}
-                ${uploadZoneHtml}
-            </div>
-        `;
-
-        card.appendChild(header);
-        card.appendChild(panel);
+    documents.forEach(doc => {
+        const card = createDocumentCard(doc, user);
         wrapper.appendChild(card);
     });
 
     container.appendChild(wrapper);
 
-    // ---- Re-bind toggle events (expand/collapse the whole document card) ----
-    document.querySelectorAll(".doc-row-toggle").forEach((toggle) => {
+    // ---- Bind events ----
+    bindToggleEvents();
+    bindAddDocumentButtons();
+    bindDocumentDetails();
+    initializeFileUploads(user);
+    setupSubmitButton();
+}
+
+// =============================================================
+// Event Binding
+// =============================================================
+
+function bindToggleEvents() {
+    document.querySelectorAll(".doc-row-toggle").forEach(toggle => {
         toggle.addEventListener("click", function () {
             const docId = this.dataset.docId;
-            const isExpanded = this.getAttribute("aria-expanded") === "true";
-            const panel = document.querySelector(
-                `.doc-panel[data-doc-id="${docId}"]`,
-            );
+            const panel = document.querySelector(`.doc-panel[data-doc-id="${docId}"]`);
             if (panel) {
+                const isExpanded = this.getAttribute("aria-expanded") === "true";
                 panel.classList.toggle("d-none", isExpanded);
                 this.setAttribute("aria-expanded", String(!isExpanded));
             }
         });
     });
+}
 
-    // ---- Re-bind "Add Document" buttons (reveal the dropzone for that doc) ----
-    document.querySelectorAll(".add-document-btn").forEach((btn) => {
+function bindAddDocumentButtons() {
+    document.querySelectorAll(".add-document-btn").forEach(btn => {
         btn.addEventListener("click", function () {
             const docId = this.dataset.docId;
-            const uploadZone = document.querySelector(
-                `.upload-zone-wrapper[data-doc-id="${docId}"]`,
-            );
+            const uploadZone = document.querySelector(`.upload-zone-wrapper[data-doc-id="${docId}"]`);
             if (!uploadZone) return;
-
             const isHidden = uploadZone.classList.contains("d-none");
             uploadZone.classList.toggle("d-none", !isHidden);
-
-            this.innerHTML = isHidden ? `Cancel` : `Add Document`;
+            this.innerHTML = isHidden ? `<i class="ti ti-x me-1"></i> Cancel` : `<i class="ti ti-plus me-1"></i> Add Document`;
         });
     });
+}
 
-    // ---- Initialize file upload for each document ----
-    if (typeof fileUpload === "function") {
-        documents.forEach((doc) => {
+function bindDocumentDetails() {
+    document.querySelectorAll(".doc-details-btn").forEach(btn => {
+        btn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            const docId = this.dataset.docId;
+            const doc = documents.find(d => String(d.id) === String(docId));
+            if (doc) showDocumentDescription(doc);
+        });
+    });
+}
+
+function initializeFileUploads(user) {
+    if (typeof fileUpload !== "function") {
+        console.warn("fileUpload function not found; upload zones will not work.");
+        return;
+    }
+
+    documents.forEach(doc => {
+        const hasValidRead = hasValidReadFile(user, doc.name);
+        if (!hasValidRead) {
             fileUpload(doc.id);
+        }
 
-            // ---- Set up badge observer to track total files (existing + staged) ----
-            const card = document.querySelector(
-                `.document-upload-section[data-doc-id="${doc.id}"]`,
-            );
-            if (card) {
-                const badge = card.querySelector(".doc-status-badge");
-                const existingList = card.querySelector(
-                    ".existing-file-list-container",
-                );
-                const stagedList = card.querySelector(".file-list-container");
+        // Setup badge observer
+        const card = document.querySelector(`.document-upload-section[data-doc-id="${doc.id}"]`);
+        if (!card) return;
 
-                function updateBadge() {
-                    const existingCount = existingList
-                        ? existingList.children.length
-                        : 0;
-                    const stagedCount = stagedList
-                        ? stagedList.children.length
-                        : 0;
-                    const total = existingCount + stagedCount;
+        const badge = card.querySelector(".doc-status-badge");
+        const existingList = card.querySelector(".existing-file-list-container");
+        const stagedList = card.querySelector(".file-list-container");
 
-                    if (total > 0) {
-                        badge.textContent =
-                            total + (total === 1 ? " file" : " files");
-                        badge.classList.add("has-files");
-                    } else {
-                        badge.textContent = "No files";
-                        badge.classList.remove("has-files");
-                    }
-                }
-
-                // Initial update
-                updateBadge();
-
-                // Observe staged list changes (add/remove files)
-                if (stagedList) {
-                    const observer = new MutationObserver(updateBadge);
-                    observer.observe(stagedList, {
-                        childList: true,
-                        subtree: true,
-                    });
-                }
+        function updateBadge() {
+            const existingCount = existingList ? existingList.children.length : 0;
+            const stagedCount = stagedList ? stagedList.children.length : 0;
+            const total = existingCount + stagedCount;
+            if (total > 0) {
+                badge.textContent = total + (total === 1 ? " file" : " files");
+                badge.classList.add("has-files");
+            } else {
+                badge.textContent = "No files";
+                badge.classList.remove("has-files");
             }
-        });
-    } else {
-        console.warn(
-            "fileUpload function not found; upload zones will not work.",
-        );
-    }
+        }
 
-    // ---- Add Submit Button & Logic ----
+        updateBadge();
+        if (stagedList) {
+            const observer = new MutationObserver(updateBadge);
+            observer.observe(stagedList, { childList: true, subtree: true });
+        }
+    });
+}
+
+// =============================================================
+// Submit Button
+// =============================================================
+
+function setupSubmitButton() {
     const submitFooter = document.getElementById("document-submit-footer");
-    if (submitFooter) {
-        submitFooter.innerHTML = `
-            <button type="button" class="btn btn-primary" id="submit-documents-btn" disabled>
-                <i class="ti ti-upload me-1"></i> Submit Documents
-            </button>
-        `;
+    if (!submitFooter) return;
 
-        // Show footer
-        submitFooter.classList.remove("d-none");
+    submitFooter.innerHTML = `
+        <button type="button" class="btn btn-primary" id="submit-documents-btn" disabled>
+            <i class="ti ti-upload me-1"></i> Submit Documents
+        </button>
+    `;
+    submitFooter.classList.remove("d-none");
 
-        const submitBtn = document.getElementById("submit-documents-btn");
+    const submitBtn = document.getElementById("submit-documents-btn");
 
-        // Function to check if there are any staged files across all doc types
-        const checkStagedFiles = () => {
-            let hasFiles = false;
-            document.querySelectorAll(".file-input").forEach((input) => {
-                if (input.files && input.files.length > 0) {
-                    hasFiles = true;
-                }
-            });
-            submitBtn.disabled = !hasFiles;
-        };
-
-        // Observe changes to all staged lists to enable/disable the submit button
-        document
-            .querySelectorAll(".file-list-container")
-            .forEach((stagedList) => {
-                const submitObserver = new MutationObserver(checkStagedFiles);
-                submitObserver.observe(stagedList, {
-                    childList: true,
-                    subtree: true,
-                });
-            });
-
-        // Handle submission
-        submitBtn.addEventListener("click", async function () {
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Submitting...`;
-
-            try {
-                const formData = new FormData();
-                let hasFiles = false;
-
-                // Collect files and metadata
-                document.querySelectorAll(".file-input").forEach((input) => {
-                    const docId = input.dataset.docId;
-                    if (input.files && input.files.length > 0) {
-                        Array.from(input.files).forEach((file) => {
-                            formData.append(`attachment[${docId}][]`, file);
-                            hasFiles = true;
-                        });
-
-                        // Append metadata
-                        const docTypeInput = document.querySelector(
-                            `input[name="document_type[${docId}]"]`,
-                        );
-                        if (docTypeInput)
-                            formData.append(
-                                `document_type[${docId}]`,
-                                docTypeInput.value,
-                            );
-
-                        const validFromInput = document.querySelector(
-                            `input[name="valid_from[${docId}]"]`,
-                        );
-                        if (validFromInput && validFromInput.value)
-                            formData.append(
-                                `valid_from[${docId}]`,
-                                validFromInput.value,
-                            );
-
-                        const validUntilInput = document.querySelector(
-                            `input[name="valid_until[${docId}]"]`,
-                        );
-                        if (validUntilInput && validUntilInput.value)
-                            formData.append(
-                                `valid_until[${docId}]`,
-                                validUntilInput.value,
-                            );
-                    }
-                });
-
-                if (!hasFiles) {
-                    throw new Error("No files selected to upload.");
-                }
-
-                // Add CSRF token manually (sometimes required if not in fetch headers)
-                const csrfToken = $('meta[name="csrf-token"]').attr("content");
-
-                const response = await fetch("/public/upload-verification", {
-                    method: "POST",
-                    headers: {
-                        "X-CSRF-TOKEN": csrfToken,
-                        Accept: "application/json",
-                    },
-                    body: formData,
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(
-                        data.message || "Failed to upload documents.",
-                    );
-                }
-
-                await Swal.fire({
-                    icon: "success",
-                    title: "Success",
-                    text: data.message || "Documents uploaded successfully.",
-                    confirmButtonText: "OK",
-                    timer: 2000,
-                });
-
-                // Reload page to reflect changes
-                window.location.reload();
-            } catch (error) {
-                console.error("Upload error:", error);
-                Swal.fire({
-                    icon: "error",
-                    title: "Upload Failed",
-                    text: error.message || "An unexpected error occurred.",
-                });
-
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = `<i class="ti ti-upload me-1"></i> Submit Documents`;
-            }
+    function checkStagedFiles() {
+        let hasFiles = false;
+        document.querySelectorAll(".file-input").forEach(input => {
+            if (input.files && input.files.length > 0) hasFiles = true;
         });
+        submitBtn.disabled = !hasFiles;
     }
+
+    document.querySelectorAll(".file-list-container").forEach(list => {
+        const observer = new MutationObserver(checkStagedFiles);
+        observer.observe(list, { childList: true, subtree: true });
+    });
+
+    submitBtn.addEventListener("click", async function () {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Submitting...`;
+
+        try {
+            const formData = new FormData();
+            let hasFiles = false;
+
+            document.querySelectorAll(".file-input").forEach(input => {
+                const docId = input.dataset.docId;
+                if (input.files && input.files.length > 0) {
+                    Array.from(input.files).forEach(file => {
+                        formData.append(`attachment[${docId}][]`, file);
+                        hasFiles = true;
+                    });
+                    const docTypeInput = document.querySelector(`input[name="document_type[${docId}]"]`);
+                    if (docTypeInput) formData.append(`document_type[${docId}]`, docTypeInput.value);
+                    const validFrom = document.querySelector(`input[name="valid_from[${docId}]"]`);
+                    if (validFrom?.value) formData.append(`valid_from[${docId}]`, validFrom.value);
+                    const validUntil = document.querySelector(`input[name="valid_until[${docId}]"]`);
+                    if (validUntil?.value) formData.append(`valid_until[${docId}]`, validUntil.value);
+                }
+            });
+
+            if (!hasFiles) throw new Error("No files selected to upload.");
+
+            const response = await fetch("/public/upload-verification", {
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+                    Accept: "application/json",
+                },
+                body: formData,
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || "Failed to upload documents.");
+
+            await Swal.fire({
+                icon: "success",
+                title: "Success",
+                text: data.message || "Documents uploaded successfully.",
+                confirmButtonText: "OK",
+                timer: 2000,
+            });
+
+            window.location.reload();
+        } catch (error) {
+            console.error("Upload error:", error);
+            Swal.fire({
+                icon: "error",
+                title: "Upload Failed",
+                text: error.message || "An unexpected error occurred.",
+            });
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `<i class="ti ti-upload me-1"></i> Submit Documents`;
+        }
+    });
 }
 
-function formatFileSize(bytes) {
-    if (bytes < 1024) return bytes + " B";
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
-}
+// =============================================================
+// Public API
+// =============================================================
 
 export async function userDocument(user) {
     await listDocuments();
     renderDocumentList(user);
-
-    document.querySelectorAll(".doc-details-btn").forEach((btn) => {
-        btn.addEventListener("click", function (e) {
-            e.stopPropagation(); // prevent the row's expand/collapse toggle from firing
-            const docId = this.dataset.docId;
-            const doc = documents.find((d) => String(d.id) === String(docId));
-            if (doc) showDocumentDescription(doc);
-        });
-    });
 }

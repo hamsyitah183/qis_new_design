@@ -212,10 +212,24 @@ class DocumentController extends Controller
             ->addColumn('valid_until_formatted', function ($att) {
                 return $att->valid_until ? $att->valid_until->format('d M Y') : '—';
             })
-            ->addColumn('action', function ($att) {
-                return '<a href="' . asset('storage/' . $att->file_path) . '" target="_blank" class="btn btn-sm btn-primary">Download</a>';
+            ->addColumn('is_read_badge', function ($att) {
+                return $att->is_read
+                    ? '<span class="badge bg-success-transparent">Read</span>'
+                    : '<span class="badge bg-warning-transparent">Unread</span>';
             })
-            ->rawColumns(['action'])
+            ->addColumn('rejected_reason_button', function ($att) {
+                if (empty($att->rejected_reason)) {
+                    return '<span class="text-muted">—</span>';
+                }
+                $reason = htmlspecialchars($att->rejected_reason, ENT_QUOTES);
+                return '<button type="button" class="btn btn-sm btn-danger-light view-reject-reason-btn" data-reason="' . $reason . '">
+                        <i class="ti ti-alert-circle"></i> Reason
+                    </button>';
+            })
+            ->addColumn('action', function ($att) {
+                return $att->id;
+            })
+            ->rawColumns(['is_read_badge', 'rejected_reason_button', 'action'])
             ->make(true);
     }
 
