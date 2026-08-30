@@ -195,7 +195,7 @@
 
 
     {{-- Export Modal --}}
-    <x-modal id="exportModal" title="Download Report">
+    <x-modal id="exportModal" title="Download Report" title_en="Download Report" title_bm="Muat Turun Laporan">
         <div class="row g-3">
             <div class="col-md-6">
                 <label for="exportMonth" class="form-label" data-en="Month" data-bm="Bulan">Month</label>

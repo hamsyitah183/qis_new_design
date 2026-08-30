@@ -3,7 +3,48 @@ window.$ = window.jQuery = $;
 import Swal from "sweetalert2";
 import "datatables.net-bs5";
 import "datatables.net-responsive-bs5";
-import { fetchVerificationCount, formatTime } from "../../../app";
+import { fetchVerificationCount, formatTime, applyTranslations } from "../../../app";
+
+function getLang() {
+    try {
+        return localStorage.getItem('qis_lang') || 'en';
+    } catch {
+        return 'en';
+    }
+}
+
+const t = {
+    loading: { en: 'Loading...', bm: 'Memuat...' },
+    error: { en: 'Error', bm: 'Ralat' },
+    errorExclamation: { en: 'Error!', bm: 'Ralat!' },
+    actionFailed: { en: 'Action failed', bm: 'Tindakan gagal' },
+    verifyError: { en: 'Failed to load verification info.', bm: 'Gagal memuatkan maklumat pengesahan.' },
+    loadingVerification: { en: 'Loading verification...', bm: 'Memuatkan maklumat pengesahan...' },
+    acceptDoc: { en: 'Accept this document?', bm: 'Terima dokumen ini?' },
+    acceptDocText: { en: 'This will mark the file as reviewed and accepted.', bm: 'Ini akan menanda fail ini sebagai telah disemak dan diterima.' },
+    accepted: { en: 'Accepted', bm: 'Diterima' },
+    rejectDoc: { en: 'Reject this document?', bm: 'Tolak dokumen ini?' },
+    reasonForRejection: { en: 'Reason for rejection', bm: 'Sebab penolakan' },
+    reasonRequired: { en: 'Reason is required', bm: 'Sebab diperlukan' },
+    rejected: { en: 'Rejected', bm: 'Ditolak' },
+    acceptAllDocs: { en: 'Accept all documents?', bm: 'Terima semua dokumen?' },
+    acceptAllDocsText: { en: 'This will accept all required documents and verify the user.', bm: 'Ini akan menerima semua dokumen yang diperlukan dan mengesahkan pengguna.' },
+    approved: { en: 'Approved!', bm: 'Diluluskan!' },
+    userVerified: { en: 'User verified.', bm: 'Pengguna disahkan.' },
+    rejectAllDocs: { en: 'Reject user?', bm: 'Tolak pengguna?' },
+    rejectAllDocsText: { en: 'This will reject the verification application.', bm: 'Ini akan menolak permohonan pengesahan.' },
+    userRejected: { en: 'User rejected.', bm: 'Pengguna ditolak.' },
+    noFileSelected: { en: 'No file selected', bm: 'Tiada fail dipilih' },
+    pleaseSelectFile: { en: 'Please select a file first.', bm: 'Sila pilih fail dahulu.' },
+};
+
+function getText(key) {
+    const lang = getLang();
+    const entry = t[key];
+    if (!entry) return key;
+    return entry[lang] || entry.en;
+}
+
 
 let verificationTable = null;
 
@@ -37,9 +78,12 @@ function formatFileSize(bytes) {
 
 function showLoader(text = "Loading...") {
     Swal.fire({
-        title: text,
+        title: text === "Loading..." ? getText("loading") : text,
         allowOutsideClick: false,
-        didOpen: () => Swal.showLoading(),
+        didOpen: () => {
+            Swal.showLoading();
+            applyTranslations(Swal.getHtmlContainer());
+        },
     });
 }
 
@@ -250,8 +294,8 @@ function populateVerificationOffcanvas(response, filterDocType = null) {
 // ---------- PER-ATTACHMENT ACCEPT (offcanvas) ----------
 function handleSingleAccept(attachmentId, userId) {
     Swal.fire({
-        title: "Accept this document?",
-        text: "This will mark the file as reviewed and accepted.",
+        title: getText("acceptDoc"),
+        text: getText("acceptDocText"),
         icon: "question",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
@@ -269,7 +313,7 @@ function handleSingleAccept(attachmentId, userId) {
                 success: function (response) {
                     Swal.fire({
                         icon: "success",
-                        title: "Accepted",
+                        title: getText("accepted"),
                         timer: 1500,
                         showConfirmButton: false,
                     });
@@ -282,8 +326,8 @@ function handleSingleAccept(attachmentId, userId) {
                 },
                 error: function (xhr) {
                     Swal.fire(
-                        "Error",
-                        xhr.responseJSON?.message || "Action failed",
+                        getText("error"),
+                        xhr.responseJSON?.message || getText("actionFailed"),
                         "error",
                     );
                 },
@@ -295,9 +339,9 @@ function handleSingleAccept(attachmentId, userId) {
 // ---------- PER-ATTACHMENT REJECT (offcanvas) ----------
 function handleSingleReject(attachmentId, userId) {
     Swal.fire({
-        title: "Reject this document?",
+        title: getText("rejectDoc"),
         input: "textarea",
-        inputLabel: "Reason for rejection",
+        inputLabel: getText("reasonForRejection"),
         inputPlaceholder: "Enter reason...",
         inputAttributes: { required: true },
         showCancelButton: true,
@@ -305,7 +349,7 @@ function handleSingleReject(attachmentId, userId) {
         confirmButtonColor: "#d33",
         preConfirm: (reason) => {
             if (!reason || reason.trim() === "") {
-                Swal.showValidationMessage("Reason is required");
+                Swal.showValidationMessage(getText("reasonRequired"));
                 return false;
             }
             return reason.trim();
@@ -324,7 +368,7 @@ function handleSingleReject(attachmentId, userId) {
                 success: function (response) {
                     Swal.fire({
                         icon: "success",
-                        title: "Rejected",
+                        title: getText("rejected"),
                         timer: 1500,
                         showConfirmButton: false,
                     });
@@ -337,8 +381,8 @@ function handleSingleReject(attachmentId, userId) {
                 },
                 error: function (xhr) {
                     Swal.fire(
-                        "Error",
-                        xhr.responseJSON?.message || "Action failed",
+                        getText("error"),
+                        xhr.responseJSON?.message || getText("actionFailed"),
                         "error",
                     );
                 },
@@ -350,8 +394,8 @@ function handleSingleReject(attachmentId, userId) {
 // ---------- BULK ACCEPT (table rows) ----------
 function handleBulkAccept(userId, tableInstance) {
     Swal.fire({
-        title: "Accept all documents?",
-        text: "This will accept all required documents and verify the user.",
+        title: getText("acceptAllDocs"),
+        text: getText("acceptAllDocsText"),
         icon: "question",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
@@ -371,8 +415,8 @@ function handleBulkAccept(userId, tableInstance) {
                 success: function (response) {
                     Swal.fire({
                         icon: "success",
-                        title: "Approved!",
-                        text: response.message || "User verified.",
+                        title: getText("approved"),
+                        text: response.message || getText("userVerified"),
                         timer: 2000,
                         showConfirmButton: false,
                     });
@@ -390,8 +434,8 @@ function handleBulkAccept(userId, tableInstance) {
                 },
                 error: function (xhr) {
                     Swal.fire(
-                        "Error",
-                        xhr.responseJSON?.message || "Action failed",
+                        getText("error"),
+                        xhr.responseJSON?.message || getText("actionFailed"),
                         "error",
                     );
                 },
@@ -415,8 +459,8 @@ function handleBulkReject(userId, reason, tableInstance) {
         success: function (response) {
             Swal.fire({
                 icon: "success",
-                title: "Rejected",
-                text: response.message || "User rejected.",
+                title: getText("rejected"),
+                text: response.message || getText("userRejected"),
                 timer: 2000,
                 showConfirmButton: false,
             });
@@ -438,8 +482,8 @@ function handleBulkReject(userId, reason, tableInstance) {
         },
         error: function (xhr) {
             Swal.fire(
-                "Error",
-                xhr.responseJSON?.message || "Action failed",
+                getText("error"),
+                xhr.responseJSON?.message || getText("actionFailed"),
                 "error",
             );
         },
@@ -535,7 +579,7 @@ $(document).ready(function () {
 
         vdOffcanvas.show();
 
-        showLoader("Loading verification...");
+        showLoader(getText("loadingVerification"));
         fetchVerificationData(userId)
             .then((response) => {
                 Swal.close();
@@ -545,10 +589,10 @@ $(document).ready(function () {
                 console.error("Verification Load Error:", error);
                 Swal.fire({
                     icon: "error",
-                    title: "Error",
+                    title: getText("error"),
                     text:
                         error.responseText ||
-                        "Failed to load verification info.",
+                        getText("verifyError"),
                 });
             });
     });
@@ -579,7 +623,7 @@ $(document).ready(function () {
 
         vdOffcanvas.show();
 
-        showLoader("Loading verification...");
+        showLoader(getText("loadingVerification"));
         fetchVerificationData(userId)
             .then((response) => {
                 Swal.close();
@@ -589,10 +633,10 @@ $(document).ready(function () {
                 console.error("Verification Load Error:", error);
                 Swal.fire({
                     icon: "error",
-                    title: "Error",
+                    title: getText("error"),
                     text:
                         error.responseText ||
-                        "Failed to load verification info.",
+                        getText("verifyError"),
                 });
             });
     });
@@ -616,8 +660,8 @@ $(document).ready(function () {
         const file = vdAttachments[vdCurrentIndex];
         if (!file) {
             Swal.fire(
-                "No file selected",
-                "Please select a file first.",
+                getText("noFileSelected"),
+                getText("pleaseSelectFile"),
                 "warning",
             );
             return;
@@ -631,8 +675,8 @@ $(document).ready(function () {
         const file = vdAttachments[vdCurrentIndex];
         if (!file) {
             Swal.fire(
-                "No file selected",
-                "Please select a file first.",
+                getText("noFileSelected"),
+                getText("pleaseSelectFile"),
                 "warning",
             );
             return;

@@ -4,6 +4,39 @@ import Swal from "sweetalert2";
 import "datatables.net-bs5";
 import "datatables.net-responsive-bs5";
 import { autoInitFilterSelect2 } from "../utils/select2Utils";
+import { applyTranslations } from "../app";
+
+function getLang() {
+    try {
+        return localStorage.getItem('qis_lang') || 'en';
+    } catch {
+        return 'en';
+    }
+}
+
+const t = {
+    fillRequiredFields: { en: 'Please fill in all required fields.', bm: 'Sila isi semua medan yang diperlukan.' },
+    savingImporter: { en: 'Saving importer...', bm: 'Menyimpan pengimport...' },
+    pleaseWait: { en: 'Please wait', bm: 'Sila tunggu' },
+    importerSaved: { en: 'Importer Saved!', bm: 'Pengimport Disimpan!' },
+    failedToSaveImporter: { en: 'Failed to save importer. Please try again.', bm: 'Gagal menyimpan pengimport. Sila cuba lagi.' },
+    areYouSure: { en: 'Are you sure?', bm: 'Adakah anda pasti?' },
+    importerPermanentlyDeleted: { en: 'This importer will be permanently deleted.', bm: 'Pengimport ini akan dipadam secara kekal.' },
+    confirmDeletion: { en: 'Confirm Deletion', bm: 'Sahkan Pemadaman' },
+    actionCannotBeUndone: { en: 'This action cannot be undone.', bm: 'Tindakan ini tidak boleh dibatalkan.' },
+    deleted: { en: 'Deleted!', bm: 'Dipadam!' },
+    failed: { en: 'Failed', bm: 'Gagal' },
+    loadingImporterData: { en: 'Loading importer data...', bm: 'Memuatkan data pengimport...' },
+    error: { en: 'Error', bm: 'Ralat' },
+    failedToLoadImporterData: { en: 'Failed to load importer data.', bm: 'Gagal memuatkan data pengimport.' },
+};
+
+function getText(key) {
+    const lang = getLang();
+    const entry = t[key];
+    if (!entry) return key;
+    return entry[lang] || entry.en;
+}
 
 
 function initAddImporterModal() {
@@ -31,16 +64,17 @@ function initAddImporterModal() {
         const id = $('#id').val();
 
         if (!name || !phone_no || !country) {
-            return Swal.fire("⚠️ Please fill in all required fields.");
+            return Swal.fire(getText("fillRequiredFields"));
         }
 
         Swal.fire({
-            title: "Saving importer...",
-            text: "Please wait",
+            title: getText("savingImporter"),
+            text: getText("pleaseWait"),
             allowOutsideClick: false,
             allowEscapeKey: false,
             didOpen: () => {
                 Swal.showLoading();
+                applyTranslations(Swal.getHtmlContainer());
             }
         });
 
@@ -54,8 +88,8 @@ function initAddImporterModal() {
             success: () => {
                 Swal.fire({
                     icon: "success",
-                    title: "Importer Saved!",
-                    text: "The Importer has been successfully saved.",
+                    title: getText("importerSaved"),
+                    text: "",
                     timer: 1800,
                     showConfirmButton: false,
                     timerProgressBar: true,
@@ -79,7 +113,7 @@ function initAddImporterModal() {
 
             error: (xhr) => {
                 console.error(xhr.responseText);
-                Swal.fire("❌ Failed to save importer. Please try again.");
+                Swal.fire(getText("failedToSaveImporter"));
             },
         });
     });
@@ -153,8 +187,8 @@ $(document).on("click", ".deleteImporter", function () {
 
     // First confirmation
     Swal.fire({
-        title: "Are you sure?",
-        text: "This importer will be permanently deleted.",
+        title: getText("areYouSure"),
+        text: getText("importerPermanentlyDeleted"),
         icon: "warning",
         showCancelButton: true,
         confirmButtonText: "Yes, continue",
@@ -163,8 +197,8 @@ $(document).on("click", ".deleteImporter", function () {
         if (result.isConfirmed) {
             // Second confirmation
             Swal.fire({
-                title: "Confirm Deletion",
-                text: "This action cannot be undone.",
+                title: getText("confirmDeletion"),
+                text: getText("actionCannotBeUndone"),
                 icon: "error",
                 showCancelButton: true,
                 confirmButtonText: "Yes, delete it",
@@ -180,7 +214,7 @@ $(document).on("click", ".deleteImporter", function () {
                         success: function (res) {
                             Swal.fire({
                                 icon: "success",
-                                title: "Deleted!",
+                                title: getText("deleted"),
                                 text: res.message,
                                 timer: 1500,
                                 showConfirmButton: false,
@@ -194,7 +228,7 @@ $(document).on("click", ".deleteImporter", function () {
                         error: function (xhr) {
                             Swal.fire({
                                 icon: "error",
-                                title: "Failed",
+                                title: getText("failed"),
                                 text:
                                     xhr.responseJSON?.message ||
                                     "Unable to delete importer.",
@@ -214,9 +248,12 @@ $(document).on("click", ".editImporter", function () {
 
     // Optional: show loading Swal
     Swal.fire({
-        title: "Loading importer data...",
+        title: getText("loadingImporterData"),
         allowOutsideClick: false,
-        didOpen: () => Swal.showLoading(),
+        didOpen: () => {
+            Swal.showLoading();
+            applyTranslations(Swal.getHtmlContainer());
+        },
     });
 
     const modalEl = document.getElementById("addImporterModal");
@@ -252,7 +289,7 @@ $(document).on("click", ".editImporter", function () {
             Swal.close();
             console.error("AJAX Error:", error);
             console.log(xhr.responseText);
-            Swal.fire("Error", "Failed to load importer data.", "error");
+            Swal.fire(getText("error"), getText("failedToLoadImporterData"), "error");
         },
     });
 });

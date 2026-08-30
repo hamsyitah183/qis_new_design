@@ -2,6 +2,34 @@ import jQuery from "jquery";
 import Quill from "quill";
 import "quill/dist/quill.snow.css";
 import Swal from "sweetalert2";
+import { applyTranslations } from "../../../app";
+
+function getLang() {
+    try {
+        return localStorage.getItem('qis_lang') || 'en';
+    } catch {
+        return 'en';
+    }
+}
+
+const t = {
+    error: { en: 'Error', bm: 'Ralat' },
+    errorEx: { en: 'Error!', bm: 'Ralat!' },
+    fileTooLarge: { en: 'File must be smaller than 5MB', bm: 'Fail mestilah lebih kecil daripada 5MB' },
+    fillRequired: { en: 'Please fill in all required fields.', bm: 'Sila isi semua medan yang diperlukan.' },
+    successEx: { en: 'Success!', bm: 'Berjaya!' },
+    somethingWentWrong: { en: 'Something went wrong.', bm: 'Sesuatu yang tidak kena berlaku.' },
+    'Document requirement added successfully.': { en: 'Document requirement added successfully.', bm: 'Keperluan dokumen berjaya ditambah.' },
+    'Document requirement updated successfully.': { en: 'Document requirement updated successfully.', bm: 'Keperluan dokumen berjaya dikemas kini.' },
+    'Document requirement deleted successfully.': { en: 'Document requirement deleted successfully.', bm: 'Keperluan dokumen berjaya dipadam.' }
+};
+
+function getText(key) {
+    const lang = getLang();
+    const entry = t[key];
+    if (!entry) return key;
+    return entry[lang] || entry.en;
+}
 
 const $ = jQuery;
 window.$ = window.jQuery = jQuery;
@@ -78,7 +106,7 @@ $(document).ready(function () {
             if (!file) return;
 
             if (file.size > 5 * 1024 * 1024) {
-                Swal.fire('Error', 'File must be smaller than 5MB', 'error');
+                Swal.fire(getText("error"), getText("fileTooLarge"), 'error');
                 return;
             }
 
@@ -117,7 +145,7 @@ $(document).ready(function () {
                     if (xhr.responseJSON?.errors?.file) {
                         msg = xhr.responseJSON.errors.file[0];
                     }
-                    Swal.fire('Error', msg, 'error');
+                    Swal.fire(getText("error"), msg, 'error');
                 },
             });
         };
@@ -131,7 +159,7 @@ $(document).ready(function () {
         const name = $('#docName').val().trim();
 
         if (!module || !name) {
-            Swal.fire('Error', 'Please fill in all required fields.', 'error');
+            Swal.fire(getText("error"), getText("fillRequired"), 'error');
             return;
         }
 
@@ -161,7 +189,7 @@ $(document).ready(function () {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
             },
             success: function (response) {
-                Swal.fire('Success!', response.message, 'success').then(() => {
+                Swal.fire(getText("successEx"), getText(response.message), 'success').then(() => {
                     window.location.href = `${window.baseUrl}/internal/documents`;
                 });
             },
@@ -172,7 +200,7 @@ $(document).ready(function () {
                 } else if (xhr.responseJSON && xhr.responseJSON.errors) {
                     errorMsg = Object.values(xhr.responseJSON.errors).flat().join('\n');
                 }
-                Swal.fire('Error!', errorMsg, 'error');
+                Swal.fire(getText("errorEx"), errorMsg, 'error');
             },
         });
     });

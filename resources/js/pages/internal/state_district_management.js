@@ -3,6 +3,36 @@ window.$ = window.jQuery = $;
 import "datatables.net-bs5";
 import "datatables.net-responsive-bs5";
 import Swal from "sweetalert2";
+import { applyTranslations } from "../../app";
+
+function getLang() {
+    try {
+        return localStorage.getItem('qis_lang') || 'en';
+    } catch {
+        return 'en';
+    }
+}
+
+const t = {
+    pleaseEnterDistrict: { en: 'Please enter a district name.', bm: 'Sila masukkan nama daerah.' },
+    districtAdded: { en: 'District added!', bm: 'Daerah ditambah!' },
+    error: { en: 'Error', bm: 'Ralat' },
+    failedToAdd: { en: 'Failed to add district.', bm: 'Gagal menambah daerah.' },
+    networkError: { en: 'Network error. Please try again.', bm: 'Ralat rangkaian. Sila cuba lagi.' },
+    deleteActionWarning: { en: 'This action cannot be undone.', bm: 'Tindakan ini tidak boleh dibatalkan.' },
+    yesDelete: { en: 'Yes, delete', bm: 'Ya, padam' },
+    cancel: { en: 'Cancel', bm: 'Batal' },
+    deleted: { en: 'Deleted!', bm: 'Dipadam!' },
+    failedToDelete: { en: 'Failed to delete.', bm: 'Gagal memadam.' }
+};
+
+function getText(key) {
+    const lang = getLang();
+    const entry = t[key];
+    if (!entry) return key;
+    return entry[lang] || entry.en;
+}
+
 
 let statesTable = null;
 let districtsTable = null;
@@ -47,6 +77,7 @@ $(document).ready(function () {
             },
         ],
         order: [[1, "asc"]],
+        drawCallback: () => applyTranslations(document.body)
     });
 
     // Manage button  
@@ -65,7 +96,10 @@ $(document).ready(function () {
 
 //Open District Modal 
 function openDistrictModal() {
-    $("#modalStateTitle").text(`Manage Districts — ${currentStateName}`);
+    const titleText = getLang() === "bm" 
+        ? `Urus Daerah — ${currentStateName}` 
+        : `Manage Districts — ${currentStateName}`;
+    $("#modalStateTitle").text(titleText);
     $("#newDistrictInput").val("");
 
     if (districtsTable) {
@@ -108,6 +142,7 @@ function openDistrictModal() {
             },
         ],
         order: [[1, "asc"]],
+        drawCallback: () => applyTranslations(document.body)
     });
 
     // Delete button
@@ -120,7 +155,7 @@ function openDistrictModal() {
 function addDistrict() {
     const name = $("#newDistrictInput").val().trim();
     if (!name) {
-        Swal.fire({ icon: "warning", title: "Please enter a district name.", timer: 1500, showConfirmButton: false });
+        Swal.fire({ icon: "warning", title: getText("pleaseEnterDistrict"), timer: 1500, showConfirmButton: false });
         return;
     }
 
@@ -138,27 +173,27 @@ function addDistrict() {
         .then((data) => {
             if (data.success) {
                 $("#newDistrictInput").val("");
-                Swal.fire({ icon: "success", title: "District added!", timer: 1200, showConfirmButton: false });
+                Swal.fire({ icon: "success", title: getText("districtAdded"), timer: 1200, showConfirmButton: false });
                 districtsTable.ajax.reload();
                 statesTable.ajax.reload(null, false);
             } else {
-                Swal.fire("Error", data.message || "Failed to add district.", "error");
+                Swal.fire(getText("error"), data.message || getText("failedToAdd"), "error");
             }
         })
-        .catch(() => Swal.fire("Error", "Network error. Please try again.", "error"))
+        .catch(() => Swal.fire(getText("error"), getText("networkError"), "error"))
         .finally(() => $("#addDistrictBtn").prop("disabled", false));
 }
 
 //Delete District
 function deleteDistrict(districtId, districtName) {
     Swal.fire({
-        title: `Delete "${districtName}"?`,
-        text: "This action cannot be undone.",
+        title: getLang() === "bm" ? `Padam "${districtName}"?` : `Delete "${districtName}"?`,
+        text: getText("deleteActionWarning"),
         icon: "warning",
         showCancelButton: true,
-        confirmButtonText: "Yes, delete",
+        confirmButtonText: getText("yesDelete"),
         confirmButtonColor: "#d33",
-        cancelButtonText: "Cancel",
+        cancelButtonText: getText("cancel"),
     }).then((result) => {
         if (!result.isConfirmed) return;
 
@@ -172,13 +207,13 @@ function deleteDistrict(districtId, districtName) {
             .then((r) => r.json())
             .then((data) => {
                 if (data.success) {
-                    Swal.fire({ icon: "success", title: "Deleted!", timer: 1200, showConfirmButton: false });
+                    Swal.fire({ icon: "success", title: getText("deleted"), timer: 1200, showConfirmButton: false });
                     districtsTable.ajax.reload();
                     statesTable.ajax.reload(null, false);
                 } else {
-                    Swal.fire("Error", data.message || "Failed to delete.", "error");
+                    Swal.fire(getText("error"), data.message || getText("failedToDelete"), "error");
                 }
             })
-            .catch(() => Swal.fire("Error", "Network error. Please try again.", "error"));
+            .catch(() => Swal.fire(getText("error"), getText("networkError"), "error"));
     });
 }

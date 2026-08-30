@@ -6,6 +6,37 @@ import "datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css";
 import Swal from "sweetalert2";
 import { applyTranslations } from "../../../app";
 
+function getLang() {
+    try {
+        return localStorage.getItem('qis_lang') || 'en';
+    } catch {
+        return 'en';
+    }
+}
+
+const t = {
+    error: { en: 'Error', bm: 'Ralat' },
+    errorEx: { en: 'Error!', bm: 'Ralat!' },
+    fillRequired: { en: 'Please fill in all required fields (Module and Name).', bm: 'Sila isi semua medan yang diperlukan (Modul dan Nama).' },
+    successEx: { en: 'Success!', bm: 'Berjaya!' },
+    areYouSure: { en: 'Are you sure?', bm: 'Adakah anda pasti?' },
+    cantRevert: { en: "You won't be able to revert this!", bm: "Anda tidak akan dapat mengembalikannya!" },
+    yesDeleteIt: { en: 'Yes, delete it!', bm: 'Ya, padamkannya!' },
+    cancel: { en: 'Cancel', bm: 'Batal' },
+    deletedEx: { en: 'Deleted!', bm: 'Dipadam!' },
+    somethingWentWrong: { en: 'Something went wrong.', bm: 'Sesuatu yang tidak kena berlaku.' },
+    'Document requirement added successfully.': { en: 'Document requirement added successfully.', bm: 'Keperluan dokumen berjaya ditambah.' },
+    'Document requirement updated successfully.': { en: 'Document requirement updated successfully.', bm: 'Keperluan dokumen berjaya dikemas kini.' },
+    'Document requirement deleted successfully.': { en: 'Document requirement deleted successfully.', bm: 'Keperluan dokumen berjaya dipadam.' }
+};
+
+function getText(key) {
+    const lang = getLang();
+    const entry = t[key];
+    if (!entry) return key;
+    return entry[lang] || entry.en;
+}
+
 const $ = jQuery;
 window.$ = window.jQuery = jQuery;
 
@@ -46,6 +77,9 @@ $(document).ready(function () {
                 },
             },
         ],
+        drawCallback: function (settings) {
+            applyTranslations(document.getElementById("documentTable"));
+        }
     });
 
     // ─── Add Button ──────────────────────────────────────────────
@@ -81,8 +115,8 @@ $(document).ready(function () {
 
         if (!module || !name) {
             Swal.fire(
-                "Error",
-                "Please fill in all required fields (Module and Name).",
+                getText("error"),
+                getText("fillRequired"),
                 "error",
             );
             return;
@@ -114,7 +148,7 @@ $(document).ready(function () {
                 bootstrap.Modal.getInstance(
                     document.getElementById("addDocumentModal"),
                 ).hide();
-                Swal.fire("Success!", response.message, "success");
+                Swal.fire(getText("successEx"), getText(response.message), "success");
                 table.ajax.reload();
             },
             error: function (xhr) {
@@ -126,7 +160,7 @@ $(document).ready(function () {
                         .flat()
                         .join("\n");
                 }
-                Swal.fire("Error!", errorMsg, "error");
+                Swal.fire(getText("errorEx"), errorMsg, "error");
             },
         });
     });
@@ -143,13 +177,14 @@ $(document).ready(function () {
         const id = $(this).data("id");
 
         Swal.fire({
-            title: "Are you sure?",
-            text: "You won't be able to revert this!",
+            title: getText("areYouSure"),
+            text: getText("cantRevert"),
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#3085d6",
             cancelButtonColor: "#d33",
-            confirmButtonText: "Yes, delete it!",
+            confirmButtonText: getText("yesDeleteIt"),
+            cancelButtonText: getText("cancel"),
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
@@ -161,11 +196,11 @@ $(document).ready(function () {
                         ),
                     },
                     success: function (response) {
-                        Swal.fire("Deleted!", response.message, "success");
+                        Swal.fire(getText("deletedEx"), getText(response.message), "success");
                         table.ajax.reload();
                     },
                     error: function (xhr) {
-                        Swal.fire("Error!", "Something went wrong.", "error");
+                        Swal.fire(getText("errorEx"), getText("somethingWentWrong"), "error");
                     },
                 });
             }

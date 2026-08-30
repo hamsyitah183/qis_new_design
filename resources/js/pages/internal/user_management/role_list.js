@@ -1,6 +1,31 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
-import { initTooltips } from "../../../app";
+import { initTooltips, applyTranslations } from "../../../app";
+
+function getLang() {
+    try {
+        return localStorage.getItem('qis_lang') || 'en';
+    } catch {
+        return 'en';
+    }
+}
+
+const t = {
+    loading: { en: 'Loading...', bm: 'Memuat...' },
+    updatingRole: { en: 'Updating role...', bm: 'Mengemas kini peranan...' },
+    updatingRolePermission: { en: 'Updating role permission...', bm: 'Mengemas kini kebenaran peranan...' },
+    roleUpdated: { en: 'Role Updated!', bm: 'Peranan Dikemas kini!' },
+    failed: { en: 'Failed!', bm: 'Gagal!' },
+    saveFailed: { en: 'Something went wrong while saving the user.', bm: 'Sesuatu yang tidak kena berlaku semasa menyimpan pengguna.' },
+};
+
+function getText(key) {
+    const lang = getLang();
+    const entry = t[key];
+    if (!entry) return key;
+    return entry[lang] || entry.en;
+}
+
 
 console.log("list role");
 
@@ -263,9 +288,12 @@ function updateRole() {
             formData.append("role", roleName);
 
             Swal.fire({
-                title: "Updating role...",
+                title: getText("updatingRole"),
                 allowOutsideClick: false,
-                didOpen: () => Swal.showLoading(),
+                didOpen: () => {
+                    Swal.showLoading();
+                    applyTranslations(Swal.getHtmlContainer());
+                },
             });
 
             $.ajax({
@@ -283,7 +311,7 @@ function updateRole() {
                     console.log("response detail", response);
                     Swal.fire({
                         icon: "success",
-                        title: "Role Updated!",
+                        title: getText("roleUpdated"),
                         text: response.message,
                     });
 
@@ -306,8 +334,8 @@ function updateRole() {
                     } else {
                         Swal.fire({
                             icon: "error",
-                            title: "Failed!",
-                            text: "Something went wrong while saving the user.",
+                            title: getText("failed"),
+                            text: getText("saveFailed"),
                         });
                     }
                 },
@@ -410,9 +438,12 @@ function updatePermission() {
             formData.append("role", roleName);
 
             Swal.fire({
-                title: "Updating role permission...",
+                title: getText("updatingRolePermission"),
                 allowOutsideClick: false,
-                didOpen: () => Swal.showLoading(),
+                didOpen: () => {
+                    Swal.showLoading();
+                    applyTranslations(Swal.getHtmlContainer());
+                },
             });
 
             $.ajax({
@@ -430,7 +461,7 @@ function updatePermission() {
                     console.log("response detail", response);
                     Swal.fire({
                         icon: "success",
-                        title: "Role Updated!",
+                        title: getText("roleUpdated"),
                         text: response.message,
                     });
 
@@ -454,8 +485,8 @@ function updatePermission() {
                     } else {
                         Swal.fire({
                             icon: "error",
-                            title: "Failed!",
-                            text: "Something went wrong while saving the user.",
+                            title: getText("failed"),
+                            text: getText("saveFailed"),
                         });
                     }
                 },

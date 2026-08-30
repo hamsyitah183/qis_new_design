@@ -1,4 +1,4 @@
-import { formatTime, initTooltips } from "../../app";
+import { formatTime, initTooltips, applyTranslations } from "../../app";
 import Swal from "sweetalert2";
 import { activityLogDesign } from "../../appLog";
 
@@ -9,6 +9,66 @@ let inspectionListTable;
 
 const isInternal = window.AUTH_TYPE === "internal";
 
+function getLang() {
+    try {
+        return localStorage.getItem('qis_lang') || 'en';
+    } catch {
+        return 'en';
+    }
+}
+
+const t = {
+    allStatuses: { en: 'All Statuses', bm: 'Semua Status' },
+    draft: { en: 'Draft', bm: 'Draf' },
+    clerkReview: { en: 'Clerk Review In-Progress', bm: 'Semakan Kerani Dalam Proses' },
+    clerkVerified: { en: 'Clerk Verified', bm: 'Disahkan Kerani' },
+    clerkRejected: { en: 'Clerk Rejected', bm: 'Ditolak Kerani' },
+    officerCompleted: { en: 'Officer Verification Completed', bm: 'Pengesahan Pegawai Selesai' },
+    notApproved: { en: 'Not Approved', bm: 'Tidak Diluluskan' },
+    waitApproval: { en: 'Wait for Company Approval', bm: 'Menunggu Kelulusan Syarikat' },
+    completed: { en: 'Completed', bm: 'Selesai' },
+    allUsers: { en: 'All Users', bm: 'Semua Pengguna' },
+    allExporters: { en: 'All Exporters', bm: 'Semua Pengeksport' },
+    allImporters: { en: 'All Importers', bm: 'Semua Pengimport' },
+    selectUser: { en: 'Select a user', bm: 'Pilih pengguna' },
+    selectExporter: { en: 'Select exporter', bm: 'Pilih pengeksport' },
+    selectImporter: { en: 'Select importer', bm: 'Pilih pengimport' },
+    enterUsername: { en: 'Enter username', bm: 'Masukkan nama pengguna' },
+    status: { en: 'Status', bm: 'Status' },
+    publicUser: { en: 'Public User', bm: 'Pengguna Awam' },
+    exporter: { en: 'Exporter', bm: 'Pengeksport' },
+    importer: { en: 'Importer', bm: 'Pengimport' },
+    submittedBy: { en: 'Submitted By', bm: 'Dihantar Oleh' },
+    startDate: { en: 'Start Date', bm: 'Tarikh Mula' },
+    endDate: { en: 'End Date', bm: 'Tarikh Tamat' },
+    filter: { en: 'Filter', bm: 'Penapis' },
+    reset: { en: 'Reset', bm: 'Set Semula' },
+    apply: { en: 'Apply', bm: 'Guna' },
+    downloadReport: { en: 'Download Report', bm: 'Muat Turun Laporan' },
+    action: { en: 'Action', bm: 'Tindakan' },
+    inspectionAppLog: { en: 'Inspection Certificate Application Log', bm: 'Log Permohonan Sijil Pemeriksaan' },
+    areYouSure: { en: 'Are you sure?', bm: 'Adakah anda pasti?' },
+    cannotRevert: { en: "You won't be able to revert this!", bm: 'Anda tidak akan dapat mengembalikan ini!' },
+    yesDelete: { en: 'Yes, delete it!', bm: 'Ya, padamkan!' },
+    deleted: { en: 'Deleted!', bm: 'Dipadam!' },
+    deleteFailed: { en: 'Failed to delete application.', bm: 'Gagal memadam permohonan.' },
+    exportFormat: { en: 'Select the format for your exported report. The current filters will be applied.', bm: 'Pilih format untuk laporan yang dieksport. Penapis semasa akan digunakan.' },
+    excelCsv: { en: 'Excel (CSV)', bm: 'Excel (CSV)' },
+    pdfDoc: { en: 'PDF Document', bm: 'Dokumen PDF' },
+    cancel: { en: 'Cancel', bm: 'Batal' },
+    close: { en: 'Close', bm: 'Tutup' },
+    loading: { en: 'Loading...', bm: 'Memuat...' },
+    error: { en: 'Error!', bm: 'Ralat!' },
+    updated: { en: 'Updated!', bm: 'Telah Dikemas kini!' },
+    statusUpdateFailed: { en: 'Failed to update status.', bm: 'Gagal mengemas kini status.' },
+};
+
+function getText(key) {
+    const lang = getLang();
+    const entry = t[key];
+    if (!entry) return key;
+    return entry[lang] || entry.en;
+}
 async function data_table_init() {
     const [
         { default: DataTable },
@@ -127,11 +187,11 @@ async function data_table_init() {
                 if (!res.ok) throw new Error("Status update failed");
 
                 const json = await res.json();
-                Swal.fire("Updated!", json.message, "success");
+                Swal.fire(getText("updated"), json.message, "success");
                 inspectionListTable.ajax.reload(null, false);
             } catch (error) {
                 console.error(error);
-                Swal.fire("Error", "Failed to update status.", "error");
+                Swal.fire(getText("error"), getText("statusUpdateFailed"), "error");
             }
         });
     }
@@ -144,13 +204,13 @@ async function data_table_init() {
             .getAttribute("content");
 
         const result = await Swal.fire({
-            title: "Are you sure?",
-            text: "You won't be able to revert this!",
+            title: getText("areYouSure"),
+            text: getText("cannotRevert"),
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#4c5359ff",
             cancelButtonColor: "#d33",
-            confirmButtonText: "Yes, delete it!",
+            confirmButtonText: getText("yesDelete"),
         });
 
         if (!result.isConfirmed) return;
@@ -170,11 +230,11 @@ async function data_table_init() {
             }
 
             const json = await res.json();
-            Swal.fire("Deleted!", json.message, "success");
+            Swal.fire(getText("deleted"), json.message, "success");
             inspectionListTable.ajax.reload(null, false);
         } catch (error) {
             console.error(error);
-            Swal.fire("Error", error.message || "Failed to delete inspection application.", "error");
+            Swal.fire(getText("error"), error.message || getText("deleteFailed"), "error");
         }
     });
 
@@ -207,7 +267,7 @@ async function data_table_init() {
             $("#filterPublicUser").val("");
             $("#filterUsername").val("");
             // Reinitialize public user dropdown
-            setupSelect2('#filterPublicUser', 'Select a user');
+            setupSelect2('#filterPublicUser', getText('selectUser'));
         } else {
             loadFilterData();
         }
@@ -225,10 +285,13 @@ function activityLog() {
 
         const id = $(this).data("log");
         Swal.fire({
-            title: "Loading...",
+            title: getText("loading"),
             allowOutsideClick: false,
             showConfirmButton: false,
-            didOpen: () => Swal.showLoading(),
+            didOpen: () => {
+                Swal.showLoading();
+                applyTranslations(Swal.getHtmlContainer());
+            }
         });
         try {
             const res = await fetch(`/inspection_application/${id}/data`);
@@ -247,7 +310,10 @@ function activityLog() {
             let activity_log = json.activity_log;
 
             const modalEl = document.getElementById("activityLogModal");
-            modalEl.querySelector(".modal-title").textContent = " Inspection Activity Log";
+            const titleEl = modalEl.querySelector(".modal-title");
+            titleEl.textContent = getText('inspectionAppLog');
+            titleEl.setAttribute('data-en', t.inspectionAppLog.en);
+            titleEl.setAttribute('data-bm', t.inspectionAppLog.bm);
 
             activity_log.forEach((log) => {
                 tableBody.append(`
@@ -336,7 +402,7 @@ async function loadFilterData() {
                 $select.append(`<option value="${user.uuid}">${user.fullname} (${user.email})</option>`);
             });
             // Initialize Select2 for searchable dropdown
-            setupSelect2($select, 'Select a user');
+            setupSelect2($select, getText('selectUser'));
 
             // Use namespaced event to avoid removing Select2's internal handlers
             $select.off('change.customFilter').on('change.customFilter', async function () {
@@ -357,14 +423,15 @@ async function loadFilterData() {
                     const exportersResp = await fetch(`/internal/api/filters/user/${selectedUser}/exporters`);
                     const exporters = await exportersResp.json();
                     exporters.forEach(exp => $('#filterExporter').append(`<option value="${exp.id}">${exp.name}</option>`));
-                    setupSelect2('#filterExporter', 'Select exporter');
+                    setupSelect2('#filterExporter', getText('selectExporter'));
+                    
                     const importersResp = await fetch(`/internal/api/filters/user/${selectedUser}/importers`);
                     const importers = await importersResp.json();
                     importers.forEach(imp => $('#filterImporter').append(`<option value="${imp.id}">${imp.name}</option>`));
-                    setupSelect2('#filterImporter', 'Select importer');
+                    setupSelect2('#filterImporter', getText('selectImporter'));
                 } else {
-                    setupSelect2('#filterExporter', 'Select exporter');
-                    setupSelect2('#filterImporter', 'Select importer');
+                    setupSelect2('#filterExporter', getText('selectExporter'));
+                    setupSelect2('#filterImporter', getText('selectImporter'));
                 }
             });
         } catch (error) {
@@ -376,12 +443,13 @@ async function loadFilterData() {
             const exportersResp = await fetch('/public/api/filters/my-exporters');
             const exporters = await exportersResp.json();
             exporters.forEach(exp => $('#filterExporter').append(`<option value="${exp.id}">${exp.name}</option>`));
-            setupSelect2('#filterExporter', 'Select exporter');
+            setupSelect2('#filterExporter', getText('selectExporter'));
+
             $('#filterImporter').empty();
             const importersResp = await fetch('/public/api/filters/my-importers');
             const importers = await importersResp.json();
             importers.forEach(imp => $('#filterImporter').append(`<option value="${imp.id}">${imp.name}</option>`));
-            setupSelect2('#filterImporter', 'Select importer');
+            setupSelect2('#filterImporter', getText('selectImporter'));
         } catch (error) {
             console.error('Error loading filter data:', error);
         }

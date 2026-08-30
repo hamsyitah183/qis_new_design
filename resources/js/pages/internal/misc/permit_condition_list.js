@@ -1,5 +1,49 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
+import { applyTranslations } from "../../../app";
+
+function getLang() {
+    try {
+        return localStorage.getItem('qis_lang') || 'en';
+    } catch {
+        return 'en';
+    }
+}
+
+const t = {
+    loading: { en: 'Loading...', bm: 'Memuatkan...' },
+    fetchingData: { en: 'Fetching permit condition data', bm: 'Mendapatkan data syarat permit' },
+    error: { en: 'Error', bm: 'Ralat' },
+    failedToFetch: { en: 'Failed to fetch permit condition data.', bm: 'Gagal mendapatkan data syarat permit.' },
+    areYouSure: { en: 'Are you sure?', bm: 'Adakah anda pasti?' },
+    deleteWarning: { en: 'This permit condition will be permanently deleted.', bm: 'Syarat permit ini akan dipadamkan secara kekal.' },
+    deleted: { en: 'Deleted!', bm: 'Dipadam!' },
+    deletedSuccess: { en: 'Permit condition has been deleted.', bm: 'Syarat permit telah dipadam.' },
+    failedToDelete: { en: 'Failed to delete permit condition.', bm: 'Gagal memadam syarat permit.' },
+    failedToLoadCountries: { en: 'Failed to Load Countries', bm: 'Gagal Memuatkan Negara' },
+    checkConnection: { en: 'Please try again or check your connection.', bm: 'Sila cuba lagi atau periksa sambungan anda.' },
+    failedToLoadUsage: { en: 'Failed to Load Usage List', bm: 'Gagal Memuatkan Senarai Kegunaan' },
+    submitPermitCondition: { en: 'Submit Permit Condition', bm: 'Hantar Syarat Permit' },
+    chooseAction: { en: 'Choose an action:', bm: 'Pilih tindakan:' },
+    saving: { en: 'Saving...', bm: 'Menyimpan...' },
+    savingWait: { en: 'Please wait while the condition is being saved.', bm: 'Sila tunggu sementara syarat sedang disimpan.' },
+    saved: { en: 'Saved!', bm: 'Telah Disimpan!' },
+    savedSuccess: { en: 'Permit condition saved successfully.', bm: 'Syarat permit berjaya disimpan.' },
+    sent: { en: 'Sent!', bm: 'Dihantar!' },
+    sharedSuccess: { en: 'The permit condition has been shared to all users.', bm: 'Syarat permit telah dikongsi dengan semua pengguna.' },
+    shareError: { en: 'Something went wrong while sharing.', bm: 'Sesuatu yang tidak kena berlaku semasa berkongsi.' },
+    savedNotShared: { en: 'Saved, but not shared', bm: 'Disimpan, tetapi tidak dikongsi' },
+    savedNotSharedMsg: { en: 'The condition was saved but its ID couldn\'t be read, so the email/share step did not run.', bm: 'Syarat telah disimpan tetapi ID-nya tidak dapat dibaca, jadi langkah e-mel/kongsi tidak dijalankan.' },
+    somethingWentWrong: { en: 'Something went wrong. Please try again.', bm: 'Sesuatu yang tidak kena berlaku. Sila cuba lagi.' }
+};
+
+function getText(key) {
+    const lang = getLang();
+    const entry = t[key];
+    if (!entry) return key;
+    return entry[lang] || entry.en;
+}
+
 
 import { setupSelect2 } from "../../../utils/select2Utils";
 
@@ -209,8 +253,8 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     function deleteCondition(id) {
         Swal.fire({
-            title: "Are you sure?",
-            text: "This permit condition will be permanently deleted.",
+            title: getText("areYouSure"),
+            text: getText("deleteWarning"),
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#d33",
@@ -228,16 +272,16 @@ document.addEventListener("DOMContentLoaded", async function () {
                     success: function (res) {
                         Swal.fire({
                             icon: "success",
-                            title: "Deleted!",
-                            text: res.message || "Permit condition has been deleted.",
+                            title: getText("deleted"),
+                            text: res.message || getText("deletedSuccess"),
                         });
                         internalListTable.ajax.reload();
                     },
                     error: function (xhr) {
                         Swal.fire({
                             icon: "error",
-                            title: "Error",
-                            text: xhr.responseJSON?.message || "Failed to delete permit condition.",
+                            title: getText("error"),
+                            text: xhr.responseJSON?.message || getText("failedToDelete"),
                         });
                     },
                 });
@@ -257,13 +301,14 @@ document.addEventListener("DOMContentLoaded", async function () {
 
             beforeSend: function () {
                 Swal.fire({
-                    title: "Loading...",
-                    text: "Fetching permit condition data",
+                    title: getText("loading"),
+                    text: getText("fetchingData"),
                     allowOutsideClick: false,
                     allowEscapeKey: false,
                     showConfirmButton: false,
                     didOpen: () => {
                         Swal.showLoading();
+                        applyTranslations(Swal.getHtmlContainer());
                     },
                 });
             },
@@ -364,8 +409,8 @@ document.addEventListener("DOMContentLoaded", async function () {
             error: function () {
                 Swal.fire({
                     icon: "error",
-                    title: "Error",
-                    text: "Failed to fetch permit condition data.",
+                    title: getText("error"),
+                    text: getText("failedToFetch"),
                 });
             },
         });

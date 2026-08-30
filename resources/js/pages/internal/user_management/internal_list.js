@@ -1,4 +1,43 @@
-import { notifyUser, showToast } from "../../../app";
+import { notifyUser, showToast, applyTranslations } from "../../../app";
+
+function getLang() {
+    try {
+        return localStorage.getItem('qis_lang') || 'en';
+    } catch {
+        return 'en';
+    }
+}
+
+const t = {
+    loading: { en: 'Loading...', bm: 'Memuat...' },
+    fetchUserWait: { en: 'Please wait while we fetch the user details.', bm: 'Sila tunggu sementara kami mengambil butiran pengguna.' },
+    processWait: { en: 'Please wait while we process your request.', bm: 'Sila tunggu sementara kami memproses permintaan anda.' },
+    dataError: { en: 'Data Processing Error', bm: 'Ralat Pemprosesan Data' },
+    dataErrorMsg: { en: 'An error occurred while processing the user data. Please try again.', bm: 'Ralat berlaku semasa memproses data pengguna. Sila cuba lagi.' },
+    unexpectedError: { en: 'Unexpected Error', bm: 'Ralat Tidak Dijangka' },
+    unexpectedErrorMsg: { en: 'An unexpected error occurred. Please try again.', bm: 'Ralat tidak dijangka berlaku. Sila cuba lagi.' },
+    updatingUser: { en: 'Updating user...', bm: 'Mengemas kini pengguna...' },
+    savingUser: { en: 'Saving user...', bm: 'Menyimpan pengguna...' },
+    userUpdated: { en: 'User Updated!', bm: 'Pengguna Dikemas kini!' },
+    userAdded: { en: 'User Added!', bm: 'Pengguna Ditambah!' },
+    userUpdatedMsg: { en: 'User has been updated successfully.', bm: 'Pengguna telah berjaya dikemas kini.' },
+    userAddedMsg: { en: 'User has been added successfully.', bm: 'Pengguna telah berjaya ditambah.' },
+    validationError: { en: 'Validation Error', bm: 'Ralat Pengesahan' },
+    areYouSure: { en: 'Are you sure?', bm: 'Adakah anda pasti?' },
+    cannotUndo: { en: 'This action cannot be undone!', bm: 'Tindakan ini tidak dapat dipulihkan!' },
+    deleted: { en: 'Deleted!', bm: 'Dipadam!' },
+    userDeletedMsg: { en: 'User deleted successfully.', bm: 'Pengguna berjaya dipadam.' },
+    error: { en: 'Error!', bm: 'Ralat!' },
+    deleteFailed: { en: 'Failed to delete user.', bm: 'Gagal memadam pengguna.' },
+};
+
+function getText(key) {
+    const lang = getLang();
+    const entry = t[key];
+    if (!entry) return key;
+    return entry[lang] || entry.en;
+}
+
 
 /**
  * ✅ Lazy Initialize DataTable for Internal Users
@@ -99,10 +138,13 @@ async function open_internal_user_modal(mode = "add", userId = null) {
 
         // Show loading
         Swal.fire({
-            title: "Loading...",
-            text: "Please wait while we fetch the user details.",
+            title: getText("loading"),
+            text: getText("fetchUserWait"),
             allowOutsideClick: false,
-            didOpen: () => Swal.showLoading(),
+            didOpen: () => {
+                Swal.showLoading();
+                applyTranslations(Swal.getHtmlContainer());
+            },
         });
 
         // Make AJAX request
@@ -176,8 +218,8 @@ async function open_internal_user_modal(mode = "add", userId = null) {
                     Swal.close();
                     Swal.fire({
                         icon: "error",
-                        title: "Data Processing Error",
-                        text: "An error occurred while processing the user data. Please try again.",
+                        title: getText("dataError"),
+                        text: getText("dataErrorMsg"),
                         confirmButtonText: "OK"
                     });
                 }
@@ -240,8 +282,8 @@ async function open_internal_user_modal(mode = "add", userId = null) {
         const Swal = await getSwal();
         Swal.fire({
             icon: "error",
-            title: "Unexpected Error",
-            text: "An unexpected error occurred. Please try again.",
+            title: getText("unexpectedError"),
+            text: getText("unexpectedErrorMsg"),
             confirmButtonText: "OK"
         });
     }
@@ -266,10 +308,13 @@ function handle_internal_user_submit() {
 
             // Show loading
             Swal.fire({
-                title: isEdit ? "Updating user..." : "Saving user...",
-                text: "Please wait while we process your request.",
+                title: isEdit ? getText("updatingUser") : getText("savingUser"),
+                text: getText("processWait"),
                 allowOutsideClick: false,
-                didOpen: () => Swal.showLoading(),
+                didOpen: () => {
+                    Swal.showLoading();
+                    applyTranslations(Swal.getHtmlContainer());
+                },
             });
 
             $.ajax({
@@ -286,8 +331,8 @@ function handle_internal_user_submit() {
                     // Show success message
                     Swal.fire({
                         icon: "success",
-                        title: isEdit ? "User Updated!" : "User Added!",
-                        text: response.message || (isEdit ? "User has been updated successfully." : "User has been added successfully."),
+                        title: isEdit ? getText("userUpdated") : getText("userAdded"),
+                        text: response.message || (isEdit ? getText("userUpdatedMsg") : getText("userAddedMsg")),
                         timer: 3000,
                         timerProgressBar: true,
                         showConfirmButton: true,
@@ -331,7 +376,7 @@ function handle_internal_user_submit() {
                         // Show validation error in Swal
                         Swal.fire({
                             icon: "warning",
-                            title: "Validation Error",
+                            title: getText("validationError"),
                             html: errorMessage.replace(/\n/g, '<br>'),
                             confirmButtonText: "OK"
                         });
@@ -387,8 +432,8 @@ function handle_internal_user_submit() {
             const Swal = await import("sweetalert2").then((m) => m.default);
             Swal.fire({
                 icon: "error",
-                title: "Unexpected Error",
-                text: "An unexpected error occurred. Please try again.",
+                title: getText("unexpectedError"),
+                text: getText("unexpectedErrorMsg"),
                 confirmButtonText: "OK"
             });
         }
@@ -405,8 +450,8 @@ async function delete_internal_user() {
         const userId = $(this).data("id");
 
         Swal.fire({
-            title: "Are you sure?",
-            text: "This action cannot be undone!",
+            title: getText("areYouSure"),
+            text: getText("cannotUndo"),
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#3085d6",
@@ -424,14 +469,15 @@ async function delete_internal_user() {
                     },
                     success: function () {
                         Swal.fire(
-                            "Deleted!",
-                            "User deleted successfully.",
-                            "success",
-                        );
-                        internalListTable.ajax.reload();
+                            getText("deleted"),
+                            getText("userDeletedMsg"),
+                            "success"
+                        ).then(() => {
+                            internalListTable.ajax.reload();
+                        });
                     },
                     error: function () {
-                        Swal.fire("Error!", "Failed to delete user.", "error");
+                        Swal.fire(getText("error"), getText("deleteFailed"), "error");
                     },
                 });
             }

@@ -60,7 +60,9 @@
                         <div class="col-xl-6">
                             <div class="border rounded p-3 h-100">
                                 <div class="detail-label" data-en="Required" data-bm="Wajib">Required</div>
-                                <span class="badge bg-{{ $document->is_required ? 'warning text-dark' : 'secondary' }}">
+                                <span class="badge bg-{{ $document->is_required ? 'warning text-dark' : 'secondary' }}"
+                                      data-en="{{ $document->is_required ? 'Required' : 'Optional' }}"
+                                      data-bm="{{ $document->is_required ? 'Wajib' : 'Pilihan' }}">
                                     {{ $document->is_required ? 'Required' : 'Optional' }}
                                 </span>
                             </div>
@@ -69,7 +71,9 @@
                             <div class="border rounded p-3 h-100">
                                 <div class="detail-label" data-en="Requires Expiry" data-bm="Memerlukan Tarikh Luput">
                                     Requires Expiry</div>
-                                <span class="badge bg-{{ $document->requires_expiry ? 'info' : 'secondary' }}">
+                                <span class="badge bg-{{ $document->requires_expiry ? 'info' : 'secondary' }}"
+                                      data-en="{{ $document->requires_expiry ? 'Has Expiry' : 'No Expiry' }}"
+                                      data-bm="{{ $document->requires_expiry ? 'Tarikh Luput' : 'Tiada Tarikh Luput' }}">
                                     {{ $document->requires_expiry ? 'Has Expiry' : 'No Expiry' }}
                                 </span>
                             </div>

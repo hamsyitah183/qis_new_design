@@ -1,5 +1,34 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
+import { applyTranslations } from "../../../app";
+
+function getLang() {
+    try {
+        return localStorage.getItem('qis_lang') || 'en';
+    } catch {
+        return 'en';
+    }
+}
+
+const t = {
+    loading: { en: 'Loading...', bm: 'Memuatkan...' },
+    fetchingData: { en: 'Fetching consignment condition data', bm: 'Mendapatkan data syarat konsainan' },
+    error: { en: 'Error', bm: 'Ralat' },
+    failedToFetch: { en: 'Failed to fetch consignment condition data.', bm: 'Gagal mendapatkan data syarat konsainan.' },
+    areYouSure: { en: 'Are you sure?', bm: 'Adakah anda pasti?' },
+    deleteWarning: { en: 'This consignment condition will be permanently deleted.', bm: 'Syarat konsainan ini akan dipadamkan secara kekal.' },
+    deleted: { en: 'Deleted!', bm: 'Dipadam!' },
+    deletedSuccess: { en: 'Consignment condition has been deleted.', bm: 'Syarat konsainan telah dipadam.' },
+    failedToDelete: { en: 'Failed to delete consignment condition.', bm: 'Gagal memadam syarat konsainan.' }
+};
+
+function getText(key) {
+    const lang = getLang();
+    const entry = t[key];
+    if (!entry) return key;
+    return entry[lang] || entry.en;
+}
+
 import { setupSelect2 } from "../../../utils/select2Utils";
 
 console.log("Loaded consignment_condition_list.js");
@@ -169,8 +198,8 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     function deleteCondition(id) {
         Swal.fire({
-            title: "Are you sure?",
-            text: "This consignment condition will be permanently deleted.",
+            title: getText("areYouSure"),
+            text: getText("deleteWarning"),
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#d33",
@@ -190,20 +219,20 @@ document.addEventListener("DOMContentLoaded", async function () {
                     success: function (res) {
                         Swal.fire({
                             icon: "success",
-                            title: "Deleted!",
+                            title: getText("deleted"),
                             text:
                                 res.message ||
-                                "Consignment condition has been deleted.",
+                                getText("deletedSuccess"),
                         });
                         internalListTable.ajax.reload();
                     },
                     error: function (xhr) {
                         Swal.fire({
                             icon: "error",
-                            title: "Error",
+                            title: getText("error"),
                             text:
                                 xhr.responseJSON?.message ||
-                                "Failed to delete consignment condition.",
+                                getText("failedToDelete"),
                         });
                     },
                 });
@@ -223,13 +252,14 @@ document.addEventListener("DOMContentLoaded", async function () {
 
             beforeSend: function () {
                 Swal.fire({
-                    title: "Loading...",
-                    text: "Fetching permit condition data",
+                    title: getText("loading"),
+                    text: getText("fetchingData"),
                     allowOutsideClick: false,
                     allowEscapeKey: false,
                     showConfirmButton: false,
                     didOpen: () => {
                         Swal.showLoading();
+                        applyTranslations(Swal.getHtmlContainer());
                     },
                 });
             },
@@ -329,8 +359,8 @@ document.addEventListener("DOMContentLoaded", async function () {
             error: function () {
                 Swal.fire({
                     icon: "error",
-                    title: "Error",
-                    text: "Failed to fetch permit condition data.",
+                    title: getText("error"),
+                    text: getText("failedToFetch"),
                 });
             },
         });

@@ -1,4 +1,4 @@
-import { formatTime, initTooltips } from "../../app";
+import { formatTime, initTooltips, applyTranslations } from "../../app";
 import Swal from "sweetalert2";
 import { activityLogDesign } from "../../appLog";
 
@@ -9,6 +9,61 @@ let consignmentListTable;
 
 const isInternal = window.AUTH_TYPE === "internal";
 
+function getLang() {
+    try {
+        return localStorage.getItem('qis_lang') || 'en';
+    } catch {
+        return 'en';
+    }
+}
+
+const t = {
+    allStatuses: { en: 'All Statuses', bm: 'Semua Status' },
+    draft: { en: 'Draft', bm: 'Draf' },
+    clerkReview: { en: 'Clerk Review In-Progress', bm: 'Semakan Kerani Dalam Proses' },
+    clerkVerified: { en: 'Clerk Verified', bm: 'Disahkan Kerani' },
+    clerkRejected: { en: 'Clerk Rejected', bm: 'Ditolak Kerani' },
+    officerCompleted: { en: 'Officer Verification Completed', bm: 'Pengesahan Pegawai Selesai' },
+    notApproved: { en: 'Not Approved', bm: 'Tidak Diluluskan' },
+    waitApproval: { en: 'Wait for Company Approval', bm: 'Menunggu Kelulusan Syarikat' },
+    completed: { en: 'Completed', bm: 'Selesai' },
+    allUsers: { en: 'All Users', bm: 'Semua Pengguna' },
+    allExporters: { en: 'All Exporters', bm: 'Semua Pengeksport' },
+    allImporters: { en: 'All Importers', bm: 'Semua Pengimport' },
+    selectUser: { en: 'Select a user', bm: 'Pilih pengguna' },
+    selectExporter: { en: 'Select exporter', bm: 'Pilih pengeksport' },
+    selectImporter: { en: 'Select importer', bm: 'Pilih pengimport' },
+    enterUsername: { en: 'Enter username', bm: 'Masukkan nama pengguna' },
+    status: { en: 'Status', bm: 'Status' },
+    publicUser: { en: 'Public User', bm: 'Pengguna Awam' },
+    exporter: { en: 'Exporter', bm: 'Pengeksport' },
+    importer: { en: 'Importer', bm: 'Pengimport' },
+    submittedBy: { en: 'Submitted By', bm: 'Dihantar Oleh' },
+    startDate: { en: 'Start Date', bm: 'Tarikh Mula' },
+    endDate: { en: 'End Date', bm: 'Tarikh Tamat' },
+    filter: { en: 'Filter', bm: 'Penapis' },
+    reset: { en: 'Reset', bm: 'Set Semula' },
+    apply: { en: 'Apply', bm: 'Guna' },
+    downloadReport: { en: 'Download Report', bm: 'Muat Turun Laporan' },
+    action: { en: 'Action', bm: 'Tindakan' },
+    consignmentAppLog: { en: 'Consignment Certificate Application Log', bm: 'Log Permohonan Sijil Konsainan' },
+    areYouSure: { en: 'Are you sure?', bm: 'Adakah anda pasti?' },
+    cannotRevert: { en: "You won't be able to revert this!", bm: 'Anda tidak akan dapat mengembalikan ini!' },
+    yesDelete: { en: 'Yes, delete it!', bm: 'Ya, padamkan!' },
+    deleted: { en: 'Deleted!', bm: 'Dipadam!' },
+    deleteFailed: { en: 'Failed to delete application.', bm: 'Gagal memadam permohonan.' },
+    error: { en: 'Error!', bm: 'Ralat!' },
+    somethingWentWrong: { en: 'Something went wrong.', bm: 'Sesuatu yang tidak kena berlaku.' },
+    deleting: { en: 'Deleting...', bm: 'Memadam...' },
+    loading: { en: 'Loading...', bm: 'Memuat...' }
+};
+
+function getText(key) {
+    const lang = getLang();
+    const entry = t[key];
+    if (!entry) return key;
+    return entry[lang] || entry.en;
+}
 async function data_table_init() {
     const [
         { default: DataTable },
@@ -147,21 +202,22 @@ function handleDelete() {
         }
 
         Swal.fire({
-            title: "Are you sure?",
-            text: "You won't be able to revert this!",
+            title: getText("areYouSure"),
+            text: getText("cannotRevert"),
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#3085d6",
             cancelButtonColor: "#d33",
-            confirmButtonText: "Yes, delete it!",
+            confirmButtonText: getText("yesDelete"),
         }).then((result) => {
             if (result.isConfirmed) {
                 // Show loading
                 Swal.fire({
-                    title: "Deleting...",
+                    title: getText("deleting"),
                     allowOutsideClick: false,
                     didOpen: () => {
                         Swal.showLoading();
+                        applyTranslations(Swal.getHtmlContainer());
                     },
                 });
 
@@ -173,16 +229,16 @@ function handleDelete() {
                     },
                     success: function (response) {
                         Swal.fire(
-                            "Deleted!",
-                            "Your application has been deleted.",
+                            getText("deleted"),
+                            response.message || "Your application has been deleted.",
                             "success"
                         );
                         consignmentListTable.ajax.reload(); // Reload table
                     },
                     error: function (xhr) {
                         Swal.fire(
-                            "Error!",
-                            xhr.responseJSON?.message || "Something went wrong.",
+                            getText("error"),
+                            xhr.responseJSON?.message || getText("somethingWentWrong"),
                             "error"
                         );
                     },
@@ -208,7 +264,7 @@ async function loadFilterData() {
                 $select.append(`<option value="${user.uuid}">${user.fullname} (${user.email})</option>`);
             });
             // Initialize Select2 for searchable dropdown
-            setupSelect2($select, 'Select a user');
+            setupSelect2($select, getText('selectUser'));
 
             // Use namespaced event to avoid removing Select2's internal handlers
             $select.off('change.customFilter').on('change.customFilter', async function () {
@@ -240,8 +296,8 @@ async function loadFilterData() {
                 }
 
                 // Initialize Select2 on both dropdowns
-                setupSelect2('#filterExporter', 'Select exporter');
-                setupSelect2('#filterImporter', 'Select importer');
+                setupSelect2('#filterExporter', getText('selectExporter'));
+                setupSelect2('#filterImporter', getText('selectImporter'));
             });
         } catch (error) {
             console.error('Error loading public users:', error);
@@ -252,12 +308,12 @@ async function loadFilterData() {
             const exportersResp = await fetch('/public/api/filters/my-consignment-exporters');
             const exporters = await exportersResp.json();
             exporters.forEach(exp => $('#filterExporter').append(`<option value="${exp.id}">${exp.name}</option>`));
-            setupSelect2('#filterExporter', 'Select exporter');
+            setupSelect2('#filterExporter', getText('selectExporter'));
             $('#filterImporter').empty();
             const importersResp = await fetch('/public/api/filters/my-consignment-importers');
             const importers = await importersResp.json();
             importers.forEach(imp => $('#filterImporter').append(`<option value="${imp.id}">${imp.name}</option>`));
-            setupSelect2('#filterImporter', 'Select importer');
+            setupSelect2('#filterImporter', getText('selectImporter'));
         } catch (error) {
             console.error('Error loading filter data:', error);
         }
@@ -286,8 +342,8 @@ async function loadAllConsignmentFilters() {
         });
 
         // Initialize Select2 on both dropdowns
-        setupSelect2('#filterExporter', 'Select exporter');
-        setupSelect2('#filterImporter', 'Select importer');
+        setupSelect2('#filterExporter', getText('selectExporter'));
+        setupSelect2('#filterImporter', getText('selectImporter'));
     } catch (error) {
         console.error('Error loading consignment filters:', error);
     }
@@ -300,10 +356,13 @@ function activityLog() {
 
         const id = $(this).data("log");
         Swal.fire({
-            title: "Loading...",
+            title: getText("loading"),
             allowOutsideClick: false,
             showConfirmButton: false,
-            didOpen: () => Swal.showLoading(),
+            didOpen: () => {
+                Swal.showLoading();
+                applyTranslations(Swal.getHtmlContainer());
+            }
         });
         try {
             const res = await fetch(`/consignment_application/${id}/data`);
@@ -328,8 +387,10 @@ function activityLog() {
 
 
             const modalEl = document.getElementById("activityLogModal");
-            modalEl.querySelector(".modal-title").textContent =
-                "Consignment Certificate Application Log" || "Activity Log";
+            const titleEl = modalEl.querySelector(".modal-title");
+            titleEl.textContent = getText('consignmentAppLog');
+            titleEl.setAttribute('data-en', t.consignmentAppLog.en);
+            titleEl.setAttribute('data-bm', t.consignmentAppLog.bm);
 
             const cardBody = $('#activityLogModal .modal-body');
             cardBody.empty();

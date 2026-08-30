@@ -1,5 +1,56 @@
 import { initTooltips } from "../../app";
 import Swal from "sweetalert2";
+import { applyTranslations } from "../../app";
+
+function getLang() {
+    try {
+        return localStorage.getItem('qis_lang') || 'en';
+    } catch {
+        return 'en';
+    }
+}
+
+const t = {
+    error: { en: 'Error!', bm: 'Ralat!' },
+    fetchFailed: { en: 'Failed to fetch data.', bm: 'Gagal mendapatkan data.' },
+    areYouSure: { en: 'Are you sure?', bm: 'Adakah anda pasti?' },
+    cannotRevert: { en: "You won't be able to revert this!", bm: 'Anda tidak akan dapat mengembalikannya!' },
+    yesDeleteIt: { en: 'Yes, delete it!', bm: 'Ya, padamkannya!' },
+    yesDelete: { en: 'Yes', bm: 'Ya' },
+    deleted: { en: 'Deleted!', bm: 'Dipadam!' },
+    somethingWentWrong: { en: 'Something went wrong.', bm: 'Sesuatu yang tidak kena berlaku.' },
+    success: { en: 'Success!', bm: 'Berjaya!' },
+    successTitle: { en: 'Success', bm: 'Berjaya' },
+    sent: { en: 'Sent!', bm: 'Dihantar!' },
+    failedToSendEmail: { en: 'Failed to send emails. Please try again.', bm: 'Gagal menghantar e-mel. Sila cuba lagi.' },
+    deleteFileTitle: { en: 'Delete file?', bm: 'Padam fail?' },
+    contentRequired: { en: 'Content is required', bm: 'Kandungan diperlukan' },
+    validDateError: { en: 'Valid Until date cannot be earlier than Valid From date', bm: 'Tarikh Sah Sehingga tidak boleh lebih awal daripada tarikh Sah Dari' },
+    warning: { en: 'Warning!', bm: 'Amaran!' },
+    filesFailedToUpload: { en: 'Announcement saved but files failed to upload.', bm: 'Pengumuman disimpan tetapi fail gagal dimuat naik.' },
+    failedToFetchGallery: { en: 'Failed to fetch gallery details', bm: 'Gagal mendapatkan butiran galeri' },
+    nameRequired: { en: 'Name is required', bm: 'Nama diperlukan' },
+    orderDeletedSuccess: { en: 'Order deleted successfully', bm: 'Pesanan berjaya dipadam' },
+    qrFailed: { en: 'QR Generation Failed', bm: 'Penjanaan QR Gagal' },
+    qrUnable: { en: 'Unable to generate QR code for this permit number.', bm: 'Tidak dapat menjana kod QR untuk nombor permit ini.' },
+    "Announcement created successfully.": { en: 'Announcement created successfully.', bm: 'Pengumuman berjaya dicipta.' },
+    "Announcement updated successfully.": { en: 'Announcement updated successfully.', bm: 'Pengumuman berjaya dikemas kini.' },
+    "Announcement deleted successfully.": { en: 'Announcement deleted successfully.', bm: 'Pengumuman berjaya dipadam.' },
+    "Announcement pinned successfully.": { en: 'Announcement pinned successfully.', bm: 'Pengumuman berjaya disemat.' },
+    "Announcement unpinned successfully.": { en: 'Announcement unpinned successfully.', bm: 'Semat pengumuman berjaya dibuang.' },
+    "Gallery created successfully.": { en: 'Gallery created successfully.', bm: 'Galeri berjaya dicipta.' },
+    "Gallery updated successfully.": { en: 'Gallery updated successfully.', bm: 'Galeri berjaya dikemas kini.' },
+    "Gallery deleted successfully.": { en: 'Gallery deleted successfully.', bm: 'Galeri berjaya dipadam.' },
+    "Order deleted successfully": { en: 'Order deleted successfully', bm: 'Pesanan berjaya dipadam' }
+};
+
+function getText(key) {
+    const lang = getLang();
+    const entry = t[key];
+    if (!entry) return key;
+    return entry[lang] || entry.en;
+}
+
 import QRCode from "qrcode";
 import { autoInitFilterSelect2 } from "../../utils/select2Utils";
 
@@ -49,6 +100,7 @@ async function data_table_init() {
             },
         },
 
+        drawCallback: () => applyTranslations(document.body),
         columns: [
             { data: "order_number" },
             {
@@ -122,13 +174,13 @@ async function data_table_init() {
         const applicationId = $(this).data("id");
 
         const result = await Swal.fire({
-            title: "Are you sure?",
-            text: "You won't be able to revert this!",
+            title: getText("areYouSure"),
+            text: getText("cannotRevert"),
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#4c5359ff",
             cancelButtonColor: "#d33",
-            confirmButtonText: "Yes, delete it!",
+            confirmButtonText: getText("yesDeleteIt"),
         });
 
         if (!result.isConfirmed) return;
@@ -143,7 +195,7 @@ async function data_table_init() {
             },
         });
 
-        Swal.fire("Deleted!", "Order deleted successfully", "success");
+        Swal.fire(getText("deleted"), getText("orderDeletedSuccess"), "success");
         orderListTable.ajax.reload(null, false);
     });
 
@@ -211,8 +263,8 @@ async function data_table_init() {
         } catch (error) {
             Swal.fire({
                 icon: "error",
-                title: "QR Generation Failed",
-                text: "Unable to generate QR code for this permit number.",
+                title: getText("qrFailed"),
+                text: getText("qrUnable"),
             });
         }
     });

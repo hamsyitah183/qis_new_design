@@ -191,7 +191,7 @@
 
     @if($type === 'internal')
         {{-- 📑 Consignment Export Modal --}}
-        <x-modal id="consignmentExportModal" title="Download Report" size="modal-dialog-centered">
+        <x-modal id="consignmentExportModal" title="Download Report" title_en="Download Report" title_bm="Muat Turun Laporan" size="modal-dialog-centered">
             <div class="p-3 text-center">
                 <p>Select the format for your exported report. The current filters will be applied.</p>
                 <div class="d-flex justify-content-center gap-3 mt-4">

@@ -1,5 +1,52 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
+import { applyTranslations } from "../../../app";
+
+function getLang() {
+    try {
+        return localStorage.getItem('qis_lang') || 'en';
+    } catch {
+        return 'en';
+    }
+}
+
+const t = {
+    loading: { en: 'Loading...', bm: 'Memuatkan...' },
+    fetchingData: { en: 'Fetching permit condition data', bm: 'Mendapatkan data syarat permit' },
+    error: { en: 'Error', bm: 'Ralat' },
+    failedToFetch: { en: 'Failed to fetch permit condition data.', bm: 'Gagal mendapatkan data syarat permit.' },
+    areYouSure: { en: 'Are you sure?', bm: 'Adakah anda pasti?' },
+    deleteWarning: { en: 'This permit condition will be permanently deleted.', bm: 'Syarat permit ini akan dipadamkan secara kekal.' },
+    deleted: { en: 'Deleted!', bm: 'Dipadam!' },
+    deletedSuccess: { en: 'Permit condition has been deleted.', bm: 'Syarat permit telah dipadam.' },
+    failedToDelete: { en: 'Failed to delete permit condition.', bm: 'Gagal memadam syarat permit.' },
+    failedToLoadCountries: { en: 'Failed to Load Countries', bm: 'Gagal Memuatkan Negara' },
+    checkConnection: { en: 'Please try again or check your connection.', bm: 'Sila cuba lagi atau periksa sambungan anda.' },
+    failedToLoadUsage: { en: 'Failed to Load Usage List', bm: 'Gagal Memuatkan Senarai Kegunaan' },
+    submitPermitCondition: { en: 'Submit Permit Condition', bm: 'Hantar Syarat Permit' },
+    chooseAction: { en: 'Choose an action:', bm: 'Pilih tindakan:' },
+    saving: { en: 'Saving...', bm: 'Menyimpan...' },
+    savingWait: { en: 'Please wait while the condition is being saved.', bm: 'Sila tunggu sementara syarat sedang disimpan.' },
+    saved: { en: 'Saved!', bm: 'Telah Disimpan!' },
+    savedSuccess: { en: 'Permit condition saved successfully.', bm: 'Syarat permit berjaya disimpan.' },
+    sent: { en: 'Sent!', bm: 'Dihantar!' },
+    sharedSuccess: { en: 'The permit condition has been shared to all users.', bm: 'Syarat permit telah dikongsi dengan semua pengguna.' },
+    shareError: { en: 'Something went wrong while sharing.', bm: 'Sesuatu yang tidak kena berlaku semasa berkongsi.' },
+    savedNotShared: { en: 'Saved, but not shared', bm: 'Disimpan, tetapi tidak dikongsi' },
+    savedNotSharedMsg: { en: 'The condition was saved but its ID couldn\'t be read, so the email/share step did not run.', bm: 'Syarat telah disimpan tetapi ID-nya tidak dapat dibaca, jadi langkah e-mel/kongsi tidak dijalankan.' },
+    somethingWentWrong: { en: 'Something went wrong. Please try again.', bm: 'Sesuatu yang tidak kena berlaku. Sila cuba lagi.' },
+    saveAndShare: { en: 'Save & Share with Public', bm: 'Simpan & Kongsi dengan Awam' },
+    saveOnly: { en: 'Save Only', bm: 'Simpan Sahaja' },
+    cancel: { en: 'Cancel', bm: 'Batal' }
+};
+
+function getText(key) {
+    const lang = getLang();
+    const entry = t[key];
+    if (!entry) return key;
+    return entry[lang] || entry.en;
+}
+
 // Import Select2 module
 import select2 from "select2";
 import Tagify from '@yaireo/tagify';
@@ -72,8 +119,8 @@ function fetchCountryList() {
             console.error("Failed to load countries:", xhr.responseText);
             Swal.fire({
                 icon: "error",
-                title: "Failed to Load Countries",
-                text: "Please try again or check your connection.",
+                title: getText("failedToLoadCountries"),
+                text: getText("checkConnection"),
             });
         },
     });
@@ -127,8 +174,8 @@ function fetchUsageList() {
             console.error("Failed to load usage list:", xhr.responseText);
             Swal.fire({
                 icon: "error",
-                title: "Failed to Load Usage List",
-                text: "Please try again or check your connection.",
+                title: getText("failedToLoadUsage"),
+                text: getText("checkConnection"),
             });
         },
     });
@@ -188,14 +235,14 @@ export function three() {
 
             // Ask user which action to take (same UI as edit screen)
             Swal.fire({
-                title: "Submit Permit Condition",
-                text: "Choose an action:",
+                title: getText("submitPermitCondition"),
+                text: getText("chooseAction"),
                 icon: "question",
                 showCancelButton: true,
                 showDenyButton: true,
-                confirmButtonText: "Save & Share with Public",
-                denyButtonText: "Save Only",
-                cancelButtonText: "Cancel",
+                confirmButtonText: getText("saveAndShare"),
+                denyButtonText: getText("saveOnly"),
+                cancelButtonText: getText("cancel"),
             }).then((result) => {
                 if (result.isDismissed) {
                     return; // User clicked Cancel or closed the dialog
@@ -203,10 +250,10 @@ export function three() {
 
                 // Show loading while saving
                 Swal.fire({
-                    title: "Saving...",
-                    text: "Please wait while the condition is being saved.",
+                    title: getText("saving"),
+                    text: getText("savingWait"),
                     allowOutsideClick: false,
-                    didOpen: () => Swal.showLoading(),
+                    didOpen: () => { Swal.showLoading(); applyTranslations(Swal.getHtmlContainer()); },
                 });
 
                 $.ajax({
@@ -224,10 +271,10 @@ export function three() {
 
                         Swal.fire({
                             icon: "success",
-                            title: "Saved!",
+                            title: getText("saved"),
                             text:
                                 res.message ||
-                                "Permit condition saved successfully.",
+                                getText("savedSuccess"),
                             timer: 2000,
                             showConfirmButton: false,
                         }).then(() => {
@@ -250,8 +297,8 @@ export function three() {
                                     },
                                     success: function () {
                                         Swal.fire(
-                                            "Sent!",
-                                            "The permit condition has been shared to all users.",
+                                            getText("sent"),
+                                            getText("sharedSuccess"),
                                             "success"
                                         ).then(() => {
                                             window.location.href = `${window.baseUrl}/internal/permit_condition`;
@@ -260,10 +307,10 @@ export function three() {
                                     error: function (xhr) {
                                         Swal.fire({
                                             icon: "error",
-                                            title: "Error",
+                                            title: getText("error"),
                                             text:
                                                 xhr.responseJSON?.message ||
-                                                "Something went wrong while sharing.",
+                                                getText("shareError"),
                                         }).then(() => {
                                             window.location.href = `${window.baseUrl}/internal/permit_condition`;
                                         });
@@ -272,8 +319,8 @@ export function three() {
                             } else if (result.isConfirmed && !newConditionId) {
                                 Swal.fire({
                                     icon: "warning",
-                                    title: "Saved, but not shared",
-                                    text: "The condition was saved but its ID couldn't be read, so the email/share step did not run.",
+                                    title: getText("savedNotShared"),
+                                    text: getText("savedNotSharedMsg"),
                                 }).then(() => {
                                     window.location.href = `${window.baseUrl}/internal/permit_condition`;
                                 });
@@ -290,7 +337,7 @@ export function three() {
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             errMsg = xhr.responseJSON.message;
                         }
-                        Swal.fire("Error", errMsg, "error");
+                        Swal.fire(getText("error"), errMsg, "error");
                     },
                 });
             });

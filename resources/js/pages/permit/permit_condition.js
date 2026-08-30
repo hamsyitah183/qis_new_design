@@ -1,6 +1,46 @@
 // resources/js/pages/permit/permit_condition.js
 import $ from "jquery";
 import Swal from "sweetalert2";
+import { applyTranslations } from "../../app";
+
+function getLang() {
+    try {
+        return localStorage.getItem('qis_lang') || 'en';
+    } catch {
+        return 'en';
+    }
+}
+
+const t = {
+    submitPermitCondition: { en: 'Submit Permit Condition', bm: 'Hantar Syarat Permit' },
+    chooseAction: { en: 'Choose an action:', bm: 'Pilih tindakan:' },
+    saving: { en: 'Saving...', bm: 'Menyimpan...' },
+    savingWait: { en: 'Please wait while the condition is being saved.', bm: 'Sila tunggu sementara syarat sedang disimpan.' },
+    saved: { en: 'Saved!', bm: 'Telah Disimpan!' },
+    savedSuccess: { en: 'Permit condition saved successfully.', bm: 'Syarat permit berjaya disimpan.' },
+    sent: { en: 'Sent!', bm: 'Dihantar!' },
+    sharedSuccess: { en: 'The permit condition has been shared to all users.', bm: 'Syarat permit telah dikongsi dengan semua pengguna.' },
+    error: { en: 'Error', bm: 'Ralat' },
+    shareError: { en: 'Something went wrong.', bm: 'Sesuatu yang tidak kena berlaku.' },
+    failedToSave: { en: 'Failed to save permit condition.', bm: 'Gagal menyimpan syarat permit.' },
+    deleteTitle: { en: 'Delete this permit condition?', bm: 'Padam syarat permit ini?' },
+    deleteWarning: { en: 'This action cannot be undone.', bm: 'Tindakan ini tidak boleh dibatalkan.' },
+    deleted: { en: 'Deleted!', bm: 'Dipadam!' },
+    deletedSuccess: { en: 'The permit condition has been deleted.', bm: 'Syarat permit telah dipadam.' },
+    failedToDelete: { en: 'Failed to delete.', bm: 'Gagal memadam.' },
+    somethingWentWrong: { en: 'Something went wrong. Please try again.', bm: 'Sesuatu yang tidak kena berlaku. Sila cuba lagi.' },
+    saveAndShare: { en: 'Save & Share with Public', bm: 'Simpan & Kongsi dengan Awam' },
+    saveOnly: { en: 'Save Only', bm: 'Simpan Sahaja' },
+    cancel: { en: 'Cancel', bm: 'Batal' }
+};
+
+function getText(key) {
+    const lang = getLang();
+    const entry = t[key];
+    if (!entry) return key;
+    return entry[lang] || entry.en;
+}
+
 import Tagify from '@yaireo/tagify';
 import '@yaireo/tagify/dist/tagify.css';
 import Quill from 'quill';
@@ -42,14 +82,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Ask user which action to take
         Swal.fire({
-            title: 'Submit Permit Condition',
-            text: "Choose an action:",
+            title: getText("submitPermitCondition"),
+            text: getText("chooseAction"),
             icon: 'question',
             showCancelButton: true,
             showDenyButton: true,
-            confirmButtonText: 'Save & Share with Public',
-            denyButtonText: 'Save Only',
-            cancelButtonText: 'Cancel'
+            confirmButtonText: getText("saveAndShare"),
+            denyButtonText: getText("saveOnly"),
+            cancelButtonText: getText("cancel")
         }).then((result) => {
             if (result.isDismissed) {
                 // User clicked Cancel
@@ -58,10 +98,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
             // Show loading while saving
             Swal.fire({
-                title: 'Saving...',
-                text: 'Please wait while the condition is being saved.',
+                title: getText("saving"),
+                text: getText("savingWait"),
                 allowOutsideClick: false,
-                didOpen: () => Swal.showLoading()
+                didOpen: () => { Swal.showLoading(); applyTranslations(Swal.getHtmlContainer()); }
             });
 
             // Save via AJAX
@@ -80,8 +120,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     // Show success message
                     Swal.fire({
                         icon: 'success',
-                        title: 'Saved!',
-                        text: res.message || 'Permit condition saved successfully.',
+                        title: getText("saved"),
+                        text: res.message || getText("savedSuccess"),
                         timer: 2000,
                         showConfirmButton: false
                     }).then(() => {
@@ -97,13 +137,13 @@ document.addEventListener("DOMContentLoaded", function () {
                                     action: 'updated'
                                 },
                                 success: function (response) {
-                                    Swal.fire('Sent!', 'The permit condition has been shared to all users.', 'success');
+                                    Swal.fire(getText("sent"), getText("sharedSuccess"), 'success');
                                 },
                                 error: function (xhr) {
                                     Swal.fire({
                                         icon: "error",
-                                        title: "Error",
-                                        text: xhr.responseJSON?.message || "Something went wrong.",
+                                        title: getText("error"),
+                                        text: xhr.responseJSON?.message || getText("shareError"),
                                     });
                                 },
                             });
@@ -114,8 +154,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     Swal.close(); // close loading
                     Swal.fire({
                         icon: 'error',
-                        title: 'Error',
-                        text: xhr.responseJSON?.message || 'Failed to save permit condition.',
+                        title: getText("error"),
+                        text: xhr.responseJSON?.message || getText("failedToSave"),
                     });
                 }
             });
@@ -129,14 +169,14 @@ document.addEventListener("DOMContentLoaded", function () {
         deleteBtn.addEventListener('click', function () {
             const conditionId = document.getElementById('id').value;
             Swal.fire({
-                title: 'Delete this permit condition?',
-                text: 'This action cannot be undone.',
+                title: getText("deleteTitle"),
+                text: getText("deleteWarning"),
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#6c757d',
                 confirmButtonText: 'Yes, delete it',
-                cancelButtonText: 'Cancel',
+                cancelButtonText: getText("cancel"),
             }).then((result) => {
                 if (result.isConfirmed) {
                     fetch(`/internal/permit_condition/${conditionId}`, {
@@ -151,19 +191,19 @@ document.addEventListener("DOMContentLoaded", function () {
                             if (data.status === 'success') {
                                 Swal.fire({
                                     icon: 'success',
-                                    title: 'Deleted!',
-                                    text: 'The permit condition has been deleted.',
+                                    title: getText("deleted"),
+                                    text: getText("deletedSuccess"),
                                     timer: 1500,
                                     showConfirmButton: false,
                                 }).then(() => {
                                     window.location.href = '/internal/permit_condition';
                                 });
                             } else {
-                                Swal.fire('Error', data.message ?? 'Failed to delete.', 'error');
+                                Swal.fire(getText("error"), data.message ?? getText("failedToDelete"), 'error');
                             }
                         })
                         .catch(() => {
-                            Swal.fire('Error', 'Something went wrong. Please try again.', 'error');
+                            Swal.fire(getText("error"), getText("somethingWentWrong"), 'error');
                         });
                 }
             });
