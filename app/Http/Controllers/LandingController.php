@@ -81,4 +81,14 @@ class LandingController extends Controller
             'entryPoints' => $entryPoints
         ]);
     }
+
+    public function gallery()
+    {
+        $galleries = \App\Models\Gallery::all();
+
+        return view('pages.public.gallery', [
+            'title' => 'Gallery',
+            'galleries' => $galleries
+        ]);
+    }
 }

@@ -1,6 +1,50 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
-import { fetchVerificationCount, formatTime } from "../../../app";
+import { fetchVerificationCount, formatTime, applyTranslations } from "../../../app";
+
+function getLang() {
+    try {
+        return localStorage.getItem('qis_lang') || 'en';
+    } catch {
+        return 'en';
+    }
+}
+
+const t = {
+    loading: { en: 'Loading...', bm: 'Memuat...' },
+    error: { en: 'Error', bm: 'Ralat' },
+    errorMsg: { en: 'Error!', bm: 'Ralat!' },
+    unableToLoad: { en: 'Unable to load user details', bm: 'Tidak dapat memuatkan butiran pengguna' },
+    updatingUser: { en: 'Updating user...', bm: 'Mengemas kini pengguna...' },
+    savingUser: { en: 'Saving user...', bm: 'Menyimpan pengguna...' },
+    userUpdated: { en: 'User Updated!', bm: 'Pengguna Dikemas kini!' },
+    userAdded: { en: 'User Added!', bm: 'Pengguna Ditambah!' },
+    failed: { en: 'Failed!', bm: 'Gagal!' },
+    saveFailed: { en: 'Something went wrong while saving the user.', bm: 'Sesuatu yang tidak kena berlaku semasa menyimpan pengguna.' },
+    areYouSure: { en: 'Are you sure?', bm: 'Adakah anda pasti?' },
+    cannotUndo: { en: 'This action cannot be undone!', bm: 'Tindakan ini tidak dapat dipulihkan!' },
+    deleted: { en: 'Deleted!', bm: 'Dipadam!' },
+    deleteSuccess: { en: 'User deleted successfully.', bm: 'Pengguna berjaya dipadam.' },
+    deleteFailed: { en: 'Failed to delete user.', bm: 'Gagal memadam pengguna.' },
+    verifyError: { en: 'Failed to load verification info.', bm: 'Gagal memuatkan maklumat pengesahan.' },
+    approved: { en: 'Approved!', bm: 'Diluluskan!' },
+    verifySuccess: { en: 'User has been successfully verified.', bm: 'Pengguna telah berjaya disahkan.' },
+    unverifyUser: { en: 'Unverify User', bm: 'Tarik Balik Pengesahan Pengguna' },
+    unverifyReasonPrompt: { en: 'Please provide a reason for unverifying this user:', bm: 'Sila nyatakan sebab menarik balik pengesahan pengguna ini:' },
+    enterReason: { en: 'Enter reason here...', bm: 'Masukkan sebab di sini...' },
+    submit: { en: 'Submit', bm: 'Hantar' },
+    reasonRequired: { en: 'Reason is required!', bm: 'Sebab diperlukan!' },
+    userUnverified: { en: 'User Unverified', bm: 'Pengesahan Pengguna Ditarik Balik' },
+    unverifySuccess: { en: 'The user has been unverified successfully.', bm: 'Pengesahan pengguna telah berjaya ditarik balik.' },
+};
+
+function getText(key) {
+    const lang = getLang();
+    const entry = t[key];
+    if (!entry) return key;
+    return entry[lang] || entry.en;
+}
+
 import { autoInitFilterSelect2 } from "../../../utils/select2Utils";
 
 let publicUsersTable;
@@ -105,7 +149,9 @@ async function public_user_list() {
             $("#userUuid").val("");
             // Load states for new user
             fetchStatesModal().then((states) => {
-                $(".state-modal").empty().append('<option value="">Select State</option>');
+                const lang = localStorage.getItem("qis_lang") || "en";
+                const selectStateText = lang === "bm" ? "Pilih Negeri" : "Select State";
+                $(".state-modal").empty().append(`<option value="" data-en="Select State" data-bm="Pilih Negeri">${selectStateText}</option>`);
                 states.forEach(state => {
                     $(".state-modal").append(`<option value="${state.id}">${state.name}</option>`);
                 });
@@ -121,9 +167,12 @@ async function public_user_list() {
         }
 
         Swal.fire({
-            title: "Loading...",
+            title: getText("loading"),
             allowOutsideClick: false,
-            didOpen: () => Swal.showLoading(),
+            didOpen: () => {
+                Swal.showLoading();
+                applyTranslations(Swal.getHtmlContainer());
+            },
         });
 
         $.ajax({
@@ -143,7 +192,9 @@ async function public_user_list() {
 
                 // Load location dropdowns in sequence
                 fetchStatesModal().then((states) => {
-                    $(".state-modal").empty().append('<option value="">Select State</option>');
+                    const lang = localStorage.getItem("qis_lang") || "en";
+                    const selectStateText = lang === "bm" ? "Pilih Negeri" : "Select State";
+                    $(".state-modal").empty().append(`<option value="" data-en="Select State" data-bm="Pilih Negeri">${selectStateText}</option>`);
                     states.forEach(state => {
                         const isSelected = user.state && (user.state == state.id || user.state == state.name);
                         $(".state-modal").append(`<option value="${state.id}" ${isSelected ? 'selected' : ''}>${state.name}</option>`);
@@ -166,7 +217,7 @@ async function public_user_list() {
                 ).show();
             },
             error: function () {
-                Swal.fire("Error", "Unable to load user details", "error");
+                Swal.fire(getText("error"), getText("unableToLoad"), "error");
             },
         });
     }
@@ -187,9 +238,12 @@ async function public_user_list() {
                 const isEdit = Boolean(userUuid);
 
                 Swal.fire({
-                    title: isEdit ? "Updating user..." : "Saving user...",
+                    title: isEdit ? getText("updatingUser") : getText("savingUser"),
                     allowOutsideClick: false,
-                    didOpen: () => Swal.showLoading(),
+                    didOpen: () => {
+                        Swal.showLoading();
+                        applyTranslations(Swal.getHtmlContainer());
+                    },
                 });
 
                 $.ajax({
@@ -205,7 +259,7 @@ async function public_user_list() {
                         console.log("response detal", response);
                         Swal.fire({
                             icon: "success",
-                            title: isEdit ? "User Updated!" : "User Added!",
+                            title: isEdit ? getText("userUpdated") : getText("userAdded"),
                             text: response.message,
                         });
 
@@ -228,8 +282,8 @@ async function public_user_list() {
                         } else {
                             Swal.fire({
                                 icon: "error",
-                                title: "Failed!",
-                                text: "Something went wrong while saving the user.",
+                                title: getText("failed"),
+                                text: getText("saveFailed"),
                             });
                         }
                     },
@@ -244,8 +298,8 @@ async function public_user_list() {
             const userId = $(this).data("id");
 
             Swal.fire({
-                title: "Are you sure?",
-                text: "This action cannot be undone!",
+                title: getText("areYouSure"),
+                text: getText("cannotUndo"),
                 icon: "warning",
                 showCancelButton: true,
                 confirmButtonColor: "#3085d6",
@@ -263,16 +317,15 @@ async function public_user_list() {
                         },
                         success: function () {
                             Swal.fire(
-                                "Deleted!",
-                                "User deleted successfully.",
+                                getText("deleted"),
+                                getText("deleteSuccess"),
                                 "success"
-                            );
-                            $("#publicUsersTable").DataTable().ajax.reload();
+                            ).then(() => { $("#publicUsersTable").DataTable().ajax.reload(); });
                         },
                         error: function () {
                             Swal.fire(
-                                "Error!",
-                                "Failed to delete user.",
+                                getText("errorMsg"),
+                                getText("deleteFailed"),
                                 "error"
                             );
                         },
@@ -375,8 +428,8 @@ async function public_user_list() {
             .catch(() => {
                 Swal.fire({
                     icon: "error",
-                    title: "Error",
-                    text: "Failed to load verification info.",
+                    title: getText("error"),
+                    text: getText("verifyError"),
                 });
             });
     });
@@ -390,9 +443,12 @@ document.addEventListener("DOMContentLoaded", () => {
 // 🔹 1. Show the loader
 function showLoader(text = "Loading...") {
     Swal.fire({
-        title: text,
+        title: text === "Loading..." ? getText("loading") : text,
         allowOutsideClick: false,
-        didOpen: () => Swal.showLoading(),
+        didOpen: () => {
+            Swal.showLoading();
+            applyTranslations(Swal.getHtmlContainer());
+        },
     });
 }
 
@@ -549,25 +605,26 @@ $("#verificationBtn").on("click", function (e) {
         success: function (response) {
             Swal.fire({
                 icon: "success",
-                title: "Approved!",
-                text: "User has been successfully verified.",
+                title: getText("approved"),
+                text: getText("verifySuccess"),
                 timer: 2000,
                 showConfirmButton: false,
-            });
-            fetchVerificationCount()
-            
-            // Close modal after success
-            const modal = bootstrap.Modal.getInstance(
-                document.getElementById("verificationModal")
-            );
-            if (modal) modal.hide();
+            }).then(() => {
+                fetchVerificationCount()
+                
+                // Close modal after success
+                const modal = bootstrap.Modal.getInstance(
+                    document.getElementById("verificationModal")
+                );
+                if (modal) modal.hide();
 
-            if (publicUsersTable) publicUsersTable.ajax.reload();
+                if (publicUsersTable) publicUsersTable.ajax.reload();
+            });
         },
         error: function (xhr) {
             Swal.fire({
                 icon: "error",
-                title: "Error",
+                title: getText("error"),
                 text:
                     xhr.responseJSON?.message ||
                     "Something went wrong while approving.",
@@ -594,14 +651,14 @@ $("#unverificationBtn").on("click", function (e) {
     // ✅ Small delay to ensure modal is fully hidden before Swal opens
     setTimeout(() => {
         Swal.fire({
-            title: "Unverify User",
+            title: getText("unverifyUser"),
             html: `
-            <p class="mb-2">Please provide a reason for unverifying this user:</p>
-            <textarea id="unverifyReason" style = "width:90%; font-size:12px; lineheight: 1.5;" 
-            class="swal2-textarea" placeholder="Enter reason here..."></textarea>
+            <p class="mb-2">${getText("unverifyReasonPrompt")}</p>
+            <textarea id="unverifyReason" style="width:90%; font-size:12px; line-height: 1.5;" 
+            class="swal2-textarea" placeholder="${getText("enterReason")}"></textarea>
         `,
             showCancelButton: true,
-            confirmButtonText: "Submit",
+            confirmButtonText: getText("submit"),
             cancelButtonText: "Cancel",
             focusConfirm: false, // ✅ allow typing freely
             didOpen: () => {
@@ -613,7 +670,7 @@ $("#unverificationBtn").on("click", function (e) {
                     .getElementById("unverifyReason")
                     .value.trim();
                 if (!reason) {
-                    Swal.showValidationMessage("Reason is required!");
+                    Swal.showValidationMessage(getText("reasonRequired"));
                     return false;
                 }
                 return reason;
@@ -637,18 +694,18 @@ $("#unverificationBtn").on("click", function (e) {
                     success: function () {
                         Swal.fire({
                             icon: "success",
-                            title: "User Unverified",
-                            text: "The user has been unverified successfully.",
+                            title: getText("userUnverified"),
+                            text: getText("unverifySuccess"),
                             timer: 2000,
                             showConfirmButton: false,
+                        }).then(() => {
+                            if (publicUsersTable) publicUsersTable.ajax.reload();
                         });
-
-                        if (publicUsersTable) publicUsersTable.ajax.reload();
                     },
                     error: function (xhr) {
                         Swal.fire({
                             icon: "error",
-                            title: "Error",
+                            title: getText("error"),
                             text:
                                 xhr.responseJSON?.message ||
                                 "Something went wrong while unverifying.",
@@ -673,16 +730,21 @@ function fetchDistrictsModal(stateId, selectedDistrict = null, callback = null) 
     $(".district-modal").html('<option value="">Loading...</option>');
 
     Swal.fire({
-        title: "Loading...",
+        title: getText("loading"),
         allowOutsideClick: false,
-        didOpen: () => Swal.showLoading(),
+        didOpen: () => {
+            Swal.showLoading();
+            applyTranslations(Swal.getHtmlContainer());
+        },
     });
 
     $.ajax({
         url: `/get_districts/${stateId}`,
         type: "GET",
         success: function (data) {
-            $(".district-modal").empty().append('<option value="">Select District</option>');
+            const lang = localStorage.getItem("qis_lang") || "en";
+            const selectDistText = lang === "bm" ? "Pilih Daerah" : "Select District";
+            $(".district-modal").empty().append(`<option value="" data-en="Select District" data-bm="Pilih Daerah">${selectDistText}</option>`);
             let matchedId = null;
 
             data.forEach(district => {
@@ -708,21 +770,28 @@ function fetchPostcodesModal(districtId, selectedPostcode = null) {
     $(".postcode-modal").html('<option value="">Loading...</option>');
 
     if (!districtId) {
-        $(".postcode-modal").html('<option value="">Select Postcode</option>');
+        const lang = localStorage.getItem("qis_lang") || "en";
+        const selectPostcodeText = lang === "bm" ? "Pilih Poskod" : "Select Postcode";
+        $(".postcode-modal").html(`<option value="" data-en="Select Postcode" data-bm="Pilih Poskod">${selectPostcodeText}</option>`);
         return;
     }
 
     Swal.fire({
-        title: "Loading...",
+        title: getText("loading"),
         allowOutsideClick: false,
-        didOpen: () => Swal.showLoading(),
+        didOpen: () => {
+            Swal.showLoading();
+            applyTranslations(Swal.getHtmlContainer());
+        },
     });
 
     $.ajax({
         url: `/get_postcodes/${districtId}`,
         type: "GET",
         success: function (data) {
-            $(".postcode-modal").empty().append('<option value="">Select Postcode</option>');
+            const lang = localStorage.getItem("qis_lang") || "en";
+            const selectPostcodeText = lang === "bm" ? "Pilih Poskod" : "Select Postcode";
+            $(".postcode-modal").empty().append(`<option value="" data-en="Select Postcode" data-bm="Pilih Poskod">${selectPostcodeText}</option>`);
             data.forEach(postcode => {
                 const isSelected = selectedPostcode && (selectedPostcode == postcode.id || selectedPostcode == postcode.value) ? 'selected' : '';
                 $(".postcode-modal").append(`<option value="${postcode.value}" ${isSelected}>${postcode.value}</option>`);

@@ -47,12 +47,10 @@ class RoleService
                         <div class="avatar avatar-md fs-14 ' . $bgClass . ' svg-white d-flex justify-content-center align-items-center">
                             ' . $icon . '
                         </div>
-                        <span>' . e($role->name) . '</span>
+                        <span class="ipv-role" data-original="' . e($role->name) . '">' . e($role->name) . '</span>
                     </div>
                 ';
             })
-
-            
 
             ->editColumn('permissions', function ($role) {
 
@@ -65,14 +63,14 @@ class RoleService
 
                 foreach ($list as $permission) {
                     $html .= '
-                        <span class="badge bg-dark-transparent p-1">'
+                        <span class="badge bg-dark-transparent p-1 ipv-permission" data-original="' . e($permission->name) . '">'
                         . e($permission->name) .
                         '</span>';
                 }
 
                 if ($count > $maxDisplay) {
-                    $html .= '<a class="permissionModal badge bg-dark-transparent p-1"
-                    data-role = ' . $role->name . '>more...</a>';
+                    $html .= '<a class="permissionModal badge bg-dark-transparent p-1 ipv-more"
+                    data-role = "' . $role->name . '" data-original="more...">more...</a>';
                 }
 
                 if ($count <= $maxDisplay) {

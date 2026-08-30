@@ -15,7 +15,7 @@ class Exporter extends Model
 
     public function registeredBy()
     {
-        return $this->belongsTo(PublicUser::class, 'registered_by');
+        return $this->belongsTo(PublicUser::class, 'registered_by', 'uuid');
     }
 
     public function countryInfo()

@@ -1,5 +1,55 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
+import { applyTranslations } from "../../../app";
+
+function getLang() {
+    try {
+        return localStorage.getItem('qis_lang') || 'en';
+    } catch {
+        return 'en';
+    }
+}
+
+const t = {
+    loadingData: { en: 'Loading data...', bm: 'Memuatkan data...' },
+    pleaseWait: { en: 'Please wait', bm: 'Sila tunggu' },
+    error: { en: 'Error', bm: 'Ralat' },
+    failedToLoadData: { en: 'Failed to load data. Please try again.', bm: 'Gagal memuatkan data. Sila cuba lagi.' },
+    saving: { en: 'Saving...', bm: 'Menyimpan...' },
+    saved: { en: 'Saved!', bm: 'Telah Disimpan!' },
+    entryPointsUpdated: { en: 'Entry points updated.', bm: 'Titik masuk dikemas kini.' },
+    failedToSaveEntryPoints: { en: 'Failed to save entry points.', bm: 'Gagal menyimpan titik masuk.' },
+    areYouSure: { en: 'Are you sure?', bm: 'Adakah anda pasti?' },
+    branchDeletedWarning: { en: 'This branch will be permanently deleted!', bm: 'Cawangan ini akan dipadamkan secara kekal!' },
+    itemDeletedWarning: { en: 'You won\'t be able to revert this!', bm: 'Anda tidak akan dapat mengembalikannya!' },
+    deleted: { en: 'Deleted!', bm: 'Dipadam!' },
+    branchDeleted: { en: 'The branch has been deleted.', bm: 'Cawangan telah dipadam.' },
+    failedToDeleteBranch: { en: 'Failed to delete the branch.', bm: 'Gagal memadam cawangan.' },
+    errorDeleting: { en: 'An error occurred while deleting.', bm: 'Ralat berlaku semasa memadam.' },
+    noData: { en: 'No Data', bm: 'Tiada Data' },
+    unableToLoadItemData: { en: 'Unable to load item data.', bm: 'Tidak dapat memuatkan data item.' },
+    success: { en: 'Success', bm: 'Berjaya' },
+    itemUpdatedSuccessfully: { en: 'Item updated successfully.', bm: 'Item berjaya dikemas kini.' },
+    failedToUpdateItem: { en: 'Failed to update item.', bm: 'Gagal mengemas kini item.' },
+    errorUpdatingItem: { en: 'An error occurred while updating the item.', bm: 'Ralat berlaku semasa mengemas kini item.' },
+    itemDeleted: { en: 'The item has been deleted.', bm: 'Item telah dipadam.' },
+    failedToDeleteItem: { en: 'Failed to delete the item.', bm: 'Gagal memadam item.' },
+    errorDeletingItem: { en: 'An error occurred while deleting the item.', bm: 'Ralat berlaku semasa memadam item.' },
+    branchAddedSuccessfully: { en: 'Branch added successfully.', bm: 'Cawangan berjaya ditambah.' },
+    failedToAddBranch: { en: 'Failed to add branch.', bm: 'Gagal menambah cawangan.' },
+    errorAddingBranch: { en: 'An error occurred while adding the branch.', bm: 'Ralat berlaku semasa menambah cawangan.' },
+    itemAddedSuccessfully: { en: 'Item added successfully.', bm: 'Item berjaya ditambah.' },
+    failedToAddItem: { en: 'Failed to add item.', bm: 'Gagal menambah item.' },
+    errorAddingItem: { en: 'An error occurred while adding the item.', bm: 'Ralat berlaku semasa menambah item.' },
+};
+
+function getText(key) {
+    const lang = getLang();
+    const entry = t[key];
+    if (!entry) return key;
+    return entry[lang] || entry.en;
+}
+
 
 // var tempDropzoneUrl = `${window.baseUrl}/public/temp_upload`;
 
@@ -29,12 +79,13 @@ $(document).ready(function () {
 
         // 1️⃣ Show loading Swal
         Swal.fire({
-            title: "Loading data...",
-            text: "Please wait",
+            title: getText("loadingData"),
+            text: getText("pleaseWait"),
             allowOutsideClick: false,
             didOpen: () => {
-                Swal.showLoading();
-            },
+                  Swal.showLoading();
+                  applyTranslations(Swal.getHtmlContainer());
+              },
         });
 
         switch (cate) {
@@ -140,8 +191,8 @@ $(document).ready(function () {
 
                 Swal.fire({
                     icon: "error",
-                    title: "Error",
-                    text: "Failed to load data. Please try again.",
+                    title: getText("error"),
+                    text: getText("failedToLoadData"),
                 });
             },
         });
@@ -214,12 +265,13 @@ $(document).ready(function () {
 
         // 1️⃣ Show loading Swal
         Swal.fire({
-            title: "Saving...",
-            text: "Please wait",
+            title: getText("saving"),
+            text: getText("pleaseWait"),
             allowOutsideClick: false,
             didOpen: () => {
-                Swal.showLoading();
-            },
+                  Swal.showLoading();
+                  applyTranslations(Swal.getHtmlContainer());
+              },
         });
 
         $.ajax({
@@ -231,7 +283,7 @@ $(document).ready(function () {
                 Swal.close();
 
                 // Then show success
-                Swal.fire("Saved!", "Entry points updated.", "success");
+                Swal.fire(getText("saved"), getText("entryPointsUpdated"), "success");
 
                 $("#entryPointModal").modal("hide");
                 loadPBData("district_entry");
@@ -241,8 +293,8 @@ $(document).ready(function () {
                 Swal.close();
 
                 Swal.fire(
-                    "Error",
-                    xhr.responseJSON?.message ?? "Failed to save entry points.",
+                    getText("error"),
+                    xhr.responseJSON?.message ?? getText("failedToSaveEntryPoints"),
                     "error"
                 );
             },
@@ -329,8 +381,8 @@ $(document).ready(function () {
 
     function deleteBranch(id) {
         Swal.fire({
-            title: "Are you sure?",
-            text: "This branch will be permanently deleted!",
+            title: getText("areYouSure"),
+            text: getText("branchDeletedWarning"),
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#3085d6",
@@ -348,8 +400,8 @@ $(document).ready(function () {
                         if (response.status === "success") {
                             Swal.fire({
                                 icon: "success",
-                                title: "Deleted!",
-                                text: "The branch has been deleted.",
+                                title: getText("deleted"),
+                                text: getText("branchDeleted"),
                                 timer: 2000,
                                 showConfirmButton: false,
                             });
@@ -357,16 +409,16 @@ $(document).ready(function () {
                         } else {
                             Swal.fire({
                                 icon: "error",
-                                title: "Error",
-                                text: response.message || "Failed to delete the branch.",
+                                title: getText("error"),
+                                text: response.message || getText("failedToDeleteBranch"),
                             });
                         }
                     },
                     error: function (xhr) {
                         Swal.fire({
                             icon: "error",
-                            title: "Error",
-                            text: xhr.responseJSON?.message || "An error occurred while deleting.",
+                            title: getText("error"),
+                            text: xhr.responseJSON?.message || getText("errorDeleting"),
                         });
                     },
                 });
@@ -379,10 +431,13 @@ $(document).ready(function () {
     function getspecificPBData(id) {
 
         Swal.fire({
-            title: "Loading data...",
-            text: "Please wait",
+            title: getText("loadingData"),
+            text: getText("pleaseWait"),
             allowOutsideClick: false,
-            didOpen: () => Swal.showLoading(),
+            didOpen: () => {
+              Swal.showLoading();
+              applyTranslations(Swal.getHtmlContainer());
+          },
         });
 
         $.ajax({
@@ -433,8 +488,8 @@ $(document).ready(function () {
                 } else {
                     Swal.fire({
                         icon: "warning",
-                        title: "No Data",
-                        text: "Unable to load item data.",
+                        title: getText("noData"),
+                        text: getText("unableToLoadItemData"),
                     });
                 }
             },
@@ -442,8 +497,8 @@ $(document).ready(function () {
                 Swal.close();
                 Swal.fire({
                     icon: "error",
-                    title: "Error",
-                    text: "Failed to load data. Please try again.",
+                    title: getText("error"),
+                    text: getText("failedToLoadData"),
                 });
             }
         });
@@ -485,8 +540,8 @@ $(document).ready(function () {
                     if (response.status === "success") {
                         Swal.fire({
                             icon: "success",
-                            title: "Success",
-                            text: "Item updated successfully.",
+                            title: getText("success"),
+                            text: getText("itemUpdatedSuccessfully"),
                             timer: 2000,
                             showConfirmButton: false,
                         });
@@ -494,8 +549,8 @@ $(document).ready(function () {
                     } else {
                         Swal.fire({
                             icon: "error",
-                            title: "Error",
-                            text: response.message || "Failed to update item.",
+                            title: getText("error"),
+                            text: response.message || getText("failedToUpdateItem"),
                             timer: 3000,
                             showConfirmButton: false,
                         });
@@ -505,8 +560,8 @@ $(document).ready(function () {
                     console.error("Error updating PB data:", xhr);
                     Swal.fire({
                         icon: "error",
-                        title: "Error",
-                        text: "An error occurred while updating the item.",
+                        title: getText("error"),
+                        text: getText("errorUpdatingItem"),
                         timer: 3000,
                         showConfirmButton: false,
                     });
@@ -518,8 +573,8 @@ $(document).ready(function () {
 
     function deletePBData(id) {
         Swal.fire({
-            title: "Are you sure?",
-            text: "You won't be able to revert this!",
+            title: getText("areYouSure"),
+            text: getText("itemDeletedWarning"),
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#3085d6",
@@ -539,8 +594,8 @@ $(document).ready(function () {
                         if (response.status === "success") {
                             Swal.fire({
                                 icon: "success",
-                                title: "Deleted!",
-                                text: "The item has been deleted.",
+                                title: getText("deleted"),
+                                text: getText("itemDeleted"),
                                 timer: 2000,
                                 showConfirmButton: false,
                             });
@@ -548,10 +603,10 @@ $(document).ready(function () {
                         } else {
                             Swal.fire({
                                 icon: "error",
-                                title: "Error",
+                                title: getText("error"),
                                 text:
                                     response.message ||
-                                    "Failed to delete the item.",
+                                    getText("failedToDeleteItem"),
                                 timer: 3000,
                                 showConfirmButton: false,
                             });
@@ -561,8 +616,8 @@ $(document).ready(function () {
                         console.error("Error deleting PB data:", xhr);
                         Swal.fire({
                             icon: "error",
-                            title: "Error",
-                            text: "An error occurred while deleting the item.",
+                            title: getText("error"),
+                            text: getText("errorDeletingItem"),
                             timer: 3000,
                             showConfirmButton: false,
                         });
@@ -674,8 +729,8 @@ $(document).ready(function () {
                     if (response.status === "success") {
                         Swal.fire({
                             icon: "success",
-                            title: "Success",
-                            text: "Branch added successfully.",
+                            title: getText("success"),
+                            text: getText("branchAddedSuccessfully"),
                             timer: 2000,
                             showConfirmButton: false,
                         });
@@ -683,16 +738,16 @@ $(document).ready(function () {
                     } else {
                         Swal.fire({
                             icon: "error",
-                            title: "Error",
-                            text: response.message || "Failed to add branch.",
+                            title: getText("error"),
+                            text: response.message || getText("failedToAddBranch"),
                         });
                     }
                 },
                 error: function (xhr) {
                     Swal.fire({
                         icon: "error",
-                        title: "Error",
-                        text: xhr.responseJSON?.message || "An error occurred while adding the branch.",
+                        title: getText("error"),
+                        text: xhr.responseJSON?.message || getText("errorAddingBranch"),
                     });
                 },
             });
@@ -725,8 +780,8 @@ $(document).ready(function () {
                 if (response.status === "success") {
                     Swal.fire({
                         icon: "success",
-                        title: "Success",
-                        text: "Item added successfully.",
+                        title: getText("success"),
+                        text: getText("itemAddedSuccessfully"),
                         timer: 2000,
                         showConfirmButton: false,
                     });
@@ -734,8 +789,8 @@ $(document).ready(function () {
                 } else {
                     Swal.fire({
                         icon: "error",
-                        title: "Error",
-                        text: response.message || "Failed to add item.",
+                        title: getText("error"),
+                        text: response.message || getText("failedToAddItem"),
                         timer: 3000,
                         showConfirmButton: false,
                     });
@@ -745,8 +800,8 @@ $(document).ready(function () {
                 console.error("Error adding PB data:", xhr);
                 Swal.fire({
                     icon: "error",
-                    title: "Error",
-                    text: "An error occurred while adding the item.",
+                    title: getText("error"),
+                    text: getText("errorAddingItem"),
                     timer: 3000,
                     showConfirmButton: false,
                 });

@@ -4,6 +4,39 @@ import Swal from "sweetalert2";
 import "datatables.net-bs5";
 import "datatables.net-responsive-bs5";
 import { autoInitFilterSelect2 } from "../utils/select2Utils";
+import { applyTranslations } from "../app";
+
+function getLang() {
+    try {
+        return localStorage.getItem('qis_lang') || 'en';
+    } catch {
+        return 'en';
+    }
+}
+
+const t = {
+    fillRequiredFields: { en: 'Please fill in all required fields.', bm: 'Sila isi semua medan yang diperlukan.' },
+    savingExporter: { en: 'Saving exporter...', bm: 'Menyimpan pengeksport...' },
+    pleaseWait: { en: 'Please wait', bm: 'Sila tunggu' },
+    exporterSaved: { en: 'Exporter Saved!', bm: 'Pengeksport Disimpan!' },
+    failedToSaveExporter: { en: 'Failed to save exporter. Please try again.', bm: 'Gagal menyimpan pengeksport. Sila cuba lagi.' },
+    areYouSure: { en: 'Are you sure?', bm: 'Adakah anda pasti?' },
+    exporterPermanentlyDeleted: { en: 'This exporter will be permanently deleted.', bm: 'Pengeksport ini akan dipadam secara kekal.' },
+    confirmDeletion: { en: 'Confirm Deletion', bm: 'Sahkan Pemadaman' },
+    actionCannotBeUndone: { en: 'This action cannot be undone.', bm: 'Tindakan ini tidak boleh dibatalkan.' },
+    deleted: { en: 'Deleted!', bm: 'Dipadam!' },
+    failed: { en: 'Failed', bm: 'Gagal' },
+    loadingExporterData: { en: 'Loading exporter data...', bm: 'Memuatkan data pengeksport...' },
+    error: { en: 'Error', bm: 'Ralat' },
+    failedToLoadExporterData: { en: 'Failed to load exporter data.', bm: 'Gagal memuatkan data pengeksport.' },
+};
+
+function getText(key) {
+    const lang = getLang();
+    const entry = t[key];
+    if (!entry) return key;
+    return entry[lang] || entry.en;
+}
 
 
 function initAddExporterModal() {
@@ -29,16 +62,19 @@ function initAddExporterModal() {
         const country = $("#addexpcountry").val();
 
         if (!name || !phone_no || !country) {
-            return Swal.fire("⚠️ Please fill in all required fields.");
+            return Swal.fire(getText("fillRequiredFields"));
         }
 
         // 🔄 Loading Swal
         Swal.fire({
-            title: "Saving exporter...",
-            text: "Please wait",
+            title: getText("savingExporter"),
+            text: getText("pleaseWait"),
             allowOutsideClick: false,
             allowEscapeKey: false,
-            didOpen: () => Swal.showLoading()
+            didOpen: () => {
+                Swal.showLoading();
+                applyTranslations(Swal.getHtmlContainer());
+            }
         });
 
         $.ajax({
@@ -61,8 +97,8 @@ function initAddExporterModal() {
 
                 Swal.fire({
                     icon: "success",
-                    title: "Exporter Saved!",
-                    text: "The exporter has been successfully saved.",
+                    title: getText("exporterSaved"),
+                    text: "",
                     timer: 1800,
                     showConfirmButton: false,
                     timerProgressBar: true,
@@ -77,8 +113,8 @@ function initAddExporterModal() {
 
                 Swal.fire({
                     icon: "error",
-                    title: "Failed!",
-                    text: "Failed to save exporter. Please try again."
+                    title: getText("failed"),
+                    text: getText("failedToSaveExporter")
                 });
             }
         });
@@ -170,8 +206,8 @@ $(document).on("click", ".deleteExporter", function () {
 
     // First confirmation
     Swal.fire({
-        title: "Are you sure?",
-        text: "This exporter will be permanently deleted.",
+        title: getText("areYouSure"),
+        text: getText("exporterPermanentlyDeleted"),
         icon: "warning",
         showCancelButton: true,
         confirmButtonText: "Yes, continue",
@@ -180,8 +216,8 @@ $(document).on("click", ".deleteExporter", function () {
         if (result.isConfirmed) {
             // Second confirmation
             Swal.fire({
-                title: "Confirm Deletion",
-                text: "This action cannot be undone.",
+                title: getText("confirmDeletion"),
+                text: getText("actionCannotBeUndone"),
                 icon: "error",
                 showCancelButton: true,
                 confirmButtonText: "Yes, delete it",
@@ -197,7 +233,7 @@ $(document).on("click", ".deleteExporter", function () {
                         success: function (res) {
                             Swal.fire({
                                 icon: "success",
-                                title: "Deleted!",
+                                title: getText("deleted"),
                                 text: res.message,
                                 timer: 1500,
                                 showConfirmButton: false,
@@ -211,7 +247,7 @@ $(document).on("click", ".deleteExporter", function () {
                         error: function (xhr) {
                             Swal.fire({
                                 icon: "error",
-                                title: "Failed",
+                                title: getText("failed"),
                                 text:
                                     xhr.responseJSON?.message ||
                                     "Unable to delete exporter.",
@@ -231,9 +267,12 @@ $(document).on("click", ".editExporter", function () {
 
     // Optional: show loading Swal
     Swal.fire({
-        title: "Loading exporter data...",
+        title: getText("loadingExporterData"),
         allowOutsideClick: false,
-        didOpen: () => Swal.showLoading(),
+        didOpen: () => {
+            Swal.showLoading();
+            applyTranslations(Swal.getHtmlContainer());
+        },
     });
 
     const modal = new bootstrap.Modal(document.getElementById("addExporterModal"));
@@ -268,7 +307,7 @@ $(document).on("click", ".editExporter", function () {
             Swal.close();
             console.error("AJAX Error:", error);
             console.log(xhr.responseText);
-            Swal.fire("Error", "Failed to load exporter data.", "error");
+            Swal.fire(getText("error"), getText("failedToLoadExporterData"), "error");
         },
     });
 });

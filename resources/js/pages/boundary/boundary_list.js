@@ -1,6 +1,32 @@
 
-import { formatTime, initTooltips } from "../../app";
+import { formatTime, initTooltips, applyTranslations } from "../../app";
 import Swal from "sweetalert2";
+
+function getLang() {
+    try {
+        return localStorage.getItem('qis_lang') || 'en';
+    } catch {
+        return 'en';
+    }
+}
+
+const t = {
+    loading: { en: 'Loading...', bm: 'Memuat...' },
+    pleaseWait: { en: 'Please wait', bm: 'Sila tunggu' },
+    error: { en: 'Error', bm: 'Ralat' },
+    failedToLoadBoundaryData: { en: 'Failed to load boundary data', bm: 'Gagal memuatkan data sempadan' },
+    boundaryOfficerInformationSaved: { en: 'Boundary Officer Information Saved!', bm: 'Maklumat Pegawai Sempadan Disimpan!' },
+    failed: { en: 'Failed!', bm: 'Gagal!' },
+    failedToSaveBoundaryOfficer: { en: 'Failed to save boundary officer.', bm: 'Gagal menyimpan pegawai sempadan.' },
+};
+
+function getText(key) {
+    const lang = getLang();
+    const entry = t[key];
+    if (!entry) return key;
+    return entry[lang] || entry.en;
+}
+
 import { activityLogDesign } from "../../appLog";
 
 let boundaryTable = null;
@@ -92,11 +118,14 @@ function viewData() {
         e.preventDefault();
 
         Swal.fire({
-            title: "Loading...",
-            text: "Please wait",
+            title: getText("loading"),
+            text: getText("pleaseWait"),
             allowOutsideClick: false,
             allowEscapeKey: false,
-            didOpen: () => Swal.showLoading(),
+            didOpen: () => {
+                Swal.showLoading();
+                applyTranslations(Swal.getHtmlContainer());
+            },
         });
 
         const userId   = $(this).data('id');
@@ -132,7 +161,7 @@ function viewData() {
 
         } catch (error) {
             console.error("AJAX Error:", error);
-            Swal.fire("Error", "Failed to load boundary data", "error");
+            Swal.fire(getText("error"), getText("failedToLoadBoundaryData"), "error");
         }
     });
 }
@@ -142,11 +171,14 @@ function editData() {
         e.preventDefault();
 
         Swal.fire({
-            title: "Loading...",
-            text: "Please wait",
+            title: getText("loading"),
+            text: getText("pleaseWait"),
             allowOutsideClick: false,
             allowEscapeKey: false,
-            didOpen: () => Swal.showLoading(),
+            didOpen: () => {
+                Swal.showLoading();
+                applyTranslations(Swal.getHtmlContainer());
+            },
         });
 
         const userId   = $(this).data('id');
@@ -183,7 +215,7 @@ function editData() {
 
         } catch (error) {
             console.error("AJAX Error:", error);
-            Swal.fire("Error", "Failed to load boundary data", "error");
+            Swal.fire(getText("error"), getText("failedToLoadBoundaryData"), "error");
         }
     });
 }
@@ -197,9 +229,12 @@ function saveData() {
         const entryPoint = $('#entryPoint').val();
 
         Swal.fire({
-            title: "Loading...",
+            title: getText("loading"),
             allowOutsideClick: false,
-            didOpen: () => Swal.showLoading(),
+            didOpen: () => {
+                Swal.showLoading();
+                applyTranslations(Swal.getHtmlContainer());
+            },
         });
 
         $.ajax({
@@ -211,14 +246,14 @@ function saveData() {
                 entryPoint: entryPoint,
             },
             success: function () {
-                Swal.fire({ icon: "success", title: "Boundary Officer Information Saved!" });
+                Swal.fire({ icon: "success", title: getText("boundaryOfficerInformationSaved") });
                 const modalEl       = document.getElementById('boundaryModal');
                 const modalInstance = bootstrap.Modal.getInstance(modalEl);
                 modalInstance.hide();
                 boundaryTable.ajax.reload(null, false);
             },
             error: function () {
-                Swal.fire({ icon: "error", title: "Failed!", text: "Failed to save boundary officer." });
+                Swal.fire({ icon: "error", title: getText("failed"), text: getText("failedToSaveBoundaryOfficer") });
             },
         });
     });

@@ -4,6 +4,36 @@ import "datatables.net-responsive-bs5";
 import "datatables.net-bs5/css/dataTables.bootstrap5.min.css";
 import "datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css";
 import Swal from "sweetalert2";
+import { applyTranslations } from "../../app";
+
+function getLang() {
+    try {
+        return localStorage.getItem('qis_lang') || 'en';
+    } catch {
+        return 'en';
+    }
+}
+
+const t = {
+    error: { en: 'Error', bm: 'Ralat' },
+    errorEx: { en: 'Error!', bm: 'Ralat!' },
+    failedToFetch: { en: 'Failed to fetch vehicle details', bm: 'Gagal mendapatkan butiran kenderaan' },
+    fillRequired: { en: 'Please fill in all required fields (Name, Number, Registration Number).', bm: 'Sila isi semua medan yang diperlukan (Nama, Nombor, Nombor Pendaftaran).' },
+    successEx: { en: 'Success!', bm: 'Berjaya!' },
+    areYouSure: { en: 'Are you sure?', bm: 'Adakah anda pasti?' },
+    cantRevert: { en: "You won't be able to revert this!", bm: "Anda tidak akan dapat mengembalikannya!" },
+    deletedEx: { en: 'Deleted!', bm: 'Dipadam!' },
+    somethingWentWrong: { en: 'Something went wrong.', bm: 'Sesuatu yang tidak kena berlaku.' },
+    yesDeleteIt: { en: 'Yes, delete it!', bm: 'Ya, padamkannya!' },
+    cancel: { en: 'Cancel', bm: 'Batal' }
+};
+
+function getText(key) {
+    const lang = getLang();
+    const entry = t[key];
+    if (!entry) return key;
+    return entry[lang] || entry.en;
+}
 
 const $ = jQuery;
 window.$ = window.jQuery = jQuery;
@@ -74,7 +104,7 @@ $(document).ready(function () {
             const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('addVehicleModal'));
             modal.show();
         }).fail(function() {
-            Swal.fire('Error', 'Failed to fetch vehicle details', 'error');
+            Swal.fire(getText("error"), getText("failedToFetch"), 'error');
         });
     });
 
@@ -91,7 +121,7 @@ $(document).ready(function () {
         const regNumber = $('#vehicleRegNumber').val().trim();
 
         if (!name || !number || !regNumber) {
-            Swal.fire('Error', 'Please fill in all required fields (Name, Number, Registration Number).', 'error');
+            Swal.fire(getText("error"), getText("fillRequired"), 'error');
             return;
         }
 
@@ -118,7 +148,7 @@ $(document).ready(function () {
             },
             success: function (response) {
                 bootstrap.Modal.getInstance(document.getElementById('addVehicleModal')).hide();
-                Swal.fire('Success!', response.message, 'success');
+                Swal.fire(getText("successEx"), response.message, 'success');
                 table.ajax.reload();
             },
             error: function (xhr) {
@@ -128,7 +158,7 @@ $(document).ready(function () {
                 } else if (xhr.responseJSON && xhr.responseJSON.errors) {
                     errorMsg = Object.values(xhr.responseJSON.errors).flat().join('\n');
                 }
-                Swal.fire('Error!', errorMsg, 'error');
+                Swal.fire(getText("errorEx"), errorMsg, 'error');
             }
         });
     });
@@ -149,7 +179,7 @@ $(document).ready(function () {
             const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('viewVehicleModal'));
             modal.show();
         }).fail(function() {
-            Swal.fire('Error', 'Failed to fetch vehicle details', 'error');
+            Swal.fire(getText("error"), getText("failedToFetch"), 'error');
         });
     });
 
@@ -158,13 +188,14 @@ $(document).ready(function () {
         const id = $(this).data('id');
 
         Swal.fire({
-            title: 'Are you sure?',
-            text: "You won't be able to revert this!",
+            title: getText("areYouSure"),
+            text: getText("cantRevert"),
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete it!'
+            confirmButtonText: getText("yesDeleteIt"),
+            cancelButtonText: getText("cancel")
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
@@ -174,11 +205,11 @@ $(document).ready(function () {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function (response) {
-                        Swal.fire('Deleted!', response.message, 'success');
+                        Swal.fire(getText("deletedEx"), response.message, 'success');
                         table.ajax.reload();
                     },
                     error: function (xhr) {
-                        Swal.fire('Error!', 'Something went wrong.', 'error');
+                        Swal.fire(getText("errorEx"), getText("somethingWentWrong"), 'error');
                     }
                 });
             }

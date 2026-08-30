@@ -294,29 +294,59 @@
         <section class="qis-section" id="qis-gallery">
             <div class="qis-container">
                 <span class="qis-eyebrow" data-en="Gallery" data-bm="Galeri">Gallery</span>
-                <h2 class="qis-h2 mt-2" data-en="Checkpoints, in the field" data-bm="Titik Pemeriksaan, di Lapangan">
+                <h2 class="qis-h2 mt-2" data-en="Checkpoints, in the field" data-bm="Pusat Pemeriksaan di Lapangan">
                     Checkpoints, in the field</h2>
 
-                <div class="qis-gallery-grid">
-                    @forelse($galleries as $gallery)
-                        <div class="qis-gallery-tile"
-                            style="background-image: url('{{ asset('storage/' . $gallery->path) }}'); background-size: cover; background-position: center;"
-                            data-modal="qisModalImage" data-image-src="{{ asset('storage/' . $gallery->path) }}"
-                            data-caption-en="{{ $gallery->name }}"
-                            data-caption-bm="{{ $gallery->description ?? $gallery->name }}">
-                            <span class="qis-tag">IMG_{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
-                            <span class="qis-tile-overlay" data-en="{{ $gallery->name }}"
-                                data-bm="{{ $gallery->description ?? $gallery->name }}">
-                                {{ $gallery->name }}
-                            </span>
-                        </div>
-                    @empty
-                        <div class="col-12 text-center text-muted py-5">
-                            <i class="bi bi-image fs-1"></i>
-                            <p class="mt-2" data-en="No gallery images available."
-                                data-bm="Tiada imej galeri tersedia.">No gallery images available.</p>
-                        </div>
-                    @endforelse
+
+                <div id="landingGalleryCarousel" class="carousel slide" data-bs-ride="carousel">
+                    @if($galleries->count() > 1)
+                    <div class="carousel-indicators">
+                        @foreach($galleries->take(6) as $gallery)
+                            <button type="button" data-bs-target="#landingGalleryCarousel" data-bs-slide-to="{{ $loop->index }}" class="{{ $loop->first ? 'active' : '' }}" aria-current="{{ $loop->first ? 'true' : 'false' }}" aria-label="Slide {{ $loop->iteration }}"></button>
+                        @endforeach
+                    </div>
+                    @endif
+                    <div class="carousel-inner">
+                        @forelse($galleries->take(6) as $gallery)
+                            @php 
+                                $imgUrl = str_starts_with($gallery->path, 'http') ? $gallery->path : asset('storage/' . $gallery->path); 
+                                $isLastAndHasMore = $loop->iteration == 6 && $galleries->count() > 5;
+                            @endphp
+                            <div class="carousel-item {{ $loop->first ? 'active' : '' }}">
+                                @if($isLastAndHasMore)
+                                    <a href="{{ route('public.gallery') }}" style="display: block; position: relative;">
+                                        <div style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('{{ $imgUrl }}'); background-size: cover; background-position: center; height: 500px; width: 100%; display: flex; align-items: center; justify-content: center; text-decoration: none; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                                            <div style="color: white; font-size: 5rem; font-weight: bold; display: flex; align-items: center; justify-content: center;">
+                                                <i class='bx bx-plus' style="margin-right: 4px;"></i>{{ $galleries->count() - 5 }}
+                                            </div>
+                                        </div>
+                                    </a>
+                                @else
+                                    <div style="background-image: url('{{ $imgUrl }}'); background-size: cover; background-position: center; height: 500px; width: 100%; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);"></div>
+                                    <div class="mt-4 text-center">
+                                        <p class="qis-lead mx-auto" style="max-width: 800px; color: #64748b;" data-en="{{ $gallery->description ?? $gallery->name }}" data-bm="{{ $gallery->description ?? $gallery->name }}">{{ $gallery->description ?? $gallery->name }}</p>
+                                    </div>
+                                @endif
+                            </div>
+                        @empty
+                            <div class="carousel-item active">
+                                <div style="height: 500px; width: 100%; background: #f3f4f6; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+                                    <i class="bi bi-image" style="font-size: 3rem; color: #9ca3af;"></i>
+                                    <p class="mt-2 text-muted" data-en="No gallery images available." data-bm="Tiada imej galeri tersedia.">No gallery images available.</p>
+                                </div>
+                            </div>
+                        @endforelse
+                    </div>
+                    @if($galleries->count() > 1)
+                        <button class="carousel-control-prev" type="button" data-bs-target="#landingGalleryCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#landingGalleryCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    @endif
                 </div>
             </div>
         </section>

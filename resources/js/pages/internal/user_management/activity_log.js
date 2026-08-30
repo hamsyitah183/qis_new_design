@@ -2,6 +2,34 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import flatpickr from "flatpickr";
 import { autoInitFilterSelect2 } from "../../../utils/select2Utils";
+import { applyTranslations } from "../../../app";
+
+function getLang() {
+    try {
+        return localStorage.getItem('qis_lang') || 'en';
+    } catch {
+        return 'en';
+    }
+}
+
+const t = {
+    loading: { en: 'Loading...', bm: 'Memuat...' },
+    error: { en: 'Error', bm: 'Ralat' },
+    failedToLoad: { en: 'Failed to Load', bm: 'Gagal Memuatkan' },
+    unableToFetchTimeline: { en: 'Unable to fetch activity timeline. Please try again.', bm: 'Tidak dapat memuatkan garis masa aktiviti. Sila cuba lagi.' },
+    chooseUserType: { en: 'Choose User Type first!', bm: 'Pilih Jenis Pengguna dahulu!' },
+    noData: { en: 'No Data', bm: 'Tiada Data' },
+    noUsersFound: { en: 'No users found for this type.', bm: 'Tiada pengguna dijumpai untuk jenis ini.' },
+    unableToLoadUser: { en: 'Unable to load user details', bm: 'Tidak dapat memuatkan butiran pengguna' },
+};
+
+function getText(key) {
+    const lang = getLang();
+    const entry = t[key];
+    if (!entry) return key;
+    return entry[lang] || entry.en;
+}
+
 
 
 let userTypeVal = 0; // ✅ Define globally so all functions can access it
@@ -108,9 +136,12 @@ async function loadActivityTimeline(
 
     try {
         Swal.fire({
-            title: "Loading...",
+            title: getText("loading"),
             allowOutsideClick: false,
-            didOpen: () => Swal.showLoading(),
+            didOpen: () => {
+                Swal.showLoading();
+                applyTranslations(Swal.getHtmlContainer());
+            },
         });
 
         const params = {};
@@ -144,8 +175,8 @@ async function loadActivityTimeline(
         Swal.close();
         Swal.fire({
             icon: "error",
-            title: "Failed to Load",
-            text: "Unable to fetch activity timeline. Please try again.",
+            title: getText("failedToLoad"),
+            text: getText("unableToFetchTimeline"),
         });
     } finally {
         allInputs.forEach((el) => (el.disabled = false));
@@ -274,7 +305,7 @@ $("#userType").on("change", function (e) {
     console.log("Selected user type:", userTypeVal);
 
     if (!userTypeVal || userTypeVal == 0) {
-        Swal.fire("Error", "Choose User Type first!", "error");
+        Swal.fire(getText("error"), getText("chooseUserType"), "error");
         return;
     }
 
@@ -346,9 +377,12 @@ function setupUserModal(userTypeVal) {
 
 function loadUserList(userTypeVal) {
     Swal.fire({
-        title: "Loading...",
+        title: getText("loading"),
         allowOutsideClick: false,
-        didOpen: () => Swal.showLoading(),
+        didOpen: () => {
+            Swal.showLoading();
+            applyTranslations(Swal.getHtmlContainer());
+        },
     });
 
     window.selectedUserIds.clear();
@@ -362,11 +396,11 @@ function loadUserList(userTypeVal) {
                 window.allUsers = response.users;
                 listUser(response.users);
             } else {
-                Swal.fire("No Data", "No users found for this type.", "info");
+                Swal.fire(getText("noData"), getText("noUsersFound"), "info");
             }
         },
         error: function () {
-            Swal.fire("Error", "Unable to load user details", "error");
+            Swal.fire(getText("error"), getText("unableToLoadUser"), "error");
         },
     });
 }

@@ -84,6 +84,11 @@
                                 'was verified by' => 'telah disahkan oleh',
                                 '\'s verification is rejected by' => ' pengesahannya ditolak oleh',
                                 'is new user for boundary officer' => 'ialah pengguna baharu untuk pegawai sempadan',
+                                
+                                'verified inspection certificate application' => 'mengesahkan permohonan sijil pemeriksaan',
+                                'has clerk verified an inspection application (ID:' => 'telah pengkeranian permohonan pemeriksaan (ID:',
+                                'has clerk verified an inspection application' => 'telah pengkeranian permohonan pemeriksaan',
+                                'verified application' => 'mengesahkan permohonan',
                             ];
                             $desc_bm = str_ireplace(array_keys($translations), array_values($translations), $desc_en);
                         @endphp
@@ -94,7 +99,12 @@
                             <span class="adm-activity-subject">
                                 @php
                                     $subj_en = strtolower(class_basename($activity->subject_type));
-                                    $subj_bm = $subj_en === 'internal' ? 'dalaman' : ($subj_en === 'public' ? 'awam' : $subj_en);
+                                    $subj_bm = $subj_en;
+                                    if ($subj_en === 'internal') $subj_bm = 'dalaman';
+                                    elseif ($subj_en === 'public') $subj_bm = 'awam';
+                                    elseif ($subj_en === 'inspectionapplication') $subj_bm = 'permohonanpemeriksaan';
+                                    elseif ($subj_en === 'ipapplication') $subj_bm = 'permohonanip';
+                                    elseif ($subj_en === 'consignmentapplication') $subj_bm = 'permohonankonsainan';
                                 @endphp
                                 <i class='bx bx-link-alt'></i> <span data-en="{{ $subj_en }}" data-bm="{{ $subj_bm }}">{{ $subj_en }}</span>
                             </span>

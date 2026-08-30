@@ -8,16 +8,37 @@ function getCurrentLanguage() {
 }
 
 // Helper to extract the message in the correct language
+const notifTranslations = {
+    'Inspection application has been approved by clerk.': 'Permohonan pemeriksaan telah diluluskan oleh kerani.',
+    'Consignment application has been approved by clerk.': 'Permohonan konsainan telah diluluskan oleh kerani.',
+    'Inspection application has been rejected by clerk.': 'Permohonan pemeriksaan telah ditolak oleh kerani.',
+    'Consignment application has been rejected by clerk.': 'Permohonan konsainan telah ditolak oleh kerani.',
+    'New inspection application has been submitted.': 'Permohonan pemeriksaan baharu telah dihantar.',
+    'New consignment application has been submitted.': 'Permohonan konsainan baharu telah dihantar.',
+    'has been approved by clerk.': 'telah diluluskan oleh kerani.',
+    'has been rejected by clerk.': 'telah ditolak oleh kerani.',
+    'Inspection application': 'Permohonan pemeriksaan',
+    'Consignment application': 'Permohonan konsainan',
+    'has been submitted.': 'telah dihantar.',
+};
+
+function translateBm(text) {
+    let bmText = text;
+    for (const [en, bm] of Object.entries(notifTranslations)) {
+        bmText = bmText.replace(new RegExp(en, 'gi'), bm);
+    }
+    return bmText;
+}
+
 function getLocalizedMessage(notificationData) {
     const lang = getCurrentLanguage();
     const message = notificationData.message;
 
-    // If message is an object with 'en' and 'bm' keys
     if (typeof message === 'object' && message !== null) {
         return message[lang] || message['en'] || 'Notification';
     }
-    // Otherwise it's a plain string (old notifications)
-    return message || 'Notification';
+    
+    return lang === 'bm' ? translateBm(message || 'Notification') : (message || 'Notification');
 }
 
 export function notification() {
@@ -35,6 +56,7 @@ export function notification() {
         })
         .then((data) => {
             notificationContent.innerHTML = "";
+            const lang = getCurrentLanguage();
 
             console.log("Fetched notifications:", data);
 
@@ -43,19 +65,22 @@ export function notification() {
             if (unread.length > 0) {
                 pulse.className =
                     "header-icon-pulse bg-primary2 rounded pulse pulse-secondary";
-                notificationCount.textContent = `${unread.length} Unread`;
+                notificationCount.setAttribute('data-en', `${unread.length} Unread`);
+                notificationCount.setAttribute('data-bm', `${unread.length} Belum Dibaca`);
+                notificationCount.textContent = lang === 'bm' ? `${unread.length} Belum Dibaca` : `${unread.length} Unread`;
             } else {
                 pulse.className = "";
-                notificationCount.textContent = `0 Unread`;
+                notificationCount.setAttribute('data-en', `0 Unread`);
+                notificationCount.setAttribute('data-bm', `0 Belum Dibaca`);
+                notificationCount.textContent = lang === 'bm' ? `0 Belum Dibaca` : `0 Unread`;
             }
 
             if (!data.length) {
-                // Use bilingual static message (already in HTML via data attributes, but we set innerHTML)
-                const lang = getCurrentLanguage();
-                const noMsg = lang === 'bm' ? 'Tiada Notifikasi' : 'No notifications';
+                const noMsgEn = 'No notifications';
+                const noMsgBm = 'Tiada Notifikasi';
                 notificationContent.innerHTML = `
-                    <li class="dropdown-item text-muted text-center">
-                        ${noMsg}
+                    <li class="dropdown-item text-muted text-center" data-en="${noMsgEn}" data-bm="${noMsgBm}">
+                        ${lang === 'bm' ? noMsgBm : noMsgEn}
                     </li>
                 `;
                 return;
@@ -67,10 +92,11 @@ export function notification() {
 
                 const url = notification.data.url ? notification.data.url : "#";
                 const user = notification.data.user || 'System';
-                const messageObj = typeof notification.data.message === 'object' ? notification.data.message : { en: notification.data.message, bm: notification.data.message };
+                const messageObj = typeof notification.data.message === 'object' ? notification.data.message : { en: notification.data.message, bm: translateBm(notification.data.message) };
                 const msgEn = messageObj.en ? messageObj.en.replace(/"/g, '&quot;') : 'Notification';
                 const msgBm = messageObj.bm ? messageObj.bm.replace(/"/g, '&quot;') : 'Notifikasi';
                 const message = getLocalizedMessage(notification.data);
+                const timeFmt = formatTime(notification.created_at);
 
                 listItem.innerHTML = `
                     <a href="${url}" class="d-flex align-items-center">
@@ -82,9 +108,7 @@ export function notification() {
                         <div class="flex-grow-1">
                             <p class="mb-0 fw-medium">${user}</p>
                             <div class="text-muted fs-12" data-en="${msgEn}" data-bm="${msgBm}">${message}</div>
-                            <div class="fw-normal fs-10 text-muted">${formatTime(
-                                notification.created_at,
-                            )}</div>
+                            <div class="fw-normal fs-10 text-muted" data-en="${timeFmt.en}" data-bm="${timeFmt.bm}">${lang === 'bm' ? timeFmt.bm : timeFmt.en}</div>
                         </div>
                     </a>
                 `;
@@ -113,8 +137,11 @@ export function notification() {
             },
         })
             .then(() => {
+                const lang = getCurrentLanguage();
                 pulse.className = "";
-                notificationCount.textContent = "0 Unread";
+                notificationCount.setAttribute('data-en', `0 Unread`);
+                notificationCount.setAttribute('data-bm', `0 Belum Dibaca`);
+                notificationCount.textContent = lang === 'bm' ? `0 Belum Dibaca` : `0 Unread`;
 
                 // Mark visually all the items as read (optional)
                 unreadItems.forEach((item) => {
@@ -132,24 +159,24 @@ function formatTime(dateString) {
     const time = new Date(dateString);
     const seconds = Math.floor((now - time) / 1000);
 
-    // You can optionally translate these time labels using a helper, but I'll keep as is.
-    if (seconds < 10) return "Just now";
-    if (seconds < 60) return `${seconds} seconds ago`;
+    if (seconds < 10) return { en: "Just now", bm: "Baru sahaja" };
+    if (seconds < 60) return { en: `${seconds} seconds ago`, bm: `${seconds} saat lepas` };
 
     const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
+    if (minutes < 60) return { en: `${minutes} minute${minutes > 1 ? "s" : ""} ago`, bm: `${minutes} minit lepas` };
 
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+    if (hours < 24) return { en: `${hours} hour${hours > 1 ? "s" : ""} ago`, bm: `${hours} jam lepas` };
 
     const days = Math.floor(hours / 24);
-    if (days < 7) return `${days} day${days > 1 ? "s" : ""} ago`;
+    if (days < 7) return { en: `${days} day${days > 1 ? "s" : ""} ago`, bm: `${days} hari lepas` };
 
-    return time.toLocaleDateString("en-MY", {
+    const dateFmt = time.toLocaleDateString("en-MY", {
         year: "numeric",
         month: "short",
         day: "numeric",
     });
+    return { en: dateFmt, bm: dateFmt };
 }
 
 // (Existing event listeners for the dropdown filter – unchanged)
@@ -196,10 +223,11 @@ export function notificationContent(hours = null) {
                 listItem.href = notification.data.url ?? "#";
 
                 const user = notification.data.user || 'System';
-                const messageObj = typeof notification.data.message === 'object' ? notification.data.message : { en: notification.data.message, bm: notification.data.message };
+                const messageObj = typeof notification.data.message === 'object' ? notification.data.message : { en: notification.data.message, bm: translateBm(notification.data.message) };
                 const msgEn = messageObj.en ? messageObj.en.replace(/"/g, '&quot;') : 'Notification';
                 const msgBm = messageObj.bm ? messageObj.bm.replace(/"/g, '&quot;') : 'Notifikasi';
                 const message = getLocalizedMessage(notification.data);
+                const timeFmt = formatTime(notification.created_at);
 
                 listItem.innerHTML = `
                     <div class="pe-2">
@@ -215,8 +243,8 @@ export function notificationContent(hours = null) {
                         </p>
                     </div>
 
-                    <span class="text-muted ms-auto fs-12">
-                        ${formatTime(notification.created_at)}
+                    <span class="text-muted ms-auto fs-12" data-en="${timeFmt.en}" data-bm="${timeFmt.bm}">
+                        ${lang === 'bm' ? timeFmt.bm : timeFmt.en}
                     </span>
                 `;
 

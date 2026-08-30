@@ -93,7 +93,7 @@ class AuthenticationController extends Controller
                 'redirect' => $redirect,
             ]);
         }
-
+        
         return response()->json([
             'status' => 'error',
             'message' => __('auth.failed'), // translated

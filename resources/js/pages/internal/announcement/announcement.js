@@ -4,6 +4,57 @@ import "datatables.net-responsive-bs5";
 import "datatables.net-bs5/css/dataTables.bootstrap5.min.css";
 import "datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css";
 import Swal from "sweetalert2";
+import { applyTranslations } from "../../../app";
+
+function getLang() {
+    try {
+        return localStorage.getItem('qis_lang') || 'en';
+    } catch {
+        return 'en';
+    }
+}
+
+const t = {
+    error: { en: 'Error!', bm: 'Ralat!' },
+    fetchFailed: { en: 'Failed to fetch data.', bm: 'Gagal mendapatkan data.' },
+    areYouSure: { en: 'Are you sure?', bm: 'Adakah anda pasti?' },
+    cannotRevert: { en: "You won't be able to revert this!", bm: 'Anda tidak akan dapat mengembalikannya!' },
+    yesDeleteIt: { en: 'Yes, delete it!', bm: 'Ya, padamkannya!' },
+    yesDelete: { en: 'Yes', bm: 'Ya' },
+    deleted: { en: 'Deleted!', bm: 'Dipadam!' },
+    somethingWentWrong: { en: 'Something went wrong.', bm: 'Sesuatu yang tidak kena berlaku.' },
+    success: { en: 'Success!', bm: 'Berjaya!' },
+    successTitle: { en: 'Success', bm: 'Berjaya' },
+    sent: { en: 'Sent!', bm: 'Dihantar!' },
+    failedToSendEmail: { en: 'Failed to send emails. Please try again.', bm: 'Gagal menghantar e-mel. Sila cuba lagi.' },
+    deleteFileTitle: { en: 'Delete file?', bm: 'Padam fail?' },
+    contentRequired: { en: 'Content is required', bm: 'Kandungan diperlukan' },
+    validDateError: { en: 'Valid Until date cannot be earlier than Valid From date', bm: 'Tarikh Sah Sehingga tidak boleh lebih awal daripada tarikh Sah Dari' },
+    warning: { en: 'Warning!', bm: 'Amaran!' },
+    filesFailedToUpload: { en: 'Announcement saved but files failed to upload.', bm: 'Pengumuman disimpan tetapi fail gagal dimuat naik.' },
+    failedToFetchGallery: { en: 'Failed to fetch gallery details', bm: 'Gagal mendapatkan butiran galeri' },
+    nameRequired: { en: 'Name is required', bm: 'Nama diperlukan' },
+    orderDeletedSuccess: { en: 'Order deleted successfully', bm: 'Pesanan berjaya dipadam' },
+    qrFailed: { en: 'QR Generation Failed', bm: 'Penjanaan QR Gagal' },
+    qrUnable: { en: 'Unable to generate QR code for this permit number.', bm: 'Tidak dapat menjana kod QR untuk nombor permit ini.' },
+    "Announcement created successfully.": { en: 'Announcement created successfully.', bm: 'Pengumuman berjaya dicipta.' },
+    "Announcement updated successfully.": { en: 'Announcement updated successfully.', bm: 'Pengumuman berjaya dikemas kini.' },
+    "Announcement deleted successfully.": { en: 'Announcement deleted successfully.', bm: 'Pengumuman berjaya dipadam.' },
+    "Announcement pinned successfully.": { en: 'Announcement pinned successfully.', bm: 'Pengumuman berjaya disemat.' },
+    "Announcement unpinned successfully.": { en: 'Announcement unpinned successfully.', bm: 'Semat pengumuman berjaya dibuang.' },
+    "Gallery created successfully.": { en: 'Gallery created successfully.', bm: 'Galeri berjaya dicipta.' },
+    "Gallery updated successfully.": { en: 'Gallery updated successfully.', bm: 'Galeri berjaya dikemas kini.' },
+    "Gallery deleted successfully.": { en: 'Gallery deleted successfully.', bm: 'Galeri berjaya dipadam.' },
+    "Order deleted successfully": { en: 'Order deleted successfully', bm: 'Pesanan berjaya dipadam' }
+};
+
+function getText(key) {
+    const lang = getLang();
+    const entry = t[key];
+    if (!entry) return key;
+    return entry[lang] || entry.en;
+}
+
 
 const $ = jQuery;
 window.$ = window.jQuery = jQuery;
@@ -15,6 +66,7 @@ $(document).ready(function () {
         serverSide: true,
         responsive: true,
         ajax: `${window.baseUrl}/internal/announcements/data`,
+        drawCallback: () => applyTranslations(document.body),
         columns: [
             { data: 'title', name: 'title' },
             { data: 'released_by_name', name: 'released_by_name' },
@@ -150,7 +202,7 @@ $(document).ready(function () {
             const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('viewAnnouncementModal'));
             modal.show();
         }).fail(function () {
-            Swal.fire('Error!', 'Failed to fetch data.', 'error');
+            Swal.fire(getText("error"), getText("fetchFailed"), 'error');
         });
     });
 
@@ -201,13 +253,13 @@ $(document).ready(function () {
         const id = $(this).data('id');
         
         Swal.fire({
-            title: 'Are you sure?',
-            text: "You won't be able to revert this!",
+            title: getText("areYouSure"),
+            text: getText("cannotRevert"),
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete it!'
+            confirmButtonText: getText("yesDeleteIt")
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
@@ -217,11 +269,11 @@ $(document).ready(function () {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function (response) {
-                        Swal.fire('Deleted!', response.message, 'success');
+                        Swal.fire(getText("deleted"), getText(response.message), 'success');
                         table.ajax.reload();
                     },
                     error: function (xhr) {
-                        Swal.fire('Error!', 'Something went wrong.', 'error');
+                        Swal.fire(getText("error"), getText("somethingWentWrong"), 'error');
                     }
                 });
             }
@@ -245,12 +297,12 @@ $(document).ready(function () {
                     const toastElement = new bootstrap.Toast(document.getElementById('editToast'));
                     toastElement.show();
                 } else {
-                    Swal.fire('Success', response.message, 'success');
+                    Swal.fire(getText("successTitle"), getText(response.message), 'success');
                 }
                 table.ajax.reload(null, false);
             },
             error: function (xhr) {
-                Swal.fire('Error!', 'Something went wrong.', 'error');
+                Swal.fire(getText("error"), getText("somethingWentWrong"), 'error');
             }
         });
     });
@@ -272,12 +324,12 @@ $(document).ready(function () {
                     const toastElement = new bootstrap.Toast(document.getElementById('editToast'));
                     toastElement.show();
                 } else {
-                    Swal.fire('Success', response.message, 'success');
+                    Swal.fire(getText("successTitle"), getText(response.message), 'success');
                 }
                 table.ajax.reload(null, false);
             },
             error: function (xhr) {
-                Swal.fire('Error!', 'Something went wrong.', 'error');
+                Swal.fire(getText("error"), getText("somethingWentWrong"), 'error');
             }
         });
     });
@@ -307,10 +359,10 @@ $(document).ready(function () {
             },
             success: function (response) {
                 bootstrap.Modal.getInstance(document.getElementById('shareEmailModal')).hide();
-                Swal.fire('Sent!', response.message, 'success');
+                Swal.fire(getText("sent"), getText(response.message), 'success');
             },
             error: function () {
-                Swal.fire('Error!', 'Failed to send emails. Please try again.', 'error');
+                Swal.fire(getText("error"), getText("failedToSendEmail"), 'error');
             },
             complete: function () {
                 btn.prop('disabled', false).html('<i class="ti ti-send me-1"></i> Confirm Send');

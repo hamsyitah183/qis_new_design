@@ -1,6 +1,31 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
-import { initTooltips } from "../../../app";
+import { initTooltips, applyTranslations } from "../../../app";
+
+function getLang() {
+    try {
+        return localStorage.getItem('qis_lang') || 'en';
+    } catch {
+        return 'en';
+    }
+}
+
+const t = {
+    loading: { en: 'Loading...', bm: 'Memuat...' },
+    updatingRole: { en: 'Updating role...', bm: 'Mengemas kini peranan...' },
+    updatingRolePermission: { en: 'Updating role permission...', bm: 'Mengemas kini kebenaran peranan...' },
+    roleUpdated: { en: 'Role Updated!', bm: 'Peranan Dikemas kini!' },
+    failed: { en: 'Failed!', bm: 'Gagal!' },
+    saveFailed: { en: 'Something went wrong while saving the user.', bm: 'Sesuatu yang tidak kena berlaku semasa menyimpan pengguna.' },
+};
+
+function getText(key) {
+    const lang = getLang();
+    const entry = t[key];
+    if (!entry) return key;
+    return entry[lang] || entry.en;
+}
+
 
 console.log("list role");
 
@@ -95,6 +120,8 @@ async function role_list() {
 
         roleTable.on("draw.dt", function () {
             initTooltips();
+            const currentLang = localStorage.getItem("qis_lang") || "en";
+            document.dispatchEvent(new CustomEvent("lang-changed", { detail: { lang: currentLang } }));
         });
     }
 
@@ -111,9 +138,9 @@ async function role_list() {
 
         // Build modal content
         const detailsHtml = `
-        <div class="mb-2 fw-bold fs-6">${rowData.name}</div>
-            <p><strong>users:</strong> ${listUser(rowData.user_count)}
-            <p><strong>Permissions:</strong> ${listPermission(
+        <div class="mb-2 fw-bold fs-6"><span class="ipv-role" data-original="${rowData.name}">${rowData.name}</span></div>
+            <p><strong data-en="users:" data-bm="pengguna:">users:</strong> ${listUser(rowData.user_count)}
+            <p><strong data-en="Permissions:" data-bm="Kebenaran:">Permissions:</strong> ${listPermission(
                 rowData.permission_names
             )}
         `;
@@ -122,6 +149,10 @@ async function role_list() {
         $("#roleDetailsContentModal").html(detailsHtml);
 
         initTooltips();
+
+        // Trigger translation
+        const currentLang = localStorage.getItem("qis_lang") || "en";
+        document.dispatchEvent(new CustomEvent("lang-changed", { detail: { lang: currentLang } }));
 
         const modal = new bootstrap.Modal(
             document.getElementById("roleDetailsModal")
@@ -174,7 +205,7 @@ function listPermission(permissions) {
     let permissionHTML = `<div class="d-flex gap-2 flex-wrap">`;
 
     permissions.forEach((permission) => {
-        permissionHTML += `<span class="badge bg-dark-transparent p-1">
+        permissionHTML += `<span class="badge bg-dark-transparent p-1 ipv-permission" data-original="${permission}">
             ${permission}
         </span>`;
     });
@@ -207,7 +238,7 @@ function listUserModal() {
         await new Promise((resolve) => setTimeout(resolve, 300)); // small delay for UX
 
         let html = `
-            <div class="fw-bold mb-2">Assign Users to Role: ${roleName}</div>
+            <div class="fw-bold mb-2"><span data-en="Assign Users to Role:" data-bm="Umpuk Pengguna ke Peranan:">Assign Users to Role:</span> <span class="ipv-role" data-original="${roleName}">${roleName}</span></div>
             <div class="list-group scrollable-grey">
         `;
 
@@ -229,6 +260,10 @@ function listUserModal() {
         html += `</div>`;
 
         $("#userListContainer").html(html);
+
+        // Trigger translation
+        const currentLang = localStorage.getItem("qis_lang") || "en";
+        document.dispatchEvent(new CustomEvent("lang-changed", { detail: { lang: currentLang } }));
 
         Swal.close();
 
@@ -253,9 +288,12 @@ function updateRole() {
             formData.append("role", roleName);
 
             Swal.fire({
-                title: "Updating role...",
+                title: getText("updatingRole"),
                 allowOutsideClick: false,
-                didOpen: () => Swal.showLoading(),
+                didOpen: () => {
+                    Swal.showLoading();
+                    applyTranslations(Swal.getHtmlContainer());
+                },
             });
 
             $.ajax({
@@ -273,7 +311,7 @@ function updateRole() {
                     console.log("response detail", response);
                     Swal.fire({
                         icon: "success",
-                        title: "Role Updated!",
+                        title: getText("roleUpdated"),
                         text: response.message,
                     });
 
@@ -296,8 +334,8 @@ function updateRole() {
                     } else {
                         Swal.fire({
                             icon: "error",
-                            title: "Failed!",
-                            text: "Something went wrong while saving the user.",
+                            title: getText("failed"),
+                            text: getText("saveFailed"),
                         });
                     }
                 },
@@ -339,10 +377,10 @@ function listPermissionModal() {
 
         // Build modal content with search input
         let html = `
-            <div class="fw-bold mb-2">Permission List for: ${roleName}</div>
+            <div class="fw-bold mb-2"><span data-en="Permission List for:" data-bm="Senarai Kebenaran untuk:">Permission List for:</span> <span class="ipv-role" data-original="${roleName}">${roleName}</span></div>
 
             <!-- Search box -->
-            <input type="text" id="permissionSearch" class="form-control mb-2" placeholder="Search permission...">
+            <input type="text" id="permissionSearch" class="form-control mb-2" placeholder="Search permission..." data-en="Search permission..." data-bm="Cari kebenaran..." data-i18n-attr="placeholder">
 
             <div class="list-group scrollable-grey" style="max-height: 400px; overflow-y: scroll;">
         `;
@@ -357,7 +395,7 @@ function listPermissionModal() {
                         name="permission[]"
                         value="${permission}"
                         ${checked}>
-                    <span>${permission}</span>
+                    <span class="ipv-permission" data-original="${permission}">${permission}</span>
                 </label>
             `;
         });
@@ -365,6 +403,10 @@ function listPermissionModal() {
         html += `</div>`;
 
         $("#permissionListContainer").html(html);
+
+        // Trigger translation
+        const currentLang = localStorage.getItem("qis_lang") || "en";
+        document.dispatchEvent(new CustomEvent("lang-changed", { detail: { lang: currentLang } }));
 
         // Add search functionality
         $("#permissionSearch").on("input", function () {
@@ -396,9 +438,12 @@ function updatePermission() {
             formData.append("role", roleName);
 
             Swal.fire({
-                title: "Updating role permission...",
+                title: getText("updatingRolePermission"),
                 allowOutsideClick: false,
-                didOpen: () => Swal.showLoading(),
+                didOpen: () => {
+                    Swal.showLoading();
+                    applyTranslations(Swal.getHtmlContainer());
+                },
             });
 
             $.ajax({
@@ -416,7 +461,7 @@ function updatePermission() {
                     console.log("response detail", response);
                     Swal.fire({
                         icon: "success",
-                        title: "Role Updated!",
+                        title: getText("roleUpdated"),
                         text: response.message,
                     });
 
@@ -440,8 +485,8 @@ function updatePermission() {
                     } else {
                         Swal.fire({
                             icon: "error",
-                            title: "Failed!",
-                            text: "Something went wrong while saving the user.",
+                            title: getText("failed"),
+                            text: getText("saveFailed"),
                         });
                     }
                 },

@@ -41,18 +41,19 @@ class DocumentController extends Controller
         return DataTables::of($documents)
             ->addColumn('status_badge', function ($doc) {
                 $class = $doc->is_active ? 'success' : 'danger';
-                $label = $doc->is_active ? 'Active' : 'Inactive';
-                return '<span class="badge bg-' . $class . '">' . $label . '</span>';
+                $labelEn = $doc->is_active ? 'Active' : 'Inactive';
+                $labelBm = $doc->is_active ? 'Aktif' : 'Tidak Aktif';
+                return '<span class="badge bg-' . $class . '" data-en="' . $labelEn . '" data-bm="' . $labelBm . '">' . $labelEn . '</span>';
             })
             ->addColumn('required_badge', function ($doc) {
                 return $doc->is_required
-                    ? '<span class="badge bg-warning text-dark">Required</span>'
-                    : '<span class="badge bg-secondary">Optional</span>';
+                    ? '<span class="badge bg-warning text-dark" data-en="Required" data-bm="Wajib">Required</span>'
+                    : '<span class="badge bg-secondary" data-en="Optional" data-bm="Pilihan">Optional</span>';
             })
             ->addColumn('expiry_badge', function ($doc) {
                 return $doc->requires_expiry
-                    ? '<span class="badge bg-info">Has Expiry</span>'
-                    : '<span class="badge bg-secondary">No Expiry</span>';
+                    ? '<span class="badge bg-info" data-en="Has Expiry" data-bm="Tarikh Luput">Has Expiry</span>'
+                    : '<span class="badge bg-secondary" data-en="No Expiry" data-bm="Tiada Tarikh Luput">No Expiry</span>';
             })
             ->addColumn('action', function ($doc) {
                 return $doc->id;
@@ -214,8 +215,8 @@ class DocumentController extends Controller
             })
             ->addColumn('is_read_badge', function ($att) {
                 return $att->is_read
-                    ? '<span class="badge bg-success-transparent">Read</span>'
-                    : '<span class="badge bg-warning-transparent">Unread</span>';
+                    ? '<span class="badge bg-success-transparent" data-en="Read" data-bm="Dibaca">Read</span>'
+                    : '<span class="badge bg-warning-transparent" data-en="Unread" data-bm="Belum Dibaca">Unread</span>';
             })
             ->addColumn('rejected_reason_button', function ($att) {
                 if (empty($att->rejected_reason)) {

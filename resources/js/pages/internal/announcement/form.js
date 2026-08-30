@@ -1,6 +1,57 @@
 import jQuery from "jquery";
 import "quill/dist/quill.snow.css";
 import Swal from "sweetalert2";
+import { applyTranslations } from "../../../app";
+
+function getLang() {
+    try {
+        return localStorage.getItem('qis_lang') || 'en';
+    } catch {
+        return 'en';
+    }
+}
+
+const t = {
+    error: { en: 'Error!', bm: 'Ralat!' },
+    fetchFailed: { en: 'Failed to fetch data.', bm: 'Gagal mendapatkan data.' },
+    areYouSure: { en: 'Are you sure?', bm: 'Adakah anda pasti?' },
+    cannotRevert: { en: "You won't be able to revert this!", bm: 'Anda tidak akan dapat mengembalikannya!' },
+    yesDeleteIt: { en: 'Yes, delete it!', bm: 'Ya, padamkannya!' },
+    yesDelete: { en: 'Yes', bm: 'Ya' },
+    deleted: { en: 'Deleted!', bm: 'Dipadam!' },
+    somethingWentWrong: { en: 'Something went wrong.', bm: 'Sesuatu yang tidak kena berlaku.' },
+    success: { en: 'Success!', bm: 'Berjaya!' },
+    successTitle: { en: 'Success', bm: 'Berjaya' },
+    sent: { en: 'Sent!', bm: 'Dihantar!' },
+    failedToSendEmail: { en: 'Failed to send emails. Please try again.', bm: 'Gagal menghantar e-mel. Sila cuba lagi.' },
+    deleteFileTitle: { en: 'Delete file?', bm: 'Padam fail?' },
+    contentRequired: { en: 'Content is required', bm: 'Kandungan diperlukan' },
+    validDateError: { en: 'Valid Until date cannot be earlier than Valid From date', bm: 'Tarikh Sah Sehingga tidak boleh lebih awal daripada tarikh Sah Dari' },
+    warning: { en: 'Warning!', bm: 'Amaran!' },
+    filesFailedToUpload: { en: 'Announcement saved but files failed to upload.', bm: 'Pengumuman disimpan tetapi fail gagal dimuat naik.' },
+    failedToFetchGallery: { en: 'Failed to fetch gallery details', bm: 'Gagal mendapatkan butiran galeri' },
+    nameRequired: { en: 'Name is required', bm: 'Nama diperlukan' },
+    orderDeletedSuccess: { en: 'Order deleted successfully', bm: 'Pesanan berjaya dipadam' },
+    qrFailed: { en: 'QR Generation Failed', bm: 'Penjanaan QR Gagal' },
+    qrUnable: { en: 'Unable to generate QR code for this permit number.', bm: 'Tidak dapat menjana kod QR untuk nombor permit ini.' },
+    "Announcement created successfully.": { en: 'Announcement created successfully.', bm: 'Pengumuman berjaya dicipta.' },
+    "Announcement updated successfully.": { en: 'Announcement updated successfully.', bm: 'Pengumuman berjaya dikemas kini.' },
+    "Announcement deleted successfully.": { en: 'Announcement deleted successfully.', bm: 'Pengumuman berjaya dipadam.' },
+    "Announcement pinned successfully.": { en: 'Announcement pinned successfully.', bm: 'Pengumuman berjaya disemat.' },
+    "Announcement unpinned successfully.": { en: 'Announcement unpinned successfully.', bm: 'Semat pengumuman berjaya dibuang.' },
+    "Gallery created successfully.": { en: 'Gallery created successfully.', bm: 'Galeri berjaya dicipta.' },
+    "Gallery updated successfully.": { en: 'Gallery updated successfully.', bm: 'Galeri berjaya dikemas kini.' },
+    "Gallery deleted successfully.": { en: 'Gallery deleted successfully.', bm: 'Galeri berjaya dipadam.' },
+    "Order deleted successfully": { en: 'Order deleted successfully', bm: 'Pesanan berjaya dipadam' }
+};
+
+function getText(key) {
+    const lang = getLang();
+    const entry = t[key];
+    if (!entry) return key;
+    return entry[lang] || entry.en;
+}
+
 
 const $ = jQuery;
 window.$ = window.jQuery = jQuery;
@@ -127,10 +178,10 @@ $(document).ready(function () {
         const container = $(this).closest('.attachment-item');
         
         Swal.fire({
-            title: 'Delete file?',
+            title: getText("deleteFileTitle"),
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Yes'
+            confirmButtonText: getText("yesDelete")
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
@@ -179,7 +230,7 @@ $(document).ready(function () {
         const title = $('#title').val();
         const content = quill.root.innerHTML;
         if (quill.getText().trim().length === 0) {
-            Swal.fire('Error', 'Content is required', 'error');
+            Swal.fire(getText("error"), getText("contentRequired"), 'error');
             btn.prop('disabled', false).html(originalText);
             return;
         }
@@ -188,7 +239,7 @@ $(document).ready(function () {
         const valid_until = $('#valid_until').val();
         
         if (valid_from && valid_until && valid_until < valid_from) {
-            Swal.fire('Error', 'Valid Until date cannot be earlier than Valid From date', 'error');
+            Swal.fire(getText("error"), getText("validDateError"), 'error');
             btn.prop('disabled', false).html(originalText);
             return;
         }
@@ -235,28 +286,28 @@ $(document).ready(function () {
                         contentType: false,
                         headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
                         success: function() {
-                            Swal.fire('Success!', response.message, 'success').then(() => {
+                            Swal.fire(getText("success"), getText(response.message), 'success').then(() => {
                                 window.location.href = `${window.baseUrl}/internal/announcements`;
                             });
                         },
                         error: function() {
-                            Swal.fire('Warning!', 'Announcement saved but files failed to upload.', 'warning').then(() => {
+                            Swal.fire(getText("warning"), getText("filesFailedToUpload"), 'warning').then(() => {
                                 window.location.href = `${window.baseUrl}/internal/announcements`;
                             });
                         }
                     });
                 } else {
-                    Swal.fire('Success!', response.message, 'success').then(() => {
+                    Swal.fire(getText("success"), getText(response.message), 'success').then(() => {
                         window.location.href = `${window.baseUrl}/internal/announcements`;
                     });
                 }
             },
             error: function (xhr) {
-                let errorMsg = 'Something went wrong';
+                let errorMsg = getText("somethingWentWrong");
                 if (xhr.responseJSON && xhr.responseJSON.message) {
                     errorMsg = xhr.responseJSON.message;
                 }
-                Swal.fire('Error!', errorMsg, 'error');
+                Swal.fire(getText("error"), errorMsg, 'error');
                 btn.prop('disabled', false).html(originalText);
             }
         });

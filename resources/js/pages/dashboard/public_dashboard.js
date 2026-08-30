@@ -1,6 +1,8 @@
 import ApexCharts from 'apexcharts'
 import $ from "jquery";
 import Swal from "sweetalert2";
+import { applyTranslations } from "../../app";
+
 function getReviewCount()
 {
     // /application/review/list/data
@@ -14,9 +16,14 @@ function getReviewCount()
         let recordCount = response.recordsTotal;
 
         if(recordCount > 0) {
-            $('#toReviewCount').html(`To Review <span class="badge ms-3 bg-success">${recordCount}</span>`)
+            $('#toReviewCount').html(`<span data-en="To Review" data-bm="Untuk Disemak">To Review</span> <span class="badge ms-3 bg-success">${recordCount}</span>`)
         } else {
-            $('#toReviewCount').html(`To Review`)
+            $('#toReviewCount').html(`<span data-en="To Review" data-bm="Untuk Disemak">To Review</span>`)
+        }
+
+        const container = document.getElementById('toReviewCount');
+        if (container && typeof applyTranslations === 'function') {
+            applyTranslations(container);
         }
        
 

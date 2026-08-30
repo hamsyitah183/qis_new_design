@@ -199,17 +199,17 @@
 
     @if ($type === 'internal')
         {{-- 📑 Inspection Export Modal --}}
-        <x-modal id="inspectionExportModal" title="Download Report" size="modal-dialog-centered">
+        <x-modal id="inspectionExportModal" title="Download Report" title_en="Download Report" title_bm="Muat Turun Laporan" size="modal-dialog-centered">
             <div class="p-3 text-center">
                 <p data-en="Select the format for your exported report. The current filters will be applied." data-bm="Pilih format untuk laporan yang dieksport. Tapis semasa akan digunakan.">Select the format for your exported report. The current filters will be applied.</p>
                 <div class="d-flex justify-content-center gap-3 mt-4">
                     <button type="button" class="btn btn-success btn-md d-flex align-items-center gap-2"
                         id="btnConfirmExportExcel">
-                        <i class="ti ti-file-spreadsheet fs-20"></i> Excel (CSV)
+                        <i class="ti ti-file-spreadsheet fs-20"></i> <span data-en="Excel (CSV)" data-bm="Excel (CSV)">Excel (CSV)</span>
                     </button>
                     <button type="button" class="btn btn-danger btn-md d-flex align-items-center gap-2"
                         id="btnConfirmExportPdf">
-                        <i class="ti ti-file-description fs-20"></i> PDF Document
+                        <i class="ti ti-file-description fs-20"></i> <span data-en="PDF Document" data-bm="Dokumen PDF">PDF Document</span>
                     </button>
                 </div>
             </div>
