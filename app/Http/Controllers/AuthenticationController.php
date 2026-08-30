@@ -123,12 +123,20 @@ class AuthenticationController extends Controller
             ? now()->addDays(30)
             : now()->addHours(24);
 
-        $token = $user->createToken('scanner-app', ['*'], $expiresAt)->plainTextToken;
+        // Single-device policy: revoke all previous tokens, keep only this one.
+        $user->tokens()->delete();
+
+        $token = $user->createToken('scanner-app', ['*'], $expiresAt);
+
+        $token->accessToken->forceFill([
+            'ip_address' => $request->ip(),
+            'user_agent' => substr((string) $request->userAgent(), 0, 255),
+        ])->save();
 
         return response()->json([
             'status' => 'success',
             'message' => 'Login successful.',
-            'token' => $token,
+            'token' => $token->plainTextToken,
             'expires_at' => $expiresAt->toIso8601String(),
             'user' => [
                 'uuid' => $user->uuid,

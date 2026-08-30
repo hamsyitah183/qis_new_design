@@ -354,7 +354,7 @@ Other possible `message` values: `Invalid or Tampered QR Code`, `Internal scanne
   "application_type": "Import Permit",
   "item_name": "Steel Coil",
   "is_used": true,
-  "action": "endorsed",
+  "action": "approved",
   "endorsed_by": "Ali Bin Ahmad",
   "endorsed_at": "01-01-2025 10:30:00 AM",
   "endorsed_location": "Port Klang Gate 3",
@@ -362,6 +362,8 @@ Other possible `message` values: `Invalid or Tampered QR Code`, `Internal scanne
   "endorsed_lng": 101.4
 }
 ```
+
+`action` values: `approved` | `rejected` (from `qr_permit_usages.status`). `is_valid` on the logged scan = `0` when already consumed, `1` when still valid/unconsumed.
 
 `application_type` values: `Import Permit` | `Inspection Certificate` | `Consignment Certificate`.
 
@@ -410,6 +412,82 @@ GET /api/permits/pending?application_type=Import%20Permit
 ```
 
 **Response `401`:** `{"message": "Unauthenticated."}`
+
+---
+
+## 10b. POST `/api/permits/search` 🔒 Auth required
+
+Search issued permits (`status=paid`) by permit number and/or importer/exporter name. Searches all three permit types; one result per item (multi-item permits repeat `permit_details`).
+
+**Headers:** `Authorization: Bearer <token>`.
+
+**Request body (JSON):**
+
+| Field | Type | Required | Rules |
+|---|---|---|---|
+| `permit_number` | string | no* | Exact match, case-insensitive |
+| `importer` | string | no* | Exact match; OR with `exporter` |
+| `exporter` | string | no* | Exact match; OR with `importer` |
+| `limit` | int | no | Max results (default `50`, max `100`) |
+
+\* At least one of `permit_number` / `importer` / `exporter` required.
+
+**Matching logic:** provided fields combine as AND; importer + exporter are OR within the name group.
+
+**Example payload:**
+
+```json
+{
+  "permit_number": "SP/2608307190",
+  "importer": "Chong"
+}
+```
+
+**Response `200`:**
+
+```json
+{
+  "status": "success",
+  "permits": [
+    {
+      "permit_details": {
+        "permit_number": "SP/2608307190",
+        "application_type": "Inspection Certificate",
+        "importer": "Chong",
+        "exporter": "China Enterprise",
+        "entrypoint": {
+          "entry_name": "Sepanggar Container Port",
+          "transport_type": "Sea",
+          "eta": "03-09-2026"
+        }
+      },
+      "item_details": {
+        "item_name": "Apple",
+        "category": null,
+        "quantity": "250",
+        "unit_measurement": "KG",
+        "value": "25000",
+        "purpose": "Commercial (Human consumption)",
+        "uses": "fresh produce"
+      }
+    }
+  ]
+}
+```
+
+- `permit_details`: permit number, application type, importer, exporter, entrypoint (`entry_name`, `transport_type`, `eta` as `d-m-Y`).
+- `item_details`: from `consignment_detail` JSON — `item_name`, `category`, `quantity`, `unit_measurement` (key `measure`), `value`, `purpose`, `uses`.
+- `quantity` / `value` are strings (JSON source). `category` / `uses` / `purpose` null when absent.
+- Multi-item permit → same `permit_details`, different `item_details` per row.
+- No match → `"permits": []`.
+
+**Error responses:**
+
+| Code | Body |
+|---|---|
+| `401` | `{"message": "Unauthenticated."}` |
+| `422` | `{"status":"error","message":"At least one of permit_number, importer, or exporter is required."}` |
+| `403` | `{"status":"error","message":"Internal scanner identity is required."}` |
 
 ---
 
@@ -469,8 +547,8 @@ Record the result of a scanned permit inspection (approve/reject), with live GPS
 | `500` | `{"status":"error","message":"Failed to log scan completion."}` |
 
 Behavior:
-- `inspection_status=approved` → records `endorsed`, writes `QrScanLog` (`result=approved`), fires `OrderQrUsed` broadcast event.
-- `inspection_status=rejected` → records `ignored`, writes `QrScanLog` (`result=rejected`).
+- `inspection_status=approved` → records `qr_permit_usages.status=approved`, writes `QrScanLog` (`result=approved`), fires `OrderQrUsed` broadcast event.
+- `inspection_status=rejected` → records `qr_permit_usages.status=rejected`, writes `QrScanLog` (`result=rejected`).
 - Both statuses log GPS + location into `qr_scan_logs`.
 - Marks `orders.qr_used_at` / `qr_used_by_uuid`.
 
@@ -486,8 +564,8 @@ Scan history for the logged-in internal user (non-admin). Only own scans.
 
 | Param | Type | Required | Description |
 |---|---|---|---|
-| `result` | string | no | `approved` or `rejected` — filter by scan outcome |
-| `per_page` | int | no | Items per page (default `15`) |
+| `result` | string | no | `approved`, `rejected`, `valid`, `used`, `invalid` — filter by scan outcome |
+| `per_page` | int | no | Items per page (default `15`, max `100`) |
 
 **Response `200`:** Laravel paginator under `logs`, each item:
 
@@ -525,7 +603,7 @@ Scan history for the logged-in internal user (non-admin). Only own scans.
 | Code | Body |
 |---|---|
 | `401` | `{"status":"error","message":"Unauthenticated."}` (missing/expired token) |
-| `422` | `{"status":"error","message":"result must be \"approved\" or \"rejected\"."}` |
+| `422` | `{"status":"error","message":"result must be one of: approved, rejected, valid, used, invalid."}` |
 
 ---
 
@@ -575,7 +653,7 @@ All scan history across every internal user. Requires `admin` or `superadmin` ro
 |---|---|
 | `401` | `{"status":"error","message":"Unauthenticated."}` (missing/expired token) |
 | `403` | `{"status":"error","message":"Unauthorized: admins only."}` (non-admin token) |
-| `422` | `{"status":"error","message":"result must be \"approved\" or \"rejected\"."}` |
+| `422` | `{"status":"error","message":"result must be one of: approved, rejected, valid, used, invalid."}` |
 
 ---
 

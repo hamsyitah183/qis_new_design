@@ -40,6 +40,7 @@ Route::middleware('api')->group(function () {
 
 Route::get('/permit/validate', [ApplicationPaymentController::class, 'validatePermitApi'])->middleware('auth:internal-api');
 Route::get('/permits/pending', [ApplicationPaymentController::class, 'pendingPermitsApi'])->middleware('auth:internal-api');
+Route::post('/permits/search', [ApplicationPaymentController::class, 'searchPermitsApi'])->middleware('auth:internal-api');
 Route::post('/qr-scan/complete-scan', [ApplicationPaymentController::class, 'completeQrScan'])->middleware('auth:internal-api');
 Route::get('/qr-scan/history', [ApplicationPaymentController::class, 'getScanHistoryApi'])->middleware('auth:internal-api');
 Route::get('/qr-scan/history/all', [ApplicationPaymentController::class, 'getAllScanHistoryApi'])->middleware('auth:internal-api');
