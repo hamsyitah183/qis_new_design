@@ -386,6 +386,8 @@ Route::prefix('internal')
 
         // Document Requirements Management
         Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
+        Route::get('/documents/add', [DocumentController::class, 'create'])->name('documents.add');
+        Route::get('/documents/{id}/edit', [DocumentController::class, 'edit'])->name('documents.edit');
         Route::get('/documents/data', [DocumentController::class, 'data'])->name('documents.data');
         Route::get('/documents/view/{id}', [DocumentController::class, 'showView'])->name('documents.view');
         Route::get('/documents/{id}/attachments/data', [DocumentController::class, 'attachmentsData'])->name('documents.attachments.data');
@@ -393,6 +395,8 @@ Route::prefix('internal')
         Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
         Route::put('/documents/{id}', [DocumentController::class, 'update'])->name('documents.update');
         Route::delete('/documents/{id}', [DocumentController::class, 'destroy'])->name('documents.destroy');
+
+        Route::post('documents/upload-file', [DocumentController::class, 'uploadFile']);
     });
 
 // Publicly accessible location routes
@@ -636,13 +640,18 @@ Route::middleware(['auth.any'])->group(function () {
 
     // download to pdf
     Route::get('/consignment/application/{id}/print', [ConsignmentController::class, 'printApplication'])
-    ->name('consignment.application.print');
+        ->name('consignment.application.print');
 
     Route::get('/import/application/{id}/print', [ApplicationController::class, 'printImportPermit'])->name('import-permit.print');
     Route::get('/inspection/application/{id}/print', [InspectionController::class, 'printInspection'])->name('inspection.print');
 
     // uses
     Route::get('/consignment_uses', [PublicController::class, 'getConsignmentUses'])->name('consignment.uses');
+
+
+
+
+    Route::get('documents/temp-preview/{filename}', [DocumentController::class, 'tempPreview'])->name('documents.temp-preview');
 });
 
 // broadcast --dont kacau---

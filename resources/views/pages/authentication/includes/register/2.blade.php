@@ -61,7 +61,7 @@
 
             <!-- Address 1 -->
             <div class="col-xl-12">
-                <label class="form-label text-default"><span data-en="Address" data-bm="Alamat">Address 1</span>
+                <label class="form-label text-default"><span data-en="Address" data-bm="Alamat">Address</span>
                     <span class="text-primary2">*</span></label>
                 <textarea name="address_1" id="" cols="30" rows="2" class="form-control border"></textarea>
             </div>

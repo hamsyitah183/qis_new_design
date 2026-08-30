@@ -110,7 +110,7 @@
 
                 <div class="col-xl-3">
                     <div class="lh-1">
-                        <span class="fw-medium" data-en="Address 1 :" data-bm="Alamat 1 :">Address 1 :</span>
+                        <span class="fw-medium" data-en="Address :" data-bm="Alamat:">Address:</span>
                     </div>
                 </div>
                 <div class="col-xl-9">
@@ -118,7 +118,7 @@
                     <textarea name="address_1" id="" cols="30" rows="3" class="form-control border address_1"></textarea>
                 </div>
 
-                <div class="col-xl-3 d-none">
+                {{-- <div class="col-xl-3 d-none">
                     <div class="lh-1">
                         <span class="fw-medium" data-en="Address 2 :" data-bm="Alamat 2 :">Address 2 :</span>
                     </div>
@@ -126,7 +126,7 @@
                 <div class="col-xl-9">
 
                     <textarea name="address_2" id="" cols="30" rows="3" class="form-control border address_2"></textarea>
-                </div>
+                </div> --}}
 
 
 

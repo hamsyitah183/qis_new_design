@@ -256,7 +256,7 @@
 
                 <div class="ipv-divider"></div>
 
-                @if ($application->status == 'Draft' && $application->user_id === $authUuid)
+                @if ( ($application->status == 'Draft' || $application->status == 'Clerk Rejected') && $application->user_id === $authUuid) 
                     <a class="ipv-btn-outline w-100 justify-content-center mt-3 btn btn-primary" id="editButton"
                         href="/edit_application/{{ $application->application_id }}">
                         <i class="bi bi-pencil"></i> <span data-en="Edit Application" data-bm="Kemaskini Permohonan">Edit

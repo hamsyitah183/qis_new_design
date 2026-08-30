@@ -13,7 +13,12 @@ class ConsignmentApplicationAttachment extends Model
         'application_id',
         'file_name',
         'file_path',
-        'file_type'
+        'file_type',
+        'description'
     ];
 
+    public function application()
+    {
+        return $this->belongsTo(ConsignmentApplication::class, 'application_id', 'id');
+    }
 }

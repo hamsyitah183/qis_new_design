@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\DocumentRequirement;
 use App\Models\UserAttachment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
 
@@ -16,6 +17,18 @@ class DocumentController extends Controller
     public function index()
     {
         return view('pages.internal.documents.list');
+    }
+
+    public function create()
+    {
+        return view('pages.internal.documents.add');
+    }
+
+    public function edit($id)
+    {
+        $document = DocumentRequirement::findOrFail($id);
+
+        return view('pages.internal.documents.edit', compact('document'));
     }
 
     /**
@@ -199,10 +212,95 @@ class DocumentController extends Controller
             ->addColumn('valid_until_formatted', function ($att) {
                 return $att->valid_until ? $att->valid_until->format('d M Y') : '—';
             })
-            ->addColumn('action', function ($att) {
-                return '<a href="' . asset('storage/' . $att->file_path) . '" target="_blank" class="btn btn-sm btn-primary">Download</a>';
+            ->addColumn('is_read_badge', function ($att) {
+                return $att->is_read
+                    ? '<span class="badge bg-success-transparent">Read</span>'
+                    : '<span class="badge bg-warning-transparent">Unread</span>';
             })
-            ->rawColumns(['action'])
+            ->addColumn('rejected_reason_button', function ($att) {
+                if (empty($att->rejected_reason)) {
+                    return '<span class="text-muted">—</span>';
+                }
+                $reason = htmlspecialchars($att->rejected_reason, ENT_QUOTES);
+                return '<button type="button" class="btn btn-sm btn-danger-light view-reject-reason-btn" data-reason="' . $reason . '">
+                        <i class="ti ti-alert-circle"></i> Reason
+                    </button>';
+            })
+            ->addColumn('action', function ($att) {
+                return $att->id;
+            })
+            ->rawColumns(['is_read_badge', 'rejected_reason_button', 'action'])
             ->make(true);
+    }
+
+    public function uploadFile(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|max:5120|mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx',
+        ]);
+
+        $file = $request->file('file');
+        $mime = $file->getMimeType();
+        $isImage = str_starts_with($mime, 'image/');
+
+        // Store in the private temp disk, NOT public
+        $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+        $file->storeAs('', $filename, 'temp-uploads');
+
+        return response()->json([
+            // Served through a controlled preview route, not a direct public path
+            'url'      => route('internal.documents.temp-preview', ['filename' => $filename]),
+            'temp_key' => $filename,
+            'is_image' => $isImage,
+            'name'     => $file->getClientOriginalName(),
+            'size'     => $file->getSize(),
+        ]);
+    }
+
+    /**
+     * Stream a temp-uploaded file back for preview while editing.
+     */
+    public function tempPreview($filename)
+    {
+        $path = storage_path('app/temp-uploads/' . basename($filename));
+
+        if (!file_exists($path)) {
+            abort(404);
+        }
+
+        return response()->file($path);
+    }
+
+    /**
+     * Move any temp-uploaded files referenced in the HTML into permanent public storage,
+     * and rewrite the HTML to point at the final URLs.
+     */
+    private function promoteTempFiles(string $html): string
+    {
+        // Match our temp-preview route URLs used as src="" or href=""
+        return preg_replace_callback(
+            '/(?:src|href)="([^"]*documents\/temp-preview\/([a-zA-Z0-9._-]+))"/',
+            function ($matches) {
+                $fullUrl = $matches[1];
+                $filename = $matches[2];
+
+                $tempPath = storage_path('app/temp-uploads/' . $filename);
+
+                if (!file_exists($tempPath)) {
+                    return $matches[0]; // leave untouched if already gone
+                }
+
+                $contents = file_get_contents($tempPath);
+                $permanentPath = 'document-descriptions/' . $filename;
+                Storage::disk('public')->put($permanentPath, $contents);
+
+                @unlink($tempPath);
+
+                $permanentUrl = Storage::url($permanentPath);
+
+                return str_replace($fullUrl, $permanentUrl, $matches[0]);
+            },
+            $html
+        );
     }
 }

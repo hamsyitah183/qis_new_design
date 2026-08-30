@@ -310,7 +310,7 @@ class ConsignmentController extends Controller
 
         // Fetch application and eager load relationships
         $application = ConsignmentApplication::where('application_id', $id)
-            ->with(['user', 'importer', 'exporter', 'entryPoint.districtCode', 'consignmentPermits.attachments', 'activity_log.causer'])
+            ->with(['user', 'importer', 'exporter', 'entryPoint.districtCode', 'consignmentPermits.attachments', 'activity_log.causer', 'attachments'])
             ->firstOrFail();
 
         $application['print_calc'] = $application->print_calc;

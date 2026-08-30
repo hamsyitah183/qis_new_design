@@ -89,7 +89,7 @@
                         <td>
                             <!-- Header with logo -->
                             <div class="email-header">
-                                <img src="{{ asset('images/logo-DOA.png') }}" alt="{{ config('app.name') }} Logo">
+                                <img src="{{ asset('images/Logo-DOA.png') }}" alt="{{ config('app.name') }} Logo">
                                 <h2>{{ config('app.name') }}</h2>
                             </div>
 
