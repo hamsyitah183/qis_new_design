@@ -315,7 +315,9 @@ class InspectionController extends Controller
                            </button>';
                 }
 
-                return $view . $delete;
+                $download = '<button class="btn btn-sm btn-secondary downloadApplication ms-1" data-id="' . $row->application_id . '" title="Download Application"> <i class="fa-solid fa-print"></i> </button>';
+
+                return $view . $delete . $download;
             });
 
         if ($type === 'internal') {

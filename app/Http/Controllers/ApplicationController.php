@@ -321,7 +321,10 @@ class ApplicationController extends Controller
                 if (authUser()['type'] === 'internal') {
                     $delete = '<button class="btn btn-sm btn-danger deleteApplication" data-id="' . $row->application_id . '"><i class="ti ti-trash"></i></button>';
                 }
-                return $view . ' ' . $delete;
+
+                $download = '<button class="btn btn-sm btn-secondary downloadApplication" data-id="' . $row->application_id . '" title="Download Application"> <i class="fa-solid fa-print"></i> </button>';
+
+                return $view . ' ' . $delete . ' ' . $download;
             });
 
         if ($type === 'internal') {
@@ -338,9 +341,7 @@ class ApplicationController extends Controller
     {
         return '
         <span class="badge bg-' . $color . ' fs-12 p-1 activityLog" data-log="' . $id . '" data-en="' . $en . '" data-bm="' . $bm . '">' . $en . '</span>
-        <br class="mt-1">
-        <small class="text-muted"><span data-en="at" data-bm="pada">at</span> ' . $time . '</small><br>
-        <small class="text-muted"><span data-en="by" data-bm="oleh">by</span> ' . e($user) . '</small>
+        
     ';
     }
 
@@ -459,14 +460,14 @@ class ApplicationController extends Controller
                 if ($matchedKey) {
                     $en = $statusTranslations[$matchedKey]['en'];
                     $bm = $statusTranslations[$matchedKey]['bm'];
-                    
+
                     $color = match (true) {
                         str_contains($matchedKey, 'pending') => 'warning',
                         str_contains($matchedKey, 'rejected') => 'danger',
                         str_contains($matchedKey, 'approved') || str_contains($matchedKey, 'success') => 'success',
                         default => 'secondary',
                     };
-                    
+
                     return '<span class="badge bg-' . $color . ' fs-11 p-2" data-en="' . $en . '" data-bm="' . $bm . '">' . $en . '</span>';
                 }
 
@@ -572,14 +573,14 @@ class ApplicationController extends Controller
                 if ($matchedKey) {
                     $en = $statusTranslations[$matchedKey]['en'];
                     $bm = $statusTranslations[$matchedKey]['bm'];
-                    
+
                     $color = match (true) {
                         str_contains($matchedKey, 'pending') => 'warning',
                         str_contains($matchedKey, 'rejected') => 'danger',
                         str_contains($matchedKey, 'approved') || str_contains($matchedKey, 'success') => 'success',
                         default => 'secondary',
                     };
-                    
+
                     return '<span class="badge bg-' . $color . ' fs-11 p-2" data-en="' . $en . '" data-bm="' . $bm . '">' . $en . '</span>';
                 }
 

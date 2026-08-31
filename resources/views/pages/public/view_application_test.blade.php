@@ -84,6 +84,11 @@
                 str_contains($importerVerify, 'wait for representative approval')) &&
             $isImporterVerifier;
         $showAdminRejectedActions = str_contains($status, 'rejected') && $isAdmin;
+
+        $showPaymentActionBar =
+            $isPublic &&
+            $application->user_id === $authUuid &&
+            str_contains(strtolower($application->status ?? ''), 'officer verification completed');
     @endphp
 
     {{-- Feed real application context to test1.js instead of URL-parsing --}}
@@ -110,7 +115,7 @@
         {{-- ============================================================ --}}
         {{-- APPLICATION-LEVEL ACTIONS BAR --}}
         {{-- ============================================================ --}}
-        @if ($showClerkReviewActions || $showImporterVerifyActions || $showAdminRejectedActions)
+        @if ($showClerkReviewActions || $showImporterVerifyActions || $showAdminRejectedActions || $showPaymentActionBar)
             <div class="col-xl-12">
                 <div class="ipv-actions-bar">
                     <div class="ipv-actions-bar-text">
@@ -134,6 +139,11 @@
                             <span data-en="This application was rejected. You may review and re-evaluate it."
                                 data-bm="Permohonan ini telah ditolak. Anda boleh menyemak dan menilai semula.">This
                                 application was rejected. You may review and re-evaluate it.</span>
+                        @elseif ($showPaymentActionBar)
+                            <span data-en="Your application has been verified by the officer. Please proceed to payment."
+                                data-bm="Permohonan anda telah disahkan oleh pegawai. Sila teruskan ke pembayaran.">
+                                Your application has been verified by the officer. Please proceed to payment.
+                            </span>
                         @endif
                     </div>
                     <div class="ipv-actions-bar-buttons">
@@ -155,6 +165,12 @@
                             <button id="rejectAppl" class="ipv-btn-action is-danger">
                                 <i class="bi bi-x-lg"></i> <span data-en="Reject Application"
                                     data-bm="Tolak Permohonan">Reject Application</span>
+                            </button>
+                        @endif
+                        @if ($showPaymentActionBar)
+                            <button id="goToPaymentTabBtn" class="ipv-btn-action btn btn-info">
+                                <i class="bi bi-credit-card"></i> <span data-en="Go to Payment"
+                                    data-bm="Pergi ke Pembayaran">Go to Payment</span>
                             </button>
                         @endif
                     </div>
@@ -256,7 +272,9 @@
 
                 <div class="ipv-divider"></div>
 
-                @if ( ($application->status == 'Draft' || $application->status == 'Clerk Rejected') && $application->user_id === $authUuid) 
+                @if (
+                    ($application->status == 'Draft' || $application->status == 'Clerk Rejected') &&
+                        $application->user_id === $authUuid)
                     <a class="ipv-btn-outline w-100 justify-content-center mt-3 btn btn-primary" id="editButton"
                         href="/edit_application/{{ $application->application_id }}">
                         <i class="bi bi-pencil"></i> <span data-en="Edit Application" data-bm="Kemaskini Permohonan">Edit
@@ -665,6 +683,98 @@
         </form>
     </div>
 
+
+    <div class="modal fade" id="quickAddConditionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" data-en="Add New Permit Condition Item"
+                        data-bm="Tambah Item Syarat Permit Baharu">
+                        Add New Permit Condition Item
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="qacPermitId">
+                    <div class="row gy-3">
+                        <div class="col-xl-12">
+                            <label class="form-label" data-en="Item Name" data-bm="Nama Item">Item Name</label>
+                            <input type="text" class="form-control" id="qacItemName">
+                        </div>
+                        <div class="col-xl-12">
+                            <label class="form-label" data-en="Scientific Name" data-bm="Nama Saintifik">Scientific
+                                Name</label>
+                            <input type="text" class="form-control" id="qacScientificName">
+                        </div>
+                        <div class="col-xl-6">
+                            <label class="form-label" data-en="Category" data-bm="Kategori">Category</label>
+                            <select class="form-select" id="qacCategory"></select>
+                        </div>
+                        <div class="col-xl-3">
+                            <label class="form-label" data-en="Quantity Limit" data-bm="Had Kuantiti">Quantity
+                                Limit</label>
+                            <input type="text" class="form-control" id="qacQuanLimit">
+                        </div>
+                        <div class="col-xl-3">
+                            <label class="form-label" data-en="Measurement Unit" data-bm="Unit Ukuran">Measurement
+                                Unit</label>
+                            <select class="form-select" id="qacQuanUnit"></select>
+                        </div>
+                        <div class="col-xl-12">
+                            <label class="form-label" data-en="Permit Condition" data-bm="Syarat Permit">Permit
+                                Condition</label>
+                            <div id="qacEditorWrapper">
+                                <div id="qacConditionEditor"
+                                    style="min-height:120px; border:1px solid var(--bs-border-color); border-radius:.5rem;">
+                                </div>
+                            </div>
+                            <input type="hidden" id="qacConditionInput">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Cancel"
+                        data-bm="Batal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="qacSaveBtn" data-en="Save & Link"
+                        data-bm="Simpan & Pautkan">Save & Link</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="replaceExistingModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" data-en="Select Existing Item" data-bm="Pilih Item Sedia Ada">
+                        Select Existing Item
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="reiPermitId">
+                    <input type="hidden" id="reiNewItemName">
+
+                    <label class="form-label" data-en="Search Existing Item" data-bm="Cari Item Sedia Ada">Search
+                        Existing Item</label>
+                    <select id="reiSelect" class="form-control" style="width:100%;"></select>
+
+                    <div id="reiPreview" class="mt-3 p-2 border rounded d-none">
+                        <div class="fs-13 text-muted"
+                            data-en="This item will be linked and the new name will be added as an alias:"
+                            data-bm="Item ini akan dipautkan dan nama baharu akan ditambah sebagai alias:"></div>
+                        <div class="fw-semibold" id="reiPreviewName"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Cancel"
+                        data-bm="Batal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="reiConfirmBtn" disabled data-en="Confirm & Link"
+                        data-bm="Sahkan & Pautkan">Confirm & Link</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
@@ -672,6 +782,21 @@
         document.addEventListener('DOMContentLoaded', function() {
             if (window.location.hash === '#pending') {
                 document.querySelector('.ipv-tabnav-item[data-ipv-tab="payment"]')?.click();
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('#goToPaymentTabBtn');
+            if (btn) {
+                e.preventDefault();
+                const paymentTab = document.querySelector('.ipv-tabnav-item[data-ipv-tab="payment"]');
+                if (paymentTab) {
+                    paymentTab.click();
+                    paymentTab.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'nearest'
+                    });
+                }
             }
         });
     </script>

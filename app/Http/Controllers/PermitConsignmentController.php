@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Events\ApplicationDeleted;
 use App\Events\PublicUserEvent;
+use App\Models\ConsignmentPermit;
 use App\Models\InternalUser;
 use App\Models\IpConsignmentPermit;
 use App\Models\PublicUser;
 use App\Notifications\ApplicationNotification;
+use App\Services\ApplicationActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
@@ -199,5 +201,56 @@ class PermitConsignmentController extends Controller
             ->firstOrFail();
 
         return redirect('/view_application/' . $importPermit->application->application_id);
+    }
+
+    public function linkCondition(Request $request, $id)
+    {
+        $request->validate([
+            'ip_condition_id' => 'required|integer|exists:ip_condition,id',
+        ]);
+
+        $permit = ConsignmentPermit::with('application')->findOrFail($id);
+
+        // Ensure we're working with a real array, not null/stdClass
+        $detail = is_array($permit->consignment_detail) ? $permit->consignment_detail : [];
+        $originalItemName = $detail['item_name'] ?? null;
+        $wasCustom = $detail['isCustom'] ?? null;
+
+        $detail['item_id']  = (int) $request->ip_condition_id;
+        $detail['isCustom'] = false;
+
+        \DB::transaction(function () use ($permit, $detail) {
+            $permit->consignment_detail = $detail; // explicit attribute assignment
+            $permit->status = 'processing';
+            $permit->save();
+        });
+
+        $permit->refresh();
+
+        // ─── Activity Log ─────────────────────────────────
+        $application = $permit->application;
+
+        if ($application) {
+            $user = authUser()['user'] ?? null;
+
+            ApplicationActivityLogger::log(
+                application: $application,
+                event: 'custom_item_linked',
+                description: ($user->fullname ?? 'System')
+                    . " linked custom item \"{$originalItemName}\" to permit condition ID {$request->ip_condition_id} for application {$application->application_id}",
+                properties: [
+                    'permit_id'        => $permit->id,
+                    'ip_condition_id'  => (int) $request->ip_condition_id,
+                    'original_item'    => $originalItemName,
+                    'is_custom_before' => $wasCustom,
+                    'is_custom_after'  => $permit->consignment_detail['isCustom'] ?? null,
+                ],
+            );
+        }
+
+        return response()->json([
+            'message' => 'Item linked successfully.',
+            'permit'  => $permit->consignment_detail, // return the persisted state for the frontend to verify
+        ]);
     }
 }

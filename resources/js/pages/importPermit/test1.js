@@ -119,7 +119,7 @@ async function loadApplicationData() {
     const applicationId = getApplicationId();
     const res = await fetch(`/application/${applicationId}/data`);
     const json = await res.json();
-    console.log('application', json);
+
 
     mapApplication(json);
     mapPermits(json);
@@ -864,6 +864,12 @@ function renderPermitAccordion() {
         const detail = permit.consignment_detail;
         const statusText = cfg[lang] || cfg.en;
         let isCustom = ' ';
+        let isCustomClass = '';
+
+        // ─── Waiting/pending approval highlight ─────────────
+        const isWaitingClass = ['processing', 'reapplied'].includes(permit.status)
+            ? ' is-waiting'
+            : '';
 
         const agreementBanner = permit.agreedAt
             ? `<div class="alert alert-success mb-3 d-flex align-items-center">
@@ -886,17 +892,22 @@ function renderPermitAccordion() {
             </div>`;
         
         if(permit.isCustom === true) {
-            isCustom += `<span class = "ipv-badge alert alert-warning" data-en = "Custom Item"  data-bm="Item Khas" >Custom Item</span>`
+            isCustom += `<span class = "ipv-badge alert alert-warning" data-en = "Custom Item"  data-bm="Item Khas" >Custom Item</span>`;
+            isCustomClass += `is-custom`;
         }
 
         return `
-            <div class="ipv-permit-item" data-permit="${escapeHtml(permit.permit_number)}">
+            <div class="ipv-permit-item ${isCustomClass}${isWaitingClass}" data-permit="${escapeHtml(permit.permit_number)}" >
                 <div class="ipv-permit-header">
                     <div class="ipv-permit-icon"><i class="bi bi-box-seam"></i></div>
                     <div class="ipv-permit-id-group">
                         <div class="ipv-permit-id">#${escapeHtml(permit.permit_number)}</div>
                         <div class="ipv-permit-name">
-                            ${escapeHtml(detail.item_name)}
+                            <div>
+                                ${escapeHtml(detail.item_name)}
+
+                                ${permitActionsHtml(permit)}
+                            </div>
 
                             <div> ${isCustom}</div>
                         </div>
@@ -912,11 +923,11 @@ function renderPermitAccordion() {
                 <div class="ipv-permit-body">
                     ${agreementBanner}
                     <div class="pd-section-label mb-2" data-en="Consignment Info" data-bm="Info Konsainan">Consignment Info</div>
-                    <div class="p-2 row ipv-permit-details-grid" style="background: var(--gray-1); border: 1px solid var(--default-border); border-radius: 0.6rem;">
+                    <div class="p-2 row ipv-permit-details-grid m-1" style="background: var(--gray-1); border: 1px solid var(--default-border); border-radius: 0.6rem;">
                         <div class="col-12 col-lg-6">
                             <p class="mb-2">
                                 <strong class="me-1">
-                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-tag"></i></span>
+                                    <span class="avatar avatar-sm d-none avatar-rounded bd-gray-500"><i class="fa-solid fa-tag"></i></span>
                                     <span data-en="Item Name:" data-bm="Nama Item:">Item Name:</span>
                                 </strong> 
                                 <span class="text-break">${escapeHtml(detail.item_name)}</span>
@@ -926,7 +937,7 @@ function renderPermitAccordion() {
                         <div class="col-12 col-lg-6">
                             <p class="mb-2">
                                 <strong class="me-1">
-                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-scale-balanced"></i></span>
+                                    <span class="avatar avatar-sm d-none avatar-rounded bd-gray-500"><i class="fa-solid fa-scale-balanced"></i></span>
                                     <span data-en="Quantity:" data-bm="Kuantiti:">Quantity:</span>
                                 </strong> 
                                 <span class="text-break">${permit.quantity.toLocaleString()} ${escapeHtml(permit.unit_measurement)}</span>
@@ -935,7 +946,7 @@ function renderPermitAccordion() {
                         <div class="col-12 col-lg-6">
                             <p class="mb-2">
                                 <strong class="me-1">
-                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-money-bill"></i></span>
+                                    <span class="avatar avatar-sm d-none avatar-rounded bd-gray-500"><i class="fa-solid fa-money-bill"></i></span>
                                     <span data-en="Value:" data-bm="Nilai:">Value:</span>
                                 </strong> 
                                 <span class="text-break">RM ${money(permit.value)}</span>
@@ -944,7 +955,7 @@ function renderPermitAccordion() {
                         <div class="col-12 col-lg-6">
                             <p class="mb-2">
                                 <strong class="me-1">
-                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-pen-fancy"></i></span>
+                                    <span class="avatar avatar-sm d-none avatar-rounded bd-gray-500"><i class="fa-solid fa-pen-fancy"></i></span>
                                     <span data-en="Purpose:" data-bm="Tujuan:">Purpose:</span>
                                 </strong> 
                                 <span class="text-break">${escapeHtml(permit.purpose)}</span>
@@ -953,7 +964,7 @@ function renderPermitAccordion() {
                         <div class="col-12 col-lg-6">
                             <p class="mb-2">
                                 <strong class="me-1">
-                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-gear"></i></span>
+                                    <span class="avatar avatar-sm d-none avatar-rounded bd-gray-500"><i class="fa-solid fa-gear"></i></span>
                                     <span data-en="Usage:" data-bm="Kegunaan:">Usage:</span>
                                 </strong> 
                                 <span class="text-break">${escapeHtml(detail.usage)}</span>
@@ -962,7 +973,7 @@ function renderPermitAccordion() {
                         <div class="col-12">
                             <p class="mb-2">
                                 <strong class="me-1">
-                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-file-contract"></i></span>
+                                    <span class="avatar avatar-sm d-none avatar-rounded bd-gray-500"><i class="fa-solid fa-file-contract"></i></span>
                                     <span data-en="Permit Number:" data-bm="No. Permit:">Permit Number:</span>
                                 </strong> 
                                 <span class="text-break">${escapeHtml(permit.permit_number)}</span>
@@ -980,7 +991,7 @@ function renderPermitAccordion() {
                         </div>
                     ` : ''}
 
-                    ${permitActionsHtml(permit)}
+                    
                 </div>
             </div>
         `;

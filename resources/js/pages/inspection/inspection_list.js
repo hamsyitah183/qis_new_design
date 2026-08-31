@@ -455,3 +455,21 @@ async function loadFilterData() {
         }
     }
 }
+
+function generatePDF() {
+    $(document).on('click', '.downloadApplication'  ,function (e) {
+        e.preventDefault();
+
+        const applicationId = $(this).data('id');
+
+        if (!applicationId) {
+            console.warn('No application id found on #printApplication (expected data-application attribute).');
+            return;
+        }
+
+        window.open(`/inspection/application/${applicationId}/print`, '_blank');
+    });
+}
+
+
+generatePDF();

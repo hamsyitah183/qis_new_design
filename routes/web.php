@@ -28,6 +28,7 @@ use App\Http\Controllers\ConsignmentMiscController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\GalleryController;
+use App\Http\Controllers\IpConditionController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\VehicleController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -321,6 +322,11 @@ Route::prefix('internal')
         Route::get('/permit_condition/data', [MiscController::class, 'getpermitconditiondata']);
         Route::get('/permit_condition/getdata/{id}', [MiscController::class, 'getpermitconditionbyid']);
         Route::get('/permit_add_condition', [MiscController::class, 'permitaddcondition'])->name('permitaddcondition');
+
+        Route::post('/ip_condition/quick-add', [IpConditionController::class, 'quickAdd']);
+        Route::get('/ip_condition/search/{country}', [IpConditionController::class, 'search']);
+        Route::post('/ip_condition/{id}/add-alias', [IpConditionController::class, 'addAlias']);
+        Route::post('/permit/{id}/link-condition', [PermitConsignmentController::class, 'linkCondition']);
 
         Route::post('/save_condition', [MiscController::class, 'saveCondition'])->name('saveCondition');
         Route::get('/permit_edit_condition/{id}', [MiscController::class, 'editCondition']);
