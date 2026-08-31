@@ -54,7 +54,12 @@ class PermitApplicationController extends Controller
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();
-        return view('pages.public.apply_permit', compact('pubmeasure', 'pubpurpose', 'country'));
+        
+        $ipDocuments = DocumentRequirement::forModule('ip')
+            ->orderBy('name')
+            ->get();
+            
+        return view('pages.public.apply_permit', compact('pubmeasure', 'pubpurpose', 'country', 'ipDocuments'));
     }
 
     /**
@@ -70,7 +75,12 @@ class PermitApplicationController extends Controller
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();
-        return view('pages.public.assigned_apply_permit', compact('pubmeasure', 'pubpurpose', 'country'));
+        
+        $ipDocuments = DocumentRequirement::forModule('ip')
+            ->orderBy('name')
+            ->get();
+            
+        return view('pages.public.assigned_apply_permit', compact('pubmeasure', 'pubpurpose', 'country', 'ipDocuments'));
     }
 
     private function checkDocumentStatusAndReturnView()
@@ -514,7 +524,10 @@ class PermitApplicationController extends Controller
             }
 
             if ($request->hasFile('application_files')) {
-                foreach ($request->file('application_files') as $file) {
+                $documentTypes = $request->input('application_files_document_type', []);
+                $descriptions  = $request->input('application_files_description', []);
+
+                foreach ($request->file('application_files') as $i => $file) {
                     $name = uniqid() . '_' . $file->getClientOriginalName();
                     $path = $file->storeAs('import_applications', $name, 'public');
                     $movedFiles[] = $path;
@@ -524,6 +537,7 @@ class PermitApplicationController extends Controller
                         'file_name' => $file->getClientOriginalName(),
                         'file_path' => "/storage/{$path}",
                         'file_type' => $file->getClientOriginalExtension(),
+                        'description'    => $descriptions[$i] ?? ($documentTypes[$i] ?? null),
                     ]);
                 }
             }

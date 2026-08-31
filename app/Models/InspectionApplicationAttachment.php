@@ -13,7 +13,8 @@ class InspectionApplicationAttachment extends Model
         'application_id',
         'file_name',
         'file_path',
-        'file_type'
+        'file_type',
+        'description'
     ];
 
 }

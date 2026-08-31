@@ -391,8 +391,12 @@ class InspectionController extends Controller
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();
-
-        return view('pages.public.inspection_self', compact('pubmeasure', 'pubpurpose', 'country', 'id'));
+        
+        $inspectionDocuments = DocumentRequirement::forModule('inspection')
+            ->orderBy('name')
+            ->get();
+            
+        return view('pages.public.inspection_self', compact('pubmeasure', 'pubpurpose', 'country', 'id', 'inspectionDocuments'));
     }
 
     private function checkDocumentStatusAndReturnView()
@@ -456,7 +460,12 @@ class InspectionController extends Controller
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();
-        return view('pages.public.inspection_others', compact('pubmeasure', 'pubpurpose', 'country', 'id'));
+        
+        $inspectionDocuments = DocumentRequirement::forModule('inspection')
+            ->orderBy('name')
+            ->get();
+            
+        return view('pages.public.inspection_others', compact('pubmeasure', 'pubpurpose', 'country', 'id', 'inspectionDocuments'));
     }
 
     public function saveApplication(Request $request)
@@ -629,7 +638,10 @@ class InspectionController extends Controller
             // ─── APPLICATION ATTACHMENTS (application_files[]) ──────────────
             // Using the InspectionApplicationAttachment model
             if ($request->hasFile('application_files')) {
-                foreach ($request->file('application_files') as $file) {
+                $documentTypes = $request->input('application_files_document_type', []);
+                $descriptions  = $request->input('application_files_description', []);
+
+                foreach ($request->file('application_files') as $i => $file) {
                     $name = uniqid() . '_' . $file->getClientOriginalName();
                     $path = $file->storeAs('inspection_applications', $name, 'public');
                     $movedFiles[] = $path;
@@ -639,6 +651,7 @@ class InspectionController extends Controller
                         'file_name'      => $file->getClientOriginalName(),
                         'file_path'      => "/storage/{$path}",
                         'file_type'      => $file->getClientOriginalExtension(),
+                        'description'    => $descriptions[$i] ?? ($documentTypes[$i] ?? null),
                     ]);
                 }
             }
