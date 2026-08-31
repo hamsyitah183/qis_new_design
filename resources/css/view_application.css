@@ -1343,6 +1343,10 @@
     
 }
 
+.ipv-permit-item .ipv-btn-action {
+    font-size: 0.65rem;
+}
+
 
 
 @keyframes ipv-pulse {

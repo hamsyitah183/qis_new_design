@@ -196,12 +196,12 @@
 
                 <div class="ipv-action-row">
                     @if ($isInternal && auth()->guard('internal')->user()->can('print permit'))
-                        <button type="button" class="ipv-btn-primary d-none" id="ipvPrintPermitBtn">
+                        <button type="button" class="ipv-btn-primary" id="ipvPrintPermitBtn">
                             <i class="bi bi-printer"></i> <span data-en="Print Permit" data-bm="Cetak Permit">Print
                                 Permit</span>
                         </button>
                     @endif
-                    <span class="ipv-download-badge" id="ipvDownloadBadge" title="Permits downloaded">
+                    <span class="ipv-download-badge d-none" id="ipvDownloadBadge" title="Permits downloaded">
                         <i class="bi bi-download"></i> 0
                     </span>
 

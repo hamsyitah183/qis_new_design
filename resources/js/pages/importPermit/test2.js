@@ -102,7 +102,7 @@ function paymentCtaHtml(permit) {
                     </div>
                 </div>
                 <button type="button" class="ipv-btn-primary generatePermit" data-permit="${slug}">
-                    <i class="bi bi-download"></i> <span data-en="Print / Download Permit" data-bm="Cetak / Muat Turun Permit">Print / Download Permit</span>
+                    <i class="bi bi-download"></i> <span data-en="Print / Download Permit" data-bm="Muat Turun Permit">Print / Download Permit</span>
                 </button>
             </div>
         `;
