@@ -162,8 +162,15 @@ class ConsignmentController extends Controller
      */
     public function showInternalConsignmentList()
     {
-        if (auth()->user()->hasRole('boundary officer')) {
-            abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
+        $user = authUser()['user'];
+
+        // Check if the user is from branch 'Sipitang' OR has superadmin/admin role
+        $isSipitang = ($user->branch ?? '') === 'Sipitang';
+        $isAdmin = $user->hasAnyRole(['superadmin', 'admin']);
+
+        // If neither, deny access
+        if (!($isSipitang || $isAdmin)) {
+            abort(403, 'Unauthorized action. Only users from Sipitang branch or administrators may access this area.');
         }
 
         return view('pages.internal.consignment_list');

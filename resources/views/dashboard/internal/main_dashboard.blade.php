@@ -12,8 +12,18 @@
 @endsection
 
 @section('content')
-    {{-- @dd($overduePendingApps) --}}
-    @if ($overduePendingApps > 0)
+  
+    @php
+        $auth = authUser();
+        $isRestrictedRole = false;
+        if ($auth && $auth['type'] === 'internal') {
+            $roles = $auth['roles']; // Collection of role names
+            $restrictedRoles = ['boundary officer', 'finance'];
+            $isRestrictedRole = $roles->intersect($restrictedRoles)->isNotEmpty();
+        }
+    @endphp
+
+    @if ($overduePendingApps > 0 && !$isRestrictedRole)
         <div class="row mb-3">
             <div class="col-12">
                 <div class="alert alert-danger p-4">
@@ -38,7 +48,6 @@
                                     </span>
                                 </p>
                             </div>
-                            
                         </div>
                     </div>
                 </div>

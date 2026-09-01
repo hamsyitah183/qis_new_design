@@ -1053,6 +1053,7 @@ $(document).on('click', '#reiConfirmBtn', function () {
         data: {
             _token: $('meta[name="csrf-token"]').attr('content'),
             alias: newItemName,
+            permit_id: permitId,
         },
         success: function () {
             // 2. Link the permit to that existing condition

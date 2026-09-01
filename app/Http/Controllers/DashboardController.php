@@ -137,7 +137,7 @@ class DashboardController extends Controller
             $startOfMonth = $month->copy()->startOfMonth();
             $endOfMonth = $month->copy()->endOfMonth();
 
-            $count = 
+            $count =
                 IpApplication::where('user_id', $userId)->whereBetween('created_at', [$startOfMonth, $endOfMonth])->count() +
                 InspectionApplication::where('user_id', $userId)->whereBetween('created_at', [$startOfMonth, $endOfMonth])->count() +
                 ConsignmentApplication::where('user_id', $userId)->whereBetween('created_at', [$startOfMonth, $endOfMonth])->count();
@@ -187,117 +187,200 @@ class DashboardController extends Controller
         ClerkDailyVolumeChart $clerkVolumeChart,
         PermitDailyProcessChart $permitChart
     ) {
-        // ─── Fetch completed applications ──────────────────────────────────
-        $importPermits = IpApplication::with('user')->where('status', 'Completed')->get();
-        $inspectionCerts = InspectionApplication::with('user')->where('status', 'Completed')->get();
-        $consignmentCerts = ConsignmentApplication::with('user')->where('status', 'Completed')->get();
-
-        // ─── Boundary officer filter ──────────────────────────────────────
-        if (authUser()['roles'][0] == 'boundary officer') {
-            $boundary = InternalUser::with(['boundaryOfficer.entryPoint'])
-                ->where('uuid', authUser()['user']['uuid'])
-                ->first();
-
-            $entryPoint = $boundary?->boundaryOfficer?->ip_entry_id;
-
-            if ($entryPoint) {
-                $importPermits = $importPermits->filter(fn($app) => $app->entry_point == $entryPoint)->sortByDesc('created_at')->values();
-                $inspectionCerts = $inspectionCerts->filter(fn($app) => $app->entry_point == $entryPoint)->sortByDesc('created_at')->values();
-                $consignmentCerts = $consignmentCerts->filter(fn($app) => $app->entry_point == $entryPoint)->sortByDesc('created_at')->values();
-            } else {
-                $importPermits = $importPermits->sortByDesc('created_at')->values();
-                $inspectionCerts = $inspectionCerts->sortByDesc('created_at')->values();
-                $consignmentCerts = $consignmentCerts->sortByDesc('created_at')->values();
-            }
-
-            $totalImportPermits = $importPermits->count();
-            $totalInspectionCerts = $inspectionCerts->count();
-            $totalConsignmentCerts = $consignmentCerts->count();
-
-            $announcements = \App\Models\Announcement::with('attachments')
-                ->where('is_active', true)
-                ->where(function ($query) {
-                    $query->whereNull('valid_from')
-                          ->orWhere('valid_from', '<=', now()->toDateString());
-                })
-                ->where(function ($query) {
-                    $query->whereNull('valid_until')
-                          ->orWhere('valid_until', '>=', now()->toDateString());
-                })
-                ->orderBy('pin_announcement', 'desc')
-                ->latest()
-                ->take(3)
-                ->get();
-
-            return view('dashboard.internal.main_dashboard', [
-                'latestApplications' => collect(),
-                'importPermits' => $importPermits,
-                'inspectionCerts' => $inspectionCerts,
-                'consignmentCerts' => $consignmentCerts,
-                'totalImportPermits' => $totalImportPermits,
-                'totalInspectionCerts' => $totalInspectionCerts,
-                'totalConsignmentCerts' => $totalConsignmentCerts,
-                'announcements' => Announcement::with('attachments')
-                    ->where('is_active', true)
-                    ->where(function ($q) {
-                        $q->whereNull('valid_from')->orWhere('valid_from', '<=', now()->toDateString());
-                    })
-                    ->where(function ($q) {
-                        $q->whereNull('valid_until')->orWhere('valid_until', '>=', now()->toDateString());
-                    })
-                    ->orderBy('pin_announcement', 'desc')
-                    ->latest()
-                    ->take(3)
-                    ->get(),
-            ]);
+        // ─── 1. Handle boundary officer separately ──────────────────────────
+        if (authUser()['roles'][0] === 'boundary officer') {
+            return $this->boundaryOfficerDashboard();
         }
 
-        // ─── For other roles: latest 5 completed applications ────────────
-        $latestApplications = $importPermits
-            ->concat($inspectionCerts)
-            ->concat($consignmentCerts)
+        // ─── 2. Common data for other internal roles ────────────────────────
+        $completedImportPermits = IpApplication::with('user')->where('status', 'Completed')->get();
+        $completedInspections = InspectionApplication::with('user')->where('status', 'Completed')->get();
+        $completedConsignments = ConsignmentApplication::with('user')->where('status', 'Completed')->get();
+
+        $latestApplications = $completedImportPermits
+            ->concat($completedInspections)
+            ->concat($completedConsignments)
             ->sortByDesc('created_at')
             ->take(5)
             ->values();
 
-        // ─── Statistics ────────────────────────────────────────────────────
         $totalImportPermits = IpApplication::count();
         $totalInspectionCerts = InspectionApplication::count();
         $totalConsignmentCerts = ConsignmentApplication::count();
 
-        $totalAccepted = IpApplication::where('status', 'Approved')->count()
-            + InspectionApplication::where('status', 'Approved')->count()
-            + ConsignmentApplication::where('status', 'Approved')->count();
+        $totalAccepted = $this->getTotalAcceptedApplications();
 
-        // ─── Recent activity logs ─────────────────────────────────────────
-        try {
-            $recentActivities = Activity::with('causer')->latest()->take(10)->get();
-        } catch (\Exception $e) {
-            $recentActivities = collect([]);
+        // ─── 3. Recent activity logs ─────────────────────────────────────────
+        $recentActivities = $this->getRecentActivities();
+
+        // ─── 4. KPI counts ───────────────────────────────────────────────────
+        $kpi = $this->getKpiCounts();
+
+        // ─── 5. Charts ───────────────────────────────────────────────────────
+        $charts = [
+            'lineChart'          => $lineChart->build(),
+            'orderChart'         => $orderChart->build(),
+            'paymentChart'       => $paymentChart->build(),
+            'applicationChart'   => $applicationChart->build(),
+            'clerkStatusChart'   => $clerkStatusChart->build(),
+            'clerkWorkloadChart' => $clerkWorkloadChart->build(),
+            'clerkVolumeChart'   => $clerkVolumeChart->build(),
+            'permitChart'        => $permitChart->build(),
+        ];
+
+        // ─── 6. Pending queue with overdue flag ─────────────────────────────
+        $pendingQueue = $this->getPendingQueue();
+
+        // ─── 7. Total payment ───────────────────────────────────────────────
+        $totalPayment = Order::where('status', 'payment complete')->sum('payment_amount');
+
+        // ─── 8. Announcements ───────────────────────────────────────────────
+        $announcements = $this->getAnnouncements();
+
+        // ─── 9. Overdue pending applications ────────────────────────────────
+        $overduePendingApps = $this->getOverduePendingAppsCount();
+
+        // ─── 10. Return view ────────────────────────────────────────────────
+        return view('dashboard.internal.main_dashboard', [
+            // Charts
+            'userLineChart'      => $charts['lineChart'],
+            'orderChart'         => $charts['orderChart'],
+            'paymentChart'       => $charts['paymentChart'],
+            'applicationChart'   => $charts['applicationChart'],
+            'clerkStatusChart'   => $charts['clerkStatusChart'],
+            'clerkWorkloadChart' => $charts['clerkWorkloadChart'],
+            'clerkVolumeChart'   => $charts['clerkVolumeChart'],
+            'permitChart'        => $charts['permitChart'],
+
+            // Completed applications
+            'latestApplications' => $latestApplications,
+
+            // Totals
+            'totalImportPermits'     => $totalImportPermits,
+            'totalInspectionCerts'   => $totalInspectionCerts,
+            'totalConsignmentCerts'  => $totalConsignmentCerts,
+            'totalAccepted'          => $totalAccepted,
+
+            // KPI
+            'pendingPermits'         => $kpi['pendingPermits'],
+            'pendingInspections'     => $kpi['pendingInspections'],
+            'pendingConsignments'    => $kpi['pendingConsignments'],
+            'verifiedToday'          => $kpi['verifiedToday'],
+
+            // Activity & queue
+            'recentActivities'       => $recentActivities,
+            'pendingQueue'           => $pendingQueue,
+
+            // Payments & announcements
+            'totalPayment'           => $totalPayment,
+            'announcements'          => $announcements,
+
+            // Overdue
+            'overduePendingApps'     => $overduePendingApps,
+        ]);
+    }
+
+// ─── Private helper methods ──────────────────────────────────────────
+
+    /**
+     * Dashboard for boundary officers – filtered by entry point.
+     */
+    private function boundaryOfficerDashboard()
+    {
+        $boundary = InternalUser::with(['boundaryOfficer.entryPoint'])
+            ->where('uuid', authUser()['user']['uuid'])
+            ->first();
+
+        $entryPoint = $boundary?->boundaryOfficer?->ip_entry_id;
+
+        // Fetch completed applications and filter by entry point
+        $importPermits = IpApplication::with('user')->where('status', 'Completed')->get();
+        $inspectionCerts = InspectionApplication::with('user')->where('status', 'Completed')->get();
+        $consignmentCerts = ConsignmentApplication::with('user')->where('status', 'Completed')->get();
+
+        if ($entryPoint) {
+            $importPermits = $importPermits->filter(fn($app) => $app->entry_point == $entryPoint)->sortByDesc('created_at')->values();
+            $inspectionCerts = $inspectionCerts->filter(fn($app) => $app->entry_point == $entryPoint)->sortByDesc('created_at')->values();
+            $consignmentCerts = $consignmentCerts->filter(fn($app) => $app->entry_point == $entryPoint)->sortByDesc('created_at')->values();
+        } else {
+            $importPermits = $importPermits->sortByDesc('created_at')->values();
+            $inspectionCerts = $inspectionCerts->sortByDesc('created_at')->values();
+            $consignmentCerts = $consignmentCerts->sortByDesc('created_at')->values();
         }
 
-        // ─── KPI Counts ────────────────────────────────────────────────────
-        $data['pendingPermits'] = IpApplication::where('status', 'Clerk Review In-Progress')->count();
-        $data['pendingInspections'] = InspectionApplication::where('status', 'Clerk review in-progress')->count();
-        $data['pendingConsignments'] = ConsignmentApplication::where('status', 'Clerk Review In-Progress')->count();
+        $totalImportPermits = $importPermits->count();
+        $totalInspectionCerts = $inspectionCerts->count();
+        $totalConsignmentCerts = $consignmentCerts->count();
 
+        $announcements = $this->getAnnouncements();
+        $overduePendingApps = $this->getOverduePendingAppsCount();
+
+        return view('dashboard.internal.main_dashboard', [
+            'latestApplications' => collect(), // not used for boundary officers
+            'importPermits'      => $importPermits,
+            'inspectionCerts'    => $inspectionCerts,
+            'consignmentCerts'   => $consignmentCerts,
+            'totalImportPermits' => $totalImportPermits,
+            'totalInspectionCerts' => $totalInspectionCerts,
+            'totalConsignmentCerts' => $totalConsignmentCerts,
+            'announcements'      => $announcements,
+            'overduePendingApps' => $overduePendingApps,
+        ]);
+    }
+
+    /**
+     * Get total accepted applications across all types.
+     */
+    private function getTotalAcceptedApplications(): int
+    {
+        return IpApplication::where('status', 'Approved')->count()
+            + InspectionApplication::where('status', 'Approved')->count()
+            + ConsignmentApplication::where('status', 'Approved')->count();
+    }
+
+    /**
+     * Get recent activity logs (fallback to empty collection).
+     */
+    private function getRecentActivities()
+    {
+        try {
+            return Activity::with('causer')->latest()->take(10)->get();
+        } catch (\Exception $e) {
+            return collect([]);
+        }
+    }
+
+    /**
+     * Get KPI counts: pending and verified today.
+     */
+    private function getKpiCounts(): array
+    {
         $today = Carbon::today();
-        $verifiedTodayPermits = IpApplication::where('status', 'Clerk Verified')->whereDate('updated_at', $today)->count();
-        $verifiedTodayInspections = InspectionApplication::where('status', 'Clerk Verified')->whereDate('updated_at', $today)->count();
-        $verifiedTodayConsignments = ConsignmentApplication::where('status', 'Clerk Verified')->whereDate('updated_at', $today)->count();
 
-        $data['verifiedToday'] = $verifiedTodayPermits + $verifiedTodayInspections + $verifiedTodayConsignments;
+        $pendingPermits = IpApplication::where('status', 'Clerk Review In-Progress')->count();
+        $pendingInspections = InspectionApplication::where('status', 'Clerk review in-progress')->count();
+        $pendingConsignments = ConsignmentApplication::where('status', 'Clerk Review In-Progress')->count();
 
-        // ─── Charts ────────────────────────────────────────────────────────
-        $data['clerkStatusChart'] = $clerkStatusChart->build();
-        $data['clerkWorkloadChart'] = $clerkWorkloadChart->build();
-        $data['clerkVolumeChart'] = $clerkVolumeChart->build();
+        $verifiedToday = IpApplication::where('status', 'Clerk Verified')->whereDate('updated_at', $today)->count()
+            + InspectionApplication::where('status', 'Clerk Verified')->whereDate('updated_at', $today)->count()
+            + ConsignmentApplication::where('status', 'Clerk Verified')->whereDate('updated_at', $today)->count();
 
-        // ─── Action Needed Queue (pending applications with overdue flag) ──
-        $pendingQueue = collect();
+        return [
+            'pendingPermits'     => $pendingPermits,
+            'pendingInspections' => $pendingInspections,
+            'pendingConsignments' => $pendingConsignments,
+            'verifiedToday'      => $verifiedToday,
+        ];
+    }
 
-        // Fetch pending permits
-        $pendingQueue = $pendingQueue->concat(
+    /**
+     * Get pending applications (top 5) from each type, enriched with 'type' and 'is_overdue'.
+     */
+    private function getPendingQueue()
+    {
+        $pending = collect();
+
+        $pending = $pending->concat(
             IpApplication::with('user')
                 ->where('status', 'Clerk Review In-Progress')
                 ->orderBy('created_at', 'asc')
@@ -306,8 +389,7 @@ class DashboardController extends Controller
                 ->map(fn($item) => tap($item, fn($i) => $i->type = 'Import Permit'))
         );
 
-        // Fetch pending inspections
-        $pendingQueue = $pendingQueue->concat(
+        $pending = $pending->concat(
             InspectionApplication::with('user')
                 ->where('status', 'Clerk review in-progress')
                 ->orderBy('created_at', 'asc')
@@ -316,8 +398,7 @@ class DashboardController extends Controller
                 ->map(fn($item) => tap($item, fn($i) => $i->type = 'Inspection'))
         );
 
-        // Fetch pending consignments
-        $pendingQueue = $pendingQueue->concat(
+        $pending = $pending->concat(
             ConsignmentApplication::with('user')
                 ->where('status', 'Clerk Review In-Progress')
                 ->orderBy('created_at', 'asc')
@@ -326,20 +407,18 @@ class DashboardController extends Controller
                 ->map(fn($item) => tap($item, fn($i) => $i->type = 'Consignment'))
         );
 
-        // Sort and take top 5, adding overdue flag
-        $pendingQueue = $pendingQueue
+        return $pending
             ->sortBy('created_at')
             ->take(5)
-            ->map(function ($item) {
-                $item->is_overdue = $item->created_at->diffInDays(now()) > 2;
-                return $item;
-            });
+            ->map(fn($item) => tap($item, fn($i) => $i->is_overdue = $i->created_at->diffInDays(now()) > 2));
+    }
 
-        // ─── Total payment (completed orders) ────────────────────────────
-        $totalPayment = Order::where('status', 'payment complete')->sum('payment_amount');
-
-        // ─── Announcements ─────────────────────────────────────────────────
-        $announcements = Announcement::with('attachments')
+    /**
+     * Get active announcements (max 3).
+     */
+    private function getAnnouncements()
+    {
+        return Announcement::with('attachments')
             ->where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('valid_from')->orWhere('valid_from', '<=', now()->toDateString());
@@ -351,35 +430,9 @@ class DashboardController extends Controller
             ->latest()
             ->take(3)
             ->get();
-
-        $overduePendingApps = $this->getOverduePendingAppsCount();
-
-        // ─── Return view ───────────────────────────────────────────────────
-        return view('dashboard.internal.main_dashboard', [
-            'userLineChart' => $lineChart->build(),
-            'orderChart' => $orderChart->build(),
-            'paymentChart' => $paymentChart->build(),
-            'applicationChart' => $applicationChart->build(),
-            'latestApplications' => $latestApplications,
-            'totalImportPermits' => $totalImportPermits,
-            'totalInspectionCerts' => $totalInspectionCerts,
-            'totalConsignmentCerts' => $totalConsignmentCerts,
-            'totalAccepted' => $totalAccepted,
-            'recentActivities' => $recentActivities,
-            'clerkVolumeChart' => $data['clerkVolumeChart'],
-            'clerkStatusChart' => $data['clerkStatusChart'],
-            'clerkWorkloadChart' => $data['clerkWorkloadChart'],
-            'pendingQueue' => $pendingQueue,
-            'verifiedToday' => $data['verifiedToday'],
-            'permitChart' => $permitChart->build(),
-            'announcements' => $announcements,
-            'pendingPermits' => $data['pendingPermits'],
-            'pendingInspections' => $data['pendingInspections'],
-            'pendingConsignments' => $data['pendingConsignments'],
-            'totalPayment' => $totalPayment,
-            'overduePendingApps' => $overduePendingApps
-        ]);
     }
+
+  
 
     public function get_country($code)
     {

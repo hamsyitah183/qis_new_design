@@ -106,10 +106,12 @@ class IpConditionController extends Controller
 
     public function addAlias(Request $request, $id)
     {
+        // dd($request->all());
         $request->validate([
             'alias'     => 'required|string|max:255',
             'permit_id' => 'nullable|integer|exists:consignment_permits,id',
         ]);
+
 
         $condition = IpCondition::findOrFail($id);
 
@@ -119,6 +121,20 @@ class IpConditionController extends Controller
             $condition->another_name = $aliases;
             $condition->save();
         }
+
+        // 1. Retrieve the permit
+        $permit = IpConsignmentPermit::find($request->permit_id);
+        if (!$permit) {
+            return response()->json(['message' => 'Permit not found.'], 404);
+        }
+
+        // 2. Update consignment_detail
+        $consignment_detail = $permit->consignment_detail ?? [];
+        $consignment_detail['item_name'] = $condition->item_name;
+        $consignment_detail['isCustom'] = false;
+        $permit->consignment_detail = $consignment_detail;
+        $permit->save();
+
 
         // ─── Activity Log ─────────────────────────────────
         if ($request->permit_id) {

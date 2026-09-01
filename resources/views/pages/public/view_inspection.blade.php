@@ -144,7 +144,7 @@ $canEditInternal = $isInternal && auth('internal')->user()->can('edit applicatio
                          Inspection — reusing the same role-based gate as elsewhere on this
                          page rather than guessing a permission name. --}}
 
-                    @if ($isAdminOrClerk)
+                    @if ($application->status == 'Completed' &&  auth()->guard('internal')->user()->can('print permit'))
                         <button type="button" class="ipv-btn-primary" id="ipvPrintPermitBtn">
                             <i class="bi bi-printer"></i> <span data-en="Print Certificate" data-bm="Cetak Sijil">Print
                                 Certificate</span>

@@ -116,11 +116,11 @@ $(document).ready(function () {
         const isEdit = id !== '';
 
         // Basic validation
-        const name = $('#vehicleName').val().trim();
+        // const name = $('#vehicleName').val().trim();
         const number = $('#vehicleNumber').val().trim();
-        const regNumber = $('#vehicleRegNumber').val().trim();
+        // const regNumber = $('#vehicleRegNumber').val().trim();
 
-        if (!name || !number || !regNumber) {
+        if (!number ) {
             Swal.fire(getText("error"), getText("fillRequired"), 'error');
             return;
         }

@@ -764,27 +764,59 @@ class ConsignmentApplicationController extends Controller
 
     public function viewapplication($uuid)
     {
+        // ─── 1. Fetch the application ────────────────────────────────────
         $application = ConsignmentApplication::with([
-            'user', // submitted by
-            'importer', // importer user
-            'exporter', // exporter record
+            'user',
+            'importer',
+            'exporter',
             'entryPoint.districtCode',
             'attachments',
-
         ])
             ->where('application_id', $uuid)
             ->orderBy('created_at', 'desc')
             ->firstOrFail();
 
-    
+        // ─── 2. Get authenticated user via helper ───────────────────────
+        $auth = authUser();
 
+        if (!$auth) {
+            abort(401, 'You must be logged in to view this application.');
+        }
+
+        // ─── 3. Access control based on user type ──────────────────────
+
+        if ($auth['type'] === 'public') {
+            // Public user must be the exporter (owner) of this application
+            $publicUser = $auth['user'];
+            if ($application->user_id !== $publicUser->uuid) {
+                abort(403, 'You are not authorised to view this application.');
+            }
+        } elseif ($auth['type'] === 'internal') {
+            $internalUser = $auth['user'];
+            $roles = $auth['roles'];
+
+            // Superadmin and admin bypass all restrictions
+            $isAdmin = $roles->contains('superadmin') || $roles->contains('admin');
+
+            if (!$isAdmin) {
+                // For other internal users:
+                // – Must have 'Approve Application' permission
+                // – Must belong to branch 'Sipitang'
+                
+                $isSipitang = ($internalUser->branch ?? '') === 'Sipitang';
+
+                if (!($isSipitang)) {
+                    abort(403, 'You do not have the required permissions or branch access to view this application.');
+                }
+            }
+        } else {
+            // Should never happen because authUser() only returns 'public' or 'internal'
+            abort(403, 'Unknown user type.');
+        }
+
+        // ─── 4. Fetch remaining data and return view ────────────────────
         $itemId = $application->id;
-
-
         $consignment = [];
-
-
-
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = country::where('is_del', false)->get();
@@ -795,7 +827,6 @@ class ConsignmentApplicationController extends Controller
             'pubmeasure' => $pubmeasure,
             'pubpurpose' => $pubpurpose,
             'country' => $country,
-
         ]);
     }
     public function deleteApplication($id)
