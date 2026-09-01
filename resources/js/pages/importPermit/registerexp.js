@@ -72,7 +72,7 @@ let currentItemAttachments = [];
 let currentItemAttachIndex = 0;
 let itemFileOffcanvas = null;
 let applicationAttachments = [];
-let applicationAttachmentDropzone = null;
+let applicationDropzones = {}; // keyed by doc.id
 let itemPurpose = null;
 let temporaryItemsAttachment = [];
 
@@ -1115,70 +1115,93 @@ $(document).on("click", "#itemFileSaveBtn", function () {
 
 // ─── Application Attachments ─────────────────────────────
 function initApplicationAttachments() {
-    const dropzoneEl = document.getElementById("applicationAttachmentDropzone");
-    if (!dropzoneEl) return;
+    document
+        .querySelectorAll(".application-attachment-dropzone")
+        .forEach((dropzoneEl) => {
+            const docId = dropzoneEl.dataset.docId;
+            const docName = dropzoneEl.dataset.docName;
 
-    applicationAttachmentDropzone = new Dropzone(
-        "#applicationAttachmentDropzone",
-        {
-            url: "/",
-            autoProcessQueue: false,
-            addRemoveLinks: false,
-            previewsContainer: false,
-            clickable: true,
-            acceptedFiles: ".jpg,.jpeg,.png,.pdf,.doc,.docx",
-            maxFilesize: 15,
-            headers: {
-                "X-CSRF-TOKEN": document.querySelector(
-                    'meta[name="csrf-token"]',
-                ).content,
-            },
-            init: function () {
-                this.on("addedfile", function (file) {
-                    const attachment = {
-                        id: generateUUID(),
-                        file,
-                        name: file.name,
-                        displayName: file.name,
-                        size: file.size,
-                        type: file.type,
-                    };
-                    file._attachmentId = attachment.id; // <-- this must be set
-                    applicationAttachments.push(attachment);
-                    renderApplicationAttachmentTable();
-                    updateAttachmentTable(); // also update summary immediately
-                });
-            },
-            error: function (file, message) {
-                console.error("Attachment Dropzone Error:", message);
-                if (file.previewElement) {
-                    file.previewElement.remove();
-                }
-            },
-        },
-    );
+            const dz = new Dropzone(`#${dropzoneEl.id}`, {
+                url: "/",
+                autoProcessQueue: false,
+                addRemoveLinks: false,
+                previewsContainer: false,
+                clickable: true,
+                acceptedFiles: ".jpg,.jpeg,.png,.pdf,.doc,.docx",
+                maxFilesize: 15,
+                headers: {
+                    "X-CSRF-TOKEN": document.querySelector(
+                        'meta[name="csrf-token"]',
+                    ).content,
+                },
+                init: function () {
+                    this.on("addedfile", function (file) {
+                        const attachment = {
+                            id: generateUUID(),
+                            file,
+                            name: file.name,
+                            displayName: file.name,
+                            size: file.size,
+                            type: file.type,
+                            document_type: docName,
+                            document_id: docId,
+                            description: docName, // default description = document requirement name
+                        };
+                        file._attachmentId = attachment.id;
+                        applicationAttachments.push(attachment);
+                        renderApplicationAttachmentTable(docId);
+                        updateDocFileCountBadge(docId);
+                        updateAttachmentTable(); // update summary immediately
+                    });
+                },
+                error: function (file, message) {
+                    console.error("Attachment Dropzone Error:", message);
+                    if (file.previewElement) {
+                        file.previewElement.remove();
+                    }
+                },
+            });
 
-    renderApplicationAttachmentTable();
+            applicationDropzones[docId] = dz;
+            renderApplicationAttachmentTable(docId);
+        });
 }
 
-function renderApplicationAttachmentTable() {
-    const $tbody = $("#applicationAttachmentTable tbody");
+function updateDocFileCountBadge(docId) {
+    const badge = document.querySelector(
+        `.doc-file-count[data-doc-id="${docId}"]`,
+    );
+    if (!badge) return;
+    const count = applicationAttachments.filter(
+        (a) => String(a.document_id) === String(docId),
+    ).length;
+    badge.textContent = count > 0 ? `${count} file(s)` : "No files";
+}
+
+function renderApplicationAttachmentTable(docId) {
+    const $tbody = $(
+        `.application-attachment-table[data-doc-id="${docId}"] tbody`,
+    );
     $tbody.empty();
 
-    if (!applicationAttachments.length) {
+    const docAttachments = applicationAttachments.filter(
+        (a) => String(a.document_id) === String(docId),
+    );
+
+    if (!docAttachments.length) {
         $tbody.append(`
-            <tr>
-                <td colspan="2" class="text-center text-muted py-3" data-en="No attachments uploaded yet." data-bm="Tiada lampiran dimuat naik lagi.">
-                    <span data-en = "No attachments uploaded yet." data-bm = "Tiada lampiran"></span>
+            <tr class="empty-row">
+                <td colspan="2" class="text-center text-muted py-2" data-en="No attachments uploaded yet." data-bm="Tiada lampiran dimuat naik lagi.">
+                    No attachments uploaded yet.
                 </td>
             </tr>
         `);
         return;
     }
 
-    applicationAttachments.forEach((attachment, index) => {
+    docAttachments.forEach((attachment) => {
         $tbody.append(`
-            <tr data-id="${attachment.id}" data-index="${index}">
+            <tr data-id="${attachment.id}">
                 <td class="text-wrap">
                     <a href="#" class="text-decoration-none attachment-name-link" data-id="${attachment.id}">
                         <strong>${attachment.displayName}</strong>
@@ -1202,28 +1225,23 @@ function renderApplicationAttachmentTable() {
 }
 
 function removeAttachmentFromDropzone(attachmentId) {
-    if (!applicationAttachmentDropzone) {
-        console.warn("Dropzone not initialized");
-        return false;
-    }
-    // Find the file by our custom _attachmentId
-    const fileIndex = applicationAttachmentDropzone.files.findIndex(
+    const attachment = applicationAttachments.find((a) => a.id === attachmentId);
+    if (!attachment) return false;
+
+    const docId = attachment.document_id;
+    const dz = applicationDropzones[docId];
+    if (!dz) return false;
+
+    const fileIndex = dz.files.findIndex(
         (fileItem) => fileItem._attachmentId === attachmentId,
     );
-    if (fileIndex === -1) {
-        console.warn(
-            `File with attachmentId ${attachmentId} not found in Dropzone`,
-        );
-        return false;
-    }
-    const file = applicationAttachmentDropzone.files[fileIndex];
+    if (fileIndex === -1) return false;
+    const file = dz.files[fileIndex];
     try {
-        applicationAttachmentDropzone.removeFile(file);
+        dz.removeFile(file);
         return true;
     } catch (e) {
-        console.error("Error removing file from Dropzone:", e);
-        // Fallback: manually remove from the files array
-        applicationAttachmentDropzone.files.splice(fileIndex, 1);
+        dz.files.splice(fileIndex, 1);
         return true;
     }
 }
@@ -2431,6 +2449,8 @@ function saveapplication(isDraft = false) {
     applicationAttachments.forEach((attachment) => {
         if (attachment.file) {
             formData.append("application_files[]", attachment.file);
+            formData.append("application_files_document_type[]", attachment.document_type || "");
+            formData.append("application_files_description[]", attachment.description || "");
         }
     });
 
@@ -2562,7 +2582,7 @@ function updateAttachmentTable() {
                 "beforeend",
                 `
                 <tr>
-                    <td colspan="4" class="text-center text-muted py-3" data-en="No attachments uploaded" data-bm="Tiada lampiran dimuat naik">
+                    <td colspan="5" class="text-center text-muted py-3" data-en="No attachments uploaded" data-bm="Tiada lampiran dimuat naik">
                         No attachments uploaded
                     </td>
                 </tr>
@@ -2601,6 +2621,7 @@ function updateAttachmentTable() {
                     <tr>
                         <td data-label="#">${index + 1}</td>
                         <td data-label="File Name" class="text-wrap">${attachment.displayName || attachment.name || ""}</td>
+                        <td data-label="Description" class="text-wrap">${attachment.description || ""}</td>
                         <td data-label="Size">${sizeDisplay}</td>
                         <td data-label="Type">${typeDisplay}</td>
                         <td class="text-end">
@@ -3001,6 +3022,26 @@ $(document).ready(async function () {
             html: '<span data-en="Failed to initialize page. Check console for details." data-bm="Gagal memulakan halaman. Periksa konsol untuk butiran.">Failed to initialize page. Check console for details.</span>',
             didOpen: (modal) => applyTranslations(modal),
         });
+    }
+
+    $(document).on("click", ".doc-details-btn", function () {
+        const name = $(this).data("doc-name");
+        const targetId = $(this).data("description-target");
+        const sourceHtml = document.getElementById(targetId)?.innerHTML || "";
+
+        $("#docDescriptionModalLabel").text(name);
+        $(".doc-description-modal-body").html(
+            sourceHtml.trim() || "<p class='text-muted mb-0'>No description available.</p>",
+        );
+
+        const modal = bootstrap.Modal.getOrCreateInstance(
+            document.getElementById("docDescriptionModal"),
+        );
+        modal.show();
+    });
+
+    try {
+        // dummy try to match the finally
     } finally {
         Swal.close();
     }
