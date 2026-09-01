@@ -24,6 +24,7 @@ use App\Http\Controllers\InspectionPermitController;
 use App\Http\Controllers\ConsignmentPermitController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\BoundaryOfficerController;
+use App\Http\Controllers\internal\IpUsesController;
 use App\Http\Controllers\ConsignmentMiscController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FilterController;
@@ -308,6 +309,12 @@ Route::prefix('internal')
 
         //MISC - Restricted to non-boundary officers
         Route::get('/control_panel', [MiscController::class, 'showcontrolpanel']);
+        
+        // IP Uses management in Control Panel
+        Route::get('/control_panel/ip_uses/data', [IpUsesController::class, 'getData'])->name('ip_uses.data');
+        Route::post('/control_panel/ip_uses/save', [IpUsesController::class, 'save'])->name('ip_uses.save');
+        Route::delete('/control_panel/ip_uses/delete/{id}', [IpUsesController::class, 'destroy'])->name('ip_uses.destroy');
+
         Route::get('/state-district-management', [MiscController::class, 'showStateDistrictManagement'])->name('state-district-management');
         Route::get('/branch-management', [MiscController::class, 'showBranchManagement'])->name('branch-management');
         Route::get('/get_pbdata/{cate}', [MiscController::class, 'getpbdata']);

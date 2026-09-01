@@ -4,6 +4,19 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.12.1/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.3.0/css/responsive.bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.bootstrap5.min.css">
+    <style>
+        .filter-dropdown {
+            width: 450px;
+        }
+
+        @media (max-width: 768px) {
+            .filter-dropdown {
+                width: 100%;
+                left: 0 !important;
+                right: 0 !important;
+            }
+        }
+    </style>
 @endpush
 
 @php
@@ -34,11 +47,51 @@
         <div class="col-xl-12">
             <div class="card custom-card">
                 <div class="card-header">
-                    @can('create internal user')
-                        <div class="ms-auto">
-                            <button class="btn btn-success btn-sm addInternalUser-modal"><span data-en="Add Internal User" data-bm="Tambah Pengguna Dalaman">Add Internal User</span></button>
+                    <div class="ms-auto d-flex align-items-center gap-2">
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-primary filter dropdown-toggle" type="button"
+                                id="dropdownMenuClickableOutside" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                                aria-expanded="false">
+                                <span class="me-2"><i class="ti ti-adjustments-horizontal"></i></span>
+                                <span data-en="Filter" data-bm="Tapis">Filter</span>
+                            </button>
+                            <ul class="dropdown-menu p-3 filter-dropdown" aria-labelledby="dropdownMenuClickableOutside">
+                                <div class="row gx-3">
+                                    <div class="col-12 col-md-6">
+                                        <li class="mb-3">
+                                            <label class="form-label fw-semibold mb-1" data-en="Filter by Role" data-bm="Tapis mengikut Peranan">Filter by Role</label>
+                                            <select class="form-select form-select-sm select2" id="filter_role">
+                                                <option value="superadmin" data-en="Superadmin" data-bm="Pentadbir Super">Superadmin</option>
+                                                <option value="admin" data-en="Admin" data-bm="Pentadbir">Admin</option>
+                                                <option value="officer" data-en="Officer" data-bm="Pegawai">Officer</option>
+                                                <option value="clerk" data-en="Clerk" data-bm="Kerani">Clerk</option>
+                                                <option value="boundary officer" data-en="Boundary Officer" data-bm="Pegawai Sempadan">Boundary Officer</option>
+                                                <option value="finance" data-en="Finance" data-bm="Kewangan">Finance</option>
+                                            </select>
+                                        </li>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <li class="mb-3">
+                                            <label class="form-label fw-semibold mb-1" data-en="Filter by Branch" data-bm="Tapis mengikut Cawangan">Filter by Branch</label>
+                                            <select class="form-select form-select-sm select2" id="filter_branch">
+                                                @foreach ($branches as $branch)
+                                                    <option value="{{ $branch->name }}">{{ $branch->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </li>
+                                    </div>
+                                </div>
+                                <li class="d-flex justify-content-end gap-2 mt-2">
+                                    <button class="btn btn-sm btn-secondary" id="resetFilterBtn"><span data-en="Reset" data-bm="Set Semula">Reset</span></button>
+                                    <button class="btn btn-sm btn-primary" id="applyFilterBtn"><span data-en="Apply" data-bm="Cari">Apply</span></button>
+                                </li>
+                            </ul>
                         </div>
-                    @endcan
+
+                        @can('create internal user')
+                            <button class="btn btn-success btn-sm addInternalUser-modal"><span class="me-2"><i class="ti ti-plus"></i></span><span data-en="Add Internal User" data-bm="Tambah Pengguna Dalaman">Add Internal User</span></button>
+                        @endcan
+                    </div>
                 </div>
 
                 <div class="card-body">
