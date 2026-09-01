@@ -214,6 +214,7 @@ class ConsignmentController extends Controller
 
         $datatable = DataTables::eloquent($query)
             ->addIndexColumn()
+            ->addColumn('application_id', fn($row) => $row->application_id ?? '-')
             ->addColumn('importer', fn($row) => $row->exporter->fullname ?? '-')
             ->addColumn('exporter', fn($row) => $row->importer->name ?? '-')
             ->addColumn('status', function ($row) use ($statusTranslations) {

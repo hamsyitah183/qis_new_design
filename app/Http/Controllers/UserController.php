@@ -594,6 +594,18 @@ class UserController extends Controller
     {
         $query = InternalUser::select(['uuid', 'fullname', 'email', 'phone_number', 'position', 'office', 'branch'])->with('roles'); // Using Spatie roles
 
+        if ($request->has('role') && $request->role != '') {
+            $roles = explode(',', $request->role);
+            $query->whereHas('roles', function ($q) use ($roles) {
+                $q->whereIn('name', $roles);
+            });
+        }
+
+        if ($request->has('branch') && $request->branch != '') {
+            $branches = explode(',', $request->branch);
+            $query->whereIn('branch', $branches);
+        }
+
         $currentUser = Auth::guard('internal')->user();
 
         return DataTables::of($query)

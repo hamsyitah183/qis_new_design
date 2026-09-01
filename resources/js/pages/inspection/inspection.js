@@ -1549,7 +1549,7 @@ $(document).on("click", ".edit-attachment-btn", function () {
     if (!newName) return;
 
     attachment.displayName = newName.trim();
-    renderApplicationAttachmentTable();
+    renderApplicationAttachmentTable(attachment.document_id);
     updateAttachmentTable();
 });
 
@@ -1560,10 +1560,13 @@ $(document).on("click", ".delete-attachment-btn", function () {
     );
     if (index === -1) return;
 
+    const docId = applicationAttachments[index].document_id;
+
     removeAttachmentFromDropzone(attachmentId);
     applicationAttachments.splice(index, 1);
 
-    renderApplicationAttachmentTable();
+    renderApplicationAttachmentTable(docId);
+    updateDocFileCountBadge(docId);
     updateAttachmentTable();
 
     Swal.fire({
@@ -1603,7 +1606,7 @@ $(document).on("click", "#attachmentSaveNameBtn", function () {
     });
 
     if (attachment.source === "application") {
-        renderApplicationAttachmentTable();
+        renderApplicationAttachmentTable(attachment.document_id || attachment.raw.document_id);
         updateAttachmentTable();
     }
 });
@@ -1777,8 +1780,14 @@ async function loadApplicationData(id) {
                     size: a.file_size || 0,
                     type: a.file_type || "",
                     url: a.file_path,
+                    document_id: a.document_id,
                 }));
-                renderApplicationAttachmentTable();
+                
+                const docIds = [...new Set(applicationAttachments.map(a => a.document_id).filter(id => id))];
+                docIds.forEach(id => {
+                    renderApplicationAttachmentTable(id);
+                    updateDocFileCountBadge(id);
+                });
                 updateAttachmentTable();
             }
 

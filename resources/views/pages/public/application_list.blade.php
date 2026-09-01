@@ -143,6 +143,7 @@
                                     <thead class="mt-3">
                                         <tr class="even">
                                             <th data-en="#" data-bm="#">#</th>
+                                            <th data-en="Application ID" data-bm="ID Permohonan">Application ID</th>
                                             <th data-en="Importer" data-bm="Pengimport">Importer</th>
                                             <th data-en="Exporter" data-bm="Pengeksport">Exporter</th>
                                             <th data-en="Application Status" data-bm="Status Permohonan">Application Status</th>

@@ -55,6 +55,12 @@
                         </li>
                         <li class="nav-item me-0" role="presentation">
                             <a class="nav-link " data-bs-toggle="tab" role="tab" aria-current="page"
+                                href="#ip-uses-settings" aria-selected="true"><i
+                                    class="ri-settings-3-line me-2 align-middle fs-14 lh-1 text-primary"></i><span
+                                    data-en="IP Uses" data-bm="Kegunaan IP">IP Uses</span></a>
+                        </li>
+                        <li class="nav-item me-0" role="presentation">
+                            <a class="nav-link " data-bs-toggle="tab" role="tab" aria-current="page"
                                 href="#rejection-settings" aria-selected="true"><i
                                     class="ri-file-shield-line me-2 align-middle fs-14 lh-1 text-danger"></i><span
                                     data-en="Rejection Notes" data-bm="Nota Penolakan">Rejection
@@ -81,6 +87,9 @@
                         @include('pages.internal.misc.cp_tab6')
                         <!-- tab5 -->
                         @include('pages.internal.misc.cp_tab5')
+                        
+                        <!-- IP Uses tab -->
+                        @include('pages.internal.misc.cp_ip_uses')
 
 
                     </div>

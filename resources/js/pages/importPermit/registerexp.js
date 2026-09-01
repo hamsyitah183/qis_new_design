@@ -1417,7 +1417,7 @@ $(document).on("click", ".edit-attachment-btn", function () {
     if (!newName) return;
 
     attachment.displayName = newName.trim();
-    renderApplicationAttachmentTable();
+    renderApplicationAttachmentTable(attachment.document_id);
     updateAttachmentTable();
 });
 
@@ -1428,6 +1428,8 @@ $(document).on("click", ".delete-attachment-btn", function () {
     );
     if (index === -1) return;
 
+    const docId = applicationAttachments[index].document_id;
+
     // Remove from Dropzone (if possible)
     removeAttachmentFromDropzone(attachmentId);
 
@@ -1435,7 +1437,8 @@ $(document).on("click", ".delete-attachment-btn", function () {
     applicationAttachments.splice(index, 1);
 
     // Re-render both tables
-    renderApplicationAttachmentTable();
+    renderApplicationAttachmentTable(docId);
+    updateDocFileCountBadge(docId);
     updateAttachmentTable(); // <-- ensure summary table updates too
 
     // Optional: show a quick feedback
@@ -1468,7 +1471,7 @@ $(document).on("click", "#attachmentSaveNameBtn", function () {
         const attachment = applicationAttachments[currentAttachmentIndex];
         attachment.displayName = newName;
 
-        renderApplicationAttachmentTable();
+        renderApplicationAttachmentTable(attachment.document_id);
         renderAttachmentDetails(
             attachment,
             document.getElementById("attachmentDetails"),

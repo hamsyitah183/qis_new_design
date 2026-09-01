@@ -39,6 +39,8 @@ function getText(key) {
 }
 
 
+import { autoInitFilterSelect2 } from "../../../utils/select2Utils";
+
 /**
  * ✅ Lazy Initialize DataTable for Internal Users
  */
@@ -86,6 +88,9 @@ async function data_table_init() {
         responsive: true,
         pageLength: 10,
     });
+
+    // Init Select2 on all static filter selects (those with class 'select2')
+    autoInitFilterSelect2();
 }
 
 async function getSwal() {
@@ -517,6 +522,40 @@ async function internal_user_list() {
         $(".form-control").removeClass("is-invalid");
         $(".invalid-feedback").text("");
         $("#internalUserModal .modal-footer").show();
+    });
+
+    // ========== Filter Functionality ==========
+    
+    // Apply Filter Button
+    $(document).on("click", "#applyFilterBtn", function (e) {
+        e.preventDefault();
+        
+        const filters = {
+            role: [].concat($("#filter_role").val() || []).join(","),
+            branch: [].concat($("#filter_branch").val() || []).join(",")
+        };
+
+        // Update DataTable AJAX URL with filter parameters
+        const url = new URL("/internal/user_internal/list/data", window.location.origin);
+        Object.keys(filters).forEach(key => {
+            if (filters[key]) {
+                url.searchParams.append(key, filters[key]);
+            }
+        });
+
+        internalListTable.ajax.url(url.toString()).load();
+    });
+
+    // Reset Filter Button
+    $(document).on("click", "#resetFilterBtn", function (e) {
+        e.preventDefault();
+        
+        // Reset all filter dropdowns
+        $("#filter_role").val("").trigger("change");
+        $("#filter_branch").val("").trigger("change");
+
+        // Reset DataTable to default URL
+        internalListTable.ajax.url("/internal/user_internal/list/data").load();
     });
 
     console.log("user id", userId);

@@ -55,7 +55,7 @@ class PermitApplicationController extends Controller
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();
         
-        $ipDocuments = DocumentRequirement::forModule('ip')
+        $ipDocuments = DocumentRequirement::forModule('import')
             ->orderBy('name')
             ->get();
             
@@ -76,7 +76,7 @@ class PermitApplicationController extends Controller
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();
         
-        $ipDocuments = DocumentRequirement::forModule('ip')
+        $ipDocuments = DocumentRequirement::forModule('import')
             ->orderBy('name')
             ->get();
             

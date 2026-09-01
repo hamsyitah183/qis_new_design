@@ -15,8 +15,8 @@
                 {{-- Logo --}}
                 <tr>
                     <td align="center" style="padding-bottom: 30px;">
-                        @if(!empty($logoBase64))
-                            <img src="{{ $logoBase64 }}" alt="DOA Logo" style="height: 60px; display: block;">
+                        @if(file_exists(public_path('images/Logo-DOA.png')))
+                            <img src="{{ $message->embed(public_path('images/Logo-DOA.png')) }}" alt="DOA Logo" style="height: 60px; display: block;">
                         @else
                             <p style="font-size: 18px; font-weight: bold; color: #2e7d32;">QIS System</p>
                         @endif

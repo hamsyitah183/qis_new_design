@@ -14,9 +14,7 @@ class AnnouncementMail extends Mailable
     use Queueable, SerializesModels;
 
     public Announcement $announcement;
-    public ?string $imageBase64;
-    public ?string $imageMime;
-    public string $logoBase64;
+    public ?string $imagePath;
 
     /**
      * Create a new message instance.
@@ -25,26 +23,17 @@ class AnnouncementMail extends Mailable
     {
         $this->announcement = $announcement;
 
-        // Embed logo as base64
-        $logoPath = public_path('asset/Logo-DOA.png');
-        $this->logoBase64 = file_exists($logoPath)
-            ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath))
-            : '';
-
-        // Embed announcement image as base64
+        // Embed announcement image path
         $firstAttachment = $announcement->attachments->first();
         if ($firstAttachment) {
             $filePath = storage_path('app/public/' . $firstAttachment->file_path);
             if (file_exists($filePath)) {
-                $this->imageBase64 = 'data:' . $firstAttachment->file_type . ';base64,' . base64_encode(file_get_contents($filePath));
-                $this->imageMime   = $firstAttachment->file_type;
+                $this->imagePath = $filePath;
             } else {
-                $this->imageBase64 = null;
-                $this->imageMime   = null;
+                $this->imagePath = null;
             }
         } else {
-            $this->imageBase64 = null;
-            $this->imageMime   = null;
+            $this->imagePath = null;
         }
     }
 
@@ -67,8 +56,7 @@ class AnnouncementMail extends Mailable
             view: 'email.announcement_email',
             with: [
                 'announcement' => $this->announcement,
-                'imageBase64'  => $this->imageBase64,
-                'logoBase64'   => $this->logoBase64,
+                'imagePath'    => $this->imagePath,
             ],
         );
     }

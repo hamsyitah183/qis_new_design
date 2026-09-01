@@ -809,3 +809,152 @@ $(document).ready(function () {
         });
     });
 });
+
+// ==========================================
+// IP Uses Management
+// ==========================================
+
+let tableIpUses;
+
+$(document).ready(function () {
+    // Initialize DataTable
+    tableIpUses = $('#table-ip-uses').DataTable({
+        processing: true,
+        serverSide: true,
+        paging: false,
+        searching: false,
+        info: false,
+        dom: 't',
+        ajax: '/internal/control_panel/ip_uses/data',
+        columns: [
+            { data: 'name', name: 'name' },
+            { data: 'action', name: 'action', orderable: false, searchable: false }
+        ],
+        language: {
+            processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>'
+        },
+    });
+
+    // Handle form submit (Add/Edit)
+    $('#ipUsesForm').on('submit', function (e) {
+        e.preventDefault();
+        
+        const saveBtn = $('#saveIpUsesBtn');
+        const originalText = saveBtn.html();
+        saveBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
+
+        $.ajax({
+            url: '/internal/control_panel/ip_uses/save',
+            type: 'POST',
+            data: $(this).serialize(),
+            success: function (response) {
+                saveBtn.prop('disabled', false).html(originalText);
+                if (response.success) {
+                    $('#ipUsesModal').modal('hide');
+                    tableIpUses.ajax.reload();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: response.message,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message || 'Failed to save',
+                    });
+                }
+            },
+            error: function (xhr) {
+                saveBtn.prop('disabled', false).html(originalText);
+                let errorMsg = 'An error occurred';
+                if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    errorMsg = Object.values(xhr.responseJSON.errors)[0][0];
+                }
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: errorMsg,
+                });
+            }
+        });
+    });
+
+    // Handle Edit button click
+    $(document).on('click', '.edit-ipuse-btn', function () {
+        const id = $(this).data('id');
+        const name = $(this).data('name');
+        
+        $('#ip_uses_id').val(id);
+        $('#ip_uses_name').val(name);
+        
+        const titleEl = document.getElementById('ipUsesModalTitle');
+        if (titleEl) {
+            titleEl.innerText = 'Edit IP Use';
+        }
+        
+        $('#ipUsesModal').modal('show');
+    });
+
+    // Handle Delete button click
+    $(document).on('click', '.delete-ipuse-btn', function () {
+        const id = $(this).data('id');
+        
+        Swal.fire({
+            title: typeof getText === 'function' ? (getText('areYouSure') || 'Are you sure?') : 'Are you sure?',
+            text: typeof getText === 'function' ? (getText('itemDeletedWarning') || "You won't be able to revert this!") : "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '/internal/control_panel/ip_uses/delete/' + id,
+                    type: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            tableIpUses.ajax.reload();
+                            Swal.fire({
+                                icon: 'success',
+                                title: typeof getText === 'function' ? (getText('deleted') || 'Deleted!') : 'Deleted!',
+                                text: response.message,
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: response.message,
+                            });
+                        }
+                    },
+                    error: function () {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An error occurred while deleting.',
+                        });
+                    }
+                });
+            }
+        });
+    });
+});
+
+window.openIpUsesModal = function() {
+    $('#ipUsesForm')[0].reset();
+    $('#ip_uses_id').val('');
+    const titleEl = document.getElementById('ipUsesModalTitle');
+    if (titleEl) {
+        titleEl.innerText = 'Add IP Use';
+    }
+    $('#ipUsesModal').modal('show');
+};

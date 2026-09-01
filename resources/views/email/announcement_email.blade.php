@@ -15,8 +15,8 @@
                 {{-- Logo (embedded as base64) --}}
                 <tr>
                     <td align="center" style="padding-bottom: 30px;">
-                        @if($logoBase64)
-                            <img src="{{ $logoBase64 }}" alt="QIS Logo" style="height: 60px; display: block;">
+                        @if(file_exists(public_path('images/Logo-DOA.png')))
+                            <img src="{{ $message->embed(public_path('images/Logo-DOA.png')) }}" alt="QIS Logo" style="height: 60px; display: block;">
                         @else
                             <p style="font-size: 18px; font-weight: bold; color: #2e7d32;">QIS System</p>
                         @endif
@@ -56,9 +56,9 @@
                                     </div>
 
                                     {{-- Image (embedded as base64) --}}
-                                    @if($imageBase64)
+                                    @if(isset($imagePath) && $imagePath)
                                         <div style="margin-top: 24px; text-align: center;">
-                                            <img src="{{ $imageBase64 }}" alt="Announcement Image"
+                                            <img src="{{ $message->embed($imagePath) }}" alt="Announcement Image"
                                                  style="max-width: 100%; border-radius: 6px; border: 1px solid #eeeeee;">
                                         </div>
                                     @endif

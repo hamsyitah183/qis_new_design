@@ -121,6 +121,7 @@ async function createDataTables() {
                 orderable: false,
                 searchable: false,
             },
+            { data: "application_id", name: "application_id" },
             { data: "importer" },
             { data: "exporter" },
             { data: "status" },

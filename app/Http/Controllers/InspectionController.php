@@ -17,6 +17,7 @@ use App\Events\PublicUserEvent;
 use App\Models\DocumentRequirement;
 use App\Models\ImportPermitLog;
 use App\Models\InspectionAttachment;
+use App\Models\InspectionApplicationAttachment;
 use App\Models\InspectionItem;
 use App\Models\IpCondition;
 use App\Models\IpConsignmentAttachment;
@@ -203,6 +204,7 @@ class InspectionController extends Controller
 
         $datatable = DataTables::eloquent($query)
             ->addIndexColumn()
+            ->addColumn('application_id', fn($row) => $row->application_id ?? '-')
             ->addColumn('importer', fn($row) => $row->importer->fullname ?? '-')
             ->addColumn('exporter', fn($row) => $row->exporter->name ?? '-')
             ->addColumn('status', function ($row) use ($statusTranslations) {
