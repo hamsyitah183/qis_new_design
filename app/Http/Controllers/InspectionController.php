@@ -17,6 +17,7 @@ use App\Events\PublicUserEvent;
 use App\Models\DocumentRequirement;
 use App\Models\ImportPermitLog;
 use App\Models\InspectionAttachment;
+use App\Models\InspectionApplicationAttachment;
 use App\Models\InspectionItem;
 use App\Models\IpCondition;
 use App\Models\IpConsignmentAttachment;
