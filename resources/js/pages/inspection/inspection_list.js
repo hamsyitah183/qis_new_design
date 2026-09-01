@@ -118,6 +118,7 @@ async function data_table_init() {
                 orderable: false,
                 searchable: false,
             },
+            { data: "application_id", name: "application_id" },
             { data: "importer" },
             { data: "exporter" },
             { data: "status" },

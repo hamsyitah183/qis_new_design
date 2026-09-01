@@ -203,6 +203,7 @@ class InspectionController extends Controller
 
         $datatable = DataTables::eloquent($query)
             ->addIndexColumn()
+            ->addColumn('application_id', fn($row) => $row->application_id ?? '-')
             ->addColumn('importer', fn($row) => $row->importer->fullname ?? '-')
             ->addColumn('exporter', fn($row) => $row->exporter->name ?? '-')
             ->addColumn('status', function ($row) use ($statusTranslations) {
