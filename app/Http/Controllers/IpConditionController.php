@@ -132,6 +132,7 @@ class IpConditionController extends Controller
         $consignment_detail = $permit->consignment_detail ?? [];
         $consignment_detail['item_name'] = $condition->item_name;
         $consignment_detail['isCustom'] = false;
+        $consignment_detail['condition'] = $condition->addional_condition;
         $permit->consignment_detail = $consignment_detail;
         $permit->save();
 

@@ -189,7 +189,7 @@
                                             class="fw-bold fs-16 text-warning-emphasis">{{ $pendingPaymentCount ?? 0 }}</span>
                                     </div>
 
-                                    <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3">
+                                    {{-- <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3">
                                         <div class="d-flex align-items-center">
                                             <div class="avatar avatar-sm bg-success-transparent rounded-circle me-3">
                                                 <i class="ti ti-circle-check text-success fs-16"></i>
@@ -207,7 +207,7 @@
                                             <span class="fs-13 fw-medium text-muted" data-en="Rejected" data-bm="Ditolak">Rejected</span>
                                         </div>
                                         <span class="fw-bold fs-16">{{ $rejectedCount ?? 0 }}</span>
-                                    </div>
+                                    </div> --}}
                                 </div>
                             </div>
 
@@ -216,7 +216,7 @@
                                 {{-- Soft inset background to mimic the reference image --}}
                                 <div class="p-3 rounded-4"
                                     style="background-color: var(--gray-1); border: 1px solid var(--default-border);">
-                                    <h6 class="fs-13 fw-semibold text-center mb-1 text-muted" data-en="Applications Received" data-bm="Permohonan Diterima">Applications Received</h6>
+                                    <h6 class="fs-13 fw-semibold text-center mb-1 text-muted" data-en="Applications Submitted" data-bm="Permohonan Dihantar">Applications Submitted</h6>
                                     <div id="dummyBarChart" style="min-height: 220px;"></div>
                                 </div>
                             </div>

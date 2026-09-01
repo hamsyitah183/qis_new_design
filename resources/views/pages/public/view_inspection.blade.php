@@ -11,7 +11,6 @@
         use Illuminate\Support\Facades\Gate;
         $internalUser = auth('internal')->user();
         $isInternal = auth('internal')->check();
-        // Kept as-is from the original blade — these were hardcoded URLs, not named routes.
         $applicationUrl = $isInternal
             ? '/internal/inspection_certificates_list'
             : '/public/inspection_certificates_list';
@@ -50,33 +49,27 @@
                 ->hasAnyRole(['admin', 'clerk', 'superadmin']);
 
         $isPublic = auth()->guard('public')->check();
-        // Unlike Consignment (where roles are reversed), Inspection keeps the
-        // original semantics: the applicant/owner is whoever submitted the
-        // application (user_id) — same check the old blade used for the Edit
-        // button.
         $isOwner = $isPublic && $application->user_id === $authUuid;
 
         $allPending = $application->inspectionItems->every(fn($permit) => $permit->status === 'pending for payment');
 
+        // ─── Payment tab ──────────────────────────────────────────────
         $showPaymentTab = $isPublic && $application->user_id === $authUuid && $allPending;
 
-        // [TODO] The old blade gated the clerk-review section purely on role
-        // ($isAdminOrClerk), with no separate permission check — kept as-is
-        // rather than inventing a permission name that may not exist for this
-        // guard. If Inspection later gets its own "approve application"
-        // permission, add it here to match Consignment's stricter gating.
-$showClerkReviewActions = $isAdminOrClerk && str_contains($status, 'clerk review in-progress');
+        // ─── Payment action bar (officer verification completed) ─────
+        $showPaymentActionBar =
+            $isPublic &&
+            $application->user_id === $authUuid &&
+            str_contains(strtolower($application->status ?? ''), 'officer verification completed');
 
-// [TODO] Consignment has a separate "re-evaluate a rejected
-// application" admin flow ($showAdminRejectedActions). Nothing in the
-// old Inspection blade/JS evidenced an equivalent — omitted here. Add
-// it back if Inspection gets the same feature.
+        // ─── Clerk review actions ────────────────────────────────────
+        $showClerkReviewActions = $isAdminOrClerk && str_contains($status, 'clerk review in-progress');
 
-// ---------- FIX: Edit Application permission check ----------
-$canEditInternal = $isInternal && auth('internal')->user()->can('edit application');
+        // ─── Edit permission for internal users ──────────────────────
+        $canEditInternal = $isInternal && auth('internal')->user()->can('edit application');
     @endphp
 
-    {{-- Feed real application context to inspection_detail.js instead of URL-parsing --}}
+    {{-- Feed real application context to inspection_detail.js --}}
     <script>
         window.baseUrl = "{{ url('/') }}";
         window.APPLICATION_ID = "{{ $application->application_id }}";
@@ -100,24 +93,40 @@ $canEditInternal = $isInternal && auth('internal')->user()->can('edit applicatio
         {{-- ============================================================ --}}
         {{-- APPLICATION-LEVEL ACTIONS BAR --}}
         {{-- ============================================================ --}}
-        @if ($showClerkReviewActions)
+        @if ($showClerkReviewActions || $showPaymentActionBar)
             <div class="col-xl-12">
-                <div class="ipv-actions-bar" id= "ipvBulkActionsWrap">
+                <div class="ipv-actions-bar" id="ipvBulkActionsWrap">
                     <div class="ipv-actions-bar-text">
                         <i class="bi bi-info-circle"></i>
-                        <span data-en="This application is awaiting your review."
-                            data-bm="Permohonan ini sedang menunggu semakan anda.">This application is awaiting your
-                            review.</span>
+                        @if ($showClerkReviewActions)
+                            <span data-en="This application is awaiting your review."
+                                data-bm="Permohonan ini sedang menunggu semakan anda.">This application is awaiting your
+                                review.</span>
+                        @elseif ($showPaymentActionBar)
+                            <span data-en="Your application has been verified by the officer. Please proceed to payment."
+                                data-bm="Permohonan anda telah disahkan oleh pegawai. Sila teruskan ke pembayaran.">
+                                Your application has been verified by the officer. Please proceed to payment.
+                            </span>
+                        @endif
                     </div>
                     <div class="ipv-actions-bar-buttons">
-                        <button id="acceptAppl" class="ipv-btn-action is-success">
-                            <i class="bi bi-check-lg"></i> <span data-en="Accept Application"
-                                data-bm="Terima Permohonan">Accept Application</span>
-                        </button>
-                        <button id="rejectAdminAppl" class="ipv-btn-action is-danger">
-                            <i class="bi bi-x-lg"></i> <span data-en="Reject Application" data-bm="Tolak Permohonan">Reject
-                                Application</span>
-                        </button>
+                        @if ($showClerkReviewActions)
+                            <button id="acceptAppl" class="ipv-btn-action is-success">
+                                <i class="bi bi-check-lg"></i> <span data-en="Accept Application"
+                                    data-bm="Terima Permohonan">Accept Application</span>
+                            </button>
+                            <button id="rejectAdminAppl" class="ipv-btn-action is-danger">
+                                <i class="bi bi-x-lg"></i> <span data-en="Reject Application"
+                                    data-bm="Tolak Permohonan">Reject
+                                    Application</span>
+                            </button>
+                        @endif
+                        @if ($showPaymentActionBar)
+                            <button id="goToPaymentTabBtn" class="ipv-btn-action btn btn-info">
+                                <i class="bi bi-credit-card"></i> <span data-en="Go to Payment"
+                                    data-bm="Pergi ke Pembayaran">Go to Payment</span>
+                            </button>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -140,11 +149,7 @@ $canEditInternal = $isInternal && auth('internal')->user()->can('edit applicatio
                 </div>
 
                 <div class="ipv-action-row">
-                    {{-- [TODO] Old blade had no dedicated print-permit permission check for
-                         Inspection — reusing the same role-based gate as elsewhere on this
-                         page rather than guessing a permission name. --}}
-
-                    @if ($application->status == 'Completed' &&  auth()->guard('internal')->user()->can('print permit'))
+                    @if ($application->status == 'Completed' && $isInternal && auth()->guard('internal')->user()->can('print permit'))
                         <button type="button" class="ipv-btn-primary" id="ipvPrintPermitBtn">
                             <i class="bi bi-printer"></i> <span data-en="Print Certificate" data-bm="Cetak Sijil">Print
                                 Certificate</span>
@@ -155,7 +160,7 @@ $canEditInternal = $isInternal && auth('internal')->user()->can('edit applicatio
                     </span>
 
                     <button class="btn ipv-btn-primary btn-secondary" id="printApplication"
-                        data-type = "{{ $application->type }}" data-application = "{{ $application->application_id }}">
+                        data-type="{{ $application->type }}" data-application="{{ $application->application_id }}">
                         <i class="fa-solid fa-print"></i> <span data-en='Print Application' data-bm="Cetak Permohonan">Print
                             Application</span>
                     </button>
@@ -175,10 +180,6 @@ $canEditInternal = $isInternal && auth('internal')->user()->can('edit applicatio
 
                 <div class="ipv-divider"></div>
 
-                {{-- [TODO] Same caveat as the Consignment blade: only render this block if
-                     your API's /inspection_application/{id}/data response actually includes
-                     an application-level `attachment`/`attachments` array. The legacy
-                     inspection_detail.js never populated one. --}}
                 <div class="ipv-section-label-row">
                     <span class="ipv-section-label" data-en="Application Documents" data-bm="Dokumen Permohonan">Application
                         Documents</span>
@@ -191,23 +192,21 @@ $canEditInternal = $isInternal && auth('internal')->user()->can('edit applicatio
 
                 <div class="ipv-divider"></div>
 
-                {{-- ============================================================ --}}
-                {{-- EDIT APPLICATION BUTTON – FIXED CONDITION                    --}}
-                {{-- ============================================================ --}}
-                @if ( ($application->status == 'Draft' || $application->status == 'Clerk Rejected') && $application->user_id === $authUuid) 
+                {{-- Edit Application button --}}
+                @if (
+                    ($application->status == 'Draft' || $application->status == 'Clerk Rejected') &&
+                        $application->user_id === $authUuid)
                     @if ($application->category_application == '0')
                         <a class="ipv-btn-outline w-100 justify-content-center mt-3 btn btn-primary" id="editButton"
                             href="{{ route('public.inspectionApplicationSelf', ['id' => $application->application_id]) }}">
                             <i class="bi bi-pencil"></i> <span data-en="Edit Application"
-                                data-bm="Kemaskini Permohonan">Edit
-                                Application</span>
+                                data-bm="Kemaskini Permohonan">Edit Application</span>
                         </a>
                     @else
                         <a class="ipv-btn-outline w-100 justify-content-center mt-3 btn btn-primary" id="editButton"
                             href="{{ route('public.inspectionApplicationOthers', ['id' => $application->application_id]) }}">
                             <i class="bi bi-pencil"></i> <span data-en="Edit Application"
-                                data-bm="Kemaskini Permohonan">Edit
-                                Application</span>
+                                data-bm="Kemaskini Permohonan">Edit Application</span>
                         </a>
                     @endif
                 @endif
@@ -293,7 +292,6 @@ $canEditInternal = $isInternal && auth('internal')->user()->can('edit applicatio
                                         <tr>
                                             <th data-en="Permit Number" data-bm="Nombor Permit">Permit Number</th>
                                             <th data-en="Item Name" data-bm="Nama Item">Item Name</th>
-                                            {{-- <th class="text-end" data-en="Value" data-bm="Nilai">Value</th> --}}
                                         </tr>
                                     </thead>
                                     <tbody></tbody>
@@ -445,9 +443,7 @@ $canEditInternal = $isInternal && auth('internal')->user()->can('edit applicatio
         @endslot
     </x-modal>
 
-    {{-- Reapply modal — needed by inspection_detail.js's reapply() flow.
-         Controller must pass $pubmeasure and $pubpurpose (same as the old
-         wizard's addItemModal / consignment's equivalent). --}}
+    {{-- Reapply modal — needed by inspection_detail.js's reapply() flow. --}}
     <div class="modal fade" id="addItemModal" tabindex="-1" data-bs-focus="false">
         <form class="modal-dialog modal-fullscreen">
             <input type="hidden" name="permit_id" value="permit_id">
@@ -539,3 +535,28 @@ $canEditInternal = $isInternal && auth('internal')->user()->can('edit applicatio
     </div>
 
 @endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.location.hash === '#pending') {
+                document.querySelector('.ipv-tabnav-item[data-ipv-tab="payment"]')?.click();
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('#goToPaymentTabBtn');
+            if (btn) {
+                e.preventDefault();
+                const paymentTab = document.querySelector('.ipv-tabnav-item[data-ipv-tab="payment"]');
+                if (paymentTab) {
+                    paymentTab.click();
+                    paymentTab.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'nearest'
+                    });
+                }
+            }
+        });
+    </script>
+@endpush

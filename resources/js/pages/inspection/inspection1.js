@@ -865,7 +865,7 @@ function renderPermitAccordion() {
                         <div class="col-12 col-lg-6">
                             <p class="mb-2">
                                 <strong class="me-1">
-                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-tag"></i></span>
+                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500 d-none"><i class="fa-solid fa-tag"></i></span>
                                     <span data-en="Item Name:" data-bm="Nama Item:">Item Name:</span>
                                 </strong>
                                 <span class="text-break">${escapeHtml(detail.item_name)}</span>
@@ -874,7 +874,7 @@ function renderPermitAccordion() {
                         <div class="col-12 col-lg-6">
                             <p class="mb-2">
                                 <strong class="me-1">
-                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-scale-balanced"></i></span>
+                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500 d-none"><i class="fa-solid fa-scale-balanced"></i></span>
                                     <span data-en="Quantity:" data-bm="Kuantiti:">Quantity:</span>
                                 </strong>
                                 <span class="text-break">${permit.quantity.toLocaleString()} ${escapeHtml(permit.unit_measurement)}</span>
@@ -883,7 +883,7 @@ function renderPermitAccordion() {
                         <div class="col-12 col-lg-6">
                             <p class="mb-2">
                                 <strong class="me-1">
-                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-money-bill"></i></span>
+                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500 d-none"><i class="fa-solid fa-money-bill"></i></span>
                                     <span data-en="Value:" data-bm="Nilai:">Value:</span>
                                 </strong>
                                 <span class="text-break">RM ${money(permit.value)}</span>
@@ -892,7 +892,7 @@ function renderPermitAccordion() {
                         <div class="col-12 col-lg-6">
                             <p class="mb-2">
                                 <strong class="me-1">
-                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-pen-fancy"></i></span>
+                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500 d-none"><i class="fa-solid fa-pen-fancy"></i></span>
                                     <span data-en="Purpose:" data-bm="Tujuan:">Purpose:</span>
                                 </strong>
                                 <span class="text-break">${escapeHtml(detail.purpose)}</span>
@@ -901,7 +901,7 @@ function renderPermitAccordion() {
                         <div class="col-12 col-lg-6">
                             <p class="mb-2">
                                 <strong class="me-1">
-                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-gear"></i></span>
+                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500 d-none"><i class="fa-solid fa-gear"></i></span>
                                     <span data-en="Uses:" data-bm="Kegunaan:">Uses:</span>
                                 </strong>
                                 <span class="text-break">${escapeHtml(detail.uses)}</span>
@@ -910,7 +910,7 @@ function renderPermitAccordion() {
                         <div class="col-12">
                             <p class="mb-2">
                                 <strong class="me-1">
-                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-file-contract"></i></span>
+                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500 d-none"><i class="fa-solid fa-file-contract"></i></span>
                                     <span data-en="Permit Number:" data-bm="No. Permit:">Permit Number:</span>
                                 </strong>
                                 <span class="text-break">${escapeHtml(permit.permit_number)}</span>
