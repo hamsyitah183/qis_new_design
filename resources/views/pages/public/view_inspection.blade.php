@@ -39,6 +39,8 @@
     @php
         $authUuid = authUser()['user']->uuid ?? null;
         $status = strtolower($application->status ?? '');
+        // ─── NEW: importer_verify logic ────────────────────────────
+        $importerVerify = strtolower($application->importer_verify ?? '');
 
         $isInternal = auth()->guard('internal')->check();
         $isAdminOrClerk =
@@ -50,6 +52,10 @@
 
         $isPublic = auth()->guard('public')->check();
         $isOwner = $isPublic && $application->user_id === $authUuid;
+        // ─── NEW: check if the public user is the importer ────────
+        $isImporterVerifier = $isPublic && $application->importer_id === $authUuid;
+
+
 
         $allPending = $application->inspectionItems->every(fn($permit) => $permit->status === 'pending for payment');
 
@@ -64,6 +70,25 @@
 
         // ─── Clerk review actions ────────────────────────────────────
         $showClerkReviewActions = $isAdminOrClerk && str_contains($status, 'clerk review in-progress');
+
+        // ─── NEW: Internal user sees importer awaiting message ──────
+        $showImporterAwaiting =
+            $isInternal &&
+            (str_contains($application->status, 'wait for company approval') ||
+                str_contains($application->status, 'wait for representative approval'));
+
+        // ─── NEW: Exporter (owner) sees importer awaiting message ───
+        $showExporterAwaiting =
+            $isPublic && $isOwner &&
+            (str_contains($application->status, 'wait for company approval') ||
+                str_contains($application->status, 'wait for representative approval'));
+
+        // ─── NEW: Importer verifier actions (Verify/Reject) ──────────
+        $showImporterVerifyActions =
+            $application->category_application == 1 &&
+            (str_contains($application->status, 'wait for company approval') ||
+                str_contains($application->status, 'wait for representative approval')) &&
+            $isImporterVerifier;
 
         // ─── Edit permission for internal users ──────────────────────
         $canEditInternal = $isInternal && auth('internal')->user()->can('edit application');
@@ -93,7 +118,7 @@
         {{-- ============================================================ --}}
         {{-- APPLICATION-LEVEL ACTIONS BAR --}}
         {{-- ============================================================ --}}
-        @if ($showClerkReviewActions || $showPaymentActionBar)
+        @if ($showClerkReviewActions || $showPaymentActionBar || $showImporterAwaiting || $showExporterAwaiting || $showImporterVerifyActions)
             <div class="col-xl-12">
                 <div class="ipv-actions-bar" id="ipvBulkActionsWrap">
                     <div class="ipv-actions-bar-text">
@@ -106,6 +131,24 @@
                             <span data-en="Your application has been verified by the officer. Please proceed to payment."
                                 data-bm="Permohonan anda telah disahkan oleh pegawai. Sila teruskan ke pembayaran.">
                                 Your application has been verified by the officer. Please proceed to payment.
+                            </span>
+                        @elseif ($showImporterAwaiting)
+                            {{-- Internal user: application waiting for importer --}}
+                            <span data-en="This application is awaiting for verification from the importer."
+                                data-bm="Permohonan ini sedang menunggu pengesahan daripada pengimport.">
+                                This application is awaiting for verification from the importer.
+                            </span>
+                        @elseif ($showExporterAwaiting)
+                            {{-- Exporter (owner): application waiting for importer --}}
+                            <span data-en="This application is awaiting for verification from the importer."
+                                data-bm="Permohonan ini sedang menunggu pengesahan daripada pengimport.">
+                                This application is awaiting for verification from the importer.
+                            </span>
+                        @elseif ($showImporterVerifyActions)
+                            {{-- Importer: action required from them --}}
+                            <span data-en="This application is awaiting your verification as the importer."
+                                data-bm="Permohonan ini sedang menunggu pengesahan anda sebagai pengimport.">
+                                This application is awaiting your verification as the importer.
                             </span>
                         @endif
                     </div>
@@ -125,6 +168,16 @@
                             <button id="goToPaymentTabBtn" class="ipv-btn-action btn btn-info">
                                 <i class="bi bi-credit-card"></i> <span data-en="Go to Payment"
                                     data-bm="Pergi ke Pembayaran">Go to Payment</span>
+                            </button>
+                        @endif
+                        @if ($showImporterVerifyActions)
+                            <button id="verifyAppl" class="ipv-btn-action is-success">
+                                <i class="bi bi-check-lg"></i> <span data-en="Verify Application"
+                                    data-bm="Sahkan Permohonan">Verify Application</span>
+                            </button>
+                            <button id="rejectAppl" class="ipv-btn-action is-danger">
+                                <i class="bi bi-x-lg"></i> <span data-en="Reject Application"
+                                    data-bm="Tolak Permohonan">Reject Application</span>
                             </button>
                         @endif
                     </div>
@@ -194,7 +247,7 @@
 
                 {{-- Edit Application button --}}
                 @if (
-                    ($application->status == 'Draft' || $application->status == 'Clerk Rejected') &&
+                    ($application->status == 'Draft' || $application->status == 'Rejected') &&
                         $application->user_id === $authUuid)
                     @if ($application->category_application == '0')
                         <a class="ipv-btn-outline w-100 justify-content-center mt-3 btn btn-primary" id="editButton"

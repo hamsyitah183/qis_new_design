@@ -1150,7 +1150,6 @@ function renderPermitAccordion() {
         let isCustom = " ";
         let isCustomClass = "";
 
-        // ─── Waiting/pending approval highlight ─────────────
         const isWaitingClass = ["processing", "reapplied"].includes(
             permit.status,
         )
@@ -1178,12 +1177,12 @@ function renderPermitAccordion() {
             </div>`;
 
         if (permit.isCustom === true) {
-            isCustom += `<span class = "ipv-badge alert alert-warning" data-en = "Custom Item"  data-bm="Item Khas" >Custom Item</span>`;
+            isCustom += `<span class="ipv-badge alert alert-warning" data-en="Custom Item" data-bm="Item Khas">Custom Item</span>`;
             isCustomClass += `is-custom`;
         }
 
         return `
-            <div class="ipv-permit-item ${isCustomClass}${isWaitingClass}" data-permit="${escapeHtml(permit.permit_number)}" >
+            <div class="ipv-permit-item ${isCustomClass}${isWaitingClass}" data-permit="${escapeHtml(permit.permit_number)}">
                 <div class="ipv-permit-header">
                     <div class="ipv-permit-icon"><i class="bi bi-box-seam"></i></div>
                     <div class="ipv-permit-id-group">
@@ -1191,15 +1190,12 @@ function renderPermitAccordion() {
                         <div class="ipv-permit-name">
                             <div>
                                 ${escapeHtml(detail.item_name)}
-                                <div class = "my-1 mb-2"> ${isCustom}</div>
+                                <div class="my-1 mb-2">${isCustom}</div>
                                 ${permitActionsHtml(permit)}
                             </div>
-
-                            
                         </div>
                     </div>
                     <span class="ipv-badge is-${cfg.color}">${escapeHtml(statusText)}</span>
-                   
                     <div class="ipv-permit-value">RM ${money(permit.value)}</div>
                     <button type="button" class="ipv-view-detail-btn" data-permit-id="${permit.id}" title="View full details">
                         <i class="bi bi-eye"></i>
@@ -1219,7 +1215,6 @@ function renderPermitAccordion() {
                                 <span class="text-break">${escapeHtml(detail.item_name)}</span>
                             </p>
                         </div>
-                        
                         <div class="col-12 col-lg-6">
                             <p class="mb-2">
                                 <strong class="me-1">
@@ -1229,8 +1224,15 @@ function renderPermitAccordion() {
                                 <span class="text-break">${permit.quantity.toLocaleString()} ${escapeHtml(permit.unit_measurement)}</span>
                             </p>
                         </div>
-                       
-                        
+                        <div class="col-12 col-lg-6">
+                            <p class="mb-2">
+                                <strong class="me-1">
+                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500 d-none"><i class="fa-solid fa-file-shield"></i></span>
+                                    <span data-en="Certificate No:" data-bm="No. Sijil:">Certificate No:</span>
+                                </strong>
+                                <span class="text-break">${escapeHtml(detail.certificate_no || '—')}</span>
+                            </p>
+                        </div>
                         <div class="col-12">
                             <p class="mb-2">
                                 <strong class="me-1">
@@ -1240,47 +1242,30 @@ function renderPermitAccordion() {
                                 <span class="text-break">${escapeHtml(permit.permit_number)}</span>
                             </p>
                         </div>
-                        <div class="col-12">
-                            <p class="mb-2">
-                                <strong class="me-1">
-                                    <span class="avatar avatar-sm d-none avatar-rounded bd-gray-500"><i class="fa-solid fa-file-contract"></i></span>
-                                    <span data-en="Total permits printed:" data-bm="Jumlah permit dicetak :">Total permits printed:</span>
-                                </strong> 
-                                <span class="text-break">${escapeHtml(permit.print_calc)}</span>
-                            </p>
-                        </div>
-                        
                     </div>
 
-                    <div class="ipv-permit-subsection-title" data-bm = "Lampiran" data-en = "Attachments">Attachments (${permit.attachments.length})</div>
-                    <div class="ipv-attach-list" id="attachList-${escapeHtml(permit.permit_number)}"></div>
+                    <div class="ipv-permit-subsection-title" data-bm="Lampiran" data-en="Attachments">Attachments (${permit.attachments.length})</div>
+                    <div class="ipv-attach-list" id="attachList-${permit.id}"></div>
 
-                    ${
-                        permit.remark
-                            ? `
+                    ${permit.remark ? `
                         <div class="ipv-permit-remark is-${cfg.color}">
                             <i class="bi bi-info-circle"></i>
                             <span>${escapeHtml(permit.remark)}</span>
                         </div>
-                    `
-                            : ""
-                    }
-
-                    
+                    ` : ""}
                 </div>
             </div>
         `;
     }).join("");
 
-    // Render attachment lists and apply translations to the whole container
+    // Render attachment lists for each permit
     PERMITS.forEach((permit) => {
-        const container = document.getElementById(
-            `attachList-${permit.permit_number}`,
-        );
-        renderAttachmentList(container, permit.attachments, 2);
+        const container = document.getElementById(`attachList-${permit.id}`);
+        if (container) {
+            renderAttachmentList(container, permit.attachments, 2);
+        }
     });
 
-    // Apply translations to the accordion (for data-en/data-bm labels)
     applyTranslations(el);
 }
 

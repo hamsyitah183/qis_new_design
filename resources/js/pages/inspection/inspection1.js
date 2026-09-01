@@ -22,6 +22,8 @@ import $ from "jquery";
 import Swal from "sweetalert2";
 import { applyTranslations } from "../../app";
 import { loadProfile } from "../auth/profile";
+import { renderActivityTimeline } from "../applicationActivityLog";
+
 
 // ---------------------------------------------------------------
 // Config
@@ -135,6 +137,35 @@ async function loadApplicationData() {
     mapApplication(json);
     mapPermits(json);
     mapActivityLog(json);
+
+    // ─── Override stage key based on permit statuses ──────────
+    APPLICATION.status_key = deriveEffectiveStageKey(APPLICATION.status, PERMITS);
+}
+
+/**
+ * Computes the effective stage key for the stepper based on
+ * application status AND permit statuses.
+ */
+function deriveEffectiveStageKey(appStatus, permits) {
+    const s = (appStatus || '').toLowerCase();
+
+    // 1. If ALL permits are in "payment processing", go straight to Payment Processing
+    if (permits.length > 0 && permits.every(p => p.status === 'payment processing')) {
+        return 'payment_processing';
+    }
+
+    // 2. If ANY permit is still pending payment, keep Awaiting Payment
+    if (permits.some(p => p.status === 'pending for payment' || p.status === 'payment failed')) {
+        return 'awaiting_payment';
+    }
+
+    // 3. If ALL permits are paid/completed, and application is completed → show Completed
+    if (permits.length > 0 && permits.every(p => p.status === 'paid' || p.status === 'completed')) {
+        if (s.includes('completed')) return 'completed';
+    }
+
+    // 4. Fallback to the original mapping
+    return deriveStageKey(appStatus);
 }
 
 function mapAttachment(f) {
@@ -150,7 +181,8 @@ function deriveStageKey(status) {
     const s = (status || '').toLowerCase();
     if (s.includes('draft')) return 'submitted';
     if (s.includes('clerk review')) return 'doc_verification';
-    if (s.includes('officer verification completed')) return 'officer_verification_completed';
+    if (s.includes('clerk verified')) return 'officer_verification_completed';
+    if (s.includes('officer verification completed')) return 'awaiting_payment';
     if (s.includes('completed')) return 'completed';
     if (s.includes('rejected') || s.includes('not approved')) return 'returned';
     if (s.includes('pending for payment')) return 'awaiting_payment';
@@ -167,8 +199,6 @@ function buildTags(json) {
     } else {
         tags.push({ label_en: 'Apply for Others', label_bm: 'Mohon untuk Pihak Lain', color: 'primary' });
     }
-
-   
 
     return tags;
 }
@@ -269,6 +299,8 @@ function mapActivityLog(json) {
             user: entry.causer?.fullname || entry.user || entry.user_name || '—',
             description: entry.remark || entry.description || '',
             time: formatDateTime(entry.time || entry.created_at),
+            causer: entry.causer.fullname,
+            causer_email: entry.causer.email,
         }));
 }
 
@@ -707,7 +739,6 @@ function renderTransportDetails() {
         { icon: 'bi-calendar-event', label: t.eta, value: APPLICATION.eta },
         { icon: 'bi-truck', label: t.transport, value: APPLICATION.transport_type },
         { icon: 'bi-geo-alt', label: t.entry, value: APPLICATION.entry_point },
-        // { icon: 'bi-info-circle', label: t.notes, value: APPLICATION.entry_point_description || '—' },
     ];
 
     el.innerHTML = rows.map(r => `
@@ -844,6 +875,9 @@ function renderPermitAccordion() {
         const detail = permit.consignment_detail;
         const statusText = cfg[lang] || cfg.en;
 
+        // ─── Use permit.id for DOM IDs ──────────────────────────────────
+        const attachContainerId = `attachList-${permit.id}`;
+
         return `
             <div class="ipv-permit-item" data-permit="${escapeHtml(permit.permit_number)}">
                 <div class="ipv-permit-header">
@@ -854,7 +888,7 @@ function renderPermitAccordion() {
                     </div>
                     <span class="ipv-badge is-${cfg.color}">${escapeHtml(statusText)}</span>
                     <div class="ipv-permit-value">RM ${money(permit.value)}</div>
-                    <button type="button" class="ipv-view-detail-btn" data-permit-number="${escapeHtml(permit.permit_number)}" title="View full details">
+                    <button type="button" class="ipv-view-detail-btn" data-permit-id="${permit.id}" title="View full details">
                         <i class="bi bi-eye"></i>
                     </button>
                     <i class="bi bi-chevron-down ipv-chevron"></i>
@@ -919,7 +953,7 @@ function renderPermitAccordion() {
                     </div>
 
                     <div class="ipv-permit-subsection-title" data-bm="Lampiran" data-en="Attachments">Attachments (${permit.attachments.length})</div>
-                    <div class="ipv-attach-list" id="attachList-${escapeHtml(permit.permit_number)}"></div>
+                    <div class="ipv-attach-list" id="${attachContainerId}"></div>
 
                     ${permit.remark ? `
                         <div class="ipv-permit-remark is-${cfg.color}">
@@ -934,8 +968,9 @@ function renderPermitAccordion() {
         `;
     }).join('');
 
+    // ─── Render attachment lists using permit.id ──────────
     PERMITS.forEach((permit) => {
-        const container = document.getElementById(`attachList-${permit.permit_number}`);
+        const container = document.getElementById(`attachList-${permit.id}`);
         renderAttachmentList(container, permit.attachments, 2);
     });
 
@@ -953,8 +988,8 @@ function initAccordionToggle() {
         const viewBtn = e.target.closest('.ipv-view-detail-btn');
         if (viewBtn) {
             e.stopPropagation();
-            const permitNumber = viewBtn.dataset.permitNumber;
-            if (permitNumber) openPermitDetail(permitNumber);
+            const permitId = viewBtn.dataset.permitId;
+            if (permitId) openPermitDetail(permitId);
             return;
         }
 
@@ -995,7 +1030,6 @@ function renderPendingPaymentTable() {
             <tr>
                 <td>${escapeHtml(permit.permit_number)}</td>
                 <td class="text-wrap">${escapeHtml(permit.consignment_detail.item_name)}</td>
-               
             </tr>
         `);
     });
@@ -1095,31 +1129,6 @@ function renderPaymentAwarenessBanner() {
 // Render: Activity tab + Application Log modal
 // ---------------------------------------------------------------
 
-function renderActivityTimeline() {
-    const el = document.getElementById('ipvActivityTimeline');
-    if (!ACTIVITY_LOG.length) {
-        el.innerHTML = '<div class="ipv-empty-state"><i class="bi bi-clock-history"></i><p>No activity recorded yet.</p></div>';
-        return;
-    }
-    const lang = getLang();
-    el.innerHTML = ACTIVITY_LOG.map((entry) => {
-        const cfg = STAGE_CONFIG[entry.stage] || STAGE_CONFIG.email;
-        const title = cfg[lang] || cfg.en;
-        return `
-            <div class="ipv-timeline-item">
-                <div class="ipv-timeline-icon is-${cfg.color}"><i class="bi ${cfg.icon}"></i></div>
-                <div class="ipv-timeline-body">
-                    <div>
-                        <div class="ipv-timeline-title">${escapeHtml(title)}</div>
-                        <p class="ipv-timeline-desc">${escapeHtml(entry.description)}</p>
-                    </div>
-                    <span class="ipv-timeline-time">${escapeHtml(entry.time)}</span>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
 function renderApplicationLogTable() {
     const tbody = $('#applicationLogTable tbody');
     tbody.empty();
@@ -1193,7 +1202,7 @@ function refreshUI() {
     renderTransportDetails();
     renderPermitAccordion();
     renderPendingPaymentTable();
-    renderActivityTimeline();
+    renderActivityTimeline(STAGE_CONFIG, ACTIVITY_LOG);
     renderPaymentAwarenessBanner();
     initAccordionToggle();
     const container = document.querySelector('.ipv-wrapper');
@@ -1212,11 +1221,12 @@ async function renderAll() {
     renderTransportDetails();
     renderPermitAccordion();
     renderPendingPaymentTable();
-    renderActivityTimeline();
+    renderActivityTimeline(STAGE_CONFIG, ACTIVITY_LOG);
     renderPaymentAwarenessBanner();
     initAccordionToggle();
     const container = document.querySelector('.ipv-wrapper');
     if (container) applyTranslations(container);
+
 }
 
 async function init() {

@@ -56,10 +56,8 @@
 
         $isPublic = auth()->guard('public')->check();
         // In Consignment, the applicant/owner is the EXPORTER (roles are reversed vs Import Permit).
-        $isOwner = $isPublic && $application->exporter_id === auth()->guard('public')->user()->uuid;
-                $isImporterVerifier = $isPublic && $application->exporter && $application->exporter->uuid === $authUuid;
-
-
+        $isOwner = $isPublic && $application->user_id === authUser()['user']->uuid;
+        $isImporterVerifier = $isPublic && $application->exporter && $application->exporter->uuid === $authUuid;
         // ---------- Officer Verification Completed ----------
         $isOfficerVerified = str_contains(strtolower($application->status ?? ''), 'officer verification completed');
 
@@ -90,6 +88,10 @@
             (str_contains($importerVerify, 'wait for company approval') ||
                 str_contains($importerVerify, 'wait for representative approval'));
 
+        // ─── NEW: Owner (exporter) sees the importer awaiting message ──────────
+        $ownerSeesImporterAwaiting = $isPublic && $isOwner && 
+            (str_contains($importerVerify, 'wait for company approval') ||
+             str_contains($importerVerify, 'wait for representative approval'));
         $showImporterVerifyActions =
             $application->category_application == 1 &&
             (str_contains($importerVerify, 'wait for company approval') ||
@@ -123,7 +125,7 @@
         {{-- ============================================================ --}}
         {{-- APPLICATION-LEVEL ACTIONS BAR (Clerk / Admin)               --}}
         {{-- ============================================================ --}}
-        @if ($showClerkReviewActions || $showImporterVerifyActions || $showAdminRejectedActions || $showImporterAwaiting)
+        @if ($showClerkReviewActions || $showImporterVerifyActions || $showAdminRejectedActions || $showImporterAwaiting || $ownerSeesImporterAwaiting)
             <div class="col-xl-12">
                 <div class="ipv-actions-bar">
                     <div class="ipv-actions-bar-text">
@@ -150,17 +152,18 @@
                             <span data-en="This application was rejected. You may review and re-evaluate it."
                                 data-bm="Permohonan ini telah ditolak. Anda boleh menyemak dan menilai semula.">This
                                 application was rejected. You may review and re-evaluate it.</span>
-                        @elseif ($showImporterAwaiting)
-                            {{-- NEW: internal user sees this when importer hasn't verified yet --}}
+                        @elseif ($showImporterAwaiting || $ownerSeesImporterAwaiting)
+                            {{-- Message for both internal users and owner when importer verification is pending --}}
                             <span data-en="This application is awaiting for verification from the importer."
                                 data-bm="Permohonan ini sedang menunggu pengesahan daripada pengimport.">
                                 This application is awaiting for verification from the importer.
                             </span>
                         @endif
+                        
                     </div>
                     <div class="ipv-actions-bar-buttons">
                         @if ($showClerkReviewActions)
-                            <button id="acceptAppl" class="ipv-btn-action is-accept">
+                            <button id="acceptAppl" class="ipv-btn-action is-success">
                                 <i class="bi bi-check-lg"></i> <span data-en="Accept Application"
                                     data-bm="Terima Permohonan">Accept Application</span>
                             </button>
@@ -702,102 +705,6 @@
             </div>
         </form>
     </div>
-
-    {{-- Reapply modal — needed by test4-actions.js's reapply() flow.
-         Controller must pass $pubmeasure and $pubpurpose (same as the old blade did). --}}
-    <div class="modal fade" id="addItemModal" tabindex="-1" data-bs-focus="false">
-        <form class="modal-dialog modal-fullscreen">
-            <input type="hidden" name="permit_id" value="permit_id">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addExporterModalLabel" data-en="Reapply" data-bm="Mohon Semula">Reapply
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row gy-4 mb-3 p-4">
-                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                            <label for="itemSelect" class="form-label" data-en="Item" data-bm="Item">Item</label>
-                            <select class="form-select" id="itemSelect" name="itemSelect"></select>
-                            <small style="color:red" data-en="Item refering to the exporter's Country"
-                                data-bm="Item merujuk kepada Negara pengeksport">Item refering to the exporter's
-                                Country</small>
-                        </div>
-                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                            <label for="itemValue" class="form-label" data-en="Value (RM)" data-bm="Nilai (RM)">Value
-                                (RM)</label>
-                            <input type="number" class="form-control" id="itemValue" name="itemValue"
-                                placeholder="RM ..." data-en="RM ..." data-bm="RM ..." data-i18n-attr="placeholder">
-                        </div>
-                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                            <label for="itemQuantity" class="form-label" data-en="Quantity"
-                                data-bm="Kuantiti">Quantity</label>
-                            <input type="number" class="form-control" id="itemQuantity" name="itemQuantity"
-                                placeholder="0" data-en="0" data-bm="0" data-i18n-attr="placeholder">
-                        </div>
-                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                            <label for="itemMeasure" class="form-label" data-en="Measurement Unit"
-                                data-bm="Unit Ukuran">Measurement Unit</label>
-                            <select class="form-select" id="itemMeasure" name="itemMeasure">
-                                <option value="" data-en="-- Select Measurement Unit --"
-                                    data-bm="-- Pilih Unit Ukuran --">-- Select Measurement Unit --</option>
-                                @foreach ($pubmeasure ?? [] as $measure)
-                                    <option value="{{ $measure->cate_code }}">{{ $measure->description }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                            <label for="itemPurpose" class="form-label" data-en="Purpose"
-                                data-bm="Tujuan">Purpose</label>
-                            <select class="form-select" id="itemPurpose" name="itemPurpose">
-                                <option value="" data-en="-- Select Purpose --" data-bm="-- Pilih Tujuan --">--
-                                    Select Purpose --</option>
-                                @foreach ($pubpurpose ?? [] as $purpose)
-                                    <option value="{{ $purpose->cate_code }}"
-                                        data-description="{{ $purpose->description }}">{{ $purpose->description }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                            <label for="itemUses" class="form-label" data-en="Uses" data-bm="Kegunaan">Uses</label>
-                            <select class="form-select" id="itemUses" name="itemUses"></select>
-                        </div>
-                        <div class="row gy-4">
-                            <div class="col-xl-12">
-                                <div class="card-header">
-                                    <div class="card-title" data-en="Attachment" data-bm="Lampiran">Attachment</div>
-                                </div>
-                                <div class="card-body">
-                                    <div id="itemDropzone" method="post" class="dz-clickable"
-                                        enctype="multipart/form-data">
-                                        @csrf
-                                        <div class="dz-default dz-message">
-                                            <button class="dz-button p-5 border w-100 border-radius" type="button">
-                                                <span data-en="Drop files here to upload"
-                                                    data-bm="Jatuhkan fail di sini untuk muat naik">Drop files here to
-                                                    upload</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bx bx-x me-1"></i> <span data-en="Cancel" data-bm="Batal">Cancel</span>
-                    </button>
-                    <button id="saveBtn" type="submit" class="btn btn-primary">
-                        <i class="bx bx-save me-1"></i> <span data-en="Reapply" data-bm="Mohon Semula">Reapply</span>
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
-
 
     <div class="modal fade" id="quickAddConditionModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">

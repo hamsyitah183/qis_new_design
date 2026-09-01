@@ -15,6 +15,34 @@ import "select2/dist/css/select2.min.css";
 
 Dropzone.autoDiscover = false;
 
+// ─── Helper: get MIME type from file name ────────────────
+function getMimeType(fileName) {
+    const ext = fileName.split('.').pop().toLowerCase();
+    const mimeTypes = {
+        'pdf': 'application/pdf',
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'doc': 'application/msword',
+        'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    };
+    return mimeTypes[ext] || 'application/octet-stream';
+}
+
+// ─── Helper: create a dummy File from an existing attachment ──
+function createExistingFile(attachment) {
+    const mimeType = attachment.file_type || getMimeType(attachment.file_name);
+    // Create a non‑empty blob so Dropzone accepts the file
+    const blob = new Blob([' '], { type: mimeType });
+    const file = new File([blob], attachment.file_name, { type: mimeType });
+    file._isExisting = true;
+    file._url = attachment.file_path;
+    file._id = attachment.id;
+    file.displayName = attachment.file_name;
+    return file;
+}
+
 // ------------------------- Global state -------------------------
 let exporterListArray = [];
 let entryName = null;
@@ -536,13 +564,6 @@ function groupPreview() {
 }
 
 // ============= Item declaration & agreement (added) =====================
-/**
- * Shows a per-item declaration dialog the user must tick before the item
- * is accepted into tempItems. Mirrors registerexp.js's showItemAgreement,
- * without the bilingual scaffolding (inspection.js is English-only).
- * @param {object} item - the item payload about to be saved
- * @returns {Promise<boolean>} true if the user agreed and confirmed
- */
 async function showItemAgreement(item) {
     const now = new Date();
     const timestamp = now.toLocaleString("en-GB", {
@@ -599,12 +620,6 @@ async function showItemAgreement(item) {
     return false;
 }
 
-/**
- * Full terms-and-conditions dialog shown once before final submission.
- * The confirm checkbox only unlocks once the user scrolls to the bottom,
- * mirroring registerexp.js's showFinalAgreement.
- * @returns {Promise<boolean>}
- */
 async function showFinalAgreement() {
     let agreed = false;
 
@@ -660,7 +675,7 @@ async function showFinalAgreement() {
     return result.isConfirmed && agreed;
 }
 
-// ============= Save consignment item (MODIFIED: now requires agreement) =====================
+// ============= Save consignment item =====================
 function saveConsignmentAttachment() {
     document
         .getElementById("saveBtn")
@@ -676,17 +691,6 @@ function saveConsignmentAttachment() {
             const itemMeasure = $("#itemMeasure").val();
             const itemPurposeValue = $("#itemPurpose").val();
             const itemUsesValue = $("#itemUses").val();
-
-            console.log(
-                "items",
-                itemSelectValue,
-                itemSelectText,
-                itemValue,
-                itemQuantity,
-                itemMeasure,
-                itemPurposeValue,
-                itemUsesValue,
-            );
 
             if (
                 !itemSelectValue ||
@@ -709,7 +713,8 @@ function saveConsignmentAttachment() {
                 $("#itemPurpose option:selected").data("description") ||
                 $("#itemPurpose").val();
 
-            const newItem = {
+            // ─── Build the item payload ──────────────────────────────
+            let newItem = {
                 id: generateUUID(),
                 item_id: itemSelectValue,
                 item_name: itemSelectText,
@@ -722,16 +727,43 @@ function saveConsignmentAttachment() {
                 agreedAt: null,
             };
 
-            // ✅ Require the user to confirm the item declaration before saving
+            // ─── If editing, fetch the existing item ────────────────
+            let existingItem = null;
+            let existingIndex = -1;
+            if (editingItemId) {
+                existingIndex = tempItems.findIndex(obj => obj.id === editingItemId);
+                if (existingIndex !== -1) {
+                    existingItem = tempItems[existingIndex];
+                    // Preserve the original ID for update
+                    newItem.id = existingItem.id;
+                }
+            }
+
+            // ─── Show agreement (pass the payload; it will set agreedAt) ──
             const agreed = await showItemAgreement(newItem);
             if (!agreed) {
                 return;
             }
 
-            tempItems.push(newItem);
-            editingItemId = null; // reset editing state
+            // ─── Save or update ───────────────────────────────────────
+            if (existingItem !== null && existingIndex !== -1) {
+                // Update existing item (keep existing file references if none added?)
+                // newItem.files already contains all files from dropzone (existing + new)
+                tempItems[existingIndex] = newItem;
+                console.log("Updated item:", newItem);
+            } else {
+                // Add new item
+                tempItems.push(newItem);
+                console.log("Added new item:", newItem);
+            }
+
+            // ─── Clean up ─────────────────────────────────────────────
+            editingItemId = null;
             renderAllItems();
             resetAddItemModal();
+
+            const modalEl = document.getElementById("addItemModal");
+            bootstrap.Modal.getInstance(modalEl).hide();
 
             document
                 .getElementById("addItemModal")
@@ -751,7 +783,7 @@ function resetAddItemModal() {
     $("#itemPurpose").val("").trigger("change");
     $("#itemUses").val(null).trigger("change");
 
-    $("#itemSelect").val(""); // instead of .val(null).trigger("change")
+    $("#itemSelect").val("");
 
     if (itemDropzone) itemDropzone.removeAllFiles(true);
 }
@@ -795,7 +827,7 @@ function renderAllItems() {
     }
 }
 
-// ============= Item details / attachments viewer (MODIFIED: uses offcanvas) =====================
+// ============= Item details / attachments viewer =====================
 function viewMore() {
     $(document).on("click", ".view-more-item", function (e) {
         e.preventDefault();
@@ -812,7 +844,7 @@ function viewMore() {
         const conditionItem = document.getElementById("pdConditionItem");
         const conditionCount = document.getElementById("pdConditionCount");
 
-        console.log("item added previously", item, tempItems);
+        console.log("item added previously", item, tempItems, item.agreedAt);
 
         const agreementBanner = item.agreedAt
             ? `<div class="alert alert-success mb-3 d-flex align-items-center">
@@ -944,7 +976,7 @@ function viewMore() {
     });
 }
 
-// ============= Item Attachment Offcanvas (NEW) =====================
+// ============= Item Attachment Offcanvas =====================
 function initItemAttachmentOffcanvas() {
     const el = document.getElementById("itemAttachmentOffcanvas");
     if (!el) return;
@@ -986,6 +1018,7 @@ function openItemAttachmentViewer(files, startIndex = 0) {
     }
 }
 
+// ─── FIXED: showItemAttachment – handles both existing and new files ──
 function showItemAttachment(file, index) {
     const viewerTitle = document.getElementById("itemAttachmentTitle");
     const viewerCounter = document.getElementById("itemAttachCounter");
@@ -1006,20 +1039,37 @@ function showItemAttachment(file, index) {
     }
     viewerBody.innerHTML = "";
 
-    if (file.type && file.type.startsWith("image/")) {
+    // ─── Existing file (already on server) ──────────────────────
+    if (file._isExisting && file._url) {
+        const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(file._url);
+        const isPdf = /\.pdf$/i.test(file._url);
+        if (isImage) {
+            viewerBody.innerHTML = `<img src="${file._url}" class="img-fluid rounded" alt="${displayName}">`;
+        } else if (isPdf) {
+            viewerBody.innerHTML = `<iframe src="${file._url}" class="w-100" style="height: calc(100vh - 220px); border: none;"></iframe>`;
+        } else {
+            viewerBody.innerHTML = `
+                <div class="text-center">
+                    <i class="bi bi-file-earmark-fill fs-1 mb-3"></i>
+                    <p class="mb-2">${displayName}</p>
+                    <a href="${file._url}" target="_blank" class="btn btn-sm btn-primary">Open File</a>
+                </div>
+            `;
+        }
+    } else if (file.type && file.type.startsWith("image/")) {
+        // ─── New image file (browser File) ────────────────────────
         const reader = new FileReader();
         reader.onload = function (e) {
             viewerBody.innerHTML = `<img src="${e.target.result}" class="img-fluid rounded" alt="${displayName}">`;
         };
         reader.readAsDataURL(file);
-    } else if (
-        file.type === "application/pdf" ||
-        file.name.toLowerCase().endsWith(".pdf")
-    ) {
+    } else if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+        // ─── New PDF file ──────────────────────────────────────────
         const url = URL.createObjectURL(file);
         viewerBody.innerHTML = `<iframe src="${url}" class="w-100" style="height: calc(100vh - 220px); border: none;"></iframe>`;
         viewerBody.dataset.objectUrl = url;
     } else {
+        // ─── Other new file ────────────────────────────────────────
         const url = URL.createObjectURL(file);
         viewerBody.innerHTML = `
             <div class="text-center">
@@ -1031,6 +1081,7 @@ function showItemAttachment(file, index) {
         viewerBody.dataset.objectUrl = url;
     }
 
+    // ─── Render details ──────────────────────────────────────────
     const fields = [
         { label: "File Name", value: displayName },
         { label: "Original Name", value: file.name },
@@ -1168,11 +1219,7 @@ function deleteItem() {
     });
 }
 
-// ============= Application-level attachments (added) =====================
-/**
- * Dropzone used for documents attached to the whole application
- * (as opposed to attachments tied to a single consignment item).
- */
+// ============= Application-level attachments =====================
 function initApplicationAttachments() {
     document
         .querySelectorAll(".application-attachment-dropzone")
@@ -1204,13 +1251,13 @@ function initApplicationAttachments() {
                             type: file.type,
                             document_type: docName,
                             document_id: docId,
-                            description: docName, // default description = document requirement name
+                            description: docName,
                         };
                         file._attachmentId = attachment.id;
                         applicationAttachments.push(attachment);
                         renderApplicationAttachmentTable(docId);
                         updateDocFileCountBadge(docId);
-                        updateAttachmentTable(); // if exists in inspection.js
+                        updateAttachmentTable();
                     });
                 },
                 error: function (file, message) {
@@ -1333,13 +1380,6 @@ function initAttachmentOffcanvas() {
     });
 }
 
-/**
- * Normalizes applicationAttachments into the same shape used for item
- * attachments ({ source, raw, file, url, name, displayName, size, type })
- * so both can be paged through by the one shared offcanvas. `raw` keeps a
- * reference back to the original entry so renames stay in sync with the
- * application-attachment table.
- */
 function buildApplicationAttachmentList() {
     return applicationAttachments.map((a) => ({
         source: "application",
@@ -1353,11 +1393,6 @@ function buildApplicationAttachmentList() {
     }));
 }
 
-/**
- * Opens the shared #attachmentOffcanvas against any normalized attachment
- * list — used for both application-level attachments and a single item's
- * attachments (existing + newly uploaded).
- */
 function openAttachmentViewerAt(list, index, source) {
     if (!list || list.length === 0) return;
 
@@ -1368,9 +1403,6 @@ function openAttachmentViewerAt(list, index, source) {
     if (attachmentOffcanvas) attachmentOffcanvas.show();
 }
 
-// Kept for application-attachment table buttons that only know the
-// attachment's id (view/name-link clicks) — resolves the id to an index
-// and delegates to the shared opener.
 function openAttachmentViewer(attachmentId) {
     const index = applicationAttachments.findIndex(
         (item) => item.id === attachmentId,
@@ -1406,7 +1438,6 @@ function showAttachmentAt(index) {
     viewerBody.innerHTML = "";
 
     if (attachment.file) {
-        // Not-yet-persisted file — still a browser File object
         const file = attachment.file;
 
         if (file.type && file.type.startsWith("image/")) {
@@ -1434,7 +1465,6 @@ function showAttachmentAt(index) {
             viewerBody.dataset.objectUrl = url;
         }
     } else if (attachment.url) {
-        // Already-persisted file — we have a direct URL, no File object
         const isPdf =
             (attachment.type || "").includes("pdf") ||
             attachment.url.toLowerCase().endsWith(".pdf");
@@ -1544,9 +1574,6 @@ $(document).on("click", ".delete-attachment-btn", function () {
     });
 });
 
-// Renaming works for both sources — application attachments (kept in sync
-// with their table + summary) and item attachments (kept in sync with the
-// underlying file/existingFiles object so it reflects if the modal reopens).
 $(document).on("click", "#attachmentSaveNameBtn", function () {
     const newName = document.getElementById("attachmentEditName").value.trim();
 
@@ -1581,10 +1608,6 @@ $(document).on("click", "#attachmentSaveNameBtn", function () {
     }
 });
 
-/**
- * Mirrors the application-level attachment list into the review/summary
- * page's table, so it stays in sync every time an attachment changes.
- */
 function updateAttachmentTable() {
     const attachmentTable = document.querySelector(
         "#summaryAttachmentTable tbody",
@@ -1651,8 +1674,7 @@ function updateAttachmentTable() {
     });
 }
 
-// ============= attachment =====================
-
+// ============= Load existing application data =====================
 async function loadApplicationData(id) {
     if (!id) return;
 
@@ -1722,8 +1744,12 @@ async function loadApplicationData(id) {
             }
 
             if (app.inspection_items && app.inspection_items.length > 0) {
+                // ─── FIXED: Convert existing attachments to dummy File objects ───
                 tempItems = app.inspection_items.map((item) => {
+                    console.log('item processing:', item);
                     const data = item.consignment_detail || {};
+                    // Convert existing attachments to dummy File objects
+                    const files = (item.attachments || []).map(a => createExistingFile(a));
                     return {
                         id: item.id || generateUUID(),
                         item_id: data.item_id || data.id,
@@ -1733,21 +1759,15 @@ async function loadApplicationData(id) {
                         measure: item.unit_measurement,
                         purpose: item.purpose,
                         uses: data.uses,
-                        agreedAt: item.agreed_at || null,
-                        existingFiles: (item.attachments || []).map((a) => ({
-                            name: a.file_name,
-                            url: a.file_path,
-                            type: a.file_type,
-                        })),
-                        files: [],
+                        agreedAt: data.agreedAt || null,
+                        files: files,
+                        existingAttachments: item.attachments || [],
                     };
                 });
                 renderAllItems();
                 summarySubmit();
             }
 
-            // Restore previously saved application-level attachments (view-only,
-            // since we don't have the raw File object for already-uploaded files).
             if (app.attachments && app.attachments.length > 0) {
                 applicationAttachments = app.attachments.map((a) => ({
                     id: a.id || generateUUID(),
@@ -1800,7 +1820,6 @@ function copyItem() {
         const agreed = await showItemAgreement(duplicated);
 
         if (!agreed) {
-            // User cancelled or didn't tick the condition — don't add the copy
             return;
         }
 
@@ -1836,31 +1855,57 @@ function editItem() {
         bootstrap.Modal.getOrCreateInstance(modalEl).show();
 
         // ─── Fill the form with item data ──────────────────────────
-        // Item name – plain text input
+        // Item name – free text
         $("#itemSelect").val(item.item_name);
 
         // Other fields
         $("#itemValue").val(item.value);
         $("#itemQuantity").val(item.quantity);
         $("#itemMeasure").val(item.measure).trigger("change");
-        $("#itemPurpose").val(item.purposeValue || item.purpose).trigger("change");
-        $("#itemUses").val(item.uses).trigger("change");
 
-        // Optional: if you have a hidden field to store item_id, set it here
-        // $("#selectedItemId").val(item.item_id || "");
+        // ─── Purpose dropdown: select by matching description ──────
+        const $purposeSelect = $("#itemPurpose");
+        let purposeSet = false;
+        if (item.purpose) {
+            $purposeSelect.find("option").each(function() {
+                const desc = $(this).data("description");
+                if (desc && desc.trim() === item.purpose.trim()) {
+                    $purposeSelect.val($(this).val()).trigger("change");
+                    purposeSet = true;
+                    return false; // break loop
+                }
+            });
+            // If not found by description, try by text
+            if (!purposeSet) {
+                $purposeSelect.find("option").each(function() {
+                    if ($(this).text().trim() === item.purpose.trim()) {
+                        $purposeSelect.val($(this).val()).trigger("change");
+                        purposeSet = true;
+                        return false;
+                    }
+                });
+            }
+        }
+        // If still not set, fallback to empty
+        if (!purposeSet) {
+            $purposeSelect.val("").trigger("change");
+        }
+
+        // Uses
+        $("#itemUses").val(item.uses).trigger("change");
 
         // ─── Restore files in Dropzone ──────────────────────────────
         if (itemDropzone) {
             itemDropzone.removeAllFiles(true);
-            (item.files || []).forEach((file) => itemDropzone.addFile(file));
+            (item.files || []).forEach((file) => {
+                itemDropzone.addFile(file);
+            });
         }
 
-        // Remove any custom-item-specific UI (since it's all free text)
+        // Remove any custom-item-specific UI (not used in inspection)
         $(".attachmentInstruction").html("").hide();
     });
 }
-
-
 function saveapplication(isDraft = false, shouldRedirect = false) {
     const form =
         document.querySelector("#wizardForm") ||
@@ -1899,7 +1944,6 @@ function saveapplication(isDraft = false, shouldRedirect = false) {
         }
     });
 
-    // ✅ Application-level attachments
     applicationAttachments.forEach((attachment) => {
         if (attachment.file) {
             formData.append("application_files[]", attachment.file);
@@ -1976,13 +2020,10 @@ $(document).ready(async function () {
         copyItem()
         editItem();
 
-        // ✅ Application attachments + the single shared attachment offcanvas
-        // (used to view BOTH application-level and item-level attachments)
         initApplicationAttachments();
         initAttachmentOffcanvas();
         initAttachmentNavigation();
 
-        // ✅ Item attachment offcanvas (NEW)
         initItemAttachmentOffcanvas();
         initItemAttachmentNavigation();
 
@@ -2024,8 +2065,6 @@ $(document).ready(async function () {
             });
         }
 
-        // Submit button handler — now requires the final declaration to be
-        // agreed to before the application is actually saved.
         $(document).on("click", "#submitApps", async function (e) {
             e.preventDefault();
             console.log("Submit clicked!");
@@ -2170,7 +2209,6 @@ export function summarySubmit() {
         );
     });
 
-    // ✅ Keep the application-level attachment summary in sync too
     updateAttachmentTable();
 }
 
@@ -2219,7 +2257,6 @@ $(document).ready(function () {
                 }
             });
 
-            // ✅ Application-level attachments
             applicationAttachments.forEach((attachment) => {
                 if (attachment.file) {
                     formData.append("application_files[]", attachment.file);
@@ -2254,9 +2291,7 @@ $(document).ready(function () {
 });
 
 function showItemFilePreview(file) {
-    const previewContainer = document.getElementById(
-        "itemFilePreviewContainer",
-    );
+    const previewContainer = document.getElementById("itemFilePreviewContainer");
     const fileNameSpan = document.getElementById("itemFileName");
     const fileEditInput = document.getElementById("itemFileEditName");
     const fileDetailsDiv = document.getElementById("itemFileDetails");
@@ -2271,27 +2306,65 @@ function showItemFilePreview(file) {
     }
 
     previewContainer.innerHTML = "";
-    fileNameSpan.textContent = file.name;
-    fileEditInput.value = file.name;
+    const displayName = file.displayName || file.name;
+    fileNameSpan.textContent = displayName;
+    fileEditInput.value = displayName;
 
-    // ---- Preview ----
-    if (file.type.startsWith("image/")) {
+    // ─── Existing file (already on server) ──────────────────────
+    if (file._isExisting && file._url) {
+        const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(file._url);
+        const isPdf = /\.pdf$/i.test(file._url);
+        if (isImage) {
+            previewContainer.innerHTML = `<img src="${file._url}" class="img-fluid rounded" alt="${displayName}">`;
+        } else if (isPdf) {
+            previewContainer.innerHTML = `<iframe src="${file._url}" class="w-100" style="height: calc(100vh - 220px); border: none;"></iframe>`;
+        } else {
+            previewContainer.innerHTML = `
+                <div class="text-center">
+                    <i class="bi bi-file-earmark-fill fs-1 mb-3"></i>
+                    <p class="mb-2">${displayName}</p>
+                    <a href="${file._url}" target="_blank" class="btn btn-sm btn-primary">Open File</a>
+                </div>
+            `;
+        }
+        const fileSize = file.size ? (file.size / 1024).toFixed(2) + " KB" : "Unknown";
+        const fileType = file.type || "Unknown";
+        fileDetailsDiv.innerHTML = `
+            <div class="mb-3">
+                <strong data-en="File Name:" data-bm="Nama Fail:">File Name:</strong>
+                <div class="text-muted">${displayName}</div>
+            </div>
+            <div class="mb-3">
+                <strong data-en="File Size:" data-bm="Saiz Fail:">File Size:</strong>
+                <div class="text-muted">${fileSize}</div>
+            </div>
+            <div class="mb-3">
+                <strong data-en="File Type:" data-bm="Jenis Fail:">File Type:</strong>
+                <div class="text-muted">${fileType}</div>
+            </div>
+        `;
+        applyTranslations(fileDetailsDiv);
+        itemFileOffcanvas.show();
+        return;
+    }
+
+    // ─── New file (browser File) ──────────────────────────────
+    if (file.type && file.type.startsWith("image/")) {
         const reader = new FileReader();
         reader.onload = function (e) {
             previewContainer.innerHTML = `<img src="${e.target.result}" class="img-fluid rounded" alt="${file.name}">`;
         };
         reader.readAsDataURL(file);
-    } else if (file.type === "application/pdf") {
+    } else if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
         const url = URL.createObjectURL(file);
         previewContainer.innerHTML = `<iframe src="${url}" class="w-100" style="height: calc(100vh - 220px); border: none;"></iframe>`;
     } else {
+        const url = URL.createObjectURL(file);
         previewContainer.innerHTML = `<div class="text-center"><i class="bi bi-file-earmark-fill fs-1 mb-3"></i><p>${file.name}</p></div>`;
     }
 
-    // ---- File Details (bilingual) ----
     const fileSize = (file.size / 1024).toFixed(2) + " KB";
     const fileType = file.type || "Unknown";
-
     fileDetailsDiv.innerHTML = `
         <div class="mb-3">
             <strong data-en="File Name:" data-bm="Nama Fail:">File Name:</strong>
@@ -2306,10 +2379,7 @@ function showItemFilePreview(file) {
             <div class="text-muted">${fileType}</div>
         </div>
     `;
-
-    // Apply current language to the newly added labels
     applyTranslations(fileDetailsDiv);
-
     itemFileOffcanvas.show();
 }
 
@@ -2320,15 +2390,11 @@ function addPreviewButtons(file) {
     const removeBtn = preview.querySelector(".dz-remove");
     if (!removeBtn) return;
 
-    // Create the action group
     const attachmentGroup = document.createElement("div");
     attachmentGroup.className = "attachment-group";
     attachmentGroup.style.display = "flex";
     attachmentGroup.style.gap = "5px";
-    // attachmentGroup.style.alignItems = "center";
-    // attachmentGroup.style.justifyContent = "end";
 
-    // View button
     const viewBtn = document.createElement("a");
     viewBtn.href = "#";
     viewBtn.innerHTML = "<i class='ti ti-eye'></i>";
@@ -2340,7 +2406,6 @@ function addPreviewButtons(file) {
         showItemFilePreview(file);
     };
 
-    // Edit button
     const editBtn = document.createElement("a");
     editBtn.href = "#";
     editBtn.innerHTML = "<i class='ti ti-pencil'></i>";
@@ -2355,11 +2420,10 @@ function addPreviewButtons(file) {
         modal.show();
     };
 
-    // Delete button – custom handler that removes the file from Dropzone
     const deleteBtn = document.createElement("a");
     deleteBtn.href = "#";
     deleteBtn.innerHTML = "<i class='ti ti-trash'></i>";
-    deleteBtn.className = "btn btn-icon btn-danger-light"; // or keep dz-remove class? We'll use our own
+    deleteBtn.className = "btn btn-icon btn-danger-light";
     deleteBtn.onclick = function (e) {
         e.preventDefault();
         if (itemDropzone) {
@@ -2371,7 +2435,6 @@ function addPreviewButtons(file) {
     attachmentGroup.appendChild(editBtn);
     attachmentGroup.appendChild(deleteBtn);
 
-    // Replace the original .dz-remove with our group
     removeBtn.parentNode.replaceChild(attachmentGroup, removeBtn);
 }
 
@@ -2388,25 +2451,20 @@ $(document).on("click", "#itemFileSaveBtn", function () {
         return;
     }
 
-    // Update the file object
     currentItemFile.displayName = newName;
 
-    // ----- NEW: Update Dropzone preview filename -----
     if (currentItemFile.previewElement) {
         const $preview = $(currentItemFile.previewElement);
-        // Dropzone places filename in .dz-filename span
         const $filenameSpan = $preview.find(".dz-filename span");
         if ($filenameSpan.length) {
             $filenameSpan.text(newName);
         }
-        // Also update the .dz-filename data-dz-name attribute if used
         const $filenameDiv = $preview.find(".dz-filename");
         if ($filenameDiv.length) {
             $filenameDiv.attr("data-dz-name", newName);
         }
     }
 
-    // Update offcanvas title
     document.getElementById("itemFileName").textContent = newName;
 
     Swal.fire({

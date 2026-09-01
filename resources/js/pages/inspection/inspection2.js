@@ -68,21 +68,24 @@ function reapplyCtaHtml(permit) {
     `;
 }
 
-export function openPermitDetail(permitNumber) {
-    const permit = PERMITS.find((p) => p.permit_number === permitNumber);
-    if (!permit) return;
+export function openPermitDetail(permitId) {
+    // permitId is now the numeric ID (not the permit number)
+    const permit = PERMITS.find((p) => String(p.id) === String(permitId));
+    if (!permit) {
+        console.warn(`Permit with id ${permitId} not found.`);
+        return;
+    }
 
     const cfg = PERMIT_STATUS_CONFIG[permit.status] || PERMIT_STATUS_CONFIG.queued;
     const detail = permit.consignment_detail;
-
-    console.log("permit details", permit);
 
     document.getElementById("permitDetailOffcanvasLabel").textContent = detail.item_name;
     const badge = document.getElementById("pdBadge");
     badge.textContent = getStatusText(permit.status);
     badge.className = `ipv-badge ms-2 is-${cfg.color}`;
 
-    const attachListId = `pd-attach-${permit.permit_number}`;
+    // ─── Use permit.id for the attachment list ID ──────────────────────
+    const attachListId = `pd-attach-${permit.id}`;
 
     document.getElementById("pdDetailsContent").innerHTML = `
         ${reapplyCtaHtml(permit)}

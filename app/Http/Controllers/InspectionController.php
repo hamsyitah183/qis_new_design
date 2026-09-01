@@ -364,16 +364,49 @@ class InspectionController extends Controller
         );
     }
 
-    function viewInspection($id = null)
+    public function viewInspection($id = null)
     {
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();
 
-        $application = InspectionApplication::with(['exporter', 'importer', 'entryPoint', 'inspectionItems.attachments', 'activity_log.causer'])
+        $application = InspectionApplication::with([
+            'exporter',
+            'importer',
+            'entryPoint',
+            'inspectionItems.attachments',
+            'activity_log.causer'
+        ])
             ->where('application_id', $id)
             ->firstOrFail();
 
+        $auth = authUser();
+
+        if (!$auth) {
+            abort(401, 'You must be logged in to view this application.');
+        }
+
+        if ($auth['type'] === 'public') {
+            // Public user can view if they are the exporter OR the importer
+            if ($application->user_id !== $auth['user']->uuid && $application->importer_id !== $auth['user']->uuid) {
+                abort(403, 'You do not have permission to view this application.');
+            }
+        } elseif ($auth['type'] === 'internal') {
+            $internalUser = $auth['user'];
+            $roles = $auth['roles'];
+
+            // Superadmin and admin bypass all restrictions
+            $isAdmin = $roles->contains('superadmin') || $roles->contains('admin');
+
+            if (!$isAdmin) {
+                // For other internal users: must have 'approve application' permission
+                if (!$internalUser->can('approve application')) {
+                    abort(403, 'You do not have the required permissions to view this application.');
+                }
+            }
+        } else {
+            abort(403, 'Unknown user type.');
+        }
 
         return view('pages.public.view_inspection', compact('pubmeasure', 'pubpurpose', 'country', 'id', 'application'));
     }
@@ -391,11 +424,11 @@ class InspectionController extends Controller
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();
-        
+
         $inspectionDocuments = DocumentRequirement::forModule('inspection')
             ->orderBy('name')
             ->get();
-            
+
         return view('pages.public.inspection_self', compact('pubmeasure', 'pubpurpose', 'country', 'id', 'inspectionDocuments'));
     }
 
@@ -460,11 +493,11 @@ class InspectionController extends Controller
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();
-        
+
         $inspectionDocuments = DocumentRequirement::forModule('inspection')
             ->orderBy('name')
             ->get();
-            
+
         return view('pages.public.inspection_others', compact('pubmeasure', 'pubpurpose', 'country', 'id', 'inspectionDocuments'));
     }
 
