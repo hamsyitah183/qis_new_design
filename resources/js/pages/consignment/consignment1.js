@@ -1082,14 +1082,85 @@ function renderBulkActionBar() {
 
 function permitActionsHtml(permit) {
     const status = permit.status;
+    const applicationStatus = (APPLICATION.status || "").toLowerCase();
+
+    // ─── Permission helper ────────────────────────────────
+    function hasPermission(permissionName) {
+        const user = window.fullUser;
+        if (!user || !user.permissions) return false;
+        return user.permissions.some((p) => p.name === permissionName);
+    }
+
     const isOwner = getCurrentUserType() === "public";
     const lang = getLang();
+
+    let user = window.authUser;
+
     let actions = "";
 
+    // ─── Accept Custom Item to List ──────────────────────────
+    // Only for internal users with 'approve permit' permission.
+    if (permit.isCustom === true && user.type === "internal") {
+        actions += `
+            <button type="button" class="ipv-btn-action is-success accept-custom" data-permit="${permit.id}">
+                <i class="bi bi-check-lg"></i> ${lang === "bm" ? "Terima Item ke Senarai" : "Accept Item to List"}
+            </button>
+        `;
+    }
+
+    // ─── Standard Approve / Reject ──────────────────────────
+    if (
+        applicationStatus === "clerk verified" &&
+        (status === "processing" || status === "reapplied") &&
+        hasPermission("approve permit")
+    ) {
+        // Standard approve/reject for non-custom permits only
+        if (!permit.isCustom) {
+            actions += `
+                <button type="button" class="ipv-btn-action is-success accept" data-permit="${permit.id}">
+                    <i class="bi bi-check-lg"></i> ${lang === "bm" ? "Lulus" : "Approve"}
+                </button>
+                <button type="button" class="ipv-btn-action is-danger reject" data-permit="${permit.id}">
+                    <i class="bi bi-x-lg"></i> ${lang === "bm" ? "Tolak" : "Reject"}
+                </button>
+            `;
+        } else {
+            // For custom permits, keep the standard Reject button
+            actions += `
+                <button type="button" class="ipv-btn-action is-danger reject" data-permit="${permit.id}">
+                    <i class="bi bi-x-lg"></i> ${lang === "bm" ? "Tolak" : "Reject"}
+                </button>
+            `;
+        }
+    }
+
+    // ─── Reapply (owner only) ──────────────────────────────
     if (status === "rejected" && isOwner) {
         actions += `
             <button type="button" class="ipv-btn-action is-warning reapply" data-permit="${permit.id}">
                 <i class="bi bi-arrow-repeat"></i> ${lang === "bm" ? "Mohon Semula" : "Reapply"}
+            </button>
+        `;
+    }
+
+    // ─── Pay Now (owner only) ──────────────────────────────
+    if (["pending for payment", "payment failed"].includes(status) && isOwner) {
+        actions += `
+            <button type="button" class="ipv-btn-action is-warning pd-pay-now" data-permit="${permit.id}" data-value="12">
+                <i class="bi bi-credit-card"></i> ${lang === "bm" ? "Bayar Sekarang" : "Pay Now"} — RM 12.00
+            </button>
+        `;
+    }
+
+    // ─── Print / Download ──────────────────────────────────
+    if (
+        ["paid", "completed"].includes(status) &&
+        (hasPermission("print permit") || isOwner)
+    ) {
+        const slug = (permit.permit_number || "").replaceAll("/", "");
+        actions += `
+            <button type="button" class="ipv-btn-action is-info generatePermit" data-permit="${slug}">
+                <i class="bi bi-download"></i> ${lang === "bm" ? "Cetak Permit" : "Print Permit"}
             </button>
         `;
     }
@@ -1109,7 +1180,6 @@ function renderPermitAccordion() {
     if (!PERMITS.length) {
         el.innerHTML =
             '<div class="ipv-empty-state"><i class="bi bi-inbox"></i><p>No consignment items found.</p></div>';
-        renderBulkActionBar();
         return;
     }
 
@@ -1120,98 +1190,132 @@ function renderPermitAccordion() {
             PERMIT_STATUS_CONFIG[permit.status] || PERMIT_STATUS_CONFIG.queued;
         const detail = permit.consignment_detail;
         const statusText = cfg[lang] || cfg.en;
+        let isCustom = " ";
+        let isCustomClass = "";
 
-        // ─── isCustom badge ──────────────────────────────────────────
-        let customBadge = '';
+        // ─── Waiting/pending approval highlight ─────────────
+        const isWaitingClass = ["processing", "reapplied"].includes(
+            permit.status,
+        )
+            ? " is-waiting"
+            : "";
+
+        const agreementBanner = permit.agreedAt
+            ? `<div class="alert alert-success mb-3 d-flex align-items-center">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <div>
+                    <strong>
+                        <span data-en="Declaration Confirmed" data-bm="Pengisytiharan Disahkan">Declaration Confirmed</span>
+                    </strong>
+                    <div class="small text-muted">
+                        <span data-en="Agreed on:" data-bm="Dipersetujui pada:">Agreed on:</span> ${permit.agreedAt}
+                    </div>
+                </div>
+            </div>`
+            : `<div class="alert alert-warning mb-3">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <strong>
+                    <span data-en="Pending Agreement" data-bm="Menunggu Persetujuan">Pending Agreement</span>
+                </strong>
+                - <span data-en="User has not confirmed this item yet." data-bm="Pengguna belum mengesahkan item ini lagi.">User has not confirmed this item yet.</span>
+            </div>`;
+
         if (permit.isCustom === true) {
-            customBadge = `<span class="ipv-badge alert alert-warning" data-en="Custom Item" data-bm="Item Khas">Custom Item</span>`;
+            isCustom += `<span class = "ipv-badge alert alert-warning" data-en = "Custom Item"  data-bm="Item Khas" >Custom Item</span>`;
+            isCustomClass += `is-custom`;
         }
-        // ──────────────────────────────────────────────────────────────
 
         return `
-            <div class="ipv-permit-item" data-permit="${escapeHtml(permit.permit_number)}">
+            <div class="ipv-permit-item ${isCustomClass}${isWaitingClass}" data-permit="${escapeHtml(permit.permit_number)}" >
                 <div class="ipv-permit-header">
                     <div class="ipv-permit-icon"><i class="bi bi-box-seam"></i></div>
                     <div class="ipv-permit-id-group">
                         <div class="ipv-permit-id">#${escapeHtml(permit.permit_number)}</div>
                         <div class="ipv-permit-name">
-                            ${escapeHtml(detail.item_name)}
-                            ${customBadge}
+                            <div>
+                                ${escapeHtml(detail.item_name)}
+                                <div class = "my-1 mb-2"> ${isCustom}</div>
+                                ${permitActionsHtml(permit)}
+                            </div>
+
+                            
                         </div>
                     </div>
                     <span class="ipv-badge is-${cfg.color}">${escapeHtml(statusText)}</span>
+                   
                     <div class="ipv-permit-value">RM ${money(permit.value)}</div>
-                   <button type="button" class="ipv-view-detail-btn" data-permit-id="${permit.id}" title="View full details">
+                    <button type="button" class="ipv-view-detail-btn" data-permit-id="${permit.id}" title="View full details">
                         <i class="bi bi-eye"></i>
                     </button>
                     <i class="bi bi-chevron-down ipv-chevron"></i>
                 </div>
                 <div class="ipv-permit-body">
+                    ${agreementBanner}
                     <div class="pd-section-label mb-2" data-en="Consignment Info" data-bm="Info Konsainan">Consignment Info</div>
-                    <div class="p-2 row ipv-permit-details-grid" style="background: var(--gray-1); border: 1px solid var(--default-border); border-radius: 0.6rem;">
+                    <div class="p-2 row ipv-permit-details-grid m-1" style="background: var(--gray-1); border: 1px solid var(--default-border); border-radius: 0.6rem;">
                         <div class="col-12 col-lg-6">
                             <p class="mb-2">
                                 <strong class="me-1">
-                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500 d-none"><i class="fa-solid fa-tag"></i></span>
+                                    <span class="avatar avatar-sm d-none avatar-rounded bd-gray-500"><i class="fa-solid fa-tag"></i></span>
                                     <span data-en="Item Name:" data-bm="Nama Item:">Item Name:</span>
-                                </strong>
+                                </strong> 
                                 <span class="text-break">${escapeHtml(detail.item_name)}</span>
                             </p>
                         </div>
+                        
                         <div class="col-12 col-lg-6">
                             <p class="mb-2">
                                 <strong class="me-1">
-                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500 d-none"><i class="fa-solid fa-scale-balanced"></i></span>
-                                    <span data-en="Category:" data-bm="Kategori:">Category:</span>
-                                </strong>
-                                <span class="text-break">${escapeHtml(permit.category)}</span>
-                            </p>
-                        </div>
-                        <div class="col-12 col-lg-6">
-                            <p class="mb-2">
-                                <strong class="me-1">
-                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500 d-none"><i class="fa-solid fa-scale-balanced"></i></span>
+                                    <span class="avatar avatar-sm d-none avatar-rounded bd-gray-500"><i class="fa-solid fa-scale-balanced"></i></span>
                                     <span data-en="Quantity:" data-bm="Kuantiti:">Quantity:</span>
-                                </strong>
+                                </strong> 
                                 <span class="text-break">${permit.quantity.toLocaleString()} ${escapeHtml(permit.unit_measurement)}</span>
                             </p>
                         </div>
-                        <div class="col-12 col-lg-6">
+                       
+                        
+                        <div class="col-12">
                             <p class="mb-2">
                                 <strong class="me-1">
-                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500 d-none"><i class="fa-solid fa-file-shield"></i></span>
-                                    <span data-en="Certificate No:" data-bm="No. Sijil:">Certificate No:</span>
-                                </strong>
-                                <span class="text-break">${escapeHtml(detail.certificate_no || "—")}</span>
+                                    <span class="avatar avatar-sm d-none avatar-rounded bd-gray-500"><i class="fa-solid fa-file-contract"></i></span>
+                                    <span data-en="Permit Number:" data-bm="No. Permit:">Permit Number:</span>
+                                </strong> 
+                                <span class="text-break">${escapeHtml(permit.permit_number)}</span>
                             </p>
                         </div>
                         <div class="col-12">
                             <p class="mb-2">
                                 <strong class="me-1">
-                                    <span class="avatar avatar-sm avatar-rounded bd-gray-500 d-none"><i class="fa-solid fa-file-contract"></i></span>
-                                    <span data-en="Permit Number:" data-bm="No. Permit:">Permit Number:</span>
-                                </strong>
-                                <span class="text-break">${escapeHtml(permit.permit_number)}</span>
+                                    <span class="avatar avatar-sm d-none avatar-rounded bd-gray-500"><i class="fa-solid fa-file-contract"></i></span>
+                                    <span data-en="Total permits printed:" data-bm="Jumlah permit dicetak :">Total permits printed:</span>
+                                </strong> 
+                                <span class="text-break">${escapeHtml(permit.print_calc)}</span>
                             </p>
                         </div>
+                        
                     </div>
 
-                    <div class="ipv-permit-subsection-title" data-bm="Lampiran" data-en="Attachments">Attachments (${permit.attachments.length})</div>
+                    <div class="ipv-permit-subsection-title" data-bm = "Lampiran" data-en = "Attachments">Attachments (${permit.attachments.length})</div>
                     <div class="ipv-attach-list" id="attachList-${escapeHtml(permit.permit_number)}"></div>
 
-                    ${permit.remark ? `
+                    ${
+                        permit.remark
+                            ? `
                         <div class="ipv-permit-remark is-${cfg.color}">
                             <i class="bi bi-info-circle"></i>
                             <span>${escapeHtml(permit.remark)}</span>
                         </div>
-                    ` : ""}
+                    `
+                            : ""
+                    }
 
-                    ${permitActionsHtml(permit)}
+                    
                 </div>
             </div>
         `;
     }).join("");
 
+    // Render attachment lists and apply translations to the whole container
     PERMITS.forEach((permit) => {
         const container = document.getElementById(
             `attachList-${permit.permit_number}`,
@@ -1219,8 +1323,8 @@ function renderPermitAccordion() {
         renderAttachmentList(container, permit.attachments, 2);
     });
 
+    // Apply translations to the accordion (for data-en/data-bm labels)
     applyTranslations(el);
-    renderBulkActionBar();
 }
 
 function initAccordionToggle() {

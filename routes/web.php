@@ -327,6 +327,11 @@ Route::prefix('internal')
         Route::post('/ip_condition/{id}/add-alias', [IpConditionController::class, 'addAlias']);
         Route::post('/permit/{id}/link-condition', [PermitConsignmentController::class, 'linkCondition']);
 
+        Route::post('/consignment_condition/quick-add', [ConsignmentMiscController::class, 'quickAdd']);
+        Route::get('/consignment_condition/search/{country}', [ConsignmentMiscController::class, 'search']);
+        Route::post('/consignment_condition/{id}/add-alias', [ConsignmentMiscController::class, 'addAlias']);
+        Route::post('/consignment_permit/{id}/link-condition', [ConsignmentMiscController::class, 'linkCondition']);
+
         Route::post('/save_condition', [MiscController::class, 'saveCondition'])->name('saveCondition');
         Route::get('/permit_edit_condition/{id}', [MiscController::class, 'editCondition']);
         Route::delete('/permit_condition/{id}', [MiscController::class, 'deleteCondition']);

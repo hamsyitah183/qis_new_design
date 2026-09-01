@@ -209,7 +209,7 @@ class PermitConsignmentController extends Controller
             'ip_condition_id' => 'required|integer|exists:ip_condition,id',
         ]);
 
-        $permit = ConsignmentPermit::with('application')->findOrFail($id);
+        $permit = IpConsignmentPermit::with('application')->findOrFail($id);
 
         // Ensure we're working with a real array, not null/stdClass
         $detail = is_array($permit->consignment_detail) ? $permit->consignment_detail : [];

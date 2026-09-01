@@ -120,40 +120,43 @@
             <div class="register-page ipa-card h-100">
                 <div class="ipa-card-header">
                     <span class="ipa-icon-badge"><i class='bx bx-search-alt'></i></span>
-                    <h6 data-en="Consignment Details" data-bm="Butiran Konsainan">Consignment Details <a
-                            style="color:red"> * </a>
+                    <h6 data-en="Consignment Details" data-bm="Butiran Konsainan">Consignment Details 
                         <span class="ipa-card-sub" data-en="When and how the goods arrive"
                             data-bm="Bila dan bagaimana barangan tiba">When and how the goods arrive</span>
-                    </h6>
+                    </h6><a
+                            style="color:red"> * </a>
                 </div>
                 <div class="row gy-3 mb-3">
                     <div class="col-xl-12">
                         <label for="eta" class="form-label" data-en="Estimated Time Arrival"
-                            data-bm="Anggaran Waktu Ketibaan">Estimated Time Arrival <a style="color:red"> *
-                            </a></label>
+                            data-bm="Anggaran Waktu Ketibaan">Estimated Time Arrival </label><a style="color:red"> *
+                            </a>
                         <input type="date" class="form-control " id="eta" name="eta" required>
                         <div class="invalid-feedback" id="etaError">Estimated Time Arrival cannot be a past date.</div>
                     </div>
                     <div class="col-xl-12">
                         <label for="eta" class="form-label" data-en="Expired Date" data-bm="Tarikh Mansuh">Expired
                             Date<a style="color:red"> *
-                            </a></label>
+                            </a></label><a style="color:red"> *
+                            </a>
                         <input type="date" class="form-control" id="expiredDate" name="expired_date" disabled>
 
                     </div>
                 </div>
                 <div class="row gy-3">
-                    <div class="col-xl-6">
+                    <div class="col-xl-12">
                         <label for="trnptType" class="form-label" data-en="Transport Type"
-                            data-bm="Jenis Pengangkutan">Transport Type <a style="color:red"> * </a></label>
+                            data-bm="Jenis Pengangkutan">Transport Type <a style="color:red"> * </a></label><a style="color:red"> *
+                            </a>
                         <select class="form-select" id="trnptType" name="trnptType"
                             data-route="/public/get_entry_point" required>
                             <option value="Land" selected>Land</option>
                         </select>
                     </div>
-                    <div class="col-xl-6">
+                    <div class="col-xl-12">
                         <label for="entryPoint" class="form-label" data-en="Entry Point" data-bm="Pintu Masuk">Entry
-                            Point<a style="color:red"> * </a></label>
+                            Point<a style="color:red"> * </a></label><a style="color:red"> *
+                            </a>
                         <select class="form-select" id="entryPoint" name="entryPoint" required>
                             <option value="">-- Select Entry Point --</option>
 
@@ -163,7 +166,8 @@
 
                     <div class="col-xl-12">
                         <label for="entryPoint" class="form-label" data-en="PTN Number" data-bm="Nombor PTN">PTN
-                            Number<a style="color:red"> * </a></label>
+                            Number<a style="color:red"> * </a></label><a style="color:red"> *
+                            </a>
 
                         <input type="text" name="ptnNumber" id="ptnNumber" class="form-control">
                     </div>
@@ -176,7 +180,8 @@
                                     <label for="selectVehicle" class="form-label" data-en="Select Vehicle(s)"
                                         data-bm="Pilih Kenderaan">
                                         Select Vehicle(s) <a style="color:red"> * </a>
-                                    </label>
+                                    </label><a style="color:red"> *
+                            </a>
                                     <select id="selectVehicle" class="form-select xintra-select2"
                                         name="selectVehicle[]" style="width:100%;" multiple="multiple" required>
                                         <option value="" data-en="-- Select Vehicle(s) --"

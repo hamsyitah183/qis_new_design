@@ -1920,7 +1920,6 @@ function saveConsignmentAttachment() {
                 !certificateNo
             ) {
                 // But if custom, itemSelectValue may be "others", so we need to treat it as valid
-                // Adjust validation: for custom, we only need custom name, quantity, measure, certNo, and attachment.
                 // The condition above would fail for custom because itemSelectValue === "others" is truthy so it passes.
                 // However we already validated custom name and attachment, so it's fine.
                 // But we still need to check if itemSelectValue is empty or "others" and we have name.
@@ -2401,6 +2400,55 @@ function editItem() {
             });
     });
 }
+
+// ─── Validate Required Documents ──────────────────────────
+function validateRequiredDocuments() {
+    let allUploaded = true;
+    const $requiredBlocks = $('.consignment-doc-block[data-required="true"]');
+
+    if ($requiredBlocks.length === 0) {
+        return true; // no required documents, skip validation
+    }
+
+    $requiredBlocks.each(function() {
+        const docId = $(this).data('doc-id');
+        const hasAttachment = applicationAttachments.some(
+            (a) => String(a.document_id) === String(docId)
+        );
+        if (!hasAttachment) {
+            allUploaded = false;
+            return false; // break the loop
+        }
+    });
+
+    return allUploaded;
+}
+
+// ─── Intercept "Next" button clicks (step 1 validation) ──
+$(document).on('click', '.wizard-btn.next', function(e) {
+    const $activeStep = $('.wizard-step.active');
+    // Only validate when moving from step 1 (Certificate Details)
+    if ($activeStep.length && $activeStep.data('step') === 1) {
+        if (!validateRequiredDocuments()) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+
+            const lang = getCurrentLang();
+            const title = lang === 'bm' ? 'Dokumen Wajib' : 'Required Documents';
+            const message = lang === 'bm'
+                ? 'Sila muat naik semua dokumen yang diperlukan sebelum meneruskan.'
+                : 'Please upload all required documents before proceeding.';
+
+            Swal.fire({
+                icon: 'warning',
+                title: title,
+                text: message,
+                confirmButtonText: lang === 'bm' ? 'OK' : 'OK',
+            });
+            return false;
+        }
+    }
+});
 
 // ─── Save Application ──────────────────────────────────────
 function saveapplication(isDraft = false) {

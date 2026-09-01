@@ -79,8 +79,8 @@
 
         // ---------- Compute whether this application has any custom items ----------
         $hasCustomItems = $application->consignmentPermits->contains(function ($permit) {
-                return data_get($permit->consignment_detail, 'isCustom') === true;
-            });
+            return data_get($permit->consignment_detail, 'isCustom') === true;
+        });
     @endphp
 
     {{-- Feed real application context to consignment1.js instead of URL-parsing --}}
@@ -116,20 +116,22 @@
                         <i class="bi bi-info-circle"></i>
                         @if ($showClerkReviewActions)
                             <span data-en="This application is awaiting your review."
-                                  data-bm="Permohonan ini sedang menunggu semakan anda.">This application is awaiting your review.</span>
+                                data-bm="Permohonan ini sedang menunggu semakan anda.">This application is awaiting your
+                                review.</span>
                             {{-- CUSTOM ITEMS WARNING – dynamically controlled by JavaScript --}}
                             <span id="customItemsWarning" class="{{ $hasCustomItems ? '' : 'd-none' }}"
-                                  data-en="There is an item that is not in the Consignment item list."
-                                  data-bm="Terdapat item yang tiada dalam senarai item Konsainan.">
+                                data-en="There is an item that is not in the Consignment item list."
+                                data-bm="Terdapat item yang tiada dalam senarai item Konsainan.">
                                 <i class="bi bi-exclamation-triangle me-1"></i>
                                 <span data-en="There is an item that is not in the Consignment item list."
-                                      data-bm="Terdapat item yang tiada dalam senarai item Konsainan.">
+                                    data-bm="Terdapat item yang tiada dalam senarai item Konsainan.">
                                     There is an item that is not in the Consignment item list.
                                 </span>
                             </span>
                         @elseif ($showAdminRejectedActions)
                             <span data-en="This application was rejected. You may review and re-evaluate it."
-                                  data-bm="Permohonan ini telah ditolak. Anda boleh menyemak dan menilai semula.">This application was rejected. You may review and re-evaluate it.</span>
+                                data-bm="Permohonan ini telah ditolak. Anda boleh menyemak dan menilai semula.">This
+                                application was rejected. You may review and re-evaluate it.</span>
                         @endif
                     </div>
                     <div class="ipv-actions-bar-buttons">
@@ -157,13 +159,12 @@
                     <div class="ipv-actions-bar-text">
                         <i class="bi bi-info-circle"></i>
                         <span data-en="Your application has been verified. Please proceed to payment."
-                              data-bm="Permohonan anda telah disahkan. Sila teruskan ke pembayaran.">
+                            data-bm="Permohonan anda telah disahkan. Sila teruskan ke pembayaran.">
                             Your application has been verified. Please proceed to payment.
                         </span>
                     </div>
                     <div class="ipv-actions-bar-buttons">
-                        <a href="#"
-                           class="ipv-btn-action btn-primary" id="payBulkUser">
+                        <a href="#" class="ipv-btn-action btn-primary" id="payBulkUser">
                             <i class="bi bi-credit-card"></i>
                             <span data-en="Go to Payment" data-bm="Pergi ke Pembayaran">Go to Payment</span>
                         </a>
@@ -189,7 +190,7 @@
                 </div>
 
                 <div class="ipv-action-row">
-                    @if ($isInternal && $application->status == 'Completed'  && auth()->guard('internal')->user()->can('print permit'))
+                    @if ($isInternal && $application->status == 'Completed' && auth()->guard('internal')->user()->can('print permit'))
                         <button type="button" class="ipv-btn-primary btn-info" id="ipvPrintPermitBtn">
                             <i class="bi bi-printer"></i> <span data-en="Print Certificate" data-bm="Cetak Sijil">Print
                                 Certificate</span>
@@ -199,9 +200,10 @@
                         <i class="bi bi-download"></i> {{ $application->printCalc }}
                     </span>
 
-                    <button class="btn ipv-btn-primary btn-secondary" id="printApplication" 
-                    data-type="{{ $application->type }}" data-application="{{ $application->application_id }}">
-                        <i class="fa-solid fa-print"></i>  <span data-en='Print Application' data-bm="Cetak Permohonan">Print Application</span> 
+                    <button class="btn ipv-btn-primary btn-secondary" id="printApplication"
+                        data-type="{{ $application->type }}" data-application="{{ $application->application_id }}">
+                        <i class="fa-solid fa-print"></i> <span data-en='Print Application' data-bm="Cetak Permohonan">Print
+                            Application</span>
                     </button>
                 </div>
 
@@ -237,7 +239,9 @@
                 {{-- ============================================================ --}}
                 {{-- EDIT APPLICATION BUTTON – FIXED CONDITION                    --}}
                 {{-- ============================================================ --}}
-                @if (($application->status == 'Draft' || $application->status == 'Clerk Rejected') && $application->user_id === $authUuid)
+                @if (
+                    ($application->status == 'Draft' || $application->status == 'Clerk Rejected') &&
+                        $application->user_id === $authUuid)
                     <a class="ipv-btn-outline w-100 justify-content-center mt-3 btn btn-primary" id="editButton"
                         href="/edit_consignment/{{ $application->application_id }}">
                         <i class="bi bi-pencil"></i> <span data-en="Edit Application" data-bm="Kemaskini Permohonan">Edit
@@ -255,7 +259,8 @@
 
                 <div class="ipv-status-header">
                     <div>
-                        <span class="ipv-status-eyebrow" data-en="Application Type:" data-bm="Jenis Permohonan:">Application
+                        <span class="ipv-status-eyebrow" data-en="Application Type:"
+                            data-bm="Jenis Permohonan:">Application
                             Type:</span>
                         <strong data-en="Consignment Certificate" data-bm="Sijil Konsainan">Consignment
                             Certificate</strong>
@@ -275,34 +280,34 @@
                 <div class="ipv-tabnav" role="tablist">
                     {{-- Permits tab --}}
                     <button type="button" class="ipv-tabnav-item {{ $paymentTabActive ? '' : 'is-active' }}"
-                            data-ipv-tab="permits" role="tab">
+                        data-ipv-tab="permits" role="tab">
                         <span data-en="Item List" data-bm="Senarai Item">Item List</span>
                         <span class="ipv-tab-count" id="ipvPermitCount">0</span>
                     </button>
 
                     {{-- Application Prices tab --}}
                     <button type="button" class="ipv-tabnav-item" data-ipv-tab="application_prices" role="tab"
-                            id="applicationPrices">
+                        id="applicationPrices">
                         <span data-en="Consignment Application Prices" data-bm="Harga Permohonan Konsainan"
                             class="text-wrap">Consignment Application Prices</span>
                     </button>
 
                     {{-- Importer & Exporter tab --}}
                     <button type="button" class="ipv-tabnav-item" data-ipv-tab="importer_exporter" role="tab"
-                            data-en="Importer & Exporter" data-bm="Pengimport & Pengeksport">
+                        data-en="Importer & Exporter" data-bm="Pengimport & Pengeksport">
                         Importer & Exporter
                     </button>
 
                     {{-- Transportation Details tab --}}
                     <button type="button" class="ipv-tabnav-item" data-ipv-tab="transport" role="tab"
-                            data-en="Transportation Details" data-bm="Butiran Pengangkutan">
+                        data-en="Transportation Details" data-bm="Butiran Pengangkutan">
                         Transportation Details
                     </button>
 
                     {{-- Payment tab (conditionally shown) --}}
                     @if ($showPaymentTab)
                         <button type="button" class="ipv-tabnav-item {{ $paymentTabActive ? 'is-active' : '' }}"
-                                data-ipv-tab="payment" role="tab">
+                            data-ipv-tab="payment" role="tab">
                             <span data-en="Pending Payment" data-bm="Pembayaran Tertangguh">Pending Payment</span>
                             <span class="ipv-tab-count" id="ipvPendingPaymentCount"></span>
                         </button>
@@ -310,7 +315,7 @@
 
                     {{-- Activity tab --}}
                     <button type="button" class="ipv-tabnav-item" data-ipv-tab="activity" role="tab"
-                            data-en="Activity" data-bm="Aktiviti">
+                        data-en="Activity" data-bm="Aktiviti">
                         Activity
                     </button>
                 </div>
@@ -321,8 +326,7 @@
                 <div class="ipv-tabbody">
 
                     {{-- Permits pane --}}
-                    <div class="ipv-tabpane {{ $paymentTabActive ? '' : 'is-active' }}"
-                         data-ipv-pane="permits">
+                    <div class="ipv-tabpane {{ $paymentTabActive ? '' : 'is-active' }}" data-ipv-pane="permits">
                         <div class="ipv-permit-accordion" id="ipvPermitAccordion"></div>
                     </div>
 
@@ -353,8 +357,7 @@
 
                     {{-- Payment pane (conditionally shown) --}}
                     @if ($showPaymentTab)
-                        <div class="ipv-tabpane {{ $paymentTabActive ? 'is-active' : '' }}"
-                             data-ipv-pane="payment">
+                        <div class="ipv-tabpane {{ $paymentTabActive ? 'is-active' : '' }}" data-ipv-pane="payment">
                             <div class="table-responsive">
                                 <table id="summaryTable4" class="table ipv-payment-table text-nowrap">
                                     <thead>
@@ -621,7 +624,8 @@
                                     Select Purpose --</option>
                                 @foreach ($pubpurpose ?? [] as $purpose)
                                     <option value="{{ $purpose->cate_code }}"
-                                        data-description="{{ $purpose->description }}">{{ $purpose->description }}</option>
+                                        data-description="{{ $purpose->description }}">{{ $purpose->description }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
@@ -661,6 +665,205 @@
                 </div>
             </div>
         </form>
+    </div>
+
+    {{-- Reapply modal — needed by test4-actions.js's reapply() flow.
+         Controller must pass $pubmeasure and $pubpurpose (same as the old blade did). --}}
+    <div class="modal fade" id="addItemModal" tabindex="-1" data-bs-focus="false">
+        <form class="modal-dialog modal-fullscreen">
+            <input type="hidden" name="permit_id" value="permit_id">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addExporterModalLabel" data-en="Reapply" data-bm="Mohon Semula">Reapply
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row gy-4 mb-3 p-4">
+                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                            <label for="itemSelect" class="form-label" data-en="Item" data-bm="Item">Item</label>
+                            <select class="form-select" id="itemSelect" name="itemSelect"></select>
+                            <small style="color:red" data-en="Item refering to the exporter's Country"
+                                data-bm="Item merujuk kepada Negara pengeksport">Item refering to the exporter's
+                                Country</small>
+                        </div>
+                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                            <label for="itemValue" class="form-label" data-en="Value (RM)" data-bm="Nilai (RM)">Value
+                                (RM)</label>
+                            <input type="number" class="form-control" id="itemValue" name="itemValue"
+                                placeholder="RM ..." data-en="RM ..." data-bm="RM ..." data-i18n-attr="placeholder">
+                        </div>
+                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                            <label for="itemQuantity" class="form-label" data-en="Quantity"
+                                data-bm="Kuantiti">Quantity</label>
+                            <input type="number" class="form-control" id="itemQuantity" name="itemQuantity"
+                                placeholder="0" data-en="0" data-bm="0" data-i18n-attr="placeholder">
+                        </div>
+                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                            <label for="itemMeasure" class="form-label" data-en="Measurement Unit"
+                                data-bm="Unit Ukuran">Measurement Unit</label>
+                            <select class="form-select" id="itemMeasure" name="itemMeasure">
+                                <option value="" data-en="-- Select Measurement Unit --"
+                                    data-bm="-- Pilih Unit Ukuran --">-- Select Measurement Unit --</option>
+                                @foreach ($pubmeasure ?? [] as $measure)
+                                    <option value="{{ $measure->cate_code }}">{{ $measure->description }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                            <label for="itemPurpose" class="form-label" data-en="Purpose"
+                                data-bm="Tujuan">Purpose</label>
+                            <select class="form-select" id="itemPurpose" name="itemPurpose">
+                                <option value="" data-en="-- Select Purpose --" data-bm="-- Pilih Tujuan --">--
+                                    Select Purpose --</option>
+                                @foreach ($pubpurpose ?? [] as $purpose)
+                                    <option value="{{ $purpose->cate_code }}"
+                                        data-description="{{ $purpose->description }}">{{ $purpose->description }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                            <label for="itemUses" class="form-label" data-en="Uses" data-bm="Kegunaan">Uses</label>
+                            <select class="form-select" id="itemUses" name="itemUses"></select>
+                        </div>
+                        <div class="row gy-4">
+                            <div class="col-xl-12">
+                                <div class="card-header">
+                                    <div class="card-title" data-en="Attachment" data-bm="Lampiran">Attachment</div>
+                                </div>
+                                <div class="card-body">
+                                    <div id="itemDropzone" method="post" class="dz-clickable"
+                                        enctype="multipart/form-data">
+                                        @csrf
+                                        <div class="dz-default dz-message">
+                                            <button class="dz-button p-5 border w-100 border-radius" type="button">
+                                                <span data-en="Drop files here to upload"
+                                                    data-bm="Jatuhkan fail di sini untuk muat naik">Drop files here to
+                                                    upload</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bx bx-x me-1"></i> <span data-en="Cancel" data-bm="Batal">Cancel</span>
+                    </button>
+                    <button id="saveBtn" type="submit" class="btn btn-primary">
+                        <i class="bx bx-save me-1"></i> <span data-en="Reapply" data-bm="Mohon Semula">Reapply</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+
+    <div class="modal fade" id="quickAddConditionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" data-en="Add New Permit Condition Item"
+                        data-bm="Tambah Item Syarat Permit Baharu">
+                        Add New Permit Condition Item
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="qacPermitId">
+                    <div class="row gy-3">
+                        <div class="col-xl-12">
+                            <label class="form-label" data-en="Item Name" data-bm="Nama Item">Item Name</label>
+                            <input type="text" class="form-control" id="qacItemName">
+                        </div>
+                        <div class="col-xl-12">
+                            <label class="form-label" data-en="Scientific Name" data-bm="Nama Saintifik">Scientific
+                                Name</label>
+                            <input type="text" class="form-control" id="qacScientificName">
+                        </div>
+                        <div class="col-xl-6">
+                            <label class="form-label" data-en="Category" data-bm="Kategori">Category</label>
+                            <select class="form-select" id="qacCategory">
+                                @foreach ($pbdata as $cate)
+                                    <option value="{{ $cate->cate_code }}">{{ $cate->description }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-xl-3">
+                            <label class="form-label" data-en="Quantity Limit" data-bm="Had Kuantiti">Quantity
+                                Limit</label>
+                            <input type="text" class="form-control" id="qacQuanLimit">
+                        </div>
+                        <div class="col-xl-3">
+                            <label class="form-label" data-en="Measurement Unit" data-bm="Unit Ukuran">Measurement
+                                Unit</label>
+                            <select class="form-select" id="qacQuanUnit"></select>
+                        </div>
+                        <div class="col-xl-12">
+                            <label class="form-label" data-en="Country" data-bm="Negara">Country</label>
+                            <select id="countrySelect" name="countrySelect[]" class="form-control xintra-select2"
+                                multiple data-route="/get_country" style="width: 100%;">
+                                <!-- Options will be loaded dynamically -->
+                            </select>
+                        </div>
+                        <div class="col-xl-12">
+                            <label class="form-label" data-en="Permit Condition" data-bm="Syarat Permit">Permit
+                                Condition</label>
+                            <div id="qacEditorWrapper">
+                                <div id="qacConditionEditor"
+                                    style="min-height:120px; border:1px solid var(--bs-border-color); border-radius:.5rem;">
+                                </div>
+                            </div>
+                            <input type="hidden" id="qacConditionInput">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Cancel"
+                        data-bm="Batal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="qacSaveBtn" data-en="Save & Link"
+                        data-bm="Simpan & Pautkan">Save & Link</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="replaceExistingModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" data-en="Select Existing Item" data-bm="Pilih Item Sedia Ada">
+                        Select Existing Item
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="reiPermitId">
+                    <input type="hidden" id="reiNewItemName">
+
+                    <label class="form-label" data-en="Search Existing Item" data-bm="Cari Item Sedia Ada">Search
+                        Existing Item</label>
+                    <select id="reiSelect" class="form-control" style="width:100%;"></select>
+
+                    <div id="reiPreview" class="mt-3 p-2 border rounded d-none">
+                        <div class="fs-13 text-muted"
+                            data-en="This item will be linked and the new name will be added as an alias:"
+                            data-bm="Item ini akan dipautkan dan nama baharu akan ditambah sebagai alias:"></div>
+                        <div class="fw-semibold" id="reiPreviewName"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-en="Cancel"
+                        data-bm="Batal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="reiConfirmBtn" disabled data-en="Confirm & Link"
+                        data-bm="Sahkan & Pautkan">Confirm & Link</button>
+                </div>
+            </div>
+        </div>
     </div>
 
 @endsection
