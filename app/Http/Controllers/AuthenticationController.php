@@ -100,59 +100,60 @@ class AuthenticationController extends Controller
         ], 422);
     }
 
-    public function loginActionApi(Request $request)
+    public function internalLoginApi(Request $request)
     {
-        // Get language from request (default 'en')
-        $lang = $request->input('lang', 'en');
-        app()->setLocale($lang);
-
-
         $credentials = $request->validate([
-            'userType' => 'required|in:public,internal',
             'email' => 'required|email',
             'password' => 'required|string',
+            'remember_me' => 'sometimes|boolean',
         ]);
 
-        $guard = $credentials['userType'];
+        $user = InternalUser::query()
+            ->where('email', $credentials['email'])
+            ->first();
 
-        // Retrieve user first
-        $user = ($guard === 'public' ? PublicUser::class : InternalUser::class)::where('email', $credentials['email'])->first();
-
-        if (!$user) {
+        if (!$user || !Hash::check($credentials['password'], $user->password)) {
             return response()->json([
                 'status' => 'error',
-                'message' => __('auth.user_not_found'), // translated
+                'message' => 'Invalid credentials.',
             ], 422);
         }
 
-        // API login is stateless: verify credentials without creating a session.
-        if (!Hash::check($credentials['password'], $user->password)) {
-            return response()->json([
-                'status' => 'error',
-                'message' => __('auth.invalid_credentials'), // translated
-            ], 422);
-        }
+        $expiresAt = !empty($credentials['remember_me'])
+            ? now()->addDays(30)
+            : now()->addHours(24);
 
-        // After login, check if email not verified
-        if (method_exists($user, 'hasVerifiedEmail') && !$user->hasVerifiedEmail()) {
-            $user->notify(new VerifyEmailNotification());
-            return response()->json([
-                'status' => 'unverified',
-                'message' => __('auth.email_unverified'), // translated
-                'redirect' => route('verify.email'),
-            ]);
-        }
+        // Single-device policy: revoke all previous tokens, keep only this one.
+        $user->tokens()->delete();
 
-        // Return user payload expected by mobile app.
+        $token = $user->createToken('scanner-app', ['*'], $expiresAt);
+
+        $token->accessToken->forceFill([
+            'ip_address' => $request->ip(),
+            'user_agent' => substr((string) $request->userAgent(), 0, 255),
+        ])->save();
+
         return response()->json([
             'status' => 'success',
-            'message' => __('auth.login_success'), // translated
+            'message' => 'Login successful.',
+            'token' => $token->plainTextToken,
+            'expires_at' => $expiresAt->toIso8601String(),
             'user' => [
                 'uuid' => $user->uuid,
-                'name' => $user->name ?? $user->fullname,
+                'name' => $user->fullname,
                 'email' => $user->email,
-                'userType' => $guard,
+                'roles' => $user->getRoleNames()->first() ?? null,
             ],
+        ]);
+    }
+
+    public function internalLogoutApi(Request $request)
+    {
+        $request->user()?->currentAccessToken()?->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Logged out.',
         ]);
     }
 

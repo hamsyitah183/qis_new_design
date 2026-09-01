@@ -19,6 +19,9 @@ class QrScanLog extends Model
         'is_valid',
         'result',
         'scanned_at',
+        'used_lat',
+        'used_lng',
+        'used_location',
     ];
 
     protected $casts = [

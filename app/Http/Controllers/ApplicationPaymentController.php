@@ -47,7 +47,7 @@ class ApplicationPaymentController extends Controller
 
         $logs = QrScanLog::query()
             ->where(function ($query) {
-                $query->whereRaw("LOWER(COALESCE(result, '')) IN (?, ?)", ['approved', 'valid'])
+                $query->whereRaw("LOWER(COALESCE(result, '')) IN (?, ?, ?, ?)", ['approved', 'valid', 'used', 'rejected'])
                     ->orWhere(function ($legacyQuery) {
                         $legacyQuery->whereNull('result')
                             ->where('is_valid', true);
@@ -61,12 +61,102 @@ class ApplicationPaymentController extends Controller
                     'internal_user_name' => $log->internal_user_name ?? '-',
                     'internal_user_position' => $log->internal_user_position ?? '-',
                     'scanned_value' => $log->scanned_value ?? '-',
-                    'is_valid' => true,
-                    'result' => 'Valid',
+                    'is_valid' => (bool) $log->is_valid,
+                    'result' => ucfirst((string) ($log->result ?: 'invalid')),
                     'scanned_at' => optional($log->scanned_at)->format('d-m-Y h:i:s A') ?? '-',
                 ];
             })
             ->values();
+
+        return response()->json([
+            'status' => 'success',
+            'logs' => $logs,
+        ]);
+    }
+
+    public function getScanHistoryApi(Request $request)
+    {
+        $internalUser = $request->user();
+
+        if (!$internalUser) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthenticated.',
+            ], 401);
+        }
+
+        $query = QrScanLog::query()
+            ->where('internal_user_uuid', $internalUser->uuid)
+            ->latest('scanned_at');
+
+        return $this->scanHistoryResponse($request, $query);
+    }
+
+    public function getAllScanHistoryApi(Request $request)
+    {
+        $internalUser = $request->user();
+
+        if (!$internalUser) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthenticated.',
+            ], 401);
+        }
+
+        if (!$internalUser->hasAnyRole(['admin', 'superadmin'])) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized: admins only.',
+            ], 403);
+        }
+
+        $query = QrScanLog::query()
+            ->with([
+                'internalUser:id,uuid,fullname,position',
+                'internalUser.roles:id,name',
+            ])
+            ->latest('scanned_at');
+
+        return $this->scanHistoryResponse($request, $query);
+    }
+
+    private function scanHistoryResponse(Request $request, $query)
+    {
+        $result = strtolower(trim((string) $request->query('result', '')));
+        if ($result !== '' && !in_array($result, ['approved', 'rejected', 'valid', 'used', 'invalid'])) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'result must be one of: approved, rejected, valid, used, invalid.',
+            ], 422);
+        }
+
+        if ($result !== '') {
+            $query->where('result', $result);
+        }
+
+        $perPage = min((int) $request->query('per_page', 15), 100);
+
+        $logs = $query->paginate($perPage)
+            ->through(function ($log) {
+                return [
+                    'id' => $log->id,
+                    'scanner' => $log->relationLoaded('internalUser') && $log->internalUser
+                        ? [
+                            'name' => $log->internalUser->fullname ?? '-',
+                            'roles' => $log->internalUser->roles->pluck('name')->first() ?? null,
+                        ]
+                        : null,
+                    'permit_number' => $log->permit_number ?? '-',
+                    'order_number' => $log->order_number ?? '-',
+                    'application_type' => $log->application_type ?? '-',
+                    'result' => $log->result,
+                    'is_valid' => (bool) $log->is_valid,
+                    'used_lat' => $log->used_lat,
+                    'used_lng' => $log->used_lng,
+                    'used_location' => $log->used_location,
+                    'scanned_at' => optional($log->scanned_at)->format('d-m-Y h:i:s A') ?? '-',
+                ];
+            });
 
         return response()->json([
             'status' => 'success',
@@ -121,6 +211,15 @@ class ApplicationPaymentController extends Controller
                 $decodedPayload = $this->permitQrService->decryptPayload($qrPayload);
                 $rawPermit = (string) ($decodedPayload['permit_number'] ?? '');
             } catch (\Throwable $e) {
+                $this->recordQrScanLog($request, [
+                    'scanned_value' => $qrPayload,
+                    'permit_number' => '-',
+                    'order_number' => null,
+                    'application_type' => null,
+                    'is_valid' => false,
+                    'result' => 'invalid',
+                ]);
+
                 return response()->json([
                     'status' => 'success',
                     'valid' => false,
@@ -197,6 +296,15 @@ class ApplicationPaymentController extends Controller
 
         // If no permit found in any table, return invalid
         if (!$permitId) {
+            $this->recordQrScanLog($request, [
+                'scanned_value' => $rawPermit,
+                'permit_number' => $rawPermit,
+                'order_number' => null,
+                'application_type' => null,
+                'is_valid' => false,
+                'result' => 'invalid',
+            ]);
+
             return response()->json([
                 'status' => 'success',
                 'valid' => false,
@@ -251,6 +359,15 @@ class ApplicationPaymentController extends Controller
         }
 
         if (!$order) {
+            $this->recordQrScanLog($request, [
+                'scanned_value' => $rawPermit,
+                'permit_number' => $rawPermit,
+                'order_number' => null,
+                'application_type' => null,
+                'is_valid' => false,
+                'result' => 'invalid',
+            ]);
+
             return response()->json([
                 'status' => 'success',
                 'valid' => false,
@@ -261,15 +378,7 @@ class ApplicationPaymentController extends Controller
         }
 
         // One-time consume is restricted to known internal scanner users only.
-        $scannerUserType = trim((string) $request->query('scanner_user_type', ''));
-        $scannerUserUuid = trim((string) $request->query('scanner_user_uuid', ''));
-
-        $internalScanner = null;
-        if ($scannerUserType === 'internal' && $scannerUserUuid !== '') {
-            $internalScanner = InternalUser::query()
-                ->where('uuid', $scannerUserUuid)
-                ->first();
-        }
+        $internalScanner = $request->user();
 
         if (!$internalScanner) {
             return response()->json([
@@ -294,6 +403,15 @@ class ApplicationPaymentController extends Controller
                 ->first();
 
             if ($existingUsage) {
+                $this->recordQrScanLog($request, [
+                    'scanned_value' => $resolvedPermitNumber,
+                    'permit_number' => $resolvedPermitNumber,
+                    'order_number' => $order->order_number,
+                    'application_type' => $order->application_type,
+                    'is_valid' => false,
+                    'result' => $existingUsage->status ?: 'used',
+                ]);
+
                 $endorser = InternalUser::query()
                     ->where('uuid', $existingUsage->used_by_uuid)
                     ->first();
@@ -308,7 +426,7 @@ class ApplicationPaymentController extends Controller
                     'item_name' => $itemName,
                     'is_used' => true,
                     // Audit details of the earlier scan for the scanner app.
-                    'action' => $existingUsage->inspection_status, // endorsed | ignored | null
+                    'action' => $existingUsage->status, // approved | rejected | null
                     'endorsed_by' => $endorser?->fullname ?: $endorser?->name,
                     'endorsed_at' => optional($existingUsage->used_at)->format('d-m-Y h:i:s A'),
                     'endorsed_location' => $existingUsage->used_location,
@@ -317,6 +435,15 @@ class ApplicationPaymentController extends Controller
                 ]);
             }
         }
+
+        $this->recordQrScanLog($request, [
+            'scanned_value' => $resolvedPermitNumber,
+            'permit_number' => $resolvedPermitNumber,
+            'order_number' => $order->order_number,
+            'application_type' => $order->application_type,
+            'is_valid' => true,
+            'result' => 'valid',
+        ]);
 
         return response()->json([
             'status' => 'success',
@@ -342,10 +469,7 @@ class ApplicationPaymentController extends Controller
      */
     public function pendingPermitsApi(Request $request)
     {
-        $scannerUserType = trim((string) $request->query('scanner_user_type', ''));
-        $scannerUserUuid = trim((string) $request->query('scanner_user_uuid', ''));
-
-        if ($scannerUserType !== 'internal' || $scannerUserUuid === '') {
+        if (!$request->user()) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Internal scanner identity is required.',
@@ -420,19 +544,116 @@ class ApplicationPaymentController extends Controller
         ]);
     }
 
+    /**
+     * Search permits by permit number AND/OR importer/exporter name.
+     * All provided criteria must match (AND); importer + exporter are OR.
+     * Searches all three permit types for the scanner app.
+     */
+    public function searchPermitsApi(Request $request)
+    {
+        if (!$request->user()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Internal scanner identity is required.',
+            ], 403);
+        }
+
+        $permitNumber = trim((string) $request->input('permit_number', ''));
+        $importer = trim((string) $request->input('importer', ''));
+        $exporter = trim((string) $request->input('exporter', ''));
+        $limit = min((int) $request->input('limit', 50), 100);
+
+        if ($permitNumber === '' && $importer === '' && $exporter === '') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'At least one of permit_number, importer, or exporter is required.',
+            ], 422);
+        }
+
+        $permitUpper = strtoupper($permitNumber);
+        $importerUpper = strtoupper($importer);
+        $exporterUpper = strtoupper($exporter);
+
+        $types = [
+            'Import Permit' => [IpConsignmentPermit::class],
+            'Inspection Certificate' => [InspectionItem::class],
+            'Consignment Certificate' => [ConsignmentPermit::class],
+        ];
+
+        $permits = [];
+
+        foreach ($types as $type => [$model]) {
+            $rows = $model::query()
+                ->where('status', 'paid')
+                ->with('application.importer', 'application.exporter', 'application.entryPoint')
+                ->get();
+
+            foreach ($rows as $row) {
+                $app = $row->application;
+
+                // Importer/exporter names differ per application type:
+                // Import/Inspection: importer=PublicUser.fullname, exporter=Exporter.name
+                // Consignment: importer=ConsignmentImporter.name, exporter=PublicUser.fullname
+                if ($type === 'Consignment Certificate') {
+                    $rowImporter = (string) ($app?->importer?->name ?: '-');
+                    $rowExporter = (string) ($app?->exporter?->fullname ?: '-');
+                } else {
+                    $rowImporter = (string) ($app?->importer?->fullname ?: '-');
+                    $rowExporter = (string) ($app?->exporter?->name ?: '-');
+                }
+
+                // Every provided criterion must match (AND).
+                // importer + exporter are OR within the name group.
+                $matchesNumber = $permitNumber === '' || strtoupper((string) $row->permit_number) === $permitUpper;
+                $matchesName = ($importer === '' && $exporter === '')
+                    || ($importer !== '' && strtoupper($rowImporter) === $importerUpper)
+                    || ($exporter !== '' && strtoupper($rowExporter) === $exporterUpper);
+
+                if (!$matchesNumber || !$matchesName) {
+                    continue;
+                }
+
+                $detail = $row->consignment_detail ?? [];
+
+                $permits[] = [
+                    'permit_details' => [
+                        'permit_number' => (string) $row->permit_number,
+                        'application_type' => $type,
+                        'importer' => $rowImporter,
+                        'exporter' => $rowExporter,
+                        'entrypoint' => [
+                            'entry_name' => (string) ($app?->entryPoint?->entry_name ?: '-'),
+                            'transport_type' => (string) ($app?->entryPoint?->transport_type ?: $app?->transport_type ?: '-'),
+                            'eta' => $app?->eta ? $app->eta->format('d-m-Y') : null,
+                        ],
+                    ],
+                    'item_details' => [
+                        'item_name' => (string) data_get($detail, 'item_name', '-'),
+                        'category' => data_get($detail, 'category'),
+                        'quantity' => data_get($detail, 'quantity', $row->quantity ?? 0),
+                        'unit_measurement' => data_get($detail, 'measure', $row->unit_measurement),
+                        'value' => data_get($detail, 'value', $row->value ?? 0),
+                        'purpose' => data_get($detail, 'purpose'),
+                        'uses' => data_get($detail, 'uses'),
+                    ],
+                ];
+
+                if (count($permits) >= $limit) {
+                    break 2;
+                }
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'permits' => $permits,
+        ]);
+    }
+
     private function recordQrScanLog(Request $request, array $payload): void
     {
         try {
-            $userType = (string) $request->query('scanner_user_type', '');
-            $scannerUserUuid = trim((string) $request->query('scanner_user_uuid', ''));
-
-            if ($userType !== 'internal' || $scannerUserUuid === '') {
-                return;
-            }
-
-            $internalUser = InternalUser::query()
-                ->where('uuid', $scannerUserUuid)
-                ->first();
+            $internalUser = $request->user();
 
             if (!$internalUser) {
                 return;
@@ -449,6 +670,9 @@ class ApplicationPaymentController extends Controller
                 'is_valid' => (bool) ($payload['is_valid'] ?? false),
                 'result' => $payload['result'] ?? 'invalid',
                 'scanned_at' => now(),
+                'used_lat' => $payload['used_lat'] ?? null,
+                'used_lng' => $payload['used_lng'] ?? null,
+                'used_location' => $payload['used_location'] ?? null,
             ]);
         } catch (\Throwable $e) {
             // Keep scan validation resilient even when logging fails.
@@ -823,8 +1047,11 @@ class ApplicationPaymentController extends Controller
             $orderNumber = trim((string) $request->input('order_number', ''));
             $applicationType = trim((string) $request->input('application_type', ''));
             $inspectionStatus = trim((string) $request->input('inspection_status', ''));
-            $scannerUserUuid = trim((string) $request->query('scanner_user_uuid', ''));
-            $scannerUserType = trim((string) $request->query('scanner_user_type', ''));
+            $usedLat = $request->input('used_lat');
+            $usedLng = $request->input('used_lng');
+            $usedLocation = trim((string) $request->input('used_location', ''));
+
+            $internalUser = $request->user();
 
             if ($permitNumber === '' || $orderNumber === '' || $applicationType === '') {
                 return response()->json([
@@ -840,21 +1067,10 @@ class ApplicationPaymentController extends Controller
                 ], 422);
             }
 
-            if ($scannerUserType !== 'internal' || $scannerUserUuid === '') {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Internal scanner identity is required.',
-                ], 403);
-            }
-
-            $internalUser = InternalUser::query()
-                ->where('uuid', $scannerUserUuid)
-                ->first();
-
             if (!$internalUser) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Invalid scanner user.',
+                    'message' => 'Internal scanner identity is required.',
                 ], 403);
             }
 
@@ -886,9 +1102,6 @@ class ApplicationPaymentController extends Controller
 
                 // Live GPS location captured by the scanner app. There is no
                 // fallback: a real fix is required to record an endorsement.
-                $usedLat = $request->input('used_lat');
-                $usedLng = $request->input('used_lng');
-                $usedLocation = trim((string) $request->input('used_location', ''));
 
                 if (!is_numeric($usedLat) || !is_numeric($usedLng)) {
                     return response()->json([
@@ -907,9 +1120,9 @@ class ApplicationPaymentController extends Controller
                     'used_lat' => $usedLat,
                     'used_lng' => $usedLng,
                     'used_location' => $usedLocation !== '' ? $usedLocation : null,
-                    'inspection_status' => $inspectionStatus === 'approved'
-                        ? 'endorsed'
-                        : 'ignored',
+                    'status' => $inspectionStatus === 'approved'
+                        ? 'approved'
+                        : 'rejected',
                 ]);
 
                 $order->forceFill([
@@ -928,21 +1141,20 @@ class ApplicationPaymentController extends Controller
                 }
             }
 
-            // Only log to Application Log if inspection was approved
-            if ($inspectionStatus === 'approved') {
-                QrScanLog::create([
-                    'internal_user_uuid' => $internalUser->uuid,
-                    'internal_user_name' => $internalUser->fullname ?? '-',
-                    'internal_user_position' => $internalUser->position ?? '-',
-                    'scanned_value' => $permitNumber,
-                    'permit_number' => $permitNumber,
-                    'order_number' => $orderNumber,
-                    'application_type' => $applicationType,
-                    'is_valid' => true,
-                    'result' => 'approved',
-                    'scanned_at' => now(),
-                ]);
-            }
+            // Log every scan completion: approved and rejected, with location.
+            // Completing a scan consumes the QR (one-time) — is_valid = 0
+            // regardless of outcome; result distinguishes approved/rejected.
+            $this->recordQrScanLog($request, [
+                'scanned_value' => $permitNumber,
+                'permit_number' => $permitNumber,
+                'order_number' => $orderNumber,
+                'application_type' => $applicationType,
+                'is_valid' => false,
+                'result' => $inspectionStatus,
+                'used_lat' => $usedLat,
+                'used_lng' => $usedLng,
+                'used_location' => $usedLocation !== '' ? $usedLocation : null,
+            ]);
 
             return response()->json([
                 'status' => 'success',

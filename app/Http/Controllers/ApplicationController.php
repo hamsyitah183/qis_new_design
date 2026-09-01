@@ -971,7 +971,7 @@ class ApplicationController extends Controller
                 ->where('application_type', 'Import Permit')
                 ->whereIn('order_number', $orderNumbers)
                 ->where(function ($query) {
-                    $query->whereRaw("LOWER(COALESCE(result, '')) IN (?, ?)", ['approved', 'valid'])
+                    $query->whereRaw("LOWER(COALESCE(result, '')) IN (?, ?, ?, ?)", ['approved', 'valid', 'used', 'rejected'])
                         ->orWhere(function ($legacyQuery) {
                             $legacyQuery->whereNull('result')
                                 ->where('is_valid', true);
@@ -984,8 +984,8 @@ class ApplicationController extends Controller
                         'internal_user_name' => $log->internal_user_name ?? '-',
                         'internal_user_position' => $log->internal_user_position ?? '-',
                         'scanned_value' => $log->scanned_value ?? '-',
-                        'is_valid' => true,
-                        'result' => 'Valid',
+                        'is_valid' => (bool) $log->is_valid,
+                        'result' => ucfirst((string) ($log->result ?: 'invalid')),
                         'scanned_at' => optional($log->scanned_at)->toIso8601String(),
                     ];
                 })

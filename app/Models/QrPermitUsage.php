@@ -15,6 +15,10 @@ class QrPermitUsage extends Model
         'order_number',
         'used_by_uuid',
         'used_at',
+        'status',
+        'used_lat',
+        'used_lng',
+        'used_location',
     ];
 
     protected $casts = [
