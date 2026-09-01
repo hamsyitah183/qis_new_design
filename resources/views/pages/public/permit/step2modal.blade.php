@@ -18,9 +18,9 @@
                     <div class="news"></div>
 
                     <!-- Item Select -->
-                    <div class="col-xl-6 col-sm-12">
-                        <label for="itemSelect" class="form-label" data-en="Item" data-bm="Item">Item <a
-                                style="color:red"> * </a></label>
+                    <div class="col-xl-12 col-sm-12">
+                        <label for="itemSelect" class="form-label" data-en="Item" data-bm="Item">Item </label><a
+                                style="color:red"> * </a>
                         <select class="form-select" id="itemSelect" name="itemSelect">
                             <!-- Options populated by JS, including "Others" -->
                         </select>
@@ -33,8 +33,8 @@
                     <div class="col-xl-6 col-sm-12" id="customItemWrapper" style="display:none;">
                         <label for="customItemName" class="form-label" data-en="Custom Item Name"
                             data-bm="Nama Item Tersuai">
-                            Custom Item Name <a style="color:red"> * </a>
-                        </label>
+                            Custom Item Name 
+                        </label><a style="color:red"> * </a>
                         <input type="text" class="form-control" id="customItemName" name="customItemName"
                             placeholder="Enter custom item name" data-en="Enter custom item name"
                             data-bm="Masukkan nama item tersuai">
@@ -43,22 +43,20 @@
 
                     <!-- Value -->
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                        <label for="itemValue" class="form-label" data-en="Value (RM)" data-bm="Nilai (RM)">Value (RM)<a
-                                style="color:red"> * </a></label>
+                        <label for="itemValue" class="form-label" data-en="Value (RM)" data-bm="Nilai (RM)">Value (RM)</label><a style="color:red"> * </a>
                         <input type="number" class="form-control" id="itemValue" name="itemValue" placeholder="RM ...">
                     </div>
 
                     <!-- Quantity -->
                     <div class="col-xl-3 col-lg-3 col-md-3 col-sm-12">
-                        <label for="itemQuantity" class="form-label" data-en="Quantity" data-bm="Kuantiti">Quantity<a
-                                style="color:red"> * </a></label>
+                        <label for="itemQuantity" class="form-label" data-en="Quantity" data-bm="Kuantiti">Quantity</label><a style="color:red"> * </a>
                         <input type="number" class="form-control" id="itemQuantity" name="itemQuantity">
                     </div>
 
                     <!-- Measurement Unit -->
                     <div class="col-xl-3 col-lg-3 col-md-3 col-sm-12">
                         <label for="itemMeasure" class="form-label" data-en="Measurement Unit"
-                            data-bm="Unit Ukuran">Measurement Unit<a style="color:red"> * </a></label>
+                            data-bm="Unit Ukuran">Measurement Unit</label><a style="color:red"> * </a>
                         <select class="form-select" id="itemMeasure" name="itemMeasure">
                             <option value="" data-en="-- Select Measurement Unit --"
                                 data-bm="-- Pilih Unit Ukuran --">-- Select Measurement Unit --</option>
@@ -70,8 +68,7 @@
 
                     <!-- Purpose -->
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                        <label for="itemPurpose" class="form-label" data-en="Purpose" data-bm="Tujuan">Purpose<a
-                                style="color:red"> * </a></label>
+                        <label for="itemPurpose" class="form-label" data-en="Purpose" data-bm="Tujuan">Purpose</label><a style="color:red"> * </a>
                         <select class="form-select" id="itemPurpose" name="itemPurpose">
                             <option value="" data-en="-- Select Purpose --" data-bm="-- Pilih Tujuan --">-- Select
                                 Purpose --</option>
@@ -86,8 +83,7 @@
 
                     <!-- Uses -->
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                        <label for="itemUses" class="form-label" data-en="Uses" data-bm="Kegunaan">Uses<a
-                                style="color:red"> * </a></label>
+                        <label for="itemUses" class="form-label" data-en="Uses" data-bm="Kegunaan">Uses</label><a style="color:red"> * </a>
                         <select class="form-select" id="itemUses" name="itemUses"></select>
                     </div>
 
@@ -96,8 +92,8 @@
                         <div class="col-xl-12">
                             <div class="card-header">
                                 <div class="card-title" data-en="Attachment" data-bm="Lampiran">
-                                    Attachment<a style="color:red"> * </a>
-                                </div>
+                                    Attachment
+                                </div><a style="color:red"> * </a>
                             </div>
                             <!-- Attachment instruction (hidden initially) -->
                             <div class="col-12 attachmentInstruction" style="display:none; color:red; font-size: 12px;"></div>

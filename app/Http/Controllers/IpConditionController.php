@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ConsignmentPermit;
 use App\Models\Country;
 use App\Models\IpCondition;
+use App\Models\IpConsignmentPermit;
 use App\Services\ApplicationActivityLogger;
 use Illuminate\Http\Request;
 
@@ -13,35 +14,59 @@ class IpConditionController extends Controller
     public function quickAdd(Request $request)
     {
         $request->validate([
-            'item_name' => 'required|string|max:255',
-            'permit_id' => 'nullable|integer|exists:consignment_permits,id',
+            'item_name'     => 'required|string|max:255',
+            'permit_id'     => 'nullable|integer|exists:ip_consignment_permit,id',
+            'countrySelect' => 'nullable|array',       // optional; countries sent as array
+            'countrySelect.*' => 'string|max:10',     // each country code
         ]);
 
+        // 1. Retrieve the permit
+        $permit = IpConsignmentPermit::find($request->permit_id);
+        if (!$permit) {
+            return response()->json(['message' => 'Permit not found.'], 404);
+        }
+
+        // 2. Update consignment_detail
+        $consignment_detail = $permit->consignment_detail ?? [];
+        $consignment_detail['item_name'] = $request->item_name;
+        $consignment_detail['isCustom'] = false;
+        $permit->consignment_detail = $consignment_detail;
+        $permit->save();
+
+        // 3. Prepare country array – handle both JSON string and direct array
+        $countryValues = [];
+        if ($request->filled('countrySelect')) {
+            $countryValues = $request->countrySelect; // already an array
+        } elseif ($request->filled('country')) {
+            // fallback if frontend sends a JSON string under 'country'
+            $countryValues = json_decode($request->country, true) ?? [];
+        }
+
+        // 4. Create the new condition
         $condition = IpCondition::create([
-            'item_name'           => $request->item_name,
-            'item_bahasa'         => $request->scientific_name,
-            'category'            => $request->category,
-            'quantity_limit'      => $request->quantity_limit ?: null,
-            'measurement_unit'    => $request->measurement_unit,
-            'addional_condition'  => $request->condition_html,
-            'another_name'        => [],
+            'item_name'          => $request->item_name,
+            'item_bahasa'        => $request->scientific_name,
+            'category'           => $request->category,
+            'quantity_limit'     => $request->quantity_limit ?: null,
+            'measurement_unit'   => $request->measurement_unit,
+            'addional_condition' => $request->condition_html,
+            'country'            => $countryValues,
+            'usage'              => [],
+            'another_name'       => [],
         ]);
 
-        // ─── Activity Log ─────────────────────────────────
-        if ($request->permit_id) {
-            $permit = ConsignmentPermit::with('application')->find($request->permit_id);
-            if ($permit && $permit->application) {
-                ApplicationActivityLogger::log(
-                    application: $permit->application,
-                    event: 'permit_condition_created',
-                    description: authUser()['user']->fullname
-                        . " created a new permit condition item \"{$condition->item_name}\" from a custom item on application {$permit->application->application_id}",
-                    properties: [
-                        'permit_id'       => $permit->id,
-                        'ip_condition_id' => $condition->id,
-                    ],
-                );
-            }
+        // 5. Activity log (use the same $permit)
+        if ($permit && $permit->application) {
+            ApplicationActivityLogger::log(
+                application: $permit->application,
+                event: 'permit_condition_created',
+                description: authUser()['user']->fullname
+                    . " created a new permit condition item \"{$condition->item_name}\" from a custom item on application {$permit->application->application_id}",
+                properties: [
+                    'permit_id'       => $permit->id,
+                    'ip_condition_id' => $condition->id,
+                ],
+            );
         }
 
         return response()->json([

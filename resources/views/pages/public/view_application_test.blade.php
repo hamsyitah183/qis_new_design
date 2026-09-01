@@ -196,7 +196,7 @@
 
                 <div class="ipv-action-row">
                     @if ($isInternal && auth()->guard('internal')->user()->can('print permit'))
-                        <button type="button" class="ipv-btn-primary" id="ipvPrintPermitBtn">
+                        <button type="button" class="ipv-btn-primary d-none" id="ipvPrintPermitBtn">
                             <i class="bi bi-printer"></i> <span data-en="Print Permit" data-bm="Cetak Permit">Print
                                 Permit</span>
                         </button>
@@ -708,7 +708,11 @@
                         </div>
                         <div class="col-xl-6">
                             <label class="form-label" data-en="Category" data-bm="Kategori">Category</label>
-                            <select class="form-select" id="qacCategory"></select>
+                            <select class="form-select" id="qacCategory">
+                                @foreach ($pbdata as $cate)
+                                    <option value="{{ $cate->cate_code }}">{{ $cate->description }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div class="col-xl-3">
                             <label class="form-label" data-en="Quantity Limit" data-bm="Had Kuantiti">Quantity
@@ -719,6 +723,13 @@
                             <label class="form-label" data-en="Measurement Unit" data-bm="Unit Ukuran">Measurement
                                 Unit</label>
                             <select class="form-select" id="qacQuanUnit"></select>
+                        </div>
+                        <div class="col-xl-12">
+                            <label class="form-label" data-en="Country" data-bm="Negara">Country</label>
+                            <select id="countrySelect" name="countrySelect[]" class="form-control xintra-select2"
+                                multiple data-route="/get_country" style="width: 100%;">
+                                <!-- Options will be loaded dynamically -->
+                            </select>
                         </div>
                         <div class="col-xl-12">
                             <label class="form-label" data-en="Permit Condition" data-bm="Syarat Permit">Permit

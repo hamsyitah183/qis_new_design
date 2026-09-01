@@ -52,6 +52,8 @@ let currentAttachmentSource = null; // "application" | "item"
 // know what to hand off to the shared offcanvas.
 let pendingItemAttachmentList = [];
 
+let editingItemId = null;
+
 // --------if self apply -----------
 async function selfImport() {
     if (
@@ -727,12 +729,15 @@ function saveConsignmentAttachment() {
             }
 
             tempItems.push(newItem);
-
+            editingItemId = null; // reset editing state
             renderAllItems();
             resetAddItemModal();
 
-            const modalEl = document.getElementById("addItemModal");
-            bootstrap.Modal.getInstance(modalEl).hide();
+            document
+                .getElementById("addItemModal")
+                .addEventListener("hidden.bs.modal", function () {
+                    editingItemId = null;
+                });
 
             summarySubmit();
         });
@@ -755,14 +760,12 @@ function renderAllItems() {
     const tableBody = document.querySelector("#itemListTbl tbody");
     tableBody.innerHTML = "";
 
-    tempItems.forEach((item, index) => {
+     tempItems.forEach((item, index) => {
         tableBody.insertAdjacentHTML(
             "beforeend",
             `<tr id="item-row-${item.id}">
-                <td>${index + 1}</td>
-                <td>${item.item_name}</td>
-                <td>${item.quantity} ${item.measure}</td>
-                <td class = "text-wrap">${item.purpose}</td>
+                <td class="text-wrap">${item.item_name}</td>
+                <td class="text-wrap">${item.purpose}</td>
                 <td class="text-center">
                     <div class="d-flex justify-content-center align-items-center gap-2">
                         <button class="btn btn-icon btn-success-light view-more-item"
@@ -773,12 +776,19 @@ function renderAllItems() {
                             data-id="${item.id}">
                             <i class="ti ti-trash"></i>
                         </button>
+                        <button class="btn btn-icon btn-info-light edit-item"
+                            data-id="${item.id}">
+                            <i class="ti ti-edit"></i>
+                        </button>
+                        <button class="btn btn-icon btn-secondary-light copy-item"
+                            data-id="${item.id}">
+                            <i class="ti ti-copy"></i>
+                        </button>
                     </div>
                 </td>
             </tr>`,
         );
     });
-
     const hasItemsInput = document.getElementById("hasItems");
     if (hasItemsInput) {
         hasItemsInput.value = tempItems.length > 0 ? "true" : "";
@@ -1728,6 +1738,98 @@ async function loadApplicationData(id) {
     }
 }
 
+// ─── Copy Item ──────────────────────────────────────────────
+function copyItem() {
+    $(document).on("click", ".copy-item", async function (e) {
+        e.preventDefault();
+
+        const id = $(this).data("id");
+
+        if (!tempItems) {
+            console.error("tempItems array not found");
+            return;
+        }
+
+        const index = tempItems.findIndex((obj) => obj.id === id);
+
+        if (index === -1) {
+            console.warn("Item not found:", id);
+            return;
+        }
+
+        const original = tempItems[index];
+
+        const duplicated = {
+            ...original,
+            id: generateUUID(),
+            files: [...(original.files || [])],
+            agreedAt: null,
+        };
+
+        const agreed = await showItemAgreement(duplicated);
+
+        if (!agreed) {
+            // User cancelled or didn't tick the condition — don't add the copy
+            return;
+        }
+
+        tempItems.splice(index + 1, 0, duplicated);
+        renderAllItems();
+        summarySubmit();
+
+        console.log("Copied item:", id, "->", duplicated.id, tempItems);
+
+        Swal.fire({
+            icon: "success",
+            title: '<span data-en="Item Copied" data-bm="Item Disalin">Item Copied</span>',
+            html: '<span data-en="A duplicate of the item has been added." data-bm="Salinan item telah ditambah.">A duplicate of the item has been added.</span>',
+            timer: 1800,
+            showConfirmButton: false,
+            didOpen: (modal) => applyTranslations(modal),
+        });
+    });
+}
+
+function editItem() {
+    $(document).on("click", ".edit-item", function (e) {
+        e.preventDefault();
+
+        const id = $(this).data("id");
+        const item = tempItems.find((obj) => obj.id === id);
+        if (!item) return console.warn("Item not found for id:", id);
+
+        editingItemId = id;
+        resetAddItemModal();
+
+        const modalEl = document.getElementById("addItemModal");
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+
+        // ─── Fill the form with item data ──────────────────────────
+        // Item name – plain text input
+        $("#itemSelect").val(item.item_name);
+
+        // Other fields
+        $("#itemValue").val(item.value);
+        $("#itemQuantity").val(item.quantity);
+        $("#itemMeasure").val(item.measure).trigger("change");
+        $("#itemPurpose").val(item.purposeValue || item.purpose).trigger("change");
+        $("#itemUses").val(item.uses).trigger("change");
+
+        // Optional: if you have a hidden field to store item_id, set it here
+        // $("#selectedItemId").val(item.item_id || "");
+
+        // ─── Restore files in Dropzone ──────────────────────────────
+        if (itemDropzone) {
+            itemDropzone.removeAllFiles(true);
+            (item.files || []).forEach((file) => itemDropzone.addFile(file));
+        }
+
+        // Remove any custom-item-specific UI (since it's all free text)
+        $(".attachmentInstruction").html("").hide();
+    });
+}
+
+
 function saveapplication(isDraft = false, shouldRedirect = false) {
     const form =
         document.querySelector("#wizardForm") ||
@@ -1838,6 +1940,8 @@ $(document).ready(async function () {
         saveConsignmentAttachment();
         viewMore();
         deleteItem();
+        copyItem()
+        editItem();
 
         // ✅ Application attachments + the single shared attachment offcanvas
         // (used to view BOTH application-level and item-level attachments)

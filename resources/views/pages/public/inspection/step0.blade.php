@@ -36,9 +36,9 @@
             <div class="register-page ipa-card h-100">
                 <div class="ipa-card-header">
                     <span class="ipa-icon-badge"><i class='bx bx-globe'></i></span>
-                    <h6 data-en="Exporter" data-bm="Pengeksport">Exporter <a style="color:red"> * </a>
+                    <h6 data-en="Exporter" data-bm="Pengeksport">Exporter 
                         <span class="ipa-card-sub" data-en="Who you're importing the goods from" data-bm="Siapa anda mengimport barangan daripada">Who you're importing the goods from</span>
-                    </h6>
+                    </h6><a style="color:red"> * </a>
                 </div>
                 <div class="row gy-3">
                     <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">

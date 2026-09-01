@@ -17,10 +17,6 @@ import { renderActivityTimeline } from "../applicationActivityLog";
 // Config
 // ---------------------------------------------------------------
 
-// ---------------------------------------------------------------
-// Config
-// ---------------------------------------------------------------
-
 const STAGE_ORDER = [
     "submitted",
     "doc_verification",
@@ -247,9 +243,7 @@ function deriveStageKey(status) {
     const s = (status || "").toLowerCase();
     if (s.includes("draft")) return "submitted";
     if (s.includes("clerk review")) return "doc_verification";
-    // ─── Map clerk verified to doc_verification ───
     if (s.includes("clerk verified")) return "doc_verification";
-    // ──────────────────────────────────────────────
     if (
         s.includes("officer verification") ||
         s === "officer verification completed"
@@ -262,6 +256,7 @@ function deriveStageKey(status) {
     if (s.includes("payment processing")) return "payment_processing";
     return "submitted";
 }
+
 function mapApplication(json) {
     const importer = json.importer_detail || {};
     const exporter = json.exporter_detail || json.exporter || json.user || {};
@@ -270,7 +265,6 @@ function mapApplication(json) {
 
     const rawStatus = json.status || "";
 
-    // Parse prices_total – it comes as a JSON string from the API
     let pricesTotal = [];
     if (json.prices_total) {
         try {
@@ -346,11 +340,12 @@ function mapApplication(json) {
         ptnNumber: json.ptn_number || null,
         vehicleIds: json.vehicle_ids || [],
         vehicles: [],
-        prices_total: pricesTotal, // <-- stored here
+        prices_total: pricesTotal,
         print_calc: json.print_calc,
     };
 }
 
+// ─── NEW: isCustom added to permit mapping ─────────────────────────
 function mapPermits(json) {
     const permits = json.consignment_permits || [];
     PERMITS = permits.map((permit) => {
@@ -376,9 +371,11 @@ function mapPermits(json) {
             agreedAt: detail.agreedAt,
             _raw: permit,
             category: detail.category,
+            isCustom: detail.isCustom || false, // <── NEW
         };
     });
 }
+// ──────────────────────────────────────────────────────────────────
 
 function mapActivityLog(json) {
     RAW_ACTIVITY_LOG = json.activity_log || [];
@@ -413,14 +410,14 @@ function toggleApplicationPricesTab() {
         '.ipv-tabnav-item[data-ipv-tab="application_prices"]',
     );
     if (!tab) return;
-    const userType = getCurrentUserType(); // returns 'public' for applicants
+    const userType = getCurrentUserType();
     if (
         userType === "public" &&
         APPLICATION.status_key === "awaiting_payment"
     ) {
         tab.style.display = "none";
     } else {
-        tab.style.display = ""; // show for officers/admins, or when not awaiting payment
+        tab.style.display = "";
     }
 }
 
@@ -970,7 +967,6 @@ function renderTransportDetails() {
             label: t.transport,
             value: APPLICATION.transport_type,
         },
-        // { icon: 'bi-info-circle', label: t.notes, value: APPLICATION.entry_point_description || '—' },
         { icon: "bi-hash", label: t.ptn, value: APPLICATION.ptnNumber || "—" },
         { icon: "bi-car-front", label: t.vehicles, value: vehicleList },
     ];
@@ -1039,12 +1035,11 @@ function renderBulkActionBar() {
     }
 
     // ─── Pay All ──────────────────────────────────────────────────────
-    // Flat fee: total = CONSIGNMENT_APPLICATION_FEE (RM 10) regardless of number of pending permits
     if (isOwner && hasPendingPayment) {
         const pending = PERMITS.filter((p) =>
             ["pending for payment", "payment failed"].includes(p.status),
         );
-        const total = CONSIGNMENT_APPLICATION_FEE; // Flat RM 10
+        const total = CONSIGNMENT_APPLICATION_FEE;
         wrap.style.display = "";
         wrap.innerHTML = `
             <div class="ipv-actions-bar-text">
@@ -1077,7 +1072,6 @@ function renderBulkActionBar() {
         return;
     }
 
-    // ─── Hide if nothing applies ─────────────────────────────────────
     wrap.style.display = "none";
     wrap.innerHTML = "";
 }
@@ -1127,13 +1121,23 @@ function renderPermitAccordion() {
         const detail = permit.consignment_detail;
         const statusText = cfg[lang] || cfg.en;
 
+        // ─── isCustom badge ──────────────────────────────────────────
+        let customBadge = '';
+        if (permit.isCustom === true) {
+            customBadge = `<span class="ipv-badge alert alert-warning" data-en="Custom Item" data-bm="Item Khas">Custom Item</span>`;
+        }
+        // ──────────────────────────────────────────────────────────────
+
         return `
             <div class="ipv-permit-item" data-permit="${escapeHtml(permit.permit_number)}">
                 <div class="ipv-permit-header">
                     <div class="ipv-permit-icon"><i class="bi bi-box-seam"></i></div>
                     <div class="ipv-permit-id-group">
                         <div class="ipv-permit-id">#${escapeHtml(permit.permit_number)}</div>
-                        <div class="ipv-permit-name">${escapeHtml(detail.item_name)}</div>
+                        <div class="ipv-permit-name">
+                            ${escapeHtml(detail.item_name)}
+                            ${customBadge}
+                        </div>
                     </div>
                     <span class="ipv-badge is-${cfg.color}">${escapeHtml(statusText)}</span>
                     <div class="ipv-permit-value">RM ${money(permit.value)}</div>
@@ -1195,16 +1199,12 @@ function renderPermitAccordion() {
                     <div class="ipv-permit-subsection-title" data-bm="Lampiran" data-en="Attachments">Attachments (${permit.attachments.length})</div>
                     <div class="ipv-attach-list" id="attachList-${escapeHtml(permit.permit_number)}"></div>
 
-                    ${
-                        permit.remark
-                            ? `
+                    ${permit.remark ? `
                         <div class="ipv-permit-remark is-${cfg.color}">
                             <i class="bi bi-info-circle"></i>
                             <span>${escapeHtml(permit.remark)}</span>
                         </div>
-                    `
-                            : ""
-                    }
+                    ` : ""}
 
                     ${permitActionsHtml(permit)}
                 </div>
@@ -1253,7 +1253,6 @@ function initAccordionToggle() {
 // Render: Pending Payment tab (flat fee per application)
 // ---------------------------------------------------------------
 
-// ─── Render: Payment Table (Category Summary) ──────────────────────
 function renderPendingPaymentTable() {
     const tableBody = document.querySelector("#summaryTable4 tbody");
     if (!tableBody) return;
@@ -1312,7 +1311,7 @@ function renderPaymentAwarenessBanner() {
         return;
     }
 
-    const total = CONSIGNMENT_APPLICATION_FEE; // flat RM 10
+    const total = CONSIGNMENT_APPLICATION_FEE;
     const hasFailed = pending.some((p) => p.status === "payment failed");
 
     el.className = `ipv-payment-banner${hasFailed ? " is-danger" : ""}`;
@@ -1379,56 +1378,10 @@ function renderPaymentAwarenessBanner() {
                     });
                 }
 
-                // Trigger the same pay-bulk handler
                 $(".pay-bulk").first().click();
             });
         };
     }
-}
-
-
-
-function renderApplicationLogTable() {
-    const tbody = $("#applicationLogTable tbody");
-    tbody.empty();
-    const lang = getLang();
-
-    if (!RAW_ACTIVITY_LOG.length) {
-        tbody.append(
-            '<tr><td colspan="5" class="text-center text-muted">No log entries found.</td></tr>',
-        );
-        return;
-    }
-
-    RAW_ACTIVITY_LOG.forEach((entry) => {
-        let statusLabel = entry.status || "—";
-        const statusKey = (entry.status || "").toLowerCase();
-        if (PERMIT_STATUS_CONFIG[statusKey]) {
-            statusLabel =
-                PERMIT_STATUS_CONFIG[statusKey][lang] ||
-                PERMIT_STATUS_CONFIG[statusKey].en;
-        }
-        tbody.append(`
-            <tr>
-                <td>${escapeHtml(entry.action || entry.title || "—")}</td>
-                <td>${escapeHtml(entry.user || entry.user_name || entry.user?.name || "—")}</td>
-                <td>${escapeHtml(entry.remark || entry.description || "—")}</td>
-                <td>${escapeHtml(statusLabel)}</td>
-                <td>${escapeHtml(formatDateTime(entry.time || entry.created_at))}</td>
-            </tr>
-        `);
-    });
-}
-
-function initApplicationLogModal() {
-    $("#applicationModal")
-        .off("click")
-        .on("click", function (e) {
-            e.preventDefault();
-            renderApplicationLogTable();
-            const modalEl = document.getElementById("activityLogModal");
-            new bootstrap.Modal(modalEl).show();
-        });
 }
 
 // ---------------------------------------------------------------
@@ -1452,7 +1405,6 @@ function renderApplicationPrices() {
         <table class="table text-nowrap">
             <thead class="table-primary" style="font-weight: 800">
                 <tr>
-                  
                     <th scope="col" data-en="Category" data-bm="Kategori">Category</th>
                     <th scope="col" data-en="Quantity" data-bm="Kuantiti">Quantity</th>
                     <th scope="col" data-en="Price (RM)" data-bm="Harga (RM)">Price (RM)</th>
@@ -1463,7 +1415,6 @@ function renderApplicationPrices() {
                     .map(
                         (item, idx) => `
                     <tr>
-                       
                         <td>${escapeHtml(item.category_name)}</td>
                         <td>${Number(item.quantity).toLocaleString()}</td>
                         <td>${Number(item.price).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -1522,9 +1473,33 @@ function initTabs() {
     }
 }
 
-// ---------------------------------------------------------------
-// Payment checkbox + checkout wiring (removed)
-// ---------------------------------------------------------------
+// ─── NEW: Update custom items announcement ─────────────────────────
+function updateCustomItemsAnnouncement() {
+    const warningEl = document.getElementById('customItemsWarning');
+    if (!warningEl) return;
+
+    const hasCustom = PERMITS.some(p => p.isCustom === true);
+    const lang = getLang();
+
+    if (hasCustom) {
+        warningEl.innerHTML = `
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            ${lang === 'bm'
+                ? 'Terdapat item yang tiada dalam senarai item Konsainan.'
+                : 'There is an item that is not in the Consignment item list.'}
+        `;
+        warningEl.style.display = 'inline';
+    } else {
+        warningEl.innerHTML = `
+            <i class="bi bi-check-circle me-1"></i>
+            ${lang === 'bm'
+                ? 'Tiada item khas yang tertunda.'
+                : 'No custom items pending.'}
+        `;
+        warningEl.style.display = 'inline';
+    }
+}
+// ─────────────────────────────────────────────────────────────────────
 
 // ---------------------------------------------------------------
 // Refresh UI on language change
@@ -1540,9 +1515,10 @@ function refreshUI() {
     renderPendingPaymentTable();
     renderActivityTimeline(STAGE_CONFIG, ACTIVITY_LOG);
     renderPaymentAwarenessBanner();
-    renderApplicationPrices(); // <-- added
+    renderApplicationPrices();
     initAccordionToggle();
     toggleApplicationPricesTab();
+    updateCustomItemsAnnouncement(); // <── NEW
     const container = document.querySelector(".ipv-wrapper");
     if (container) applyTranslations(container);
 }
@@ -1572,9 +1548,10 @@ async function renderAll() {
     renderPendingPaymentTable();
     renderActivityTimeline(STAGE_CONFIG, ACTIVITY_LOG);
     renderPaymentAwarenessBanner();
-    renderApplicationPrices(); // <-- added
+    renderApplicationPrices();
     initAccordionToggle();
     toggleApplicationPricesTab();
+    updateCustomItemsAnnouncement(); // <── NEW
     const container = document.querySelector(".ipv-wrapper");
     if (container) applyTranslations(container);
 }

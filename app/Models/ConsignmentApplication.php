@@ -93,7 +93,7 @@ class ConsignmentApplication extends Model
         return $this->hasMany(ConsignmentApplicationAttachment::class, 'application_id', 'id');
     }
 
-    
+
 
     // In ConsignmentApplication.php
     public function getPrintCalcAttribute()
@@ -108,5 +108,10 @@ class ConsignmentApplication extends Model
             // ->where('is_active', true)
             ->orderBy('name')
             ->get();
+    }
+
+    public function hasCustomItems()
+    {
+        return $this->consignmentPermits()->where('isCustom', true)->exists();
     }
 }

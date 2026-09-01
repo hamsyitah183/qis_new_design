@@ -171,7 +171,7 @@
     <div class="row justify-content-center">
         <div class="d-flex gap-3 align-items-end justify-content-end">
             {{-- <button id="generateSummary" type="button" class="btn btn-md btn-warning">Generate Summary</button> --}}
-            <button id="submitApps" type="button" class="btn btn-md btn-info"><span data-en="Submit Application" data-bm="Hantar Permohonan">Submit Application</span></button>
+            <button id="submitApps" type="button" class="btn btn-md btn-info"><i class="bx bx-send me-1"></i><span data-en="Submit Application" data-bm="Hantar Permohonan">Submit Application</span></button>
         </div>
     </div>
 </div>

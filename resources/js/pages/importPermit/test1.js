@@ -262,6 +262,7 @@ function mapApplication(json) {
             path: f.file_path || f.path,
             mime: f.file_type || f.mime,
         })),
+     
     };
 }
 
@@ -290,8 +291,8 @@ function buildTags(json) {
     const category = json.category_application;
     if (category === 0 || category === "0") {
         tags.push({
-            label: "Self Import",
-            label_en: "Self Import",
+            label: "Self Apply",
+            label_en: "Self Apply",
             label_bm: "Import Sendiri",
             color: "info",
         });
@@ -1108,11 +1109,11 @@ function renderPermitAccordion() {
                         <div class="ipv-permit-name">
                             <div>
                                 ${escapeHtml(detail.item_name)}
-
+                                <div class = "my-1 mb-2"> ${isCustom}</div>
                                 ${permitActionsHtml(permit)}
                             </div>
 
-                            <div> ${isCustom}</div>
+                            
                         </div>
                     </div>
                     <span class="ipv-badge is-${cfg.color}">${escapeHtml(statusText)}</span>

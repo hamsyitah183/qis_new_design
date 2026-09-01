@@ -334,12 +334,12 @@ function loadConsignmentSelection() {
     });
 
     return $.ajax({
-        url: `/public/get_consignment/${countryCode}`,
+        url: `/get_consignment/${countryCode}`,
         method: "GET",
         dataType: "json",
         success: function (data) {
             $select.prop("disabled", false);
-            console.log('the loses data', data);
+            console.log("the loses data", data);
 
             // ─── Prepend "Others" option ───
             $select.append(
@@ -349,37 +349,44 @@ function loadConsignmentSelection() {
             data.forEach((row) => {
                 const en = row.entry_en || row.entry_display;
                 const bm = row.entry_bm || row.entry_display;
-                const anotherNames = row.another_name ? JSON.stringify(row.another_name) : '[]';
+                const anotherNames = row.another_name
+                    ? JSON.stringify(row.another_name)
+                    : "[]";
                 $select.append(
-                    `<option value="${row.id}" data-en="${en}" data-bm="${bm}" data-another-names='${anotherNames}'>${row.entry_display}</option>`
+                    `<option value="${row.id}" data-en="${en}" data-bm="${bm}" data-another-names='${anotherNames}'>${row.entry_display}</option>`,
                 );
             });
 
             const lang = getCurrentLang();
-            const placeholder = lang === "bm" ? "-- Pilih Item --" : "-- Select Item --";
+            const placeholder =
+                lang === "bm" ? "-- Pilih Item --" : "-- Select Item --";
             $select.select2({
                 width: "100%",
                 placeholder: placeholder,
                 allowClear: true,
                 dropdownParent: $("#addItemModal"),
-                matcher: function(params, data) {
-                    if ($.trim(params.term) === '') {
+                matcher: function (params, data) {
+                    if ($.trim(params.term) === "") {
                         return data;
                     }
-                    const text = data.text || '';
+                    const text = data.text || "";
                     const term = params.term.toLowerCase();
                     if (text.toLowerCase().indexOf(term) > -1) {
                         return data;
                     }
                     const element = data.element;
                     if (element) {
-                        const anotherNamesAttr = element.getAttribute('data-another-names');
+                        const anotherNamesAttr =
+                            element.getAttribute("data-another-names");
                         if (anotherNamesAttr) {
                             try {
                                 const names = JSON.parse(anotherNamesAttr);
                                 if (Array.isArray(names)) {
                                     for (let name of names) {
-                                        if (name.toLowerCase().indexOf(term) > -1) {
+                                        if (
+                                            name.toLowerCase().indexOf(term) >
+                                            -1
+                                        ) {
                                             return data;
                                         }
                                     }
@@ -390,7 +397,35 @@ function loadConsignmentSelection() {
                         }
                     }
                     return null;
-                }
+                },
+                templateResult: function (data) {
+                    if (data.loading) return data.text;
+                    const element = data.element;
+                    if (!element) return data.text;
+                    const anotherNamesAttr =
+                        element.getAttribute("data-another-names");
+                    if (anotherNamesAttr) {
+                        try {
+                            const names = JSON.parse(anotherNamesAttr);
+                            if (Array.isArray(names) && names.length > 0) {
+                                const mainText = data.text;
+                                const others = names.join(", ");
+                                // Wrap in a span with muted text for others
+                                return $(
+                                    `<span>${mainText} <span class="text-muted">(${others})</span></span>`,
+                                );
+                            }
+                        } catch (e) {}
+                    }
+                    return data.text;
+                },
+                templateSelection: function (data) {
+                    // For selection, just show the main text (without muted part)
+                    return data.text;
+                },
+                escapeMarkup: function (markup) {
+                    return markup;
+                },
             });
 
             Swal.close();
@@ -934,7 +969,7 @@ function addPreviewButtons(file) {
     viewBtn.className = "btn btn-icon btn-info-light";
     viewBtn.onclick = function (e) {
         e.preventDefault();
-        console.log('click item', file)
+        console.log("click item", file);
         currentItemFile = file;
         showItemFilePreview(file);
     };
@@ -2321,7 +2356,7 @@ function editItem() {
                         .html(
                             `<span style="color:red;" data-en="Attachment is mandatory for custom items. Please upload the item image or document"
                                data-bm="Lampiran adalah wajib untuk item yang tiada dalam senarai. Sila muat naik gambar atau dokumen">
-                            * Attachment is mandatory for custom items. Please upload the item image or document.</span>`
+                            * Attachment is mandatory for custom items. Please upload the item image or document.</span>`,
                         )
                         .show();
                 } else {

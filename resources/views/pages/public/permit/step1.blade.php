@@ -55,13 +55,13 @@ data-id="2e8WqSV3slGIpTbnjcJzmDwBQaHrfh0Z" data-step="1">
                 </div>
                 <div class="row gy-3">
                     <div class="col-xl-12">
-                        <label for="eta" class="form-label" data-en="Estimated Time Arrival" data-bm="Anggaran Waktu Ketibaan">Estimated Time Arrival<a style="color:red"> *
-                            </a></label>
+                        <label for="eta" class="form-label" data-en="Estimated Time Arrival" data-bm="Anggaran Waktu Ketibaan">Estimated Time Arrival</label><a style="color:red"> *
+                            </a>
                         <input type="date" class="form-control" id="eta" name="eta" required>
                         <div class="invalid-feedback" id="etaError" data-en="Estimated Time Arrival cannot be a past date." data-bm="Anggaran Waktu Ketibaan tidak boleh menjadi tarikh yang lepas.">Estimated Time Arrival cannot be a past date.</div>
                     </div>
                     <div class="col-xl-12">
-                        <label for="trnptType" class="form-label" data-en="Transport Type" data-bm="Jenis Pengangkutan">Transport Type<a style="color:red"> * </a></label>
+                        <label for="trnptType" class="form-label" data-en="Transport Type" data-bm="Jenis Pengangkutan">Transport Type</label><a style="color:red"> * </a>
                         <select class="form-select" id="trnptType" name="trnptType" data-route="/public/get_entry_point"
                             required>
                             <option value="" data-en="-- Select Transport --" data-bm="-- Pilih Pengangkutan --">-- Select Transport --</option>
@@ -71,7 +71,7 @@ data-id="2e8WqSV3slGIpTbnjcJzmDwBQaHrfh0Z" data-step="1">
                         </select>
                     </div>
                     <div class="col-xl-12">
-                        <label for="entryPoint" class="form-label" data-en="Entry Point" data-bm="Pintu Masuk">Entry Point<a style="color:red"> * </a></label>
+                        <label for="entryPoint" class="form-label" data-en="Entry Point" data-bm="Pintu Masuk">Entry Point</label><a style="color:red"> * </a>
                         <select class="form-select" id="entryPoint" name="entryPoint" required>
                             <option value="" data-en="-- Select Entry Point --" data-bm="-- Pilih Pintu Masuk --">-- Select Entry Point --</option>
                         </select>

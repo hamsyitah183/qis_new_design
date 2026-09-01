@@ -7,8 +7,13 @@ import $ from "jquery";
 import Quill from "quill";
 import "quill/dist/quill.snow.css";
 import Swal from "sweetalert2";
+import select2 from "select2";
+import Tagify from '@yaireo/tagify';
+import '@yaireo/tagify/dist/tagify.css';
 import { applyTranslations } from "../../app"; // adjust path as needed
-import { APPLICATION } from "./test1";
+import { APPLICATION, PERMITS } from "./test1";
+
+window.Tagify = Tagify;
 
 let qacQuill = null;
 let qacCategoriesLoaded = false;
@@ -941,13 +946,22 @@ function acceptItemToList() {
                 $("#qacScientificName").val("");
                 $("#qacQuanLimit").val("");
 
-                loadQuickAddCategoryOptions();
                 loadQuickAddMeasurementOptions();
                 initQuickAddEditor();
 
                 const quickAddModal = bootstrap.Modal.getOrCreateInstance(
                     document.getElementById("quickAddConditionModal"),
                 );
+
+                // Remove any previous listener to avoid duplication
+                quickAddModal._element.removeEventListener('shown.bs.modal', onModalShown);
+
+                function onModalShown() {
+                    quickAddModal._element.removeEventListener('shown.bs.modal', onModalShown);
+                    fetchCountryList(); // now the modal is visible
+                }
+
+                quickAddModal._element.addEventListener('shown.bs.modal', onModalShown);
                 quickAddModal.show();
             });
 
@@ -1069,20 +1083,7 @@ $(document).on('click', '#reiConfirmBtn', function () {
     });
 });
 
-function loadQuickAddCategoryOptions() {
-    if (qacCategoriesLoaded) return;
-    const $select = $("#qacCategory");
-    $select.empty().append('<option value="">-- Select Category --</option>');
 
-    $.get("/get_pbdata/consignment_category", function (data) {
-        (data.data || []).forEach((row) => {
-            $select.append(
-                `<option value="${row.id}">${row.description}</option>`,
-            );
-        });
-        qacCategoriesLoaded = true;
-    });
-}
 
 function loadQuickAddMeasurementOptions() {
     if (qacMeasurementsLoaded) return;
@@ -1126,6 +1127,79 @@ function initQuickAddEditor() {
     });
 }
 
+
+// ---------------------------------------------------------------
+// FIXED: fetchCountryList with dropdownParent set to modal body
+// ---------------------------------------------------------------
+function fetchCountryList() {
+    const $select = $("#countrySelect");
+    const url = $select.data("route");
+
+    // Destroy any existing Select2 instance
+    if ($select.hasClass('select2-hidden-accessible')) {
+        $select.select2('destroy');
+    }
+    $select.empty();
+
+    return $.ajax({
+        url,
+        type: "GET",
+        dataType: "json",
+        cache: false,
+        success: (response) => {
+            const data = response.data || [];
+
+            console.log('country data', data)
+
+            // Optional: placeholder option
+            $select.append('<option value="">-- Select Countries --</option>');
+
+            // Add options dynamically
+            data.forEach((country) => {
+                // country.value = code, country.name = full name
+                $select.append(
+                    `<option value="${country.value}">${country.name} (${country.value})</option>`
+                );
+            });
+
+            // Initialize Select2 – attach dropdown inside modal body for proper scrolling
+            $select.select2({
+                width: "100%",
+                placeholder: "-- Select Countries --",
+                allowClear: true,
+                multiple: true,
+                dropdownParent: $('#quickAddConditionModal .modal-body'), // FIX: dropdown scrolls with modal
+                matcher: function (params, data) {
+                    // If no search term, return all data
+                    if ($.trim(params.term) === "") {
+                        return data;
+                    }
+
+                    // Search by both name or value
+                    const term = params.term.toLowerCase();
+                    if (
+                        data.text.toLowerCase().includes(term) ||
+                        data.id.toLowerCase().includes(term)
+                    ) {
+                        return data;
+                    }
+
+                    // Return null if not matched
+                    return null;
+                },
+            });
+        },
+        error: (xhr) => {
+            console.error("Failed to load countries:", xhr.responseText);
+            Swal.fire({
+                icon: "error",
+                title: "Failed to load countries",
+                text: "Please check your connection.",
+            });
+        },
+    });
+}
+
 // ---------------------------------------------------------------
 // Wire everything up
 // ---------------------------------------------------------------
@@ -1145,6 +1219,8 @@ function initActions() {
 
     generatePDF();
 
+    // fetchCountryList() is no longer called here – it's triggered after modal shown
+
     $(document).on("click", "#qacSaveBtn", function () {
         const permitId = $("#qacPermitId").val();
         const itemName = $("#qacItemName").val().trim();
@@ -1162,6 +1238,13 @@ function initActions() {
             didOpen: () => Swal.showLoading(),
         });
 
+       
+
+        const selectedCountries = $("#countrySelect").val() || [];
+        const countryTagData = selectedCountries.map((val) => ({ value: val }));
+        let countryTag = JSON.stringify(countryTagData)
+     
+
         $.ajax({
             url: "/internal/ip_condition/quick-add",
             method: "POST",
@@ -1174,6 +1257,10 @@ function initActions() {
                 measurement_unit: $("#qacQuanUnit").val(),
                 condition_html: conditionHtml,
                 permit_id: permitId,
+                country: countryTag,
+                permitId: permitId,
+                application_type: APPLICATION.type,
+             
             },
             success: function (res) {
                 // Link the newly created condition to the permit

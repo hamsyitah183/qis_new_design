@@ -57,7 +57,7 @@
         // In Consignment, the applicant/owner is the EXPORTER (roles are reversed vs Import Permit).
         $isOwner = $isPublic && $application->exporter_id === auth()->guard('public')->user()->uuid;
 
-        // ---------- NEW: Officer Verification Completed ----------
+        // ---------- Officer Verification Completed ----------
         $isOfficerVerified = str_contains(strtolower($application->status ?? ''), 'officer verification completed');
 
         $allPending = $application->consignmentPermits->every(fn($permit) => $permit->status === 'pending for payment');
@@ -76,6 +76,11 @@
 
         // ---------- FIX: Add permission check for internal users ----------
         $canEditInternal = $isInternal && auth('internal')->user()->can('edit application');
+
+        // ---------- Compute whether this application has any custom items ----------
+        $hasCustomItems = $application->consignmentPermits->contains(function ($permit) {
+                return data_get($permit->consignment_detail, 'isCustom') === true;
+            });
     @endphp
 
     {{-- Feed real application context to consignment1.js instead of URL-parsing --}}
@@ -88,6 +93,8 @@
                 $isInternal ? auth('internal')->user()->roles->map(fn($r) => ['name' => $r->name])->values() : [],
             ) !!}
         };
+        // Pass custom items flag to JavaScript so it can be updated dynamically
+        window.HAS_CUSTOM_ITEMS = {{ $hasCustomItems ? 'true' : 'false' }};
     </script>
 
     <div class="ipv-wrapper row g-4">
@@ -109,12 +116,20 @@
                         <i class="bi bi-info-circle"></i>
                         @if ($showClerkReviewActions)
                             <span data-en="This application is awaiting your review."
-                                data-bm="Permohonan ini sedang menunggu semakan anda.">This application is awaiting your
-                                review.</span>
+                                  data-bm="Permohonan ini sedang menunggu semakan anda.">This application is awaiting your review.</span>
+                            {{-- CUSTOM ITEMS WARNING – dynamically controlled by JavaScript --}}
+                            <span id="customItemsWarning" class="{{ $hasCustomItems ? '' : 'd-none' }}"
+                                  data-en="There is an item that is not in the Consignment item list."
+                                  data-bm="Terdapat item yang tiada dalam senarai item Konsainan.">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                <span data-en="There is an item that is not in the Consignment item list."
+                                      data-bm="Terdapat item yang tiada dalam senarai item Konsainan.">
+                                    There is an item that is not in the Consignment item list.
+                                </span>
+                            </span>
                         @elseif ($showAdminRejectedActions)
                             <span data-en="This application was rejected. You may review and re-evaluate it."
-                                data-bm="Permohonan ini telah ditolak. Anda boleh menyemak dan menilai semula.">This
-                                application was rejected. You may review and re-evaluate it.</span>
+                                  data-bm="Permohonan ini telah ditolak. Anda boleh menyemak dan menilai semula.">This application was rejected. You may review and re-evaluate it.</span>
                         @endif
                     </div>
                     <div class="ipv-actions-bar-buttons">
@@ -174,7 +189,7 @@
                 </div>
 
                 <div class="ipv-action-row">
-                    @if ($isInternal && auth()->guard('internal')->user()->can('print permit'))
+                    @if ($isInternal && $application->status == 'Completed'  && auth()->guard('internal')->user()->can('print permit'))
                         <button type="button" class="ipv-btn-primary btn-info" id="ipvPrintPermitBtn">
                             <i class="bi bi-printer"></i> <span data-en="Print Certificate" data-bm="Cetak Sijil">Print
                                 Certificate</span>
@@ -185,8 +200,8 @@
                     </span>
 
                     <button class="btn ipv-btn-primary btn-secondary" id="printApplication" 
-                    data-type = "{{ $application->type }}" data-application = "{{ $application->application_id }}">
-                        <i class="fa-solid fa-print"></i>  <span data-en='Print Application' data-bm="Cetak Permohonan" >Print Application</span> 
+                    data-type="{{ $application->type }}" data-application="{{ $application->application_id }}">
+                        <i class="fa-solid fa-print"></i>  <span data-en='Print Application' data-bm="Cetak Permohonan">Print Application</span> 
                     </button>
                 </div>
 
@@ -222,7 +237,7 @@
                 {{-- ============================================================ --}}
                 {{-- EDIT APPLICATION BUTTON – FIXED CONDITION                    --}}
                 {{-- ============================================================ --}}
-                @if (($application->status == 'Draft' || $application->status == 'Clerk Rejected') &&$application->user_id === $authUuid )
+                @if (($application->status == 'Draft' || $application->status == 'Clerk Rejected') && $application->user_id === $authUuid)
                     <a class="ipv-btn-outline w-100 justify-content-center mt-3 btn btn-primary" id="editButton"
                         href="/edit_consignment/{{ $application->application_id }}">
                         <i class="bi bi-pencil"></i> <span data-en="Edit Application" data-bm="Kemaskini Permohonan">Edit

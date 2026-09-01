@@ -136,7 +136,6 @@ Route::prefix('public')
         Route::get('/get_exporters', [PermitApplicationController::class, 'getExporters'])->name('getExportersJson');
         Route::get('/get_importers', [PermitApplicationController::class, 'getConsignmentImporters'])->name('getImportersJson');
         Route::get('/get_entry_point', [PermitApplicationController::class, 'getEntryPoint'])->name('getEntryPoint');
-        Route::get('/get_consignment/{countryCode}', [PermitApplicationController::class, 'getConsignmentFromCountry'])->name('getItemFromCountry');
         Route::get('/consignment_uses/{id}', [PermitApplicationController::class, 'getConsignmentUses'])->name('consignmentUses');
         Route::get('/all_consignment_uses/{id}', [PermitApplicationController::class, 'getAllConsignmentUses'])->name('allConsignmentUses');
         Route::post('/save-application', [PermitApplicationController::class, 'saveApplication'])->name('saveApplication');
@@ -653,6 +652,7 @@ Route::middleware(['auth.any'])->group(function () {
 
     // uses
     Route::get('/consignment_uses', [PublicController::class, 'getConsignmentUses'])->name('consignment.uses');
+    Route::get('/get_consignment/{countryCode}', [PermitApplicationController::class, 'getConsignmentFromCountry'])->name('getItemFromCountry');
 
 
 

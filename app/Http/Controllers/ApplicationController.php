@@ -809,6 +809,9 @@ class ApplicationController extends Controller
 
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
+
+        $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->where('cate_name', 'condition_category')->where('is_del', false)->get();
+
         $country = country::where('is_del', false)->get();
 
         return view('pages.public.view_application_test', [
@@ -817,6 +820,7 @@ class ApplicationController extends Controller
             'pubmeasure' => $pubmeasure,
             'pubpurpose' => $pubpurpose,
             'country' => $country,
+            'pbdata'=> $pbdata
         ]); //, 'consignment', 'attachment'
     }
 
