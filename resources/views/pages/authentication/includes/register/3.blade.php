@@ -24,10 +24,16 @@
                             aria-expanded="false" data-doc-id="{{ $doc->id }}">
                             <div class="d-flex align-items-center gap-2 min-w-0">
                                 <i class="ti ti-file-text fs-18 text-muted flex-shrink-0"></i>
-                                <div class="min-w-0">
+                                <div class="min-w-0 d-flex align-items-center gap-1 flex-wrap">
                                     <div class="fw-semibold fs-14">{{ $doc->name }}</div>
                                     @if ($doc->description)
-                                        <div class="text-muted fs-12 text-truncate">{{ $doc->description }}</div>
+                                        <button type="button"
+                                            class="badge rounded-pill bg-light-primary text-primary border-0 doc-details-btn d-flex align-items-center gap-1"
+                                            data-doc-id="{{ $doc->id }}"
+                                            data-description="{{ $doc->description }}">
+                                            <i class="ti ti-info-circle fs-14"></i>
+                                            <span data-en="Details" data-bm="Butiran">Details</span>
+                                        </button>
                                     @endif
                                 </div>
                             </div>
@@ -71,7 +77,8 @@
                                         accept=".jpg,.jpeg,.png,.pdf" multiple name="attachment[{{ $doc->id }}][]"
                                         data-doc-id="{{ $doc->id }}">
 
-                                     <input type="hidden" name="document_type[{{ $doc->id }}]" value="{{ $doc->name }}">
+                                    <input type="hidden" name="document_type[{{ $doc->id }}]"
+                                        value="{{ $doc->name }}">
                                 </div>
 
                                 <!-- File list for newly staged files (not yet uploaded) -->
@@ -197,6 +204,7 @@
 
 <script>
     (function() {
+        // Toggle upload panel
         document.querySelectorAll('.document-upload-section').forEach(function(section) {
             var docId = section.getAttribute('data-doc-id');
             var rowToggle = section.querySelector('.doc-row-toggle');
@@ -212,3 +220,68 @@
         });
     })();
 </script>
+
+@push('scripts')
+<script>
+    (function() {
+        'use strict';
+
+        // ─── Ensure the description modal exists ──────────────
+        function ensureDescriptionModal() {
+            if (document.getElementById('docDescriptionModal')) return;
+
+            const html = `
+                <div class="modal fade" id="docDescriptionModal" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="docDescriptionModalLabel">Document Details</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body doc-description-modal-body"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', html);
+        }
+
+        // ─── Show document description modal ──────────────────
+        function showDocumentDescription(docName, description) {
+            ensureDescriptionModal();
+
+            const modalEl = document.getElementById('docDescriptionModal');
+            const title = document.getElementById('docDescriptionModalLabel');
+            const body = modalEl.querySelector('.doc-description-modal-body');
+
+            if (title) title.textContent = docName || 'Document Details';
+            if (body) {
+                body.innerHTML = description
+                    ? `<div class="py-2">${description}</div>`
+                    : '<p class="text-muted mb-0">No description available.</p>';
+            }
+
+            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+
+        // ─── Bind click events to all "Details" buttons ───────
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.doc-details-btn');
+            if (!btn) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Get the document name from the row header
+            const row = btn.closest('.doc-row-toggle');
+            const nameEl = row ? row.querySelector('.fw-semibold') : null;
+            const docName = nameEl ? nameEl.textContent.trim() : 'Document';
+
+            const description = btn.getAttribute('data-description') || '';
+            showDocumentDescription(docName, description);
+        });
+
+    })();
+</script>
+@endpush

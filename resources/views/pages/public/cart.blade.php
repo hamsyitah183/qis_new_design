@@ -54,6 +54,10 @@
         {{-- Reference strip --}}
         <div class="apy-ref-strip">
             <div class="apy-ref-cell">
+                <div class="apy-ref-label" data-en="Order Number" data-bm="Nombor Order">Order Number</div>
+                <div class="apy-ref-value" id="apyRefOrderNumber">{{ $orderNumberPreview }}</div>
+            </div>
+            <div class="apy-ref-cell">
                 <div class="apy-ref-label" data-en="Application ID" data-bm="ID Permohonan">Application ID</div>
                 <div class="apy-ref-value" id="apyRefAppId">{{ $application->application_id }}</div>
             </div>
@@ -61,11 +65,11 @@
                 <div class="apy-ref-label" data-en="Application Type" data-bm="Jenis Permohonan">Application Type</div>
                 <div class="apy-ref-value" id="apyRefAppType">{{ $application->application_type }}</div>
             </div>
-            <div class="apy-ref-cell">
+            {{-- <div class="apy-ref-cell">
                 <div class="apy-ref-label" data-en="Status" data-bm="Status">Status</div>
                 <div class="apy-ref-value" id="apyRefStatus" data-en="Pending Payment" data-bm="Menunggu Pembayaran">Pending
                     Payment</div>
-            </div>
+            </div> --}}
             <div class="apy-ref-cell">
                 <div class="apy-ref-label" data-en="Amount Due" data-bm="Jumlah Perlu Dibayar">Amount Due</div>
                 <div class="apy-ref-value" id="apyRefAmount">RM {{ number_format($total, 2) }}</div>

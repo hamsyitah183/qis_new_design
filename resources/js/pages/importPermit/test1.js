@@ -979,7 +979,7 @@ function permitActionsHtml(permit) {
 
     // ─── Accept Custom Item to List ──────────────────────────
     // Only for internal users with 'approve permit' permission.
-    if (permit.isCustom === true && user.type === "internal") {
+    if (permit.isCustom === true && user.type === "internal" && applicationStatus === "clerk review in-progress" ) {
         actions += `
             <button type="button" class="ipv-btn-action is-success accept-custom" data-permit="${permit.id}">
                 <i class="bi bi-check-lg"></i> ${lang === "bm" ? "Terima Item ke Senarai" : "Accept Item to List"}

@@ -38,6 +38,7 @@
     @php
         $authUuid = authUser()['user']->uuid ?? null;
         $status = strtolower($application->status ?? '');
+        $importerVerify = strtolower($application->importer_verify ?? '');
 
         $isInternal = auth()->guard('internal')->check();
         $isAdminOrClerk =
@@ -56,6 +57,8 @@
         $isPublic = auth()->guard('public')->check();
         // In Consignment, the applicant/owner is the EXPORTER (roles are reversed vs Import Permit).
         $isOwner = $isPublic && $application->exporter_id === auth()->guard('public')->user()->uuid;
+                $isImporterVerifier = $isPublic && $application->exporter && $application->exporter->uuid === $authUuid;
+
 
         // ---------- Officer Verification Completed ----------
         $isOfficerVerified = str_contains(strtolower($application->status ?? ''), 'officer verification completed');
@@ -81,6 +84,17 @@
         $hasCustomItems = $application->consignmentPermits->contains(function ($permit) {
             return data_get($permit->consignment_detail, 'isCustom') === true;
         });
+
+        $showImporterAwaiting =
+            $isInternal &&
+            (str_contains($importerVerify, 'wait for company approval') ||
+                str_contains($importerVerify, 'wait for representative approval'));
+
+        $showImporterVerifyActions =
+            $application->category_application == 1 &&
+            (str_contains($importerVerify, 'wait for company approval') ||
+                str_contains($importerVerify, 'wait for representative approval')) &&
+            $isImporterVerifier;
     @endphp
 
     {{-- Feed real application context to consignment1.js instead of URL-parsing --}}
@@ -109,7 +123,7 @@
         {{-- ============================================================ --}}
         {{-- APPLICATION-LEVEL ACTIONS BAR (Clerk / Admin)               --}}
         {{-- ============================================================ --}}
-        @if ($showClerkReviewActions || $showAdminRejectedActions)
+        @if ($showClerkReviewActions || $showImporterVerifyActions || $showAdminRejectedActions || $showImporterAwaiting)
             <div class="col-xl-12">
                 <div class="ipv-actions-bar">
                     <div class="ipv-actions-bar-text">
@@ -128,19 +142,40 @@
                                     There is an item that is not in the Consignment item list.
                                 </span>
                             </span>
+                        @elseif ($showImporterVerifyActions)
+                            <span data-en="This application is awaiting your verification as the importer."
+                                data-bm="Permohonan ini sedang menunggu pengesahan anda sebagai pengimport.">This
+                                application is awaiting your verification as the importer.</span>
                         @elseif ($showAdminRejectedActions)
                             <span data-en="This application was rejected. You may review and re-evaluate it."
                                 data-bm="Permohonan ini telah ditolak. Anda boleh menyemak dan menilai semula.">This
                                 application was rejected. You may review and re-evaluate it.</span>
+                        @elseif ($showImporterAwaiting)
+                            {{-- NEW: internal user sees this when importer hasn't verified yet --}}
+                            <span data-en="This application is awaiting for verification from the importer."
+                                data-bm="Permohonan ini sedang menunggu pengesahan daripada pengimport.">
+                                This application is awaiting for verification from the importer.
+                            </span>
                         @endif
                     </div>
                     <div class="ipv-actions-bar-buttons">
                         @if ($showClerkReviewActions)
-                            <button id="acceptAppl" class="ipv-btn-action is-success">
+                            <button id="acceptAppl" class="ipv-btn-action is-accept">
                                 <i class="bi bi-check-lg"></i> <span data-en="Accept Application"
                                     data-bm="Terima Permohonan">Accept Application</span>
                             </button>
                             <button id="rejectAdminAppl" class="ipv-btn-action is-danger">
+                                <i class="bi bi-x-lg"></i> <span data-en="Reject Application"
+                                    data-bm="Tolak Permohonan">Reject Application</span>
+                            </button>
+                        @endif
+
+                        @if ($showImporterVerifyActions)
+                            <button id="verifyAppl" class="ipv-btn-action is-success">
+                                <i class="bi bi-check-lg"></i> <span data-en="Verify Application"
+                                    data-bm="Sahkan Permohonan">Verify Application</span>
+                            </button>
+                            <button id="rejectAppl" class="ipv-btn-action is-danger">
                                 <i class="bi bi-x-lg"></i> <span data-en="Reject Application"
                                     data-bm="Tolak Permohonan">Reject Application</span>
                             </button>
@@ -225,7 +260,8 @@
                      response includes application-level `attachment`/`attachments`. The legacy
                      consignment_detail.js never populated one — confirm before shipping. --}}
                 <div class="ipv-section-label-row">
-                    <span class="ipv-section-label" data-en="Application Documents" data-bm="Dokumen Permohonan">Application
+                    <span class="ipv-section-label" data-en="Application Documents"
+                        data-bm="Dokumen Permohonan">Application
                         Documents</span>
                     <button type="button" class="ipv-download-all" id="ipvDownloadAllApp">
                         <i class="bi bi-download"></i> <span data-en="Download All" data-bm="Muat Turun Semua">Download
@@ -873,6 +909,21 @@
         document.addEventListener('DOMContentLoaded', function() {
             if (window.location.hash === '#pending') {
                 document.querySelector('.ipv-tabnav-item[data-ipv-tab="payment"]')?.click();
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('#payBulkUser');
+            if (btn) {
+                e.preventDefault();
+                const paymentTab = document.querySelector('.ipv-tabnav-item[data-ipv-tab="payment"]');
+                if (paymentTab) {
+                    paymentTab.click();
+                    paymentTab.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'nearest'
+                    });
+                }
             }
         });
     </script>

@@ -44,7 +44,6 @@ class PaymentController extends Controller
         } elseif ($type == 'inspection') {
             $application = InspectionApplication::findOrFail($id);
             $permitIds = explode(',', $permitId);
-
             $permits = InspectionItem::where('application_id', $id)
                 ->whereIn('id', $permitIds)
                 ->whereIn('status', ['pending for payment', 'payment failed', 'Payment Failed'])
@@ -52,13 +51,10 @@ class PaymentController extends Controller
         } elseif ($type == 'consignment') {
             $application = ConsignmentApplication::with(['consignmentPermits'])->findOrFail($id);
             $permitIds = explode(',', $permitId);
-
             $permits = ConsignmentPermit::where('application_id', $id)
                 ->whereIn('id', $permitIds)
                 ->whereIn('status', ['pending for payment', 'payment failed', 'Payment Failed'])
                 ->get();
-
-            // dd($permits);
         }
 
         if ($permits->isEmpty()) {
@@ -75,14 +71,12 @@ class PaymentController extends Controller
                 'application_type' => $application->application_type,
                 'prices_total' => $application->prices_total
             ],
-
             'user' => [
                 'uuid' => $application->user->uuid,
                 'fullname' => $application->user->fullname,
                 'email' => $application->user->email,
                 'phone_number' => $application->user->phone_number,
             ],
-
             'permits' => $permits
                 ->map(function ($permit) use ($amount) {
                     return [
@@ -95,17 +89,33 @@ class PaymentController extends Controller
                 })
                 ->values()
                 ->toArray(),
-
             'total' => number_format($amount * $permits->count(), 2, '.', ''),
         ];
 
-        // ✅ STORE IN SESSION HERE
         session(['application_details' => $jsonData]);
 
         $total = (float) $total;
         $paymentMethod = PaymentMethod::get();
 
-        return view('pages.public.cart', compact('permits', 'application', 'total', 'paymentMethod'));
+        // ─── Generate order number preview (without creating order) ───
+        $lastOrder = Order::where('application_id', $application->application_id)->latest('id')->first();
+        $runningNumber = 1;
+        if ($lastOrder) {
+            $parts = explode('-', $lastOrder->order_number);
+            $lastRunning = (int) end($parts);
+            $runningNumber = $lastRunning + 1;
+        }
+        $runningNumber = str_pad($runningNumber, 3, '0', STR_PAD_LEFT);
+        $orderNumberPreview = 'QIS-' . $application->application_id . '-' . $runningNumber;
+
+     
+        return view('pages.public.cart', compact(
+            'permits',
+            'application',
+            'total',
+            'paymentMethod',
+            'orderNumberPreview'  // <-- pass to view
+        ));
     }
 
     public function signedUrl(Request $request)

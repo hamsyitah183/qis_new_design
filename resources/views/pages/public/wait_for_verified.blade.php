@@ -37,7 +37,6 @@
                                 <tr>
                                     <th data-en="Document" data-bm="Dokumen">Document</th>
                                     <th data-en="Status" data-bm="Status">Status</th>
-                                   
                                     <th data-en="Action" data-bm="Tindakan">Action</th>
                                 </tr>
                             </thead>
@@ -54,8 +53,18 @@
                                     @endphp
                                     <tr>
                                         <td>
-                                            <strong>{{ $req->name }}</strong>
-                                            <div class="text-muted small">{{ $req->description }}</div>
+                                            <div class="d-flex align-items-center gap-1 flex-wrap">
+                                                <strong>{{ $req->name }}</strong>
+                                                @if ($req->description)
+                                                    <button type="button"
+                                                            class="badge rounded-pill bg-light-primary text-primary border-0 doc-details-btn d-flex align-items-center gap-1"
+                                                            data-doc-id="{{ $req->id }}"
+                                                            data-description="{{ $req->description }}">
+                                                        <i class="ti ti-info-circle fs-14"></i>
+                                                        <span data-en="Details" data-bm="Butiran">Details</span>
+                                                    </button>
+                                                @endif
+                                            </div>
                                         </td>
                                         <td>
                                             @if ($isMissing)
@@ -78,7 +87,6 @@
                                                 </span>
                                             @endif
                                         </td>
-                                       
                                         <td>
                                             @if ($isMissing || $isExpired)
                                                 <a href="{{ route('profile') }}" class="btn btn-sm btn-primary"
@@ -155,7 +163,7 @@
                                 </span>
                             </div>
                         </div>
-                    @elseif ($allValid && count($docStatus) > 0)  {{-- ✅ FIX: use count() --}}
+                    @elseif ($allValid && count($docStatus) > 0)
                         <div class="alert alert-success d-flex align-items-start text-start" role="alert">
                             <i class="ri-checkbox-circle-fill me-3 fs-4"></i>
                             <div>
@@ -197,3 +205,68 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+    (function() {
+        'use strict';
+
+        // ─── Ensure the description modal exists ──────────────
+        function ensureDescriptionModal() {
+            if (document.getElementById('docDescriptionModal')) return;
+
+            const html = `
+                <div class="modal fade" id="docDescriptionModal" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="docDescriptionModalLabel">Document Details</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body doc-description-modal-body"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', html);
+        }
+
+        // ─── Show document description modal ──────────────────
+        function showDocumentDescription(docName, description) {
+            ensureDescriptionModal();
+
+            const modalEl = document.getElementById('docDescriptionModal');
+            const title = document.getElementById('docDescriptionModalLabel');
+            const body = modalEl.querySelector('.doc-description-modal-body');
+
+            if (title) title.textContent = docName || 'Document Details';
+            if (body) {
+                body.innerHTML = description
+                    ? `<div class="py-2">${description}</div>`
+                    : '<p class="text-muted mb-0">No description available.</p>';
+            }
+
+            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+
+        // ─── Bind click events to all "Details" buttons ───────
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.doc-details-btn');
+            if (!btn) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Get document name from the row (the <strong> element before the button)
+            const row = btn.closest('td');
+            const nameEl = row ? row.querySelector('strong') : null;
+            const docName = nameEl ? nameEl.textContent.trim() : 'Document';
+
+            const description = btn.getAttribute('data-description') || '';
+            showDocumentDescription(docName, description);
+        });
+
+    })();
+</script>
+@endpush

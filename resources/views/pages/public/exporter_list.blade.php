@@ -116,19 +116,19 @@
             <input type="hidden" name="id" id="id">
             {{-- Name --}}
             <div class="mb-3">
-                <label for="addexpName" class="form-label" data-en="Name" data-bm="Nama">Name</label>
+                <label for="addexpName" class="form-label" data-en="Name" data-bm="Nama">Name</label> <a style="color:red"> * </a>
                 <input type="text" id="addexpName" name="addexpName" class="form-control">
             </div>
 
             {{-- Phone --}}
             <div class="mb-3">
-                <label for="addexpfonno" class="form-label" data-en="Phone No" data-bm="No Telefon">Phone No</label>
+                <label for="addexpfonno" class="form-label" data-en="Phone No" data-bm="No Telefon">Phone No</label> <a style="color:red"> * </a>
                 <input type="text" id="addexpfonno" name="addexpfonno" class="form-control">
             </div>
 
             {{-- Address --}}
             <div class="mb-3">
-                <label for="addexpaddress" class="form-label" data-en="Address" data-bm="Alamat">Address</label>
+                <label for="addexpaddress" class="form-label" data-en="Address" data-bm="Alamat">Address</label> <a style="color:red"> * </a>
                 {{-- <input type="text" id="addexpaddress1" name="addexpaddress1" class="form-control mb-2"> --}}
                 <textarea id="addexpaddress1" name="addexpaddress1" class="form-control" rows="3" ></textarea>
                 {{-- <input type="text" id="addexpaddress2" name="addexpaddress2" class="form-control"> --}}
@@ -136,7 +136,7 @@
 
             {{-- Country --}}
             <div class="mb-3">
-                <label for="addexpcountry" class="form-label" data-en="Country" data-bm="Negara">Country</label>
+                <label for="addexpcountry" class="form-label" data-en="Country" data-bm="Negara">Country</label> <a style="color:red"> * </a>
                 <select class="form-select" id="addexpcountry" name="addexpcountry">
                     <option value="" data-en="-- Select Country --" data-bm="-- Pilih Negara --">-- Select Country --</option>
                     @foreach ($country as $coun)

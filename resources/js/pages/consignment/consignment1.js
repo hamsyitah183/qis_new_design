@@ -45,9 +45,9 @@ export const STAGE_CONFIG = {
         icon: "bi-arrow-return-left",
         color: "danger",
     },
-    officer_verified: {
-        en: "Officer Verification Completed",
-        bm: "Pengesahan Pegawai Selesai",
+    officer_verified: {                         // <-- updated here
+        en: "Officer Verification",
+        bm: "Pengesahan Pegawai",
         icon: "bi-person-check",
         color: "primary",
     },
@@ -243,13 +243,9 @@ function deriveStageKey(status) {
     const s = (status || "").toLowerCase();
     if (s.includes("draft")) return "submitted";
     if (s.includes("clerk review")) return "doc_verification";
-    if (s.includes("clerk verified")) return "doc_verification";
-    if (
-        s.includes("officer verification") ||
-        s === "officer verification completed"
-    ) {
-        return "awaiting_payment";
-    }
+    if (s.includes("clerk verified")) return "officer_verified";          // ← fixed
+    if (s.includes("officer verification") && !s.includes("completed")) return "officer_verified";
+    if (s.includes("officer verification completed")) return "awaiting_payment";
     if (s.includes("completed")) return "completed";
     if (s.includes("rejected") || s.includes("not approved")) return "returned";
     if (s.includes("pending for payment")) return "awaiting_payment";
@@ -1109,30 +1105,7 @@ function permitActionsHtml(permit) {
     }
 
     // ─── Standard Approve / Reject ──────────────────────────
-    if (
-        applicationStatus === "clerk verified" &&
-        (status === "processing" || status === "reapplied") &&
-        hasPermission("approve permit")
-    ) {
-        // Standard approve/reject for non-custom permits only
-        if (!permit.isCustom) {
-            actions += `
-                <button type="button" class="ipv-btn-action is-success accept" data-permit="${permit.id}">
-                    <i class="bi bi-check-lg"></i> ${lang === "bm" ? "Lulus" : "Approve"}
-                </button>
-                <button type="button" class="ipv-btn-action is-danger reject" data-permit="${permit.id}">
-                    <i class="bi bi-x-lg"></i> ${lang === "bm" ? "Tolak" : "Reject"}
-                </button>
-            `;
-        } else {
-            // For custom permits, keep the standard Reject button
-            actions += `
-                <button type="button" class="ipv-btn-action is-danger reject" data-permit="${permit.id}">
-                    <i class="bi bi-x-lg"></i> ${lang === "bm" ? "Tolak" : "Reject"}
-                </button>
-            `;
-        }
-    }
+   
 
     // ─── Reapply (owner only) ──────────────────────────────
     if (status === "rejected" && isOwner) {
@@ -1144,26 +1117,10 @@ function permitActionsHtml(permit) {
     }
 
     // ─── Pay Now (owner only) ──────────────────────────────
-    if (["pending for payment", "payment failed"].includes(status) && isOwner) {
-        actions += `
-            <button type="button" class="ipv-btn-action is-warning pd-pay-now" data-permit="${permit.id}" data-value="12">
-                <i class="bi bi-credit-card"></i> ${lang === "bm" ? "Bayar Sekarang" : "Pay Now"} — RM 12.00
-            </button>
-        `;
-    }
+    
 
     // ─── Print / Download ──────────────────────────────────
-    if (
-        ["paid", "completed"].includes(status) &&
-        (hasPermission("print permit") || isOwner)
-    ) {
-        const slug = (permit.permit_number || "").replaceAll("/", "");
-        actions += `
-            <button type="button" class="ipv-btn-action is-info generatePermit" data-permit="${slug}">
-                <i class="bi bi-download"></i> ${lang === "bm" ? "Cetak Permit" : "Print Permit"}
-            </button>
-        `;
-    }
+   
 
     return actions ? `<div class="ipv-permit-actions">${actions}</div>` : "";
 }
@@ -1655,6 +1612,7 @@ async function renderAll() {
     renderApplicationPrices();
     initAccordionToggle();
     toggleApplicationPricesTab();
+    renderBulkActionBar();
     updateCustomItemsAnnouncement(); // <── NEW
     const container = document.querySelector(".ipv-wrapper");
     if (container) applyTranslations(container);
@@ -1684,7 +1642,7 @@ async function init() {
 
     initTabs();
     initOffcanvas();
-    initApplicationLogModal();
+    // initApplicationLogModal();
 
     Swal.close();
 

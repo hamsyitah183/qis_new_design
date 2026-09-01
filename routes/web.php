@@ -38,6 +38,8 @@ use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/documents/data', [DocumentController::class, 'documentsList']);
+Route::get('documents/temp-preview/{filename}', [DocumentController::class, 'tempPreview'])->name('documents.temp-preview');
+
 
 // Guest routes (Unauthenticated users)
 Route::middleware(['multi.guest'])->group(function () {
@@ -658,11 +660,6 @@ Route::middleware(['auth.any'])->group(function () {
     // uses
     Route::get('/consignment_uses', [PublicController::class, 'getConsignmentUses'])->name('consignment.uses');
     Route::get('/get_consignment/{countryCode}', [PermitApplicationController::class, 'getConsignmentFromCountry'])->name('getItemFromCountry');
-
-
-
-
-    Route::get('documents/temp-preview/{filename}', [DocumentController::class, 'tempPreview'])->name('documents.temp-preview');
 });
 
 // broadcast --dont kacau---

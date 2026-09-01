@@ -89,6 +89,12 @@
             $isPublic &&
             $application->user_id === $authUuid &&
             str_contains(strtolower($application->status ?? ''), 'officer verification completed');
+
+        // ─── NEW: internal user viewing application awaiting importer verification ───
+        $showImporterAwaiting =
+            $isInternal &&
+            (str_contains($importerVerify, 'wait for company approval') ||
+                str_contains($importerVerify, 'wait for representative approval'));
     @endphp
 
     {{-- Feed real application context to test1.js instead of URL-parsing --}}
@@ -115,7 +121,7 @@
         {{-- ============================================================ --}}
         {{-- APPLICATION-LEVEL ACTIONS BAR --}}
         {{-- ============================================================ --}}
-        @if ($showClerkReviewActions || $showImporterVerifyActions || $showAdminRejectedActions || $showPaymentActionBar)
+        @if ($showClerkReviewActions || $showImporterVerifyActions || $showAdminRejectedActions || $showPaymentActionBar || $showImporterAwaiting)
             <div class="col-xl-12">
                 <div class="ipv-actions-bar">
                     <div class="ipv-actions-bar-text">
@@ -143,6 +149,12 @@
                             <span data-en="Your application has been verified by the officer. Please proceed to payment."
                                 data-bm="Permohonan anda telah disahkan oleh pegawai. Sila teruskan ke pembayaran.">
                                 Your application has been verified by the officer. Please proceed to payment.
+                            </span>
+                        @elseif ($showImporterAwaiting)
+                            {{-- NEW: internal user sees this when importer hasn't verified yet --}}
+                            <span data-en="This application is awaiting for verification from the importer."
+                                data-bm="Permohonan ini sedang menunggu pengesahan daripada pengimport.">
+                                This application is awaiting for verification from the importer.
                             </span>
                         @endif
                     </div>

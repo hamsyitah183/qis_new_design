@@ -86,26 +86,26 @@
 
                 {{-- Name --}}
                 <div class="mb-3">
-                    <label for="addexpName" class="form-label">Name<a style="color:red"> * </a></label>
+                    <label for="addexpName" class="form-label">Name</label><a style="color:red"> * </a>
                     <input type="text" id="addexpName" name="addexpName" class="form-control">
                 </div>
 
                 {{-- Phone --}}
                 <div class="mb-3">
-                    <label for="addexpfonno" class="form-label">Phone No<a style="color:red"> * </a></label>
+                    <label for="addexpfonno" class="form-label">Phone No<a style="color:red"> * </a></label><a style="color:red"> * </a>
                     <input type="text" id="addexpfonno" name="addexpfonno" class="form-control">
                 </div>
 
                 {{-- Address --}}
                 <div class="mb-3">
-                    <label for="addexpaddress" class="form-label">Address<a style="color:red"> * </a></label>
+                    <label for="addexpaddress" class="form-label">Address<a style="color:red"> * </a></label><a style="color:red"> * </a>
                     <input type="text" id="addexpaddress1" name="addexpaddress1" class="form-control mb-2">
                     <input type="text" id="addexpaddress2" name="addexpaddress2" class="form-control">
                 </div>
 
                 {{-- Country --}}
                 <div class="mb-3">
-                    <label for="addexpcountry" class="form-label">Country<a style="color:red"> * </a></label>
+                    <label for="addexpcountry" class="form-label">Country<a style="color:red"> * </a></label><a style="color:red"> * </a>
                     <select class="form-select" id="addexpcountry" name="addexpcountry">
                         <option value="">-- Select Country --</option>
                         @foreach ($country as $coun)

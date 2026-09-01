@@ -10,7 +10,7 @@ use Spatie\Permission\Models\Role;
 if (!function_exists('authUser')) {
     function authUser()
     {
-        // 🔐 INTERNAL USER
+
         if (Auth::guard('internal')->check()) {
             $user = Auth::guard('internal')->user();
 
@@ -24,7 +24,7 @@ if (!function_exists('authUser')) {
             ];
         }
 
-        // 🌍 PUBLIC USER
+
         if (Auth::guard('public')->check()) {
             $user = Auth::guard('public')->user()->load([
                 'approved',

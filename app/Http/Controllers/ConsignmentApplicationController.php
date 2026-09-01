@@ -116,11 +116,15 @@ class ConsignmentApplicationController extends Controller
             return $blockView;
         }
 
+        $consignmentDocuments = DocumentRequirement::forModule('consignment')
+            ->orderBy('name')
+            ->get();
+
         // Proceed to the "Other" consignment view
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();
-        return view('pages.public.consignmentappOther', compact('pubmeasure', 'pubpurpose', 'country'));
+        return view('pages.public.consignmentappOther', compact('pubmeasure', 'pubpurpose', 'country', 'consignmentDocuments'));
     }
 
     public function getConsignmentImporters()
@@ -735,12 +739,16 @@ class ConsignmentApplicationController extends Controller
 
     public function editApplication($uuid)
     {
+        $consignmentDocuments = DocumentRequirement::forModule('consignment')
+            ->orderBy('name')
+            ->get();
         $application = ConsignmentApplication::with([
             'user',
             'importer',
             'exporter',
             'entryPoint.districtCode',
             'consignmentPermits.attachments',
+            'attachments',
         ])
             ->where('application_id', $uuid)
             ->orderBy('created_at', 'desc')
@@ -759,7 +767,7 @@ class ConsignmentApplicationController extends Controller
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();
 
-        return view('pages.public.edit_consignment', compact('pubmeasure', 'pubpurpose', 'country', 'application'));
+        return view('pages.public.edit_consignment', compact('pubmeasure', 'pubpurpose', 'country', 'application',  'consignmentDocuments'));
     }
 
     public function viewapplication($uuid)
@@ -784,12 +792,10 @@ class ConsignmentApplicationController extends Controller
         }
 
         // ─── 3. Access control based on user type ──────────────────────
-
         if ($auth['type'] === 'public') {
-            // Public user must be the exporter (owner) of this application
-            $publicUser = $auth['user'];
-            if ($application->user_id !== $publicUser->uuid) {
-                abort(403, 'You are not authorised to view this application.');
+            // Public user can view if they are the exporter OR the user who created the application
+            if ($application->exporter_id !== $auth['user']->uuid && $application->user_id !== $auth['user']->uuid) {
+                abort(403, 'You do not have permission to view this application.');
             }
         } elseif ($auth['type'] === 'internal') {
             $internalUser = $auth['user'];
@@ -799,18 +805,12 @@ class ConsignmentApplicationController extends Controller
             $isAdmin = $roles->contains('superadmin') || $roles->contains('admin');
 
             if (!$isAdmin) {
-                // For other internal users:
-                // – Must have 'Approve Application' permission
-                // – Must belong to branch 'Sipitang'
-                
-                $isSipitang = ($internalUser->branch ?? '') === 'Sipitang';
-
-                if (!($isSipitang)) {
-                    abort(403, 'You do not have the required permissions or branch access to view this application.');
+                // For other internal users: must have 'approve application' permission
+                if (!$internalUser->can('approve application')) {
+                    abort(403, 'You do not have the required permissions to view this application.');
                 }
             }
         } else {
-            // Should never happen because authUser() only returns 'public' or 'internal'
             abort(403, 'Unknown user type.');
         }
 
@@ -821,8 +821,10 @@ class ConsignmentApplicationController extends Controller
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = country::where('is_del', false)->get();
 
-                $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->where('cate_name', 'condition_category')->where('is_del', false)->get();
-
+        $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')
+            ->where('cate_name', 'condition_category')
+            ->where('is_del', false)
+            ->get();
 
         return view('pages.public.view_consignment_application', [
             'application' => $application,

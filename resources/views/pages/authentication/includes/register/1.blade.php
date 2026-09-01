@@ -3,8 +3,8 @@
     <div class="p-3">
         <p class="mb-1 fw-semibold text-muted op-5 fs-20">01</p>
         <div class="fs-15 fw-semibold d-sm-flex d-block align-items-center justify-content-between mb-3">
-            <div data-en="Choose your account type" data-bm="Pilih jenis akaun anda">Choose your account type</div>
-            <span class="text-primary2">*</span>
+            <div ><span data-en="Choose your account type" data-bm="Pilih jenis akaun anda">Choose your account type</span> <span class="text-primary2">*</span></div>
+            
         </div>
 
         <div class="row">

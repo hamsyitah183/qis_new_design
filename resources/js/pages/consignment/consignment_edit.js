@@ -2,7 +2,7 @@ import Dropzone from "dropzone";
 import $ from "jquery";
 window.$ = window.jQuery = $;
 import Swal from "sweetalert2";
-import { generateUUID, getAuthUser, applyTranslations } from "../../app"; // <-- added applyTranslations
+import { generateUUID, getAuthUser, applyTranslations } from "../../app";
 import "dropzone/dist/dropzone.css";
 import { render } from "react-dom/cjs/react-dom.production.min";
 
@@ -47,7 +47,7 @@ let limitMeasurement = null;
 let currentItemCondition = null;
 let editingItemId = null;
 let applicationAttachments = [];
-let applicationAttachmentDropzone = null;
+let dropzoneInstances = {};              // keyed by document ID
 let itemFileOffcanvas = null;
 let currentItemFile = null;
 let itemAttachmentOffcanvas = null;
@@ -56,6 +56,20 @@ let currentItemAttachIndex = 0;
 let attachmentOffcanvas = null;
 let currentAttachmentIndex = 0;
 
+// ─── Helper: get MIME type from file name ────────────────
+function getMimeType(fileName) {
+    const ext = fileName.split('.').pop().toLowerCase();
+    const mimeTypes = {
+        'pdf': 'application/pdf',
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'doc': 'application/msword',
+        'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    };
+    return mimeTypes[ext] || 'application/octet-stream';
+}
 
 // ─── Measurement Units ────────────────────────────────────
 function measurementUnit() {
@@ -79,12 +93,10 @@ measurementUnit();
 function getKgForItem(item) {
     console.log('item kg', item)
     const qty = parseFloat(item.quantity) || 0;
-    if (!qty || !measurementUnits || !measurementUnits.unit) return 0;
-    const measure = item.measure || "";
-    const unit = measurementUnits.unit.find(
-        (u) => u.cate_code.toLowerCase() === measure.toLowerCase() && !u.is_del,
-    );
-    return unit ? qty * unit.conversion.conversion : 0;
+   
+
+
+    return  qty ;
 }
 
 // ─── Helper ──────────────────────────────────────────────
@@ -94,6 +106,33 @@ function getCurrentLang() {
     } catch {
         return "en";
     }
+}
+
+// ─── Helper to create a dummy file from existing attachment ──
+function createExistingFile(attachment) {
+    const mimeType = attachment.file_type || getMimeType(attachment.file_name);
+    // Create a non‑empty blob so Dropzone accepts the file
+    const blob = new Blob([' '], { type: mimeType });
+    const file = new File([blob], attachment.file_name, { type: mimeType });
+    file._isExisting = true;
+    file._url = attachment.file_path;
+    file._id = attachment.id;
+    file.displayName = attachment.file_name;
+    return file;
+}
+
+// ─── Helper: create dummy File from application attachment (used for document dropzones) ──
+function createDummyFileFromAttachment(att) {
+    const mimeType = att.type || getMimeType(att.name);
+    const blob = new Blob([' '], { type: mimeType });
+    const file = new File([blob], att.name, { type: mimeType });
+    file._isExisting = true;
+    file._url = att.url || null;
+    file._id = att.id;
+    file.displayName = att.displayName || att.name;
+    // Store the attachment ID so we can link back
+    file._attachmentId = att.id;
+    return file;
 }
 
 // [FIX] Restored importerDetail – loads the "Me" side from the draft
@@ -116,9 +155,12 @@ function loadExistingConsignments() {
     application.consignment_permits.forEach((permit) => {
         const detail = permit.consignment_detail || {};
 
+        // Convert existing attachments to file-like objects
+        const files = (permit.attachments || []).map(a => createExistingFile(a));
+
         tempItems.push({
             id: detail.id || generateUUID(),
-            permit_id: permit.id, // used by deleteItem() to build deleteIds
+            permit_id: permit.id,
             item_id: detail.item_id,
             item_name: detail.item_name,
             quantity: detail.quantity,
@@ -127,11 +169,12 @@ function loadExistingConsignments() {
             purpose: detail.purpose ?? "",
             uses: detail.uses ?? "",
             value: detail.value ?? 0,
-            files: [],
+            files: files,
             existingAttachments: permit.attachments || [],
             agreedAt: detail.agreedAt ?? "Previously submitted",
             condition: detail.addional_condition ?? null,
-            category: detail.category
+            category: detail.category,
+            isCustom: detail.isCustom ?? (detail.item_id ? false : true)
         });
     });
 
@@ -344,59 +387,66 @@ function initAddVehicleModal() {
 }
 
 function loadCategory() {
-    const $select = $("#itemCategory");
+    return new Promise((resolve, reject) => {
+        const $select = $("#itemCategory");
+        $select.empty().append('<option value="">-- Select Category --</option>');
 
-    $select.empty().append('<option value="">-- Select Category --</option>');
+        if ($select.hasClass("select2-hidden-accessible")) {
+            $select.select2("destroy");
+        }
 
-    if ($select.hasClass("select2-hidden-accessible")) {
-        $select.select2("destroy");
-    }
+        $select.prop("disabled", true);
 
-    $select.prop("disabled", true);
-
-    Swal.fire({
-        title: "Loading...",
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading(),
-    });
-
-    fetch(`/get_pbdata/consignment_category`)
-        .then((res) => res.json())
-        .then((data) => {
-            $select.prop("disabled", false);
-            console.log("data in loadcategory", data);
-
-            data.data.forEach((row) => {
-                $select.append(
-                    `<option value="${row.id}">${row.description}</option>`,
-                );
-            });
-
-            $select.select2({
-                width: "100%",
-                placeholder: "-- Select Item --",
-                allowClear: true,
-                dropdownParent: $("#addItemModal"),
-            });
-
-            Swal.close();
-        })
-        .catch((e) => {
-            console.error("Error loading items:", e);
-            $select.prop("disabled", false);
-            Swal.fire("Error", "Failed to load consignment items.", "error");
+        Swal.fire({
+            title: "Loading...",
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading(),
         });
+
+        fetch(`/get_pbdata/consignment_category`)
+            .then((res) => res.json())
+            .then((data) => {
+                $select.prop("disabled", false);
+                data.data.forEach((row) => {
+                    $select.append(
+                        `<option value="${row.id}">${row.description}</option>`,
+                    );
+                });
+
+                $select.select2({
+                    width: "100%",
+                    placeholder: "-- Select Item --",
+                    allowClear: true,
+                    dropdownParent: $("#addItemModal"),
+                });
+
+                Swal.close();
+                resolve();
+            })
+            .catch((e) => {
+                console.error("Error loading items:", e);
+                $select.prop("disabled", false);
+                Swal.fire("Error", "Failed to load consignment items.", "error");
+                reject(e);
+            });
+    });
 }
 
 // ─── Consignment / Uses ──────────────────────────────────
 function loadConsignmentSelection(itemId) {
     const countryCode = $("#expcountryCode").val();
-
     const $select = $("#itemSelect");
 
-    console.log("the country code", countryCode);
-
-    if (!countryCode) return;
+    if (!countryCode) {
+        $select.empty().append('<option value="">-- Select Item --</option>');
+        $select.select2({
+            width: "100%",
+            placeholder: "-- Select Item --",
+            allowClear: true,
+            dropdownParent: $("#addItemModal"),
+        });
+        return Promise.resolve();
+    }
 
     $select.empty().append('<option value="">-- Select Item --</option>');
 
@@ -412,13 +462,12 @@ function loadConsignmentSelection(itemId) {
         didOpen: () => Swal.showLoading(),
     });
 
-    fetch(`/consignment_condition/category/${itemId}/${countryCode}/data`)
+    return fetch(`/consignment_condition/category/${itemId}/${countryCode}/data`)
         .then((res) => res.json())
         .then((data) => {
             $select.prop("disabled", false);
-            console.log("data", data);
 
-            // ===== [OTHERS] Prepend "Others" option at the top =====
+            // Prepend "Others" option
             $select.append(`<option value="others">Others</option>`);
 
             data.data.forEach((row) => {
@@ -440,6 +489,7 @@ function loadConsignmentSelection(itemId) {
             console.error("Error loading items:", e);
             $select.prop("disabled", false);
             Swal.fire("Error", "Failed to load consignment items.", "error");
+            return Promise.reject(e);
         });
 }
 
@@ -845,7 +895,7 @@ function itemConsigment() {
         autoProcessQueue: false,
         paramName: "file",
         maxFilesize: 10,
-        acceptedFiles: ".jpg,.jpeg,.png,.pdf",
+        acceptedFiles: ".jpg,.jpeg,.png,.pdf,application/pdf,image/*",
         addRemoveLinks: true,
         headers: {
             "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
@@ -923,6 +973,23 @@ function itemConsigment() {
 
     itemDropzone.on("addedfile", function (file) {
         currentItemFile = file;
+
+        // ─── Existing file: set thumbnail from URL ─────────────────
+        if (file._isExisting && file._url) {
+            const preview = file.previewElement;
+            if (preview) {
+                const img = preview.querySelector('.dz-image img[data-dz-thumbnail]');
+                if (img) {
+                    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+                        img.src = '/images/pdf-logo.png';
+                        img.style.objectFit = 'contain';
+                    } else {
+                        img.src = file._url;
+                    }
+                }
+            }
+        }
+
         showItemFilePreview(file);
         setTimeout(() => {
             addPreviewButtons(file);
@@ -1006,9 +1073,46 @@ function showItemFilePreview(file) {
     }
 
     previewContainer.innerHTML = "";
-    fileNameSpan.textContent = file.name;
-    fileEditInput.value = file.name;
+    fileNameSpan.textContent = file.displayName || file.name;
+    fileEditInput.value = file.displayName || file.name;
 
+    // ─── Existing file with URL ─────────────────────────────────────
+    if (file._isExisting && file._url) {
+        if (file.type && file.type.startsWith("image/")) {
+            previewContainer.innerHTML = `<img src="${file._url}" class="img-fluid rounded" alt="${file.displayName || file.name}">`;
+        } else if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+            previewContainer.innerHTML = `<iframe src="${file._url}" class="w-100" style="height: calc(100vh - 220px); border: none;"></iframe>`;
+        } else {
+            previewContainer.innerHTML = `
+                <div class="text-center">
+                    <i class="bi bi-file-earmark-fill fs-1 mb-3"></i>
+                    <p>${file.displayName || file.name}</p>
+                    <a href="${file._url}" target="_blank" class="btn btn-sm btn-primary">Open File</a>
+                </div>
+            `;
+        }
+        const fileSize = file.size ? (file.size / 1024).toFixed(2) + " KB" : "Unknown";
+        const fileType = file.type || "Unknown";
+        fileDetailsDiv.innerHTML = `
+            <div class="mb-3">
+                <strong data-en="File Name:" data-bm="Nama Fail:">File Name:</strong>
+                <div class="text-muted">${file.displayName || file.name}</div>
+            </div>
+            <div class="mb-3">
+                <strong data-en="File Size:" data-bm="Saiz Fail:">File Size:</strong>
+                <div class="text-muted">${fileSize}</div>
+            </div>
+            <div class="mb-3">
+                <strong data-en="File Type:" data-bm="Jenis Fail:">File Type:</strong>
+                <div class="text-muted">${fileType}</div>
+            </div>
+        `;
+        applyTranslations(fileDetailsDiv);
+        itemFileOffcanvas.show();
+        return;
+    }
+
+    // ─── New file (real File object) ──────────────────────────────
     if (file.type.startsWith("image/")) {
         const reader = new FileReader();
         reader.onload = function (e) {
@@ -1040,7 +1144,7 @@ function showItemFilePreview(file) {
         </div>
     `;
 
-    // applyTranslations would be here if available – we skip as not imported
+    applyTranslations(fileDetailsDiv);
     itemFileOffcanvas.show();
 }
 
@@ -1081,62 +1185,124 @@ $(document).on("click", "#itemFileSaveBtn", function () {
     });
 });
 
-// ─── Application Attachments ─────────────────────────────
+// ============================================================
+// ─── FIXED: Application Attachments (multiple dropzones, no duplicates) ──
+// ============================================================
 function initApplicationAttachments() {
-    const dropzoneEl = document.getElementById("applicationAttachmentDropzone");
-    if (!dropzoneEl) return;
+    const dropzoneElements = document.querySelectorAll('.application-attachment-dropzone');
+    if (!dropzoneElements.length) return;
 
-    applicationAttachmentDropzone = new Dropzone(
-        "#applicationAttachmentDropzone",
-        {
-            url: "/",
+    // Clear previous instances
+    dropzoneInstances = {};
+
+    dropzoneElements.forEach((el) => {
+        const docId = el.dataset.docId;
+        const docName = el.dataset.docName || '';
+
+        if (!docId) return;
+
+        const dz = new Dropzone(`#${el.id}`, {
+            url: '/',                          // not used (autoProcessQueue = false)
             autoProcessQueue: false,
             addRemoveLinks: false,
-            previewsContainer: false,
+            previewsContainer: false,          // we render our own table
             clickable: true,
-            acceptedFiles: ".jpg,.jpeg,.png,.pdf,.doc,.docx",
+            acceptedFiles: '.jpg,.jpeg,.png,.pdf,.doc,.docx',
             maxFilesize: 15,
             headers: {
-                "X-CSRF-TOKEN": document.querySelector(
-                    'meta[name="csrf-token"]',
-                ).content,
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
             },
-            init: function () {
-                this.on("addedfile", function (file) {
+            init: function() {
+                // When a file is added, store it in the global array with doc info
+                this.on('addedfile', function(file) {
+                    // Check if this is an existing file from the server
+                    if (file._isExisting && file._id) {
+                        // Find the existing attachment in the array
+                        const existing = applicationAttachments.find(a => a.id === file._id);
+                        if (existing) {
+                            // Reuse existing attachment – just link the file object
+                            existing.file = file;
+                            file._attachmentId = existing.id;
+                            // Do NOT push a new attachment
+                            return;
+                        }
+                    }
+
+                    // New file (uploaded by user)
                     const attachment = {
                         id: generateUUID(),
-                        file,
+                        file: file,
                         name: file.name,
-                        displayName: file.name,
+                        displayName: file.displayName || file.name,
                         size: file.size,
                         type: file.type,
+                        document_id: docId,
+                        document_type: docName,
+                        description: docName,   // default description = document requirement name
                     };
                     file._attachmentId = attachment.id;
                     applicationAttachments.push(attachment);
-                    renderApplicationAttachmentTable();
-                    updateAttachmentTable();
+                    renderApplicationAttachmentTable(docId);
+                    updateDocFileCountBadge(docId);
+                    updateAttachmentTable();   // summary table
+                });
+
+                // Handle file removal
+                this.on('removedfile', function(file) {
+                    const index = applicationAttachments.findIndex(
+                        (a) => a.id === file._attachmentId
+                    );
+                    if (index !== -1) {
+                        applicationAttachments.splice(index, 1);
+                        renderApplicationAttachmentTable(docId);
+                        updateDocFileCountBadge(docId);
+                        updateAttachmentTable();
+                    }
                 });
             },
-            error: function (file, message) {
-                console.error("Attachment Dropzone Error:", message);
+            error: function(file, message) {
+                console.error('Dropzone error:', message);
                 if (file.previewElement) {
                     file.previewElement.remove();
                 }
-            },
-        },
-    );
+            }
+        });
 
-    renderApplicationAttachmentTable();
+        dropzoneInstances[docId] = dz;
+
+        // ─── Load existing attachments for this document ID ──
+        const existingForDoc = applicationAttachments.filter(
+            (a) => String(a.document_id) === String(docId)
+        );
+        existingForDoc.forEach((att) => {
+            const dummyFile = createDummyFileFromAttachment(att);
+            dz.addFile(dummyFile);
+        });
+
+        // Render the table for this document (will show existing files)
+        renderApplicationAttachmentTable(docId);
+        updateDocFileCountBadge(docId);
+    });
+
+    // Update the summary table
+    updateAttachmentTable();
 }
 
-function renderApplicationAttachmentTable() {
-    const $tbody = $("#applicationAttachmentTable tbody");
+// ─── Render attachment table for a specific document ────
+function renderApplicationAttachmentTable(docId) {
+    const $tbody = $(`.application-attachment-table[data-doc-id="${docId}"] tbody`);
+    if (!$tbody.length) return;
+
     $tbody.empty();
 
-    if (!applicationAttachments.length) {
+    const docAttachments = applicationAttachments.filter(
+        (a) => String(a.document_id) === String(docId)
+    );
+
+    if (!docAttachments.length) {
         $tbody.append(`
-            <tr>
-                <td colspan="2" class="text-center text-muted py-3" data-en="No attachments uploaded yet." data-bm="Tiada lampiran dimuat naik lagi.">
+            <tr class="empty-row">
+                <td colspan="2" class="text-center text-muted py-2" data-en="No attachments uploaded yet." data-bm="Tiada lampiran dimuat naik lagi.">
                     No attachments uploaded yet.
                 </td>
             </tr>
@@ -1144,9 +1310,9 @@ function renderApplicationAttachmentTable() {
         return;
     }
 
-    applicationAttachments.forEach((attachment, index) => {
+    docAttachments.forEach((attachment) => {
         $tbody.append(`
-            <tr data-id="${attachment.id}" data-index="${index}">
+            <tr data-id="${attachment.id}">
                 <td class="text-wrap">
                     <a href="#" class="text-decoration-none attachment-name-link" data-id="${attachment.id}">
                         <strong>${attachment.displayName}</strong>
@@ -1169,22 +1335,44 @@ function renderApplicationAttachmentTable() {
     });
 }
 
+// ─── Update document file count badge ────────────────────
+function updateDocFileCountBadge(docId) {
+    const badge = document.querySelector(
+        `.doc-file-count[data-doc-id="${docId}"]`
+    );
+    if (!badge) return;
+    const count = applicationAttachments.filter(
+        (a) => String(a.document_id) === String(docId)
+    ).length;
+    badge.textContent = count > 0 ? `${count} file(s)` : "No files";
+}
+
+// ─── Remove attachment from its dropzone ────────────────
 function removeAttachmentFromDropzone(attachmentId) {
-    if (!applicationAttachmentDropzone) return false;
-    const fileIndex = applicationAttachmentDropzone.files.findIndex(
-        (fileItem) => fileItem._attachmentId === attachmentId,
+    // Find which dropzone owns this attachment
+    const attachment = applicationAttachments.find(a => a.id === attachmentId);
+    if (!attachment) return false;
+
+    const docId = attachment.document_id;
+    const dz = dropzoneInstances[docId];
+    if (!dz) return false;
+
+    const fileIndex = dz.files.findIndex(
+        (fileItem) => fileItem._attachmentId === attachmentId
     );
     if (fileIndex === -1) return false;
-    const file = applicationAttachmentDropzone.files[fileIndex];
+
+    const file = dz.files[fileIndex];
     try {
-        applicationAttachmentDropzone.removeFile(file);
+        dz.removeFile(file);
         return true;
     } catch (e) {
-        applicationAttachmentDropzone.files.splice(fileIndex, 1);
+        dz.files.splice(fileIndex, 1);
         return true;
     }
 }
 
+// ─── Init offcanvas for attachment viewing ──────────────
 function initAttachmentOffcanvas() {
     const el = document.getElementById("attachmentOffcanvas");
     if (!el) return;
@@ -1212,6 +1400,7 @@ function initAttachmentOffcanvas() {
     });
 }
 
+// ─── Open attachment viewer ──────────────────────────────
 function openAttachmentViewer(attachmentId) {
     const index = applicationAttachments.findIndex(
         (item) => item.id === attachmentId,
@@ -1350,7 +1539,10 @@ $(document).on("click", ".edit-attachment-btn", function () {
     const newName = prompt("Edit file name:", attachment.displayName);
     if (!newName) return;
     attachment.displayName = newName.trim();
-    renderApplicationAttachmentTable();
+    // Re-render all tables
+    const docId = attachment.document_id;
+    renderApplicationAttachmentTable(docId);
+    updateDocFileCountBadge(docId);
     updateAttachmentTable();
 });
 
@@ -1361,9 +1553,12 @@ $(document).on("click", ".delete-attachment-btn", function () {
     );
     if (index === -1) return;
 
+    const docId = applicationAttachments[index].document_id;
+
     removeAttachmentFromDropzone(attachmentId);
     applicationAttachments.splice(index, 1);
-    renderApplicationAttachmentTable();
+    renderApplicationAttachmentTable(docId);
+    updateDocFileCountBadge(docId);
     updateAttachmentTable();
 
     Swal.fire({
@@ -1393,7 +1588,9 @@ $(document).on("click", "#attachmentSaveNameBtn", function () {
         const attachment = applicationAttachments[currentAttachmentIndex];
         attachment.displayName = newName;
 
-        renderApplicationAttachmentTable();
+        const docId = attachment.document_id;
+        renderApplicationAttachmentTable(docId);
+        updateDocFileCountBadge(docId);
         renderAttachmentDetails(
             attachment,
             document.getElementById("attachmentDetails"),
@@ -1800,7 +1997,7 @@ function calculateCategoryPrice(totalQuantity) {
     return tierCount * CATEGORY_TIER_BASE_PRICE;
 }
 
-let categoryAmount = []; // [FIX] defined here
+let categoryAmount = [];
 
 function recalculateCategoryAmounts() {
     const totals = {};
@@ -2052,7 +2249,6 @@ function saveConsignmentAttachment() {
                 agreedAt: null,
                 condition: currentItemCondition,
                 isCustom: isCustom,
-                // [FIX] preserve permit_id for edit-mode deletion tracking
                 permit_id: existingItem ? existingItem.permit_id : undefined,
             };
 
@@ -2354,7 +2550,6 @@ function deleteItem() {
             return;
         }
 
-        // [FIX] Track deleted existing permits for edit mode
         if (isEditMode && tempItems[index].permit_id) {
             const permitId = tempItems[index].permit_id;
             if (!deleteIds.includes(permitId)) {
@@ -2397,7 +2592,6 @@ function copyItem() {
             id: generateUUID(),
             files: [...(original.files || [])],
             agreedAt: null,
-            // [FIX] Duplicate should not carry the original permit_id
             permit_id: undefined,
         };
 
@@ -2423,6 +2617,42 @@ function copyItem() {
     });
 }
 
+// ─── Populate Edit Form ──────────────────────────────────
+function populateEditForm(item) {
+    const $select = $("#itemSelect");
+    const existsInDropdown = $select.find(`option[value="${item.item_id}"]`).length > 0;
+
+    if (item.isCustom || !existsInDropdown) {
+        $("#itemSelect").val("others").trigger("change");
+        toggleCustomItemInput(true);
+        $("#customItemName").val(item.item_name);
+        $(".attachmentInstruction")
+            .html(`<span style="color:red;" data-en="Attachment is mandatory for custom items. Please upload the item image or document"
+                   data-bm="Lampiran adalah wajib untuk item yang tiada dalam senarai. Sila muat naik gambar atau dokumen">
+                * Attachment is mandatory for custom items. Please upload the item image or document.</span>`)
+            .show();
+    } else {
+        $("#itemSelect").val(item.item_id).trigger("change");
+        toggleCustomItemInput(false);
+        $(".attachmentInstruction").html("").hide();
+    }
+
+    $("#itemQuantity").val(item.quantity);
+    $("#certificateNo").val(item.certificateNo || "");
+
+    // ─── Restore files in Dropzone ──────────────────────────────
+    if (itemDropzone) {
+        itemDropzone.removeAllFiles(true);
+        if (item.files && item.files.length > 0) {
+            item.files.forEach((file) => {
+                itemDropzone.addFile(file);
+            });
+        }
+    }
+
+    Swal.close();
+}
+
 // ─── Edit Item ──────────────────────────────────────────────
 function editItem() {
     $(document).on("click", ".edit-item", function (e) {
@@ -2435,6 +2665,8 @@ function editItem() {
         editingItemId = id;
         resetAddItemModal();
 
+        console.log("Editing item:", id, item);
+
         const modalEl = document.getElementById("addItemModal");
         bootstrap.Modal.getOrCreateInstance(modalEl).show();
 
@@ -2444,26 +2676,33 @@ function editItem() {
             didOpen: () => Swal.showLoading(),
         });
 
-        loadConsignmentSelection()
+        loadCategory()
             .then(() => {
-                $("#itemSelect").val(item.item_id).trigger("change");
-
-                $("#itemValue").val(item.value);
-                $("#itemQuantity").val(item.quantity);
-                $("#itemMeasure").val(item.measure).trigger("change");
-                $("#itemPurpose")
-                    .val(item.purposeValue || item.purpose)
-                    .trigger("change");
-                $("#certificateNo").val(item.certificateNo || "");
-
-                if (itemDropzone) {
-                    itemDropzone.removeAllFiles(true);
-                    (item.files || []).forEach((file) =>
-                        itemDropzone.addFile(file),
-                    );
+                const categoryText = item.category;
+                if (categoryText) {
+                    const $catSelect = $("#itemCategory");
+                    let optionValue = null;
+                    $catSelect.find('option').each(function() {
+                        if ($(this).text().trim() === categoryText.trim()) {
+                            optionValue = $(this).val();
+                            return false;
+                        }
+                    });
+                    if (optionValue) {
+                        $catSelect.val(optionValue).trigger('change');
+                    }
                 }
 
-                Swal.close();
+                const categoryId = $("#itemCategory").val();
+                const countryCode = $("#expcountryCode").val();
+                if (categoryId && countryCode) {
+                    return loadConsignmentSelection(categoryId);
+                } else {
+                    return Promise.resolve();
+                }
+            })
+            .then(() => {
+                populateEditForm(item);
             })
             .catch(() => {
                 Swal.close();
@@ -2652,7 +2891,6 @@ function saveapplication(isDraft = false) {
     formData.append("importerData", JSON.stringify(exporter));
     formData.append("permitDetails", JSON.stringify(currentPermitDetails));
 
-    // [FIX] Edit-mode: send applicationId and deleted IDs
     if (isEditMode) {
         formData.append("applicationId", application.application_id);
         formData.append("deleted_item_ids", deleteIds);
@@ -2821,8 +3059,8 @@ export function summarySubmit() {
     }
 
     updateAttachmentTable();
-    renderCategoryPriceSummary(); // [FIX] added
-    tablePrice(); // [FIX] added
+    renderCategoryPriceSummary();
+    tablePrice();
 }
 
 function updateAttachmentTable() {
@@ -2891,8 +3129,48 @@ function updateAttachmentTable() {
     }
 }
 
+// ─── Load existing application attachments from the application variable ──
+function loadExistingApplicationAttachments() {
+    // Build a map of docName -> docId from the DOM
+    const docMap = {};
+    document.querySelectorAll('.consignment-doc-block').forEach(el => {
+        const docId = el.dataset.docId;
+        const docName = el.dataset.docName ? el.dataset.docName.trim() : '';
+        if (docId && docName) {
+            docMap[docName] = docId;
+        }
+    });
+
+    // Clear the global array
+    applicationAttachments = [];
+
+    if (application.attachments && application.attachments.length > 0) {
+        application.attachments.forEach((a) => {
+            const docName = a.description ? a.description.trim() : '';
+            const docId = docMap[docName] || null;
+            applicationAttachments.push({
+                id: a.id || generateUUID(),
+                file: null,
+                name: a.file_name,
+                displayName: a.file_name,
+                size: a.file_size || 0,
+                type: a.file_type || "",
+                url: a.file_path,
+                document_id: docId,
+                document_type: docName || "",
+                description: docName || "",
+            });
+        });
+
+        // IMPORTANT: Do NOT render tables here – initApplicationAttachments will do that.
+    }
+}
+
 // ─── Initialize ──────────────────────────────────────────
 $(document).ready(async function () {
+
+    console.log("Document ready. Initializing...", application, isEditMode);
+
     Swal.fire({
         title: "Loading...",
         html: "Please wait while the page initializes.",
@@ -2901,10 +3179,10 @@ $(document).ready(async function () {
     });
 
     try {
-        // [FIX] Edit-mode vs new mode
         if (isEditMode) {
             importerDetail();
             loadExistingConsignments();
+            loadExistingApplicationAttachments();   // populate applicationAttachments from server
         } else {
             await selfImport();
         }
@@ -2912,7 +3190,6 @@ $(document).ready(async function () {
         await fetchExporterList();
         handleExporterChange();
 
-        // [FIX] Prefill importer (exporter in DB) in edit mode
         if (isEditMode && application.importer_detail) {
             const imp = application.importer_detail;
             exporter = imp;
@@ -2948,7 +3225,10 @@ $(document).ready(async function () {
         initAddExporterModal();
         initImporterSearch();
         permitDetails();
+
+        // ─── NOW initialize application attachment dropzones (after the array is populated) ──
         initApplicationAttachments();
+
         initAttachmentOffcanvas();
         initAttachmentNavigation();
         initItemAttachmentOffcanvas();
@@ -2991,7 +3271,6 @@ $(document).ready(async function () {
             loadConsignmentSelection(itemId);
         });
 
-        // [OTHERS] Item Select change handler
         $("#itemSelect").on("change", function () {
             const selectedVal = $(this).val();
             const $itemUses = $("#itemUses");
@@ -3031,7 +3310,6 @@ $(document).ready(async function () {
             resetAddItemModal();
         });
 
-        // Submit button handler
         $(document).on("click", "#submitApps", async function (e) {
             e.preventDefault();
             console.log("Submit clicked!");
