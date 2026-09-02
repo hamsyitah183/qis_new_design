@@ -11,7 +11,7 @@
     <meta name="Description" content="Quarantine Information System (QIS) is a web-based application designed to streamline the management and monitoring of quarantine processes. It provides a centralized platform for tracking individuals in quarantine, managing their health status, and ensuring compliance with quarantine regulations. QIS aims to enhance efficiency, improve data accuracy, and facilitate communication between relevant authorities and stakeholders involved in quarantine management.">
     <meta name="Author" content="Spruko Technologies Private Limited">
     <meta name="keywords"
-        content="DOA SABAH, QIS, quarantine, information system, Jabatan Pertanian Sabah, agriculture, health monitoring, compliance, data management, web application, quarantine tracking, centralized platform, efficiency, data accuracy, communication, authorities, stakeholders">
+        content="Plant Quarantine Sabah, Plant Biosecurity Sabah, Kuarantin Tumbuhan Sabah, Biosekuriti Tumbuhan Sabah, Permit Import Tumbuhan Sabah, Plant Import Permit Sabah, Sijil Pemeriksaan Tumbuhan Sabah, Plant Inspection Certificate Sabah, Sijil Consignment Sabah, Plant Consignment Certificate Sabah, Jabatan Pertanian Sabah, Department of Agriculture Sabah, Sabah Agriculture, Plant Quarantine Department Sabah, Plant Quarantine Kota Kinabalu, Tawau, Sandakan &amp; Lahad Datu, Plant Quarantine Sabah Entry Points, Pintu Masuk Kuarantin Sabah, Plant Health Sabah, Plant Protection Sabah, Plant Pest &amp; Disease Sabah, Agricultural Biosecurity Sabah, Kawalan Perosak Tumbuhan Sabah, Penyakit Tumbuhan Sabah, Kawalan Kuarantin Tumbuhan dan Kawalan Biosekuriti Tumbuhan, DOA SABAH, QIS, QIS 2.0">
 
     <!-- Title-->
     <title> {{ $title }} </title>

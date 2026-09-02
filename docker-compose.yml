@@ -27,7 +27,7 @@ services:
     image: nginx:latest
     container_name: qis_app_nginx
     ports:
-      - "8080:80"
+      - "8081:80"
     volumes:
       - .:/var/www/html:ro                                 # Read-only access to local code
       - storage:/var/www/html/storage                      # Same storage volume

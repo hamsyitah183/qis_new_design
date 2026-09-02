@@ -102,9 +102,10 @@ async function data_table_init() {
 
         drawCallback: () => applyTranslations(document.body),
         columns: [
-            { data: "order_number" },
+            { data: "order_number", title: "Order Number" },
             {
                 data: "permit_number",
+                title: "Permit Number",
                 render: function (data, type) {
                     const permitNumber = data || "-";
 
@@ -115,11 +116,12 @@ async function data_table_init() {
                     return `<span title="${escapeHtml(permitNumber)}">${escapeHtml(permitNumber)}</span>`;
                 },
             },
-            { data: "status" },
-            { data: "application_type" },
-            ...(isInternal ? [{ data: "kod_transaksi" }] : []),
-            { data: "payment_amount" },
-            { data: "action", orderable: false, searchable: false },
+            { data: "status", title: "Status" },
+            { data: "application_type", title: "Application Type" },
+            ...(isInternal ? [{ data: "kod_transaksi", title: "Transaction Code" }] : []),
+            { data: "payment_amount", title: "Amount" },
+            { data: "created_at", title: "Date" },
+            { data: "action", title: "Action", orderable: false, searchable: false },
         ],
 
         responsive: true,

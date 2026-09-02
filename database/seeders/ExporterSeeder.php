@@ -15,6 +15,8 @@ class ExporterSeeder extends Seeder
     public function run(): void
     {
         $now = Carbon::now();
+        $user = \App\Models\PublicUser::first();
+        $userId = $user ? $user->uuid : \Str::uuid();
 
         DB::table('exporter')->insert([
             [
@@ -22,7 +24,7 @@ class ExporterSeeder extends Seeder
                 'phone_no' => '+6012-3456789',
                 'address' => 'Lot 123, Jalan Kolam, Kota Damansara, Kuala Lumpur',
                 'country' => 'SMY',
-                'registered_by' => 2,
+                'registered_by' => $userId,
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
@@ -31,7 +33,7 @@ class ExporterSeeder extends Seeder
                 'phone_no' => '+6013-9988776',
                 'address' => 'Taman Megah, Johor Baharu, Johor',
                 'country' => 'SMY',
-                'registered_by' => 2,
+                'registered_by' => $userId,
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
@@ -40,7 +42,7 @@ class ExporterSeeder extends Seeder
                 'phone_no' => '+6013-9988776',
                 'address' => 'Taman Megah, Wuuhaa, Wuhuuu',
                 'country' => 'TZ',
-                'registered_by' => 2,
+                'registered_by' => $userId,
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
