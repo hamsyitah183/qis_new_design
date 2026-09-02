@@ -359,6 +359,16 @@ class ConsignmentApplicationController extends Controller
                 }
             }
 
+            if ($request->has('deleted_attachment_ids')) {
+                $deletedAppFiles = $request->input('deleted_attachment_ids');
+                if (is_string($deletedAppFiles)) {
+                    $deletedAppFiles = json_decode($deletedAppFiles, true);
+                }
+                if (is_array($deletedAppFiles) && count($deletedAppFiles) > 0) {
+                    ConsignmentApplicationAttachment::whereIn('id', $deletedAppFiles)->delete();
+                }
+            }
+
             // ─── APPLICATION ATTACHMENTS (application_files[]) ─────────────
             if ($request->hasFile('application_files')) {
                 $documentTypes = $request->input('application_files_document_type', []);

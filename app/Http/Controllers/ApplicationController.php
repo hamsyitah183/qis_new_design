@@ -907,6 +907,7 @@ class ApplicationController extends Controller
             // 'exporter.country',
             'entryPoint.districtCode',
             'consignmentPermits.attachments',
+            'attachment',
         ])
             ->where('application_id', $uuid)
             ->orderBy('created_at', 'desc')

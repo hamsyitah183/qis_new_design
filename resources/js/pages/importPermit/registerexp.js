@@ -294,8 +294,8 @@ function clearExporterFields() {
 }
 
 function exporterDetail() {
+    if (typeof application === 'undefined' || !application.exporter) return;
     exporter = application.exporter;
-    if (!exporter) return;
     
     console.log("exporter data:", exporter);
     $("#expname").val(exporter.name || "");

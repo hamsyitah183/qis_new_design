@@ -464,6 +464,8 @@ class PermitApplicationController extends Controller
 
             if (is_string($deletedPermits)) {
                 $deletedPermits = array_filter(explode(',', $deletedPermits));
+            } elseif (!is_array($deletedPermits)) {
+                $deletedPermits = [];
             }
 
             foreach ($deletedPermits as $permitId) {
@@ -520,6 +522,16 @@ class PermitApplicationController extends Controller
                         'file_path' => "/storage/{$path}",
                         'file_type' => $file->getClientOriginalExtension(),
                     ]);
+                }
+            }
+
+            if ($request->has('deleted_attachment_ids')) {
+                $deletedAppFiles = $request->input('deleted_attachment_ids');
+                if (is_string($deletedAppFiles)) {
+                    $deletedAppFiles = json_decode($deletedAppFiles, true);
+                }
+                if (is_array($deletedAppFiles) && count($deletedAppFiles) > 0) {
+                    IpApplicationAttachment::whereIn('id', $deletedAppFiles)->delete();
                 }
             }
 

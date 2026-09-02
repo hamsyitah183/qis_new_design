@@ -47,6 +47,7 @@ let limitMeasurement = null;
 let currentItemCondition = null;
 let editingItemId = null;
 let applicationAttachments = [];
+let deletedAppFilesIds = [];
 let dropzoneInstances = {};              // keyed by document ID
 let itemFileOffcanvas = null;
 let currentItemFile = null;
@@ -1555,6 +1556,11 @@ $(document).on("click", ".delete-attachment-btn", function () {
 
     const docId = applicationAttachments[index].document_id;
 
+    // Track for backend deletion
+    if (applicationAttachments[index].url && !deletedAppFilesIds.includes(attachmentId)) {
+        deletedAppFilesIds.push(attachmentId);
+    }
+
     removeAttachmentFromDropzone(attachmentId);
     applicationAttachments.splice(index, 1);
     renderApplicationAttachmentTable(docId);
@@ -2908,11 +2914,17 @@ function saveapplication(isDraft = false) {
         }
     });
 
-    applicationAttachments.forEach((attachment) => {
-        if (attachment.file) {
-            formData.append("application_files[]", attachment.file);
+    applicationAttachments.forEach((attachment, index) => {
+        if (attachment.file && !attachment.file._isExisting) {
+            formData.append(`application_files[${index}]`, attachment.file);
+            formData.append(`application_files_document_type[${index}]`, attachment.document_type || "");
+            formData.append(`application_files_description[${index}]`, attachment.description || "");
         }
     });
+
+    if (deletedAppFilesIds.length > 0) {
+        formData.append("deleted_attachment_ids", JSON.stringify(deletedAppFilesIds));
+    }
 
     formData.append("categoryAmount", JSON.stringify(categoryAmount));
 
