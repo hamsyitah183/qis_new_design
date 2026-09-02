@@ -584,3 +584,13 @@ function updateWizardButtons(lang) {
 }
 
 languange();
+
+
+// ─── Helper ──────────────────────────────────────────────
+export function getCurrentLang() {
+    try {
+        return localStorage.getItem("qis_lang") || "en";
+    } catch {
+        return "en";
+    }
+}
