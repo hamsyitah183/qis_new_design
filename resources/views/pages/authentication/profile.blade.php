@@ -79,11 +79,27 @@
                                                     <span class="text-muted phone_number"></span>
                                                 </div>
                                             </li>
+                                            @if ($user['type'] == 'internal')
                                             <li class="list-group-item pt-2 border-0">
                                                 <div><span class="fw-medium me-2" data-en="IC :" data-bm="KP :">IC :</span>
                                                     <span class="text-muted ic"></span>
                                                 </div>
                                             </li>
+                                            @else
+                                                @if($user['user']['account_type'] == 'individu')
+                                                     <li class="list-group-item pt-2 border-0">
+                                                        <div><span class="fw-medium me-2" data-en="IC :" data-bm="KP :">IC :</span>
+                                                            <span class="text-muted ic"></span>
+                                                        </div>
+                                                    </li>
+                                                @else
+                                                    <li class="list-group-item pt-2 border-0">
+                                                        <div><span class="fw-medium me-2" data-en="Company Number :" data-bm="Nombor Syarikat :">Company Number :</span>
+                                                            <span class="text-muted ic"></span>
+                                                        </div>
+                                                    </li>
+                                                @endif
+                                            @endif
                                             @if ($user['type'] == 'internal')
                                                 <li class="list-group-item pt-2 border-0">
                                                     <div><span class="fw-medium me-2" data-en="Role :" data-bm="Peranan :">Role :</span>

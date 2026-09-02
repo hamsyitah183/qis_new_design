@@ -243,16 +243,19 @@ function deriveStageKey(status) {
     const s = (status || "").toLowerCase();
     if (s.includes("draft")) return "submitted";
     if (s.includes("clerk review")) return "doc_verification";
-    if (s.includes("clerk verified")) return "officer_verified";          // ← fixed
+    if (s.includes("clerk verified")) return "officer_verified";
     if (s.includes("officer verification") && !s.includes("completed")) return "officer_verified";
     if (s.includes("officer verification completed")) return "awaiting_payment";
     if (s.includes("completed")) return "completed";
     if (s.includes("rejected") || s.includes("not approved")) return "returned";
     if (s.includes("pending for payment")) return "awaiting_payment";
+    // ─── NEW: Map "pending authorization" → payment_processing ───
+    if (s.includes("pending authorization") || s.includes("payment pending authorization")) {
+        return "payment_processing";
+    }
     if (s.includes("payment processing")) return "payment_processing";
     return "submitted";
 }
-
 function mapApplication(json) {
     const importer = json.importer_detail || {};
     const exporter = json.exporter_detail || json.exporter || json.user || {};

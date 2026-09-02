@@ -13,13 +13,10 @@ class BayuPayService
 {
     public function checkAndUpdatePayment(Order $order, string $kodTransaksi): array
     {
-
         try {
             $response = Http::withToken('test-api')
-            ->withoutVerifying()
+                ->withoutVerifying()
                 ->get('https://bayupay-dummy.geovidia.my/readdata.php', ['kod_transaksi' => $kodTransaksi]);
-
-
 
             if (!$response->successful()) {
                 throw new \Exception('Failed to retrieve payment data');
@@ -41,11 +38,26 @@ class BayuPayService
                 'transaction_status' => $paymentData['transaction_status'],
             ]);
 
-            // Map transaction status to order & permit status
+            // Map transaction status to order, permit & application status
             $statusMap = [
-                'SUCCESSFUL' => ['order' => 'payment success', 'permit' => 'paid', 'log' => 'Payment Successful'],
-                'UNSUCCESSFUL' => ['order' => 'payment failed', 'permit' => 'payment failed', 'log' => 'Payment Unsuccessful'],
-                'PENDING FOR AUTHORIZER TO APPROVE' => ['order' => 'pending authorization', 'permit' => 'payment processing', 'log' => 'Payment Pending Authorization'],
+                'SUCCESSFUL' => [
+                    'order' => 'payment success',
+                    'permit' => 'paid',
+                    'log' => 'Payment Successful',
+                    'application' => null, // handled later by all-paid check
+                ],
+                'UNSUCCESSFUL' => [
+                    'order' => 'payment failed',
+                    'permit' => 'payment failed',
+                    'log' => 'Payment Unsuccessful',
+                    'application' => null, // keep unchanged
+                ],
+                'PENDING FOR AUTHORIZER TO APPROVE' => [
+                    'order' => 'pending authorization',
+                    'permit' => 'payment processing',
+                    'log' => 'Payment Pending Authorization',
+                    'application' => 'Payment Pending Authorization', // ← NEW
+                ],
             ];
 
             $transactionStatus = $paymentData['transaction_status'] ?? null;
@@ -81,7 +93,13 @@ class BayuPayService
                 };
             }
 
-            // Optional: Update application status if all permits are paid
+            // ─── Update application status if pending authorization ───
+            if ($config['application'] && $application) {
+                $application->update(['status' => $config['application']]);
+                $application->logActivity(action: 'Payment Status Updated', remark: "Application status updated to {$config['application']}", status: $config['application']);
+            }
+
+            // ─── Check if all permits are paid (for SUCCESSFUL case) ──
             if ($config['permit'] === 'paid' && $application) {
                 $allPaid = match ($order->application_type) {
                     'Import Permit' => IpConsignmentPermit::where('application_id', $application->application_id)->where('status', '!=', 'paid')->doesntExist(),
@@ -96,7 +114,7 @@ class BayuPayService
                 }
             }
 
-            // Optional: Log activity
+            // Log activity for the payment status change
             $application?->logActivity(action: 'User Payment', remark: "Payment status updated to {$config['order']}", status: $config['log']);
 
             return $paymentData;
@@ -110,13 +128,6 @@ class BayuPayService
 
     public function checkAndUpdatePaymentWithoutTransactionCode(Order $order): array
     {
-        // $response = Http::withToken('test-api')
-        //  ->withoutVerifying() // Disable SSL verification for testing
-        // ->get('https://bayupay-dummy.geovidia.my/readtransaction.php', [
-        //     'sid' => $order->sid,
-        //     'itn' => $order->itn,
-        //     'rn' => $order->order_number,
-        // ]);
         try {
             $response = Http::withToken('test-api')
                 ->withoutVerifying()
@@ -137,28 +148,13 @@ class BayuPayService
                 'body' => $response->body(),
             ]);
 
-            /**
-             * Handle transaction not found
-             */
             if ($response->status() === 404) {
                 Log::warning('BayuPay transaction not found. Marking as unsuccessful.', [
                     'order_number' => $order->order_number,
                 ]);
-
                 $this->markOrderUnsuccessful($order);
-
                 return [];
             }
-
-            if (!$response->successful()) {
-                throw new \Exception('Failed to retrieve payment data');
-            }
-            // $response = Http::withToken('test-api')
-            // ->get('https://hands-on5.sabah.gov.my/readtransaction.php', [
-            //     'sid' => $order->sid,
-            //     'itn' => $order->itn,
-            //     'rn' => $order->order_number,
-            // ]);
 
             if (!$response->successful()) {
                 throw new \Exception('Failed to retrieve payment data');
@@ -176,9 +172,6 @@ class BayuPayService
                 'application_type' => $applicationType,
             ]);
 
-            /**
-             * Decide permit model
-             */
             $permitModel = match ($applicationType) {
                 'Import Permit' => IpConsignmentPermit::class,
                 'Inspection Certificate' => InspectionItem::class,
@@ -190,28 +183,28 @@ class BayuPayService
                 throw new \Exception('Unsupported application type');
             }
 
-            /**
-             * Handle payment status
-             */
+            // ─── Handle payment status ────────────────────────────────────────
+            $permitStatus = null;
+            $orderStatus = null;
+            $applicationStatus = null;
+
             switch ($paymentData['transaction_status']) {
                 case 'SUCCESSFUL':
-                    $order->status = 'payment success';
+                    $orderStatus = 'payment success';
                     $permitStatus = 'paid';
-
                     $application->logActivity(action: 'User Payment', remark: 'The order is successfully paid', status: 'User Payment');
                     break;
 
                 case 'UNSUCCESSFUL':
-                    $order->status = 'payment failed';
+                    $orderStatus = 'payment failed';
                     $permitStatus = 'payment failed';
-
                     $application->logActivity(action: 'User Payment', remark: 'The order payment failed', status: 'User Payment');
                     break;
 
                 case 'PENDING FOR AUTHORIZER TO APPROVE':
-                    $order->status = 'pending authorization';
+                    $orderStatus = 'pending authorization';
                     $permitStatus = 'payment processing';
-
+                    $applicationStatus = 'Payment Pending Authorization'; // ← NEW
                     $application->logActivity(action: 'User Payment', remark: 'The order is pending for authorization', status: 'User Payment');
                     break;
 
@@ -219,16 +212,12 @@ class BayuPayService
                     return $paymentData;
             }
 
-            /**
-             * Update permits (ONCE)
-             */
+            // ─── Update permits ──────────────────────────────────────────────
             foreach ($permits as $permit) {
                 $permitModel::where('id', $permit['permit_id'])->update(['status' => $permitStatus]);
             }
 
-            /**
-             * Save payment metadata
-             */
+            // ─── Update order metadata ──────────────────────────────────────
             $order->fill([
                 'seller_ref' => $paymentData['seller_ref'] ?? null,
                 'fpx_seller_reference' => $paymentData['fpx_seller_reference'] ?? null,
@@ -240,8 +229,29 @@ class BayuPayService
                 'transaction_status' => $paymentData['transaction_status'] ?? null,
                 'kod_transaksi' => ' ',
             ]);
-
+            $order->status = $orderStatus;
             $order->save();
+
+            // ─── Update application status if pending authorization ────────
+            if ($applicationStatus && $application) {
+                $application->update(['status' => $applicationStatus]);
+                $application->logActivity(action: 'Payment Status Updated', remark: "Application status updated to {$applicationStatus}", status: $applicationStatus);
+            }
+
+            // ─── Check if all permits are paid (for SUCCESSFUL case) ──────
+            if ($permitStatus === 'paid' && $application) {
+                $allPaid = match ($applicationType) {
+                    'Import Permit' => IpConsignmentPermit::where('application_id', $application->application_id)->where('status', '!=', 'paid')->doesntExist(),
+                    'Inspection Certificate' => InspectionItem::where('application_id', $application->application_id)->where('status', '!=', 'paid')->doesntExist(),
+                    'Consignment Certificate' => ConsignmentPermit::where('application_id', $application->application_id)->where('status', '!=', 'paid')->doesntExist(),
+                    default => false,
+                };
+
+                if ($allPaid) {
+                    $application->update(['status' => 'Completed']);
+                    $application->logActivity(action: 'Application Completed', remark: 'All permits under this application have been fully paid', status: 'Completed');
+                }
+            }
 
             return $paymentData;
         } catch (\Exception $e) {

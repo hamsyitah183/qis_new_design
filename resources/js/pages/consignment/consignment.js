@@ -302,49 +302,51 @@ function initAddVehicleModal() {
     });
 }
 
+// ─── FIXED: loadCategory returns a Promise ──────────────
 function loadCategory() {
-    const $select = $("#itemCategory");
+    return new Promise((resolve, reject) => {
+        const $select = $("#itemCategory");
+        $select.empty().append('<option value="">-- Select Category --</option>');
 
-    $select.empty().append('<option value="">-- Select Category --</option>');
+        if ($select.hasClass("select2-hidden-accessible")) {
+            $select.select2("destroy");
+        }
 
-    if ($select.hasClass("select2-hidden-accessible")) {
-        $select.select2("destroy");
-    }
+        $select.prop("disabled", true);
 
-    $select.prop("disabled", true);
-
-    Swal.fire({
-        title: "Loading...",
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading(),
-    });
-
-    fetch(`/get_pbdata/consignment_category`)
-        .then((res) => res.json())
-        .then((data) => {
-            $select.prop("disabled", false);
-            console.log("data in loadcategory", data);
-
-            data.data.forEach((row) => {
-                $select.append(
-                    `<option value="${row.id}">${row.description}</option>`,
-                );
-            });
-
-            $select.select2({
-                width: "100%",
-                placeholder: "-- Select Item --",
-                allowClear: true,
-                dropdownParent: $("#addItemModal"),
-            });
-
-            Swal.close();
-        })
-        .catch((e) => {
-            console.error("Error loading items:", e);
-            $select.prop("disabled", false);
-            Swal.fire("Error", "Failed to load consignment items.", "error");
+        Swal.fire({
+            title: "Loading...",
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading(),
         });
+
+        fetch(`/get_pbdata/consignment_category`)
+            .then((res) => res.json())
+            .then((data) => {
+                $select.prop("disabled", false);
+                data.data.forEach((row) => {
+                    $select.append(
+                        `<option value="${row.id}">${row.description}</option>`,
+                    );
+                });
+
+                $select.select2({
+                    width: "100%",
+                    placeholder: "-- Select Item --",
+                    allowClear: true,
+                    dropdownParent: $("#addItemModal"),
+                });
+
+                Swal.close();
+                resolve();
+            })
+            .catch((e) => {
+                console.error("Error loading items:", e);
+                $select.prop("disabled", false);
+                Swal.fire("Error", "Failed to load consignment items.", "error");
+                reject(e);
+            });
+    });
 }
 
 // ─── Consignment / Uses ──────────────────────────────────
@@ -353,9 +355,16 @@ function loadConsignmentSelection(itemId) {
 
     const $select = $("#itemSelect");
 
-    console.log("the country code", countryCode);
-
-    if (!countryCode) return;
+    if (!countryCode) {
+        $select.empty().append('<option value="">-- Select Item --</option>');
+        $select.select2({
+            width: "100%",
+            placeholder: "-- Select Item --",
+            allowClear: true,
+            dropdownParent: $("#addItemModal"),
+        });
+        return Promise.resolve();
+    }
 
     $select.empty().append('<option value="">-- Select Item --</option>');
 
@@ -371,13 +380,12 @@ function loadConsignmentSelection(itemId) {
         didOpen: () => Swal.showLoading(),
     });
 
-    fetch(`/consignment_condition/category/${itemId}/${countryCode}/data`)
+    return fetch(`/consignment_condition/category/${itemId}/${countryCode}/data`)
         .then((res) => res.json())
         .then((data) => {
             $select.prop("disabled", false);
-            console.log("data", data);
 
-            // ===== [OTHERS] Prepend "Others" option at the top =====
+            // Prepend "Others" option
             $select.append(`<option value="others">Others</option>`);
 
             data.data.forEach((row) => {
@@ -399,6 +407,7 @@ function loadConsignmentSelection(itemId) {
             console.error("Error loading items:", e);
             $select.prop("disabled", false);
             Swal.fire("Error", "Failed to load consignment items.", "error");
+            return Promise.reject(e);
         });
 }
 
@@ -2348,7 +2357,92 @@ function copyItem() {
     });
 }
 
-// ─── Edit Item ──────────────────────────────────────────────
+// ─── Populate Edit Form ──────────────────────────────────
+function populateEditForm(item) {
+    const $select = $("#itemSelect");
+    const existsInDropdown = $select.find(`option[value="${item.item_id}"]`).length > 0;
+
+    if (item.isCustom || !existsInDropdown) {
+        $("#itemSelect").val("others").trigger("change");
+        toggleCustomItemInput(true);
+        $("#customItemName").val(item.item_name);
+        $(".attachmentInstruction")
+            .html(`<span style="color:red;" data-en="Attachment is mandatory for custom items. Please upload the item image or document"
+                   data-bm="Lampiran adalah wajib untuk item yang tiada dalam senarai. Sila muat naik gambar atau dokumen">
+                * Attachment is mandatory for custom items. Please upload the item image or document.</span>`)
+            .show();
+    } else {
+        $("#itemSelect").val(item.item_id).trigger("change");
+        toggleCustomItemInput(false);
+        $(".attachmentInstruction").html("").hide();
+    }
+
+    $("#itemQuantity").val(item.quantity);
+    $("#certificateNo").val(item.certificateNo || "");
+
+    // ─── Measurement Unit ─────────────────────────────────────────
+    if (item.measure) {
+        $("#itemMeasure").val(item.measure).trigger("change");
+    } else {
+        $("#itemMeasure").val("").trigger("change");
+    }
+
+    // ─── Value ─────────────────────────────────────────────────────
+    if (item.value !== undefined && item.value !== null) {
+        $("#itemValue").val(item.value);
+    } else {
+        $("#itemValue").val("");
+    }
+
+    // ─── Purpose ──────────────────────────────────────────────────
+    const $purposeSelect = $("#itemPurpose");
+    let purposeSet = false;
+    if (item.purpose) {
+        // Try to match by description (data-description)
+        $purposeSelect.find("option").each(function() {
+            const desc = $(this).data("description");
+            if (desc && desc.trim() === item.purpose.trim()) {
+                $purposeSelect.val($(this).val()).trigger("change");
+                purposeSet = true;
+                return false;
+            }
+        });
+        // If not found, try matching by text content
+        if (!purposeSet) {
+            $purposeSelect.find("option").each(function() {
+                if ($(this).text().trim() === item.purpose.trim()) {
+                    $purposeSelect.val($(this).val()).trigger("change");
+                    purposeSet = true;
+                    return false;
+                }
+            });
+        }
+    }
+    if (!purposeSet) {
+        $purposeSelect.val("").trigger("change");
+    }
+
+    // ─── Uses ──────────────────────────────────────────────────────
+    if (item.uses) {
+        $("#itemUses").val(item.uses).trigger("change");
+    } else {
+        $("#itemUses").val(null).trigger("change");
+    }
+
+    // ─── Restore files in Dropzone ──────────────────────────────
+    if (itemDropzone) {
+        itemDropzone.removeAllFiles(true);
+        if (item.files && item.files.length > 0) {
+            item.files.forEach((file) => {
+                itemDropzone.addFile(file);
+            });
+        }
+    }
+
+    Swal.close();
+}
+
+// ─── FIXED: Edit Item ──────────────────────────────────────
 function editItem() {
     $(document).on("click", ".edit-item", function (e) {
         e.preventDefault();
@@ -2360,6 +2454,8 @@ function editItem() {
         editingItemId = id;
         resetAddItemModal();
 
+        console.log("Editing item:", id, item);
+
         const modalEl = document.getElementById("addItemModal");
         bootstrap.Modal.getOrCreateInstance(modalEl).show();
 
@@ -2369,28 +2465,37 @@ function editItem() {
             didOpen: () => Swal.showLoading(),
         });
 
-        loadConsignmentSelection()
+        loadCategory()
             .then(() => {
-                $("#itemSelect").val(item.item_id).trigger("change");
-
-                $("#itemValue").val(item.value);
-                $("#itemQuantity").val(item.quantity);
-                $("#itemMeasure").val(item.measure).trigger("change");
-                $("#itemPurpose")
-                    .val(item.purposeValue || item.purpose)
-                    .trigger("change");
-                $("#certificateNo").val(item.certificateNo || "");
-
-                if (itemDropzone) {
-                    itemDropzone.removeAllFiles(true);
-                    (item.files || []).forEach((file) =>
-                        itemDropzone.addFile(file),
-                    );
+                const categoryText = item.category;
+                if (categoryText) {
+                    const $catSelect = $("#itemCategory");
+                    let optionValue = null;
+                    $catSelect.find('option').each(function() {
+                        if ($(this).text().trim() === categoryText.trim()) {
+                            optionValue = $(this).val();
+                            return false;
+                        }
+                    });
+                    if (optionValue) {
+                        $catSelect.val(optionValue).trigger('change');
+                    }
                 }
 
+                const categoryId = $("#itemCategory").val();
+                const countryCode = $("#expcountryCode").val();
+                if (categoryId && countryCode) {
+                    return loadConsignmentSelection(categoryId);
+                } else {
+                    return Promise.resolve();
+                }
+            })
+            .then(() => {
+                populateEditForm(item);
                 Swal.close();
             })
-            .catch(() => {
+            .catch((err) => {
+                console.error("Error loading item data:", err);
                 Swal.close();
                 Swal.fire({
                     icon: "error",

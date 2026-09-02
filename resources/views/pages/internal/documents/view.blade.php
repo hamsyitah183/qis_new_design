@@ -8,9 +8,10 @@
 
 @push('scripts')
     <script>
-        window.baseUrl = "{{ url('/') }}";
-        window.documentId = "{{ $document->id }}";
+        window.documentId = {{ $document->id }};
         window.documentName = "{{ $document->name }}";
+        window.documentModule = "{{ $document->module }}";
+        window.baseUrl = "{{ url('/') }}";
     </script>
     @vite(['resources/js/pages/internal/documents/view.js'])
 @endpush
@@ -35,11 +36,9 @@
         <div class="col-xl-12">
             <div class="card custom-card">
                 <div class="card-header">
-                    {{-- <div class="card-title " data-en="Document Details" data-bm="Butiran Dokumen">Document Details</div> --}}
-
                     <div class="d-flex ms-auto">
-                        <a href = "/internal/documents/{{ $document->id }}/edit"
-                        class="btn btn-info" data-bm="Sunting Maklumat Dokumen" data-en="Edit Document Detail">Edit Document Detail</a>
+                        <a href = "/internal/documents/{{ $document->id }}/edit" class="btn btn-info"
+                            data-bm="Sunting Maklumat Dokumen" data-en="Edit Document Detail">Edit Document Detail</a>
                     </div>
                 </div>
                 <div class="card-body">
@@ -61,8 +60,8 @@
                             <div class="border rounded p-3 h-100">
                                 <div class="detail-label" data-en="Required" data-bm="Wajib">Required</div>
                                 <span class="badge bg-{{ $document->is_required ? 'warning text-dark' : 'secondary' }}"
-                                      data-en="{{ $document->is_required ? 'Required' : 'Optional' }}"
-                                      data-bm="{{ $document->is_required ? 'Wajib' : 'Pilihan' }}">
+                                    data-en="{{ $document->is_required ? 'Required' : 'Optional' }}"
+                                    data-bm="{{ $document->is_required ? 'Wajib' : 'Pilihan' }}">
                                     {{ $document->is_required ? 'Required' : 'Optional' }}
                                 </span>
                             </div>
@@ -72,13 +71,12 @@
                                 <div class="detail-label" data-en="Requires Expiry" data-bm="Memerlukan Tarikh Luput">
                                     Requires Expiry</div>
                                 <span class="badge bg-{{ $document->requires_expiry ? 'info' : 'secondary' }}"
-                                      data-en="{{ $document->requires_expiry ? 'Has Expiry' : 'No Expiry' }}"
-                                      data-bm="{{ $document->requires_expiry ? 'Tarikh Luput' : 'Tiada Tarikh Luput' }}">
+                                    data-en="{{ $document->requires_expiry ? 'Has Expiry' : 'No Expiry' }}"
+                                    data-bm="{{ $document->requires_expiry ? 'Tarikh Luput' : 'Tiada Tarikh Luput' }}">
                                     {{ $document->requires_expiry ? 'Has Expiry' : 'No Expiry' }}
                                 </span>
                             </div>
                         </div>
-                       
 
                         <div class="col-xl-6">
                             <div class="border rounded p-3 h-100">
@@ -139,11 +137,20 @@
                                     <th data-en="File Name" data-bm="Nama Fail">File Name</th>
                                     <th data-en="File Type" data-bm="Jenis Fail">File Type</th>
                                     <th data-en="Size" data-bm="Saiz">Size</th>
-                                    <th data-en="Valid From" data-bm="Sah Dari">Valid From</th>
-                                    <th data-en="Valid Until" data-bm="Sah Sehingga">Valid Until</th>
+
+                                    {{-- Extra columns only for the 'user' module --}}
+                                    @if($document->module === 'user')
+                                        <th data-en="Valid From" data-bm="Sah Dari">Valid From</th>
+                                        <th data-en="Valid Until" data-bm="Sah Sehingga">Valid Until</th>
+                                    @endif
+
                                     <th data-en="Uploaded At" data-bm="Dimuat Naik Pada">Uploaded At</th>
-                                    <th data-en="Status" data-bm="Status">Status</th>
-                                    <th data-en="Rejection" data-bm="Penolakan">Rejection</th>
+
+                                    @if($document->module === 'user')
+                                        <th data-en="Status" data-bm="Status">Status</th>
+                                        <th data-en="Rejection" data-bm="Penolakan">Rejection</th>
+                                    @endif
+
                                     <th data-en="Action" data-bm="Tindakan">Action</th>
                                 </tr>
                             </thead>

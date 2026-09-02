@@ -710,9 +710,9 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" data-en="Add New Permit Condition Item"
-                        data-bm="Tambah Item Syarat Permit Baharu">
-                        Add New Permit Condition Item
+                    <h5 class="modal-title" data-en="Add New Consignment Condition Item"
+                        data-bm="Tambah Item Syarat Consignment Baharu">
+                        Add New Consignment Condition Item
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -720,8 +720,8 @@
                     <input type="hidden" id="qacPermitId">
                     <div class="row gy-3">
                         <div class="col-xl-12">
-                            <label class="form-label" data-en="Item Name" data-bm="Nama Item">Item Name</label>
-                            <input type="text" class="form-control" id="qacItemName">
+                            <label class="form-label" data-en="Item Name" data-bm="Nama Item">Item Name</label> <span class="text-danger">*</span>
+                            <input type="text" class="form-control" id="qacItemName" required>
                         </div>
                         <div class="col-xl-12">
                             <label class="form-label" data-en="Scientific Name" data-bm="Nama Saintifik">Scientific
@@ -729,8 +729,8 @@
                             <input type="text" class="form-control" id="qacScientificName">
                         </div>
                         <div class="col-xl-6">
-                            <label class="form-label" data-en="Category" data-bm="Kategori">Category</label>
-                            <select class="form-select" id="qacCategory">
+                            <label class="form-label" data-en="Category" data-bm="Kategori">Category</label> <span class="text-danger">*</span>
+                            <select class="form-select" id="qacCategory" required>
                                 @foreach ($pbdata as $cate)
                                     <option value="{{ $cate->cate_code }}">{{ $cate->description }}</option>
                                 @endforeach
@@ -747,14 +747,14 @@
                             <select class="form-select" id="qacQuanUnit"></select>
                         </div>
                         <div class="col-xl-12">
-                            <label class="form-label" data-en="Country" data-bm="Negara">Country</label>
+                            <label class="form-label" data-en="Country" data-bm="Negara">Country</label> <span class="text-danger">*</span>
                             <select id="countrySelect" name="countrySelect[]" class="form-control xintra-select2"
                                 multiple data-route="/get_country" style="width: 100%;">
                                 <!-- Options will be loaded dynamically -->
                             </select>
                         </div>
                         <div class="col-xl-12">
-                            <label class="form-label" data-en="Permit Condition" data-bm="Syarat Permit">Permit
+                            <label class="form-label" data-en="Permit Condition" data-bm="Syarat Permit">Item
                                 Condition</label>
                             <div id="qacEditorWrapper">
                                 <div id="qacConditionEditor"

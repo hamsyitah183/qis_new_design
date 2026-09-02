@@ -69,7 +69,7 @@ document.addEventListener("DOMContentLoaded", function () {
         formData.append("end_date", document.getElementById("end_date").value);
 
         formData.append("country", JSON.stringify(countryTagify ? countryTagify.value : []));
-        formData.append("usage", JSON.stringify(usageTagify ? usageTagify.value : []));
+        // formData.append("usage", JSON.stringify(usageTagify ? usageTagify.value : []));
         formData.append("addional_condition", conditionHtml);
 
         // ✅ Ask user first (3 buttons)

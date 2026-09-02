@@ -5,14 +5,25 @@
 @section('breadcrumb')
     <x-breadcrumb :items="[
         ['label' => 'Dashboard', 'url' => '/', 'data-en' => 'Dashboard', 'data-bm' => 'Dashboard'],
-        ['label' => 'Consignment List', 'url' => '/internal/consignment_condition', 'data-en' => 'Consignment List', 'data-bm' => 'Senarai Konsainan'],
-        ['label' => 'Add Consignment Item', 'url' => '#', 'data-en' => 'Add Consignment Item', 'data-bm' => 'Tambah Item Konsainan'],
-    ]" title="Add Consignment Item" title_en="Add Consignment Item" title_bm="Tambah Item Konsainan">
+        [
+            'label' => 'Consignment List',
+            'url' => '/internal/consignment_condition',
+            'data-en' => 'Consignment List',
+            'data-bm' => 'Senarai Konsainan',
+        ],
+        [
+            'label' => 'Add Consignment Item',
+            'url' => '#',
+            'data-en' => 'Add Consignment Item',
+            'data-bm' => 'Tambah Item Konsainan',
+        ],
+    ]" title="Add Consignment Item" title_en="Add Consignment Item"
+        title_bm="Tambah Item Konsainan">
     </x-breadcrumb>
 @endsection
 
 @push('scripts')
-@vite(['resources/js/pages/internal/misc/consignment_condition_edit.js'])
+    @vite(['resources/js/pages/internal/misc/consignment_condition_edit.js'])
 @endpush
 
 
@@ -44,11 +55,7 @@
         <div class="col-xl-12">
             <div class="card custom-card">
 
-                <div class="card-header">
-                    <div class="card-title" data-en="Add New Consignment Item" data-bm="Tambah Item Konsainan Baru">
-                        Add New Consignment Item
-                    </div>
-                </div>
+
 
                 <div class="card-body">
 
@@ -65,17 +72,19 @@
                         </div>
 
                         <div class="col-xl-12">
-                            <label class="form-label" data-en="Scientific Name" data-bm="Nama Saintifik">Scientific Name</label>
+                            <label class="form-label" data-en="Scientific Name" data-bm="Nama Saintifik">Scientific
+                                Name</label>
                             <input type="text" class="form-control" id="scientificName" name="scientificName"
                                 placeholder="">
                         </div>
-                     
+
                         <!-- Category -->
                         <div class="col-xl-6">
                             <label class="form-label" data-en="Category" data-bm="Kategori">Category</label>
                             <select class="form-select" name="itemCategory" id="itemCategory">
-                                <option value="" data-en="-- Select Category --" data-bm="-- Pilih Kategori --">-- Select Category --</option>
-                            
+                                <option value="" data-en="-- Select Category --" data-bm="-- Pilih Kategori --">--
+                                    Select Category --</option>
+
                                 @foreach ($pbdata as $cate)
                                     <option value="{{ $cate->id }}">
                                         {{ $cate->description }}
@@ -90,7 +99,8 @@
 
                         <!-- Quantity -->
                         <div class="col-xl-3">
-                            <label class="form-label" data-en="Quantity Limit (Special case)" data-bm="Had Kuantiti (Kes Khas)">
+                            <label class="form-label" data-en="Quantity Limit (Special case)"
+                                data-bm="Had Kuantiti (Kes Khas)">
                                 Quantity Limit (Special case)
                             </label>
                             <input type="text" class="form-control" id="quanLimit" name="quanLimit">
@@ -98,7 +108,8 @@
 
                         <!-- Unit -->
                         <div class="col-xl-3">
-                            <label class="form-label" data-en="Measurement Unit (Special case)" data-bm="Unit Ukuran (Kes Khas)">
+                            <label class="form-label" data-en="Measurement Unit (Special case)"
+                                data-bm="Unit Ukuran (Kes Khas)">
                                 Measurement Unit (Special case)
                             </label>
                             <input type="text" class="form-control" id="quanmunit" name="quanmunit">
@@ -128,8 +139,9 @@
                         </div>
 
                         <!-- Usage -->
-                        <div class="col-xl-12">
-                            <label class="form-label d-block" data-en="Consignment Application (Usage)" data-bm="Permohonan Konsainan (Kegunaan)">
+                        <div class="col-xl-12 d-none">
+                            <label class="form-label d-block" data-en="Consignment Application (Usage)"
+                                data-bm="Permohonan Konsainan (Kegunaan)">
                                 Consignment Application (Usage)
                             </label>
                             <input id="usageTags" name="usageTags" class="form-control"
@@ -148,7 +160,9 @@
 
                             <input type="hidden" name="permit_condition" id="permit-condition-input">
 
-                            <small class="form-text text-muted mt-2" data-en="You may use simple formatting — bold, lists, links." data-bm="Anda boleh menggunakan pemformatan ringkas — tebal, senarai, pautan.">
+                            <small class="form-text text-muted mt-2"
+                                data-en="You may use simple formatting — bold, lists, links."
+                                data-bm="Anda boleh menggunakan pemformatan ringkas — tebal, senarai, pautan.">
                                 You may use simple formatting — bold, lists, links.
                             </small>
                         </div>
@@ -164,7 +178,8 @@
                         <span data-en="Create Condition" data-bm="Cipta Syarat">Create Condition</span>
                     </button>
 
-                    <a href="/internal/consignment_condition" class="btn btn-secondary" data-en="Cancel" data-bm="Batal">
+                    <a href="/internal/consignment_condition" class="btn btn-secondary" data-en="Cancel"
+                        data-bm="Batal">
                         Cancel
                     </a>
 
@@ -186,54 +201,39 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-
-
-
-
-           
-
             $.ajax({
                 url: '/get_country',
                 method: 'GET',
                 success: function(response) {
 
-                    // ✅ normalized whitelist
-                    const countryList = response.data.map(c => ({
-                        value: c.value,
-                        name: c.name
-                    }));
-
-
-
-                    
+                    // ─── Only Sarawak (SWK) and Brunei (BN) ───
+                    const allowedCodes = ['SWK', 'BN'];
+                    const countryList = response.data
+                        .filter(c => allowedCodes.includes(c.value))
+                        .map(c => ({
+                            value: c.value,
+                            name: c.name
+                        }));
 
                     countryTagify = new Tagify(document.getElementById("countryTag"), {
                         whitelist: countryList,
-                        tagTextProp: 'name', // show country name in tag
+                        tagTextProp: 'name', // display name in tags
                         enforceWhitelist: true,
                         editTags: false,
-
                         dropdown: {
                             enabled: 1,
                             maxItems: 20,
                             highlightFirst: true,
-                            mapValueTo: 'name',
+                            mapValueTo: 'name', // show name in dropdown list
                         },
-
-                        // enables searching by BOTH code & name
+                        // ─── Search by BOTH name and code, but prefer name ───
                         dropdownFilter: (item, value) => {
                             const search = value.toLowerCase();
-
-                            return (
-                                item.value.toLowerCase().includes(search) ||
-                                // code (MY, CN)
-                                item.name.toLowerCase().includes(search) // country name
-                            );
+                            // Try name first, then code
+                            return item.name.toLowerCase().includes(search) ||
+                                item.value.toLowerCase().includes(search);
                         }
                     });
-
-
-
                 }
             });
 
@@ -297,7 +297,7 @@
                 theme: 'snow'
             });
 
-         
+
         });
     </script>
 @endpush

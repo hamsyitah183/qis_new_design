@@ -819,12 +819,12 @@ class ConsignmentApplicationController extends Controller
         $consignment = [];
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
-        $country = country::where('is_del', false)->get();
+        $country = country::where('is_del', false)
+        ->whereIn('code', ['SWK', 'BN'])
+        ->get();
 
-        $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')
-            ->where('cate_name', 'condition_category')
-            ->where('is_del', false)
-            ->get();
+        $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->where('cate_name', 'consignment_category')->where('is_del', false)->get();
+
 
         return view('pages.public.view_consignment_application', [
             'application' => $application,

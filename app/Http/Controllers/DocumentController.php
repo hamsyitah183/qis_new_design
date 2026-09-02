@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ConsignmentApplicationAttachment;
 use App\Models\DocumentRequirement;
+use App\Models\InspectionApplicationAttachment;
+use App\Models\IpApplicationAttachment;
 use App\Models\UserAttachment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -196,44 +199,116 @@ class DocumentController extends Controller
     public function attachmentsData($id)
     {
         $document = DocumentRequirement::findOrFail($id);
-        $attachments = UserAttachment::where('document_type', $document->name)
-            ->with('user')
-            ->orderBy('created_at', 'desc');
+
+        if ($document->module == 'user') {
+            $attachments = UserAttachment::where('document_type', $document->name)
+                ->with('user')
+                ->orderBy('created_at', 'desc');
+        } elseif ($document->module == 'import') {
+            $attachments = IpApplicationAttachment::where('description', $document->name)
+                ->with('application.user')
+                ->orderBy('created_at', 'desc');
+        } elseif ($document->module == 'consignment') {
+            $attachments = ConsignmentApplicationAttachment::where('description', $document->name)
+                ->with('application.exporter') // exporter is the applicant for consignment
+                ->orderBy('created_at', 'desc');
+        } elseif ($document->module == 'inspection') {
+            $attachments = InspectionApplicationAttachment::where('description', $document->name)
+                ->with('application.user')
+                ->orderBy('created_at', 'desc');
+        }
 
         return DataTables::of($attachments)
             ->addColumn('user_name', function ($att) {
-                return $att->user ? $att->user->fullname : '—';
-            })
-            ->addColumn('file_size_formatted', function ($att) {
-                return $att->file_size ? number_format($att->file_size / 1024, 2) . ' KB' : '—';
-            })
-            ->addColumn('valid_from_formatted', function ($att) {
-                return $att->valid_from ? $att->valid_from->format('d M Y') : '—';
-            })
-            ->addColumn('valid_until_formatted', function ($att) {
-                return $att->valid_until ? $att->valid_until->format('d M Y') : '—';
-            })
-            ->addColumn('is_read_badge', function ($att) {
-                return $att->is_read
-                    ? '<span class="badge bg-success-transparent" data-en="Read" data-bm="Dibaca">Read</span>'
-                    : '<span class="badge bg-warning-transparent" data-en="Unread" data-bm="Belum Dibaca">Unread</span>';
-            })
-            ->addColumn('rejected_reason_button', function ($att) {
-                if (empty($att->rejected_reason)) {
-                    return '<span class="text-muted">—</span>';
+                // Direct user relation (UserAttachment)
+                if (method_exists($att, 'user') && $att->relationLoaded('user')) {
+                    return $att->user ? $att->user->fullname : '—';
                 }
-                $reason = htmlspecialchars($att->rejected_reason, ENT_QUOTES);
-                return '<button type="button" class="btn btn-sm btn-danger-light view-reject-reason-btn" data-reason="' . $reason . '">
-                        <i class="ti ti-alert-circle"></i> Reason
-                    </button>';
+
+                // Through application relationship
+                if (method_exists($att, 'application') && $att->relationLoaded('application')) {
+                    $app = $att->application;
+                    if ($app) {
+                        // Try user (import/inspection/public)
+                        if (method_exists($app, 'user') && $app->relationLoaded('user')) {
+                            return $app->user ? $app->user->fullname : '—';
+                        }
+                        // Try exporter (consignment)
+                        if (method_exists($app, 'exporter') && $app->relationLoaded('exporter')) {
+                            return $app->exporter ? $app->exporter->fullname : '—';
+                        }
+                        // Try importer (import permit)
+                        if (method_exists($app, 'importer') && $app->relationLoaded('importer')) {
+                            return $app->importer ? $app->importer->fullname : '—';
+                        }
+                    }
+                }
+                return '—';
             })
+
+            ->addColumn('file_name_display', function ($att) use ($document) {
+                // ✅ original_file_name exists ONLY on UserAttachment
+                if ($document->module == 'user' && isset($att->original_file_name) && $att->original_file_name) {
+                    return $att->original_file_name;
+                }
+                // file_name is common across all attachment models
+                if (isset($att->file_name) && $att->file_name) {
+                    return $att->file_name;
+                }
+                if (isset($att->name) && $att->name) {
+                    return $att->name;
+                }
+                return '—';
+            })
+
+            ->addColumn('file_size_formatted', function ($att) {
+                if (isset($att->file_size) && $att->file_size) {
+                    return number_format($att->file_size / 1024, 2) . ' KB';
+                }
+                return '—';
+            })
+
+            ->addColumn('valid_from_formatted', function ($att) use ($document) {
+                // ✅ Only UserAttachment has valid_from/valid_until
+                if ($document->module == 'user' && isset($att->valid_from)) {
+                    return $att->valid_from ? $att->valid_from->format('d M Y') : '—';
+                }
+                return '—';
+            })
+
+            ->addColumn('valid_until_formatted', function ($att) use ($document) {
+                if ($document->module == 'user' && isset($att->valid_until)) {
+                    return $att->valid_until ? $att->valid_until->format('d M Y') : '—';
+                }
+                return '—';
+            })
+
+            ->addColumn('is_read_badge', function ($att) {
+                if (isset($att->is_read)) {
+                    return $att->is_read
+                        ? '<span class="badge bg-success-transparent" data-en="Read" data-bm="Dibaca">Read</span>'
+                        : '<span class="badge bg-warning-transparent" data-en="Unread" data-bm="Belum Dibaca">Unread</span>';
+                }
+                return '<span class="text-muted">—</span>';
+            })
+
+            ->addColumn('rejected_reason_button', function ($att) {
+                if (isset($att->rejected_reason) && !empty($att->rejected_reason)) {
+                    $reason = htmlspecialchars($att->rejected_reason, ENT_QUOTES);
+                    return '<button type="button" class="btn btn-sm btn-danger-light view-reject-reason-btn" data-reason="' . $reason . '">
+                    <i class="ti ti-alert-circle"></i> Reason
+                </button>';
+                }
+                return '<span class="text-muted">—</span>';
+            })
+
             ->addColumn('action', function ($att) {
                 return $att->id;
             })
+
             ->rawColumns(['is_read_badge', 'rejected_reason_button', 'action'])
             ->make(true);
     }
-
     public function uploadFile(Request $request)
     {
         $request->validate([

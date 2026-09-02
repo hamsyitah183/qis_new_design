@@ -105,7 +105,7 @@
                     </div>
                 </div>
 
-                <div class="col-xl-4">
+                <div class="col-xl-4 d-none">
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="docActive" name="is_active" checked>
                         <label class="form-check-label" for="docActive" data-en="Active" data-bm="Aktif">Active</label>

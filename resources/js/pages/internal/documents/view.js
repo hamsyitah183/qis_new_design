@@ -144,67 +144,82 @@ function resolveAttachmentUrl(filePath) {
 
 $(document).ready(function () {
     const documentName = window.documentName;
+    const documentModule = window.documentModule || 'user'; // fallback to user
+    console.log('document id', window.documentId);
+    console.log('document module', documentModule);
 
+    // ─── Define columns ──────────────────────────────────────────────
+    // Base columns always visible
+    const columns = [
+        { data: "id", name: "id", visible: false },
+        { data: "user_name", name: "user_name" },
+        { data: "file_name_display", name: "file_name_display" }, // changed from original_file_name
+        { data: "file_type", name: "file_type" },
+        { data: "file_size_formatted", name: "file_size" },
+        { data: "created_at", name: "created_at" },
+        {
+            data: "id",
+            name: "action",
+            orderable: false,
+            searchable: false,
+            render: function (data, type, row) {
+                const fileUrl = resolveAttachmentUrl(row.file_path);
+                const fileName = (
+                    row.file_name_display || row.original_file_name || "Document"
+                ).replace(/'/g, "\\'");
+                return `
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-info" onclick="window.viewAttachment('${fileUrl}', '${fileName}')">
+                            <i class="ti ti-eye"></i> View
+                        </button>
+                        <a href="${fileUrl}" target="_blank" class="btn btn-sm btn-primary">
+                            <i class="ti ti-download"></i> Download
+                        </a>
+                    </div>
+                `;
+            },
+        },
+    ];
+
+    // ─── Conditionally add columns only for 'user' module ──────────
+    if (documentModule === 'user') {
+        // Insert valid_from, valid_until after file_size
+        columns.splice(5, 0, { data: "valid_from_formatted", name: "valid_from" });
+        columns.splice(6, 0, { data: "valid_until_formatted", name: "valid_until" });
+        // Add is_read and rejected_reason near the end (before action)
+        columns.splice(8, 0, {
+            data: "is_read_badge",
+            name: "is_read",
+            orderable: false,
+            searchable: false,
+        });
+        columns.splice(9, 0, {
+            data: "rejected_reason_button",
+            name: "rejected_reason",
+            orderable: false,
+            searchable: false,
+        });
+    }
+
+    // ─── Initialise DataTable ──────────────────────────────────────
     const table = $("#attachmentTable").DataTable({
         processing: true,
         serverSide: true,
         responsive: true,
         ajax: `${window.baseUrl}/internal/documents/${window.documentId}/attachments/data`,
-        columns: [
-            { data: "id", name: "id", visible: false },
-            { data: "user_name", name: "user_name" },
-            { data: "original_file_name", name: "original_file_name" },
-            { data: "file_type", name: "file_type" },
-            { data: "file_size_formatted", name: "file_size" },
-            { data: "valid_from_formatted", name: "valid_from" },
-            { data: "valid_until_formatted", name: "valid_until" },
-            { data: "created_at", name: "created_at" },
-            {
-                data: "is_read_badge",
-                name: "is_read",
-                orderable: false,
-                searchable: false,
-            },
-            {
-                data: "rejected_reason_button",
-                name: "rejected_reason",
-                orderable: false,
-                searchable: false,
-            },
-            {
-                data: "id",
-                name: "action",
-                orderable: false,
-                searchable: false,
-                render: function (data, type, row) {
-                    const fileUrl = resolveAttachmentUrl(row.file_path);
-                    const fileName = (
-                        row.original_file_name || "Document"
-                    ).replace(/'/g, "\\'");
-                    return `
-            <div class="d-flex gap-2">
-                <button type="button" class="btn btn-sm btn-info" onclick="window.viewAttachment('${fileUrl}', '${fileName}')">
-                    <i class="ti ti-eye"></i> View
-                </button>
-                <a href="${fileUrl}" target="_blank" class="btn btn-sm btn-primary">
-                    <i class="ti ti-download"></i> Download
-                </a>
-            </div>
-        `;
-                },
-            },
-        ],
+        columns: columns,
         columnDefs: [
             {
-                targets: 7,
+                targets: columns.findIndex(col => col.data === "created_at"),
                 render: function (data) {
                     return data ? new Date(data).toLocaleString("en-GB") : "—";
                 },
             },
         ],
+        order: [[columns.findIndex(col => col.data === "created_at"), "desc"]],
     });
 
-    // ─── Rejection reason button clicks (event delegation, DataTables re-renders rows) ───
+    // ─── Rejection reason button clicks (event delegation) ────────
     $("#attachmentTable").on("click", ".view-reject-reason-btn", function () {
         const reason = $(this).data("reason");
         viewRejectReason(reason);

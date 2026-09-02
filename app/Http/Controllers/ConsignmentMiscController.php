@@ -194,15 +194,17 @@ class ConsignmentMiscController extends Controller
 
     public function quickAdd(Request $request)
     {
+ 
         $request->validate([
             'item_name'     => 'required|string|max:255',
-            'permit_id'     => 'nullable|integer|exists:ip_consignment_permit,id',
+            'permit_id'     => 'nullable|integer|exists:consignment_permits,id',
             'countrySelect' => 'nullable|array',       // optional; countries sent as array
             'countrySelect.*' => 'string|max:10',     // each country code
         ]);
 
         // 1. Retrieve the permit
         $permit = ConsignmentPermit::find($request->permit_id);
+   
         if (!$permit) {
             return response()->json(['message' => 'Permit not found.'], 404);
         }

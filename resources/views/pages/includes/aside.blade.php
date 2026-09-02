@@ -259,7 +259,7 @@
                                             data-en="Role and Permission" data-bm="Peranan dan Kebenaran">Role and
                                             Permission</a>
                                     </li>
-                                    <li class="slide">
+                                    <li class="slide d-none">
                                         <a href="{{ route('internal.boundary.list') }}" class="side-menu__item"
                                             data-en="Boundary Officer" data-bm="Pegawai Sempadan">Boundary Officer</a>
                                     </li>
