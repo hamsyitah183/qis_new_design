@@ -32,11 +32,11 @@
                         <a href="/dashboard" class="qis-btn-ghost d-md-inline-flex" data-en="Dashboard"
                             data-bm="Dashboard">Dashboard</a>
                     @else
-                        <a href="/login" class="qis-btn-ghost d-md-inline-flex" data-en="Sign In"
-                            data-bm="Log Masuk">Sign In</a>
+                        <a href="/login" class="qis-btn-ghost d-md-inline-flex" data-en="Sign In" data-bm="Log Masuk">Sign
+                            In</a>
                     @endif
 
-                  
+
                 </div>
             </div>
         </header>
@@ -120,8 +120,7 @@
                 <!-- duplicate for seamless loop -->
                 @foreach ($announcements as $item)
                     <span class="qis-ticker-item"><b data-en="NOTICE" data-bm="NOTIS">NOTICE</b><span
-                            data-en="{{ $item->title }}"
-                            data-bm="{{ $item->title }}">{{ $item->title }}</span></span>
+                            data-en="{{ $item->title }}" data-bm="{{ $item->title }}">{{ $item->title }}</span></span>
                 @endforeach
             </div>
         </div>
@@ -165,34 +164,43 @@
                         </div>
                     </div>
 
-                    {{-- Kenapa Gunakan QIS 2.0? / Why Use QIS 2.0? --}}
-                    <div class="mt-4 p-4 rounded-3" style="background: #f8fafc; border: 1px solid #e2e8f0;">
-                        <h4 class="fw-bold mb-3 text-dark" data-en="Why Use QIS 2.0?" data-bm="Kenapa Gunakan QIS 2.0?">Why Use QIS 2.0?</h4>
-                        <div class="row g-3">
-                            <div class="col-6 col-md-3">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class='bx bx-check-circle text-success fs-4'></i>
-                                    <span class="fw-semibold text-secondary" data-en="Simpler Processes" data-bm="Urusan Lebih Mudah">Simpler Processes</span>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class='bx bx-check-circle text-success fs-4'></i>
-                                    <span class="fw-semibold text-secondary" data-en="Faster Processing" data-bm="Proses Lebih Pantas">Faster Processing</span>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class='bx bx-check-circle text-success fs-4'></i>
-                                    <span class="fw-semibold text-secondary" data-en="Organised Information" data-bm="Maklumat Lebih Teratur">Organised Information</span>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class='bx bx-check-circle text-success fs-4'></i>
-                                    <span class="fw-semibold text-secondary" data-en="Greater Transparency &amp; Easy Tracking" data-bm="Lebih Telus &amp; Mudah Disemak">Greater Transparency &amp; Easy Tracking</span>
-                                </div>
-                            </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section class ="qis-section">
+            {{-- Kenapa Gunakan QIS 2.0? / Why Use QIS 2.0? --}}
+            <div class="my-4 p-4 rounded-3 " style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                <h4 class="fw-bold mb-3 text-dark" data-en="Why Use QIS 2.0?" data-bm="Kenapa Gunakan QIS 2.0?">Why Use
+                    QIS 2.0?</h4>
+                <div class="row g-3">
+                    <div class="col-6 col-md-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class='bx bx-check-circle text-success fs-4'></i>
+                            <span class="fw-semibold text-secondary" data-en="Simpler Processes"
+                                data-bm="Urusan Lebih Mudah">Simpler Processes</span>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class='bx bx-check-circle text-success fs-4'></i>
+                            <span class="fw-semibold text-secondary" data-en="Faster Processing"
+                                data-bm="Proses Lebih Pantas">Faster Processing</span>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class='bx bx-check-circle text-success fs-4'></i>
+                            <span class="fw-semibold text-secondary" data-en="Organised Information"
+                                data-bm="Maklumat Lebih Teratur">Organised Information</span>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class='bx bx-check-circle text-success fs-4'></i>
+                            <span class="fw-semibold text-secondary" data-en="Greater Transparency &amp; Easy Tracking"
+                                data-bm="Lebih Telus &amp; Mudah Disemak">Greater Transparency &amp; Easy Tracking</span>
                         </div>
                     </div>
                 </div>
@@ -262,13 +270,24 @@
                 {{-- Official Portal Resources Links --}}
                 <div class="p-3 my-3 rounded-3" style="background: #eff6ff; border: 1px solid #bfdbfe;">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                        <span class="fw-bold text-primary" data-en="Official Department Resources:" data-bm="Sumber Rasmi Jabatan:">Official Department Resources:</span>
+                        <span class="fw-bold text-primary" data-en="Official Department Resources:"
+                            data-bm="Sumber Rasmi Jabatan:">Official Department Resources:</span>
                         <div class="d-flex flex-wrap gap-2">
-                            <a href="https://tani.sabah.gov.my/seksyen-biosekuriti-kuarantin-tumbuhan/" target="_blank" class="btn btn-sm btn-white text-primary border" data-en="Legislative Information" data-bm="Maklumat Perundangan">Legislative Information</a>
-                            <a href="https://tani.sabah.gov.my/seksyen-biosekuriti-kuarantin-tumbuhan/" target="_blank" class="btn btn-sm btn-white text-primary border" data-en="Guidelines" data-bm="Panduan">Guidelines</a>
-                            <a href="https://tani.sabah.gov.my/seksyen-biosekuriti-kuarantin-tumbuhan/" target="_blank" class="btn btn-sm btn-white text-primary border" data-en="High-Risk Countries" data-bm="Negara Berisiko Tinggi">High-Risk Countries</a>
-                            <a href="https://tani.sabah.gov.my/seksyen-biosekuriti-kuarantin-tumbuhan/" target="_blank" class="btn btn-sm btn-white text-primary border" data-en="Application Forms" data-bm="Borang Permohonan">Application Forms</a>
-                            <a href="https://tani.sabah.gov.my/seksyen-biosekuriti-kuarantin-tumbuhan/" target="_blank" class="btn btn-sm btn-white text-primary border" data-en="Important Notice" data-bm="Notis Penting">Important Notice</a>
+                            <a href="https://tani.sabah.gov.my/seksyen-biosekuriti-kuarantin-tumbuhan/" target="_blank"
+                                class="btn btn-sm btn-white text-primary border" data-en="Legislative Information"
+                                data-bm="Maklumat Perundangan">Legislative Information</a>
+                            <a href="https://tani.sabah.gov.my/seksyen-biosekuriti-kuarantin-tumbuhan/" target="_blank"
+                                class="btn btn-sm btn-white text-primary border" data-en="Guidelines"
+                                data-bm="Panduan">Guidelines</a>
+                            <a href="https://tani.sabah.gov.my/seksyen-biosekuriti-kuarantin-tumbuhan/" target="_blank"
+                                class="btn btn-sm btn-white text-primary border" data-en="High-Risk Countries"
+                                data-bm="Negara Berisiko Tinggi">High-Risk Countries</a>
+                            <a href="https://tani.sabah.gov.my/seksyen-biosekuriti-kuarantin-tumbuhan/" target="_blank"
+                                class="btn btn-sm btn-white text-primary border" data-en="Application Forms"
+                                data-bm="Borang Permohonan">Application Forms</a>
+                            <a href="https://tani.sabah.gov.my/seksyen-biosekuriti-kuarantin-tumbuhan/" target="_blank"
+                                class="btn btn-sm btn-white text-primary border" data-en="Important Notice"
+                                data-bm="Notis Penting">Important Notice</a>
                         </div>
                     </div>
                 </div>
@@ -338,56 +357,75 @@
         {{-- =============================== GALLERY =============================== --}}
         <section class="qis-section" id="qis-gallery">
             <div class="qis-container">
-                <span class="qis-eyebrow" data-en="Field Checkpoints" data-bm="Titik Pemeriksaan, di Lapangan">Field Checkpoints</span>
-                <h2 class="qis-h2 mt-2" data-en="Protecting Sabah’s Agriculture, Preventing Pest and Disease Threats" data-bm="Melindungi Pertanian Sabah, Mencegah Ancaman Perosak dan Penyakit">
+                <span class="qis-eyebrow" data-en="Field Checkpoints" data-bm="Titik Pemeriksaan, di Lapangan">Field
+                    Checkpoints</span>
+                <h2 class="qis-h2 mt-2" data-en="Protecting Sabah’s Agriculture, Preventing Pest and Disease Threats"
+                    data-bm="Melindungi Pertanian Sabah, Mencegah Ancaman Perosak dan Penyakit">
                     Protecting Sabah’s Agriculture, Preventing Pest and Disease Threats</h2>
 
 
                 <div id="landingGalleryCarousel" class="carousel slide" data-bs-ride="carousel">
-                    @if($galleries->count() > 1)
-                    <div class="carousel-indicators">
-                        @foreach($galleries->take(6) as $gallery)
-                            <button type="button" data-bs-target="#landingGalleryCarousel" data-bs-slide-to="{{ $loop->index }}" class="{{ $loop->first ? 'active' : '' }}" aria-current="{{ $loop->first ? 'true' : 'false' }}" aria-label="Slide {{ $loop->iteration }}"></button>
-                        @endforeach
-                    </div>
+                    @if ($galleries->count() > 1)
+                        <div class="carousel-indicators">
+                            @foreach ($galleries->take(6) as $gallery)
+                                <button type="button" data-bs-target="#landingGalleryCarousel"
+                                    data-bs-slide-to="{{ $loop->index }}" class="{{ $loop->first ? 'active' : '' }}"
+                                    aria-current="{{ $loop->first ? 'true' : 'false' }}"
+                                    aria-label="Slide {{ $loop->iteration }}"></button>
+                            @endforeach
+                        </div>
                     @endif
                     <div class="carousel-inner">
                         @forelse($galleries->take(6) as $gallery)
-                            @php 
-                                $imgUrl = str_starts_with($gallery->path, 'http') ? $gallery->path : asset('storage/' . $gallery->path); 
+                            @php
+                                $imgUrl = str_starts_with($gallery->path, 'http')
+                                    ? $gallery->path
+                                    : asset('storage/' . $gallery->path);
                                 $isLastAndHasMore = $loop->iteration == 6 && $galleries->count() > 5;
                             @endphp
                             <div class="carousel-item {{ $loop->first ? 'active' : '' }}">
-                                @if($isLastAndHasMore)
+                                @if ($isLastAndHasMore)
                                     <a href="{{ route('public.gallery') }}" style="display: block; position: relative;">
-                                        <div style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('{{ $imgUrl }}'); background-size: cover; background-position: center; height: 500px; width: 100%; display: flex; align-items: center; justify-content: center; text-decoration: none; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
-                                            <div style="color: white; font-size: 5rem; font-weight: bold; display: flex; align-items: center; justify-content: center;">
-                                                <i class='bx bx-plus' style="margin-right: 4px;"></i>{{ $galleries->count() - 5 }}
+                                        <div
+                                            style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('{{ $imgUrl }}'); background-size: cover; background-position: center; height: 500px; width: 100%; display: flex; align-items: center; justify-content: center; text-decoration: none; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                                            <div
+                                                style="color: white; font-size: 5rem; font-weight: bold; display: flex; align-items: center; justify-content: center;">
+                                                <i class='bx bx-plus'
+                                                    style="margin-right: 4px;"></i>{{ $galleries->count() - 5 }}
                                             </div>
                                         </div>
                                     </a>
                                 @else
-                                    <div style="background-image: url('{{ $imgUrl }}'); background-size: cover; background-position: center; height: 500px; width: 100%; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);"></div>
+                                    <div
+                                        style="background-image: url('{{ $imgUrl }}'); background-size: cover; background-position: center; height: 500px; width: 100%; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                                    </div>
                                     <div class="mt-4 text-center">
-                                        <p class="qis-lead mx-auto" style="max-width: 800px; color: #64748b;" data-en="{{ $gallery->description ?? $gallery->name }}" data-bm="{{ $gallery->description ?? $gallery->name }}">{{ $gallery->description ?? $gallery->name }}</p>
+                                        <p class="qis-lead mx-auto" style="max-width: 800px; color: #64748b;"
+                                            data-en="{{ $gallery->description ?? $gallery->name }}"
+                                            data-bm="{{ $gallery->description ?? $gallery->name }}">
+                                            {{ $gallery->description ?? $gallery->name }}</p>
                                     </div>
                                 @endif
                             </div>
                         @empty
                             <div class="carousel-item active">
-                                <div style="height: 500px; width: 100%; background: #f3f4f6; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+                                <div
+                                    style="height: 500px; width: 100%; background: #f3f4f6; display: flex; align-items: center; justify-content: center; flex-direction: column;">
                                     <i class="bi bi-image" style="font-size: 3rem; color: #9ca3af;"></i>
-                                    <p class="mt-2 text-muted" data-en="No gallery images available." data-bm="Tiada imej galeri tersedia.">No gallery images available.</p>
+                                    <p class="mt-2 text-muted" data-en="No gallery images available."
+                                        data-bm="Tiada imej galeri tersedia.">No gallery images available.</p>
                                 </div>
                             </div>
                         @endforelse
                     </div>
-                    @if($galleries->count() > 1)
-                        <button class="carousel-control-prev" type="button" data-bs-target="#landingGalleryCarousel" data-bs-slide="prev">
+                    @if ($galleries->count() > 1)
+                        <button class="carousel-control-prev" type="button" data-bs-target="#landingGalleryCarousel"
+                            data-bs-slide="prev">
                             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                             <span class="visually-hidden">Previous</span>
                         </button>
-                        <button class="carousel-control-next" type="button" data-bs-target="#landingGalleryCarousel" data-bs-slide="next">
+                        <button class="carousel-control-next" type="button" data-bs-target="#landingGalleryCarousel"
+                            data-bs-slide="next">
                             <span class="carousel-control-next-icon" aria-hidden="true"></span>
                             <span class="visually-hidden">Next</span>
                         </button>
@@ -400,8 +438,10 @@
         <section class="qis-section qis-contact-section" id="qis-contact">
             <div class="qis-container">
                 <span class="qis-eyebrow" data-en="Get in Touch" data-bm="Hubungi Kami">Get in Touch</span>
-                <h2 class="qis-h2 mt-2" data-en="Plant Biosecurity &amp; Quarantine Section, Sabah Department of Agriculture"
-                    data-bm="Seksyen Biosekuriti &amp; Kuarantin Tumbuhan, Jabatan Pertanian Sabah">Plant Biosecurity &amp; Quarantine Section, Sabah Department of Agriculture</h2>
+                <h2 class="qis-h2 mt-2"
+                    data-en="Plant Biosecurity &amp; Quarantine Section, Sabah Department of Agriculture"
+                    data-bm="Seksyen Biosekuriti &amp; Kuarantin Tumbuhan, Jabatan Pertanian Sabah">Plant Biosecurity &amp;
+                    Quarantine Section, Sabah Department of Agriculture</h2>
 
                 <div class="qis-contact-grid">
                     <div class="qis-contact-card">
@@ -416,7 +456,10 @@
                                     Beg Berkunci No. 2050, 88632 Kota Kinabalu, Sabah
                                 </span>
                                 <div class="mt-2">
-                                    <a href="https://maps.google.com/maps?q=Wisma%20Pertanian%20Sabah%20Kota%20Kinabalu" target="_blank" class="btn btn-xs btn-outline-success rounded-pill" data-en="Peta Lokasi / Location Map" data-bm="Peta Lokasi">📍 Peta Lokasi / Location Map</a>
+                                    <a href="https://maps.google.com/maps?q=Wisma%20Pertanian%20Sabah%20Kota%20Kinabalu"
+                                        target="_blank" class="btn btn-xs btn-outline-success rounded-pill"
+                                        data-en="Peta Lokasi / Location Map" data-bm="Peta Lokasi">📍 Peta Lokasi /
+                                        Location Map</a>
                                 </div>
                             </div>
                         </div>
@@ -452,10 +495,15 @@
                         <div class="qis-contact-row">
                             <i class='bx bx-globe'></i>
                             <div>
-                                <b data-en="Website &amp; Social" data-bm="Laman Web &amp; Media Sosial">Website &amp; Social</b>
+                                <b data-en="Website &amp; Social" data-bm="Laman Web &amp; Media Sosial">Website &amp;
+                                    Social</b>
                                 <div>
-                                    <a href="https://tani.sabah.gov.my/seksyen-biosekuriti-kuarantin-tumbuhan/" target="_blank" class="d-block mb-1 text-primary">🌐 tani.sabah.gov.my/seksyen-biosekuriti-kuarantin-tumbuhan</a>
-                                    <a href="https://www.facebook.com/p/Biosekuriti-dan-Kuarantin-Tumbuhan-Jabatan-Pertanian-Sabah-100064560731671/" target="_blank" class="d-block text-primary">👍 FB: Biosekuriti dan Kuarantin Tumbuhan, Jabatan Pertanian Sabah</a>
+                                    <a href="https://tani.sabah.gov.my/seksyen-biosekuriti-kuarantin-tumbuhan/"
+                                        target="_blank" class="d-block mb-1 text-primary">🌐
+                                        tani.sabah.gov.my/seksyen-biosekuriti-kuarantin-tumbuhan</a>
+                                    <a href="https://www.facebook.com/p/Biosekuriti-dan-Kuarantin-Tumbuhan-Jabatan-Pertanian-Sabah-100064560731671/"
+                                        target="_blank" class="d-block text-primary">👍 FB: Biosekuriti dan Kuarantin
+                                        Tumbuhan, Jabatan Pertanian Sabah</a>
                                 </div>
                             </div>
                         </div>
@@ -464,9 +512,12 @@
                             <i class='bx bx-time-five'></i>
                             <div>
                                 <b data-en="Office Hours" data-bm="Waktu Pejabat">Office Hours</b>
-                                <span data-en="Monday &ndash; Thursday: 8:00 AM &ndash; 1:00 PM, 2:00 PM &ndash; 5:00 PM | Friday: 8:00 AM &ndash; 11:30 AM, 2:00 PM &ndash; 5:00 PM (Closed Saturday, Sunday &amp; Public Holidays)"
+                                <span
+                                    data-en="Monday &ndash; Thursday: 8:00 AM &ndash; 1:00 PM, 2:00 PM &ndash; 5:00 PM | Friday: 8:00 AM &ndash; 11:30 AM, 2:00 PM &ndash; 5:00 PM (Closed Saturday, Sunday &amp; Public Holidays)"
                                     data-bm="Isnin &ndash; Khamis: 8:00 pagi &ndash; 1:00 petang, 2:00 petang &ndash; 5:00 petang | Jumaat: 8:00 pagi &ndash; 11:30 pagi, 2:00 petang &ndash; 5:00 petang (Tutup Sabtu, Ahad &amp; Cuti Umum)">
-                                    Monday &ndash; Thursday: 8:00 AM &ndash; 1:00 PM, 2:00 PM &ndash; 5:00 PM | Friday: 8:00 AM &ndash; 11:30 AM, 2:00 PM &ndash; 5:00 PM (Closed Saturday, Sunday &amp; Public Holidays)
+                                    Monday &ndash; Thursday: 8:00 AM &ndash; 1:00 PM, 2:00 PM &ndash; 5:00 PM | Friday: 8:00
+                                    AM &ndash; 11:30 AM, 2:00 PM &ndash; 5:00 PM (Closed Saturday, Sunday &amp; Public
+                                    Holidays)
                                 </span>
                             </div>
                         </div>
