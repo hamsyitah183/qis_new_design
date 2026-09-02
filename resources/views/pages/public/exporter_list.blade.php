@@ -45,7 +45,7 @@
         <div class="col-xl-12">
             <div class="card custom-card">
                 <div class="card-header">
-                    <div class="card-title" data-en="Exporter List" data-bm="Senarai Pengeksport">Exporter List</div>
+                    {{-- <div class="card-title" data-en="Exporter List" data-bm="Senarai Pengeksport">Exporter List</div> --}}
                     <div class="ms-auto d-flex gap-2 align-items-center">
 
                         <button class="btn btn-sm btn-primary filter dropdown-toggle" type="button"
@@ -123,7 +123,7 @@
             {{-- Phone --}}
             <div class="mb-3">
                 <label for="addexpfonno" class="form-label" data-en="Phone No" data-bm="No Telefon">Phone No</label> <a style="color:red"> * </a>
-                <input type="text" id="addexpfonno" name="addexpfonno" class="form-control">
+                <input type="number" id="addexpfonno" name="addexpfonno" class="form-control" min="0" step="1">
             </div>
 
             {{-- Address --}}

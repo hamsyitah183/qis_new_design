@@ -821,7 +821,7 @@ class ApplicationController extends Controller
             'pubmeasure' => $pubmeasure,
             'pubpurpose' => $pubpurpose,
             'country' => $country,
-            'pbdata'=> $pbdata
+            'pbdata' => $pbdata
         ]); //, 'consignment', 'attachment'
     }
 
@@ -912,7 +912,10 @@ class ApplicationController extends Controller
             ->orderBy('created_at', 'desc')
             ->firstOrFail();
 
-        if ($application->user_id != authUser()['user']->uuid || $application->status != 'Draft') {
+        if (
+            $application->user_id != authUser()['user']->uuid ||
+            ($application->status != 'Draft' && $application->status != 'Clerk Rejected')
+        ) {
             abort(403, 'Cannot edit this application.');
         }
 
@@ -927,7 +930,10 @@ class ApplicationController extends Controller
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();
-        return view('pages.public.edit_permit', compact('pubmeasure', 'pubpurpose', 'country', 'application')); // , compact('')
+        $ipDocuments = DocumentRequirement::forModule('import')
+            ->orderBy('name')
+            ->get();
+        return view('pages.public.edit_permit', compact('pubmeasure', 'pubpurpose', 'country', 'application', 'ipDocuments')); // , compact('')
     }
 
     public function modalspeItem($id)

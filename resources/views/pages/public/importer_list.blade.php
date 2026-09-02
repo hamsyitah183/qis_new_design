@@ -45,7 +45,7 @@
         <div class="col-xl-12">
             <div class="card custom-card">
                 <div class="card-header">
-                    <div class="card-title" data-en="Importer List" data-bm="Senarai Pengimport">Importer List</div>
+                    {{-- <div class="card-title" data-en="Importer List" data-bm="Senarai Pengimport">Importer List</div> --}}
                     <div class="ms-auto d-flex gap-2 align-items-center">
 
                         <button class="btn btn-sm btn-primary filter dropdown-toggle" type="button"
@@ -109,7 +109,7 @@
     </div>
 
     <!-- Add Importer Modal -->
-    <x-modal id="addImporterModal" title="Add Importer">
+    <x-modal id="addImporterModal" title="Add Importer" title_en="Add Importer" title_bm="Tambah Pengimport" size="modal-lg">
         <form id="addImporterForm">
             @csrf
 
@@ -117,28 +117,29 @@
 
             {{-- Name --}}
             <div class="mb-3">
-                <label for="addimpName" class="form-label" data-en="Name" data-bm="Nama">Name <span class="text-danger">*</span> </label>
-                <input type="text" id="addimpName" name="name" class="form-control">
+                <label for="addimpName" class="form-label" data-en="Name" data-bm="Nama">Name  </label><span class="text-danger">*</span>
+                <input type="text" id="addimpName" name="name" class="form-control" required>
             </div>
 
             {{-- Phone --}}
             <div class="mb-3">
-                <label for="addimpfonno" class="form-label" data-en="Phone No" data-bm="No Telefon">Phone No</label>
-                <input type="text" id="addimpfonno" name="phone_no" class="form-control">
+                <label for="addimpfonno" class="form-label" data-en="Phone No" data-bm="No Telefon">Phone No</label> <span class="text-danger">*</span>
+                <input type="number" id="addimpfonno" name="phone_no" class="form-control" min="0" step="1" required >
             </div>
 
             {{-- Address --}}
             <div class="mb-3">
-                <label for="addimpaddress" class="form-label" data-en="Address" data-bm="Alamat">Address <span class="text-danger">*</span></label>
-                <input type="text" id="addimpaddress1" name="address1" class="form-control mb-2"
-                    placeholder="Address Line 1" data-en="Address Line 1" data-bm="Alamat Baris 1" data-i18n-attr="placeholder">
-                <input type="text" id="addimpaddress2" name="address2" class="form-control" placeholder="Address Line 2" data-en="Address Line 2" data-bm="Alamat Baris 2" data-i18n-attr="placeholder">
+                <label for="addimpaddress" class="form-label" data-en="Address" data-bm="Alamat">Address</label>  <span class="text-danger">*</span>
+                <textarea  id="addimpaddress1" name="address1" class="form-control mb-2"
+                    placeholder="Address" data-en="Address" data-bm="Alamat" data-i18n-attr="placeholder">
+                </textarea>
+                {{-- <input type="text" id="addimpaddress2" name="address2" class="form-control" placeholder="Address Line 2" data-en="Address Line 2" data-bm="Alamat Baris 2" data-i18n-attr="placeholder"> --}}
             </div>
 
             {{-- Country --}}
             <div class="mb-3">
-                <label for="addimpcountry" class="form-label" data-en="Country" data-bm="Negara">Country <span class="text-danger">*</span></label>
-                <select class="form-select" id="addimpcountry" name="country">
+                <label for="addimpcountry" class="form-label" data-en="Country" data-bm="Negara">Country </label> <span class="text-danger">*</span>
+                <select class="form-select" id="addimpcountry" name="country" required>
                     <option value="" data-en="-- Select Country --" data-bm="-- Pilih Negara --">-- Select Country --</option>
                     @foreach ($country as $coun)
                         <option value="{{ $coun->code }}">{{ $coun->name }}</option>

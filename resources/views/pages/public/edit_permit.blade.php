@@ -7,7 +7,7 @@
     <x-breadcrumb :items="[
         ['label' => 'Home', 'url' => '/'],
         ['label' => 'New Application', 'url' => '/public/new_application'],
-        ['label' => 'Self Apply Import Permit Application (Draft)', 'url' => '#'],
+        ['label' => 'Self Apply Import Permit Application', 'url' => '#'],
     ]" title="Import Permit">
 
     </x-breadcrumb>

@@ -4,14 +4,11 @@ window.$ = window.jQuery = $;
 import Swal from "sweetalert2";
 import { generateUUID, getAuthUser } from "../../app";
 import "dropzone/dist/dropzone.css";
-import { render } from "react-dom/cjs/react-dom.production.min";
 
 // Import Select2 module
 import select2 from "select2";
-
 // Force Select2 to attach to THIS jQuery:
 select2(window.jQuery);
-
 import "select2/dist/css/select2.min.css";
 
 Dropzone.autoDiscover = false;
@@ -27,6 +24,8 @@ let impAddrs = null;
 let itemDropzone = null;
 
 let change = null;
+let isInitializing = true; // Prevent change‑exporter dialog on page load
+let editingItemId = null;  // ID of the item being edited
 
 let tempItems = [];
 let tempAttachments = [];
@@ -38,44 +37,45 @@ existingIds = application.consignment_permits
     ? application.consignment_permits.map((p) => p.id)
     : [];
 
-
 let measurementUnits = null;
 let news = null;
 let limit = null;
 let limitMeasurement = null;
 
-
-function measurementUnit()
-{
-     return $.ajax({
+function measurementUnit() {
+    return $.ajax({
         url: '/measurement',
         type: "GET",
         dataType: "json",
         cache: false,
         success: (data) => {
-           measurementUnits = data;
-
-           console.log('measurement', measurementUnits)
+            measurementUnits = data;
+            console.log('measurement', measurementUnits);
         },
-
         error: (xhr) => {
             console.error("Failed to load exporters:", xhr.responseText);
-           
         },
     });
 }
-
-
 measurementUnit();
 
 function importerDetail() {
-    // importer = JSON.parse(application.importer_detail);
     importer = application.importer_detail;
-    // console.log('importer', importer)
     $("#impname").val(importer.fullname);
     $("#impfonno").val(importer.phone_number);
     $("#impaddress1").val(importer.address_1);
     $("#impaddress2").val(importer.address_2 ?? "");
+}
+
+function exporterDetail() {
+    exporter = application.exporter;
+    if (!exporter) return;
+    console.log("exporter data:", exporter);
+    $("#expname").val(exporter.name || "");
+    $("#expfonno").val(exporter.phone_no || "");
+    $("#expaddress1").val(exporter.address1 || exporter.address || "");
+    $("#expcountryCode").val(exporter.ccode || "");
+    $("#expcountry").val(exporter.country || "");
 }
 
 // ------------------------- Exporter List -------------------------
@@ -108,13 +108,11 @@ function fetchExporterList() {
                 allowClear: true,
             });
 
-            // ✅ Auto-select the exporter if already set
+            // Auto‑select the exporter if already set
             if (exporter && exporter.id) {
-                $select.val(exporter.id).trigger("change"); // trigger change to update fields
-                // $select.trigger('change');
+                $select.val(exporter.id).trigger("change");
             }
         },
-
         error: (xhr) => {
             console.error("Failed to load exporters:", xhr.responseText);
             Swal.fire({
@@ -130,51 +128,44 @@ function handleExporterChange() {
     const $select = $("#selectexp");
 
     $select.on("change", function () {
-        const selectedId  = $(this).val();
-        const $selectRef  = $(this); // ✅ capture reference for use inside Swal callback
+        const selectedId = $(this).val();
+        const $selectRef = $(this);
 
         const applyExporter = (id) => {
             if (!id) return clearExporterFields();
-
             exporter = null;
             exporter = exporterListArray.find((e) => e.id == id);
             if (!exporter) return;
 
-            console.log("exporter details", exporter);
-
-            $("#expid").val(exporter.id       || "");
-            $("#expname").val(exporter.name   || "");
+            $("#expid").val(exporter.id || "");
+            $("#expname").val(exporter.name || "");
             $("#expfonno").val(exporter.phone_no || "");
             $("#expaddress1").val(exporter.address1 || exporter.address || "");
-            $("#expcountryCode").val(exporter.ccode    || "");
-            $("#expcountry").val(exporter.country  || "");
-
+            $("#expcountryCode").val(exporter.ccode || "");
+            $("#expcountry").val(exporter.country || "");
             change = 1;
         };
 
-        if (tempItems.length > 0) {
+        if (tempItems.length > 0 && !isInitializing) {
             Swal.fire({
-                icon:              'warning',
-                title:             'Change Exporter?',
-                text:              'Want to change the exporter? All the items will be removed!',
-                showCancelButton:  true,
+                icon: 'warning',
+                title: 'Change Exporter?',
+                text: 'Want to change the exporter? All the items will be removed!',
+                showCancelButton: true,
                 confirmButtonText: 'Yes, change it',
-                cancelButtonText:  'Cancel',
+                cancelButtonText: 'Cancel',
                 confirmButtonColor: '#d33',
-                cancelButtonColor:  '#6c757d',
+                cancelButtonColor: '#6c757d',
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // ✅ Clear all temp items and re-render
                     tempItems.length = 0;
                     renderAllItems();
                     summarySubmit();
                     applyExporter(selectedId);
                 } else {
-                    // ✅ Revert select back to previous exporter
                     $selectRef.val(exporter?.id ?? "").trigger("change.select2");
                 }
             });
-
             return;
         }
 
@@ -188,42 +179,42 @@ function clearExporterFields() {
 }
 
 // ------------------------- Consignment / Uses -------------------------
-
 function loadConsignmentSelection() {
-
     limitMeasurement = null;
     limit = null;
     $('#addItemModal .modal-body .news').find('.alert').remove();
 
-
     const countryCode = $("#expcountryCode").val();
     const $select = $("#itemSelect");
 
-    if (!countryCode) return;
+    if (!countryCode) {
+        // Return a resolved promise to avoid breaking the chain
+        return Promise.resolve();
+    }
 
     // Reset select options
     $select.empty().append('<option value="">-- Select Item --</option>');
 
-    // Destroy existing Select2 (if already initiated)
     if ($select.hasClass("select2-hidden-accessible")) {
         $select.select2("destroy");
     }
 
-    // Disable select while loading
     $select.prop("disabled", true);
 
-    // Show loading Swal
     Swal.fire({
         title: "Loading...",
-        // html: "Please wait while items are loaded.",
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading(),
     });
 
-    fetch(`/public/get_consignment/${countryCode}`)
+    // ✅ Return the fetch promise
+    return fetch(`/public/get_consignment/${countryCode}`)
         .then((res) => res.json())
         .then((data) => {
             $select.prop("disabled", false);
+
+            // Add "Others" option for custom items
+            $select.append(`<option value="others">Others</option>`);
 
             data.forEach((row) => {
                 $select.append(
@@ -231,20 +222,23 @@ function loadConsignmentSelection() {
                 );
             });
 
-            // Initialize Select2
             $select.select2({
                 width: "100%",
                 placeholder: "-- Select Item --",
                 allowClear: true,
-                dropdownParent: $("#addItemModal"), // Important: for modal
+                dropdownParent: $("#addItemModal"),
             });
 
-            Swal.close(); // Close loading
+            Swal.close();
+            return data; // optional
         })
         .catch((e) => {
             console.error("Error loading items:", e);
             $select.prop("disabled", false);
+            Swal.close();
             Swal.fire("Error", "Failed to load consignment items.", "error");
+            // Re-throw so the caller can handle the error
+            throw e;
         });
 }
 
@@ -256,12 +250,12 @@ function loadUses(itemId) {
 
     Swal.fire({
         title: "Loading...",
-        // html: "Please wait while items are loaded.",
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading(),
     });
 
-    fetch(`/public/consignment_uses/${itemId}`)
+    const url = itemId === 'others' ? '/public/consignment_uses' : `/public/consignment_uses/${itemId}`;
+    fetch(url)
         .then((res) => res.json())
         .then((data) => {
             if (!data.data) return;
@@ -273,13 +267,14 @@ function loadUses(itemId) {
                 width: "100%",
                 placeholder: "-- Select Uses --",
                 allowClear: true,
-                dropdownParent: $("#addItemModal"), // Important: for modal
+                dropdownParent: $("#addItemModal"),
             });
 
             Swal.close();
         })
         .catch((err) => {
             console.error("Failed to load uses:", err);
+            Swal.close();
         });
 }
 
@@ -289,58 +284,40 @@ function formatDate(dateString) {
 }
 
 function loadDetails(itemId) {
-
-
     fetch(`/public/get_item_details/${itemId}`)
         .then((res) => res.json())
         .then((data) => {
-            console.log('data in details', data)
+            console.log('data in details', data);
             let item = data.data;
-            let startDate = ``;
+            let startDate = '';
 
             limit = item.quantity_limit;
             limitMeasurement = item.measurement_unit;
 
-            if(item.start_date) {
-                startDate = 
-                `from <span class = "fw-bold">${formatDate(item.start_date)}</span> until 
-                <span class = "fw-bold">${formatDate(item.end_date)}</span>`
+            if (item.start_date) {
+                startDate = `from <span class="fw-bold">${formatDate(item.start_date)}</span> until <span class="fw-bold">${formatDate(item.end_date)}</span>`;
             }
 
-            if(item.quantity_limit) {
+            if (item.quantity_limit) {
                 const alertHtml = `
                     <div class="col-12 alert alert-primary">
-                        <p class = "">
+                        <p>
                             The quantity allowed for ${item.item_name} is 
-                            <span class = "fw-bold"> ${item.quantity_limit} ${item.measurement_unit} </span> 
-                            ${startDate}
-                            .
+                            <span class="fw-bold">${item.quantity_limit} ${item.measurement_unit}</span> 
+                            ${startDate}.
                         </p>
                     </div>
                 `;
-
-                // Remove old alert first (important if dynamic)
                 $('#addItemModal .modal-body .news').find('.alert').remove();
-
-                // Insert at TOP of row
                 $('#addItemModal .modal-body .news').prepend(alertHtml);
-
-            } 
-
-            else {
-                // Remove old alert first (important if dynamic)
+            } else {
                 $('#addItemModal .modal-body .news').find('.alert').remove();
             }
-
-       
         })
         .catch((err) => {
-            console.error("Failed to load uses:", err);
+            console.error("Failed to load details:", err);
         });
-
-    
 }
-
 
 // ------------------------- Add Exporter Modal -------------------------
 function initAddExporterModal() {
@@ -443,9 +420,7 @@ function handleImporterResponse(data) {
     console.log("handleImporterResponse", data);
     const hideAll = () => {
         $("#searchresult, #doanotver, #emailnotver").hide();
-        $(
-            "#impname, #impid, #impfonno, #impaddress1, #impaddress2, #imp_id, #impemail"
-        ).val("");
+        $("#impname, #impid, #impfonno, #impaddress1, #impaddress2, #imp_id, #impemail").val("");
     };
 
     importer = null;
@@ -454,7 +429,6 @@ function handleImporterResponse(data) {
 
     if (data.status !== "success") return hideAll();
 
-    // SUCCESS
     $("#searchresult, #doanotver, #emailnotver").hide();
     $("#impname").val(data.data.fullname);
     $("#impid").val(data.data.id);
@@ -465,21 +439,18 @@ function handleImporterResponse(data) {
     $("#impemail").val(data.data.email);
 }
 
-// -------------------------Permit details ------------------------
+// ------------------------- Permit details -------------------------
 function permitDetails() {
     const trnptType = document.getElementById("trnptType");
     const detailsSelect = document.getElementById("entryPoint");
 
     if (!trnptType) return;
 
-    // Function to load entry points via AJAX
     function loadEntryPoints(value) {
         return new Promise((resolve, reject) => {
             const route = trnptType.dataset.route;
             if (!value || route === "#") {
-                $(detailsSelect).html(
-                    '<option value="">-- Select Option --</option>'
-                );
+                $(detailsSelect).html('<option value="">-- Select Option --</option>');
                 resolve();
                 return;
             }
@@ -495,8 +466,7 @@ function permitDetails() {
                 type: "GET",
                 dataType: "json",
                 success: function (data) {
-                    let options =
-                        '<option value="">-- Select Entry Point --</option>';
+                    let options = '<option value="">-- Select Entry Point --</option>';
                     data.forEach(function (item) {
                         options += `<option value="${item.id}" data-entry_name="${item.entry_display}">${item.entry_display}</option>`;
                     });
@@ -514,15 +484,11 @@ function permitDetails() {
         });
     }
 
-    // Change handler
     trnptType.addEventListener("change", function () {
         const value = this.value;
         loadEntryPoints(value).then(() => {
-            // Auto-select entry point if exists in application
             if (application.entry_point && application.entry_point.id) {
-                $(detailsSelect)
-                    .val(application.entry_point.id)
-                    .trigger("change");
+                $(detailsSelect).val(application.entry_point.id).trigger("change");
             }
         });
     });
@@ -534,16 +500,13 @@ function permitDetails() {
         summarySubmit();
     });
 
-    // ✅ Auto-select transport type on page load
     if (application.transport_type) {
         trnptType.value = application.transport_type;
-        // Trigger change and handle the AJAX + then
         const event = new Event("change");
         trnptType.dispatchEvent(event);
     }
 
     if (application && application.eta) {
-        // Extract YYYY-MM-DD from the datetime string
         const etaDate = application.eta.split("T")[0];
         document.getElementById("eta").value = etaDate;
     }
@@ -555,26 +518,21 @@ function itemConsigment() {
         url: "/",
         autoProcessQueue: false,
         paramName: "file",
-        maxFilesize: 10, // MB
+        maxFilesize: 10,
         acceptedFiles: ".jpg,.jpeg,.png,.pdf",
         addRemoveLinks: true,
         headers: {
-            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
-                .content,
+            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
         },
-        // --- 1. SWAL LOADING BEFORE LOAD (Processing) ---
         processing: function (file) {
             Swal.fire({
                 title: "Uploading...",
                 html: "Please wait while your file is being uploaded.",
                 allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                },
+                didOpen: () => { Swal.showLoading(); },
             });
             groupPreview();
         },
-        // --- 2. SWAL SUCCESS AFTER LOAD ---
         success: (file, response) => {
             Swal.close();
 
@@ -589,16 +547,7 @@ function itemConsigment() {
             });
 
             file.temp_id = response.id;
-
-            // ✅ Call groupPreview here too
             groupPreview();
-
-            console.log("temp", tempAttachments);
-            console.log(
-                "Latest uploaded file:",
-                tempAttachments[tempAttachments.length - 1]
-            );
-            console.log("All attachments:", tempAttachments);
 
             Swal.fire({
                 icon: "success",
@@ -608,36 +557,28 @@ function itemConsigment() {
                 showConfirmButton: false,
             });
         },
-        // --- 3. SWAL ERROR AFTER LOAD ---
         error: (file, message, xhr) => {
             Swal.close();
             itemDropzone.removeFile(file);
             Swal.fire({
                 icon: "error",
                 title: "Upload Failed",
-                text:
-                    message.error || "An unknown error occurred during upload.",
+                text: message.error || "An unknown error occurred during upload.",
                 footer: "Please try again.",
             });
             console.error("Dropzone Error:", message);
         },
-        // --- 4. HANDLE FILE REMOVAL ---
         removedfile: function (file) {
             if (file.temp_id) {
-                const indexToRemove = tempAttachments.findIndex(
-                    (a) => a.id === file.temp_id
-                );
-                if (indexToRemove > -1)
-                    tempAttachments.splice(indexToRemove, 1);
+                const indexToRemove = tempAttachments.findIndex((a) => a.id === file.temp_id);
+                if (indexToRemove > -1) tempAttachments.splice(indexToRemove, 1);
             }
             const _ref = file.previewElement;
             if (_ref) _ref.parentNode.removeChild(_ref);
-
             groupPreview();
         },
     });
 
-    // ✅ Run groupPreview every time a file is added (before upload)
     itemDropzone.on("addedfile", function (file) {
         groupPreview();
     });
@@ -656,38 +597,23 @@ function groupPreview() {
             const $previews = $dropzone.find(".dz-preview");
             const $deleteBtns = $previews.find(".dz-remove");
 
-            // Create group if it doesn't exist
             let $group = $dropzone.find(".dz-preview-group");
             if ($group.length === 0) {
                 $group = $('<div class="dz-preview-group"></div>');
                 $dropzone.find(".dz-message").after($group);
             }
 
-            // Move all previews into the group
             $previews.appendTo($group);
 
-            // Replace PDF previews with PDF logo
             for (const file of itemDropzone.getAcceptedFiles()) {
                 if (file.type === "application/pdf") {
                     const $preview = $(file.previewElement);
-                    const $img = $preview.find(
-                        ".dz-image img[data-dz-thumbnail]"
-                    );
-
-                    // Set your PDF logo path
-                    $img.attr(
-                        "src",
-                        "/images/pdf-logo.png" // <-- replace with your actual PDF logo path
-                    );
-                    $img.css({
-                        "object-fit": "contain",
-                        width: "100%",
-                        height: "100%",
-                    });
+                    const $img = $preview.find(".dz-image img[data-dz-thumbnail]");
+                    $img.attr("src", "/images/pdf-logo.png");
+                    $img.css({ "object-fit": "contain", width: "100%", height: "100%" });
                 }
             }
 
-            // Update delete buttons
             $deleteBtns.html('<i class="ti ti-trash"></i>');
 
             Swal.close();
@@ -695,11 +621,11 @@ function groupPreview() {
     });
 }
 
+// ─── Save Consignment Attachment (FIXED) ──────────────────────────
 function saveConsignmentAttachment() {
     document.getElementById("saveBtn").addEventListener("click", function (e) {
         e.preventDefault();
 
-        // ✅ Get field values (handle Select2 if used)
         const itemSelectValue = $("#itemSelect").val();
         const itemSelectText = $("#itemSelect option:selected").text();
         const itemValue = $("#itemValue").val().trim();
@@ -708,7 +634,6 @@ function saveConsignmentAttachment() {
         const itemPurposeDescription = $("#itemPurpose option:selected").data("description") || $("#itemPurpose").val();
         const itemUsesValue = $("#itemUses").val();
 
-        // ✅ Validation
         if (!itemSelectValue || !itemValue || !itemQuantity || !itemMeasure || !itemPurposeDescription || !itemUsesValue) {
             Swal.fire({
                 icon: "error",
@@ -718,50 +643,35 @@ function saveConsignmentAttachment() {
             return;
         }
 
-        if(limitMeasurement) {
-            // convert the limit to kg first
+        // Handle custom item (Others)
+        let isCustom = itemSelectValue === "others";
+        let itemName = isCustom ? $("#customItemName").val().trim() : itemSelectText;
+        let itemId = isCustom ? null : itemSelectValue;
+
+        if (isCustom && !itemName) {
+            Swal.fire({ icon: "error", title: "Custom Item Name Required", text: "Please enter a custom item name." });
+            return;
+        }
+
+        // Limit validation (existing logic)
+        if (limitMeasurement) {
             let limitInKg = null;
-            let conversion = null;
-
             const selectedUnit = measurementUnits.unit.find(unit =>
-                unit.cate_code.toLowerCase() === limitMeasurement.toLowerCase()
-                && unit.is_del === false
+                unit.cate_code.toLowerCase() === limitMeasurement.toLowerCase() && unit.is_del === false
             );
-
             if (selectedUnit) {
-                console.log("Found:", selectedUnit);
-                console.log("Cate Code:", selectedUnit.cate_code);
-
                 limitInKg = limit * selectedUnit.conversion.conversion;
-
-            } else {
-                console.log("Measurement unit not found.");
             }
 
-            console.log("limit in kg", limitInKg);
-
-            // convert the quantity of the selected item weight
             let selectedItemInKg = null;
-            
             const selectedItemUnit = measurementUnits.unit.find(unit =>
-                unit.cate_code.toLowerCase() === itemMeasure.toLowerCase()
-                && unit.is_del === false
+                unit.cate_code.toLowerCase() === itemMeasure.toLowerCase() && unit.is_del === false
             );
-
             if (selectedItemUnit) {
-                console.log("Found:", selectedItemUnit);
-                console.log("Cate Code:", selectedItemUnit.cate_code);
-
                 selectedItemInKg = itemQuantity * selectedItemUnit.conversion.conversion;
-
-
-            } else {
-                console.log("Measurement unit not found.");
             }
 
-            console.log("selected limit in kg", selectedItemInKg);
-
-            if(selectedItemInKg > limitInKg) {
+            if (selectedItemInKg > limitInKg) {
                 Swal.fire({
                     icon: "error",
                     title: "The item is over limit",
@@ -771,62 +681,86 @@ function saveConsignmentAttachment() {
             }
         }
 
-        // ✅ Get Dropzone files
         const files = itemDropzone.getAcceptedFiles();
 
-        // ✅ Build the item object
+        // ─── BUILD ITEM OBJECT ──────────────────────────────────────
         const newItem = {
-            // id: crypto.randomUUID(),
             id: generateUUID(),
-            item_id: itemSelectValue,
-            item_name: itemSelectText,
+            item_id: itemId,
+            item_name: itemName,
             value: itemValue,
             quantity: itemQuantity,
             measure: itemMeasure,
             purpose: itemPurposeDescription,
             uses: itemUsesValue,
-            files: [...files],       // UI display
-            newFiles: [...files],    // actual upload
+            files: [...files],
+            newFiles: [...files],
+            isCustom: isCustom,
         };
 
-        // ✅ Add to temp array
-        tempItems.push(newItem);
+        // ─── UPDATE OR ADD ─────────────────────────────────────────
+        if (editingItemId !== null) {
+            // Update existing item
+            const index = tempItems.findIndex(obj => obj.id === editingItemId);
+            if (index !== -1) {
+                // Preserve the permit_id and existing attachments
+                const oldItem = tempItems[index];
+                newItem.permit_id = oldItem.permit_id;
+                newItem.existingAttachments = oldItem.existingAttachments || [];
+                newItem.files = [...oldItem.existingAttachments, ...files]; // combine old + new
+                // Replace the item
+                tempItems[index] = newItem;
+            }
+            editingItemId = null; // reset
+        } else {
+            // Add new item
+            tempItems.push(newItem);
+        }
 
-        // ✅ Render table
         renderAllItems();
-
-        // ✅ Reset modal fields
         resetAddItemModal();
 
-        // ✅ Hide modal
         const modalEl = document.getElementById("addItemModal");
         bootstrap.Modal.getInstance(modalEl).hide();
 
-        // ✅ Trigger summary / update
         change = 1;
         summarySubmit();
     });
 }
 
 function resetAddItemModal() {
-    // Clear plain inputs
     $("#itemValue").val("");
     $("#itemQuantity").val("");
-
-    // Reset Select2 or plain selects
     $("#itemSelect").val(null).trigger("change");
     $("#itemMeasure").val("").trigger("change");
     $("#itemPurpose").val("").trigger("change");
     $("#itemUses").val(null).trigger("change");
-
-    // Clear Dropzone files
+    // Custom fields
+    $("#customItemName").val("");
+    $("#customItemWrapper").hide();
+    // Reset editing flag
+    editingItemId = null;
     if (itemDropzone) itemDropzone.removeAllFiles(true);
 }
 
-
 function renderAllItems() {
     const tableBody = document.querySelector("#itemListTbl tbody");
-    tableBody.innerHTML = ""; // Clear existing rows
+    tableBody.innerHTML = "";
+
+    const countInput = document.getElementById("itemCountCheck");
+    if (countInput) {
+        countInput.value = tempItems.length > 0 ? "1" : "";
+        if (tempItems.length > 0) {
+            countInput.classList.remove("is-invalid");
+            countInput.style.border = "";
+            const addBtn = document.getElementById("mdlAddItemBtn");
+            if (addBtn) {
+                addBtn.classList.remove("is-invalid");
+                addBtn.style.setProperty("border", "", "important");
+                addBtn.style.color = "";
+            }
+        }
+    }
 
     console.log("temp items", tempItems);
 
@@ -834,18 +768,21 @@ function renderAllItems() {
         tableBody.insertAdjacentHTML(
             "beforeend",
             `<tr id="item-row-${item.id}">
-                <td>${index + 1}</td>
-                <td>${item.item_name}</td>
-               
+                <td class="text-wrap">${item.item_name}</td>
+                <td class="text-wrap">${item.purpose}</td>
                 <td class="text-center">
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                        <button class="btn btn-icon btn-success-light view-more-item"
-                            data-id="${item.id}">
+                        <button class="btn btn-icon btn-success-light view-more-item" data-id="${item.id}">
                             <i class="ti ti-eye"></i>
                         </button>
-                        <button class="btn btn-icon btn-danger-light delete-item"
-                            data-id="${item.id}">
+                        <button class="btn btn-icon btn-danger-light delete-item" data-id="${item.id}">
                             <i class="ti ti-trash"></i>
+                        </button>
+                        <button class="btn btn-icon btn-info-light edit-item" data-id="${item.id}">
+                            <i class="ti ti-edit"></i>
+                        </button>
+                        <button class="btn btn-icon btn-secondary-light copy-item" data-id="${item.id}">
+                            <i class="ti ti-copy"></i>
                         </button>
                     </div>
                 </td>
@@ -864,162 +801,72 @@ function viewMore() {
         let item = tempItems.find((obj) => obj.id === id);
         if (!item) return console.warn("Item not found for id:", id);
 
-        // Render item details
-        const detailsDiv = document.getElementById("itemDetailsInfo");
-        detailsDiv.innerHTML = `
-            <div class="p-1 row">
-                <div class = "col-12 col-md-6">
-                    <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-tag"></i></span> Item Name:</strong> ${item.item_name}</p>
-                </div>
-                <div class = "col-12 col-md-6">
-                    <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-scale-balanced"></i></span> Quantity:</strong> ${item.quantity} ${item.measure}</p>
-                </div>
-                <div class = "col-12 col-md-6">
-                    <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-money-bill"></i></span> Value:</strong> ${item.value}</p>
-                </div>
-                <div class = "col-12 col-md-6">
-                    <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-pen-fancy"></i></span> Purpose:</strong> ${item.purpose}</p>
-                </div>
-                <div class = "col-12">
-                    <p><strong class = "me-1"><span class = "avatar avatar-sm avatar-rounded  bd-gray-500"><i class="fa-solid fa-gear"></i></span> Uses:</strong> ${item.uses}</p>
-                </div>
+        const detailsHTML = `
+            <div class="text-start">
+                <div class="mb-3"><strong>Item Name:</strong> ${item.item_name}</div>
+                <div class="mb-3"><strong>Quantity:</strong> ${item.quantity} ${item.measure}</div>
+                <div class="mb-3"><strong>Value:</strong> RM ${item.value}</div>
+                <div class="mb-3"><strong>Purpose:</strong> ${item.purpose}</div>
+                <div class="mb-3"><strong>Uses:</strong> ${item.uses}</div>
+                ${Array.isArray(item.files) && item.files.length > 0 ? 
+                    `<div class="mb-3"><strong>Files:</strong> ${item.files.length} file(s) attached</div>` :
+                    `<div class="mb-3 text-muted"><strong>Files:</strong> No files attached</div>`
+                }
             </div>
         `;
 
-        // Render files in a table
-        const filesTableBody = document.querySelector("#itemFilesTable tbody");
-        filesTableBody.innerHTML = "";
-
-        if (Array.isArray(item.files) && item.files.length > 0) {
-            item.files.forEach((file) => {
-                // ✅ CASE 1: REAL File object (new upload)
-                if (file instanceof File) {
-                    const reader = new FileReader();
-
-                    reader.onload = function (e) {
-                        filesTableBody.insertAdjacentHTML(
-                            "beforeend",
-                            `
-                    <tr>
-                        <td>${file.name}</td>
-                        <td>${file.type}</td>
-                        <td>
-                            <button class="btn btn-sm btn-primary view-file-btn"
-                                data-url="${e.target.result}"
-                                type="button">
-                                View
-                            </button>
-                        </td>
-                    </tr>
-                    `
-                        );
-                    };
-
-                    reader.readAsDataURL(file);
-                }
-
-                // ✅ CASE 2: EXISTING attachment from DB
-                else if (file.file_path) {
-                    filesTableBody.insertAdjacentHTML(
-                        "beforeend",
-                        `
-                        <tr data-attachment-id="${file.id}">
-                            <td>${file.file_name}</td>
-                            <td>${file.file_type}</td>
-                            <td class="d-flex gap-2">
-                                <a href="${file.file_path}"
-                                target="_blank"
-                                class="btn btn-sm btn-primary">
-                                    View
-                                </a>
-
-                               
-                            </td>
-                        </tr>
-                        `
-                    );
-                }
-            });
-        } else {
-            filesTableBody.innerHTML = `
-        <tr>
-            <td colspan="3" class="text-center text-muted">
-                No files uploaded
-            </td>
-        </tr>
-    `;
-        }
-
-        // Show modal
-        const modalEl = document.getElementById("ItemDetailsModal");
-        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        Swal.fire({
+            title: "Item Details",
+            html: detailsHTML,
+            icon: "info",
+            confirmButtonText: "Close",
+            width: 500,
+        });
     });
 
-    // Handle view file button
     $(document).on("click", ".view-file-btn", function () {
         const base64DataUrl = $(this).data("url");
-
         if (!base64DataUrl) {
             console.error("No file URL found");
             return;
         }
-
-        // Extract Base64 & MIME type
         const arr = base64DataUrl.split(",");
         const mime = arr[0].match(/:(.*?);/)[1];
         const bstr = atob(arr[1]);
         let n = bstr.length;
         let u8arr = new Uint8Array(n);
-
-        while (n--) {
-            u8arr[n] = bstr.charCodeAt(n);
-        }
-
-        // Convert to Blob
+        while (n--) { u8arr[n] = bstr.charCodeAt(n); }
         const fileBlob = new Blob([u8arr], { type: mime });
-
-        // Create temporary URL
         const fileURL = URL.createObjectURL(fileBlob);
-
-        // Open in a new tab
         window.open(fileURL, "_blank");
     });
 }
+
 let deleteIds = [];
 
 function deleteItem() {
     $(document).on("click", ".delete-item", function (e) {
         e.preventDefault();
 
-        let id = $(this).data("id"); // this is tempItems.id (UUID)
-
+        let id = $(this).data("id");
         if (!tempItems) {
             console.error("tempItems array not found");
             return;
         }
 
-        // Find item index in array by UUID
         let index = tempItems.findIndex((obj) => obj.id === id);
-
         if (index === -1) {
             console.warn("Item not found:", id);
             return;
         }
 
-        // ✅ Get item_id instead of id
         let itemId = tempItems[index].permit_id;
-
-        // ✅ Store item_id (avoid duplicates)
         if (!deleteIds.includes(itemId)) {
             deleteIds.push(itemId);
         }
 
-        // Remove from array
         tempItems.splice(index, 1);
-
-        // Remove from UI
         $("#item-card-" + id).remove();
-
         renderAllItems();
 
         console.log("Deleted UUID:", id);
@@ -1031,16 +878,127 @@ function deleteItem() {
     });
 }
 
+function editItem() {
+    $(document).on("click", ".edit-item", function (e) {
+        e.preventDefault();
+
+        const id = $(this).data("id");
+        const item = tempItems.find((obj) => obj.id === id);
+        if (!item) return console.warn("Item not found for id:", id);
+
+        editingItemId = id;
+        resetAddItemModal();
+
+        const modalEl = document.getElementById("addItemModal");
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+
+        Swal.fire({
+            title: "Loading item...",
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading(),
+        });
+
+        // ✅ Now loadConsignmentSelection() returns a Promise, so we can use .then()
+        loadConsignmentSelection()
+            .then(() => {
+                // Handle custom vs normal
+                if (item.isCustom) {
+                    $("#itemSelect").val("others").trigger("change");
+                    $("#customItemWrapper").show();
+                    $("#customItemName").val(item.item_name);
+                } else {
+                    $("#itemSelect").val(item.item_id).trigger("change");
+                    $("#customItemWrapper").hide();
+                }
+
+                // Load uses and set value
+                return loadUses(item.isCustom ? 'others' : item.item_id);
+            })
+            .then(() => {
+                if (item.uses) {
+                    $("#itemUses").val(item.uses).trigger("change");
+                }
+                // Fill other fields
+                $("#itemValue").val(item.value);
+                $("#itemQuantity").val(item.quantity);
+                $("#itemMeasure").val(item.measure).trigger("change");
+                $("#itemPurpose").val(item.purpose).trigger("change");
+
+                // Clear Dropzone and add existing files (only if they are File objects)
+                if (itemDropzone) {
+                    itemDropzone.removeAllFiles(true);
+                    if (item.files && item.files.length > 0) {
+                        item.files.forEach((file) => {
+                            if (file instanceof File) {
+                                itemDropzone.addFile(file);
+                            }
+                        });
+                    }
+                }
+
+                Swal.close();
+            })
+            .catch(() => {
+                Swal.close();
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "Failed to load item data for editing.",
+                });
+            });
+    });
+}
+
+// ─── Copy Item ─────────────────────────────────────────
+function copyItem() {
+    $(document).on("click", ".copy-item", function (e) {
+        e.preventDefault();
+
+        const id = $(this).data("id");
+        if (!tempItems) {
+            console.error("tempItems array not found");
+            return;
+        }
+
+        const index = tempItems.findIndex((obj) => obj.id === id);
+        if (index === -1) {
+            console.warn("Item not found:", id);
+            return;
+        }
+
+        const original = tempItems[index];
+        const duplicated = {
+            ...original,
+            id: generateUUID(),
+            files: [...(original.files || [])],
+            permit_id: null, // new item, no permit_id yet
+        };
+
+        tempItems.splice(index + 1, 0, duplicated);
+        renderAllItems();
+        summarySubmit();
+
+        Swal.fire({
+            icon: "success",
+            title: "Item Copied",
+            text: "A duplicate of the item has been added.",
+            timer: 1800,
+            showConfirmButton: false,
+        });
+    });
+}
+
+// ─── Load Existing Consignments (FIXED) ────────────────────────────
 function loadExistingConsignments() {
     if (!application.consignment_permits) return;
 
     tempItems = [];
 
     application.consignment_permits.forEach((permit) => {
-        // let detail = JSON.parse(permit.consignment_detail);
         let detail = permit.consignment_detail;
-
-        console.log("permit detail", detail);
+        if (typeof detail === "string") {
+            try { detail = JSON.parse(detail); } catch (e) { detail = {}; }
+        }
 
         tempItems.push({
             id: detail.id || crypto.randomUUID(),
@@ -1052,15 +1010,10 @@ function loadExistingConsignments() {
             measure: detail.measure,
             purpose: detail.purpose,
             uses: detail.uses,
-
-            // ✅ EXISTING attachments from DB
+            isCustom: detail.isCustom || false,   // ✅ added
             existingAttachments: permit.attachments || [],
             files: permit.attachments || [],
-
-            // 🆕 new uploads only
             newFiles: [],
-
-            // ❌ deleted attachment IDs
             deletedAttachmentIds: [],
         });
     });
@@ -1070,19 +1023,17 @@ function loadExistingConsignments() {
 
 // ============= attachment =====================
 
+// ─── Save Application ──────────────────────────────────────────────
 function saveapplication(isDraft = false) {
     const form = document.querySelector("#wizardForm");
     if (!form) return console.error("Form not found");
 
     const formData = new FormData(form);
 
-    // 🔑 tell backend this is draft or submit
     formData.append("is_draft", isDraft ? 1 : 0);
-
     formData.append("exporterData", JSON.stringify(exporter));
     formData.append("importerData", JSON.stringify(importer));
     formData.append("permitDetails", JSON.stringify(permitDetails));
-
     formData.append("applicationId", application.application_id);
     formData.append("deleted_item_ids", deleteIds);
 
@@ -1100,10 +1051,10 @@ function saveapplication(isDraft = false) {
                 measure: item.measure,
                 purpose: item.purpose,
                 uses: item.uses,
+                isCustom: item.isCustom || false,
             })
         );
 
-        // 🆕 only new files
         newFiles.forEach((file) => {
             formData.append("files[]", file);
             formData.append("file_item_index[]", index);
@@ -1146,9 +1097,7 @@ function saveapplication(isDraft = false) {
 }
 
 // ------------------------- Initialize -------------------------
-// ------------------------- Initialize -------------------------
 $(document).ready(async function () {
-    // Show loading swal
     Swal.fire({
         title: "Loading...",
         html: "Please wait while the page initializes.",
@@ -1157,17 +1106,13 @@ $(document).ready(async function () {
     });
 
     try {
-        // Fetch exporter list and set change handler
-        // await fetchExporterList();
         fetchExporterList().then(() => {
             if (exporter && exporter.id) {
-                const $select = $("#selectexp");
-                $select.val(exporter.id).trigger("change"); // This will populate fields
+                $("#selectexp").val(exporter.id).trigger("change");
             }
         });
         handleExporterChange();
 
-        // Initialize modals and search
         initAddExporterModal();
         initImporterSearch();
         permitDetails();
@@ -1175,74 +1120,72 @@ $(document).ready(async function () {
         saveConsignmentAttachment();
         viewMore();
         deleteItem();
+        editItem();
+        copyItem();
 
         importerDetail();
+        exporterDetail();
         loadExistingConsignments();
+        summarySubmit();  // ensure summary is updated after loading
 
         measurementUnit();
 
         $("#itemMeasure").select2({
             width: "100%",
             placeholder: "-- Select Measurement Unit --",
-            // allowClear: true,
-            dropdownParent: $("#addItemModal"), // Important: for modal
+            dropdownParent: $("#addItemModal"),
         });
 
         $("#addexpcountry").select2({
             width: "100%",
             placeholder: "-- Select Country --",
-            // allowClear: true,
-            dropdownParent: $("#addExporterModal"), // Important: for modal
+            dropdownParent: $("#addExporterModal"),
         });
 
         $("#itemPurpose").select2({
             width: "100%",
             placeholder: "-- Select Purpose --",
-            // allowClear: true,
-            dropdownParent: $("#addItemModal"), // Important: for modal
+            dropdownParent: $("#addItemModal"),
         });
 
-        // ------------------- Item Purpose -------------------
         $("#itemPurpose").on("change", function () {
             const selectedOption = $(this).find("option:selected");
             itemPurpose = selectedOption.data("description") || "";
             console.log("Item purpose selected:", itemPurpose);
         });
 
-        // ------------------- Item Select (Consignment) -------------------
         $("#itemSelect").on("change", function () {
             const itemId = $(this).val();
             const $itemUses = $("#itemUses");
-
-            // Reset uses dropdown
-            $itemUses
-                .empty()
-                .append('<option value="">-- Select Uses --</option>');
+            $itemUses.empty().append('<option value="">-- Select Uses --</option>');
 
             if (!itemId) return;
 
-            // Load uses for the selected item
-            loadUses(itemId);
-            loadDetails(itemId)
+            if (itemId === "others") {
+                // Custom item: show custom name input
+                $("#customItemWrapper").show();
+                // Load global uses (no itemId)
+                loadUses('others');
+            } else {
+                $("#customItemWrapper").hide();
+                loadUses(itemId);
+                loadDetails(itemId);
+            }
         });
 
-        // Expose loadConsignmentSelection globally if needed
-        // loadConsignmentSelection();
         $("#mdlAddItemBtn").on("click", loadConsignmentSelection);
 
-        // Submit button handler
+        // Submit button
         $(document).on("click", "#submitApps", function (e) {
             e.preventDefault();
             console.log("Submit clicked!");
             saveapplication(false);
         });
 
+        // Unsaved changes warning
         $(document).on(
-             "click",
-            `#logoutButton, 
-            .app-sidebar.sticky button, .app-sidebar.sticky a,
-            .breadcrumb .breadcrumb-item a`,
-            
+            "click",
+            `#logoutButton, .app-sidebar.sticky button, .app-sidebar.sticky a, .breadcrumb .breadcrumb-item a`,
             function (e) {
                 if (!change) return;
 
@@ -1260,50 +1203,36 @@ $(document).ready(async function () {
                     cancelButtonText: "Stay",
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        // Leave page
                         change = false;
-
                         if (target.tagName === "A") {
                             window.location.href = target.href;
                         } else {
                             target.click();
                         }
                     }
-
                     if (result.isDenied) {
-                        console.log("draft is saved !");
-                        saveapplication(true); // ✅ draft
+                        saveapplication(true);
                         window.location.href = "/public/view_import_permit";
-                        
                     }
-
-                    // result.isDismissed → user clicked "Stay"
                 });
             }
         );
+
+        isInitializing = false;
     } catch (error) {
         console.error("Error during initialization:", error);
-        Swal.fire(
-            "Error",
-            "Failed to initialize page. Check console for details.",
-            "error"
-        );
+        Swal.fire("Error", "Failed to initialize page. Check console for details.", "error");
     } finally {
         Swal.close();
     }
 });
 
-// ============= attachment =====================
-
-// ------------------------------summary details ---------------------
+// ------------------------------ Summary details ---------------------
 export function summarySubmit() {
     const targetTable = document.querySelector("#summaryTable3 tbody");
 
-    // --- IMPORTER & EXPORTER SUMMARY ---
     impAddrs = importer
-        ? [importer.address_1, importer.address_2]
-              .filter((x) => x && x.trim() !== "")
-              .join(", ")
+        ? [importer.address_1, importer.address_2].filter(x => x && x.trim() !== "").join(", ")
         : "";
 
     permitDetails = {
@@ -1313,46 +1242,41 @@ export function summarySubmit() {
         entrypoint: document.getElementById("entryPoint").value,
     };
 
-    // Insert importer details
     document.getElementById("importerName").textContent = importer.fullname;
-    document.getElementById("importerPhoneno").textContent =
-        importer.phone_number;
+    document.getElementById("importerPhoneno").textContent = importer.phone_number;
     document.getElementById("simpAdd").textContent = impAddrs;
 
-    // Exporter details
     document.getElementById("sexpName").textContent = exporter.name;
+    if (document.getElementById("expName")) document.getElementById("expName").value = exporter.name;
     document.getElementById("sexpfonno").textContent = exporter.phone_no;
+    if (document.getElementById("expfonno")) document.getElementById("expfonno").value = exporter.phone_no;
     document.getElementById("sexpAddress").textContent = exporter.address;
+    if (document.getElementById("expAddress")) document.getElementById("expAddress").value = exporter.address;
     document.getElementById("sexpCountry").textContent = exporter.country;
+    if (document.getElementById("expCountry")) document.getElementById("expCountry").value = exporter.country;
 
-    // Permit details
     document.getElementById("seta").textContent = permitDetails.eta;
     document.getElementById("strty").textContent = permitDetails.tranType;
     document.getElementById("sentryp").textContent = entryName;
 
-    // --- CONSIGNMENT DETAILS ---
-    targetTable.innerHTML = ""; // clear existing rows
+    targetTable.innerHTML = "";
 
     tempItems.forEach((item, index) => {
-        // --- Build attachment list ---
-        let attachmentHTML = "";
-
-        attachmentHTML = `
-            <button class = "btn btn-icon btn-success-light view-more-item" data-id = "${item.id}">
-                 <i class="ti ti-eye"></i>
+        let attachmentHTML = `
+            <button class="btn btn-icon btn-success-light view-more-item" data-id="${item.id}">
+                <i class="ti ti-eye"></i>
             </button>
-            `;
+        `;
 
-        // --- Insert summary row ---
         targetTable.insertAdjacentHTML(
             "beforeend",
             `
                 <tr>
                     <td>${index + 1}</td>
                     <td>${item.item_name || ""}</td>
-                    <td>${item.quantity || ""}  ${item.measure || ""}</td>
-                    <td class = "text-wrap">${item.purpose || ""}</td>
-                    <td class = "text-wrap">${item.uses || ""}</td>
+                    <td>${item.quantity || ""} ${item.measure || ""}</td>
+                    <td class="text-wrap">${item.purpose || ""}</td>
+                    <td class="text-wrap">${item.uses || ""}</td>
                     <td>RM ${item.value || ""}</td>
                     <td>${attachmentHTML}</td>
                 </tr>
@@ -1360,5 +1284,3 @@ export function summarySubmit() {
         );
     });
 }
-
-// ------------------------------summary details ---------------------

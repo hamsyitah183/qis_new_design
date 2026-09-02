@@ -1177,7 +1177,7 @@ class UserController extends Controller
                 $message = 'All required attachments rejected.';
             }
 
-            $user->doa_verified = 1;
+            $user->doa_verified = $isApproved;
             $user->save();
 
             DB::commit();
