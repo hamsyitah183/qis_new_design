@@ -15,10 +15,10 @@ class DocumentRequirementSeeder extends Seeder
         DocumentRequirement::updateOrCreate(
             [
                 'module' => 'user',
-                'name' => 'Identification Documents (IC / Passport)',
+                'name' => 'Identification Documents (IC / Passport) or Business Registration Certificate (SSM / Trading License)',
             ],
             [
-                'description' => 'Dokumen Pengenalan Diri (Kad Pengenalan / Pasport)',
+                'description' => '',
                 'is_required' => true,
                 'requires_expiry' => false,
                 'is_active' => true,
@@ -26,17 +26,17 @@ class DocumentRequirementSeeder extends Seeder
         );
 
 
-        DocumentRequirement::updateOrCreate(
-            [
-                'module' => 'user',
-                'name' => 'Business Registration Certificate (SSM / Trading License)',
-            ],
-            [
-                'description' => 'Sijil Pendaftaran Perniagaan (SSM / Lesen Berniaga)',
-                'is_required' => true,
-                'requires_expiry' => true,
-                'is_active' => true,
-            ]
-        );
+        // DocumentRequirement::updateOrCreate(
+        //     [
+        //         'module' => 'user',
+        //         'name' => 'Business Registration Certificate (SSM / Trading License)',
+        //     ],
+        //     [
+        //         'description' => 'Sijil Pendaftaran Perniagaan (SSM / Lesen Berniaga)',
+        //         'is_required' => true,
+        //         'requires_expiry' => true,
+        //         'is_active' => true,
+        //     ]
+        // );
     }
 }

@@ -171,7 +171,7 @@
 
         <section class ="qis-section">
             {{-- Kenapa Gunakan QIS 2.0? / Why Use QIS 2.0? --}}
-            <div class="my-4 p-4 rounded-3 " style="background: #f8fafc; border: 1px solid #e2e8f0;">
+            <div class=" p-4 rounded-3 qis-container " style="background: #f8fafc; border: 1px solid #e2e8f0;">
                 <h4 class="fw-bold mb-3 text-dark" data-en="Why Use QIS 2.0?" data-bm="Kenapa Gunakan QIS 2.0?">Why Use
                     QIS 2.0?</h4>
                 <div class="row g-3">
