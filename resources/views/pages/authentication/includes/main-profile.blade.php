@@ -71,3 +71,29 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Get the hash from the URL (e.g., #edit-verification-tab)
+        const hash = window.location.hash;
+
+        if (hash) {
+            // Try to find a button with that ID (e.g., id="edit-verification-tab")
+            let targetButton = document.querySelector(hash);
+
+            // If not found, maybe the hash points to a pane (e.g., #edit-verification-tab-pane)
+            if (!targetButton) {
+                // Find a button whose data-bs-target matches the hash
+                targetButton = document.querySelector(`[data-bs-target="${hash}"]`);
+            }
+
+            // If we found a tab button, activate it
+            if (targetButton && targetButton.classList.contains('nav-link')) {
+                const tab = new bootstrap.Tab(targetButton);
+                tab.show();
+            }
+        }
+    });
+</script>
+@endpush

@@ -253,9 +253,10 @@
                         </div>
                         <div class="p-2 mt-4">
                             <h4 data-bm="Sahkan e-mel anda" data-en="Verify your email">Verify your email</h4>
+                            
                             <p>
                                 <span data-bm="Kami telah menghantar e-mel pengesahan kepada" data-en="We have sent you verification email">We have sent you verification email</span>
-                                <span class="fw-semibold">{{ $user->email ?? '' }}</span>,
+                                <span class="fw-semibold">{{ $email ?? '' }}</span>,
                                 <span data-bm="Sila semaknya" data-en="Please check it">Please check it</span>
                             </p>
                             <div class="alert alert-success text-center mb-4" id="emailSent" style="display: none"></div>
