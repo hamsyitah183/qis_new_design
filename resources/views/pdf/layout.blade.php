@@ -5,6 +5,9 @@
     <title>@yield('title', 'Document')</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         @page {
@@ -14,7 +17,7 @@
             box-sizing: border-box;
         }
         body {
-            font-family: Arial, sans-serif;
+            font-family:'Poppins', Arial, sans-serif;
             font-size: 10pt;
             line-height: 1.45;
             color: #2b2b2b;
@@ -184,7 +187,7 @@
         <table>
             <tr>
                 <td class="footer-left">Official Document — Department of Agriculture Sabah</td>
-                <td class="footer-right footer-page"></td>
+                <td class="footer-right footer-page" style="display: none"></td>
             </tr>
         </table>
     </div>
