@@ -1089,7 +1089,7 @@ function renderActivityTimeline() {
     const lang = getLang();
     el.innerHTML = ACTIVITY_LOG.map((entry) => {
         const cfg = STAGE_CONFIG[entry.stage] || STAGE_CONFIG.email;
-        const title = cfg[lang] || cfg.en;
+        const title = entry.title || cfg[lang] || cfg.en;
         return `
             <div class="ipv-timeline-item">
                 <div class="ipv-timeline-icon is-${cfg.color}"><i class="bi ${cfg.icon}"></i></div>

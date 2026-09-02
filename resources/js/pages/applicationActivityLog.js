@@ -35,7 +35,7 @@ export function renderActivityTimeline(stageconfig, activity_log) {
     const lang = getLang();
     el.innerHTML = activity_log.map((entry) => {
         const cfg = stageconfig[entry.stage] || stageconfig.email;
-        const title = cfg[lang] || cfg.en;
+        const title = entry.title || cfg[lang] || cfg.en;
         return `
             <div class="ipv-timeline-item">
                 <div class="ipv-timeline-icon is-${cfg.color}"><i class="bi ${cfg.icon}"></i></div>
