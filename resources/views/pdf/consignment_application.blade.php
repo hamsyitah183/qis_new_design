@@ -6,8 +6,8 @@
 
 @php
     $docRef = $application->application_id;
-    $totalValue = $application->consignmentPermits->sum(fn ($p) => $p->value ?? 0);
-    $totalQty = $application->consignmentPermits->sum(fn ($p) => $p->quantity ?? 0);
+    $totalValue = $application->consignmentPermits->sum(fn($p) => $p->value ?? 0);
+    $totalQty = $application->consignmentPermits->sum(fn($p) => $p->quantity ?? 0);
 @endphp
 
 @section('extra-style')
@@ -18,6 +18,7 @@
             border-collapse: collapse;
             margin-bottom: 4px;
         }
+
         .info-grid td {
             width: 25%;
             vertical-align: top;
@@ -25,6 +26,7 @@
             border: 1px solid #eceff1;
             background: #fafbfc;
         }
+
         .info-grid .info-label {
             font-size: 7.5pt;
             text-transform: uppercase;
@@ -32,6 +34,7 @@
             color: #9ca3af;
             margin-bottom: 3px;
         }
+
         .info-grid .info-value {
             font-size: 9.5pt;
             font-weight: bold;
@@ -45,12 +48,14 @@
             border-spacing: 10px 0;
             margin: 0 -10px 4px -10px;
         }
+
         .party-table td {
             width: 50%;
             vertical-align: top;
             padding: 12px 14px;
             border: 1px solid #eceff1;
         }
+
         .party-table .party-heading {
             font-weight: bold;
             margin-bottom: 6px;
@@ -59,17 +64,20 @@
             letter-spacing: 0.5px;
             color: #2d8f4f;
         }
+
         .party-table .party-name {
             font-weight: bold;
             font-size: 11.5pt;
             margin-bottom: 6px;
             color: #1a1a1a;
         }
+
         .party-table .party-row {
             font-size: 9pt;
             color: #4b5563;
             margin-bottom: 3px;
         }
+
         .party-table .party-row .party-row-label {
             color: #9ca3af;
             display: inline-block;
@@ -82,11 +90,14 @@
             border-collapse: collapse;
             margin-top: 2px;
         }
-        .item-table th, .item-table td {
+
+        .item-table th,
+        .item-table td {
             border: 1px solid #eceff1;
             padding: 7px 8px;
             font-size: 9pt;
         }
+
         .item-table th {
             background: #f4f7f5;
             color: #4b5563;
@@ -96,12 +107,15 @@
             letter-spacing: 0.3px;
             font-weight: bold;
         }
+
         .item-table td.num {
             text-align: right;
         }
+
         .item-table tr:nth-child(even) td {
             background: #fafbfc;
         }
+
         .item-status {
             display: inline-block;
             padding: 2px 8px;
@@ -118,21 +132,26 @@
             margin: 10px 0 0 auto;
             border: 1px solid #eceff1;
         }
+
         .totals-box table {
             width: 100%;
             border-collapse: collapse;
         }
+
         .totals-box td {
             padding: 7px 12px;
             font-size: 9pt;
         }
+
         .totals-box .totals-label {
             color: #6b7280;
         }
+
         .totals-box .totals-value {
             text-align: right;
             font-weight: bold;
         }
+
         .totals-box .grand-total td {
             background: #eaf6ee;
             color: #226b3c;
@@ -153,13 +172,13 @@
 @section('content')
 
     {{-- ================= APPLICATION OVERVIEW ================= --}}
-    <div class="section-block">
+    <div class="section-block mb-3">
         <div class="section-title"><span class="section-icon"></span>Application Overview</div>
         <table class="info-grid">
             <tr>
                 <td>
-                    <div class="info-label">Reference No.</div>
-                    <div class="info-value">{{ $application->reference_no ?? '—' }}</div>
+                    <div class="info-label">Type</div>
+                    <div class="info-value">{{ $application->application_type ?? '—' }}</div>
                 </td>
                 <td>
                     <div class="info-label">Status</div>
@@ -194,11 +213,21 @@
                     <div class="info-value">{{ $application->importer_verify ?? '—' }}</div>
                 </td>
             </tr>
-            @if (!empty($application->vehicle_ids))
+            @php
+                $vehicleNumbers = [];
+                if (!empty($application->vehicle_list)) {
+                    if (is_array($application->vehicle_list)) {
+                        $vehicleNumbers = array_column($application->vehicle_list, 'vehicle_number');
+                    } elseif (method_exists($application->vehicle_list, 'pluck')) {
+                        $vehicleNumbers = $application->vehicle_list->pluck('vehicle_number')->toArray();
+                    }
+                }
+            @endphp
+            @if (!empty($vehicleNumbers))
                 <tr>
                     <td colspan="4">
-                        <div class="info-label">Vehicle ID(s)</div>
-                        <div class="info-value">{{ implode(', ', $application->vehicle_ids) }}</div>
+                        <div class="info-label">Vehicle</div>
+                        <div class="info-value">{{ implode(', ', $vehicleNumbers) }}</div>
                     </td>
                 </tr>
             @endif
@@ -206,21 +235,29 @@
     </div>
 
     {{-- ================= EXPORTER & IMPORTER ================= --}}
-    <div class="section-block">
+    <div class="section-block mb-3">
         <div class="section-title"><span class="section-icon"></span>Exporter &amp; Importer</div>
         <table class="party-table">
             <tr>
                 <td>
                     <div class="party-heading">Exporter (Applicant)</div>
                     <div class="party-name">{{ optional($application->exporter)->fullname ?? '—' }}</div>
-                    <div class="party-row"><span class="party-row-label">Phone</span>{{ optional($application->exporter)->phone_number ?? '—' }}</div>
-                    <div class="party-row"><span class="party-row-label">Email</span>{{ optional($application->exporter)->email ?? '—' }}</div>
-                    <div class="party-row"><span class="party-row-label">Address</span>{{ trim(collect([
-                        optional($application->exporter)->address_1,
-                        optional($application->exporter)->address_2,
-                        optional($application->exporter)->postcode,
-                        optional($application->exporter)->district,
-                    ])->filter()->implode(', ')) ?: '—' }}</div>
+                    <div class="party-row"><span
+                            class="party-row-label">Phone</span>{{ optional($application->exporter)->phone_number ?? '—' }}
+                    </div>
+                    <div class="party-row"><span
+                            class="party-row-label">Email</span>{{ optional($application->exporter)->email ?? '—' }}</div>
+                    <div class="party-row"><span
+                            class="party-row-label">Address</span>{{ trim(
+                                collect([
+                                    optional($application->exporter)->address_1,
+                                    optional($application->exporter)->address_2,
+                                    optional($application->exporter)->postcode,
+                                    optional($application->exporter)->district,
+                                ])->filter()->implode(', '),
+                            ) ?:
+                                '—' }}
+                    </div>
                 </td>
                 <td>
                     <div class="party-heading">Importer (Consignee)</div>
@@ -228,32 +265,31 @@
                         $importerDetail = $application->importer_detail ?? [];
                         $importer = $application->importer;
 
-                    
-
-                        $country = \App\Models\Country::where('code', $importer['country'] )->first();
+                        $country = \App\Models\Country::where('code', $importer['country'])->first();
                     @endphp
-                    <div class="party-name">{{ $importerDetail['name'] ?? optional($importer)->name ?? '—' }}</div>
-                    <div class="party-row"><span class="party-row-label">Phone</span>{{ $importerDetail['phone_no'] ?? optional($importer)->phone_no ?? '—' }}</div>
+                    <div class="party-name">{{ $importerDetail['name'] ?? (optional($importer)->name ?? '—') }}</div>
+                    <div class="party-row"><span
+                            class="party-row-label">Phone</span>{{ $importerDetail['phone_no'] ?? (optional($importer)->phone_no ?? '—') }}
+                    </div>
                     <div class="party-row"><span class="party-row-label">Country</span>{{ $country->name ?? '—' }}</div>
-                    <div class="party-row"><span class="party-row-label">Address</span>{{ $importerDetail['address'] ?? optional($importer)->address ?? '—' }}</div>
+                    <div class="party-row"><span
+                            class="party-row-label">Address</span>{{ $importerDetail['address'] ?? (optional($importer)->address ?? '—') }}
+                    </div>
                 </td>
             </tr>
         </table>
     </div>
 
     {{-- ================= ITEMS ================= --}}
-    <div class="section-block">
+    <div class="section-block mb-3">
         <div class="section-title"><span class="section-icon"></span>Consignment Items</div>
         <table class="item-table">
             <thead>
                 <tr>
                     <th>Item Name</th>
                     <th>Category</th>
-                    <th>Purpose</th>
                     <th class="num">Quantity</th>
                     <th>Unit</th>
-                    <th class="num">Value (RM)</th>
-                    <th>Status</th>
                 </tr>
             </thead>
             <tbody>
@@ -264,11 +300,8 @@
                     <tr>
                         <td>{{ $detail['item_name'] ?? '—' }}</td>
                         <td>{{ $detail['category'] ?? '—' }}</td>
-                        <td>{{ $permit->purpose ?? '—' }}</td>
                         <td class="num">{{ number_format($permit->quantity ?? 0, 2) }}</td>
                         <td>{{ $permit->unit_measurement ?? '—' }}</td>
-                        <td class="num">{{ number_format($permit->value ?? 0, 2) }}</td>
-                        <td><span class="item-status">{{ $permit->status ?? '—' }}</span></td>
                     </tr>
                 @empty
                     <tr>
@@ -278,7 +311,7 @@
             </tbody>
         </table>
 
-        @if ($application->consignmentPermits->count())
+        {{-- @if ($application->consignmentPermits->count())
             <div class="totals-box">
                 <table>
                     <tr>
@@ -295,7 +328,52 @@
                     </tr>
                 </table>
             </div>
-        @endif
+        @endif --}}
     </div>
+
+    {{-- ================= CATEGORY SUMMARY (NEW) ================= --}}
+    @php
+        $priceTotals = is_array($application->prices_total) 
+            ? $application->prices_total 
+            : (json_decode($application->prices_total, true) ?? []);
+    @endphp
+    @if (!empty($priceTotals))
+        <div class="section-block mb-3">
+            <div class="section-title"><span class="section-icon"></span>Category Summary</div>
+            <table class="item-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th class="num">Total Quantity</th>
+                        <th class="num">Price (RM)</th>
+                       
+                    </tr>
+                </thead>
+                <tbody>
+                    @php $grandTotal = 0; @endphp
+                    @foreach ($priceTotals as $cat)
+                        @php
+                            $qty = $cat['quantity'] ?? 0;
+                            $price = $cat['price'] ?? 0;
+                         
+                            $grandTotal += $price;
+                        @endphp
+                        <tr>
+                            <td>{{ $cat['category_name'] ?? '—' }}</td>
+                            <td class="num">{{ number_format($qty, 2) }}</td>
+                            <td class="num">{{ number_format($price, 2) }}</td>
+                      
+                        </tr>
+                    @endforeach
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="2" style="text-align:right;">Grand Total Value</th>
+                        <th class="num" style="font-weight:bold;">RM {{ number_format($grandTotal, 2) }}</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    @endif
 
 @endsection

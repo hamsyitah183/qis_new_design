@@ -20,6 +20,7 @@ use App\Models\IpConsignmentPermit;
 use App\Models\InternalUser;
 use App\Models\PublicUser;
 use App\Models\TempAttachment;
+use App\Models\UserVehicleList;
 use App\Notifications\ApplicationNotification;
 use App\Services\ApplicationActivityLogger;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -929,6 +930,11 @@ class ConsignmentController extends Controller
             'consignmentPermits',
         ])->where('application_id', $id)->firstOrFail();
 
+       
+        $vehicle = UserVehicleList::whereIn('id', $application->vehicle_ids)->get();
+          
+        $application['vehicle_list'] = $vehicle;
+    
 
         $pdf = Pdf::loadView('pdf.consignment_application', compact('application'))
             ->setPaper('a4', 'portrait');

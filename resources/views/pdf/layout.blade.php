@@ -3,6 +3,9 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>@yield('title', 'Document')</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+
     <style>
         @page {
             margin: 2.8cm 1.6cm 2cm 1.6cm;
@@ -92,7 +95,7 @@
 
         /* ================= SHARED CONTENT HELPERS ================= */
         .section-block {
-            margin-bottom: 18px;
+            margin-bottom: 40px;
         }
         .section-title {
             font-weight: bold;
