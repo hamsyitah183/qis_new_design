@@ -32,6 +32,17 @@ let tempAttachments = [];
 let itemPurpose = null;
 let temporaryItemsAttachment = [];
 
+// ─── Application Attachments State ──
+let applicationAttachments = [];
+let deletedAttachmentIds = [];
+let appDocDropzones = {};
+let dropzoneInstances = {};
+let attachmentOffcanvas = null;
+let itemAttachmentOffcanvas = null;
+let currentItemAttachments = [];
+let currentItemAttachIndex = 0;
+let currentAttachmentIndex = 0;
+
 let existingIds = [];
 existingIds = application.consignment_permits
     ? application.consignment_permits.map((p) => p.id)
@@ -77,6 +88,50 @@ function exporterDetail() {
     $("#expcountryCode").val(exporter.ccode || "");
     $("#expcountry").val(exporter.country || "");
 }
+
+// ─── Helper to determine MIME type from extension ──
+function getMimeType(filename) {
+    if (!filename) return "application/octet-stream";
+    const ext = filename.split('.').pop().toLowerCase();
+    const mimeTypes = {
+        'pdf': 'application/pdf',
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'doc': 'application/msword',
+        'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'xls': 'application/vnd.ms-excel',
+        'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'txt': 'text/plain',
+        'csv': 'text/csv'
+    };
+    return mimeTypes[ext] || "application/octet-stream";
+}
+
+// ─── Helper to create a dummy file from existing attachment ──
+function createExistingFile(attachment) {
+    const mimeType = attachment.file_type || getMimeType(attachment.file_name);
+    const blob = new Blob([' '], { type: mimeType });
+    const file = new File([blob], attachment.file_name, { type: mimeType });
+    file._isExisting = true;
+    file._url = attachment.file_path;
+    file._id = attachment.id;
+    file.displayName = attachment.file_name;
+    return file;
+}
+
+function createDummyFileFromAttachment(att) {
+    const mimeType = getMimeType(att.name) || att.type || 'application/octet-stream';
+    const blob = new Blob([' '], { type: mimeType });
+    const file = new File([blob], att.name, { type: mimeType });
+    file._isExisting = true;
+    file._url = att.url || null;
+    file._id = att.id;
+    file.displayName = att.displayName || att.name;
+    file._attachmentId = att.id;
+    return file;
+}
+
 
 // ------------------------- Exporter List -------------------------
 function fetchExporterList() {
@@ -246,7 +301,7 @@ function loadUses(itemId) {
     const $select = $("#itemUses");
     $select.empty().append('<option value="">-- Select Uses --</option>');
 
-    if (!itemId) return;
+    if (!itemId) return Promise.resolve();
 
     Swal.fire({
         title: "Loading...",
@@ -255,7 +310,7 @@ function loadUses(itemId) {
     });
 
     const url = itemId === 'others' ? '/public/consignment_uses' : `/public/consignment_uses/${itemId}`;
-    fetch(url)
+    return fetch(url)
         .then((res) => res.json())
         .then((data) => {
             if (!data.data) return;
@@ -514,7 +569,9 @@ function permitDetails() {
 
 // ============= attachment =====================
 function itemConsigment() {
-    itemDropzone = new Dropzone("#itemDropzone", {
+    const el = document.getElementById("itemDropzone");
+    if (!el) return;
+    itemDropzone = new Dropzone(el, {
         url: "/",
         autoProcessQueue: false,
         paramName: "file",
@@ -1012,7 +1069,7 @@ function loadExistingConsignments() {
             uses: detail.uses,
             isCustom: detail.isCustom || false,   // ✅ added
             existingAttachments: permit.attachments || [],
-            files: permit.attachments || [],
+            files: [],
             newFiles: [],
             deletedAttachmentIds: [],
         });
@@ -1060,6 +1117,20 @@ function saveapplication(isDraft = false) {
             formData.append("file_item_index[]", index);
         });
     });
+
+    // Send new application-level attachments
+    applicationAttachments.forEach((attachment) => {
+        if (attachment.file && !attachment.file._isExisting) {
+            formData.append("application_files[]", attachment.file);
+            formData.append("application_files_document_type[]", attachment.document_type || "");
+            formData.append("application_files_description[]", attachment.description || "");
+        }
+    });
+
+    // Notify backend of deleted attachments
+    if (deletedAttachmentIds && deletedAttachmentIds.length > 0) {
+        formData.append("deleted_attachment_ids", JSON.stringify(deletedAttachmentIds));
+    }
 
     Swal.fire({
         title: isDraft ? "Saving Draft..." : "Submitting...",
@@ -1126,6 +1197,15 @@ $(document).ready(async function () {
         importerDetail();
         exporterDetail();
         loadExistingConsignments();
+        if (typeof loadExistingApplicationAttachments === "function") {
+            loadExistingApplicationAttachments();
+            // ─── NOW init Dropzones (after applicationAttachments is populated) ──
+            initApplicationAttachments();
+            initAttachmentOffcanvas();
+            initAttachmentNavigation();
+            initItemAttachmentOffcanvas();
+            initItemAttachmentNavigation();
+        }
         summarySubmit();  // ensure summary is updated after loading
 
         measurementUnit();
@@ -1283,4 +1363,776 @@ export function summarySubmit() {
             `
         );
     });
+}
+
+function loadExistingApplicationAttachments() {
+    console.log('[APP-ATTACH] application.attachment:', application.attachment);
+    
+    // Build a map of docName -> docId from the DOM
+    const docMap = {};
+    document.querySelectorAll('.application-attachment-dropzone').forEach(el => {
+        const docId = el.dataset.docId;
+        const docName = el.dataset.docName ? el.dataset.docName.trim() : '';
+        if (docId && docName) {
+            docMap[docName] = docId;
+        }
+    });
+    console.log('[APP-ATTACH] docMap:', docMap);
+
+    // Clear the global array
+    applicationAttachments = [];
+
+    if (application.attachment && application.attachment.length > 0) {
+        application.attachment.forEach((a) => {
+            const docName = a.description ? a.description.trim() : '';
+            const docId = docMap[docName] || null;
+            console.log('[APP-ATTACH] Processing attachment:', a.file_name, '| description:', docName, '| matched docId:', docId);
+            applicationAttachments.push({
+                id: a.id || crypto.randomUUID(),
+                file: null,
+                name: a.file_name,
+                displayName: a.file_name,
+                size: a.file_size || 0,
+                type: a.file_type || "",
+                url: a.file_path,
+                document_id: docId,
+                document_type: docName || "",
+                description: docName || "",
+            });
+        });
+
+        console.log('[APP-ATTACH] applicationAttachments after load:', applicationAttachments);
+    } else {
+        console.log('[APP-ATTACH] No attachments found in application.attachment');
+    }
+}
+
+function initApplicationAttachments() {
+    const dropzoneElements = document.querySelectorAll('.application-attachment-dropzone');
+    if (!dropzoneElements.length) return;
+
+    // Clear previous instances
+    dropzoneInstances = {};
+
+    dropzoneElements.forEach((el) => {
+        const docId = el.dataset.docId;
+        const docName = el.dataset.docName || '';
+
+        if (!docId) return;
+
+        // Guard: destroy any pre-existing Dropzone instance on this element
+        if (el.dropzone) {
+            el.dropzone.destroy();
+        }
+
+        const dz = new Dropzone(el, {
+            url: '/',                          // not used (autoProcessQueue = false)
+            autoProcessQueue: false,
+            addRemoveLinks: false,
+            previewsContainer: false,          // we render our own table
+            clickable: true,
+            acceptedFiles: '.jpg,.jpeg,.png,.pdf,.doc,.docx',
+            maxFilesize: 15,
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            },
+            init: function() {
+                // When a file is added, store it in the global array with doc info
+                this.on('addedfile', function(file) {
+                    // Check if this is an existing file from the server
+                    if (file._isExisting && file._id) {
+                        // Find the existing attachment in the array
+                        const existing = applicationAttachments.find(a => a.id === file._id);
+                        if (existing) {
+                            // Reuse existing attachment – just link the file object
+                            existing.file = file;
+                            file._attachmentId = existing.id;
+                            // Render table now that the file is linked
+                            renderApplicationAttachmentTable(docId);
+                            updateDocFileCountBadge(docId);
+                            return;
+                        }
+                    }
+
+                    // New file (uploaded by user)
+                    const attachment = {
+                        id: crypto.randomUUID(),
+                        file: file,
+                        name: file.name,
+                        displayName: file.displayName || file.name,
+                        size: file.size,
+                        type: file.type,
+                        document_id: docId,
+                        document_type: docName,
+                        description: docName,   // default description = document requirement name
+                    };
+                    file._attachmentId = attachment.id;
+                    applicationAttachments.push(attachment);
+                    renderApplicationAttachmentTable(docId);
+                    updateDocFileCountBadge(docId);
+                    updateAttachmentTable();   // summary table
+                });
+
+                // Handle file removal
+                this.on('removedfile', function(file) {
+                    const index = applicationAttachments.findIndex(
+                        (a) => a.id === file._attachmentId
+                    );
+                    if (index !== -1) {
+                        applicationAttachments.splice(index, 1);
+                        renderApplicationAttachmentTable(docId);
+                        updateDocFileCountBadge(docId);
+                        updateAttachmentTable();
+                    }
+                });
+            },
+            error: function(file, message) {
+                console.error('Dropzone error:', message);
+                if (file.previewElement) {
+                    file.previewElement.remove();
+                }
+            }
+        });
+
+        dropzoneInstances[docId] = dz;
+
+        // ─── Load existing attachments for this document ID ──
+        const existingForDoc = applicationAttachments.filter(
+            (a) => String(a.document_id) === String(docId)
+        );
+        existingForDoc.forEach((att) => {
+            const dummyFile = createDummyFileFromAttachment(att);
+            dz.addFile(dummyFile);
+        });
+
+        // Render the table for this document (will show existing files)
+        renderApplicationAttachmentTable(docId);
+        updateDocFileCountBadge(docId);
+    });
+
+    // Update the summary table
+    updateAttachmentTable();
+}
+
+// ─── Render attachment table for a specific document ────
+function renderApplicationAttachmentTable(docId) {
+    const $tbody = $(`.application-attachment-table[data-doc-id="${docId}"] tbody`);
+    if (!$tbody.length) return;
+
+    $tbody.empty();
+
+    const docAttachments = applicationAttachments.filter(
+        (a) => String(a.document_id) === String(docId)
+    );
+
+    if (!docAttachments.length) {
+        $tbody.append(`
+            <tr class="empty-row">
+                <td colspan="2" class="text-center text-muted py-2" data-en="No attachments uploaded yet." data-bm="Tiada lampiran dimuat naik lagi.">
+                    No attachments uploaded yet.
+                </td>
+            </tr>
+        `);
+        return;
+    }
+
+    docAttachments.forEach((attachment) => {
+        $tbody.append(`
+            <tr data-id="${attachment.id}">
+                <td class="text-wrap">
+                    <a href="#" class="text-decoration-none attachment-name-link" data-id="${attachment.id}">
+                        <strong>${attachment.displayName}</strong>
+                    </a>
+                    <div class="text-muted small">${attachment.name}</div>
+                </td>
+                <td class="text-end">
+                    <button type="button" class="btn btn-icon btn-success-light view-attachment-btn" data-id="${attachment.id}">
+                        <i class="ti ti-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-icon btn-info-light edit-attachment-btn ms-2" data-id="${attachment.id}">
+                        <i class="ti ti-pencil"></i>
+                    </button>
+                    <button type="button" class="btn btn-icon btn-danger-light ms-2 delete-attachment-btn" data-id="${attachment.id}">
+                        <i class="ti ti-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `);
+    });
+}
+
+// ─── Update document file count badge ────────────────────
+function updateDocFileCountBadge(docId) {
+    const badge = document.querySelector(
+        `.doc-file-count[data-doc-id="${docId}"]`
+    );
+    if (!badge) return;
+    const count = applicationAttachments.filter(
+        (a) => String(a.document_id) === String(docId)
+    ).length;
+    badge.textContent = count > 0 ? `${count} file(s)` : "No files";
+}
+
+// ─── Remove attachment from its dropzone ────────────────
+function removeAttachmentFromDropzone(attachmentId) {
+    // Find which dropzone owns this attachment
+    const attachment = applicationAttachments.find(a => a.id === attachmentId);
+    if (!attachment) return false;
+
+    const docId = attachment.document_id;
+    const dz = dropzoneInstances[docId];
+    if (!dz) return false;
+
+    const fileIndex = dz.files.findIndex(
+        (fileItem) => fileItem._attachmentId === attachmentId
+    );
+    if (fileIndex === -1) return false;
+
+    const file = dz.files[fileIndex];
+    try {
+        dz.removeFile(file);
+        return true;
+    } catch (e) {
+        dz.files.splice(fileIndex, 1);
+        return true;
+    }
+}
+
+// ─── Init offcanvas for attachment viewing ──────────────
+function initAttachmentOffcanvas() {
+    const el = document.getElementById("attachmentOffcanvas");
+    if (!el) return;
+
+    attachmentOffcanvas = new bootstrap.Offcanvas(el, {
+        backdrop: true,
+        keyboard: true,
+        scroll: false,
+    });
+
+    el.addEventListener("hidden.bs.offcanvas", () => {
+        const viewerBody = document.getElementById("attachmentViewer");
+        if (viewerBody) {
+            const url = viewerBody.dataset.objectUrl;
+            if (url) {
+                URL.revokeObjectURL(url);
+                delete viewerBody.dataset.objectUrl;
+            }
+            viewerBody.innerHTML = `<div class="text-muted text-center"><i class="bi bi-file-earmark-fill fs-1"></i><br>Select an attachment</div>`;
+        }
+        const detailsBody = document.getElementById("attachmentDetails");
+        if (detailsBody) {
+            detailsBody.innerHTML = "";
+        }
+    });
+}
+
+// ─── Open attachment viewer ──────────────────────────────
+function openAttachmentViewer(attachmentId) {
+    const index = applicationAttachments.findIndex(
+        (item) => item.id === attachmentId,
+    );
+    if (index === -1) return;
+
+    const attachment = applicationAttachments[index];
+    if (!attachment) return;
+
+    const viewerTitle = document.getElementById("attachmentTitle");
+    const viewerCounter = document.getElementById("attachmentCounter");
+    const viewerBody = document.getElementById("attachmentViewer");
+    const detailsBody = document.getElementById("attachmentDetails");
+
+    if (!viewerTitle || !viewerCounter || !viewerBody || !detailsBody) return;
+
+    currentAttachmentIndex = index;
+    viewerTitle.textContent = attachment.displayName;
+    viewerCounter.textContent = `${currentAttachmentIndex + 1} / ${applicationAttachments.length}`;
+    renderAttachmentPreview(attachment, viewerBody);
+    renderAttachmentDetails(attachment, detailsBody);
+
+    document.getElementById("attachmentPrevBtn").disabled =
+        currentAttachmentIndex === 0;
+    document.getElementById("attachmentNextBtn").disabled =
+        currentAttachmentIndex === applicationAttachments.length - 1;
+
+    const editNameInput = document.getElementById("attachmentEditName");
+    if (editNameInput) {
+        editNameInput.value = attachment.displayName;
+    }
+
+    if (attachmentOffcanvas) {
+        attachmentOffcanvas.show();
+    }
+}
+
+function renderAttachmentPreview(attachment, container) {
+    const file = attachment.file;
+    if (!container) return;
+
+    if (container.dataset.objectUrl) {
+        URL.revokeObjectURL(container.dataset.objectUrl);
+        delete container.dataset.objectUrl;
+    }
+
+    container.innerHTML = "";
+
+    // For server-stored files (no local File object), use the stored URL
+    if (!file && attachment.url) {
+        const serverUrl = attachment.url;
+        const name = (attachment.displayName || attachment.name || '').toLowerCase();
+        if (name.endsWith('.pdf') || (attachment.type || '').includes('pdf')) {
+            container.innerHTML = `<iframe src="${serverUrl}" class="w-100" style="height:calc(100vh - 220px); border:none;"></iframe>`;
+        } else if (name.match(/\.(jpg|jpeg|png|gif|webp)$/) || (attachment.type || '').startsWith('image/')) {
+            container.innerHTML = `<img src="${serverUrl}" class="img-fluid rounded" alt="${attachment.displayName}">`;
+        } else {
+            container.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="bi bi-file-earmark-fill fs-1 text-muted"></i><br>
+                    <a href="${serverUrl}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">Download / View File</a>
+                </div>`;
+        }
+        return;
+    }
+
+    if (!file) {
+        container.innerHTML = `<div class="text-muted text-center"><i class="bi bi-file-earmark-fill fs-1"></i><br>No preview available</div>`;
+        return;
+    }
+
+    if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            container.innerHTML = `<img src="${e.target.result}" class="img-fluid rounded" alt="${attachment.displayName}">`;
+        };
+        reader.readAsDataURL(file);
+    } else if (
+        file.type === "application/pdf" ||
+        attachment.name.toLowerCase().endsWith(".pdf")
+    ) {
+        const url = URL.createObjectURL(file);
+        container.innerHTML = `<iframe src="${url}" class="w-100" style="height:calc(100vh - 220px); border:none;"></iframe>`;
+        container.dataset.objectUrl = url;
+    } else {
+        const url = URL.createObjectURL(file);
+        container.innerHTML = `
+            <div class="text-center">
+                <i class="bi bi-file-earmark-fill fs-1 mb-3"></i>
+                <p class="mb-2">${attachment.name}</p>
+                <a href="${url}" target="_blank" download="${attachment.name}" class="btn btn-sm btn-primary">
+                    Download File
+                </a>
+            </div>
+        `;
+        container.dataset.objectUrl = url;
+    }
+}
+
+function renderAttachmentDetails(attachment, container) {
+    const fields = [
+        { label: "File Name", value: attachment.displayName },
+        { label: "Original Name", value: attachment.name },
+        { label: "File Size", value: `${attachment.size} bytes` },
+        { label: "File Type", value: attachment.type || "Unknown" },
+    ];
+    container.innerHTML = fields
+        .map(
+            (field) => `
+                <div class="mb-3">
+                    <strong>${field.label}:</strong>
+                    <div class="text-muted">${field.value}</div>
+                </div>
+            `,
+        )
+        .join("");
+}
+
+function initAttachmentNavigation() {
+    $(document).on("click", "#attachmentPrevBtn", function () {
+        if (currentAttachmentIndex > 0) {
+            const nextId =
+                applicationAttachments[currentAttachmentIndex - 1]?.id;
+            if (nextId) openAttachmentViewer(nextId);
+        }
+    });
+
+    $(document).on("click", "#attachmentNextBtn", function () {
+        if (currentAttachmentIndex < applicationAttachments.length - 1) {
+            const nextId =
+                applicationAttachments[currentAttachmentIndex + 1]?.id;
+            if (nextId) openAttachmentViewer(nextId);
+        }
+    });
+}
+
+$(document).on("click", ".view-attachment-btn", function () {
+    const attachmentId = $(this).data("id");
+    openAttachmentViewer(attachmentId);
+});
+
+$(document).on("click", ".attachment-name-link", function (e) {
+    e.preventDefault();
+    const attachmentId = $(this).data("id");
+    openAttachmentViewer(attachmentId);
+});
+
+$(document).on("click", ".edit-attachment-btn", function () {
+    const attachmentId = $(this).data("id");
+    const attachment = applicationAttachments.find(
+        (item) => item.id === attachmentId,
+    );
+    if (!attachment) return;
+    const newName = prompt("Edit file name:", attachment.displayName);
+    if (!newName) return;
+    attachment.displayName = newName.trim();
+    // Re-render all tables
+    const docId = attachment.document_id;
+    renderApplicationAttachmentTable(docId);
+    updateDocFileCountBadge(docId);
+    updateAttachmentTable();
+});
+
+$(document).on("click", ".delete-attachment-btn", function () {
+    const attachmentId = $(this).data("id");
+    const index = applicationAttachments.findIndex(
+        (item) => item.id === attachmentId,
+    );
+    if (index === -1) return;
+
+    const docId = applicationAttachments[index].document_id;
+
+    // Track for backend deletion
+    if (applicationAttachments[index].url && !deletedAttachmentIds.includes(attachmentId)) {
+        deletedAttachmentIds.push(attachmentId);
+    }
+
+    removeAttachmentFromDropzone(attachmentId);
+    applicationAttachments.splice(index, 1);
+    renderApplicationAttachmentTable(docId);
+    updateDocFileCountBadge(docId);
+    updateAttachmentTable();
+
+    Swal.fire({
+        icon: "success",
+        title: "Attachment removed",
+        timer: 1000,
+        showConfirmButton: false,
+    });
+});
+
+$(document).on("click", "#attachmentSaveNameBtn", function () {
+    const newName = document.getElementById("attachmentEditName").value.trim();
+
+    if (!newName) {
+        Swal.fire({
+            icon: "warning",
+            title: "Empty Name",
+            text: "Please enter a file name",
+        });
+        return;
+    }
+
+    if (
+        currentAttachmentIndex >= 0 &&
+        currentAttachmentIndex < applicationAttachments.length
+    ) {
+        const attachment = applicationAttachments[currentAttachmentIndex];
+        attachment.displayName = newName;
+
+        const docId = attachment.document_id;
+        renderApplicationAttachmentTable(docId);
+        updateDocFileCountBadge(docId);
+        renderAttachmentDetails(
+            attachment,
+            document.getElementById("attachmentDetails"),
+        );
+
+        Swal.fire({
+            icon: "success",
+            title: "Saved",
+            text: "File name updated successfully",
+            timer: 1500,
+            showConfirmButton: false,
+        });
+
+        document.getElementById("attachmentEditName").value = "";
+        updateAttachmentTable();
+    }
+});
+
+// ─── Item Attachment Offcanvas ────────────────────────────
+function initItemAttachmentOffcanvas() {
+    const el = document.getElementById("itemAttachmentOffcanvas");
+    if (!el) return;
+
+    itemAttachmentOffcanvas = new bootstrap.Offcanvas(el, {
+        backdrop: true,
+        keyboard: true,
+        scroll: false,
+    });
+
+    el.addEventListener("hidden.bs.offcanvas", () => {
+        const viewerBody = document.getElementById("itemAttachViewer");
+        if (viewerBody) {
+            const url = viewerBody.dataset.objectUrl;
+            if (url) {
+                URL.revokeObjectURL(url);
+                delete viewerBody.dataset.objectUrl;
+            }
+            viewerBody.innerHTML = `<div class="text-muted text-center"><i class="bi bi-file-earmark-fill fs-1"></i><br>Select an attachment</div>`;
+        }
+        const detailsBody = document.getElementById("itemAttachDetails");
+        if (detailsBody) {
+            detailsBody.innerHTML = "";
+        }
+        currentItemAttachIndex = 0;
+    });
+}
+
+function openItemAttachmentViewer(files, startIndex = 0) {
+    if (!files || files.length === 0) return;
+
+    currentItemAttachments = files;
+    currentItemAttachIndex = startIndex;
+
+    showItemAttachment(files[startIndex], startIndex);
+
+    if (itemAttachmentOffcanvas) {
+        itemAttachmentOffcanvas.show();
+    }
+}
+
+function showItemAttachment(file, index) {
+    const viewerTitle = document.getElementById("itemAttachmentTitle");
+    const viewerCounter = document.getElementById("itemAttachCounter");
+    const viewerBody = document.getElementById("itemAttachViewer");
+    const detailsBody = document.getElementById("itemAttachDetails");
+
+    if (!viewerTitle || !viewerCounter || !viewerBody || !detailsBody) return;
+
+    const displayName = file.displayName || file.name;
+
+    currentItemAttachIndex = index;
+    viewerTitle.textContent = displayName;
+    viewerCounter.textContent = `${index + 1} / ${currentItemAttachments.length}`;
+
+    if (viewerBody.dataset.objectUrl) {
+        URL.revokeObjectURL(viewerBody.dataset.objectUrl);
+        delete viewerBody.dataset.objectUrl;
+    }
+    viewerBody.innerHTML = "";
+
+    if (file.type && file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            viewerBody.innerHTML = `<img src="${e.target.result}" class="img-fluid rounded" alt="${displayName}">`;
+        };
+        reader.readAsDataURL(file);
+    } else if (
+        file.type === "application/pdf" ||
+        (file.name && file.name.toLowerCase().endsWith(".pdf"))
+    ) {
+        const url = URL.createObjectURL(file);
+        viewerBody.innerHTML = `<iframe src="${url}" class="w-100" style="height: calc(100vh - 220px); border: none;"></iframe>`;
+        viewerBody.dataset.objectUrl = url;
+    } else {
+        const url = URL.createObjectURL(file);
+        viewerBody.innerHTML = `
+            <div class="text-center">
+                <i class="bi bi-file-earmark-fill fs-1 mb-3"></i>
+                <p class="mb-2">${displayName}</p>
+                <a href="${url}" target="_blank" download="${file.name}" class="btn btn-sm btn-primary">
+                    Download File
+                </a>
+            </div>
+        `;
+        viewerBody.dataset.objectUrl = url;
+    }
+
+    const fields = file.displayName
+        ? [
+              { label: "File Name", value: file.displayName },
+              { label: "Original Name", value: file.name },
+              {
+                  label: "File Size",
+                  value: (file.size / 1024).toFixed(2) + " KB",
+              },
+              { label: "File Type", value: file.type || "Unknown" },
+          ]
+        : [
+              { label: "File Name", value: file.name },
+              {
+                  label: "File Size",
+                  value: (file.size / 1024).toFixed(2) + " KB",
+              },
+              { label: "File Type", value: file.type || "Unknown" },
+          ];
+    detailsBody.innerHTML = fields
+        .map(
+            (field) => `
+                <div class="mb-3">
+                    <strong>${field.label}:</strong>
+                    <div class="text-muted">${field.value}</div>
+                </div>
+            `,
+        )
+        .join("");
+
+    document.getElementById("itemAttachPrevBtn").disabled = index === 0;
+    document.getElementById("itemAttachNextBtn").disabled =
+        index === currentItemAttachments.length - 1;
+
+    const editNameInput = document.getElementById("itemAttachEditName");
+    if (editNameInput) {
+        editNameInput.value = displayName;
+    }
+}
+
+function initItemAttachmentNavigation() {
+    $(document).on("click", "#itemAttachPrevBtn", function () {
+        if (currentItemAttachIndex > 0 && currentItemAttachments.length > 0) {
+            showItemAttachment(
+                currentItemAttachments[currentItemAttachIndex - 1],
+                currentItemAttachIndex - 1,
+            );
+        }
+    });
+
+    $(document).on("click", "#itemAttachNextBtn", function () {
+        if (
+            currentItemAttachIndex < currentItemAttachments.length - 1 &&
+            currentItemAttachments.length > 0
+        ) {
+            showItemAttachment(
+                currentItemAttachments[currentItemAttachIndex + 1],
+                currentItemAttachIndex + 1,
+            );
+        }
+    });
+
+    $(document).on("click", ".ipv-attach-chip", function () {
+        const index = $(this).data("index");
+        if (currentItemAttachments.length > 0 && index !== undefined) {
+            openItemAttachmentViewer(currentItemAttachments, index);
+        }
+    });
+
+    $(document).on("click", "#itemAttachSaveNameBtn", function () {
+        const newName = document
+            .getElementById("itemAttachEditName")
+            .value.trim();
+
+        if (!newName) {
+            Swal.fire({
+                icon: "warning",
+                title: "Empty Name",
+                text: "Please enter a file name",
+            });
+            return;
+        }
+
+        if (
+            currentItemAttachIndex >= 0 &&
+            currentItemAttachIndex < currentItemAttachments.length
+        ) {
+            const file = currentItemAttachments[currentItemAttachIndex];
+            file.displayName = newName;
+
+            document.getElementById("itemAttachmentTitle").textContent =
+                newName;
+
+            const detailsBody = document.getElementById("itemAttachDetails");
+            const fields = [
+                { label: "File Name", value: newName },
+                { label: "Original Name", value: file.name },
+                {
+                    label: "File Size",
+                    value: (file.size / 1024).toFixed(2) + " KB",
+                },
+                { label: "File Type", value: file.type || "Unknown" },
+            ];
+            detailsBody.innerHTML = fields
+                .map(
+                    (field) => `
+                        <div class="mb-3">
+                            <strong>${field.label}:</strong>
+                            <div class="text-muted">${field.value}</div>
+                        </div>
+                    `,
+                )
+                .join("");
+
+            Swal.fire({
+                icon: "success",
+                title: "Saved",
+                text: "File name updated successfully",
+                timer: 1500,
+                showConfirmButton: false,
+            });
+        }
+    });
+}
+
+function updateAttachmentTable() {
+    const attachmentTable = document.querySelector(
+        "#summaryAttachmentTable tbody",
+    );
+    if (attachmentTable) {
+        attachmentTable.innerHTML = "";
+
+        if (!applicationAttachments || applicationAttachments.length === 0) {
+            attachmentTable.insertAdjacentHTML(
+                "beforeend",
+                `
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-3">
+                        No attachments uploaded
+                    </td>
+                </tr>
+                `,
+            );
+        } else {
+            applicationAttachments.forEach((attachment, index) => {
+                const size = attachment.size || 0;
+                let sizeDisplay = "";
+                if (size < 1024) {
+                    sizeDisplay = size + " B";
+                } else if (size < 1024 * 1024) {
+                    sizeDisplay = (size / 1024).toFixed(1) + " KB";
+                } else {
+                    sizeDisplay = (size / (1024 * 1024)).toFixed(1) + " MB";
+                }
+
+                const type = attachment.type || "";
+                let typeDisplay = "Unknown";
+                if (type.includes("pdf")) {
+                    typeDisplay = "PDF";
+                } else if (
+                    type.includes("image") ||
+                    type.includes("jpg") ||
+                    type.includes("jpeg") ||
+                    type.includes("png")
+                ) {
+                    typeDisplay = "Image";
+                } else if (type.includes("word") || type.includes("doc")) {
+                    typeDisplay = "Document";
+                }
+
+                attachmentTable.insertAdjacentHTML(
+                    "beforeend",
+                    `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td class="text-wrap">${attachment.displayName || attachment.name || ""}</td>
+                        <td>${sizeDisplay}</td>
+                        <td>${typeDisplay}</td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-sm btn-primary view-attachment-btn" data-id="${attachment.id}">
+                                View More
+                            </button>
+                        </td>
+                    </tr>
+                    `,
+                );
+            });
+        }
+    }
 }
