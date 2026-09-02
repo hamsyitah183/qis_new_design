@@ -68,6 +68,8 @@
                     'public.showallapplicationlist',
                     'public.viewApplication',
                 ]);
+
+                // count the user verification applications for the badge
             @endphp
 
             <ul class="main-menu">
@@ -213,7 +215,14 @@
                                 <i class="ti ti-user side-menu__icon"></i>
                                 <span class="side-menu__label" style="white-space: pre-line; line-height: 1.2;"
                                     data-en="User&#10;Management"
-                                    data-bm="Pengurusan&#10;Pengguna">User&#10;Management</span>
+                                    data-bm="Pengurusan&#10;Pengguna">User&#10;Management
+                                    <svg id="userMgmtParentBadge"
+                                        style="display:none; position: relative; top: -5px; left: 2px;" width="8"
+                                        height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"
+                                        aria-hidden="true">
+                                        <circle cx="4" cy="4" r="4" fill="#dc3545" />
+                                    </svg>
+                                </span>
                             </a>
                             <ul class="slide-menu child1">
                                 <li class="slide side-menu__label1"><a href="javascript:void(0)" data-en="Users"
@@ -238,9 +247,8 @@
                                     <li
                                         class="slide {{ $currentRoute === 'internal.public.verification.list' ? 'active' : '' }}">
                                         <a href="{{ route('internal.public.verification.list') }}"
-                                            class="side-menu__item" id="verificationCount"
-                                            data-en="User Verification" data-bm="Pengesahan Pengguna">User
-                                            Verification</a>
+                                            class="side-menu__item" > <span data-en="User Verification" data-bm="Pengesahan Pengguna">User
+                                            Verification</span> <span id="verificationCount"></span></a>
                                     </li>
                                 @endif
 

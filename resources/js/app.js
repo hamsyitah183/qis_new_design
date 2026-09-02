@@ -249,6 +249,7 @@ let notificationInterval = null;
 function refreshApplicationSidebarCounts() {
     if (window.authUser?.type !== "internal") return;
     fetchApplicationCount();
+    fetchVerificationCount();
 }
 
 export function startNotificationPolling() {
@@ -294,7 +295,7 @@ export function fetchVerificationCount() {
         success: function (data) {
             if (data.count > 0) {
                 $("#verificationCount").html(
-                    `<span class="sidebar-count-row"><span>User Verification</span><span class="badge bg-success text-white sidebar-nav-count-badge">${data.count}</span></span>`,
+                    `<span class="badge bg-success text-white sidebar-nav-count-badge">${data.count}</span>`,
                 );
                 $("#userMgmtParentBadge").show();
             } else {

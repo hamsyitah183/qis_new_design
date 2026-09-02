@@ -25,8 +25,8 @@
                     </h3>
                     <p class="text-muted text-center max-w-md mx-auto mb-4"
                         data-en="Your account status is currently set to unverified. Access to formal dashboard functions requires an authorized record check."
-                        data-bm="Status akaun anda pada masa ini ditetapkan sebagai belum disahkan. Akses kepada fungsi papan pemuka rasmi memerlukan semakan rekod yang dibenarkan.">
-                        Your account status is currently set to unverified. Access to formal dashboard functions requires an
+                        data-bm="Status akaun anda pada masa ini ditetapkan sebagai belum disahkan. Akses kepada fungsi permohonan memerlukan semakan rekod yang dibenarkan.">
+                        Your account status is currently set to unverified. Access to application functions requires an
                         authorized record check.
                     </p>
 
@@ -37,7 +37,7 @@
                                 <tr>
                                     <th data-en="Document" data-bm="Dokumen">Document</th>
                                     <th data-en="Status" data-bm="Status">Status</th>
-                                    <th data-en="Action" data-bm="Tindakan">Action</th>
+                                    <th class = "d-none" data-en="Action" data-bm="Tindakan">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -87,7 +87,7 @@
                                                 </span>
                                             @endif
                                         </td>
-                                        <td>
+                                        <td class = "d-none">
                                             @if ($isMissing || $isExpired)
                                                 <a href="{{ route('profile') }}" class="btn btn-sm btn-primary"
                                                     data-en="Upload" data-bm="Muat Naik">
@@ -188,12 +188,12 @@
                         </a>
 
                         @if ($anyMissing || $anyExpired)
-                            <a href="{{ route('profile') }}" class="btn btn-primary-custom px-4 py-2"
+                            <a href="/profile#edit-verification-tab" class="btn btn-primary-custom px-4 py-2"
                                 data-en="Upload Documents" data-bm="Muat Naik Dokumen">
                                 Upload Documents
                             </a>
                         @else
-                            <a href="{{ route('profile') }}" class="btn btn-primary-custom px-4 py-2" data-en="View Profile"
+                            <a href="/profile#edit-verification-tab" class="btn btn-primary-custom px-4 py-2" data-en="View Profile"
                                 data-bm="Lihat Profil">
                                 View Profile
                             </a>

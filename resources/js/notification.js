@@ -7,6 +7,30 @@ function getCurrentLanguage() {
     return localStorage.getItem('qis_lang') || 'en';
 }
 
+// Helper function to fetch with retry logic
+async function fetchWithRetry(url, options = {}, maxRetries = 3, delay = 1000) {
+    let lastError;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const response = await fetch(url, options);
+            if (!response.ok) throw new Error("Network response was not ok");
+            return await response.json();
+        } catch (error) {
+            lastError = error;
+            console.warn(`Notification fetch attempt ${attempt}/${maxRetries} failed:`, error);
+            
+            if (attempt < maxRetries) {
+                // Exponential backoff: wait before retrying
+                await new Promise(resolve => setTimeout(resolve, delay * attempt));
+            }
+        }
+    }
+    
+    // If all retries failed, throw the last error
+    throw lastError;
+}
+
 // Helper to extract the message in the correct language
 const notifTranslations = {
     'Inspection application has been approved by clerk.': 'Permohonan pemeriksaan telah diluluskan oleh kerani.',
@@ -49,11 +73,7 @@ export function notification() {
     const notificationContent = document.getElementById("notificationContent");
     const notificationCount = document.getElementById("notifiation-data");
 
-    fetch("/notifications/data")
-        .then((response) => {
-            if (!response.ok) throw new Error("Network response was not ok");
-            return response.json();
-        })
+    fetchWithRetry("/notifications/data")
         .then((data) => {
             notificationContent.innerHTML = "";
             const lang = getCurrentLanguage();
@@ -118,7 +138,17 @@ export function notification() {
 
             applyTranslations(notificationContent);
         })
-        .catch((error) => console.error("Notification error:", error));
+        .catch((error) => {
+            console.error("Notification error after all retries:", error);
+            const lang = getCurrentLanguage();
+            const noMsgEn = 'Failed to load notifications';
+            const noMsgBm = 'Gagal memuatkan notifikasi';
+            notificationContent.innerHTML = `
+                <li class="dropdown-item text-danger text-center" data-en="${noMsgEn}" data-bm="${noMsgBm}">
+                    ${lang === 'bm' ? noMsgBm : noMsgEn}
+                </li>
+            `;
+        });
 
     // Mark all notifications as read when dropdown is clicked
     messageDropdown.addEventListener("click", () => {
@@ -196,11 +226,7 @@ export function notificationContent(hours = null) {
         url += `?hours=${hours}`;
     }
 
-    fetch(url)
-        .then((response) => {
-            if (!response.ok) throw new Error("Network response was not ok");
-            return response.json();
-        })
+    fetchWithRetry(url)
         .then((data) => {
             notificationList.innerHTML = "";
 
@@ -253,8 +279,15 @@ export function notificationContent(hours = null) {
 
             applyTranslations(notificationList);
         })
-        .catch(() => {
-            console.log("error fetch notification");
+        .catch((error) => {
+            console.error("Notification error after all retries:", error);
+            const lang = getCurrentLanguage();
+            const failMsg = lang === 'bm' ? 'Gagal memuatkan notifikasi' : 'Failed to load notifications';
+            notificationList.innerHTML = `
+                <li class="list-group-item border-bottom-0 text-center text-danger">
+                    <span class="fw-medium">${failMsg}</span>
+                </li>
+            `;
         })
         .finally(() => Swal.close());
 }
