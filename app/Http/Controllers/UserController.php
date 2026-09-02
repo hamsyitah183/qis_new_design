@@ -237,17 +237,20 @@ class UserController extends Controller
     {
         Gate::authorize('approve public user');
 
+        // Get required document types (from DocumentRequirement)
         $docTypes = DocumentRequirement::where('module', 'user')
             ->where('is_required', true)
             ->where('is_active', true)
             ->pluck('name')
             ->toArray();
 
+        // Query ApprovedPublic with publicUser and their attachments
         $query = ApprovedPublic::with(['publicUser', 'publicUser.attachments'])
             ->where('doa_verified', '!=', 1)
             ->where('status', '!=', 'Verification is rejected')
-            ->whereHas('publicUser.attachments');
+            ->whereHas('publicUser.attachments'); // only users with at least one attachment
 
+        // Filters
         if ($request->filled('name')) {
             $query->whereHas('publicUser', function ($q) use ($request) {
                 $q->where('fullname', 'like', '%' . $request->input('name') . '%');
@@ -262,87 +265,12 @@ class UserController extends Controller
 
         return DataTables::of($query)
             ->addColumn('fullname', function ($approved) {
-                $name = $approved->publicUser->fullname ?? '';
-                $initials = collect(explode(' ', $name))
-                    ->map(fn($p) => mb_substr($p, 0, 1))
-                    ->take(2)
-                    ->implode('');
-                $initials = strtoupper($initials ?: '?');
-
-                // Deterministic color per user so avatars are distinguishable
-                // but consistent across page loads.
-                $colors = ['primary', 'info', 'warning', 'danger', 'success', 'secondary'];
-                $colorIndex = crc32($name) % count($colors);
-                $color = $colors[$colorIndex];
-
-                return '
-                <div class="d-flex align-items-center gap-2">
-                    <div class="avatar avatar-sm bg-' . $color . ' text-white rounded-circle d-flex align-items-center justify-content-center fw-semibold fs-12" style="width:34px;height:34px;flex-shrink:0;">
-                        ' . htmlspecialchars($initials) . '
-                    </div>
-                    <span class="fw-medium">' . htmlspecialchars($name) . '</span>
-                </div>
-            ';
+                return $approved->publicUser->fullname ?? '';
             })
             ->addColumn('email', function ($approved) {
-                return '<span class="text-muted">' . ($approved->publicUser->email ?? '') . '</span>';
+                return $approved->publicUser->email ?? '';
             })
-            // ─── Combined documents column: progress + pills ─────────
-            ->addColumn('documents', function ($approved) use ($docTypes) {
-                $user = $approved->publicUser;
-                $attachments = $user ? $user->attachments : collect();
-
-                $totalFiles = $attachments->count();
-                $totalRequired = count($docTypes);
-                $reviewed = $attachments->where('is_read', true)->count();
-                $rejectedCount = $attachments->whereNotNull('rejected_reason')->count();
-                $uploadedTypes = $attachments->pluck('document_type')->unique()->intersect($docTypes)->count();
-                $pct = $totalFiles > 0 ? round(($reviewed / $totalFiles) * 100) : 0;
-
-                $html = '<div style="min-width:260px;max-width:340px;">';
-
-                // Progress summary line
-                $html .= '<div class="d-flex justify-content-between align-items-center fs-11 text-muted mb-1">
-                <span>' . $uploadedTypes . '/' . $totalRequired . ' types &middot; ' . $totalFiles . ' file' . ($totalFiles === 1 ? '' : 's') . '</span>
-                <span>' . $reviewed . '/' . $totalFiles . ' reviewed' . ($rejectedCount > 0 ? ' &middot; <span class="text-danger">' . $rejectedCount . ' rejected</span>' : '') . '</span>
-            </div>';
-                $html .= '<div class="progress mb-2" style="height:6px;">
-                <div class="progress-bar bg-success" style="width:' . $pct . '%"></div>
-            </div>';
-
-                // Pills, color-coded by actual status
-                $html .= '<div class="d-flex flex-wrap gap-1">';
-                foreach ($docTypes as $type) {
-                    $file = $attachments->firstWhere('document_type', $type);
-                    $short = strlen($type) > 18 ? substr($type, 0, 16) . '…' : $type;
-
-                    if (!$file) {
-                        $html .= '<span class="badge border border-secondary-subtle text-muted bg-transparent" style="font-size:0.68rem; border-style:dashed !important;" title="Not uploaded: ' . htmlspecialchars($type) . '">
-                        ' . htmlspecialchars($short) . '
-                    </span>';
-                    } elseif ($file->rejected_reason) {
-                        $html .= '<button class="btn btn-sm btn-danger view-doc-type" data-id="' . $approved->user_id . '" data-doc-type="' . htmlspecialchars($type) . '" title="Rejected: ' . htmlspecialchars($type) . '" style="font-size:0.68rem; padding:2px 8px;">
-                        <i class="ti ti-x" style="font-size:10px;"></i> ' . htmlspecialchars($short) . '
-                    </button>';
-                    } elseif ($file->is_read) {
-                        $html .= '<button class="btn btn-sm btn-success view-doc-type" data-id="' . $approved->user_id . '" data-doc-type="' . htmlspecialchars($type) . '" title="Accepted: ' . htmlspecialchars($type) . '" style="font-size:0.68rem; padding:2px 8px;">
-                        <i class="ti ti-check" style="font-size:10px;"></i> ' . htmlspecialchars($short) . '
-                    </button>';
-                    } else {
-                        $html .= '<button class="btn btn-sm btn-outline-warning view-doc-type" data-id="' . $approved->user_id . '" data-doc-type="' . htmlspecialchars($type) . '" title="Awaiting review: ' . htmlspecialchars($type) . '" style="font-size:0.68rem; padding:2px 8px;">
-                        ' . htmlspecialchars($short) . '
-                    </button>';
-                    }
-                }
-                if ($totalFiles > 0) {
-                    $html .= '<button class="btn btn-sm btn-outline-secondary view-attachment" data-id="' . $approved->user_id . '" style="font-size:0.68rem; padding:2px 8px;">
-                    <i class="ti ti-file-description"></i> View all
-                </button>';
-                }
-                $html .= '</div></div>';
-
-                return $html;
-            })
+            // ─── Overall status badge ──────────────────────────────
             ->addColumn('status_badge', function ($approved) {
                 $user = $approved->publicUser;
                 if (!$user) return '<span class="badge bg-secondary">No user</span>';
@@ -359,24 +287,57 @@ class UserController extends Controller
                     }
                     return '<span class="badge bg-success">Verified</span>';
                 }
-                return '<span class="badge bg-info-transparent text-info">Pending review</span>';
+                return '<span class="badge bg-info">Pending Review</span>';
             })
+            // ─── Document type buttons + View All ──────────────────
+            ->addColumn('documents', function ($approved) use ($docTypes) {
+                $user = $approved->publicUser;
+                $attachments = $user ? $user->attachments : collect();
+
+                $html = '<div class="d-flex flex-wrap gap-1" style="max-width:450px;">';
+
+                // Buttons for each required document type
+                foreach ($docTypes as $type) {
+                    $has = $attachments->contains('document_type', $type);
+                    if ($has) {
+                        $short = strlen($type) > 25 ? substr($type, 0, 22) . '…' : $type;
+                        $html .= '<button class="btn btn-sm btn-outline-primary view-doc-type" 
+                                data-id="' . $approved->user_id . '" 
+                                data-doc-type="' . htmlspecialchars($type) . '"
+                                title="' . htmlspecialchars($type) . '"
+                                style="font-size:0.7rem; padding:2px 6px;">
+                                ' . htmlspecialchars($short) . '
+                              </button>';
+                    } else {
+                        // Show a grey cross for missing types
+                        $html .= '<span class="badge bg-light text-muted" title="Not uploaded" style="font-size:0.7rem;">✕</span>';
+                    }
+                }
+
+                // "View All" button (always shown if there is at least one attachment)
+                if ($attachments->count() > 0) {
+                    $html .= '<button class="btn btn-sm btn-secondary view-attachment" 
+                            data-id="' . $approved->user_id . '"
+                            style="font-size:0.7rem; padding:2px 8px;">
+                            <i class="ti ti-file-description"></i> All
+                          </button>';
+                }
+
+                $html .= '</div>';
+                return $html;
+            })
+            // ─── Accept / Reject ────────────────────────────────────
             ->addColumn('action', function ($approved) {
                 return '
-                <div class="d-flex gap-1 justify-content-center">
-                    <button class="btn btn-sm btn-success accept-btn" data-id="' . $approved->user_id . '" title="Accept all documents">
-                        <i class="ti ti-check"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger reject-btn" data-id="' . $approved->user_id . '" title="Reject application">
-                        <i class="ti ti-x"></i>
-                    </button>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-success accept-btn" data-id="' . $approved->user_id . '">Accept</button>
+                    <button class="btn btn-sm btn-danger reject-btn" data-id="' . $approved->user_id . '">Reject</button>
                 </div>
             ';
             })
-            ->rawColumns(['fullname', 'email', 'documents', 'status_badge', 'action'])
+            ->rawColumns(['documents', 'status_badge', 'action'])
             ->make(true);
     }
-
     public function user_data($id)
     {
         if (auth()->user()->hasRole('boundary officer')) {
@@ -1215,6 +1176,9 @@ class UserController extends Controller
                 $isApproved = 0;
                 $message = 'All required attachments rejected.';
             }
+
+            $user->doa_verified = 1;
+            $user->save();
 
             DB::commit();
 
