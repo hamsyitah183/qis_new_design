@@ -115,19 +115,20 @@ async function data_table_init() {
         columns: [
             {
                 data: "DT_RowIndex",
+                title: "#",
                 orderable: false,
                 searchable: false,
             },
-            { data: "application_id", name: "application_id" },
-            { data: "importer" },
-            { data: "exporter" },
-            { data: "status" },
-            { data: "inspection_status" },
+            { data: "application_id", name: "application_id", title: "Application ID" },
+            { data: "importer", title: "Importer" },
+            { data: "exporter", title: "Exporter" },
+            { data: "status", title: "Application Status" },
+            { data: "inspection_status", title: "Inspection Status" },
 
             // 🔐 Only internal users see this
-            ...(isInternal ? [{ data: "submitted_by" }] : []),
+            ...(isInternal ? [{ data: "submitted_by", title: "Submitted By" }] : []),
 
-            { data: "action" },
+            { data: "action", title: "Action" },
         ],
 
         columnDefs: [

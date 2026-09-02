@@ -62,6 +62,10 @@ const t = {
     close: { en: 'Close', bm: 'Tutup' },
     loading: { en: 'Loading...', bm: 'Memuat...' },
     error: { en: 'Error!', bm: 'Ralat!' },
+    applicationId: { en: 'Application ID', bm: 'ID Permohonan' },
+    appStatus: { en: 'Application Status', bm: 'Status Permohonan' },
+    permitStatus: { en: 'Permit Status', bm: 'Status Permit' },
+    appType: { en: 'Application Type', bm: 'Jenis Permohonan' },
 };
 
 function getText(key) {
@@ -84,6 +88,27 @@ const isInternal = window.AUTH_TYPE === "internal";
 // ---------------------------------------------------------------
 // Create / refresh DataTables with current language
 // ---------------------------------------------------------------
+const customResponsiveRenderer = {
+    details: {
+        renderer: function (api, rowIdx, columns) {
+            var data = columns.map(function (col) {
+                if (!col.hidden) return '';
+                var header = api.column(col.columnIndex).header();
+                var title = col.title;
+                if (!title || title === "undefined") {
+                    title = header ? header.textContent.trim() : "";
+                }
+                return '<tr data-dt-row="' + col.rowIndex + '" data-dt-column="' + col.columnIndex + '">' +
+                    '<td class="dtr-title fw-bold pe-2" style="font-weight: 600;">' + title + '</td>' +
+                    '<td class="dtr-data">' + col.data + '</td>' +
+                    '</tr>';
+            }).join('');
+
+            return data ? $('<table class="table table-sm table-borderless mb-0"/>').append(data) : false;
+        }
+    }
+};
+
 async function createDataTables() {
     // Destroy existing instances if any
     if (applicationListTable) {
@@ -118,16 +143,17 @@ async function createDataTables() {
         columns: [
             {
                 data: "DT_RowIndex",
+                title: "#",
                 orderable: false,
                 searchable: false,
             },
-            { data: "application_id", name: "application_id" },
-            { data: "importer" },
-            { data: "exporter" },
-            { data: "status" },
-            { data: "permit_status"},
-            ...(isInternal ? [{ data: "submitted_by" }] : []),
-            { data: "action" },
+            { data: "application_id", name: "application_id", title: getText('applicationId') },
+            { data: "importer", title: getText('importer') },
+            { data: "exporter", title: getText('exporter') },
+            { data: "status", title: getText('appStatus') },
+            { data: "permit_status", title: getText('permitStatus') },
+            ...(isInternal ? [{ data: "submitted_by", title: getText('submittedBy') }] : []),
+            { data: "action", title: getText('action') },
         ],
         columnDefs: [
             { width: "50px", targets: 0 },
@@ -138,7 +164,7 @@ async function createDataTables() {
             { width: "120px", targets: isInternal ? 5 : 4 },
         ],
         autoWidth: false,
-        responsive: true,
+        responsive: customResponsiveRenderer,
         pageLength: 10,
     });
 
@@ -154,15 +180,16 @@ async function createDataTables() {
             {
                 data: "DT_RowIndex",
                 name: "DT_RowIndex",
+                title: "#",
                 orderable: false,
                 searchable: false,
             },
-            { data: "importer", name: "importer" },
-            { data: "exporter", name: "exporter" },
-            { data: "application_type", name: "application_type" },
-            { data: "status", name: "status" },
-            { data: "submitted_by", name: "submitted_by" },
-            { data: "action", name: "action" },
+            { data: "importer", name: "importer", title: getText('importer') },
+            { data: "exporter", name: "exporter", title: getText('exporter') },
+            { data: "application_type", name: "application_type", title: getText('appType') },
+            { data: "status", name: "status", title: getText('status') },
+            { data: "submitted_by", name: "submitted_by", title: getText('submittedBy') },
+            { data: "action", name: "action", title: getText('action') },
         ],
         columnDefs: [
             { width: "50px", targets: 0 },
@@ -189,15 +216,16 @@ async function createDataTables() {
             {
                 data: "DT_RowIndex",
                 name: "DT_RowIndex",
+                title: "#",
                 orderable: false,
                 searchable: false,
             },
-            { data: "importer", name: "importer" },
-            { data: "exporter", name: "exporter" },
-            { data: "application_type", name: "application_type" },
-            { data: "status", name: "status" },
-            { data: "submitted_by", name: "submitted_by" },
-            { data: "action", name: "action" },
+            { data: "importer", name: "importer", title: getText('importer') },
+            { data: "exporter", name: "exporter", title: getText('exporter') },
+            { data: "application_type", name: "application_type", title: getText('appType') },
+            { data: "status", name: "status", title: getText('status') },
+            { data: "submitted_by", name: "submitted_by", title: getText('submittedBy') },
+            { data: "action", name: "action", title: getText('action') },
         ],
         columnDefs: [
             { width: "50px", targets: 0 },

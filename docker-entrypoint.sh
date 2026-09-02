@@ -7,7 +7,7 @@ sleep 5
 
 # Remove old build cache and rebuild frontend assets with environment variables
 echo "Cleaning old builds..."
-rm -rf public/build public/build2 public/hot
+rm -rf public/build public/hot
 
 echo "Building frontend assets..."
 npm run build

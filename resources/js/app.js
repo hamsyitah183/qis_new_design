@@ -120,6 +120,31 @@ $(document).on('draw.dt', function(e, settings) {
     }
 });
 
+$(document).on('preInit.dt', function(e, settings) {
+    if (settings.oInit && (settings.oInit.responsive === true || typeof settings.oInit.responsive === 'object')) {
+        settings.oInit.responsive = {
+            details: {
+                renderer: function (api, rowIdx, columns) {
+                    var data = $.map(columns, function (col) {
+                        if (!col.hidden) return '';
+                        var header = api.column(col.columnIndex).header();
+                        var title = col.title;
+                        if (!title || title === "undefined") {
+                            title = header ? (header.getAttribute('data-en') || header.textContent.trim()) : "";
+                        }
+                        return '<tr data-dt-row="' + col.rowIndex + '" data-dt-column="' + col.columnIndex + '">' +
+                            '<td class="dtr-title fw-bold pe-2" style="font-weight: 600;">' + title + '</td>' +
+                            '<td class="dtr-data">' + col.data + '</td>' +
+                            '</tr>';
+                    }).join('');
+
+                    return data ? $('<table class="table table-sm table-borderless mb-0"/>').append(data) : false;
+                }
+            }
+        };
+    }
+});
+
 // Forcefully translate DataTables pagination buttons when language changes
 document.addEventListener("lang-changed", function(e) {
     const lang = e.detail.lang;

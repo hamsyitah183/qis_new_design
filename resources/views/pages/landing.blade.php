@@ -164,6 +164,37 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- Kenapa Gunakan QIS 2.0? / Why Use QIS 2.0? --}}
+                    <div class="mt-4 p-4 rounded-3" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                        <h4 class="fw-bold mb-3 text-dark" data-en="Why Use QIS 2.0?" data-bm="Kenapa Gunakan QIS 2.0?">Why Use QIS 2.0?</h4>
+                        <div class="row g-3">
+                            <div class="col-6 col-md-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class='bx bx-check-circle text-success fs-4'></i>
+                                    <span class="fw-semibold text-secondary" data-en="Simpler Processes" data-bm="Urusan Lebih Mudah">Simpler Processes</span>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class='bx bx-check-circle text-success fs-4'></i>
+                                    <span class="fw-semibold text-secondary" data-en="Faster Processing" data-bm="Proses Lebih Pantas">Faster Processing</span>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class='bx bx-check-circle text-success fs-4'></i>
+                                    <span class="fw-semibold text-secondary" data-en="Organised Information" data-bm="Maklumat Lebih Teratur">Organised Information</span>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class='bx bx-check-circle text-success fs-4'></i>
+                                    <span class="fw-semibold text-secondary" data-en="Greater Transparency &amp; Easy Tracking" data-bm="Lebih Telus &amp; Mudah Disemak">Greater Transparency &amp; Easy Tracking</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -226,6 +257,20 @@
                         data-en="View All Announcements" data-bm="Lihat Semua Pengumuman">
                         View All Announcements <i class='bx bx-right-arrow-alt'></i>
                     </a>
+                </div>
+
+                {{-- Official Portal Resources Links --}}
+                <div class="p-3 my-3 rounded-3" style="background: #eff6ff; border: 1px solid #bfdbfe;">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <span class="fw-bold text-primary" data-en="Official Department Resources:" data-bm="Sumber Rasmi Jabatan:">Official Department Resources:</span>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="https://tani.sabah.gov.my/seksyen-biosekuriti-kuarantin-tumbuhan/" target="_blank" class="btn btn-sm btn-white text-primary border" data-en="Legislative Information" data-bm="Maklumat Perundangan">Legislative Information</a>
+                            <a href="https://tani.sabah.gov.my/seksyen-biosekuriti-kuarantin-tumbuhan/" target="_blank" class="btn btn-sm btn-white text-primary border" data-en="Guidelines" data-bm="Panduan">Guidelines</a>
+                            <a href="https://tani.sabah.gov.my/seksyen-biosekuriti-kuarantin-tumbuhan/" target="_blank" class="btn btn-sm btn-white text-primary border" data-en="High-Risk Countries" data-bm="Negara Berisiko Tinggi">High-Risk Countries</a>
+                            <a href="https://tani.sabah.gov.my/seksyen-biosekuriti-kuarantin-tumbuhan/" target="_blank" class="btn btn-sm btn-white text-primary border" data-en="Application Forms" data-bm="Borang Permohonan">Application Forms</a>
+                            <a href="https://tani.sabah.gov.my/seksyen-biosekuriti-kuarantin-tumbuhan/" target="_blank" class="btn btn-sm btn-white text-primary border" data-en="Important Notice" data-bm="Notis Penting">Important Notice</a>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="qis-announcement-grid">
@@ -293,9 +338,9 @@
         {{-- =============================== GALLERY =============================== --}}
         <section class="qis-section" id="qis-gallery">
             <div class="qis-container">
-                <span class="qis-eyebrow" data-en="Gallery" data-bm="Galeri">Gallery</span>
-                <h2 class="qis-h2 mt-2" data-en="Checkpoints, in the field" data-bm="Pusat Pemeriksaan di Lapangan">
-                    Checkpoints, in the field</h2>
+                <span class="qis-eyebrow" data-en="Field Checkpoints" data-bm="Titik Pemeriksaan, di Lapangan">Field Checkpoints</span>
+                <h2 class="qis-h2 mt-2" data-en="Protecting Sabah’s Agriculture, Preventing Pest and Disease Threats" data-bm="Melindungi Pertanian Sabah, Mencegah Ancaman Perosak dan Penyakit">
+                    Protecting Sabah’s Agriculture, Preventing Pest and Disease Threats</h2>
 
 
                 <div id="landingGalleryCarousel" class="carousel slide" data-bs-ride="carousel">
@@ -355,9 +400,8 @@
         <section class="qis-section qis-contact-section" id="qis-contact">
             <div class="qis-container">
                 <span class="qis-eyebrow" data-en="Get in Touch" data-bm="Hubungi Kami">Get in Touch</span>
-                <h2 class="qis-h2 mt-2" data-en="Plant Biosecurity Division, Sabah Department of Agriculture"
-                    data-bm="Bahagian Biosekuriti Tumbuhan, Jabatan Pertanian Sabah">Plant Biosecurity Division, Sabah
-                    Department of Agriculture</h2>
+                <h2 class="qis-h2 mt-2" data-en="Plant Biosecurity &amp; Quarantine Section, Sabah Department of Agriculture"
+                    data-bm="Seksyen Biosekuriti &amp; Kuarantin Tumbuhan, Jabatan Pertanian Sabah">Plant Biosecurity &amp; Quarantine Section, Sabah Department of Agriculture</h2>
 
                 <div class="qis-contact-grid">
                     <div class="qis-contact-card">
@@ -366,12 +410,14 @@
                             <div>
                                 <b data-en="Address" data-bm="Alamat">Address</b>
                                 <span>
-                                    Bahagian Biosekuriti Tumbuhan,<br>
-                                    Jabatan Pertanian Sabah,<br>
-                                    Aras 1, 5, 6 &amp; 7, Wisma Pertanian Sabah,<br>
-                                    Jalan Tasik Luyang, Off Jalan Maktab Gaya,<br>
-                                    Beg Berkunci No. 2050, 88632 Kota Kinabalu, Sabah, Malaysia
+                                    Ibu Pejabat Jabatan Pertanian,<br>
+                                    Aras 1, Wisma Pertanian Sabah,<br>
+                                    Jln. Tasik Luyang, Off Jln. Maktab Gaya,<br>
+                                    Beg Berkunci No. 2050, 88632 Kota Kinabalu, Sabah
                                 </span>
+                                <div class="mt-2">
+                                    <a href="https://maps.google.com/maps?q=Wisma%20Pertanian%20Sabah%20Kota%20Kinabalu" target="_blank" class="btn btn-xs btn-outline-success rounded-pill" data-en="Peta Lokasi / Location Map" data-bm="Peta Lokasi">📍 Peta Lokasi / Location Map</a>
+                                </div>
                             </div>
                         </div>
 
@@ -379,8 +425,11 @@
                             <i class='bx bx-phone'></i>
                             <div>
                                 <b data-en="Phone" data-bm="Telefon">Phone</b>
-                                <a href="tel:+6088283283">088-283 283</a>
-                                <a href="tel:+6088283282">088-283 282</a>
+                                <div class="d-flex align-items-center gap-1 flex-wrap">
+                                    <a href="tel:+6088283264" class="d-inline">088-283 264</a>
+                                    <span class="d-inline text-muted">/</span>
+                                    <a href="tel:+6088283268" class="d-inline">088-283 268</a>
+                                </div>
                             </div>
                         </div>
 
@@ -397,8 +446,17 @@
                             <div>
                                 <b data-en="Email" data-bm="Emel">Email</b>
                                 <a href="mailto:doasabah@sabah.gov.my">doasabah@sabah.gov.my</a>
-                                <a href="mailto:aduan.tani@sabah.gov.my" data-en="(complaints / feedback)"
-                                    data-bm="(aduan / cadangan)">aduan.tani@sabah.gov.my</a>
+                            </div>
+                        </div>
+
+                        <div class="qis-contact-row">
+                            <i class='bx bx-globe'></i>
+                            <div>
+                                <b data-en="Website &amp; Social" data-bm="Laman Web &amp; Media Sosial">Website &amp; Social</b>
+                                <div>
+                                    <a href="https://tani.sabah.gov.my/seksyen-biosekuriti-kuarantin-tumbuhan/" target="_blank" class="d-block mb-1 text-primary">🌐 tani.sabah.gov.my/seksyen-biosekuriti-kuarantin-tumbuhan</a>
+                                    <a href="https://www.facebook.com/p/Biosekuriti-dan-Kuarantin-Tumbuhan-Jabatan-Pertanian-Sabah-100064560731671/" target="_blank" class="d-block text-primary">👍 FB: Biosekuriti dan Kuarantin Tumbuhan, Jabatan Pertanian Sabah</a>
+                                </div>
                             </div>
                         </div>
 
@@ -406,9 +464,10 @@
                             <i class='bx bx-time-five'></i>
                             <div>
                                 <b data-en="Office Hours" data-bm="Waktu Pejabat">Office Hours</b>
-                                <span data-en="Monday &ndash; Friday, 8:00 AM &ndash; 5:00 PM (closed on public holidays)"
-                                    data-bm="Isnin &ndash; Jumaat, 8:00 pagi &ndash; 5:00 petang (tutup pada cuti umum)">Monday
-                                    &ndash; Friday, 8:00 AM &ndash; 5:00 PM (closed on public holidays)</span>
+                                <span data-en="Monday &ndash; Thursday: 8:00 AM &ndash; 1:00 PM, 2:00 PM &ndash; 5:00 PM | Friday: 8:00 AM &ndash; 11:30 AM, 2:00 PM &ndash; 5:00 PM (Closed Saturday, Sunday &amp; Public Holidays)"
+                                    data-bm="Isnin &ndash; Khamis: 8:00 pagi &ndash; 1:00 petang, 2:00 petang &ndash; 5:00 petang | Jumaat: 8:00 pagi &ndash; 11:30 pagi, 2:00 petang &ndash; 5:00 petang (Tutup Sabtu, Ahad &amp; Cuti Umum)">
+                                    Monday &ndash; Thursday: 8:00 AM &ndash; 1:00 PM, 2:00 PM &ndash; 5:00 PM | Friday: 8:00 AM &ndash; 11:30 AM, 2:00 PM &ndash; 5:00 PM (Closed Saturday, Sunday &amp; Public Holidays)
+                                </span>
                             </div>
                         </div>
                     </div>
