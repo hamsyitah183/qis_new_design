@@ -124,7 +124,7 @@
             {{-- Phone --}}
             <div class="mb-3">
                 <label for="addimpfonno" class="form-label" data-en="Phone No" data-bm="No Telefon">Phone No</label> <span class="text-danger">*</span>
-                <input type="text" id="addimpfonno" name="phone_no" class="form-control" min="0" step="1" required >
+                <input type="number" id="addimpfonno" name="phone_no" class="form-control" min="0" step="1" required >
             </div>
 
             {{-- Address --}}
@@ -141,9 +141,8 @@
                 <label for="addimpcountry" class="form-label" data-en="Country" data-bm="Negara">Country </label> <span class="text-danger">*</span>
                 <select class="form-select" id="addimpcountry" name="country" required>
                     <option value="" data-en="-- Select Country --" data-bm="-- Pilih Negara --">-- Select Country --</option>
-                    @foreach ($country as $coun)
-                        <option value="{{ $coun->code }}">{{ $coun->name }}</option>
-                    @endforeach
+                    <option value="SWK">Sarawak, Malaysia</option>
+                    <option value="BN">Brunei Darussalam</option>
                 </select>
             </div>
 

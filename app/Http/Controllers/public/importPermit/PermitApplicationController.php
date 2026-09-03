@@ -383,13 +383,12 @@ class PermitApplicationController extends Controller
             $applicationUuid = $request->input('applicationId');
             $isDraft = $request->boolean('is_draft');
             $lang = $request->input('lang', 'en');
-            app()->setLocale($lang); // Set locale for __() translations
+            app()->setLocale($lang);
 
             $exporter = $request->exporterData ? json_decode($request->exporterData, true) : null;
             $importer = $request->importerData ? json_decode($request->importerData, true) : null;
             $permit = $request->permitDetails ? json_decode($request->permitDetails, true) : [];
 
-            // Importer verify logic
             $importer_verify = null;
             if (!$isDraft && isset($permit['applCate'])) {
                 $importer_verify = $permit['applCate'] == 0
@@ -397,7 +396,6 @@ class PermitApplicationController extends Controller
                     : 'Wait for Representative Approval';
             }
 
-            // Create / Update Application
             if ($applicationUuid) {
                 $application = IpApplication::where('application_id', $applicationUuid)->firstOrFail();
 
@@ -414,13 +412,15 @@ class PermitApplicationController extends Controller
                     'importer_verify' => $importer_verify,
                 ]);
 
-                activity()
-                    ->tap(fn($activity) => $activity->log_name = 'user_activity')
-                    ->event($isDraft ? 'update draft application' : 'update import permit application')
-                    ->causedBy(authUser()['user'])
-                    ->performedOn($application)
-                    ->withProperties(['application' => $application])
-                    ->log(authUser()['user']['fullname'] . ' updated application (ID: ' . $application->application_id . ')');
+                // ─── ApplicationService::log ──────────────────────────────────
+                $user = authUser()['user'] ?? null;
+                ApplicationService::log(
+                    application: $application,
+                    action: $isDraft ? 'update_draft_application' : 'update_import_permit_application',
+                    remark: ($user->fullname ?? 'System') . ' updated application (ID: ' . $application->application_id . ')',
+                    status: $application->status,
+                    causer: $user ?? null
+                );
             } else {
                 $status = $isDraft
                     ? 'Draft'
@@ -444,21 +444,22 @@ class PermitApplicationController extends Controller
                     'importer_verify' => $importer_verify,
                 ]);
 
-                activity()
-                    ->tap(fn($activity) => $activity->log_name = 'user_activity')
-                    ->event($isDraft ? 'create draft application' : 'create import permit application')
-                    ->causedBy(authUser()['user'])
-                    ->performedOn($application)
-                    ->withProperties(['application' => $application])
-                    ->log(authUser()['user']['fullname'] . ' created application (ID: ' . $application->application_id . ')');
+                // ─── ApplicationService::log ──────────────────────────────────
+                $user = authUser()['user'] ?? null;
+                ApplicationService::log(
+                    application: $application,
+                    action: $isDraft ? 'create_draft_application' : 'create_import_permit_application',
+                    remark: ($user->fullname ?? 'System') . ' created application (ID: ' . $application->application_id . ')',
+                    status: $application->status,
+                    causer: $user ?? null
+                );
             }
 
             $appId = $application->id;
 
-            // Sync consignments (unchanged)
+            // ─── Sync consignments ──────────────────────────────────────────
             $existingIds = IpConsignmentPermit::where('application_id', $appId)->pluck('id')->toArray();
             $deletedPermits = $request->input('deleted_item_ids', []);
-
             if (is_string($deletedPermits)) {
                 $deletedPermits = array_filter(explode(',', $deletedPermits));
             } elseif (!is_array($deletedPermits)) {
@@ -476,7 +477,6 @@ class PermitApplicationController extends Controller
                     }
                     $attachment->delete();
                 }
-
                 $permitItem->delete();
             }
 
@@ -486,7 +486,6 @@ class PermitApplicationController extends Controller
                 foreach ($request->items as $index => $item) {
                     $data = json_decode($item['data'], true);
                     $permit_id = $data['permit_id'] ?? null;
-
                     if ($permit_id && in_array($permit_id, $existingIds)) continue;
 
                     $consignment = IpConsignmentPermit::create([
@@ -503,7 +502,7 @@ class PermitApplicationController extends Controller
                 }
             }
 
-            // Attachments (unchanged)
+            // ─── Permits attachments (files[]) ─────────────────────────────
             if ($request->hasFile('files')) {
                 foreach ($request->file('files') as $i => $file) {
                     $itemIndex = $request->input('file_item_index')[$i] ?? null;
@@ -522,6 +521,7 @@ class PermitApplicationController extends Controller
                 }
             }
 
+            // ─── Deleted application attachments ──────────────────────────
             if ($request->has('deleted_attachment_ids')) {
                 $deletedAppFiles = $request->input('deleted_attachment_ids');
                 if (is_string($deletedAppFiles)) {
@@ -532,6 +532,7 @@ class PermitApplicationController extends Controller
                 }
             }
 
+            // ─── New application attachments (application_files[]) ────────
             if ($request->hasFile('application_files')) {
                 $documentTypes = $request->input('application_files_document_type', []);
                 $descriptions  = $request->input('application_files_description', []);
@@ -546,23 +547,18 @@ class PermitApplicationController extends Controller
                         'file_name' => $file->getClientOriginalName(),
                         'file_path' => "/storage/{$path}",
                         'file_type' => $file->getClientOriginalExtension(),
-                        'description'    => $descriptions[$i] ?? ($documentTypes[$i] ?? null),
+                        'description' => $descriptions[$i] ?? ($documentTypes[$i] ?? null),
                     ]);
                 }
             }
 
             DB::commit();
 
-            // --------------------------------------------
-            // BILINGUAL NOTIFICATIONS (SMS + In-app)
-            // --------------------------------------------
-
-            // 1. SMS Notifications (using __() with current locale)
+            // ─── Bilingual Notifications (SMS + In-app) ────────────────────
             if (!$isDraft) {
                 $notificationController = new NotificationController();
 
                 if ($application->category_application == 1) {
-                    // Importer (company) – needs approval
                     $notificationController->sendStatusMessage(
                         $application->importer['fullname'] ?? 'User',
                         'Import Permit',
@@ -572,7 +568,6 @@ class PermitApplicationController extends Controller
                         $application->importer->phone_number ?? '60143290092'
                     );
 
-                    // Applicant – waiting for approval
                     $notificationController->sendStatusMessage(
                         $application->user['fullname'] ?? 'User',
                         'Import Permit',
@@ -593,27 +588,20 @@ class PermitApplicationController extends Controller
                 }
             }
 
-            // 2. In-app Notifications (store both languages)
+            // ─── In-app notifications ──────────────────────────────────────
             $internalNotificationUrl = route('viewApplication', $application->application_id);
-            $publicNotificationUrl = route('public.showallapplicationlist'); // Public user dashboard
+            $publicNotificationUrl = route('public.showallapplicationlist');
 
-            // Build bilingual messages using translation keys with placeholders
-            // We need both versions, so we temporarily switch locale to get each.
             $originalLocale = app()->getLocale();
 
-            // Internal users (admins/clerks)
             $internalKey = $isDraft
                 ? ($isNewApplication ? 'notifications.internal_draft_created' : 'notifications.internal_draft_updated')
                 : ($isNewApplication ? 'notifications.internal_submit_created' : 'notifications.internal_submit_updated');
 
-            // Get English version
             app()->setLocale('en');
             $internalEn = __($internalKey);
-            // Get BM version
             app()->setLocale('bm');
             $internalBm = __($internalKey);
-
-            // Restore original locale for the rest of the request
             app()->setLocale($originalLocale);
 
             $internalUsers = InternalUser::permission('approve application')->get();
@@ -634,7 +622,6 @@ class PermitApplicationController extends Controller
                 ));
             }
 
-            // Public applicant
             $publicUser = auth()->guard('public')->user();
             if ($publicUser) {
                 $publicKey = $isDraft ? 'notifications.public_draft' : 'notifications.public_submit';
@@ -660,7 +647,7 @@ class PermitApplicationController extends Controller
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
-            \Illuminate\Support\Facades\Log::error('Permit save error: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
+            \Log::error('Permit save error: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
 
             foreach ($movedFiles as $file) {
                 Storage::disk('public')->delete($file);

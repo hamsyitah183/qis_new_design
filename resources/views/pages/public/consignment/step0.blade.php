@@ -107,9 +107,8 @@
                 <div class="mb-3">
                     <label for="addexpfonno" class="form-label" data-en="Phone No" data-bm="No Telefon">Phone
                         No</label> <span style="color:red"> * </span>
-                    <input type="tel" id="addexpfonno" name="addexpfonno" class="form-control"
-                        pattern="[0-9+\-\s()]+"
-                        title="Please enter a valid phone number (e.g., 0123456789 or +60123456789)" required>
+                    <input type="number" id="addexpfonno" name="addexpfonno" class="form-control" min="0" step="1">
+
                 </div>
 
                 {{-- Address --}}

@@ -2117,6 +2117,7 @@ function renderAllItems() {
 }
 
 // ─── View More Item ────────────────────────────────────────
+// ─── View More Item (Offcanvas) ───────────────────────────
 function viewMore() {
     $(document).on("click", ".view-more-item", function (e) {
         e.preventDefault();
@@ -2127,47 +2128,155 @@ function viewMore() {
         let item = tempItems.find((obj) => obj.id === id);
         if (!item) return console.warn("Item not found for id:", id);
 
-        // Build item details HTML with bilingual support
+        const detailsDiv = document.getElementById("itemDetailsInfo");
+        const attachList = document.getElementById("pdAttachList");
+        const attachmentCount = document.getElementById("attachmentCount");
+        const conditionItem = document.getElementById("pdConditionItem");
+        const conditionCount = document.getElementById("pdConditionCount");
+
+        console.log("item added previously", item, tempItems, item.agreedAt);
+
         const agreementBanner = item.agreedAt
             ? `<div class="alert alert-success mb-3 d-flex align-items-center">
                 <i class="bi bi-check-circle-fill me-2"></i>
                 <div>
-                    <strong><span data-en="Declaration Confirmed" data-bm="Pengisytiharan Disahkan">Declaration Confirmed</span></strong>
-                    <div class="small text-muted"><span data-en="Agreed on:" data-bm="Dipersetujui pada:">Agreed on:</span> ${item.agreedAt}</div>
+                    <strong>
+                        <span data-en="Declaration Confirmed" data-bm="Pengisytiharan Disahkan">Declaration Confirmed</span>
+                    </strong>
+                    <div class="small text-muted">
+                        <span data-en="Agreed on:" data-bm="Dipersetujui pada:">Agreed on:</span> ${item.agreedAt}
+                    </div>
                 </div>
             </div>`
             : `<div class="alert alert-warning mb-3">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                <strong><span data-en="Pending Agreement" data-bm="Menunggu Persetujuan">Pending Agreement</span></strong>
+                <strong>
+                    <span data-en="Pending Agreement" data-bm="Menunggu Persetujuan">Pending Agreement</span>
+                </strong>
                 - <span data-en="User has not confirmed this item yet." data-bm="Pengguna belum mengesahkan item ini lagi.">User has not confirmed this item yet.</span>
             </div>`;
 
-        const filesDisplay = Array.isArray(item.files) && item.files.length > 0
-            ? `<div class="mb-3"><strong><span data-en="Files:" data-bm="Fail:">Files:</span></strong> ${item.files.length} <span data-en="file(s) attached" data-bm="fail yang dilampirkan">file(s) attached</span></div>`
-            : `<div class="mb-3 text-muted"><strong><span data-en="Files:" data-bm="Fail:">Files:</span></strong> <span data-en="No files attached" data-bm="Tiada fail dilampirkan">No files attached</span></div>`;
-
-        const detailsHTML = `
+        // ─── Build details section ──────────────────────────────────────
+        detailsDiv.innerHTML = `
             ${agreementBanner}
-            <div class="text-start">
-                <div class="mb-3"><strong><span data-en="Item Name:" data-bm="Nama Item:">Item Name:</span></strong> ${item.item_name}</div>
-                <div class="mb-3"><strong><span data-en="Quantity:" data-bm="Kuantiti:">Quantity:</span></strong> ${item.quantity} ${item.measure}</div>
-                <div class="mb-3"><strong><span data-en="Value:" data-bm="Nilai:">Value:</span></strong> RM ${item.value}</div>
-                <div class="mb-3"><strong><span data-en="Purpose:" data-bm="Tujuan:">Purpose:</span></strong> ${item.purpose}</div>
-                <div class="mb-3"><strong><span data-en="Uses:" data-bm="Kegunaan:">Uses:</span></strong> ${item.uses}</div>
-                ${filesDisplay}
-                ${item.condition ? `<div class="mb-3"><strong><span data-en="Conditions:" data-bm="Syarat:">Conditions:</span></strong><div style="white-space: pre-wrap; word-break: break-word;">${item.condition}</div></div>` : ''}
+
+            <div class="pd-section-label mt-4 mb-2" data-en="Consignment Info" data-bm="Info Konsainan">Consignment Info</div>
+            <div class="p-2 row" style="background: var(--gray-1); border: 1px solid var(--default-border); border-radius: 0.6rem;">
+                <div class="col-12 col-lg-6">
+                    <p>
+                        <strong class="me-1">
+                            <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-tag"></i></span>
+                            <span data-en="Item Name:" data-bm="Nama Item:">Item Name:</span>
+                        </strong> ${item.item_name}
+                    </p>
+                </div>
+                <div class="col-12 col-lg-6">
+                    <p>
+                        <strong class="me-1">
+                            <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-scale-balanced"></i></span>
+                            <span data-en="Quantity:" data-bm="Kuantiti:">Quantity:</span>
+                        </strong> ${item.quantity} ${item.measure}
+                    </p>
+                </div>
+                <div class="col-12 col-lg-6">
+                    <p>
+                        <strong class="me-1">
+                            <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-money-bill"></i></span>
+                            <span data-en="Value:" data-bm="Nilai:">Value:</span>
+                        </strong> ${item.value}
+                    </p>
+                </div>
+                <div class="col-12 col-lg-6">
+                    <p>
+                        <strong class="me-1">
+                            <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-pen-fancy"></i></span>
+                            <span data-en="Purpose:" data-bm="Tujuan:">Purpose:</span>
+                        </strong> ${item.purpose}
+                    </p>
+                </div>
+                <div class="col-12">
+                    <p>
+                        <strong class="me-1">
+                            <span class="avatar avatar-sm avatar-rounded bd-gray-500"><i class="fa-solid fa-gear"></i></span>
+                            <span data-en="Uses:" data-bm="Kegunaan:">Uses:</span>
+                        </strong> ${item.uses}
+                    </p>
+                </div>
             </div>
         `;
 
-        // Show item details in Swal modal with bilingual support
-        Swal.fire({
-            title: '<span data-en="Item Details" data-bm="Maklumat Item">Item Details</span>',
-            html: detailsHTML,
-            icon: "info",
-            confirmButtonText: '<span data-en="Close" data-bm="Tutup">Close</span>',
-            width: 600,
-            didOpen: (modal) => applyTranslations(modal),
-        });
+        applyTranslations(detailsDiv);
+
+        // ─── Condition section ──────────────────────────────────────────
+        const hasCondition = item.condition && item.condition.trim() !== "";
+        if (conditionItem) {
+            conditionItem.innerHTML = hasCondition
+                ? `<div style="white-space: pre-wrap; word-break: break-word;">${item.condition}</div>`
+                : `<span data-en="No special conditions for this item." data-bm="Tiada syarat khas untuk item ini.">No special conditions for this item.</span>`;
+            applyTranslations(conditionItem);
+        }
+        if (conditionCount) {
+            conditionCount.textContent = hasCondition ? "1" : "0";
+        }
+
+        // ─── Attachments list ───────────────────────────────────────────
+        attachList.innerHTML = "";
+        currentItemAttachments = item.files || [];
+
+        if (!item.files || item.files.length === 0) {
+            attachList.innerHTML = `
+                <div class="text-muted text-center py-3">
+                    <span data-en="No attachments" data-bm="Tiada lampiran">No attachments</span>
+                </div>
+            `;
+            if (attachmentCount) attachmentCount.textContent = "0";
+        } else {
+            let chipsHTML = "";
+            item.files.forEach((file, index) => {
+                const displayName = file.displayName || file.name;
+                const fileIcon =
+                    file.type === "application/pdf"
+                        ? "bi-file-earmark-pdf-fill"
+                        : "bi-file-earmark-fill";
+                const fileTypeClass =
+                    file.type === "application/pdf" ? "is-pdf" : "is-file";
+                const typeDisplay = file.type || "Unknown";
+
+                chipsHTML += `
+                    <div class="ipv-attach-chip ${fileTypeClass} view-item-attach-btn" data-index="${index}" style="cursor:pointer;">
+                        <div class="ipv-attach-icon"><i class="bi ${fileIcon}"></i></div>
+                        <div class="ipv-attach-info">
+                            <div class="ipv-attach-name" title="${displayName}">${displayName}</div>
+                            <div class="ipv-attach-size">
+                                <span data-en="${typeDisplay}" data-bm="${typeDisplay}">${typeDisplay}</span>
+                                · ${(file.size / 1024).toFixed(1)} KB
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            attachList.innerHTML = chipsHTML;
+            if (attachmentCount) attachmentCount.textContent = item.files.length;
+            applyTranslations(attachList);
+        }
+
+        // ─── Show the offcanvas ─────────────────────────────────────────
+        const offcanvasEl = document.getElementById("ItemDetailsOffcanvas");
+        if (offcanvasEl) {
+            bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl).show();
+        }
+
+        console.log("detailsDiv.innerHTML after set:", detailsDiv.innerHTML);
+    });
+
+    // ─── Attachment chip click → open attachment viewer ──────────────
+    $(document).on("click", ".view-item-attach-btn", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const index = $(this).data("index");
+        if (currentItemAttachments.length > 0 && index !== undefined) {
+            openItemAttachmentViewer(currentItemAttachments, index);
+        }
     });
 }
 

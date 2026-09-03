@@ -52,75 +52,7 @@
     </div>
 </div>
 
-<style>
-    .doc-row-toggle {
-        cursor: pointer;
-    }
 
-    .doc-row-toggle .doc-toggle-icon {
-        transition: transform .2s ease;
-    }
-
-    .doc-row-toggle[aria-expanded="true"] .doc-toggle-icon {
-        transform: rotate(180deg);
-    }
-
-    .doc-status-badge.has-files {
-        background: rgba(var(--success-rgb, 30, 195, 121), .12) !important;
-        color: rgb(var(--success-rgb, 30, 195, 121)) !important;
-    }
-
-    .file-drop-area.is-dragover {
-        border-color: rgb(var(--primary-rgb)) !important;
-        background: rgba(var(--primary-rgb), .05);
-    }
-
-    .file-list-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        border: 1px solid var(--default-border);
-        border-radius: 10px;
-        padding: 8px 12px;
-        background: var(--default-background);
-    }
-
-    .file-list-item i {
-        font-size: 20px;
-        color: rgb(var(--primary-rgb));
-        flex-shrink: 0;
-    }
-
-    .file-list-item .file-meta {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .file-list-item .file-meta .file-name {
-        font-size: 13px;
-        font-weight: 500;
-        color: var(--default-text-color);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .file-list-item .file-meta .file-size {
-        font-size: 11.5px;
-        color: var(--text-muted);
-    }
-
-    .file-list-item .file-actions {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        flex-shrink: 0;
-    }
-
-    .file-list-item.existing-file i {
-        color: var(--success-color, #1ec379);
-    }
-</style>
 
 <script>
     (function() {

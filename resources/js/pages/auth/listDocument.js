@@ -176,9 +176,10 @@ function createDocumentCard(doc, user) {
     card.className = "card custom-card border shadow-sm mb-0 document-upload-section p-3 mb-2";
     card.dataset.docId = doc.id;
 
-    // ─── Header ──────────────────────────────────────────────────────
+    // ─── Header (now responsive) ──────────────────────────────────────
     const header = document.createElement("div");
-    header.className = "d-flex align-items-center justify-content-between doc-row-toggle";
+    // On small screens: column, on larger: row
+    header.className = "d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between doc-row-toggle";
     header.setAttribute("role", "button");
     header.setAttribute("aria-expanded", "false");
     header.dataset.docId = doc.id;
@@ -193,9 +194,9 @@ function createDocumentCard(doc, user) {
         </div>
     `;
 
-    // Build right side: actions + badge + toggle
+    // Build right side: actions + badge + toggle (now wraps)
     const rightSide = document.createElement("div");
-    rightSide.className = "d-flex align-items-center gap-2 flex-shrink-0";
+    rightSide.className = "d-flex align-items-center gap-2 flex-shrink-0 flex-wrap";
 
     // Details button (if description exists)
     if (doc.description) {
@@ -227,15 +228,25 @@ function createDocumentCard(doc, user) {
         addBtn.className = "btn btn-sm btn-outline-primary add-document-btn d-flex align-items-center gap-1";
         addBtn.dataset.docId = doc.id;
         addBtn.innerHTML = `<i class="ti ti-plus"></i> Add`;
+
         addBtn.addEventListener("click", function (e) {
-            e.stopPropagation(); // prevent toggling the panel
+            e.stopPropagation();
             const docId = this.dataset.docId;
+            const panel = document.querySelector(`.doc-panel[data-doc-id="${docId}"]`);
             const uploadZone = document.querySelector(`.upload-zone-wrapper[data-doc-id="${docId}"]`);
             if (!uploadZone) return;
+
+            if (panel && panel.classList.contains("d-none")) {
+                panel.classList.remove("d-none");
+                const headerEl = document.querySelector(`.doc-row-toggle[data-doc-id="${docId}"]`);
+                if (headerEl) headerEl.setAttribute("aria-expanded", "true");
+            }
+
             const isHidden = uploadZone.classList.contains("d-none");
             uploadZone.classList.toggle("d-none", !isHidden);
             this.innerHTML = isHidden ? `<i class="ti ti-x"></i> Cancel` : `<i class="ti ti-plus"></i> Add`;
         });
+
         rightSide.appendChild(addBtn);
     }
 
@@ -247,12 +258,10 @@ function createDocumentCard(doc, user) {
     header.appendChild(leftSide);
     header.appendChild(rightSide);
 
-    // ─── Panel ──────────────────────────────────────────────────────
+    // ─── Panel (unchanged) ──────────────────────────────────────────
     const panel = document.createElement("div");
     panel.className = "doc-panel d-none";
     panel.dataset.docId = doc.id;
-
-    console.log('exisitng file', existingFiles)
 
     // ─── Existing files list ──────────────────────────────────────
     let existingHtml = existingFiles.length > 0
@@ -301,7 +310,6 @@ function createDocumentCard(doc, user) {
         </div>`
         : "";
 
-    // Upload zone (hidden by default; toggled by "Add" button in header)
     const uploadZone = hasValidRead
         ? ""
         : `
@@ -342,7 +350,6 @@ function createDocumentCard(doc, user) {
 
     // ─── Toggle panel on header click ──────────────────────────────
     header.addEventListener("click", function (e) {
-        // Avoid toggling if the click originated from a button inside the header
         if (e.target.closest(".add-document-btn") || e.target.closest(".doc-details-btn")) return;
         const docId = this.dataset.docId;
         const panel = document.querySelector(`.doc-panel[data-doc-id="${docId}"]`);

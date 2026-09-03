@@ -56,12 +56,15 @@ function initAddImporterModal() {
 
         const routeUrl = $(e.currentTarget).data("route");
         const name = $("#addimpName").val().trim();
+        // const phone_no = $("#addimpfonno").val();
         const phone_no = $("#addimpfonno").val().trim();
         const address1 = $("#addimpaddress1").val().trim();
-        const address2 = $("#addimpaddress2").val().trim();
-        const full_address = `${address1} ${address2}`;
+        // const address2 = $("#addimpaddress2").val().trim();
+        const full_address = `${address1}`;
         const country = $("#addimpcountry").val();
         const id = $('#id').val();
+
+        console.log('Submitting importer data:', { name, phone_no, full_address, country, id });
 
         if (!name || !phone_no || !country) {
             return Swal.fire(getText("fillRequiredFields"));
@@ -180,6 +183,10 @@ $(document).ready(function () {
 
     // Initialize modal logic
     initAddImporterModal();
+
+    $("#filterImporterName").val("");
+    $("#filterImporterCountry").val(null).trigger("change");
+    table.ajax.reload();
 });
 
 $(document).on("click", ".deleteImporter", function () {
