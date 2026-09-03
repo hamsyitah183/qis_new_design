@@ -220,8 +220,9 @@ class UserController extends Controller
         if (auth()->user()->hasRole('boundary officer')) {
             abort(403, 'Unauthorized action. Boundary Officers are restricted from this area.');
         }
-        $user = PublicUser::with(['attachments', 'vehicles'])->where('uuid', $id)->firstOrFail();
+        $user = PublicUser::with(['attachments', 'vehicles', 'districtInfo', 'stateInfo'])->where('uuid', $id)->firstOrFail();
         $activities = $user->activities()->orderBy('created_at', 'desc')->get();
+
         return view('pages.internal.user_management.view_public', compact('user', 'activities'));
     }
 
