@@ -106,10 +106,9 @@ class IpConditionController extends Controller
 
     public function addAlias(Request $request, $id)
     {
-        // dd($request->all());
         $request->validate([
             'alias'     => 'required|string|max:255',
-            'permit_id' => 'nullable|integer|exists:consignment_permits,id',
+            'permit_id' => 'nullable|integer|exists:ip_consignment_permit,id',
         ]);
 
 

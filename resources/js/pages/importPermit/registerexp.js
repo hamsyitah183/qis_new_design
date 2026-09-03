@@ -612,16 +612,16 @@ function initAddExporterModal() {
         const name = $("#addexpName").val().trim();
         const phone_no = $("#addexpfonno").val().trim();
         const address1 = $("#addexpaddress1").val().trim();
-        const address2 = $("#addexpaddress2").val().trim();
-        const full_address = `${address1} ${address2}`;
+        // const address2 = $("#addexpaddress2").val().trim();
+        const full_address = `${address1}`
         const country = $("#addexpcountry").val();
-
-        if (!name || !phone_no || !country) {
-            return Swal.fire({
-                title: '<span data-en="⚠️ Please fill in all required fields." data-bm="⚠️ Sila isi semua ruangan wajib.">⚠️ Please fill in all required fields.</span>',
-                didOpen: (modal) => applyTranslations(modal),
-            });
-        }
+        // console.log()
+        // if (!name || !phone_no || !country) {
+        //     return Swal.fire({
+        //         title: '<span data-en="⚠️ Please fill in all required fields." data-bm="⚠️ Sila isi semua ruangan wajib.">⚠️ Please fill in all required fields.</span>',
+        //         didOpen: (modal) => applyTranslations(modal),
+        //     });
+        // }
 
         Swal.fire({
             title: '<span data-en="Saving exporter..." data-bm="Sedang menyimpan pengeksport...">Saving exporter...</span>',

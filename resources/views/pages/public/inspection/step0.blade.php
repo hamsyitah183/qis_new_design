@@ -24,10 +24,9 @@
                     </div>
                     <div class="col-xl-12">
                         <label for="impaddress" class="form-label" data-en="Address" data-bm="Alamat">Address</label>
-                        <input type="text" class="form-control mb-2" id="impaddress1" name="impaddress1"
-                            value="{{ Auth::user()->address_1 ?? '' }}" disabled>
-                        <input type="text" class="form-control " id="impaddress2" name="impaddress2"
-                            value="{{ Auth::user()->address_2 ?? '' }}" disabled>
+                        <textarea type="text" class="form-control mb-2" id="impaddress1" name="impaddress1"
+                            value="" disabled>{{ Auth::user()->address_1 ?? '' }} </textarea>
+                       
                     </div>
                 </div>
             </div>
@@ -92,20 +91,20 @@
 
                 {{-- Phone --}}
                 <div class="mb-3">
-                    <label for="addexpfonno" class="form-label">Phone No<a style="color:red"> * </a></label><a style="color:red"> * </a>
+                    <label for="addexpfonno" class="form-label">Phone No</label><a style="color:red"> * </a>
                     <input type="text" id="addexpfonno" name="addexpfonno" class="form-control">
                 </div>
 
                 {{-- Address --}}
                 <div class="mb-3">
-                    <label for="addexpaddress" class="form-label">Address<a style="color:red"> * </a></label><a style="color:red"> * </a>
-                    <input type="text" id="addexpaddress1" name="addexpaddress1" class="form-control mb-2">
-                    <input type="text" id="addexpaddress2" name="addexpaddress2" class="form-control">
+                    <label for="addexpaddress" class="form-label">Address</label><a style="color:red"> * </a>
+                    <textarea type="text" id="addexpaddress1" name="addexpaddress1" class="form-control mb-2"></textarea>
+                    
                 </div>
 
                 {{-- Country --}}
                 <div class="mb-3">
-                    <label for="addexpcountry" class="form-label">Country<a style="color:red"> * </a></label><a style="color:red"> * </a>
+                    <label for="addexpcountry" class="form-label">Country</label><a style="color:red"> * </a>
                     <select class="form-select" id="addexpcountry" name="addexpcountry">
                         <option value="">-- Select Country --</option>
                         @foreach ($country as $coun)

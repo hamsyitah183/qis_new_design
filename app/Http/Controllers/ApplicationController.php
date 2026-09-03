@@ -189,6 +189,7 @@ class ApplicationController extends Controller
                 'requirement' => $req,
                 'attachment' => $attachment,
                 'status' => $status,
+                'rejected_reason' => $attachment ? $attachment->rejected_reason : null,
             ];
         }
 

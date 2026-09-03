@@ -438,12 +438,7 @@ class InspectionController extends Controller
     {
         $user = authUser()['user'];
 
-        // ✅ If the user is already DOA-verified, allow access without blocking
-        if ($user->doa_verified == 1) {
-            return null;
-        }
-
-        // Not verified – check required documents
+        // Get all required document requirements
         $requirements = DocumentRequirement::where('module', 'user')
             ->where('is_required', true)
             ->where('is_active', true)
@@ -454,33 +449,42 @@ class InspectionController extends Controller
             ->keyBy('document_type');
 
         $docStatus = [];
+        $allUploaded = true;  // flag to track if all docs are uploaded & valid
+
         foreach ($requirements as $req) {
             $attachment = $attachments->get($req->name);
             if ($attachment) {
                 if (!$attachment->is_read) {
                     $status = 'pending';
+                    $allUploaded = false;
                 } else {
-                    $isExpired = $req->requires_expiry && $attachment->valid_until && now()->greaterThan($attachment->valid_until);
+                    $isExpired = $req->requires_expiry
+                        && $attachment->valid_until
+                        && now()->greaterThan($attachment->valid_until);
                     $status = $isExpired ? 'expired' : 'uploaded';
+                    if ($status !== 'uploaded') {
+                        $allUploaded = false;
+                    }
                 }
             } else {
                 $status = 'missing';
+                $allUploaded = false;
             }
             $docStatus[] = [
                 'requirement' => $req,
                 'attachment' => $attachment,
                 'status' => $status,
+                'rejected_reason' => $attachment ? $attachment->rejected_reason : null,
             ];
         }
 
-        $anyMissing = collect($docStatus)->contains(fn($item) => $item['status'] === 'missing');
-        $anyExpired = collect($docStatus)->contains(fn($item) => $item['status'] === 'expired');
-
-        if ($anyMissing || $anyExpired) {
-            return view('pages.public.wait_for_verified', compact('docStatus'));
+        // If all required documents are uploaded and valid, allow access
+        if ($allUploaded) {
+            return null;
         }
 
-        return null;
+        // Otherwise, show the wait page with document statuses
+        return view('pages.public.wait_for_verified', compact('docStatus'));
     }
     /**
      * Inspection certificate application for others (company / third‑party).

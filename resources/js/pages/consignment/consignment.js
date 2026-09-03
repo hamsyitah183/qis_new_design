@@ -513,8 +513,8 @@ function initAddExporterModal() {
         const name = $("#addexpName").val().trim();
         const phone_no = $("#addexpfonno").val().trim();
         const address1 = $("#addexpaddress1").val().trim();
-        const address2 = $("#addexpaddress2").val().trim();
-        const full_address = `${address1} ${address2}`;
+        // const address2 = $("#addexpaddress2").val().trim();
+        const full_address = `${address1} `;
         const country = $("#addexpcountry").val();
 
         if (!name || !phone_no || !country) {
@@ -1637,6 +1637,8 @@ function groupPreview() {
         }, 150);
     });
 }
+
+
 
 // ─── Show Item Agreement ──────────────────────────────────
 async function showItemAgreement(item) {
@@ -2873,6 +2875,7 @@ $(document).ready(async function () {
 
     try {
         await selfImport();
+        renderHeaderInfo()
 
         await fetchExporterList();
         handleExporterChange();
@@ -2905,6 +2908,7 @@ $(document).ready(async function () {
         deleteItem();
         copyItem();
         editItem();
+        
 
         $("#itemMeasure").select2({
             width: "100%",

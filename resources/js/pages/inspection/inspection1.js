@@ -172,7 +172,7 @@ function mapAttachment(f) {
     return {
         name: f.file_name || f.name,
         size: f.file_size || f.size || '',
-        path: f.id ? `/inspection/attachment/${f.id}` : (f.file_path || f.path || ''),
+        path: f.file_path || f.path || '',
         mime: f.file_type || f.mime,
     };
 }
@@ -258,6 +258,7 @@ function mapApplication(json) {
 
 function mapPermits(json) {
     const permits = json.inspection_items || [];
+    console.log('mapping permits', permits);
     PERMITS = permits.map((permit) => {
         const detail = permit.consignment_detail || {};
         const quantity = permit.quantity ?? detail.quantity ?? 0;
@@ -476,7 +477,9 @@ function paintAttachmentList(containerEl, files, visibleCount) {
     const shown = files.slice(0, visibleCount);
     const remaining = files.length - shown.length;
 
-    let html = shown.map((file, idx) => `
+    let html = shown.map((file, idx) => 
+        console.log('painting attachment', file, idx) ||
+        `
         <div class="ipv-attach-chip" data-list-id="${listId}" data-index="${idx}" style="cursor:pointer;">
             <div class="ipv-attach-icon ${fileMeta(file.name).cls}"><i class="bi ${fileMeta(file.name).icon}"></i></div>
             <div class="ipv-attach-info">

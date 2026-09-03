@@ -1,6 +1,5 @@
 @extends('pages.app')
 
-
 @section('pageName', 'Verification List')
 
 @push('style')
@@ -17,6 +16,17 @@
                 width: 100%;
             }
         }
+
+        /* ── Ensure Reject modal appears above offcanvas ── */
+        #rejectModal.modal {
+            z-index: 1070;
+        }
+
+        #rejectModal.modal-backdrop {
+            z-index: 1065;
+        }
+
+        /* Offcanvas z‑index is 1046 by default – keep it lower */
     </style>
 @endpush
 
@@ -44,9 +54,7 @@
             <div class="card custom-card">
 
                 <div class="card-header">
-                    {{-- <div class="card-title" data-en="User Verification List" data-bm="Senarai Pengesahan Pengguna">User Verification List</div> --}}
                     <div class="ms-auto d-flex gap-2 align-items-center">
-
                         <button class="btn btn-sm btn-primary filter dropdown-toggle" type="button"
                             id="verifyFilterDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
                             aria-expanded="false">
@@ -55,15 +63,6 @@
                         </button>
 
                         <ul class="dropdown-menu p-3 filter-dropdown" aria-labelledby="verifyFilterDropdown">
-
-                            {{-- Name Search --}}
-                            {{-- <li class="mb-2">
-                                <label class="form-label fw-semibold mb-1" data-en="Name" data-bm="Nama">Name</label>
-                                <input type="text" class="form-control form-control-sm" id="filterVerifyName" data-en="Search by name..." data-bm="Cari dengan nama..." data-i18n-attr="placeholder"
-                                    placeholder="Search by name...">
-                            </li> --}}
-
-                            {{-- Date Range --}}
                             <li class="mb-2">
                                 <div class="row g-2">
                                     <div class="col-6">
@@ -108,37 +107,41 @@
         </div>
     </div>
 
-    <!-- Reject Reason Modal -->
+    <!-- ─── Reject Reason Modal (SINGLE) ───────────────────────── -->
     <x-modal id="rejectModal" title="Reject Verification">
         <form id="rejectForm">
             @csrf
             <input type="hidden" id="rejectUserUuid" name="user_uuid">
+            <input type="hidden" id="rejectAttachmentId" name="attachment_id">
 
             <div class="mb-3">
-                <label for="rejectReason" class="form-label"><span data-en="Reason for Rejection"
-                        data-bm="Sebab Penolakan">Reason for Rejection</span></label>
+                <label for="rejectReason" class="form-label">
+                    <span data-en="Reason for Rejection" data-bm="Sebab Penolakan">Reason for Rejection</span>
+                </label>
                 <textarea class="form-control" id="rejectReason" name="reason" rows="3" required></textarea>
             </div>
 
             @slot('footer')
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><span data-en="Close"
-                        data-bm="Tutup">Close</span></button>
-                <button type="submit" class="btn btn-danger" id="confirmRejectBtn"><span data-en="Reject"
-                        data-bm="Tolak">Reject</span></button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <span data-en="Close" data-bm="Tutup">Close</span>
+                </button>
+                <button type="submit" class="btn btn-danger" id="confirmRejectBtn">
+                    <span data-en="Reject" data-bm="Tolak">Reject</span>
+                </button>
             @endslot
         </form>
     </x-modal>
 
-    <!-- Verification Modal -->
+    <!-- ─── Verification Modal (if used) ────────────────────────── -->
     <x-modal id="verificationModal" title="User Verification">
-        <div class="mb-2 fs-14"><span class="fw-bold me-2 " data-en="User IC:" data-bm="KP Pengguna:">User IC: </span> <span
-                class="ic"></span></div>
-
+        <div class="mb-2 fs-14"><span class="fw-bold me-2" data-en="User IC:" data-bm="KP Pengguna:">User IC: </span>
+            <span class="ic"></span>
+        </div>
         <div class="" id="userIC"></div>
-
         <div class="status mt-3"></div>
-        <div class="fs-12 mt-3"> <span class="fw-bold" data-en="Submitted On:" data-bm="Dihantar Pada:">Submitted On:
-            </span> <span class="updated_at text-muted"></span>
+        <div class="fs-12 mt-3">
+            <span class="fw-bold" data-en="Submitted On:" data-bm="Dihantar Pada:">Submitted On: </span>
+            <span class="updated_at text-muted"></span>
         </div>
 
         @slot('footer')
@@ -147,10 +150,7 @@
         @endslot
     </x-modal>
 
-    <!-- Verification Offcanvas -->
-    <!-- ============================================================ -->
-    <!-- VERIFICATION ATTACHMENT OFFCANVAS                             -->
-    <!-- ============================================================ -->
+    <!-- ─── Verification Offcanvas ────────────────────────────────── -->
     <div class="offcanvas offcanvas-end" tabindex="-1" id="verificationOffcanvas"
         aria-labelledby="verificationOffcanvasLabel" style="z-index: 1046;">
         <div class="offcanvas-header border-bottom">
@@ -171,7 +171,6 @@
             </div>
         </div>
         <div class="offcanvas-body p-0 d-flex" style="height: calc(100% - 60px);">
-            <!-- Vertical tabs (View / Details) -->
             <div class="pd-nav flex-shrink-0">
                 <ul class="nav nav-pills flex-column" id="vdTabs" role="tablist">
                     <li class="nav-item" role="presentation">
@@ -189,7 +188,6 @@
                 </ul>
             </div>
             <div class="tab-content flex-grow-1 p-3 overflow-auto" id="vdTabContent">
-                <!-- View pane -->
                 <div class="tab-pane fade show active" id="vd-view" role="tabpanel">
                     <div id="vdAttachmentViewer">
                         <div class="text-muted text-center py-5">
@@ -198,14 +196,12 @@
                         </div>
                     </div>
                 </div>
-                <!-- Details pane -->
                 <div class="tab-pane fade" id="vd-details" role="tabpanel">
                     <div id="vdAttachmentDetails" class="py-2"></div>
                 </div>
             </div>
         </div>
-        <div class="offcanvas-footer border-top p-3">
-
+        <div class="offcanvas-footer border-top p-3 d-none">
             <div class="mt-2 d-flex gap-2">
                 <button class="btn btn-success btn-sm" id="vdAcceptBtn">
                     <i class="bi bi-check-lg"></i> <span data-en="Accept" data-bm="Terima">Accept</span>
@@ -213,6 +209,37 @@
                 <button class="btn btn-danger btn-sm" id="vdRejectBtn">
                     <i class="bi bi-x-lg"></i> <span data-en="Reject" data-bm="Tolak">Reject</span>
                 </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ─── Attachment List Offcanvas ─────────────────────────────── -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="attachmentListOffcanvas" style="z-index: 1045;">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title" id="attachmentListOffcanvasLabel">
+                <i class="bi bi-file-earmark-text me-2"></i>
+                <span data-en="User Documents" data-bm="Dokumen Pengguna">User Documents</span>
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body">
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered" id="attachmentListTable">
+                    <thead>
+                        <tr>
+                            <th data-en="File Name" data-bm="Nama Fail">File Name</th>
+                            <th data-en="Document Type" data-bm="Jenis Dokumen">Document Type</th>
+                            <th data-en="Status" data-bm="Status">Status</th>
+                            <th data-en="Action" data-bm="Tindakan">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attachmentListBody">
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

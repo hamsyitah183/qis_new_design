@@ -124,7 +124,7 @@
             {{-- Phone --}}
             <div class="mb-3">
                 <label for="addimpfonno" class="form-label" data-en="Phone No" data-bm="No Telefon">Phone No</label> <span class="text-danger">*</span>
-                <input type="number" id="addimpfonno" name="phone_no" class="form-control" min="0" step="1" required >
+                <input type="text" id="addimpfonno" name="phone_no" class="form-control" min="0" step="1" required >
             </div>
 
             {{-- Address --}}

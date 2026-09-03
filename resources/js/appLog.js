@@ -265,6 +265,7 @@ export function getRemarkBm(remark) {
         'inspection application draft updated': 'Draf permohonan pemeriksaan dikemas kini',
         'inspection application submitted': 'Permohonan pemeriksaan dihantar',
         'inspection application deleted': 'Permohonan pemeriksaan dipadam',
+        'Inspection application Clerk Verified': 'Permohonan pemeriksaan diperika oleh kerani',
         'all inspection item are accepted': 'Semua item pemeriksaan diterima',
         'all inspection items processed': 'Semua item pemeriksaan telah diproses',
         'application is ready to be paid': 'Permohonan sedia untuk dibayar',

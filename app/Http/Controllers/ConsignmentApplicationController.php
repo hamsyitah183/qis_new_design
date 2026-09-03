@@ -35,12 +35,12 @@ class ConsignmentApplicationController extends Controller
     {
         $user = authUser()['user'];
 
-        // ✅ If the user is already DOA-verified, allow access without blocking
+        // Only allow access if DOA verified
         if ($user->doa_verified == 1) {
             return null;
         }
 
-        // Not verified – check required documents
+        // Otherwise, always show wait_for_verified with document statuses
         $requirements = DocumentRequirement::where('module', 'user')
             ->where('is_required', true)
             ->where('is_active', true)
@@ -67,17 +67,11 @@ class ConsignmentApplicationController extends Controller
                 'requirement' => $req,
                 'attachment' => $attachment,
                 'status' => $status,
+                'rejected_reason' => $attachment ? $attachment->rejected_reason : null,
             ];
         }
 
-        $anyMissing = collect($docStatus)->contains(fn($item) => $item['status'] === 'missing');
-        $anyExpired = collect($docStatus)->contains(fn($item) => $item['status'] === 'expired');
-
-        if ($anyMissing || $anyExpired) {
-            return view('pages.public.wait_for_verified', compact('docStatus'));
-        }
-
-        return null;
+        return view('pages.public.wait_for_verified', compact('docStatus'));
     }
     /**
      * Consignment application for regular users.
@@ -830,8 +824,8 @@ class ConsignmentApplicationController extends Controller
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = country::where('is_del', false)
-        ->whereIn('code', ['SWK', 'BN'])
-        ->get();
+            ->whereIn('code', ['SWK', 'BN'])
+            ->get();
 
         $pbdata = PublicCode::select('id', 'cate_name', 'cate_code', 'description')->where('cate_name', 'consignment_category')->where('is_del', false)->get();
 

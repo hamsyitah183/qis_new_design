@@ -18,8 +18,8 @@
                     <div class="col-xl-12">
                         <label for="impname" class="form-label" data-en="Name" data-bm="Nama">Name</label>
                         <input type="hidden" id="impid" value="{{ Auth::user()->id ?? '' }}">
-                        <input type="text" class="form-control " id="impname" name="impname"
-                            value="{{ Auth::user()->fullname ?? '' }}" disabled>
+                        <textarea type="text" class="form-control " id="impname" name="impname"
+                            value="{{ Auth::user()->fullname ?? '' }}" disabled></textarea>
                     </div>
                     <div class="col-xl-12">
                         <label for="impfonno" class="form-label" data-en="Phone No" data-bm="No Telefon">Phone No</label>
@@ -47,7 +47,7 @@
                     <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                         <label for="selectexp" class="form-label" data-en="Select Exporter" data-bm="Pilih Pengeksport">Select Exporter</label>
                         <select id="selectexp" data-route="/public/get_exporters"
-                            class="form-select xintra-select2" name="selectexp" style="width:100%;" required>
+                            class="form-select xintra-select2" name="selectexp" style="width:100%;"  >
                             <option value="" data-en="-- Select Exporter --" data-bm="-- Pilih Pengeksport --">-- Select Exporter --</option>
                         </select>
                     </div>
@@ -63,7 +63,7 @@
                     </div>
                     <div class="col-xl-12">
                         <input type="hidden" id="expid">
-                        <label for="expname" class="form-label" data-en="Name" data-bm="Nama">Name</label>
+                        <label for="expname" class="form-label" data-en="Name" data-bm="Nama">Name</label> 
                         <input type="text" class="form-control " id="expname" name="expname" disabled>
                     </div>
                     <div class="col-xl-12">
@@ -92,27 +92,27 @@
 
                 {{-- Name --}}
                 <div class="mb-3">
-                    <label for="addexpName" class="form-label" data-en="Name" data-bm="Nama">Name<a style="color:red"> * </a></label>
-                    <input type="text" id="addexpName" name="addexpName" class="form-control">
+                    <label for="addexpName" class="form-label" data-en="Name" data-bm="Nama">Name</label><a style="color:red"> * </a>
+                    <input type="text" id="addexpName" name="addexpName" class="form-control"  >
                 </div>
 
                 {{-- Phone --}}
                 <div class="mb-3">
-                    <label for="addexpfonno" class="form-label" data-en="Phone No" data-bm="No Telefon">Phone No<a style="color:red"> * </a></label>
-                    <input type="text" id="addexpfonno" name="addexpfonno" class="form-control">
+                    <label for="addexpfonno" class="form-label" data-en="Phone No" data-bm="No Telefon">Phone No</label><a style="color:red"> * </a>
+                    <input type="text" id="addexpfonno" name="addexpfonno" class="form-control" min="0"  >
                 </div>
 
                 {{-- Address --}}
                 <div class="mb-3">
-                    <label for="addexpaddress" class="form-label" data-en="Address" data-bm="Alamat">Address<a style="color:red"> * </a></label>
-                    <input type="text" id="addexpaddress1" name="addexpaddress1" class="form-control mb-2">
-                    <input type="text" id="addexpaddress2" name="addexpaddress2" class="form-control">
+                    <label for="addexpaddress" class="form-label" data-en="Address" data-bm="Alamat">Address</label><a style="color:red"> * </a>
+                    <textarea type="text" id="addexpaddress1" name="addexpaddress1" class="form-control mb-2"> </textarea>
+                   
                 </div>
 
                 {{-- Country --}}
                 <div class="mb-3">
-                    <label for="addexpcountry" class="form-label" data-en="Country" data-bm="Negara">Country<a style="color:red"> * </a></label>
-                    <select class="form-select" id="addexpcountry" name="addexpcountry">
+                    <label for="addexpcountry" class="form-label" data-en="Country" data-bm="Negara">Country</label><a style="color:red"> * </a>
+                    <select class="form-select" id="addexpcountry" name="addexpcountry"  >
                         <option value="" data-en="-- Select Country --" data-bm="-- Pilih Negara --">-- Select Country --</option>
                         @foreach ($country as $coun)
                             <option value="{{ $coun->code }}">{{ $coun->name }}</option>

@@ -36,7 +36,7 @@ function getExistingFiles(user, docName) {
 
 function hasValidReadFile(user, docName) {
     return getExistingFiles(user, docName).some(
-        file => Number(file.is_read) === 1 && isFileStillValid(file)
+        file => Number(file.is_read) === 1 && isFileStillValid(file) && !file.rejected_reason
     );
 }
 
@@ -88,7 +88,6 @@ function viewExistingFile(url, name) {
     const openBtn = document.getElementById("fileLabelOpenBtn");
     const modalTitle = document.getElementById("fileLabelModalLabel");
 
-    // Reset all viewers
     if (previewImg) previewImg.classList.add("d-none");
     if (previewIcon) previewIcon.classList.add("d-none");
     if (pdfViewer) pdfViewer.style.display = "none";
@@ -134,7 +133,6 @@ function viewExistingFile(url, name) {
     modal.show();
 }
 
-// Attach to window for inline onclick
 window.viewExistingFile = viewExistingFile;
 
 // =============================================================
@@ -178,37 +176,85 @@ function createDocumentCard(doc, user) {
     card.className = "card custom-card border shadow-sm mb-0 document-upload-section p-3 mb-2";
     card.dataset.docId = doc.id;
 
-    // Header
+    // ─── Header ──────────────────────────────────────────────────────
     const header = document.createElement("div");
     header.className = "d-flex align-items-center justify-content-between doc-row-toggle";
     header.setAttribute("role", "button");
     header.setAttribute("aria-expanded", "false");
     header.dataset.docId = doc.id;
 
-    header.innerHTML = `
-        <div class="d-flex align-items-center gap-2 min-w-0">
-            <i class="ti ti-file-text fs-18 text-muted flex-shrink-0"></i>
-            <div class="min-w-0">
-                <div class="fw-semibold fs-14">${doc.name}</div>
-            </div>
-        </div>
-        <div class="d-flex align-items-center gap-2 flex-shrink-0">
-            ${doc.description ? `<button type="button" class="badge rounded-pill bg-light-primary text-primary border-0 doc-details-btn d-flex align-items-center gap-1" data-doc-id="${doc.id}">
-                <i class="ti ti-info-circle fs-14"></i> Details
-            </button>` : ""}
-            <span class="badge rounded-pill bg-light text-muted doc-status-badge" data-doc-id="${doc.id}">
-                ${existingFiles.length > 0 ? `${existingFiles.length} file(s)` : "No files"}
-            </span>
-            <i class="ti ti-chevron-down doc-toggle-icon fs-16 text-muted"></i>
+    // Build left side: icon + name
+    const leftSide = document.createElement("div");
+    leftSide.className = "d-flex align-items-center gap-2 min-w-0";
+    leftSide.innerHTML = `
+        <i class="ti ti-file-text fs-18 text-muted flex-shrink-0"></i>
+        <div class="min-w-0">
+            <div class="fw-semibold fs-14">${doc.name}</div>
         </div>
     `;
 
-    // Panel
+    // Build right side: actions + badge + toggle
+    const rightSide = document.createElement("div");
+    rightSide.className = "d-flex align-items-center gap-2 flex-shrink-0";
+
+    // Details button (if description exists)
+    if (doc.description) {
+        const detailsBtn = document.createElement("button");
+        detailsBtn.type = "button";
+        detailsBtn.className = "badge rounded-pill bg-light-primary text-primary border-0 doc-details-btn d-flex align-items-center gap-1";
+        detailsBtn.dataset.docId = doc.id;
+        detailsBtn.innerHTML = `<i class="ti ti-info-circle fs-14"></i> Details`;
+        detailsBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            const docId = this.dataset.docId;
+            const doc = documents.find(d => String(d.id) === String(docId));
+            if (doc) showDocumentDescription(doc);
+        });
+        rightSide.appendChild(detailsBtn);
+    }
+
+    // Status badge
+    const badge = document.createElement("span");
+    badge.className = "badge rounded-pill bg-light text-muted doc-status-badge";
+    badge.dataset.docId = doc.id;
+    badge.textContent = existingFiles.length > 0 ? `${existingFiles.length} file(s)` : "No files";
+    rightSide.appendChild(badge);
+
+    // Add Document button (if not fully verified)
+    if (!hasValidRead) {
+        const addBtn = document.createElement("button");
+        addBtn.type = "button";
+        addBtn.className = "btn btn-sm btn-outline-primary add-document-btn d-flex align-items-center gap-1";
+        addBtn.dataset.docId = doc.id;
+        addBtn.innerHTML = `<i class="ti ti-plus"></i> Add`;
+        addBtn.addEventListener("click", function (e) {
+            e.stopPropagation(); // prevent toggling the panel
+            const docId = this.dataset.docId;
+            const uploadZone = document.querySelector(`.upload-zone-wrapper[data-doc-id="${docId}"]`);
+            if (!uploadZone) return;
+            const isHidden = uploadZone.classList.contains("d-none");
+            uploadZone.classList.toggle("d-none", !isHidden);
+            this.innerHTML = isHidden ? `<i class="ti ti-x"></i> Cancel` : `<i class="ti ti-plus"></i> Add`;
+        });
+        rightSide.appendChild(addBtn);
+    }
+
+    // Chevron toggle
+    const chevron = document.createElement("i");
+    chevron.className = "ti ti-chevron-down doc-toggle-icon fs-16 text-muted";
+    rightSide.appendChild(chevron);
+
+    header.appendChild(leftSide);
+    header.appendChild(rightSide);
+
+    // ─── Panel ──────────────────────────────────────────────────────
     const panel = document.createElement("div");
     panel.className = "doc-panel d-none";
     panel.dataset.docId = doc.id;
 
-    // Existing files list
+    console.log('exisitng file', existingFiles)
+
+    // ─── Existing files list ──────────────────────────────────────
     let existingHtml = existingFiles.length > 0
         ? `
             <div class="existing-file-list-empty text-muted fs-12 mb-2" data-doc-id="${doc.id}">
@@ -219,10 +265,12 @@ function createDocumentCard(doc, user) {
                     <li class="file-list-item existing-file">
                         <i class="${file.file_path?.endsWith(".pdf") ? "ti ti-file-type-pdf" : "ti ti-photo"}"></i>
                         <div class="file-meta">
-                            <div class="d-flex align-items-center gap-2">
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
                                 <div class="file-name">${file.original_file_name || "Document"}</div>
-                                ${Number(file.is_read) === 1 ? `<span class="badge bg-success-transparent fs-11 py-0 px-1"><i class="ti ti-check fs-11"></i> Read</span>` : ""}
+                                ${Number(file.is_read) === 1 && !file.rejected_reason ? `<span class="badge bg-success-transparent fs-11 py-0 px-1"><i class="ti ti-check fs-11"></i> Read</span>` : ""}
+                                ${file.rejected_reason ? `<span class="badge bg-danger fs-11 py-0 px-1">Rejected</span>` : ""}
                             </div>
+                            ${file.rejected_reason ? `<div class="text-danger fs-12 mt-1"><span data-en="Reason" data-bm="Sebab"></span>${file.rejected_reason}</div>` : ""}
                             ${file.file_size ? `<div class="file-size">${formatFileSize(file.file_size)}</div>` : ""}
                             <div class="file-uploaded-date text-muted fs-12">
                                 Uploaded on: ${new Date(file.created_at).toLocaleDateString()}
@@ -248,17 +296,12 @@ function createDocumentCard(doc, user) {
         `;
 
     const lockedNotice = hasValidRead
-        ? `<div class="text-success fs-12 d-flex align-items-center gap-1 mt-1">
+        ? `<div class="text-success fs-12 d-flex align-items-center gap-1 mt-1 d-none">
             <i class="ti ti-circle-check"></i> Verified and valid — no action needed.
         </div>`
         : "";
 
-    const addBtn = hasValidRead
-        ? ""
-        : `<button type="button" class="btn btn-sm btn-outline-primary add-document-btn d-flex ms-auto" data-doc-id="${doc.id}">
-            <i class="ti ti-plus me-1"></i> Add Document
-        </button>`;
-
+    // Upload zone (hidden by default; toggled by "Add" button in header)
     const uploadZone = hasValidRead
         ? ""
         : `
@@ -293,10 +336,22 @@ function createDocumentCard(doc, user) {
         <div class="pt-3 mt-3 border-top border-block-start-dashed">
             ${existingHtml}
             ${lockedNotice}
-            ${addBtn}
             ${uploadZone}
         </div>
     `;
+
+    // ─── Toggle panel on header click ──────────────────────────────
+    header.addEventListener("click", function (e) {
+        // Avoid toggling if the click originated from a button inside the header
+        if (e.target.closest(".add-document-btn") || e.target.closest(".doc-details-btn")) return;
+        const docId = this.dataset.docId;
+        const panel = document.querySelector(`.doc-panel[data-doc-id="${docId}"]`);
+        if (panel) {
+            const isExpanded = this.getAttribute("aria-expanded") === "true";
+            panel.classList.toggle("d-none", isExpanded);
+            this.setAttribute("aria-expanded", String(!isExpanded));
+        }
+    });
 
     card.appendChild(header);
     card.appendChild(panel);
@@ -321,55 +376,14 @@ function renderDocumentList(user) {
 
     container.appendChild(wrapper);
 
-    // ---- Bind events ----
-    bindToggleEvents();
-    bindAddDocumentButtons();
-    bindDocumentDetails();
+    // Bind remaining events (upload initialization, submit)
     initializeFileUploads(user);
     setupSubmitButton();
 }
 
 // =============================================================
-// Event Binding
+// Upload & Submit
 // =============================================================
-
-function bindToggleEvents() {
-    document.querySelectorAll(".doc-row-toggle").forEach(toggle => {
-        toggle.addEventListener("click", function () {
-            const docId = this.dataset.docId;
-            const panel = document.querySelector(`.doc-panel[data-doc-id="${docId}"]`);
-            if (panel) {
-                const isExpanded = this.getAttribute("aria-expanded") === "true";
-                panel.classList.toggle("d-none", isExpanded);
-                this.setAttribute("aria-expanded", String(!isExpanded));
-            }
-        });
-    });
-}
-
-function bindAddDocumentButtons() {
-    document.querySelectorAll(".add-document-btn").forEach(btn => {
-        btn.addEventListener("click", function () {
-            const docId = this.dataset.docId;
-            const uploadZone = document.querySelector(`.upload-zone-wrapper[data-doc-id="${docId}"]`);
-            if (!uploadZone) return;
-            const isHidden = uploadZone.classList.contains("d-none");
-            uploadZone.classList.toggle("d-none", !isHidden);
-            this.innerHTML = isHidden ? `<i class="ti ti-x me-1"></i> Cancel` : `<i class="ti ti-plus me-1"></i> Add Document`;
-        });
-    });
-}
-
-function bindDocumentDetails() {
-    document.querySelectorAll(".doc-details-btn").forEach(btn => {
-        btn.addEventListener("click", function (e) {
-            e.stopPropagation();
-            const docId = this.dataset.docId;
-            const doc = documents.find(d => String(d.id) === String(docId));
-            if (doc) showDocumentDescription(doc);
-        });
-    });
-}
 
 function initializeFileUploads(user) {
     if (typeof fileUpload !== "function") {
@@ -383,7 +397,7 @@ function initializeFileUploads(user) {
             fileUpload(doc.id);
         }
 
-        // Setup badge observer
+        // Update badge counts dynamically
         const card = document.querySelector(`.document-upload-section[data-doc-id="${doc.id}"]`);
         if (!card) return;
 
@@ -411,10 +425,6 @@ function initializeFileUploads(user) {
         }
     });
 }
-
-// =============================================================
-// Submit Button
-// =============================================================
 
 function setupSubmitButton() {
     const submitFooter = document.getElementById("document-submit-footer");

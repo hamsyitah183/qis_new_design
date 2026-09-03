@@ -23,16 +23,12 @@ const t = {
     acceptDoc: { en: 'Accept this document?', bm: 'Terima dokumen ini?' },
     acceptDocText: { en: 'This will mark the file as reviewed and accepted.', bm: 'Ini akan menanda fail ini sebagai telah disemak dan diterima.' },
     accepted: { en: 'Accepted', bm: 'Diterima' },
-    rejectDoc: { en: 'Reject this document?', bm: 'Tolak dokumen ini?' },
-    reasonForRejection: { en: 'Reason for rejection', bm: 'Sebab penolakan' },
     reasonRequired: { en: 'Reason is required', bm: 'Sebab diperlukan' },
     rejected: { en: 'Rejected', bm: 'Ditolak' },
     acceptAllDocs: { en: 'Accept all documents?', bm: 'Terima semua dokumen?' },
     acceptAllDocsText: { en: 'This will accept all required documents and verify the user.', bm: 'Ini akan menerima semua dokumen yang diperlukan dan mengesahkan pengguna.' },
     approved: { en: 'Approved!', bm: 'Diluluskan!' },
     userVerified: { en: 'User verified.', bm: 'Pengguna disahkan.' },
-    rejectAllDocs: { en: 'Reject user?', bm: 'Tolak pengguna?' },
-    rejectAllDocsText: { en: 'This will reject the verification application.', bm: 'Ini akan menolak permohonan pengesahan.' },
     userRejected: { en: 'User rejected.', bm: 'Pengguna ditolak.' },
     noFileSelected: { en: 'No file selected', bm: 'Tiada fail dipilih' },
     pleaseSelectFile: { en: 'Please select a file first.', bm: 'Sila pilih fail dahulu.' },
@@ -45,7 +41,6 @@ function getText(key) {
     return entry[lang] || entry.en;
 }
 
-
 let verificationTable = null;
 
 // ---------- Offcanvas state ----------
@@ -54,6 +49,10 @@ let vdCurrentIndex = 0;
 let vdOffcanvas = null;
 let vdUser = null;
 let vdDocTypeFilter = null;
+
+// ---------- Attachment List Offcanvas ----------
+let attachmentListOffcanvas = null;
+let currentListUserId = null;
 
 // ---------- Helpers ----------
 function escapeHtml(text) {
@@ -109,12 +108,22 @@ function initVdOffcanvas() {
     }
 }
 
-// ---------- Render attachment in offcanvas ----------
+function initAttachmentListOffcanvas() {
+    const el = document.getElementById("attachmentListOffcanvas");
+    if (el && !attachmentListOffcanvas) {
+        attachmentListOffcanvas = new bootstrap.Offcanvas(el, {
+            backdrop: true,
+            keyboard: true,
+        });
+    }
+}
+
+// ---------- Render attachment in verification offcanvas ----------
 function renderVdAttachment() {
     const file = vdAttachments[vdCurrentIndex];
     if (!file) {
         $("#vdAttachmentViewer").html(
-            '<div class="text-muted text-center py-5"><i class="bi bi-file-earmark-fill fs-1"></i><br>No file selected.</div>',
+            '<div class="text-muted text-center py-5"><i class="bi bi-file-earmark-fill fs-1"></i><br>No file selected.</div>'
         );
         $("#vdAttachmentDetails").empty();
         updateAttachmentActions(null);
@@ -126,15 +135,7 @@ function renderVdAttachment() {
     const name = file.original_file_name || "Document";
 
     const ext = (path || "").split(".").pop().toLowerCase();
-    const isImage = [
-        "jpg",
-        "jpeg",
-        "png",
-        "gif",
-        "webp",
-        "bmp",
-        "svg",
-    ].includes(ext);
+    const isImage = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"].includes(ext);
     const isPdf = ext === "pdf";
 
     let html = "";
@@ -176,7 +177,6 @@ function renderVdAttachment() {
     $("#vdPrevBtn").prop("disabled", vdCurrentIndex === 0);
     $("#vdNextBtn").prop("disabled", vdCurrentIndex === total - 1);
 
-    // ─── Update actions based on file status ───
     updateAttachmentActions(file);
 }
 
@@ -193,57 +193,32 @@ function updateAttachmentActions(file) {
     }
 
     if (file.is_read) {
-        // Hide buttons
         $acceptBtn.hide();
         $rejectBtn.hide();
-
-        // Show status badge
         if (file.rejected_reason) {
-            $statusBadge
-                .removeClass("bg-success bg-warning")
-                .addClass("bg-danger")
-                .text("Rejected")
-                .show();
+            $statusBadge.removeClass("bg-success bg-warning").addClass("bg-danger").text("Rejected").show();
         } else {
-            $statusBadge
-                .removeClass("bg-danger bg-warning")
-                .addClass("bg-success")
-                .text("Reviewed")
-                .show();
+            $statusBadge.removeClass("bg-danger bg-warning").addClass("bg-success").text("Reviewed").show();
         }
     } else {
-        // Show buttons
         $acceptBtn.show();
         $rejectBtn.show();
-
-        // Hide badge
         $statusBadge.hide().text("");
     }
 }
 
-// ---------- Populate offcanvas ----------
+// ---------- Populate verification offcanvas ----------
 function populateVerificationOffcanvas(response, filterDocType = null) {
     if (!response || !response.user) {
-        $("#vdAttachmentViewer").html(
-            '<div class="alert alert-danger">No user data found</div>',
-        );
+        $("#vdAttachmentViewer").html('<div class="alert alert-danger">No user data found</div>');
         return;
     }
 
     const user = response.user;
-    const verification = response.verification || {};
     vdUser = user;
 
-    if ($("#vdFullname").length) $("#vdFullname").text(user.fullname || "—");
-    if ($("#vdIc").length) $("#vdIc").text(user.no_ic || "—");
-    const status = verification.status || "Unknown";
-    if ($("#vdStatus").length) $("#vdStatus").text(status);
-
     let allAttachments = [];
-    if (
-        response.attachments_grouped &&
-        Array.isArray(response.attachments_grouped)
-    ) {
+    if (response.attachments_grouped && Array.isArray(response.attachments_grouped)) {
         response.attachments_grouped.forEach((group) => {
             const docType = group.document_type || "Uncategorized";
             if (group.attachments && Array.isArray(group.attachments)) {
@@ -258,23 +233,17 @@ function populateVerificationOffcanvas(response, filterDocType = null) {
     }
 
     if (filterDocType) {
-        allAttachments = allAttachments.filter(
-            (a) => a.document_type === filterDocType,
-        );
-        $("#verificationOffcanvasLabel").html(
-            `<i class="bi bi-paperclip me-2"></i> ${escapeHtml(filterDocType)}`,
-        );
+        allAttachments = allAttachments.filter((a) => a.document_type === filterDocType);
+        $("#verificationOffcanvasLabel").html(`<i class="bi bi-paperclip me-2"></i> ${escapeHtml(filterDocType)}`);
     } else {
-        $("#verificationOffcanvasLabel").html(
-            `<i class="bi bi-paperclip me-2"></i> All Attachments`,
-        );
+        $("#verificationOffcanvasLabel").html(`<i class="bi bi-paperclip me-2"></i> All Attachments`);
     }
 
     vdAttachments = allAttachments;
 
     if (!vdAttachments.length) {
         $("#vdAttachmentViewer").html(
-            '<div class="text-muted text-center py-5"><i class="bi bi-file-earmark-fill fs-1"></i><br>No attachments for this document type.</div>',
+            '<div class="text-muted text-center py-5"><i class="bi bi-file-earmark-fill fs-1"></i><br>No attachments for this document type.</div>'
         );
         $("#vdCounter").text("0 / 0");
         $("#vdPrevBtn, #vdNextBtn").prop("disabled", true);
@@ -286,193 +255,134 @@ function populateVerificationOffcanvas(response, filterDocType = null) {
     renderVdAttachment();
 
     const userId = user.uuid;
-    // Store user ID on both buttons for potential bulk actions (if needed)
     $("#vdAcceptBtn").data("id", userId);
     $("#vdRejectBtn").data("id", userId);
 }
 
-// ---------- PER-ATTACHMENT ACCEPT (offcanvas) ----------
-function handleSingleAccept(attachmentId, userId) {
-    Swal.fire({
-        title: getText("acceptDoc"),
-        text: getText("acceptDocText"),
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Yes, accept",
-    }).then((result) => {
-        if (result.isConfirmed) {
-            showLoader("Updating...");
-            $.ajax({
-                url: `/internal/verification/attachment/${attachmentId}/accept`,
-                method: "POST",
-                data: {
-                    _token: $('meta[name="csrf-token"]').attr("content"),
-                },
-                success: function (response) {
-                    Swal.fire({
-                        icon: "success",
-                        title: getText("accepted"),
-                        timer: 1500,
-                        showConfirmButton: false,
-                    });
-                    // Refresh offcanvas content (keep it open)
-                    const currentFilter = vdDocTypeFilter;
-                    fetchVerificationData(userId).then((res) => {
-                        populateVerificationOffcanvas(res, currentFilter);
-                    });
-                    if (verificationTable) verificationTable.ajax.reload();
-                },
-                error: function (xhr) {
-                    Swal.fire(
-                        getText("error"),
-                        xhr.responseJSON?.message || getText("actionFailed"),
-                        "error",
-                    );
-                },
-            });
-        }
-    });
-}
+// ---------- Populate Attachment List Offcanvas ----------
+function populateAttachmentListOffcanvas(response, userId) {
+    const tbody = $("#attachmentListBody");
+    tbody.empty();
 
-// ---------- PER-ATTACHMENT REJECT (offcanvas) ----------
-function handleSingleReject(attachmentId, userId) {
-    Swal.fire({
-        title: getText("rejectDoc"),
-        input: "textarea",
-        inputLabel: getText("reasonForRejection"),
-        inputPlaceholder: "Enter reason...",
-        inputAttributes: { required: true },
-        showCancelButton: true,
-        confirmButtonText: "Reject",
-        confirmButtonColor: "#d33",
-        preConfirm: (reason) => {
-            if (!reason || reason.trim() === "") {
-                Swal.showValidationMessage(getText("reasonRequired"));
-                return false;
+    if (!response || !response.user) {
+        tbody.html('<tr><td colspan="4" class="text-center text-danger">No user data found.</td></tr>');
+        return;
+    }
+
+    const user = response.user;
+    let allAttachments = [];
+    if (response.attachments_grouped && Array.isArray(response.attachments_grouped)) {
+        response.attachments_grouped.forEach((group) => {
+            const docType = group.document_type || "Uncategorized";
+            if (group.attachments && Array.isArray(group.attachments)) {
+                group.attachments.forEach((att) => {
+                    allAttachments.push({
+                        ...att,
+                        document_type: docType,
+                    });
+                });
             }
-            return reason.trim();
-        },
-    }).then((result) => {
-        if (result.isConfirmed) {
-            const reason = result.value;
-            showLoader("Updating...");
-            $.ajax({
-                url: `/internal/verification/attachment/${attachmentId}/reject`,
-                method: "POST",
-                data: {
-                    reason: reason,
-                    _token: $('meta[name="csrf-token"]').attr("content"),
-                },
-                success: function (response) {
-                    Swal.fire({
-                        icon: "success",
-                        title: getText("rejected"),
-                        timer: 1500,
-                        showConfirmButton: false,
-                    });
-                    // Refresh offcanvas content (keep it open)
-                    const currentFilter = vdDocTypeFilter;
-                    fetchVerificationData(userId).then((res) => {
-                        populateVerificationOffcanvas(res, currentFilter);
-                    });
-                    if (verificationTable) verificationTable.ajax.reload();
-                },
-                error: function (xhr) {
-                    Swal.fire(
-                        getText("error"),
-                        xhr.responseJSON?.message || getText("actionFailed"),
-                        "error",
-                    );
-                },
-            });
+        });
+    }
+
+    if (!allAttachments.length) {
+        tbody.html('<tr><td colspan="4" class="text-center text-muted">No attachments found.</td></tr>');
+        return;
+    }
+
+    // Build table rows
+    allAttachments.forEach((att) => {
+        const statusBadge = att.is_read
+            ? (att.rejected_reason ? '<span class="badge bg-danger">Rejected</span>' : '<span class="badge bg-success">Reviewed</span>')
+            : '<span class="badge bg-warning text-dark">Pending</span>';
+
+        // ─── Determine which action buttons to show ────────────────
+        let actionButtons = '';
+
+        // Always show View button
+        actionButtons += `
+            <button class="btn btn-sm btn btn-icon btn-info-light list-view-btn" data-id="${att.id}" data-user-id="${userId}" title="View">
+                <i class="bi bi-eye"></i>
+            </button>
+        `;
+
+        // Show Accept & Reject only if not reviewed and not rejected
+        if (!att.is_read && !att.rejected_reason) {
+            actionButtons += `
+                <button class="btn btn-sm btn btn-icon btn-success-light list-accept-btn" data-id="${att.id}" data-user-id="${userId}" title="Accept">
+                    <i class="bi bi-check-lg"></i>
+                </button>
+                <button class="btn btn-sm btn btn-icon btn-danger-light list-reject-btn" data-id="${att.id}" data-user-id="${userId}" title="Reject">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            `;
         }
+
+        const row = `
+            <tr data-attachment-id="${att.id}">
+                <td>${escapeHtml(att.original_file_name || att.file_name || "—")}</td>
+                <td>${escapeHtml(att.document_type || "—")}</td>
+                <td>${statusBadge}</td>
+                <td>
+                    <div class="d-flex gap-1">
+                        ${actionButtons}
+                    </div>
+                </td>
+            </tr>
+        `;
+        tbody.append(row);
     });
+
+    // Store user ID for later use
+    currentListUserId = userId;
 }
 
-// ---------- BULK ACCEPT (table rows) ----------
-function handleBulkAccept(userId, tableInstance) {
-    Swal.fire({
-        title: getText("acceptAllDocs"),
-        text: getText("acceptAllDocsText"),
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Yes, accept all!",
-    }).then((result) => {
-        if (result.isConfirmed) {
-            showLoader("Approving...");
+// ---------- Unified Rejection (modal) ----------
+function submitRejection(userId, attachmentId, reason, tableInstance) {
+    let url, data;
+    const csrf = $('meta[name="csrf-token"]').attr('content');
 
-            $.ajax({
-                url: `/internal/verification/${userId}/save`,
-                method: "POST",
-                data: {
-                    approved: "yes",
-                    _token: $('meta[name="csrf-token"]').attr("content"),
-                },
-                success: function (response) {
-                    Swal.fire({
-                        icon: "success",
-                        title: getText("approved"),
-                        text: response.message || getText("userVerified"),
-                        timer: 2000,
-                        showConfirmButton: false,
-                    });
+    if (attachmentId) {
+        // Per‑attachment rejection
+        url = `/internal/verification/attachment/${attachmentId}/reject`;
+        data = { reason: reason, _token: csrf };
+    } else {
+        // User‑level rejection
+        url = `/internal/verification/${userId}/save`;
+        data = { approved: 'no', reason: reason, _token: csrf };
+    }
 
-                    fetchVerificationCount();
-                    if (tableInstance) tableInstance.ajax.reload();
-
-                    // If offcanvas is open for this user, refresh it too
-                    if (vdOffcanvas && vdOffcanvas._isShown) {
-                        const currentFilter = vdDocTypeFilter;
-                        fetchVerificationData(userId).then((res) => {
-                            populateVerificationOffcanvas(res, currentFilter);
-                        });
-                    }
-                },
-                error: function (xhr) {
-                    Swal.fire(
-                        getText("error"),
-                        xhr.responseJSON?.message || getText("actionFailed"),
-                        "error",
-                    );
-                },
-            });
-        }
-    });
-}
-
-// ---------- BULK REJECT (table rows) ----------
-function handleBulkReject(userId, reason, tableInstance) {
-    showLoader("Rejecting...");
+    showLoader('Rejecting...');
 
     $.ajax({
-        url: `/internal/verification/${userId}/save`,
-        method: "POST",
-        data: {
-            approved: "no",
-            reason: reason,
-            _token: $('meta[name="csrf-token"]').attr("content"),
-        },
+        url: url,
+        method: 'POST',
+        data: data,
         success: function (response) {
             Swal.fire({
-                icon: "success",
-                title: getText("rejected"),
-                text: response.message || getText("userRejected"),
+                icon: 'success',
+                title: getText('rejected'),
+                text: response.message || getText('userRejected'),
                 timer: 2000,
                 showConfirmButton: false,
             });
 
             // Hide the reject modal
-            const modalEl = document.getElementById("rejectModal");
+            const modalEl = document.getElementById('rejectModal');
             const modal = bootstrap.Modal.getInstance(modalEl);
             if (modal) modal.hide();
 
+            // Reload DataTable
             if (tableInstance) tableInstance.ajax.reload();
 
-            // If offcanvas is open, refresh it
+            // Refresh offcanvas if open (attachment list)
+            if (attachmentListOffcanvas && attachmentListOffcanvas._isShown) {
+                fetchVerificationData(userId).then((res) => {
+                    populateAttachmentListOffcanvas(res, userId);
+                });
+            }
+
+            // Refresh verification offcanvas if open
             if (vdOffcanvas && vdOffcanvas._isShown) {
                 const currentFilter = vdDocTypeFilter;
                 fetchVerificationData(userId).then((res) => {
@@ -481,12 +391,95 @@ function handleBulkReject(userId, reason, tableInstance) {
             }
         },
         error: function (xhr) {
-            Swal.fire(
-                getText("error"),
-                xhr.responseJSON?.message || getText("actionFailed"),
-                "error",
-            );
+            Swal.fire({
+                icon: 'error',
+                title: getText('error'),
+                text: xhr.responseJSON?.message || getText('actionFailed'),
+            });
         },
+    });
+}
+
+// ---------- Accept handlers (Swal) ----------
+function handleSingleAccept(attachmentId, userId) {
+    Swal.fire({
+        title: getText('acceptDoc'),
+        text: getText('acceptDocText'),
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, accept',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            showLoader('Updating...');
+            $.ajax({
+                url: `/internal/verification/attachment/${attachmentId}/accept`,
+                method: 'POST',
+                data: { _token: $('meta[name="csrf-token"]').attr('content') },
+                success: function () {
+                    Swal.fire({ icon: 'success', title: getText('accepted'), timer: 1500, showConfirmButton: false });
+                    // Refresh the list offcanvas
+                    if (attachmentListOffcanvas && attachmentListOffcanvas._isShown) {
+                        fetchVerificationData(userId).then((res) => {
+                            populateAttachmentListOffcanvas(res, userId);
+                        });
+                    }
+                    // Refresh verification offcanvas if open
+                    if (vdOffcanvas && vdOffcanvas._isShown) {
+                        const currentFilter = vdDocTypeFilter;
+                        fetchVerificationData(userId).then((res) => {
+                            populateVerificationOffcanvas(res, currentFilter);
+                        });
+                    }
+                    if (verificationTable) verificationTable.ajax.reload();
+                },
+                error: function (xhr) {
+                    Swal.fire(getText('error'), xhr.responseJSON?.message || getText('actionFailed'), 'error');
+                },
+            });
+        }
+    });
+}
+
+function handleBulkAccept(userId, tableInstance) {
+    Swal.fire({
+        title: getText('acceptAllDocs'),
+        text: getText('acceptAllDocsText'),
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, accept all!',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            showLoader('Approving...');
+            $.ajax({
+                url: `/internal/verification/${userId}/save`,
+                method: 'POST',
+                data: { approved: 'yes', _token: $('meta[name="csrf-token"]').attr('content') },
+                success: function (response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: getText('approved'),
+                        text: response.message || getText('userVerified'),
+                        timer: 2000,
+                        showConfirmButton: false,
+                    });
+                    fetchVerificationCount();
+                    if (tableInstance) tableInstance.ajax.reload();
+                    if (vdOffcanvas && vdOffcanvas._isShown) {
+                        const currentFilter = vdDocTypeFilter;
+                        fetchVerificationData(userId).then((res) => {
+                            populateVerificationOffcanvas(res, currentFilter);
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    Swal.fire(getText('error'), xhr.responseJSON?.message || getText('actionFailed'), 'error');
+                },
+            });
+        }
     });
 }
 
@@ -519,25 +512,9 @@ $(document).ready(function () {
         columns: [
             { data: "fullname", name: "fullname" },
             { data: "email", name: "email" },
-            {
-                data: "status_badge",
-                name: "status_badge",
-                orderable: false,
-                searchable: false,
-            },
-            {
-                data: "documents",
-                name: "documents",
-                orderable: false,
-                searchable: false,
-            },
-            {
-                data: "action",
-                name: "action",
-                orderable: false,
-                searchable: false,
-                className: "text-center",
-            },
+            { data: "status_badge", name: "status_badge", orderable: false, searchable: false },
+            { data: "documents", name: "documents", orderable: false, searchable: false },
+            { data: "action",  visible: false, name: "action", orderable: false, searchable: false, className: "text-center" },
         ],
     });
 
@@ -554,94 +531,96 @@ $(document).ready(function () {
         verificationTable.ajax.reload();
     });
 
-    // ---- View All ----
-    $(document).on("click", ".view-attachment", function (e) {
+    // ---- View Documents (opens the list offcanvas) ----
+    $(document).on("click", ".view-documents-btn", function (e) {
         e.preventDefault();
         const userId = $(this).data("id");
-        initVdOffcanvas();
+        initAttachmentListOffcanvas();
 
-        vdAttachments = [];
-        vdCurrentIndex = 0;
-        vdUser = null;
-        vdDocTypeFilter = null;
-        $("#verificationOffcanvasLabel").html(
-            '<i class="bi bi-paperclip me-2"></i> All Attachments',
-        );
-        if ($("#vdFullname").length) $("#vdFullname").text("—");
-        if ($("#vdIc").length) $("#vdIc").text("—");
-        if ($("#vdStatus").length) $("#vdStatus").text("—");
-        $("#vdAttachmentViewer").html(
-            '<div class="text-muted text-center py-5"><i class="bi bi-file-earmark-fill fs-1"></i><br>Loading...</div>',
-        );
-        $("#vdAttachmentDetails").empty();
-        $("#vdCounter").text("0 / 0");
-        $("#vdPrevBtn, #vdNextBtn").prop("disabled", true);
+        // Show loading
+        $("#attachmentListBody").html('<tr><td colspan="4" class="text-center text-muted">Loading...</td></tr>');
+        attachmentListOffcanvas.show();
 
-        vdOffcanvas.show();
-
-        showLoader(getText("loadingVerification"));
         fetchVerificationData(userId)
             .then((response) => {
-                Swal.close();
-                populateVerificationOffcanvas(response, null);
+                populateAttachmentListOffcanvas(response, userId);
             })
             .catch((error) => {
-                console.error("Verification Load Error:", error);
-                Swal.fire({
-                    icon: "error",
-                    title: getText("error"),
-                    text:
-                        error.responseText ||
-                        getText("verifyError"),
-                });
+                console.error("Error loading attachments:", error);
+                $("#attachmentListBody").html('<tr><td colspan="4" class="text-center text-danger">Failed to load attachments.</td></tr>');
             });
     });
 
-    // ---- View by Document Type ----
-    $(document).on("click", ".view-doc-type", function (e) {
+    // ---- List offcanvas: View button (opens verification offcanvas) ----
+    $(document).on("click", ".list-view-btn", function (e) {
         e.preventDefault();
-        const userId = $(this).data("id");
-        const docType = $(this).data("doc-type");
-        initVdOffcanvas();
+        const attachmentId = $(this).data("id");
+        const userId = $(this).data("user-id");
 
-        vdAttachments = [];
-        vdCurrentIndex = 0;
-        vdUser = null;
-        vdDocTypeFilter = docType;
-        $("#verificationOffcanvasLabel").html(
-            `<i class="bi bi-paperclip me-2"></i> ${escapeHtml(docType)}`,
-        );
-        if ($("#vdFullname").length) $("#vdFullname").text("—");
-        if ($("#vdIc").length) $("#vdIc").text("—");
-        if ($("#vdStatus").length) $("#vdStatus").text("—");
-        $("#vdAttachmentViewer").html(
-            '<div class="text-muted text-center py-5"><i class="bi bi-file-earmark-fill fs-1"></i><br>Loading...</div>',
-        );
-        $("#vdAttachmentDetails").empty();
-        $("#vdCounter").text("0 / 0");
-        $("#vdPrevBtn, #vdNextBtn").prop("disabled", true);
+        // Find the attachment in the full list (we already have vdAttachments from previous fetch)
+        // We'll fetch fresh data to ensure we have the full list
+        fetchVerificationData(userId).then((response) => {
+            if (!response || !response.user) return;
 
-        vdOffcanvas.show();
-
-        showLoader(getText("loadingVerification"));
-        fetchVerificationData(userId)
-            .then((response) => {
-                Swal.close();
-                populateVerificationOffcanvas(response, docType);
-            })
-            .catch((error) => {
-                console.error("Verification Load Error:", error);
-                Swal.fire({
-                    icon: "error",
-                    title: getText("error"),
-                    text:
-                        error.responseText ||
-                        getText("verifyError"),
+            let allAttachments = [];
+            if (response.attachments_grouped && Array.isArray(response.attachments_grouped)) {
+                response.attachments_grouped.forEach((group) => {
+                    const docType = group.document_type || "Uncategorized";
+                    if (group.attachments && Array.isArray(group.attachments)) {
+                        group.attachments.forEach((att) => {
+                            allAttachments.push({
+                                ...att,
+                                document_type: docType,
+                            });
+                        });
+                    }
                 });
-            });
+            }
+
+            const file = allAttachments.find(a => a.id == attachmentId);
+            if (!file) {
+                Swal.fire(getText('error'), "File not found.", "error");
+                return;
+            }
+
+            // Now populate the verification offcanvas with just this file
+            vdUser = response.user;
+            vdAttachments = [file];
+            vdCurrentIndex = 0;
+            initVdOffcanvas();
+            // Set filter to null because we show a single file
+            vdDocTypeFilter = null;
+            $("#verificationOffcanvasLabel").html(`<i class="bi bi-paperclip me-2"></i> ${escapeHtml(file.document_type || "File")}`);
+            renderVdAttachment();
+            const userIdForButtons = response.user.uuid;
+            $("#vdAcceptBtn").data("id", userIdForButtons);
+            $("#vdRejectBtn").data("id", userIdForButtons);
+            // Show the offcanvas
+            if (vdOffcanvas) vdOffcanvas.show();
+        });
     });
 
-    // ---- Offcanvas navigation ----
+    // ---- List offcanvas: Accept button ----
+    $(document).on("click", ".list-accept-btn", function (e) {
+        e.preventDefault();
+        const attachmentId = $(this).data("id");
+        const userId = $(this).data("user-id");
+        handleSingleAccept(attachmentId, userId);
+    });
+
+    // ---- List offcanvas: Reject button (opens reject modal) ----
+    $(document).on("click", ".list-reject-btn", function (e) {
+        e.preventDefault();
+        const attachmentId = $(this).data("id");
+        const userId = $(this).data("user-id");
+        $('#rejectUserUuid').val(userId);
+        $('#rejectAttachmentId').val(attachmentId);
+        $('#rejectReason').val('');
+        const modal = new bootstrap.Modal(document.getElementById('rejectModal'));
+        modal.show();
+    });
+
+    // ---- Existing: Offcanvas navigation (verificationOffcanvas) ----
     $(document).on("click", "#vdPrevBtn", function () {
         if (vdCurrentIndex > 0) {
             vdCurrentIndex--;
@@ -655,69 +634,68 @@ $(document).ready(function () {
         }
     });
 
-    // ---- PER-ATTACHMENT Accept (offcanvas) ----
+    // ---- Offcanvas Accept (verificationOffcanvas) ----
     $(document).on("click", "#vdAcceptBtn", function () {
         const file = vdAttachments[vdCurrentIndex];
         if (!file) {
-            Swal.fire(
-                getText("noFileSelected"),
-                getText("pleaseSelectFile"),
-                "warning",
-            );
+            Swal.fire(getText("noFileSelected"), getText("pleaseSelectFile"), "warning");
             return;
         }
-        const userId = $("#vdAcceptBtn").data("id");
+        const userId = $(this).data("id");
         handleSingleAccept(file.id, userId);
     });
 
-    // ---- PER-ATTACHMENT Reject (offcanvas) ----
+    // ---- Offcanvas Reject (verificationOffcanvas) – opens reject modal ----
     $(document).on("click", "#vdRejectBtn", function () {
         const file = vdAttachments[vdCurrentIndex];
         if (!file) {
-            Swal.fire(
-                getText("noFileSelected"),
-                getText("pleaseSelectFile"),
-                "warning",
-            );
+            Swal.fire(getText("noFileSelected"), getText("pleaseSelectFile"), "warning");
             return;
         }
-        const userId = $("#vdRejectBtn").data("id");
-        handleSingleReject(file.id, userId);
+        const userId = $(this).data("id");
+        $('#rejectUserUuid').val(userId);
+        $('#rejectAttachmentId').val(file.id);
+        $('#rejectReason').val('');
+        const modal = new bootstrap.Modal(document.getElementById('rejectModal'));
+        modal.show();
     });
 
-    // ---- BULK Accept (table rows) ----
+    // ---- Table row Accept (bulk) ----
     $(document).on("click", ".accept-btn", function () {
         const userId = $(this).data("id");
         handleBulkAccept(userId, verificationTable);
     });
 
-    // ---- BULK Reject (table rows) ----
+    // ---- Table row Reject (bulk) – opens reject modal ----
     $(document).on("click", ".reject-btn", function () {
         const userId = $(this).data("id");
-        $("#rejectUserUuid").val(userId);
-        $("#rejectReason").val("");
-        const modal = new bootstrap.Modal(
-            document.getElementById("rejectModal"),
-        );
+        $('#rejectUserUuid').val(userId);
+        $('#rejectAttachmentId').val('');
+        $('#rejectReason').val('');
+        const modal = new bootstrap.Modal(document.getElementById('rejectModal'));
         modal.show();
     });
 
-    // ---- Reject form submit (bulk) ----
-    $("#rejectForm").on("submit", function (e) {
+    // ---- Reject form submission (unified) ----
+    $('#confirmRejectBtn').on('click', function (e) {
         e.preventDefault();
-        const userId = $("#rejectUserUuid").val();
-        const reason = $("#rejectReason").val();
-        handleBulkReject(userId, reason, verificationTable);
+        const userId = $('#rejectUserUuid').val();
+        const attachmentId = $('#rejectAttachmentId').val();
+        const reason = $('#rejectReason').val().trim();
+
+        if (!reason) {
+            Swal.fire({
+                icon: 'warning',
+                title: getText('error'),
+                text: getText('reasonRequired'),
+            });
+            return;
+        }
+
+        submitRejection(userId, attachmentId, reason, verificationTable);
     });
 
-    $("#confirmRejectBtn").on("click", function (e) {
-        e.preventDefault();
-        const userId = $("#rejectUserUuid").val();
-        const reason = $("#rejectReason").val();
-        handleBulkReject(userId, reason, verificationTable);
-    });
-
-    // ---- Legacy modal buttons ----
+    // ---- Legacy modal buttons (if any) ----
     $(document).on("click", "#verificationBtn", function (e) {
         e.preventDefault();
         const userId = $(this).data("id");
@@ -726,11 +704,10 @@ $(document).ready(function () {
     $(document).on("click", "#unverificationBtn", function (e) {
         e.preventDefault();
         const userId = $(this).data("id");
-        const modalEl = document.getElementById("verificationModal");
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        if (modal) modal.hide();
-        $("#rejectUserUuid").val(userId);
-        $("#rejectReason").val("");
-        new bootstrap.Modal(document.getElementById("rejectModal")).show();
+        $('#rejectUserUuid').val(userId);
+        $('#rejectAttachmentId').val('');
+        $('#rejectReason').val('');
+        const modal = new bootstrap.Modal(document.getElementById('rejectModal'));
+        modal.show();
     });
 });

@@ -39,13 +39,8 @@ use Illuminate\Support\Facades\Artisan;
 // use App\Notifications\ApplicationNotification;
 class PermitApplicationController extends Controller
 {
-    /**
-     * Show the permit application page (for self / regular users).
-     */
     public function show()
     {
-        Artisan::call('bayupay:check-pending');
-
         $blockView = $this->checkDocumentStatusAndReturnView();
         if ($blockView) {
             return $blockView;
@@ -54,17 +49,13 @@ class PermitApplicationController extends Controller
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();
-        
         $ipDocuments = DocumentRequirement::forModule('import')
             ->orderBy('name')
             ->get();
-            
+
         return view('pages.public.apply_permit', compact('pubmeasure', 'pubpurpose', 'country', 'ipDocuments'));
     }
 
-    /**
-     * Show the assigned permit application page (for others / company).
-     */
     public function showassign()
     {
         $blockView = $this->checkDocumentStatusAndReturnView();
@@ -75,11 +66,10 @@ class PermitApplicationController extends Controller
         $pubmeasure = PublicCode::where('cate_name', 'unit_measurement')->get();
         $pubpurpose = PublicCode::where('cate_name', 'consignment_purpose')->get();
         $country = Country::where('is_del', false)->get();
-        
         $ipDocuments = DocumentRequirement::forModule('import')
             ->orderBy('name')
             ->get();
-            
+
         return view('pages.public.assigned_apply_permit', compact('pubmeasure', 'pubpurpose', 'country', 'ipDocuments'));
     }
 
@@ -87,12 +77,7 @@ class PermitApplicationController extends Controller
     {
         $user = authUser()['user'];
 
-        // ✅ If the user is already DOA-verified, allow access without blocking
-        if ($user->doa_verified == 1) {
-            return null;
-        }
-
-        // Not verified – check required documents
+        // Get all required document requirements
         $requirements = DocumentRequirement::where('module', 'user')
             ->where('is_required', true)
             ->where('is_active', true)
@@ -103,45 +88,55 @@ class PermitApplicationController extends Controller
             ->keyBy('document_type');
 
         $docStatus = [];
+        $allUploaded = true;  // flag to track if all docs are uploaded & valid
+
         foreach ($requirements as $req) {
             $attachment = $attachments->get($req->name);
             if ($attachment) {
                 if (!$attachment->is_read) {
                     $status = 'pending';
+                    $allUploaded = false;
                 } else {
-                    $isExpired = $req->requires_expiry && $attachment->valid_until && now()->greaterThan($attachment->valid_until);
+                    $isExpired = $req->requires_expiry
+                        && $attachment->valid_until
+                        && now()->greaterThan($attachment->valid_until);
                     $status = $isExpired ? 'expired' : 'uploaded';
+                    if ($status !== 'uploaded') {
+                        $allUploaded = false;
+                    }
                 }
             } else {
                 $status = 'missing';
+                $allUploaded = false;
             }
             $docStatus[] = [
                 'requirement' => $req,
                 'attachment' => $attachment,
                 'status' => $status,
+                'rejected_reason' => $attachment ? $attachment->rejected_reason : null,
             ];
         }
 
-        $anyMissing = collect($docStatus)->contains(fn($item) => $item['status'] === 'missing');
-        $anyExpired = collect($docStatus)->contains(fn($item) => $item['status'] === 'expired');
-
-        if ($anyMissing || $anyExpired) {
-            return view('pages.public.wait_for_verified', compact('docStatus'));
+        // If all required documents are uploaded and valid, allow access
+        if ($allUploaded) {
+            return null;
         }
 
-        return null;
+        // Otherwise, show the wait page with document statuses
+        return view('pages.public.wait_for_verified', compact('docStatus'));
     }
 
-    
+
     public function storeExporter(Request $request)
     {
         // dd($request['id']);
         $validated = $request->validate([
             'name' => 'required|string|max:150',
-            'phone_no' => 'required|string|max:25',
+            'phone_no' => 'required',
             'address' => 'required|string',
             'country' => 'required|string|max:50',
         ]);
+
 
         if (!$request['id']) {
             $exporterId = \DB::table('exporter')->insertGetId([
@@ -352,10 +347,12 @@ class PermitApplicationController extends Controller
         $countryCode = strtoupper(trim($countryCode));
         //dd($countryCode);
         $data = IpCondition::whereJsonContains('country', $countryCode)->leftJoin('public_code', 'ip_condition.category', '=', 'public_code.cate_code')
-        ->where('public_code.cate_name', 'condition_category')->select('ip_condition.id', \DB::raw('CONCAT(ip_condition.item_name) AS entry_display'), 
-        'ip_condition.usage', 
-        'ip_condition.another_name'
-        )->get();
+            ->where('public_code.cate_name', 'condition_category')->select(
+                'ip_condition.id',
+                \DB::raw('CONCAT(ip_condition.item_name) AS entry_display'),
+                'ip_condition.usage',
+                'ip_condition.another_name'
+            )->get();
 
         return response()->json($data);
     }

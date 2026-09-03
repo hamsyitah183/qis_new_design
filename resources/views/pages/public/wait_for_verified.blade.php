@@ -37,7 +37,7 @@
                                 <tr>
                                     <th data-en="Document" data-bm="Dokumen">Document</th>
                                     <th data-en="Status" data-bm="Status">Status</th>
-                                    <th class = "d-none" data-en="Action" data-bm="Tindakan">Action</th>
+                                    <th data-en="Action" data-bm="Tindakan">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -50,8 +50,10 @@
                                         $isPending = $status === 'pending';
                                         $isExpired = $status === 'expired';
                                         $isValid = $status === 'uploaded';
+                                        $isRejected = $attachment && $attachment->rejected_reason;
                                     @endphp
                                     <tr>
+                                        {{-- Document column: name + rejection reason below --}}
                                         <td>
                                             <div class="d-flex align-items-center gap-1 flex-wrap">
                                                 <strong>{{ $req->name }}</strong>
@@ -65,9 +67,21 @@
                                                     </button>
                                                 @endif
                                             </div>
+                                            @if ($isRejected && $attachment->rejected_reason)
+                                                <div class="small text-danger mt-1">
+                                                    <em data-en="Reason:" data-bm="Sebab:">Reason:</em>
+                                                    {{ $attachment->rejected_reason }}
+                                                </div>
+                                            @endif
                                         </td>
+
+                                        {{-- Status column: only the badge (no reason) --}}
                                         <td>
-                                            @if ($isMissing)
+                                            @if ($isRejected)
+                                                <span class="badge bg-danger" data-en="Rejected" data-bm="Ditolak">
+                                                    <i class="ri-close-circle-line me-1"></i> Rejected
+                                                </span>
+                                            @elseif ($isMissing)
                                                 <span class="badge bg-danger" data-en="Missing" data-bm="Tiada">
                                                     <i class="ri-close-circle-line me-1"></i> Missing
                                                 </span>
@@ -87,17 +101,22 @@
                                                 </span>
                                             @endif
                                         </td>
-                                        <td class = "d-none">
-                                            @if ($isMissing || $isExpired)
-                                                <a href="{{ route('profile') }}" class="btn btn-sm btn-primary"
-                                                    data-en="Upload" data-bm="Muat Naik">
-                                                    <i class="ri-upload-line me-1"></i> Upload
+
+                                        {{-- Action column --}}
+                                        <td>
+                                            @if ($isRejected || $isMissing || $isExpired)
+                                                <a href="{{ route('profile') }}#edit-verification-tab"
+                                                   class="btn btn-sm btn-primary"
+                                                   data-en="Upload Again" data-bm="Muat Naik Semula">
+                                                    <i class="ri-upload-line me-1"></i> Upload Again
                                                 </a>
                                             @elseif ($attachment && ($isValid || $isPending))
                                                 <a href="{{ asset($attachment->file_path) }}" target="_blank"
                                                     class="btn btn-sm btn-outline-secondary" data-en="View" data-bm="Lihat">
                                                     <i class="ri-eye-line me-1"></i> View
                                                 </a>
+                                            @else
+                                                <span class="text-muted" data-en="No action" data-bm="Tiada tindakan">—</span>
                                             @endif
                                         </td>
                                     </tr>
@@ -116,13 +135,16 @@
 
                     {{-- Overall status summary --}}
                     @php
-                        $allValid = collect($docStatus)->every(fn($item) => $item['status'] === 'uploaded');
+                        $allValid = collect($docStatus)->every(function($item) {
+                            return $item['status'] === 'uploaded' && !($item['attachment'] && $item['attachment']->rejected_reason);
+                        });
                         $anyMissing = collect($docStatus)->contains(fn($item) => $item['status'] === 'missing');
                         $anyExpired = collect($docStatus)->contains(fn($item) => $item['status'] === 'expired');
                         $anyPending = collect($docStatus)->contains(fn($item) => $item['status'] === 'pending');
+                        $anyRejected = collect($docStatus)->contains(fn($item) => $item['attachment'] && $item['attachment']->rejected_reason);
                     @endphp
 
-                    @if ($anyMissing || $anyExpired)
+                    @if ($anyMissing || $anyExpired || $anyRejected)
                         <div class="alert alert-warning d-flex align-items-start text-start" role="alert">
                             <i class="ri-alert-fill me-3 fs-4"></i>
                             <div>
@@ -137,6 +159,13 @@
                                     <strong data-en="Some uploaded documents have expired."
                                         data-bm="Beberapa dokumen yang dimuat naik telah tamat tempoh.">
                                         Some uploaded documents have expired.
+                                    </strong>
+                                    <br>
+                                @endif
+                                @if ($anyRejected)
+                                    <strong data-en="Some documents were rejected and need to be re-uploaded."
+                                        data-bm="Beberapa dokumen telah ditolak dan perlu dimuat naik semula.">
+                                        Some documents were rejected and need to be re-uploaded.
                                     </strong>
                                     <br>
                                 @endif
@@ -187,7 +216,7 @@
                             Return Home
                         </a>
 
-                        @if ($anyMissing || $anyExpired)
+                        @if ($anyMissing || $anyExpired || $anyRejected)
                             <a href="/profile#edit-verification-tab" class="btn btn-primary-custom px-4 py-2"
                                 data-en="Upload Documents" data-bm="Muat Naik Dokumen">
                                 Upload Documents
@@ -204,6 +233,7 @@
             </div>
         </div>
     </div>
+
 @endsection
 
 @push('scripts')
@@ -258,7 +288,6 @@
             e.preventDefault();
             e.stopPropagation();
 
-            // Get document name from the row (the <strong> element before the button)
             const row = btn.closest('td');
             const nameEl = row ? row.querySelector('strong') : null;
             const docName = nameEl ? nameEl.textContent.trim() : 'Document';

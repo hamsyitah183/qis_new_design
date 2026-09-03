@@ -158,6 +158,7 @@ class PublicUser extends Authenticatable implements MustVerifyEmail
                 'requirement' => $req,
                 'attachment' => $attachment,
                 'status' => $status,
+                'rejected_reason' => $attachment ? $attachment->rejected_reason : null,
             ];
         }
 

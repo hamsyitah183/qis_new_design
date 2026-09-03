@@ -64,7 +64,14 @@
                                             <table width="100%" cellpadding="0" cellspacing="0" border="0" style="color: #444444; font-size: 14px; line-height: 1.8;">
                                                 <tr>
                                                     <td width="130" style="font-weight: 600;">Application Type:</td>
-                                                    <td>{{ $appData['type'] }}</td>
+                                                    <td>
+                                                        @if($appData['type'] == 0)
+                                                            Self Import
+                                                        @else
+                                                            Import as Other
+                                                        @endif
+
+                                                    </td>
                                                 </tr>
                                                 <tr>
                                                     <td style="font-weight: 600;">Category:</td>
