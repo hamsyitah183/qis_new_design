@@ -352,7 +352,7 @@
                                 <i class="ri-arrow-down-s-line side-menu__angle"></i>
                                 <i class="bi bi-gear-wide side-menu__icon"></i>
                                 <span class="side-menu__label" style="line-height:1.3rem">
-                                    <span data-en="System Configuration" data-bm="Konfigurasi Sistem">System <br>
+                                    <span data-en="System<br>Configuration" data-bm="Konfigurasi<br>Sistem" data-html="true">System <br>
                                         Configuration</span>
                                 </span>
                             </a>

@@ -73,6 +73,8 @@ export function notification() {
     const notificationContent = document.getElementById("notificationContent");
     const notificationCount = document.getElementById("notifiation-data");
 
+    if (!notificationContent || !notificationCount) return;
+
     fetchWithRetry("/notifications/data")
         .then((data) => {
             notificationContent.innerHTML = "";
@@ -110,12 +112,26 @@ export function notification() {
                 const listItem = document.createElement("li");
                 listItem.className = "dropdown-item";
 
-                const url = notification.data.url ? notification.data.url : "#";
-                const user = notification.data.user || 'System';
+                let rawUrl = notification.data.url ? notification.data.url : "#";
+                let rawUser = notification.data.user || 'System';
+                if (typeof rawUser === 'string' && (rawUser.trim().startsWith('http://') || rawUser.trim().startsWith('https://') || rawUser.trim().startsWith('/') || rawUser.includes('://'))) {
+                    if (rawUrl === '#' || !rawUrl) {
+                        rawUrl = rawUser.trim();
+                    }
+                    rawUser = 'QIS System';
+                }
+                const url = rawUrl;
+                let message = getLocalizedMessage(notification.data);
+                if (typeof message === 'string' && (message.trim().startsWith('http://') || message.trim().startsWith('https://') || message.includes('://'))) {
+                    if (rawUrl === '#' || !rawUrl) {
+                        rawUrl = message.trim();
+                    }
+                    message = lang === 'bm' ? 'Kemaskini Permohonan' : 'Application Update';
+                }
+                const user = rawUser;
                 const messageObj = typeof notification.data.message === 'object' ? notification.data.message : { en: notification.data.message, bm: translateBm(notification.data.message) };
                 const msgEn = messageObj.en ? messageObj.en.replace(/"/g, '&quot;') : 'Notification';
                 const msgBm = messageObj.bm ? messageObj.bm.replace(/"/g, '&quot;') : 'Notifikasi';
-                const message = getLocalizedMessage(notification.data);
                 const timeFmt = formatTime(notification.created_at);
 
                 listItem.innerHTML = `
@@ -220,6 +236,7 @@ document.querySelectorAll(".dropdown-item-notification").forEach((item) => {
 
 export function notificationContent(hours = null) {
     const notificationList = document.getElementById("notificationList");
+    if (!notificationList) return;
 
     let url = "/notifications/data/get";
     if (hours) {
@@ -246,13 +263,27 @@ export function notificationContent(hours = null) {
                 listItem.className =
                     "list-group-item border-bottom-0 d-flex gap-2 align-items-start pb-2 border-bottom";
 
-                listItem.href = notification.data.url ?? "#";
-
-                const user = notification.data.user || 'System';
+                let rawUrl = notification.data.url ?? "#";
+                let rawUser = notification.data.user || 'System';
+                const lang = getCurrentLanguage();
+                if (typeof rawUser === 'string' && (rawUser.trim().startsWith('http://') || rawUser.trim().startsWith('https://') || rawUser.trim().startsWith('/') || rawUser.includes('://'))) {
+                    if (rawUrl === '#' || !rawUrl) {
+                        rawUrl = rawUser.trim();
+                    }
+                    rawUser = 'QIS System';
+                }
+                let message = getLocalizedMessage(notification.data);
+                if (typeof message === 'string' && (message.trim().startsWith('http://') || message.trim().startsWith('https://') || message.includes('://'))) {
+                    if (rawUrl === '#' || !rawUrl) {
+                        rawUrl = message.trim();
+                    }
+                    message = lang === 'bm' ? 'Kemaskini Permohonan' : 'Application Update';
+                }
+                listItem.href = rawUrl;
+                const user = rawUser;
                 const messageObj = typeof notification.data.message === 'object' ? notification.data.message : { en: notification.data.message, bm: translateBm(notification.data.message) };
                 const msgEn = messageObj.en ? messageObj.en.replace(/"/g, '&quot;') : 'Notification';
                 const msgBm = messageObj.bm ? messageObj.bm.replace(/"/g, '&quot;') : 'Notifikasi';
-                const message = getLocalizedMessage(notification.data);
                 const timeFmt = formatTime(notification.created_at);
 
                 listItem.innerHTML = `

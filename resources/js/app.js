@@ -442,6 +442,8 @@ function languange() {
 
                 if (el.getAttribute("data-i18n-attr") === "placeholder") {
                     el.setAttribute("placeholder", text);
+                } else if (el.getAttribute("data-html") === "true") {
+                    el.innerHTML = text;
                 } else {
                     if (el.classList.contains("wizard-step")) {
                         var span = el.querySelector("span:last-child");
@@ -534,6 +536,8 @@ export function applyTranslations(container) {
 
         if (el.getAttribute("data-i18n-attr") === "placeholder") {
             el.setAttribute("placeholder", text);
+        } else if (el.getAttribute("data-html") === "true") {
+            el.innerHTML = text;
         } else {
             // If it's a wizard step, update the displayed label as well
             if (el.classList.contains("wizard-step")) {
