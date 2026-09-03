@@ -1,4 +1,4 @@
-<div class="card custom-card overflow-hidden adm-activity-card">
+<div class="card custom-card adm-activity-card">
     <div class="card-header">
         <div class="card-title" data-en="Recent Activity" data-bm="Aktiviti Terkini">
             Recent Activity
