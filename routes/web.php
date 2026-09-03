@@ -663,6 +663,7 @@ Route::middleware(['auth.any'])->group(function () {
 
     Route::get('/import/application/{id}/print', [ApplicationController::class, 'printImportPermit'])->name('import-permit.print');
     Route::get('/inspection/application/{id}/print', [InspectionController::class, 'printInspection'])->name('inspection.print');
+    Route::get('/order/{order_number}/receipt/print', [PaymentController::class, 'printReceipt'])->name('order.receipt.print');
 
     // uses
     Route::get('/consignment_uses', [PublicController::class, 'getConsignmentUses'])->name('consignment.uses');

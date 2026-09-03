@@ -24,6 +24,7 @@ use Spatie\Activitylog\Models\Activity;
 use App\Models\PublicUser;
 use App\Notifications\ApplicationNotification;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PaymentController extends Controller
 {
@@ -659,5 +660,25 @@ class PaymentController extends Controller
         return response()->json([
             'status' => 'cancelled',
         ]);
+    }
+
+    public function printReceipt($order_number)
+    {
+        $order = Order::where('order_number', $order_number)->firstOrFail();
+
+        $permitsArray = $order->order_details['permits'] ?? [];
+        $permitIds = collect($permitsArray)->pluck('permit_id')->toArray();
+
+        $permits = match ($order->application_type) {
+            'Import Permit'           => IpConsignmentPermit::whereIn('id', $permitIds)->get(),
+            'Inspection Certificate'  => InspectionItem::whereIn('id', $permitIds)->get(),
+            'Consignment Certificate' => ConsignmentPermit::whereIn('id', $permitIds)->get(),
+            default                   => collect(),
+        };
+
+        $pdf = Pdf::loadView('pdf.payment_receipt', compact('order', 'permits'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->stream("Receipt_{$order->order_number}.pdf");
     }
 }

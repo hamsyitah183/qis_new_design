@@ -102,6 +102,14 @@
                         <span data-bm="Lihat Permohonan" data-en="View Application">View Application</span>
                     </a>
                 @endif
+
+                @if (strtolower($order->transaction_status ?? '') === 'successful')
+                    <a href="{{ route('order.receipt.print', $order->order_number) }}" target="_blank"
+                        class="ipv-btn-action ipv-btn-outline w-100 justify-content-center mt-2" style="color: var(--green-dark, #226b3c); border-color: var(--green-dark, #226b3c);">
+                        <i class="bi bi-printer"></i>
+                        <span data-bm="Cetak Resit" data-en="Print Receipt">Print Receipt</span>
+                    </a>
+                @endif
             </div>
         </div>
 
