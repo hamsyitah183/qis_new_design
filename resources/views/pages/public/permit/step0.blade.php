@@ -18,8 +18,8 @@
                     <div class="col-xl-12">
                         <label for="impname" class="form-label" data-en="Name" data-bm="Nama">Name</label>
                         <input type="hidden" id="impid" value="{{ Auth::user()->id ?? '' }}">
-                        <textarea type="text" class="form-control " id="impname" name="impname"
-                            value="{{ Auth::user()->fullname ?? '' }}" disabled></textarea>
+                        <input type="text" class="form-control " id="impname" name="impname"
+                            value="{{ Auth::user()->fullname ?? '' }}" disabled>
                     </div>
                     <div class="col-xl-12">
                         <label for="impfonno" class="form-label" data-en="Phone No" data-bm="No Telefon">Phone No</label>
