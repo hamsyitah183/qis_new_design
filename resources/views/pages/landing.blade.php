@@ -9,9 +9,9 @@
                 <a href="/" class="qis-brand">
                     <img src="{{ asset('images/Logo-DOA.png') }}" alt="Logo">
                     <span class="qis-brand-text">
-                        <b>QIS</b>
-                        <small data-en="Plant Quarantine Info &amp; Services"
-                            data-bm="Maklumat &amp; Perkhidmatan Kuarantin">Plant Quarantine Info &amp; Services</small>
+                        <b>QIS 2.0</b>
+                        <small data-en="Sabah Plant Biosecurity & Quarantine Information Services"
+                            data-bm="Perkhidmatan Maklumat Biosekuriti dan Kuarantin Tumbuhan Negeri Sabah">Sabah Plant Biosecurity & Quarantine Information Services</small>
                     </span>
                 </a>
 
@@ -20,6 +20,7 @@
                     <li><a href="#qis-services" data-en="Services" data-bm="Perkhidmatan">Services</a></li>
                     <li><a href="#qis-announcements" data-en="Announcements" data-bm="Pengumuman">Announcements</a></li>
                     <li><a href="#qis-gallery" data-en="Gallery" data-bm="Galeri">Gallery</a></li>
+                    <li><a href="#resources" data-en="Resources" data-bm="Sumber">Resources</a></li>
                     <li><a href="#qis-contact" data-en="Contact" data-bm="Hubungi">Contact</a></li>
                 </ul>
 
@@ -42,15 +43,17 @@
         </header>
 
         {{-- =============================== HERO =============================== --}}
-        <section class="qis-hero" style="background: url('/images/background.jpg')">
-            <div class="qis-container qis-hero-grid">
+        <section class="qis-hero">
+            <img src="/images/background.jpeg" alt="" class="qis-hero-bg" aria-hidden="true">
+
+            <div class="qis-container qis-hero-grid qis-hero-content">
                 <div>
                     <span class="qis-eyebrow" data-en="Jabatan Pertanian Sabah &middot; Plant Biosecurity Division"
                         data-bm="Jabatan Pertanian Sabah &middot; Bahagian Biosekuriti Tumbuhan">Jabatan Pertanian Sabah
                         &middot; Plant Biosecurity Division</span>
 
                     <h1 data-en="Every shipment verified. Every harvest protected."
-                        data-bm="Setiap penghantaran disahkan. Setiap hasil dilindungi.">Every shipment verified. Every
+                        data-bm="Setiap penghantaran disahkan. Setiap hasil dilindungi." style = "color: #fff">Every shipment verified. Every
                         harvest protected.</h1>
 
                     <p class="qis-lead text-white"
@@ -81,7 +84,6 @@
                         <div class="qis-radar-sweep"></div>
                         @foreach ($entryPoints as $node)
                             @php
-                                // Map district ID to CSS class
                                 $classMap = [
                                     1 => 'kk',
                                     2 => 'kud',
@@ -94,7 +96,6 @@
                                     9 => 'sip',
                                 ];
                                 $nodeClass = $classMap[$node['district_id']] ?? 'default';
-                                // Short label: use district name or first word of entry name
                                 $label = $node['district_name'];
                             @endphp
                             <div class="qis-node qis-node--{{ $nodeClass }}" data-district="{{ $node['district_id'] }}"
@@ -268,7 +269,7 @@
                 </div>
 
                 {{-- Official Portal Resources Links --}}
-                <div class="p-3 my-3 rounded-3" style="background: #eff6ff; border: 1px solid #bfdbfe;">
+                <div class="p-3 my-3 rounded-3" style="background: #eff6ff; border: 1px solid #bfdbfe;" id = "resources">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
                         <span class="fw-bold text-primary" data-en="Official Department Resources:"
                             data-bm="Sumber Rasmi Jabatan:">Official Department Resources:</span>
