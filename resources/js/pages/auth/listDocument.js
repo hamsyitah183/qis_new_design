@@ -270,7 +270,7 @@ function createDocumentCard(doc, user) {
                                 ${Number(file.is_read) === 1 && !file.rejected_reason ? `<span class="badge bg-success-transparent fs-11 py-0 px-1"><i class="ti ti-check fs-11"></i> Read</span>` : ""}
                                 ${file.rejected_reason ? `<span class="badge bg-danger fs-11 py-0 px-1">Rejected</span>` : ""}
                             </div>
-                            ${file.rejected_reason ? `<div class="text-danger fs-12 mt-1"><span data-en="Reason" data-bm="Sebab"></span>${file.rejected_reason}</div>` : ""}
+                            ${file.rejected_reason ? `<div class="fs-12 mt-1 p-2 alert alert-danger"><span data-en="Reason" data-bm="Sebab"></span>${file.rejected_reason}</div>` : ""}
                             ${file.file_size ? `<div class="file-size">${formatFileSize(file.file_size)}</div>` : ""}
                             <div class="file-uploaded-date text-muted fs-12">
                                 Uploaded on: ${new Date(file.created_at).toLocaleDateString()}

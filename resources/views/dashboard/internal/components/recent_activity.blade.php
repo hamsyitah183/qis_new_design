@@ -3,9 +3,9 @@
         <div class="card-title" data-en="Recent Activity" data-bm="Aktiviti Terkini">
             Recent Activity
         </div>
-        <span class="adm-card-sub" data-en="Latest actions across the system" data-bm="Tindakan terkini dalam sistem">Latest actions across the system</span>
+        {{-- <span class="adm-card-sub " data-en="Latest actions across the system" data-bm="Tindakan terkini dalam sistem">Latest actions across the system</span> --}}
     </div>
-    <div class="card-body p-0 scroll-div" style="max-height: 450px;">
+    <div class="card-body p-0 scroll-div" style="max-height: 450px; overflow-y: auto;">
         <ul class="adm-activity-list">
             @forelse($recentActivities ?? [] as $activity)
                 @php

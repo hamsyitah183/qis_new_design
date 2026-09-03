@@ -229,9 +229,9 @@ export function notificationContent(hours = null) {
     fetchWithRetry(url)
         .then((data) => {
             notificationList.innerHTML = "";
+            const lang = getCurrentLanguage(); // ← declare once, top of scope
 
             if (!data.length) {
-                const lang = getCurrentLanguage();
                 const noMsg = lang === 'bm' ? 'Tiada notifikasi' : 'No notification';
                 notificationList.innerHTML = `
                     <li class="list-group-item border-bottom-0 text-center">
@@ -291,6 +291,5 @@ export function notificationContent(hours = null) {
         })
         .finally(() => Swal.close());
 }
-
 // Call on load
 notificationContent();

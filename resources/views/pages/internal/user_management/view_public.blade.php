@@ -530,8 +530,7 @@
                                                                                             @if ($attachment->rejected_reason)
                                                                                                 <div
                                                                                                     class="alert alert-danger d-flex align-items-start gap-2 mt-2 mb-0 py-2 px-2">
-                                                                                                    <i
-                                                                                                        class="ti ti-alert-circle fs-16 mt-1"></i>
+                                                                                                    
                                                                                                     <div class="fs-12">
                                                                                                         <span
                                                                                                             class="fw-semibold">Rejected:</span>
@@ -792,7 +791,7 @@
 
                         try {
                             const response = await fetch(
-                                `${window.baseUrl}/internal/attachments/${id}/approve`, {
+                                `${window.baseUrl}/internal/verification/attachment/${id}/approve`, {
                                     method: 'POST',
                                     headers: {
                                         'X-CSRF-TOKEN': window.csrfToken,
@@ -836,7 +835,7 @@
 
                     try {
                         const response = await fetch(
-                            `${window.baseUrl}/internal/attachments/${id}/reject`, {
+                            `${window.baseUrl}/internal/verification/attachment/${id}/reject`, {
                                 method: 'POST',
                                 headers: {
                                     'X-CSRF-TOKEN': window.csrfToken,
@@ -844,7 +843,7 @@
                                     'Content-Type': 'application/json',
                                 },
                                 body: JSON.stringify({
-                                    rejected_reason: reason
+                                    reason: reason
                                 }),
                             });
                         const data = await response.json();

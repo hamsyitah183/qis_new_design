@@ -56,34 +56,31 @@ class UserController extends Controller
             $verification->refresh();
         }
 
-        // Get all active required document types
+        // Get all active required documents (keyed by name to avoid N+1 lookups)
         $requiredDocs = DocumentRequirement::where('module', 'user')
             ->where('is_required', true)
             ->where('is_active', true)
-            ->pluck('name');
+            ->get()
+            ->keyBy('name');
 
         if ($requiredDocs->isEmpty()) {
             return;
         }
 
-        // Fetch all valid attachments (is_read = 1 and no rejection reason)
+        // Always re-fetch fresh from DB — never trust a stale/cached collection here
         $validAttachments = UserAttachment::where('user_id', $user->uuid)
             ->where('is_read', 1)
             ->whereNull('rejected_reason')
-            ->get();
+            ->get()
+            ->groupBy('document_type');
 
         $allVerified = true;
-        foreach ($requiredDocs as $docName) {
-            $hasValid = $validAttachments->some(function ($att) use ($docName) {
-                if ($att->document_type !== $docName) {
-                    return false;
-                }
-                // Check expiry if the requirement requires it
-                $req = DocumentRequirement::where('name', $docName)->first();
-                if ($req && $req->requires_expiry && $att->valid_until) {
-                    if (now()->greaterThan($att->valid_until)) {
-                        return false; // expired
-                    }
+        foreach ($requiredDocs as $docName => $req) {
+            $candidates = $validAttachments->get($docName, collect());
+
+            $hasValid = $candidates->contains(function ($att) use ($req) {
+                if ($req->requires_expiry && $att->valid_until) {
+                    return now()->lessThanOrEqualTo($att->valid_until);
                 }
                 return true;
             });
@@ -333,7 +330,7 @@ class UserController extends Controller
                 'district'     => 'required',
                 'state'        => 'required',
                 'pic_name.*'   => 'nullable|string|max:255',
-                'pic_position.*'=> 'nullable|string|max:255',
+                'pic_position.*' => 'nullable|string|max:255',
                 'pic_phone.*'  => 'nullable|string|max:20',
             ]);
 
@@ -377,7 +374,9 @@ class UserController extends Controller
                 try {
                     event(new \App\Events\PublicUserEvent('Your profile has been updated', $public->uuid));
                     event(new \App\Events\PublicUserUpdatedForInternal('A public user updated their profile', $public->uuid));
-                } catch (\Exception $e) { \Log::info('Broadcast failed: ' . $e->getMessage()); }
+                } catch (\Exception $e) {
+                    \Log::info('Broadcast failed: ' . $e->getMessage());
+                }
 
                 $users = InternalUser::all();
                 Notification::send($users, new UserNotification($public->fullname . ' account has been updated.', authUser()['user']->fullname, route('internal.public.list')));
@@ -401,7 +400,7 @@ class UserController extends Controller
                 'district'     => 'required',
                 'state'        => 'required',
                 'pic_name.*'   => 'nullable|string|max:255',
-                'pic_position.*'=> 'nullable|string|max:255',
+                'pic_position.*' => 'nullable|string|max:255',
                 'pic_phone.*'  => 'nullable|string|max:20',
             ]);
 
@@ -442,7 +441,9 @@ class UserController extends Controller
 
                 try {
                     event(new \App\Events\PublicUserUpdatedForInternal('A public user created an account', $user->uuid));
-                } catch (\Exception $e) { \Log::info('Broadcast failed: ' . $e->getMessage()); }
+                } catch (\Exception $e) {
+                    \Log::info('Broadcast failed: ' . $e->getMessage());
+                }
 
                 $users = InternalUser::all();
                 Notification::send($users, new UserNotification($user->fullname . ' account has been created.', authUser()['user']->fullname, route('internal.public.list')));
@@ -594,7 +595,9 @@ class UserController extends Controller
 
                 try {
                     event(new InternalUserEdited($internalUser->fullname . ' account was edited by ' . $actor->fullname, $internalUser->uuid));
-                } catch (\Exception $e) { \Log::info('Broadcast failed: ' . $e->getMessage()); }
+                } catch (\Exception $e) {
+                    \Log::info('Broadcast failed: ' . $e->getMessage());
+                }
 
                 return response()->json(['used_id' => $uuid, 'message' => 'User Updated']);
             }
@@ -637,7 +640,9 @@ class UserController extends Controller
 
             try {
                 event(new InternalUserAdded('A new internal user has been added'));
-            } catch (\Exception $e) { \Log::info('Broadcast failed: ' . $e->getMessage()); }
+            } catch (\Exception $e) {
+                \Log::info('Broadcast failed: ' . $e->getMessage());
+            }
 
             return response()->json(['used_id' => $internalUser->uuid, 'message' => 'User Created']);
         });
@@ -657,7 +662,9 @@ class UserController extends Controller
         $user->delete();
         try {
             event(new InternalUserDeleted($userName . ' account has been deleted by ' . $actorName));
-        } catch (\Exception $e) { \Log::warning('Broadcast failed: ' . $e->getMessage()); }
+        } catch (\Exception $e) {
+            \Log::warning('Broadcast failed: ' . $e->getMessage());
+        }
         return response()->json(['message' => 'User deleted successfully']);
     }
 
@@ -747,7 +754,9 @@ class UserController extends Controller
         try {
             event(new InternalUserAdminEvent($user->fullname . ' is uploaded a verification attachement.'));
             event(new PublicUserEvent('You Upload a verification attachment', $user->uuid));
-        } catch (\Exception $e) { \Log::info('Broadcast failed: ' . $e->getMessage()); }
+        } catch (\Exception $e) {
+            \Log::info('Broadcast failed: ' . $e->getMessage());
+        }
 
         $users = InternalUser::role(['admin', 'superadmin'])->get();
         $notificationUrl = route('internal.public.list');
@@ -869,7 +878,9 @@ class UserController extends Controller
             try {
                 event(new InternalUserAdminEvent($isApproved ? $user->fullname . ' account is verified' : $user->fullname . ' account verification is rejected'));
                 event(new PublicUserEvent($isApproved ? 'Your Account is verified by DOA' : 'Your Account is not verified by DOA', $user->uuid));
-            } catch (\Exception $e) { Log::info('Broadcast failed: ' . $e->getMessage()); }
+            } catch (\Exception $e) {
+                Log::info('Broadcast failed: ' . $e->getMessage());
+            }
 
             $users = InternalUser::role(['admin', 'superadmin'])->get();
             $notificationUrl = route('internal.public.list');

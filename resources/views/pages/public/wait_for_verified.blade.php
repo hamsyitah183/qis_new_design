@@ -107,8 +107,8 @@
                                             @if ($isRejected || $isMissing || $isExpired)
                                                 <a href="{{ route('profile') }}#edit-verification-tab"
                                                    class="btn btn-sm btn-primary"
-                                                   data-en="Upload Again" data-bm="Muat Naik Semula">
-                                                    <i class="ri-upload-line me-1"></i> Upload Again
+                                                   data-en="Upload" data-bm="Muat Naik ">
+                                                    <i class="ri-upload-line me-1"></i> Upload
                                                 </a>
                                             @elseif ($attachment && ($isValid || $isPending))
                                                 <a href="{{ asset($attachment->file_path) }}" target="_blank"

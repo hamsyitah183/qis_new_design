@@ -324,7 +324,7 @@ export function fetchVerificationCount() {
                 );
                 $("#userMgmtParentBadge").show();
             } else {
-                $("#verificationCount").text("User Verification");
+                $("#verificationCount").text("");
                 $("#userMgmtParentBadge").hide();
             }
         },
