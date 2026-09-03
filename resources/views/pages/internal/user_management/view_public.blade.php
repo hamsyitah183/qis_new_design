@@ -269,6 +269,14 @@
                                                                     'telah log masuk ke sistem',
                                                                 'logged out from the system' =>
                                                                     'telah log keluar dari sistem',
+                                                                'created a public user account for' =>
+                                                                    'telah mencipta akaun pengguna awam untuk',
+                                                                'created a internal user account for' =>
+                                                                    'telah mencipta akaun pengguna dalaman untuk',
+                                                                'registered a new account.' =>
+                                                                    'telah mendaftar akaun baharu.',
+                                                                'updated their profile information.' =>
+                                                                    'telah mengemas kini maklumat profil mereka.',
                                                                 'internal user' => 'pengguna dalaman',
                                                                 'public user ' => 'pengguna awam ',
                                                                 'public user' => 'pengguna awam',

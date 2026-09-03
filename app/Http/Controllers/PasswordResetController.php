@@ -103,6 +103,11 @@ class PasswordResetController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        if (method_exists($user, 'hasVerifiedEmail') && !$user->hasVerifiedEmail()) {
+            $user->markEmailAsVerified();
+            event(new \Illuminate\Auth\Events\Verified($user));
+        }
+
         // Clean up the session authorization
         session()->forget('password_reset_auth_' . $request->token);
 

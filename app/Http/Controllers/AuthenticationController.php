@@ -48,7 +48,7 @@ class AuthenticationController extends Controller
         $credentials = $request->validate([
             'userType' => 'required|in:public,internal',
             'email' => 'required|email',
-            'password' => 'required|string',
+            'password' => 'nullable|string',
         ]);
 
         $guard = $credentials['userType'];
@@ -60,6 +60,20 @@ class AuthenticationController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('auth.user_not_found'), // translated
+            ], 422);
+        }
+
+        if (empty($user->password)) {
+            $token = \Illuminate\Support\Str::random(60);
+            \Illuminate\Support\Facades\DB::table('password_reset_tokens')->updateOrInsert(
+                ['email' => $user->email],
+                ['token' => $token, 'created_at' => \Carbon\Carbon::now()]
+            );
+            $user->notify(new \App\Notifications\SetupPasswordNotification($token, $user->email, $guard));
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Please check your email to set up your password first.',
             ], 422);
         }
 

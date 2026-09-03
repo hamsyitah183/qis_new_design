@@ -14,7 +14,7 @@ use App\Models\ApprovedPublic;
 use App\Models\Postcode;
 use App\Models\CountryNoPhone;
 use App\Notifications\InternalUserEditedNotification;
-use App\Notifications\UserNotification;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -380,8 +380,8 @@ class UserController extends Controller
                 }
 
                 $users = InternalUser::all();
-                Notification::send($users, new UserNotification($public->fullname . ' account has been updated.', authUser()['user']->fullname, route('internal.public.list')));
-                Notification::send($public, new UserNotification('You update your account.', 'QIS', '/profile'));
+                Notification::send($users, new ApplicationNotification($public->fullname . ' account has been updated.', 'Akaun ' . $public->fullname . ' telah dikemas kini.', authUser()['user']->fullname, route('internal.public.list')));
+                Notification::send($public, new ApplicationNotification('You updated your account.', 'Anda telah mengemas kini akaun anda.', 'QIS', '/profile'));
 
                 return response()->json(['message' => 'Public User Updated', 'user' => $public]);
             } catch (\Exception $e) {
@@ -426,7 +426,8 @@ class UserController extends Controller
                 $user = PublicUser::create([
                     'fullname'         => $validated['fullname'],
                     'email'            => $validated['email'],
-                    'password'         => Hash::make($validated['no_ic']),
+                    'password'         => '',
+                    'doa_verified'     => 1,
                     'no_ic'            => $validated['no_ic'],
                     'account_type'     => $validated['account_type'],
                     'phone_number'     => $validated['phone_number'],
@@ -438,6 +439,13 @@ class UserController extends Controller
                     'person_in_charge' => $personInCharge,
                 ]);
 
+                \App\Models\ApprovedPublic::where('user_id', $user->uuid)->update([
+                    'doa_verified' => 1,
+                    'status' => 'Verified and approved',
+                    'approved_by' => authUser()['user']->uuid ?? null,
+                    'doa_approved_time' => now(),
+                ]);
+
                 DB::commit();
 
                 try {
@@ -447,9 +455,9 @@ class UserController extends Controller
                 }
 
                 $users = InternalUser::all();
-                Notification::send($users, new UserNotification($user->fullname . ' account has been created.', authUser()['user']->fullname, route('internal.public.list')));
-                Notification::send($user, new UserNotification('You created an account.', 'QIS', '#'));
-                Notification::send($user, new UserNotification('Upload your verification ID.', 'QIS', '/profile'));
+                Notification::send($users, new ApplicationNotification($user->fullname . ' account has been created.', 'Akaun ' . $user->fullname . ' telah dicipta.', authUser()['user']->fullname, route('internal.public.list')));
+                Notification::send($user, new ApplicationNotification('You created an account.', 'Anda telah mencipta akaun.', 'QIS', '#'));
+                Notification::send($user, new ApplicationNotification('Upload your verification ID.', 'Sila muat naik ID pengesahan anda.', 'QIS', '/profile'));
 
                 return response()->json(['message' => 'Public User Created', 'user' => $user]);
             } catch (\Exception $e) {
@@ -622,7 +630,7 @@ class UserController extends Controller
                 'position'     => $request->position,
                 'office'       => $request->office,
                 'branch'       => $request->branch,
-                'password'     => Hash::make($request->no_ic),
+                'password'     => '',
             ];
             $actorRole = $actor->getRoleNames()->first();
             if (in_array($actorRole, ['admin', 'superadmin'])) {
