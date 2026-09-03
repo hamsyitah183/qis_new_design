@@ -267,4 +267,84 @@
         </table>
     </div>
 
+    {{-- ================= PAYMENT SUMMARY (only when Completed) ================= --}}
+    @php
+        $successOrder = null;
+        if (strtolower($application->status ?? '') === 'completed') {
+            $successOrder = $application->orders
+                ->filter(fn($o) => strtolower($o->transaction_status ?? '') === 'successful')
+                ->sortByDesc('updated_at')
+                ->first();
+        }
+    @endphp
+
+    @if ($successOrder)
+        <div class="section-block mb-3">
+            <div class="section-title"><span class="section-icon"></span>Payment Summary</div>
+            <table class="info-grid">
+                <tr>
+                    <td>
+                        <div class="info-label">Order Number</div>
+                        <div class="info-value">{{ $successOrder->order_number ?? '—' }}</div>
+                    </td>
+                    <td>
+                        <div class="info-label">Transaction Status</div>
+                        <div class="info-value">{{ ucfirst($successOrder->transaction_status ?? '—') }}</div>
+                    </td>
+                    <td>
+                        <div class="info-label">Payment Amount</div>
+                        <div class="info-value">RM {{ number_format($successOrder->payment_amount ?? 0, 2) }}</div>
+                    </td>
+                    <td>
+                        <div class="info-label">Payment Date</div>
+                        <div class="info-value">{{ optional($successOrder->updated_at)->format('d/m/Y h:i A') ?? '—' }}</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="info-label">Seller Reference</div>
+                        <div class="info-value">{{ $successOrder->seller_ref ?? '—' }}</div>
+                    </td>
+                    <td colspan="3">
+                        <div class="info-label">FPX Seller Reference</div>
+                        <div class="info-value">{{ $successOrder->fpx_seller_reference ?? '—' }}</div>
+                    </td>
+                </tr>
+            </table>
+
+            @php
+                $orderPermitIds = collect($successOrder->order_details['permits'] ?? [])->pluck('permit_id')->toArray();
+                $paidPermits = $application->consignmentPermits->whereIn('id', $orderPermitIds);
+            @endphp
+
+            @if ($paidPermits->count())
+                <table class="item-table" style="margin-top: 8px;">
+                    <thead>
+                        <tr>
+                            <th>Permit Number</th>
+                            <th>Item Name</th>
+                            <th class="num">Quantity</th>
+                            <th>Unit</th>
+                            <th class="num">Value (RM)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($paidPermits as $permit)
+                            @php $detail = $permit->consignment_detail ?? []; @endphp
+                            <tr>
+                                <td>{{ $permit->permit_number ?? '—' }}</td>
+                                <td>{{ $detail['item_name'] ?? '—' }}</td>
+                                <td class="num">{{ number_format($permit->quantity ?? 0, 2) }}</td>
+                                <td>{{ $permit->unit_measurement ?? '—' }}</td>
+                                <td class="num">{{ number_format($permit->value ?? 0, 2) }}</td>
+                                <td><span class="item-status">{{ $permit->status ?? '—' }}</span></td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
+        </div>
+    @endif
+
 @endsection

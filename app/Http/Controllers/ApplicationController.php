@@ -1480,6 +1480,7 @@ class ApplicationController extends Controller
             'importer',
             'entryPoint',
             'consignmentPermits',
+            'orders'
         ])->where('application_id', $id)->firstOrFail();
 
         $pdf = Pdf::loadView('pdf.import_permit_application', compact('application'))
