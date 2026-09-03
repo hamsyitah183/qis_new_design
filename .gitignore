@@ -23,4 +23,5 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+docker-compose.yml
 storage/framework/lsp-225da675876cadb4.php
