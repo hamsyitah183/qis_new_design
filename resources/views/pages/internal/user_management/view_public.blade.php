@@ -227,13 +227,14 @@
                                                             <strong data-en="Postcode" data-bm="Poskod">Postcode:</strong>
                                                             <span class="text-muted">{{ $user->postcode ?? '—' }}</span>
                                                         </div>
+                                                        {{-- @dd($user) --}}
                                                         <div class="col-xl-6">
                                                             <strong data-en="District" data-bm="Daerah">District:</strong>
-                                                            <span class="text-muted">{{ $user->district ?? '—' }}</span>
+                                                            <span class="text-muted">{{   $user->districtInfo->name ??  $user->district  ??'—' }}</span>
                                                         </div>
                                                         <div class="col-xl-12">
                                                             <strong data-en="State" data-bm="Negeri">State:</strong>
-                                                            <span class="text-muted">{{ $user->state ?? '—' }}</span>
+                                                            <span class="text-muted">{{ $user->stateInfo->name ?? $user->state   ??'—' }}</span>
                                                         </div>
                                                     </div>
 

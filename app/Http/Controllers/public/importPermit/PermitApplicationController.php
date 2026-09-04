@@ -26,6 +26,7 @@ use App\Models\TempAttachment;
 use App\Models\UserAttachment;
 use App\Notifications\ApplicationNotification;
 use App\Services\ApplicationActivityLogger;
+use App\Services\ApplicationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -437,7 +438,7 @@ class PermitApplicationController extends Controller
                 $user = authUser()['user'] ?? null;
                 ApplicationService::log(
                     application: $application,
-                    action: $isDraft ? 'create_draft_application' : 'create_import_permit_application',
+                    action: $isDraft ? 'Create application (draft)' : 'Submit Import Permit application ',
                     remark: ($user->fullname ?? 'System') . ' created application (ID: ' . $application->application_id . ')',
                     status: $application->status,
                     causer: $user ?? null

@@ -567,45 +567,56 @@ function initAddExporterModal() {
 
 // ─── Importer Lookup ──────────────────────────────────────
 function initImporterSearch() {
-    const btn = $("#btnFindImp");
-    const input = $("#findImporter");
-
-    btn.on("click", function (e) {
+    // 1. Direct binding (if the button already exists)
+    $("#btnFindExp").off("click").on("click", function (e) {
         e.preventDefault();
-        const identityNumber = input.val().trim();
-
-        if (!identityNumber) {
-            Swal.fire({
-                icon: "warning",
-                title: "Identity number is empty!",
-            });
-            return;
-        }
-
-        Swal.fire({
-            title: "Searching...",
-            allowOutsideClick: false,
-            didOpen: () => Swal.showLoading(),
-        });
-
-        fetch(`/public/get_importers/${identityNumber}`)
-            .then((res) => {
-                Swal.close();
-                if (!res.ok)
-                    throw new Error(`HTTP error! status: ${res.status}`);
-                return res.json();
-            })
-            .then(handleImporterResponse)
-            .catch((err) => {
-                console.error("Importer search error:", err);
-                Swal.close();
-                Swal.fire({
-                    icon: "error",
-                    title: "Search Failed",
-                    text: "Unable to fetch importer data. Please try again.",
-                });
-            });
+        console.log("Find Exporter clicked (direct)!");
+        handleImporterSearch();
     });
+
+    // 2. Delegated binding (covers dynamically recreated buttons)
+    $(document).off("click", "#").on("click", "#btnFindExp", function (e) {
+        e.preventDefault();
+        console.log("Find Importer clicked (delegated)!");
+        handleImporterSearch();
+    });
+}
+
+// Extract the search logic to a separate function to avoid duplication
+function handleImporterSearch() {
+    const input = $("#findImporter");
+    const identityNumber = input.val().trim();
+
+    if (!identityNumber) {
+        Swal.fire({
+            icon: "warning",
+            title: "Identity number is empty!",
+        });
+        return;
+    }
+
+    Swal.fire({
+        title: "Searching...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+    });
+
+    fetch(`/public/get_importers/${identityNumber}`)
+        .then((res) => {
+            Swal.close();
+            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+            return res.json();
+        })
+        .then(handleImporterResponse)
+        .catch((err) => {
+            console.error("Importer search error:", err);
+            Swal.close();
+            Swal.fire({
+                icon: "error",
+                title: "Search Failed",
+                text: "Unable to fetch importer data. Please try again.",
+            });
+        });
 }
 
 function handleImporterResponse(data) {
@@ -2875,7 +2886,7 @@ $(document).ready(async function () {
 
     try {
         await selfImport();
-        renderHeaderInfo()
+        // renderHeaderInfo()
 
         await fetchExporterList();
         handleExporterChange();

@@ -1,25 +1,29 @@
-<div class="wizard-step active" data-title="IMPORTER & EXPORTER" data-id="2e8WqSV3slGIpTbnjcJzmDwBQaHrfh0Z"
-    data-step="0">
+<div class="wizard-step active" data-title="IMPORTER & EXPORTER" data-id="2e8WqSV3slGIpTbnjcJzmDwBQaHrfh0Z" data-step="0">
     <div class="row justify-content-center">
         <div class="col-xl-6">
             <div class="register-page ipa-card h-100">
                 <div class="ipa-card-header">
                     <span class="ipa-icon-badge"><i class='bx bx-user'></i></span>
                     <h6 data-en="Importer" data-bm="Pengimport">Importer
-                        <span class="ipa-card-sub" data-en="Assign an importer for this application" data-bm="Tetapkan pengimport untuk permohonan ini">Assign an importer for this application</span>
-                    </h6>
+                        <span class="ipa-card-sub" data-en="Assign an importer for this application"
+                            data-bm="Tetapkan pengimport untuk permohonan ini">Assign an importer for this
+                            application</span>
+                    </h6> <span class = "text-danger">*</span>
                 </div>
                 <div class="row gy-3">
                     <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
-                        <label for="selectimp" class="form-label" data-en="Select Assigning Importer" data-bm="Pilih Pengimport yang Ditetapkan">Select Assigning Importer</label>
+                        <label for="selectimp" class="form-label" data-en="Select Assigning Importer"
+                            data-bm="Pilih Pengimport yang Ditetapkan">Select Assigning Importer</label>
                         <!-- <select id="selectimp" class="form-select xintra-select2" name="selectimp" style="width:100%;" >
                             <option value="">-- Select Importer --</option>
                             <option value="">--  Importer --</option>
                             <option value="">-- Select  --</option>
                             <option value="">-- SelectImporter --</option>
                         </select> -->
-                        <input type="text" class="form-control mb-3" id="findImporter" name="findImporter" placeholder="Company Number / Identification Number">
-                        <button type="button" class="btn btn-md btn-info mb-3" id="btnFindImp"><i class="bx bx-search"></i> Find Importer</button>
+                        <input type="text" class="form-control mb-3" id="findImporter" name="findImporter"
+                            placeholder="Company Number / Identification Number">
+                        <button type="button" class="btn btn-md btn-info mb-3" id="btnFindImp"><i
+                                class="bx bx-search"></i> Find Importer</button>
 
                         <div class="alert alert-danger" id="searchresult" role="alert" style="display:none">
                             No Matching Identity Number!
@@ -32,24 +36,25 @@
                         <div class="alert alert-primary2" id="doanotver" role="alert" style="display:none">
                             Account is not verified by DOA!
                         </div>
-                        
+
                     </div>
-                    
+
                     <input type="hidden" id="app_cate" value="1">
                     <div class="col-xl-12">
                         <label for="impname" class="form-label" data-en="Name" data-bm="Nama">Name</label>
                         <input type="hidden" id="impid" name="impid" required>
-                        <input type="text" class="form-control " id="impname" name="impname" disabled >
+                        <input type="text" class="form-control " id="impname" name="impname" disabled>
                         <input type="hidden" id="impemail" name="impemail">
                     </div>
                     <div class="col-xl-12">
-                        <label for="impfonno" class="form-label" data-en="Phone No" data-bm="No Telefon">Phone No</label>
-                        <input type="text" class="form-control " id="impfonno" name="impfonno" disabled >
+                        <label for="impfonno" class="form-label" data-en="Phone No" data-bm="No Telefon">Phone
+                            No</label>
+                        <input type="text" class="form-control " id="impfonno" name="impfonno" disabled>
                     </div>
                     <div class="col-xl-12">
                         <label for="impaddress" class="form-label" data-en="Address" data-bm="Alamat">Address</label>
-                        <input type="text" class="form-control mb-2" id="impaddress1" name="impaddress1" disabled >
-                        <input type="text" class="form-control " id="impaddress2" name="impaddress2" disabled >
+                        <textarea type="text" class="form-control mb-2" id="impaddress1" name="impaddress1" disabled></textarea>
+                        <input type="text" class="form-control d-none" id="impaddress2" name="impaddress2" disabled>
                     </div>
                 </div>
             </div>
@@ -58,15 +63,18 @@
             <div class="register-page ipa-card h-100">
                 <div class="ipa-card-header">
                     <span class="ipa-icon-badge"><i class='bx bx-globe'></i></span>
-                    <h6 data-en="Exporter" data-bm="Pengeksport">Exporter <a style="color:red"> * </a>
-                        <span class="ipa-card-sub" data-en="Who you're importing the goods from" data-bm="Siapa anda mengimport barangan daripada">Who you're importing the goods from</span>
-                    </h6>
+                    <h6 data-en="Exporter" data-bm="Pengeksport">Exporter 
+                        <span class="ipa-card-sub" data-en="Who you're importing the goods from"
+                            data-bm="Siapa anda mengimport barangan daripada">Who you're importing the goods
+                            from</span>
+                    </h6><a style="color:red"> * </a>
                 </div>
                 <div class="row gy-3">
                     <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
-                        <label for="selectexp" class="form-label" data-en="Select Exporter" data-bm="Pilih Pengeksport">Select Exporter</label>
-                        <select id="selectexp" data-route="/public/get_exporters"
-                            class="form-select xintra-select2" name="selectexp" style="width:100%;" required>
+                        <label for="selectexp" class="form-label" data-en="Select Exporter"
+                            data-bm="Pilih Pengeksport">Select Exporter</label>
+                        <select id="selectexp" data-route="/public/get_exporters" class="form-select xintra-select2"
+                            name="selectexp" style="width:100%;" required>
                             <option value="">-- Select Exporter --</option>
                         </select>
                     </div>
@@ -83,17 +91,21 @@
                         <input type="text" class="form-control " id="expname" name="expname" disabled>
                     </div>
                     <div class="col-xl-12">
-                        <label for="expfonno" class="form-label" data-en="Phone No" data-bm="No Telefon">Phone No</label>
+                        <label for="expfonno" class="form-label" data-en="Phone No" data-bm="No Telefon">Phone
+                            No</label>
                         <input type="text" class="form-control " id="expfonno" name="expfonno" disabled>
                     </div>
                     <div class="col-xl-12">
-                        <label for="expaddress" class="form-label" data-en="Address" data-bm="Alamat">Address</label>
-                        <input type="text" class="form-control mb-2" id="expaddress1" name="expaddress1" disabled>
+                        <label for="expaddress" class="form-label" data-en="Address"
+                            data-bm="Alamat">Address</label>
+                        <textarea type="text" class="form-control mb-2" id="expaddress1" name="expaddress1"
+                            disabled></textarea>
                         <!-- <input type="text" class="form-control " id="expaddress2"  name="expaddress2"> -->
                     </div>
                     <div class="col-lg-12">
-                        <label for="expcountry" class="form-label" data-en="Country" data-bm="Negara">Country</label>
-                        <input type="hidden" class="form-control mb-2" id="expcountryCode" name="expcountryCode" >
+                        <label for="expcountry" class="form-label" data-en="Country"
+                            data-bm="Negara">Country</label>
+                        <input type="hidden" class="form-control mb-2" id="expcountryCode" name="expcountryCode">
                         <input type="text" class="form-control" id="expcountry" name="expcountry" disabled>
                     </div>
                 </div>
@@ -106,26 +118,26 @@
 
                 {{-- Name --}}
                 <div class="mb-3">
-                    <label for="addexpName" class="form-label">Name<a style="color:red"> * </a></label>
+                    <label for="addexpName" class="form-label">Name</label><a style="color:red"> * </a>
                     <input type="text" id="addexpName" name="addexpName" class="form-control">
                 </div>
 
                 {{-- Phone --}}
                 <div class="mb-3">
-                    <label for="addexpfonno" class="form-label">Phone No<a style="color:red"> * </a></label>
+                    <label for="addexpfonno" class="form-label">Phone No</label><a style="color:red"> * </a>
                     <input type="text" id="addexpfonno" name="addexpfonno" class="form-control">
                 </div>
 
                 {{-- Address --}}
                 <div class="mb-3">
-                    <label for="addexpaddress" class="form-label">Address<a style="color:red"> * </a></label>
-                    <input type="text" id="addexpaddress1" name="addexpaddress1" class="form-control mb-2">
-                    <input type="text" id="addexpaddress2" name="addexpaddress2" class="form-control">
+                    <label for="addexpaddress" class="form-label">Address</label><a style="color:red"> * </a>
+                    <textarea type="text" id="addexpaddress1" name="addexpaddress1" class="form-control mb-2"></textarea>
+
                 </div>
 
                 {{-- Country --}}
                 <div class="mb-3">
-                    <label for="addexpcountry" class="form-label">Country<a style="color:red"> * </a></label>
+                    <label for="addexpcountry" class="form-label">Country</label><a style="color:red"> * </a>
                     <select class="form-select" id="addexpcountry" name="addexpcountry">
                         <option value="">-- Select Country --</option>
                         @foreach ($country as $coun)
@@ -137,8 +149,7 @@
                 @slot('footer')
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
 
-                    <button type="button" id="addExporterbtn" class="btn btn-primary"
-                      >
+                    <button type="button" id="addExporterbtn" class="btn btn-primary">
                         Save Exporter
                     </button>
                 @endslot

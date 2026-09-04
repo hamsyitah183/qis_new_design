@@ -134,7 +134,7 @@
                             <i class="ri-arrow-down-s-line side-menu__angle"></i>
                         </a>
                         <ul class="slide-menu child1">
-                            <li class="slide">
+                            <li class="slide d-none">
                                 <a href="{{ route('public.verifyapplication') }}" class="side-menu__item"
                                     id="toReviewCount" data-bm="Untuk Disemak" data-en="To Review">To Review</a>
                             </li>

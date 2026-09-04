@@ -271,7 +271,8 @@ export function getRemarkBm(remark) {
         'application is ready to be paid': 'Permohonan sedia untuk dibayar',
         'all permits under this application have been completed': 'Semua permit di bawah permohonan ini telah selesai',
         'officer verification completed': 'Pengesahan Pegawai Selesai',
-        'fully processed': 'Selesai Diproses'
+        'fully processed': 'Selesai Diproses',
+        'completed': 'Permohonan Selesai',
     };
 
     for (const key of Object.keys(remarkMap)) {
