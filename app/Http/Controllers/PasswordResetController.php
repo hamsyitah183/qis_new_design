@@ -80,6 +80,7 @@ class PasswordResetController extends Controller
     // Handle reset
     public function resetPassword(Request $request)
     {
+        // dd($request->all());
         $request->validate([
             'email'    => 'required|email',
             'password' => 'required|confirmed|min:8',
@@ -110,12 +111,16 @@ class PasswordResetController extends Controller
                 // Public user: only verify if DOA‑verified
                 if ((int) $user->doa_verified === 1) {
                     $user->markEmailAsVerified();
+                     $user->email_verified_at = now();
+                $user->save();
                     event(new \Illuminate\Auth\Events\Verified($user));
                 }
                 // Otherwise, email stays unverified
             } else {
                 // Internal user: always verify (no doa_verified column)
                 $user->markEmailAsVerified();
+                $user->email_verified_at = now();
+                $user->save();
                 event(new \Illuminate\Auth\Events\Verified($user));
             }
         }
