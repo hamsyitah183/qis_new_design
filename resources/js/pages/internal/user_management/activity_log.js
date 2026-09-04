@@ -226,7 +226,8 @@ function renderTimeline(groupedActivities) {
         'verification is in-progress by': 'pengesahan sedang dijalankan oleh',
         'was verified by': 'telah disahkan oleh',
         'verification is rejected by': 'pengesahan ditolak oleh',
-        'is not approved by': 'tidak diluluskan oleh'
+        'is not approved by': 'tidak diluluskan oleh',
+        'created a internal user account for'  : 'telah membina akaun kakitangan untuk',
     };
 
     if (!Object.keys(groupedActivities).length) {

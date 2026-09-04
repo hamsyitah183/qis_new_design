@@ -99,7 +99,7 @@
                 {{-- Phone --}}
                 <div class="mb-3">
                     <label for="addexpfonno" class="form-label" data-en="Phone No" data-bm="No Telefon">Phone No</label><a style="color:red"> * </a>
-                    <input type="text" id="addexpfonno" name="addexpfonno" class="form-control" min="0"  >
+                    <input type="number" min="0" step="1"  id="addexpfonno" name="addexpfonno" class="form-control"  >
                 </div>
 
                 {{-- Address --}}

@@ -115,7 +115,7 @@
                                                 <div class="p-3">
                                                     <h6 class="fw-semibold mb-3" data-en="Job Information" data-bm="Maklumat Pekerjaan">Job Information</h6>
                                                     <p><strong data-en="Position:" data-bm="Jawatan:">Position:</strong> {{ $user->position }}</p>
-                                                    <p><strong data-en="Office:" data-bm="Pejabat:">Office:</strong> {{ $user->office }}</p>
+                                                    {{-- <p><strong data-en="Office:" data-bm="Pejabat:">Office:</strong> {{ $user->office }}</p> --}}
                                                     <p><strong data-en="Branch:" data-bm="Cawangan:">Branch:</strong> {{ $user->branch }}</p>
                                                     <h6 class="fw-semibold mb-3 mt-4" data-en="Roles" data-bm="Peranan">Roles</h6>
                                                     @if(isset($user->roles) && $user->roles->count() > 0)
