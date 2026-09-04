@@ -1,7 +1,7 @@
 @extends('pages.front')
 
 @push('scripts')
-    @vite(['resources/js/pages/auth/reset_password.js'])
+    {{-- Add validation JS if needed --}}
 @endpush
 
 @push('style')
@@ -208,22 +208,6 @@
             font-weight: 600;
         }
 
-        .password-strength {
-            display: flex;
-            gap: 4px;
-            margin-top: 6px;
-        }
-        .password-strength .bar {
-            flex: 1;
-            height: 3px;
-            border-radius: 999px;
-            background: #e9ecef;
-            transition: background .3s ease;
-        }
-        .password-strength .bar.weak { background: #dc3545; }
-        .password-strength .bar.medium { background: #ffc107; }
-        .password-strength .bar.strong { background: #28a745; }
-
         /* Language toggle */
         .lang-toggle {
             position: absolute;
@@ -253,6 +237,22 @@
             background: rgb(var(--primary-rgb));
             color: #fff;
         }
+
+        .password-strength {
+            display: flex;
+            gap: 4px;
+            margin-top: 6px;
+        }
+        .password-strength .bar {
+            flex: 1;
+            height: 3px;
+            border-radius: 999px;
+            background: #e9ecef;
+            transition: background .3s ease;
+        }
+        .password-strength .bar.weak { background: #dc3545; }
+        .password-strength .bar.medium { background: #ffc107; }
+        .password-strength .bar.strong { background: #28a745; }
 
         /* Responsive breakpoints */
         @media (max-width: 991.98px) {
@@ -317,9 +317,10 @@
                     </div>
 
                     <div class="visual-caption">
-                        <h5 data-en="Reset Your Password" data-bm="Tetapkan Semula Kata Laluan Anda">Reset Your Password</h5>
-                        <p data-en="Create a new password for your account." data-bm="Cipta kata laluan baharu untuk akaun anda.">
-                            Create a new password for your account.
+                        <h5 data-en="Set Up Your Password" data-bm="Tetapkan Kata Laluan Anda">Set Up Your Password</h5>
+                        <p data-en="Create a secure password to complete your account setup."
+                           data-bm="Cipta kata laluan yang selamat untuk melengkapkan persediaan akaun anda.">
+                            Create a secure password to complete your account setup.
                         </p>
                     </div>
 
@@ -327,7 +328,7 @@
                         <li>
                             <i class='bx bx-lock-alt'></i>
                             <div>
-                                <strong data-en="Enter New Password" data-bm="Masukkan Kata Laluan Baharu">Enter New Password</strong>
+                                <strong data-en="Choose a Strong Password" data-bm="Pilih Kata Laluan Yang Kuat">Choose a Strong Password</strong>
                                 <span data-en="Use at least 8 characters with letters, numbers, and symbols."
                                       data-bm="Gunakan sekurang-kurangnya 8 aksara dengan huruf, nombor dan simbol.">
                                     Use at least 8 characters with letters, numbers, and symbols.
@@ -348,9 +349,9 @@
                             <i class='bx bx-log-in-circle'></i>
                             <div>
                                 <strong data-en="Login to Your Account" data-bm="Log Masuk ke Akaun Anda">Login to Your Account</strong>
-                                <span data-en="After resetting, you can log in with your new password."
-                                      data-bm="Selepas menetapkan semula, anda boleh log masuk dengan kata laluan baharu anda.">
-                                    After resetting, you can log in with your new password.
+                                <span data-en="Once set, you can log in with your new password."
+                                      data-bm="Setelah ditetapkan, anda boleh log masuk dengan kata laluan baharu anda.">
+                                    Once set, you can log in with your new password.
                                 </span>
                             </div>
                         </li>
@@ -365,9 +366,10 @@
                         <i class="bx bxs-lock-alt"></i>
                     </div>
 
-                    <h4 data-en="Reset Password" data-bm="Tetapkan Semula Kata Laluan">Reset Password</h4>
-                    <p class="subtitle" data-en="Enter your new password below." data-bm="Masukkan kata laluan baharu anda di bawah.">
-                        Enter your new password below.
+                    <h4 data-en="Set Password" data-bm="Tetapkan Kata Laluan">Set Password</h4>
+                    <p class="subtitle" data-en="Enter your new password below to complete your account setup."
+                        data-bm="Masukkan kata laluan baharu anda di bawah untuk melengkapkan persediaan akaun.">
+                        Enter your new password below to complete your account setup.
                     </p>
 
                     @if (session('status'))
@@ -382,16 +384,18 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('password.update') }}" id="resetPasswordForm">
+                    <form method="POST" action="{{ route('password.setup.update') }}" id="passwordSetupForm">
                         @csrf
-                        <input type="hidden" name="email" id="email" value="{{ $email ?? '' }}">
-                        <input type="hidden" name="token" id="token" value="{{ $token ?? '' }}">
-                        <input type="hidden" name="type" id="type" value="{{ $type ?? 'public' }}">
+                        <input type="hidden" name="token" value="{{ $token ?? '' }}">
+                        <input type="hidden" name="email" value="{{ $email ?? '' }}">
+                        <input type="hidden" name="type" value="{{ $type ?? 'public' }}">
+
+                        {{-- @dd($token, $email, $type) --}}
 
                         <div class="mb-3">
-                            <label for="create-password" class="form-label" data-en="New Password" data-bm="Kata Laluan Baharu">New Password</label>
+                            <label for="password" class="form-label" data-en="New Password" data-bm="Kata Laluan Baharu">New Password</label>
                             <input type="password" class="form-control @error('password') is-invalid @enderror"
-                                   name="password" id="create-password" required minlength="8">
+                                   id="password" name="password" required minlength="8">
                             @error('password')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
@@ -408,14 +412,14 @@
 
                         <div class="mb-3">
                             <label for="password_confirmation" class="form-label" data-en="Confirm Password" data-bm="Sahkan Kata Laluan">Confirm Password</label>
-                            <input type="password" class="form-control" name="password_confirmation" id="password_confirmation" required>
+                            <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required>
                         </div>
 
-                        <button type="submit" class="btn btn-login-primary w-100" data-en="Reset Password" data-bm="Tetapkan Semula Kata Laluan">Reset Password</button>
+                        <button type="submit" class="btn btn-login-primary w-100" data-en="Set Password" data-bm="Tetapkan Kata Laluan">Set Password</button>
                     </form>
 
                     <div class="signin-hint">
-                        <span data-en="Remember your password?" data-bm="Teringat kata laluan?">Remember your password?</span>
+                        <span data-en="Already have a password?" data-bm="Sudah ada kata laluan?">Already have a password?</span>
                         <a href="{{ route('login') }}" data-en="Sign in" data-bm="Log masuk"> Sign in</a>
                     </div>
                 </div>
@@ -465,7 +469,7 @@
 
         // ─── Password strength indicator ──────────────────────────────
         document.addEventListener('DOMContentLoaded', function () {
-            const passwordInput = document.getElementById('create-password');
+            const passwordInput = document.getElementById('password');
             const bars = document.querySelectorAll('#passwordStrength .bar');
 
             if (passwordInput && bars.length) {
@@ -478,6 +482,7 @@
                     if (/\d/.test(password)) strength++;
                     if (/[@$!%*#?&]/.test(password)) strength++;
 
+                    // Map 0-4 to 0-3 for bar display
                     const level = Math.min(Math.floor(strength / 2), 2);
 
                     bars.forEach(function (bar, index) {

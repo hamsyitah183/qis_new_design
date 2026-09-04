@@ -10,6 +10,7 @@ use App\Models\InternalUser;
 use App\Models\PublicUser;
 use App\Notifications\ApplicationNotification;
 use App\Notifications\VerifyEmailNotification;
+use App\Notifications\SetupPasswordNotification;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
@@ -48,18 +49,35 @@ class AuthenticationController extends Controller
         $credentials = $request->validate([
             'userType' => 'required|in:public,internal',
             'email' => 'required|email',
-            'password' => 'required|string',
+            'password' => 'nullable|string',
         ]);
 
         $guard = $credentials['userType'];
 
-        // Retrieve user first
         $user = ($guard === 'public' ? PublicUser::class : InternalUser::class)::where('email', $credentials['email'])->first();
 
         if (!$user) {
             return response()->json([
                 'status' => 'error',
-                'message' => __('auth.user_not_found'), // translated
+                'message' => __('auth.user_not_found'),
+            ], 422);
+        }
+
+        if (empty($user->password)) {
+            $token = Str::random(60);
+            DB::table('password_reset_tokens')->updateOrInsert(
+                ['email' => $user->email],
+                ['token' => Hash::make($token), 'created_at' => now()]
+            );
+            $user->notify(new SetupPasswordNotification($token, $user->email, $guard));
+
+            return response()->json([
+                'status' => 'password_not_set',
+                'message' => 'Please check your email to set up your password.',
+                'redirect' => route('password.setup.check', [
+                    'email' => $user->email,
+                    'type'  => $guard, // add type here
+                ])
             ], 422);
         }
 
@@ -93,7 +111,7 @@ class AuthenticationController extends Controller
                 'redirect' => $redirect,
             ]);
         }
-        
+
         return response()->json([
             'status' => 'error',
             'message' => __('auth.failed'), // translated
@@ -438,5 +456,124 @@ class AuthenticationController extends Controller
             'countryNo' => $countryNo,
             'documents' => $documents
         ]);
+    }
+
+    public function passwordSetupCheck(Request $request)
+    {
+        $email = $request->query('email');
+        $title = 'Setup password';
+        return view('pages.authentication.password_setup_check', compact('title', 'email'));
+    }
+
+    /**
+     * Show the password setup form (from email link).
+     */
+    public function passwordSetupForm(Request $request)
+    {
+        $token = $request->query('token');
+        $email = $request->query('email');
+        $type = $request->query('type', 'public'); 
+
+        $title = 'Set password';
+
+        // Validate token exists
+        $record = DB::table('password_reset_tokens')->where('email', $email)->first();
+        if (!$record || !Hash::check($token, $record->token)) {
+            return redirect()->route('login')->withErrors(['email' => 'Invalid or expired token.']);
+        }
+
+        return view('pages.authentication.password_setup', compact('token', 'email', 'type', 'title'));
+    }
+
+    /**
+     * Handle password setup form submission.
+     */
+   public function passwordSetupUpdate(Request $request)
+{
+    $request->validate([
+        'token'    => 'required',
+        'email'    => 'required|email',
+        'password' => 'required|min:8|confirmed',
+        'type'     => 'required|in:public,internal',
+    ]);
+
+    $record = DB::table('password_reset_tokens')->where('email', $request->email)->first();
+    if (!$record || !Hash::check($request->token, $record->token)) {
+        return back()->withErrors(['token' => 'Invalid or expired token.']);
+    }
+
+    // ─── Find user based on type ──────────────────────────────────────
+    if ($request->type === 'public') {
+        $user = PublicUser::where('email', $request->email)->first();
+        if (!$user) {
+            return back()->withErrors(['email' => 'Public user not found.']);
+        }
+
+        // Set password
+        $user->password = Hash::make($request->password);
+
+        // Set DOA verified
+        $user->doa_verified = 1;
+
+        // Mark email as verified
+        if (method_exists($user, 'hasVerifiedEmail') && !$user->hasVerifiedEmail()) {
+            $user->email_verified_at = now();
+        }
+
+        $user->save();
+
+        // ─── Update or create ApprovedPublic record ────────────────
+        $approved = \App\Models\ApprovedPublic::firstOrNew(['user_id' => $user->uuid]);
+        $approved->doa_verified = 1;
+        $approved->status = 'Verified and approved';
+        $approved->approved_by = null;
+        $approved->doa_approved_time = now();
+        $approved->save();
+
+    } else {
+        // Internal user
+        $user = InternalUser::where('email', $request->email)->first();
+        if (!$user) {
+            return back()->withErrors(['email' => 'Internal user not found.']);
+        }
+
+        // Set password
+        $user->password = Hash::make($request->password);
+
+        // Mark email as verified
+        if (method_exists($user, 'hasVerifiedEmail') && !$user->hasVerifiedEmail()) {
+            $user->email_verified_at = now();
+        }
+
+        $user->save();
+    }
+
+    // ─── Delete the token ──────────────────────────────────────────────
+    DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+
+    return redirect()->route('login')->with('status', 'Password set successfully. Please login.');
+}
+    /**
+     * Resend the password setup link.
+     */
+    public function resendSetupLink(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $user = PublicUser::where('email', $request->email)->first();
+        if (!$user) {
+            return back()->withErrors(['email' => 'User not found.']);
+        }
+
+        // Generate token and send notification
+        $token = Str::random(60);
+        DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $user->email],
+            ['token' => Hash::make($token), 'created_at' => now()]
+        );
+
+        $user->notify(new SetupPasswordNotification($token, $user->email, 'public'));
+
+        return back()->with('status', 'Password setup link resent.');
     }
 }

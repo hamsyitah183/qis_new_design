@@ -14,7 +14,7 @@ use App\Models\ApprovedPublic;
 use App\Models\Postcode;
 use App\Models\CountryNoPhone;
 use App\Notifications\InternalUserEditedNotification;
-use App\Notifications\UserNotification;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -317,6 +317,20 @@ class UserController extends Controller
     {
         $uuid = $request->input('uuid');
 
+        // ─── Build full phone number ─────────────────────────────────────────
+        $countryCode = $request->phoneNumber ?? '+60';
+        $countryCode = preg_replace('/[^0-9+]/', '', $countryCode);
+        if (!str_starts_with($countryCode, '+')) {
+            $countryCode = '+' . $countryCode;
+        }
+        $number = preg_replace('/\D/', '', $request->phone_number);
+        $number = ltrim($number, '0');
+        if (str_starts_with($number, '60')) {
+            $number = substr($number, 2);
+        }
+        $fullPhoneNumber = $countryCode . $number;
+        $request->merge(['phone_number' => $fullPhoneNumber]);
+
         if ($uuid) {
             // UPDATE
             $public = PublicUser::where('uuid', $uuid)->firstOrFail();
@@ -325,7 +339,11 @@ class UserController extends Controller
                 'email'        => 'required|email|unique:public_users,email,' . $public->id,
                 'no_ic'        => 'required|unique:public_users,no_ic,' . $public->id,
                 'account_type' => 'required|in:individu,company',
-                'phone_number' => 'required|unique:public_users,phone_number,' . $public->id,
+                'phone_number' => [
+                    'required',
+                    'unique:public_users,phone_number,' . $public->id,
+                    'regex:/^\+\d{7,15}$/'
+                ],
                 'address_1'    => 'required',
                 'postcode'     => 'required',
                 'district'     => 'required',
@@ -371,7 +389,7 @@ class UserController extends Controller
 
                 DB::commit();
 
-                // Events & notifications
+                // Events & notifications (unchanged)
                 try {
                     event(new \App\Events\PublicUserEvent('Your profile has been updated', $public->uuid));
                     event(new \App\Events\PublicUserUpdatedForInternal('A public user updated their profile', $public->uuid));
@@ -380,8 +398,8 @@ class UserController extends Controller
                 }
 
                 $users = InternalUser::all();
-                Notification::send($users, new UserNotification($public->fullname . ' account has been updated.', authUser()['user']->fullname, route('internal.public.list')));
-                Notification::send($public, new UserNotification('You update your account.', 'QIS', '/profile'));
+                Notification::send($users, new ApplicationNotification($public->fullname . ' account has been updated.', 'Akaun ' . $public->fullname . ' telah dikemas kini.', authUser()['user']->fullname, route('internal.public.list')));
+                Notification::send($public, new ApplicationNotification('You updated your account.', 'Anda telah mengemas kini akaun anda.', 'QIS', '/profile'));
 
                 return response()->json(['message' => 'Public User Updated', 'user' => $public]);
             } catch (\Exception $e) {
@@ -395,7 +413,11 @@ class UserController extends Controller
                 'email'        => 'required|email|unique:public_users,email',
                 'no_ic'        => 'required|unique:public_users,no_ic',
                 'account_type' => 'required|in:individu,company',
-                'phone_number' => 'required|unique:public_users,phone_number',
+                'phone_number' => [
+                    'required',
+                    'unique:public_users,phone_number',
+                    'regex:/^\+\d{7,15}$/'
+                ],
                 'address_1'    => 'required',
                 'postcode'     => 'required',
                 'district'     => 'required',
@@ -426,7 +448,8 @@ class UserController extends Controller
                 $user = PublicUser::create([
                     'fullname'         => $validated['fullname'],
                     'email'            => $validated['email'],
-                    'password'         => Hash::make($validated['no_ic']),
+                    'password'         => '',
+                    'doa_verified'     => 1,
                     'no_ic'            => $validated['no_ic'],
                     'account_type'     => $validated['account_type'],
                     'phone_number'     => $validated['phone_number'],
@@ -438,6 +461,13 @@ class UserController extends Controller
                     'person_in_charge' => $personInCharge,
                 ]);
 
+                \App\Models\ApprovedPublic::where('user_id', $user->uuid)->update([
+                    'doa_verified' => 1,
+                    'status' => 'Verified and approved',
+                    'approved_by' => authUser()['user']->uuid ?? null,
+                    'doa_approved_time' => now(),
+                ]);
+
                 DB::commit();
 
                 try {
@@ -447,9 +477,9 @@ class UserController extends Controller
                 }
 
                 $users = InternalUser::all();
-                Notification::send($users, new UserNotification($user->fullname . ' account has been created.', authUser()['user']->fullname, route('internal.public.list')));
-                Notification::send($user, new UserNotification('You created an account.', 'QIS', '#'));
-                Notification::send($user, new UserNotification('Upload your verification ID.', 'QIS', '/profile'));
+                Notification::send($users, new ApplicationNotification($user->fullname . ' account has been created.', 'Akaun ' . $user->fullname . ' telah dicipta.', authUser()['user']->fullname, route('internal.public.list')));
+                Notification::send($user, new ApplicationNotification('You created an account.', 'Anda telah mencipta akaun.', 'QIS', '#'));
+                Notification::send($user, new ApplicationNotification('Upload your verification ID.', 'Sila muat naik ID pengesahan anda.', 'QIS', '/profile'));
 
                 return response()->json(['message' => 'Public User Created', 'user' => $user]);
             } catch (\Exception $e) {
@@ -505,10 +535,10 @@ class UserController extends Controller
 
                 $html = '';
                 if ($canRead) {
-                    $html .= '<a href="' . route('internal.internal.view', $user->uuid) . '" class="btn btn-sm btn-primary text-white" title="View"><i class="ti ti-eye"></i></a>';
+                    $html .= '<a href="' . route('internal.internal.view', $user->uuid) . '" class="btn btn-sm btn-primary text-white me-1" title="View"><i class="ti ti-eye"></i></a>';
                 }
                 if ($canUpdate) {
-                    $html .= '<button class="btn btn-sm btn-secondary editInternalUser-modal" data-id="' . $user->uuid . '" title="Edit"><i class="ti ti-edit"></i></button>';
+                    $html .= '<button class="btn btn-sm btn-secondary editInternalUser-modal me-1" data-id="' . $user->uuid . '" title="Edit"><i class="ti ti-edit"></i></button>';
                 }
                 if ($canDelete && (!$currentUser || $currentUser->uuid !== $user->uuid)) {
                     $html .= '<button class="btn btn-sm btn-danger text-white deleteBtn" data-id="' . $user->uuid . '" title="Delete"><i class="bx bx-trash-alt"></i></button>';
@@ -559,6 +589,9 @@ class UserController extends Controller
         $actor = authUser()['user'];
         $url = route('internal.internal.list');
 
+    
+
+
         return DB::transaction(function () use ($request, $actor, $url) {
             $uuid = $request->input('uuid');
 
@@ -570,6 +603,7 @@ class UserController extends Controller
                     'email'        => 'required|email|max:255|unique:internal_users,email,' . $internalUser->id,
                     'no_ic'        => 'required|digits:12|unique:internal_users,no_ic,' . $internalUser->id,
                     'phone_number' => 'required|unique:internal_users,phone_number,' . $internalUser->id,
+                    
                     'position'     => 'required|string|max:255',
                     'role'         => 'required|string',
                 ]);
@@ -609,6 +643,7 @@ class UserController extends Controller
                 'email'        => 'required|email|max:255|unique:internal_users,email',
                 'no_ic'        => 'required|digits:12|unique:internal_users,no_ic',
                 'phone_number' => 'required|unique:internal_users,phone_number',
+                'regex:/^\+\d{7,12}$/',
                 'position'     => 'required|string|max:255',
                 'role'         => 'required|string',
             ]);
@@ -622,7 +657,7 @@ class UserController extends Controller
                 'position'     => $request->position,
                 'office'       => $request->office,
                 'branch'       => $request->branch,
-                'password'     => Hash::make($request->no_ic),
+                'password'     => '',
             ];
             $actorRole = $actor->getRoleNames()->first();
             if (in_array($actorRole, ['admin', 'superadmin'])) {

@@ -77,7 +77,12 @@ class PermitApplicationController extends Controller
     {
         $user = authUser()['user'];
 
-        // Get all required document requirements
+        // Only allow access if DOA verified
+        if ($user->doa_verified == 1) {
+            return null;
+        }
+
+        // Otherwise, always show wait_for_verified with document statuses
         $requirements = DocumentRequirement::where('module', 'user')
             ->where('is_required', true)
             ->where('is_active', true)
@@ -88,26 +93,17 @@ class PermitApplicationController extends Controller
             ->keyBy('document_type');
 
         $docStatus = [];
-        $allUploaded = true;  // flag to track if all docs are uploaded & valid
-
         foreach ($requirements as $req) {
             $attachment = $attachments->get($req->name);
             if ($attachment) {
                 if (!$attachment->is_read) {
                     $status = 'pending';
-                    $allUploaded = false;
                 } else {
-                    $isExpired = $req->requires_expiry
-                        && $attachment->valid_until
-                        && now()->greaterThan($attachment->valid_until);
+                    $isExpired = $req->requires_expiry && $attachment->valid_until && now()->greaterThan($attachment->valid_until);
                     $status = $isExpired ? 'expired' : 'uploaded';
-                    if ($status !== 'uploaded') {
-                        $allUploaded = false;
-                    }
                 }
             } else {
                 $status = 'missing';
-                $allUploaded = false;
             }
             $docStatus[] = [
                 'requirement' => $req,
@@ -117,15 +113,8 @@ class PermitApplicationController extends Controller
             ];
         }
 
-        // If all required documents are uploaded and valid, allow access
-        if ($allUploaded) {
-            return null;
-        }
-
-        // Otherwise, show the wait page with document statuses
         return view('pages.public.wait_for_verified', compact('docStatus'));
     }
-
 
     public function storeExporter(Request $request)
     {

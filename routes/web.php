@@ -61,6 +61,19 @@ Route::middleware(['multi.guest'])->group(function () {
 Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
 Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.update');
 
+// Password setup routes
+Route::get('/password-setup-check', [AuthenticationController::class, 'passwordSetupCheck'])
+    ->name('password.setup.check');
+
+Route::get('/password-setup', [AuthenticationController::class, 'passwordSetupForm'])
+    ->name('password.setup.form');
+
+Route::post('/password-setup', [AuthenticationController::class, 'passwordSetupUpdate'])
+    ->name('password.setup.update');
+
+Route::post('/password-setup/resend', [AuthenticationController::class, 'resendSetupLink'])
+    ->name('password.setup.resend');
+
 // Protected Authentication Routes (Logged-in users only)
 // Note: Changed to POST for security. If your frontend strictly requires GET, change it back to Route::get
 Route::get('/logout', [AuthenticationController::class, 'logout'])->name('logout');

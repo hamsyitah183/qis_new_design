@@ -157,7 +157,7 @@
                             <div class="col-md-6">
                                 <label class="form-label text-default"><span data-en="Phone Number" data-bm="Nombor Telefon">Phone Number</span> <span
                                         class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="phone_number" name="phone_number" required>
+                                <input type="number" class="form-control" id="phone_number" name="phone_number" required min="0" step="1">
                                 <div class="invalid-feedback" id="error-phone"></div>
                             </div>
 

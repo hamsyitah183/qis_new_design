@@ -24,6 +24,8 @@ $(document).ready(function () {
             authFailed: 'Authentication Failed',
             invalidCredentials: 'Invalid credentials or password.',
             loginFailed: 'Login Failed',
+            passwordNotSet: 'Password Not Set',
+            goToEmail: 'Go to Email',
         },
         bm: {
             loggingIn: 'Sedang log masuk...',
@@ -35,6 +37,8 @@ $(document).ready(function () {
             authFailed: 'Pengesahan Gagal',
             invalidCredentials: 'Kelayakan atau kata laluan tidak sah.',
             loginFailed: 'Log Masuk Gagal',
+            passwordNotSet: 'Kata Laluan Belum Ditetapkan',
+            goToEmail: 'Pergi ke E-mel',
         }
     };
 
@@ -84,6 +88,19 @@ $(document).ready(function () {
                     Swal.close();
 
                     let errorMsg = t('somethingWentWrong');
+
+                    /* 🔸 422 — Password not set */
+                    if (xhr.status === 422 && xhr.responseJSON?.status === 'password_not_set') {
+                        Swal.fire({
+                            icon: 'info',
+                            title: t('passwordNotSet'),
+                            text: xhr.responseJSON.message,
+                            confirmButtonText: t('goToEmail'),
+                        }).then(() => {
+                            window.location.href = xhr.responseJSON.redirect;
+                        });
+                        return;
+                    }
 
                     /* 🔸 403 — Unverified email (server message is already translated) */
                     if (
