@@ -14,19 +14,23 @@ class ApplicationApprovalMail extends Mailable
     use Queueable, SerializesModels;
 
     public $messageEn;
+    public $messageBm;
     public $user_fullname;
     public $url;
     public $application_id;
+    public $locale;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($messageEn, $user_fullname, $url, $application_id)
+    public function __construct($messageEn, $messageBm, $user_fullname, $url, $application_id, $locale = 'en')
     {
         $this->messageEn = $messageEn;
+        $this->messageBm = $messageBm;
         $this->user_fullname = $user_fullname;
         $this->url = $url;
         $this->application_id = $application_id;
+        $this->locale = $locale;
     }
 
     /**
@@ -34,8 +38,12 @@ class ApplicationApprovalMail extends Mailable
      */
     public function envelope(): Envelope
     {
+        $subject = $this->locale === 'bm' 
+            ? 'Permohonan Baru Dihantar: ' . $this->application_id
+            : 'New Application Submitted: ' . $this->application_id;
+
         return new Envelope(
-            subject: 'New Application Submitted: ' . $this->application_id,
+            subject: $subject,
         );
     }
 
@@ -70,10 +78,15 @@ class ApplicationApprovalMail extends Mailable
             $logoBase64 = 'data:image/png;base64,' . base64_encode($logoData);
         }
 
+        $viewName = $this->locale === 'bm' 
+            ? 'email.application_approval_bm' 
+            : 'email.application_approval_en';
+
         return new Content(
-            view: 'email.application_approval',
+            view: $viewName,
             with: [
                 'messageEn' => $this->messageEn,
+                'messageBm' => $this->messageBm,
                 'user_fullname' => $this->user_fullname,
                 'url' => $this->url,
                 'application_id' => $this->application_id,

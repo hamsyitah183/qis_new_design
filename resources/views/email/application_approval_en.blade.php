@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ __('New Application Submitted') }}</title>
+    <title>New Application Submitted</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8f9fa;">
 
@@ -44,7 +44,7 @@
 
                                     {{-- Title --}}
                                     <h1 style="margin: 0 0 20px 0; font-size: 22px; font-weight: 700; color: #1a1a1a;">
-                                        {{ __('New Application Submitted') }}
+                                        New Application Submitted
                                     </h1>
 
                                     {{-- Divider --}}
@@ -55,8 +55,8 @@
                                         <p style="margin-top: 0;">{{ $messageEn }}</p>
                                         
                                         <p>
-                                            <strong>{{ __('Application ID:') }}</strong> {{ $application_id }}<br>
-                                            <strong>{{ __('Submitted By:') }}</strong> {{ $user_fullname }}
+                                            <strong>Application ID:</strong> {{ $application_id }}<br>
+                                            <strong>Submitted By:</strong> {{ $user_fullname }}
                                         </p>
 
                                         @if(!empty($appData))
@@ -66,9 +66,9 @@
                                                     <td width="130" style="font-weight: 600;">Application Type:</td>
                                                     <td>
                                                         @if($appData['type'] == 0)
-                                                            Self Import
+                                                            Self Apply
                                                         @else
-                                                            Import as Other
+                                                            Apply for Others
                                                         @endif
 
                                                     </td>
@@ -97,15 +97,15 @@
                                         </div>
                                         @endif
 
-                                        <p>{{ __('Please review the application details and choose an action below:') }}</p>
+                                        <p>Please review the application details and choose an action below:</p>
                                         
                                         <div style="margin-top: 24px; text-align: center;">
-                                            <a href="{{ route('application.email.action', ['id' => $application_id, 'action' => 'approve']) }}" style="display: inline-block; background-color: #2e7d32; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; margin-right: 10px;">{{ __('Approve Application') }}</a>
-                                            <a href="{{ route('application.email.action', ['id' => $application_id, 'action' => 'reject']) }}" style="display: inline-block; background-color: #dc3545; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600;">{{ __('Reject Application') }}</a>
+                                            <a href="{{ route('application.email.action', ['id' => $application_id, 'action' => 'approve']) }}" style="display: inline-block; background-color: #2e7d32; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; margin-right: 10px;">Approve Application</a>
+                                            <a href="{{ route('application.email.action', ['id' => $application_id, 'action' => 'reject']) }}" style="display: inline-block; background-color: #dc3545; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600;">Reject Application</a>
                                         </div>
                                         
                                         <p style="margin-top: 24px;">
-                                            {{ __('Or you can') }} <a href="{{ $url }}" style="color: #2e7d32; text-decoration: none; font-weight: 600;">{{ __('view the application here') }}</a>.
+                                            Or you can <a href="{{ $url }}" style="color: #2e7d32; text-decoration: none; font-weight: 600;">view the application here</a>.
                                         </p>
                                     </div>
 

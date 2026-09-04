@@ -70,9 +70,11 @@ class ApplicationSubmittedNotification extends Notification implements ShouldQue
     {
         return (new ApplicationApprovalMail(
             $this->messageEn,
+            $this->messageBm,
             $this->user,
             $this->url,
-            $this->application_id
+            $this->application_id,
+            app()->getLocale()
         ))->to($notifiable->email);
     }
 }
