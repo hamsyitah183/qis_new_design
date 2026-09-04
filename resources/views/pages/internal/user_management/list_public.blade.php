@@ -151,7 +151,7 @@
 
                 <div class="col-md-6">
                     <label class="form-label text-default"><span data-en="IC Number" data-bm="Nombor KP">IC Number</span> <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="no_ic" name="no_ic" required>
+                    <input type="number" class="form-control" id="no_ic" name="no_ic"  min="0" step="1" required>
                 </div>
 
                 <div class="col-md-6">
@@ -183,7 +183,7 @@
 
                         <div class="w-100">
 
-                            <input type="text" name="phone_number" class="form-control" id="phone_number">
+                            <input type="text" min="0" step="1"  name="phone_number" class="form-control" id="phone_number">
                         </div>
                     </div>
 
@@ -195,12 +195,12 @@
                 </div>
 
                 <div class="col-md-12">
-                    <label class="form-label text-default"><span data-en="Address 1" data-bm="Alamat 1">Address 1</span> <span class="text-danger">*</span></label>
+                    <label class="form-label text-default"><span data-en="Address" data-bm="Alamat">Address</span> <span class="text-danger">*</span></label>
 
                     <textarea class="form-control" name="address_1" id="address_1" cols="30" rows="2" required></textarea>
                 </div>
 
-                <div class="col-md-12">
+                <div class="col-md-12 d-none">
                     <label class="form-label"><span data-en="Address 2" data-bm="Alamat 2">Address 2</span></label>
 
                     <textarea class="form-control" id="address_2" name="address_2" cols="30" rows="2"></textarea>

@@ -81,17 +81,18 @@ class PasswordResetController extends Controller
     public function resetPassword(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email'    => 'required|email',
             'password' => 'required|confirmed|min:8',
-            'token' => 'required',
-            'type' => 'required|in:public,internal',
+            'token'    => 'required',
+            'type'     => 'required|in:public,internal',
         ]);
 
-        // Verify that this browser session is authorized to reset for this token
+        // Verify session authorization
         if (session('password_reset_auth_' . $request->token) !== $request->email) {
             return back()->withErrors(['email' => 'Invalid or expired token.']);
         }
 
+        // Find the user
         $model = $request->type === 'internal' ? InternalUser::class : PublicUser::class;
         $user = $model::where('email', $request->email)->first();
 
@@ -99,16 +100,27 @@ class PasswordResetController extends Controller
             return back()->withErrors(['email' => 'User not found.']);
         }
 
-        $user->update([
-            'password' => Hash::make($request->password),
-        ]);
+        // ─── Update password ──────────────────────────────────────────────
+        $user->password = Hash::make($request->password);
+        $user->save();
 
+        // ─── Conditionally verify email ──────────────────────────────────
         if (method_exists($user, 'hasVerifiedEmail') && !$user->hasVerifiedEmail()) {
-            $user->markEmailAsVerified();
-            event(new \Illuminate\Auth\Events\Verified($user));
+            if ($user instanceof PublicUser) {
+                // Public user: only verify if DOA‑verified
+                if ((int) $user->doa_verified === 1) {
+                    $user->markEmailAsVerified();
+                    event(new \Illuminate\Auth\Events\Verified($user));
+                }
+                // Otherwise, email stays unverified
+            } else {
+                // Internal user: always verify (no doa_verified column)
+                $user->markEmailAsVerified();
+                event(new \Illuminate\Auth\Events\Verified($user));
+            }
         }
 
-        // Clean up the session authorization
+        // ─── Clean up session ─────────────────────────────────────────────
         session()->forget('password_reset_auth_' . $request->token);
 
         return redirect()->route('login')->with('status', 'Password reset successfully!');

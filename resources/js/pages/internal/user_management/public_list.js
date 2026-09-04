@@ -1,41 +1,81 @@
 import $ from "jquery";
 import Swal from "sweetalert2";
-import { fetchVerificationCount, formatTime, applyTranslations } from "../../../app";
+import {
+    fetchVerificationCount,
+    formatTime,
+    applyTranslations,
+} from "../../../app";
 
 function getLang() {
     try {
-        return localStorage.getItem('qis_lang') || 'en';
+        return localStorage.getItem("qis_lang") || "en";
     } catch {
-        return 'en';
+        return "en";
     }
 }
 
 const t = {
-    loading: { en: 'Loading...', bm: 'Memuat...' },
-    error: { en: 'Error', bm: 'Ralat' },
-    errorMsg: { en: 'Error!', bm: 'Ralat!' },
-    unableToLoad: { en: 'Unable to load user details', bm: 'Tidak dapat memuatkan butiran pengguna' },
-    updatingUser: { en: 'Updating user...', bm: 'Mengemas kini pengguna...' },
-    savingUser: { en: 'Saving user...', bm: 'Menyimpan pengguna...' },
-    userUpdated: { en: 'User Updated!', bm: 'Pengguna Dikemas kini!' },
-    userAdded: { en: 'User Added!', bm: 'Pengguna Ditambah!' },
-    failed: { en: 'Failed!', bm: 'Gagal!' },
-    saveFailed: { en: 'Something went wrong while saving the user.', bm: 'Sesuatu yang tidak kena berlaku semasa menyimpan pengguna.' },
-    areYouSure: { en: 'Are you sure?', bm: 'Adakah anda pasti?' },
-    cannotUndo: { en: 'This action cannot be undone!', bm: 'Tindakan ini tidak dapat dipulihkan!' },
-    deleted: { en: 'Deleted!', bm: 'Dipadam!' },
-    deleteSuccess: { en: 'User deleted successfully.', bm: 'Pengguna berjaya dipadam.' },
-    deleteFailed: { en: 'Failed to delete user.', bm: 'Gagal memadam pengguna.' },
-    verifyError: { en: 'Failed to load verification info.', bm: 'Gagal memuatkan maklumat pengesahan.' },
-    approved: { en: 'Approved!', bm: 'Diluluskan!' },
-    verifySuccess: { en: 'User has been successfully verified.', bm: 'Pengguna telah berjaya disahkan.' },
-    unverifyUser: { en: 'Unverify User', bm: 'Tarik Balik Pengesahan Pengguna' },
-    unverifyReasonPrompt: { en: 'Please provide a reason for unverifying this user:', bm: 'Sila nyatakan sebab menarik balik pengesahan pengguna ini:' },
-    enterReason: { en: 'Enter reason here...', bm: 'Masukkan sebab di sini...' },
-    submit: { en: 'Submit', bm: 'Hantar' },
-    reasonRequired: { en: 'Reason is required!', bm: 'Sebab diperlukan!' },
-    userUnverified: { en: 'User Unverified', bm: 'Pengesahan Pengguna Ditarik Balik' },
-    unverifySuccess: { en: 'The user has been unverified successfully.', bm: 'Pengesahan pengguna telah berjaya ditarik balik.' },
+    loading: { en: "Loading...", bm: "Memuat..." },
+    error: { en: "Error", bm: "Ralat" },
+    errorMsg: { en: "Error!", bm: "Ralat!" },
+    unableToLoad: {
+        en: "Unable to load user details",
+        bm: "Tidak dapat memuatkan butiran pengguna",
+    },
+    updatingUser: { en: "Updating user...", bm: "Mengemas kini pengguna..." },
+    savingUser: { en: "Saving user...", bm: "Menyimpan pengguna..." },
+    userUpdated: { en: "User Updated!", bm: "Pengguna Dikemas kini!" },
+    userAdded: { en: "User Added!", bm: "Pengguna Ditambah!" },
+    failed: { en: "Failed!", bm: "Gagal!" },
+    saveFailed: {
+        en: "Something went wrong while saving the user.",
+        bm: "Sesuatu yang tidak kena berlaku semasa menyimpan pengguna.",
+    },
+    areYouSure: { en: "Are you sure?", bm: "Adakah anda pasti?" },
+    cannotUndo: {
+        en: "This action cannot be undone!",
+        bm: "Tindakan ini tidak dapat dipulihkan!",
+    },
+    deleted: { en: "Deleted!", bm: "Dipadam!" },
+    deleteSuccess: {
+        en: "User deleted successfully.",
+        bm: "Pengguna berjaya dipadam.",
+    },
+    deleteFailed: {
+        en: "Failed to delete user.",
+        bm: "Gagal memadam pengguna.",
+    },
+    verifyError: {
+        en: "Failed to load verification info.",
+        bm: "Gagal memuatkan maklumat pengesahan.",
+    },
+    approved: { en: "Approved!", bm: "Diluluskan!" },
+    verifySuccess: {
+        en: "User has been successfully verified.",
+        bm: "Pengguna telah berjaya disahkan.",
+    },
+    unverifyUser: {
+        en: "Unverify User",
+        bm: "Tarik Balik Pengesahan Pengguna",
+    },
+    unverifyReasonPrompt: {
+        en: "Please provide a reason for unverifying this user:",
+        bm: "Sila nyatakan sebab menarik balik pengesahan pengguna ini:",
+    },
+    enterReason: {
+        en: "Enter reason here...",
+        bm: "Masukkan sebab di sini...",
+    },
+    submit: { en: "Submit", bm: "Hantar" },
+    reasonRequired: { en: "Reason is required!", bm: "Sebab diperlukan!" },
+    userUnverified: {
+        en: "User Unverified",
+        bm: "Pengesahan Pengguna Ditarik Balik",
+    },
+    unverifySuccess: {
+        en: "The user has been unverified successfully.",
+        bm: "Pengesahan pengguna telah berjaya ditarik balik.",
+    },
 };
 
 function getText(key) {
@@ -125,8 +165,8 @@ async function public_user_list() {
         const title = isAdd
             ? "Add Public User"
             : isView
-                ? "View Public User"
-                : "Edit Public User";
+              ? "View Public User"
+              : "Edit Public User";
         $("#publicUserModalLabel").text(title);
 
         // Reset form + validation
@@ -141,7 +181,7 @@ async function public_user_list() {
         // Readonly in view mode
         $("#publicUserForm input, #publicUserForm select").prop(
             "readonly",
-            isView
+            isView,
         );
         $("#publicUserForm select").prop("disabled", isView);
 
@@ -150,14 +190,21 @@ async function public_user_list() {
             // Load states for new user
             fetchStatesModal().then((states) => {
                 const lang = localStorage.getItem("qis_lang") || "en";
-                const selectStateText = lang === "bm" ? "Pilih Negeri" : "Select State";
-                $(".state-modal").empty().append(`<option value="" data-en="Select State" data-bm="Pilih Negeri">${selectStateText}</option>`);
-                states.forEach(state => {
-                    $(".state-modal").append(`<option value="${state.id}">${state.name}</option>`);
+                const selectStateText =
+                    lang === "bm" ? "Pilih Negeri" : "Select State";
+                $(".state-modal")
+                    .empty()
+                    .append(
+                        `<option value="" data-en="Select State" data-bm="Pilih Negeri">${selectStateText}</option>`,
+                    );
+                states.forEach((state) => {
+                    $(".state-modal").append(
+                        `<option value="${state.id}">${state.name}</option>`,
+                    );
                 });
             });
             new bootstrap.Modal(
-                document.getElementById("publicUserModal")
+                document.getElementById("publicUserModal"),
             ).show();
             return;
         }
@@ -193,27 +240,44 @@ async function public_user_list() {
                 // Load location dropdowns in sequence
                 fetchStatesModal().then((states) => {
                     const lang = localStorage.getItem("qis_lang") || "en";
-                    const selectStateText = lang === "bm" ? "Pilih Negeri" : "Select State";
-                    $(".state-modal").empty().append(`<option value="" data-en="Select State" data-bm="Pilih Negeri">${selectStateText}</option>`);
-                    states.forEach(state => {
-                        const isSelected = user.state && (user.state == state.id || user.state == state.name);
-                        $(".state-modal").append(`<option value="${state.id}" ${isSelected ? 'selected' : ''}>${state.name}</option>`);
+                    const selectStateText =
+                        lang === "bm" ? "Pilih Negeri" : "Select State";
+                    $(".state-modal")
+                        .empty()
+                        .append(
+                            `<option value="" data-en="Select State" data-bm="Pilih Negeri">${selectStateText}</option>`,
+                        );
+                    states.forEach((state) => {
+                        const isSelected =
+                            user.state &&
+                            (user.state == state.id ||
+                                user.state == state.name);
+                        $(".state-modal").append(
+                            `<option value="${state.id}" ${isSelected ? "selected" : ""}>${state.name}</option>`,
+                        );
                     });
 
                     // Get selected state ID
                     const selectedStateId = $(".state-modal").val();
                     if (selectedStateId) {
-                        fetchDistrictsModal(selectedStateId, user.district, (resolvedDistrictId) => {
-                            if (resolvedDistrictId) {
-                                fetchPostcodesModal(resolvedDistrictId, user.postcode);
-                            }
-                        });
+                        fetchDistrictsModal(
+                            selectedStateId,
+                            user.district,
+                            (resolvedDistrictId) => {
+                                if (resolvedDistrictId) {
+                                    fetchPostcodesModal(
+                                        resolvedDistrictId,
+                                        user.postcode,
+                                    );
+                                }
+                            },
+                        );
                     }
                 });
 
                 Swal.close();
                 new bootstrap.Modal(
-                    document.getElementById("publicUserModal")
+                    document.getElementById("publicUserModal"),
                 ).show();
             },
             error: function () {
@@ -231,14 +295,16 @@ async function public_user_list() {
             .on("submit", "#publicUserForm", function (e) {
                 e.preventDefault();
                 $(".form-control").removeClass("is-invalid");
-                $(".invalid-feedback").text("");
+                $("#formPublicUser").addClass("d-none").html("");
 
                 const formData = $(this).serialize();
                 const userUuid = $("#userUuid").val();
                 const isEdit = Boolean(userUuid);
 
                 Swal.fire({
-                    title: isEdit ? getText("updatingUser") : getText("savingUser"),
+                    title: isEdit
+                        ? getText("updatingUser")
+                        : getText("savingUser"),
                     allowOutsideClick: false,
                     didOpen: () => {
                         Swal.showLoading();
@@ -252,14 +318,15 @@ async function public_user_list() {
                     data: formData,
                     headers: {
                         "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
-                            "content"
+                            "content",
                         ),
                     },
                     success: function (response) {
-                        console.log("response detal", response);
                         Swal.fire({
                             icon: "success",
-                            title: isEdit ? getText("userUpdated") : getText("userAdded"),
+                            title: isEdit
+                                ? getText("userUpdated")
+                                : getText("userAdded"),
                             text: response.message,
                         });
 
@@ -274,11 +341,16 @@ async function public_user_list() {
                         Swal.close();
                         if (xhr.status === 422) {
                             const errors = xhr.responseJSON.errors;
+                            let errorHtml = '<ul class="mb-0">';
                             Object.keys(errors).forEach((key) => {
+                                errorHtml += `<li>${errors[key][0]}</li>`;
                                 const input = $(`#${key}`);
                                 input.addClass("is-invalid");
-                                $(`#error-${key}`).text(errors[key][0]);
                             });
+                            errorHtml += "</ul>";
+                            $("#formPublicUser")
+                                .html(errorHtml)
+                                .removeClass("d-none");
                         } else {
                             Swal.fire({
                                 icon: "error",
@@ -312,21 +384,25 @@ async function public_user_list() {
                         type: "DELETE",
                         headers: {
                             "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
-                                "content"
+                                "content",
                             ),
                         },
                         success: function () {
                             Swal.fire(
                                 getText("deleted"),
                                 getText("deleteSuccess"),
-                                "success"
-                            ).then(() => { $("#publicUsersTable").DataTable().ajax.reload(); });
+                                "success",
+                            ).then(() => {
+                                $("#publicUsersTable")
+                                    .DataTable()
+                                    .ajax.reload();
+                            });
                         },
                         error: function () {
                             Swal.fire(
                                 getText("errorMsg"),
                                 getText("deleteFailed"),
-                                "error"
+                                "error",
                             );
                         },
                     });
@@ -359,21 +435,30 @@ async function public_user_list() {
     delete_public_user();
 
     // ========== Filter Functionality ==========
-    
+
     // Apply Filter Button
     $(document).on("click", "#applyFilterBtn", function (e) {
         e.preventDefault();
-        
+
         const filters = {
-            account_type: [].concat($("#filterAccountType").val() || []).join(","),
-            email_verification: [].concat($("#filterEmailVerification").val() || []).join(","),
-            account_verification: [].concat($("#filterAccountVerification").val() || []).join(","),
-            sort_by: $("#filterTime").val() // keeping sort as single value string
+            account_type: []
+                .concat($("#filterAccountType").val() || [])
+                .join(","),
+            email_verification: []
+                .concat($("#filterEmailVerification").val() || [])
+                .join(","),
+            account_verification: []
+                .concat($("#filterAccountVerification").val() || [])
+                .join(","),
+            sort_by: $("#filterTime").val(), // keeping sort as single value string
         };
 
         // Update DataTable AJAX URL with filter parameters
-        const url = new URL("/internal/user_public/list/data", window.location.origin);
-        Object.keys(filters).forEach(key => {
+        const url = new URL(
+            "/internal/user_public/list/data",
+            window.location.origin,
+        );
+        Object.keys(filters).forEach((key) => {
             if (filters[key]) {
                 url.searchParams.append(key, filters[key]);
             }
@@ -385,7 +470,7 @@ async function public_user_list() {
     // Reset Filter Button
     $(document).on("click", "#resetFilterBtn", function (e) {
         e.preventDefault();
-        
+
         // Reset all filter dropdowns
         $("#filterAccountType").val(null).trigger("change");
         $("#filterEmailVerification").val(null).trigger("change");
@@ -402,7 +487,7 @@ async function public_user_list() {
         $("#publicUserForm")[0].reset();
         $("#publicUserForm input, #publicUserForm select").prop(
             "readonly",
-            false
+            false,
         );
         $("#publicUserForm select").prop("disabled", false);
         $(".form-control").removeClass("is-invalid");
@@ -468,7 +553,7 @@ function fetchVerificationData(id) {
 function handleVerificationModal(response, id) {
     const modalEl = document.getElementById("verificationModal");
 
-    console.log('response', response)
+    console.log("response", response);
 
     if (!modalEl) {
         console.error("Modal element not found!");
@@ -492,7 +577,7 @@ function handleVerificationModal(response, id) {
 
     setupVerificationButton(response, id);
     $(".ic").text(user.no_ic || "");
-    $('.updated_at').text(formatTime(response.updated_at))
+    $(".updated_at").text(formatTime(response.updated_at));
 
     renderAttachment(response.verification_attachment);
     renderStatus(response.status);
@@ -503,7 +588,6 @@ function handleVerificationModal(response, id) {
         $("#verificationBtn").hide();
         $("#unverificationBtn").hide();
     }
-
 }
 
 // 🔹 4. Setup Verify/Unverify button
@@ -519,7 +603,7 @@ function setupVerificationButton(response, id) {
         btn.addClass("btn-success").text("Verified User").attr("data-id", id);
     }
 
-    $("#unverificationBtn").attr('data-id', id);
+    $("#unverificationBtn").attr("data-id", id);
 }
 
 // 🔹 5. Render Attachment (image or PDF)
@@ -536,11 +620,11 @@ function renderAttachment(fileUrl) {
 
     if (["jpg", "jpeg", "png", "gif", "webp"].includes(fileExtension)) {
         container.append(
-            `<img src="/${fileUrl}" class="img-fluid" alt="Verification Attachment">`
+            `<img src="/${fileUrl}" class="img-fluid" alt="Verification Attachment">`,
         );
     } else if (fileExtension === "pdf") {
         container.append(
-            `<iframe src="/${fileUrl}" class="w-100" style="height:500px;" frameborder="0"></iframe>`
+            `<iframe src="/${fileUrl}" class="w-100" style="height:500px;" frameborder="0"></iframe>`,
         );
     } else {
         container.append(`<p>Unsupported file format: ${fileExtension}</p>`);
@@ -610,11 +694,11 @@ $("#verificationBtn").on("click", function (e) {
                 timer: 2000,
                 showConfirmButton: false,
             }).then(() => {
-                fetchVerificationCount()
-                
+                fetchVerificationCount();
+
                 // Close modal after success
                 const modal = bootstrap.Modal.getInstance(
-                    document.getElementById("verificationModal")
+                    document.getElementById("verificationModal"),
                 );
                 if (modal) modal.hide();
 
@@ -644,7 +728,7 @@ $("#unverificationBtn").on("click", function (e) {
 
     // ✅ Hide the Bootstrap modal before opening Swal
     const modal = bootstrap.Modal.getInstance(
-        document.getElementById("verificationModal")
+        document.getElementById("verificationModal"),
     );
     if (modal) modal.hide();
 
@@ -699,7 +783,8 @@ $("#unverificationBtn").on("click", function (e) {
                             timer: 2000,
                             showConfirmButton: false,
                         }).then(() => {
-                            if (publicUsersTable) publicUsersTable.ajax.reload();
+                            if (publicUsersTable)
+                                publicUsersTable.ajax.reload();
                         });
                     },
                     error: function (xhr) {
@@ -722,11 +807,15 @@ $("#unverificationBtn").on("click", function (e) {
 function fetchStatesModal() {
     return $.ajax({
         url: "/get_states",
-        type: "GET"
+        type: "GET",
     });
 }
 
-function fetchDistrictsModal(stateId, selectedDistrict = null, callback = null) {
+function fetchDistrictsModal(
+    stateId,
+    selectedDistrict = null,
+    callback = null,
+) {
     $(".district-modal").html('<option value="">Loading...</option>');
 
     Swal.fire({
@@ -743,16 +832,26 @@ function fetchDistrictsModal(stateId, selectedDistrict = null, callback = null) 
         type: "GET",
         success: function (data) {
             const lang = localStorage.getItem("qis_lang") || "en";
-            const selectDistText = lang === "bm" ? "Pilih Daerah" : "Select District";
-            $(".district-modal").empty().append(`<option value="" data-en="Select District" data-bm="Pilih Daerah">${selectDistText}</option>`);
+            const selectDistText =
+                lang === "bm" ? "Pilih Daerah" : "Select District";
+            $(".district-modal")
+                .empty()
+                .append(
+                    `<option value="" data-en="Select District" data-bm="Pilih Daerah">${selectDistText}</option>`,
+                );
             let matchedId = null;
 
-            data.forEach(district => {
-                const isSelected = selectedDistrict && (selectedDistrict == district.id || selectedDistrict == district.name);
+            data.forEach((district) => {
+                const isSelected =
+                    selectedDistrict &&
+                    (selectedDistrict == district.id ||
+                        selectedDistrict == district.name);
                 if (isSelected) {
                     matchedId = district.id;
                 }
-                $(".district-modal").append(`<option value="${district.id}" ${isSelected ? 'selected' : ''}>${district.name}</option>`);
+                $(".district-modal").append(
+                    `<option value="${district.id}" ${isSelected ? "selected" : ""}>${district.name}</option>`,
+                );
             });
 
             if (callback) callback(matchedId);
@@ -761,8 +860,10 @@ function fetchDistrictsModal(stateId, selectedDistrict = null, callback = null) 
         },
         error: function (err) {
             console.error("Error fetching districts", err);
-            $(".district-modal").html('<option value="">Error loading districts</option>');
-        }
+            $(".district-modal").html(
+                '<option value="">Error loading districts</option>',
+            );
+        },
     });
 }
 
@@ -771,8 +872,11 @@ function fetchPostcodesModal(districtId, selectedPostcode = null) {
 
     if (!districtId) {
         const lang = localStorage.getItem("qis_lang") || "en";
-        const selectPostcodeText = lang === "bm" ? "Pilih Poskod" : "Select Postcode";
-        $(".postcode-modal").html(`<option value="" data-en="Select Postcode" data-bm="Pilih Poskod">${selectPostcodeText}</option>`);
+        const selectPostcodeText =
+            lang === "bm" ? "Pilih Poskod" : "Select Postcode";
+        $(".postcode-modal").html(
+            `<option value="" data-en="Select Postcode" data-bm="Pilih Poskod">${selectPostcodeText}</option>`,
+        );
         return;
     }
 
@@ -790,19 +894,33 @@ function fetchPostcodesModal(districtId, selectedPostcode = null) {
         type: "GET",
         success: function (data) {
             const lang = localStorage.getItem("qis_lang") || "en";
-            const selectPostcodeText = lang === "bm" ? "Pilih Poskod" : "Select Postcode";
-            $(".postcode-modal").empty().append(`<option value="" data-en="Select Postcode" data-bm="Pilih Poskod">${selectPostcodeText}</option>`);
-            data.forEach(postcode => {
-                const isSelected = selectedPostcode && (selectedPostcode == postcode.id || selectedPostcode == postcode.value) ? 'selected' : '';
-                $(".postcode-modal").append(`<option value="${postcode.value}" ${isSelected}>${postcode.value}</option>`);
+            const selectPostcodeText =
+                lang === "bm" ? "Pilih Poskod" : "Select Postcode";
+            $(".postcode-modal")
+                .empty()
+                .append(
+                    `<option value="" data-en="Select Postcode" data-bm="Pilih Poskod">${selectPostcodeText}</option>`,
+                );
+            data.forEach((postcode) => {
+                const isSelected =
+                    selectedPostcode &&
+                    (selectedPostcode == postcode.id ||
+                        selectedPostcode == postcode.value)
+                        ? "selected"
+                        : "";
+                $(".postcode-modal").append(
+                    `<option value="${postcode.value}" ${isSelected}>${postcode.value}</option>`,
+                );
             });
 
             Swal.close();
         },
         error: function (err) {
             console.error("Error fetching postcodes", err);
-            $(".postcode-modal").html('<option value="">Error loading postcodes</option>');
-        }
+            $(".postcode-modal").html(
+                '<option value="">Error loading postcodes</option>',
+            );
+        },
     });
 }
 

@@ -28,14 +28,14 @@ class SetupPasswordNotification extends Notification
 
     public function toMail($notifiable)
     {
-        $resetUrl = url(route('password.reset', [
+        $url = route('password.setup.form', [
             'token' => $this->token,
-            'email' => $notifiable->email,
-            'type' => $this->type,
-        ], false));
+            'email' => $this->email,
+            'type'  => $this->type,
+        ]);
 
         return (new MailMessage)
             ->subject('Set Up Your Password - QIS')
-            ->view('email.setup_password', ['setupUrl' => $resetUrl]);
+            ->view('email.setup_password', ['setupUrl' => $url]);
     }
 }
