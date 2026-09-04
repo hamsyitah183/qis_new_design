@@ -246,7 +246,7 @@
             // Client-side Localization Sandbox Controller
             (function() {
                 var STORAGE_KEY = "qis_lang";
-                var buttons = document.querySelectorAll(".lang-btn");
+                var buttons = document.querySelectorAll(".lang-btn, .qis-lang-btn");
                 var elements = document.querySelectorAll("[data-en]");
 
                 function setLang(lang) {

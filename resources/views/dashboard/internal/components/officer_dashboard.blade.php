@@ -247,11 +247,23 @@
                                                         'Clerk Review In-Progress', 'Clerk review in-progress' => 'bg-primary',
                                                         'Clerk Verified' => 'bg-info',
                                                         'Clerk Rejected', 'Rejected' => 'bg-danger',
-                                                        'Officer Verification Completed' => 'bg-success',
+                                                        'Officer Verification Completed', 'Completed' => 'bg-success',
                                                         default => 'bg-warning'
                                                     };
+                                                    $bmStatus = match($app->status) {
+                                                        'Completed' => 'Selesai',
+                                                        'Approved' => 'Diluluskan',
+                                                        'Draft' => 'Draf',
+                                                        'Clerk Review In-Progress', 'Clerk review in-progress' => 'Semakan Kerani Dalam Proses',
+                                                        'Clerk Verified' => 'Disahkan Kerani',
+                                                        'Clerk Rejected' => 'Ditolak Kerani',
+                                                        'Rejected' => 'Ditolak',
+                                                        'Officer Verification Completed' => 'Pengesahan Pegawai Selesai',
+                                                        'Pending' => 'Menunggu',
+                                                        default => $app->status
+                                                    };
                                                 @endphp
-                                                <span class="badge {{ $badgeClass }}">{{ $app->status }}</span>
+                                                <span class="badge {{ $badgeClass }}" data-en="{{ $app->status }}" data-bm="{{ $bmStatus }}">{{ $app->status }}</span>
                                             </td>
                                             <td>
                                                 @php

@@ -79,9 +79,8 @@
         {{-- Importer & Exporter --}}
         @if ($application->application_type == 'Import Permit' || $application->application_type == 'Inspection Certificate')
             <div class="apy-card">
-                <div class="apy-card-title" data-en="Importer &amp; Exporter Details"
-                    data-bm="Butiran Pengimport &amp; Pengeksport">
-                    <i class="bi bi-people"></i> Importer &amp; Exporter Details
+                <div class="apy-card-title">
+                    <i class="bi bi-people"></i> <span data-en="Importer &amp; Exporter Details" data-bm="Butiran Pengimport &amp; Pengeksport">Importer &amp; Exporter Details</span>
                 </div>
                 <div class="apy-parties" id="apyParties">
                     <div class="apy-party-card">
@@ -133,8 +132,8 @@
 
                 {{-- ========== 1. ITEMS IN THIS ORDER ========== --}}
                 <div class="apy-card">
-                    <div class="apy-card-title" data-en="Items in this Order" data-bm="Item dalam Pesanan Ini">
-                        <i class="bi bi-box-seam"></i> Items in this Order
+                    <div class="apy-card-title">
+                        <i class="bi bi-box-seam"></i> <span data-en="Items in this Order" data-bm="Item dalam Pesanan Ini">Items in this Order</span>
                     </div>
                     <div class="apy-order-list" id="apyOrderList">
                         @foreach ($permits as $index => $permit)
@@ -170,8 +169,8 @@
                     @endphp
                     @if (!empty($prices))
                         <div class="apy-card">
-                            <div class="apy-card-title" data-en="Category Summary" data-bm="Ringkasan Kategori">
-                                <i class="bi bi-tags"></i> Category Summary
+                            <div class="apy-card-title">
+                                <i class="bi bi-tags"></i> <span data-en="Category Summary" data-bm="Ringkasan Kategori">Category Summary</span>
                             </div>
                             <div class="apy-order-list">
                                 @foreach ($prices as $item)
@@ -203,8 +202,8 @@
 
                 {{-- ========== 3. PAYMENT METHOD ========== --}}
                 <div class="apy-card">
-                    <div class="apy-card-title" data-en="Payment Method" data-bm="Kaedah Pembayaran">
-                        <i class="bi bi-credit-card-2-front"></i> Payment Method
+                    <div class="apy-card-title">
+                        <i class="bi bi-credit-card-2-front"></i> <span data-en="Payment Method" data-bm="Kaedah Pembayaran">Payment Method</span>
                     </div>
                     <p class="apy-card-hint"
                         data-en="BayuPay is selected by default — tap the <i class=&quot;bi bi-info-circle&quot;></i> icon on either option for step-by-step instructions."
@@ -237,8 +236,8 @@
             <div class="apy-summary-col">
                 <div class="apy-summary-card">
 
-                    <div class="apy-summary-title" data-en="Payment Summary" data-bm="Ringkasan Pembayaran">
-                        <i class="bi bi-receipt"></i> Payment Summary
+                    <div class="apy-summary-title">
+                        <i class="bi bi-receipt"></i> <span data-en="Payment Summary" data-bm="Ringkasan Pembayaran">Payment Summary</span>
                     </div>
 
                     @if ($application->application_type == 'Import Permit')
@@ -341,9 +340,9 @@
                         <span data-en="Proceed to Payment" data-bm="Teruskan ke Pembayaran">Proceed to Payment</span>
                     </button>
 
-                    <div class="apy-secure-note" data-en="Secured payment gateway" data-bm="Gateway pembayaran selamat">
+                    <div class="apy-secure-note">
                         <i class="bi bi-shield-check"></i>
-                        Secured payment gateway
+                        <span data-en="Secured payment gateway" data-bm="Gerbang pembayaran selamat">Secured payment gateway</span>
                     </div>
 
                 </div>

@@ -39,10 +39,18 @@ const notifTranslations = {
     'Consignment application has been rejected by clerk.': 'Permohonan konsainan telah ditolak oleh kerani.',
     'New inspection application has been submitted.': 'Permohonan pemeriksaan baharu telah dihantar.',
     'New consignment application has been submitted.': 'Permohonan konsainan baharu telah dihantar.',
+    'New import permit draft created': 'Draf permit import baharu dibuat',
+    'Import permit draft updated': 'Draf permit import dikemas kini',
+    'New import permit application submitted': 'Permohonan permit import baharu dihantar',
+    'Import permit application updated': 'Permohonan permit import dikemas kini',
+    'An application needs your approval.': 'Satu permohonan memerlukan kelulusan anda.',
+    'Your application has been successfully submitted and is waiting for approval.': 'Permohonan anda telah berjaya dihantar dan menunggu kelulusan.',
+    'Your application has been successfully submitted.': 'Permohonan anda telah berjaya dihantar.',
     'has been approved by clerk.': 'telah diluluskan oleh kerani.',
     'has been rejected by clerk.': 'telah ditolak oleh kerani.',
     'Inspection application': 'Permohonan pemeriksaan',
     'Consignment application': 'Permohonan konsainan',
+    'Import permit application': 'Permohonan permit import',
     'has been submitted.': 'telah dihantar.',
 };
 

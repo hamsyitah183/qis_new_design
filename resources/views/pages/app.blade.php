@@ -281,27 +281,27 @@
                 <div class="modal-header bg-primary text-white border-0">
                     <div class="d-flex align-items-center gap-2">
                         <i class="ti ti-clock-exclamation fs-4"></i>
-                        <h5 class="modal-title mb-0 fw-bold text-white" id="qisInactivityModalLabel">Session Expiring Soon</h5>
+                        <h5 class="modal-title mb-0 fw-bold text-white" id="qisInactivityModalLabel" data-en="Session Expiring Soon" data-bm="Sesi Akan Tamat Segera">Session Expiring Soon</h5>
                     </div>
                 </div>
                 <div class="modal-body py-4 px-4">
-                    <p class="mb-2 text-muted">Your session will be automatically logged out due to inactivity.</p>
+                    <p class="mb-2 text-muted" data-en="Your session will be automatically logged out due to inactivity." data-bm="Sesi anda akan dilog keluar secara automatik akibat tiada aktiviti.">Your session will be automatically logged out due to inactivity.</p>
                     <div class="d-flex align-items-center justify-content-center my-3">
                         <div class="text-center">
                             <span id="qisCountdownDisplay" class="display-4 fw-bold text-warning">60</span>
-                            <p class="mb-0 text-muted small">seconds remaining</p>
+                            <p class="mb-0 text-muted small" data-en="seconds remaining" data-bm="saat tersisa">seconds remaining</p>
                         </div>
                     </div>
-                    <div id="qisSavingMsg" class="alert alert-info d-none py-2 mb-0">
-                        <i class="ti ti-device-floppy me-1"></i> Saving your draft, please wait&hellip;
+                    <div id="qisSavingMsg" class="alert alert-info d-none py-2 mb-0" data-en="Saving your draft, please wait..." data-bm="Menyimpan draf anda, sila tunggu...">
+                        <i class="ti ti-device-floppy me-1"></i> <span data-en="Saving your draft, please wait..." data-bm="Menyimpan draf anda, sila tunggu...">Saving your draft, please wait&hellip;</span>
                     </div>
                 </div>
                 <div class="modal-footer border-0 d-flex justify-content-between">
-                    <button type="button" id="qisLogoutNowBtn" class="btn btn-outline-danger">
-                        <i class="ti ti-logout me-1"></i>Logout Now
+                    <button type="button" id="qisLogoutNowBtn" class="btn btn-outline-danger" data-en="Logout Now" data-bm="Log Keluar Sekarang">
+                        <i class="ti ti-logout me-1"></i><span data-en="Logout Now" data-bm="Log Keluar Sekarang">Logout Now</span>
                     </button>
-                    <button type="button" id="qisStayLoggedInBtn" class="btn btn-success">
-                        <i class="ti ti-refresh me-1"></i>Stay Logged In
+                    <button type="button" id="qisStayLoggedInBtn" class="btn btn-success" data-en="Stay Logged In" data-bm="Kekal Log Masuk">
+                        <i class="ti ti-refresh me-1"></i><span data-en="Stay Logged In" data-bm="Kekal Log Masuk">Stay Logged In</span>
                     </button>
                 </div>
             </div>

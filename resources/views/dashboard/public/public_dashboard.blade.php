@@ -328,7 +328,7 @@
                                                         => 'bg-primary-transparent text-primary',
                                                     'Clerk Verified' => 'bg-info-transparent text-info',
                                                     'Clerk Rejected', 'Rejected' => 'bg-danger-transparent text-danger',
-                                                    'Officer Verification Completed'
+                                                    'Officer Verification Completed', 'Completed', 'Approved'
                                                         => 'bg-success-transparent text-success',
                                                     default => 'bg-secondary-transparent text-secondary',
                                                 };
@@ -343,6 +343,12 @@
                                                     'Clerk Rejected' => 'Ditolak Kerani',
                                                     'Rejected' => 'Ditolak',
                                                     'Officer Verification Completed' => 'Pengesahan Pegawai Selesai',
+                                                    'Completed' => 'Selesai',
+                                                    'Approved' => 'Diluluskan',
+                                                    'Verified' => 'Disahkan',
+                                                    'Paid' => 'Telah Dibayar',
+                                                    'Pending' => 'Menunggu',
+                                                    'Submitted' => 'Telah Dihantar',
                                                     default => $app->status
                                                 } }}"
                                                 >{{ $app->status }}</span>

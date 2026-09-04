@@ -192,17 +192,26 @@ class ConsignmentController extends Controller
 
         // Bilingual mappings for status labels
         $statusTranslations = [
+            'completed'                     => ['en' => 'Completed', 'bm' => 'Selesai'],
+            'approved'                      => ['en' => 'Approved', 'bm' => 'Diluluskan'],
+            'verified'                      => ['en' => 'Verified', 'bm' => 'Disahkan'],
+            'paid'                          => ['en' => 'Paid', 'bm' => 'Telah Dibayar'],
             'pending'                       => ['en' => 'Pending', 'bm' => 'Menunggu'],
             'rejected'                      => ['en' => 'Rejected', 'bm' => 'Ditolak'],
             'not approved'                  => ['en' => 'Not Approved', 'bm' => 'Tidak Diluluskan'],
             'accepted'                      => ['en' => 'Accepted', 'bm' => 'Diterima'],
             'officer verification completed' => ['en' => 'Officer Verification Completed', 'bm' => 'Pengesahan Pegawai Selesai'],
             'clerk verified'                => ['en' => 'Clerk Verified', 'bm' => 'Disahkan Kerani'],
+            'clerk rejected'                => ['en' => 'Clerk Rejected', 'bm' => 'Ditolak Kerani'],
             'awaiting approval'             => ['en' => 'Awaiting approval', 'bm' => 'Menunggu Kelulusan'],
             'draft'                         => ['en' => 'Draft', 'bm' => 'Draf'],
             'clerk review in-progress'      => ['en' => 'Clerk review in-progress', 'bm' => 'Semakan Kerani Dalam Proses'],
             'wait for company approval'     => ['en' => 'Wait for company approval', 'bm' => 'Menunggu Kelulusan Syarikat'],
             'submitted'                     => ['en' => 'Submitted', 'bm' => 'Telah Dihantar'],
+            'processing'                    => ['en' => 'Processing', 'bm' => 'Sedang Diproses'],
+            'printed'                       => ['en' => 'Printed', 'bm' => 'Dicetak'],
+            'in progress'                   => ['en' => 'In Progress', 'bm' => 'Dalam Proses'],
+            'in-progress'                  => ['en' => 'In Progress', 'bm' => 'Dalam Proses'],
         ];
 
         // Bilingual mappings for permit status tooltips
@@ -238,18 +247,30 @@ class ConsignmentController extends Controller
                 if ($matchedKey) {
                     $en = $statusTranslations[$matchedKey]['en'];
                     $bm = $statusTranslations[$matchedKey]['bm'];
-                    $color = match ($matchedKey) {
-                        'pending'     => 'warning',
-                        'rejected', 'not approved' => 'danger',
-                        'accepted', 'officer verification completed', 'awaiting approval', 'draft', 'clerk review in-progress', 'wait for company approval' => 'success',
-                        'clerk verified' => 'info',
-                        'submitted' => 'primary',
+                    $color = match (true) {
+                        str_contains($matchedKey, 'completed') || str_contains($matchedKey, 'approved') || str_contains($matchedKey, 'accepted') || str_contains($matchedKey, 'verified') || str_contains($matchedKey, 'paid') || str_contains($matchedKey, 'officer verification completed') => 'success',
+                        str_contains($matchedKey, 'rejected') || str_contains($matchedKey, 'not approved') => 'danger',
+                        str_contains($matchedKey, 'pending') || str_contains($matchedKey, 'wait') || str_contains($matchedKey, 'awaiting') => 'warning',
+                        str_contains($matchedKey, 'clerk verified') => 'info',
+                        str_contains($matchedKey, 'clerk review') || str_contains($matchedKey, 'in-progress') || str_contains($matchedKey, 'in progress') || str_contains($matchedKey, 'processing') || str_contains($matchedKey, 'submitted') => 'primary',
                         default => 'secondary',
                     };
                     return $this->bilingualBadge($color, $en, $bm, $latestTime, $causerName, $id);
                 }
 
-                return '<span class="badge bg-secondary fs-12 p-1 activityLog" data-log="' . $id . '">' . ucfirst($status) . '</span>';
+                $enBadge = ucfirst($status);
+                $bmBadge = match(strtolower($status)) {
+                    'completed' => 'Selesai',
+                    'approved' => 'Diluluskan',
+                    'verified' => 'Disahkan',
+                    'paid' => 'Telah Dibayar',
+                    'pending' => 'Menunggu',
+                    'rejected' => 'Ditolak',
+                    'submitted' => 'Telah Dihantar',
+                    'draft' => 'Draf',
+                    default => ucfirst($status)
+                };
+                return '<span class="badge bg-secondary fs-12 p-1 activityLog" data-log="' . $id . '" data-en="' . e($enBadge) . '" data-bm="' . e($bmBadge) . '">' . e($enBadge) . '</span>';
             })
             ->addColumn('permit_status', function ($row) use ($permitStatusTranslations) {
                 $statusColors = [

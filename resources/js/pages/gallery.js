@@ -1,11 +1,18 @@
 document.addEventListener('DOMContentLoaded', function() {
+    var STORAGE_KEY = 'qis_lang';
     var currentLang = 'en';
+    try {
+        currentLang = localStorage.getItem(STORAGE_KEY) || 'en';
+    } catch(e) {}
 
     // ---------- language toggle ----------
     var langButtons = document.querySelectorAll('.qis-lang-btn');
 
     function applyLang(lang) {
         currentLang = lang;
+        try {
+            localStorage.setItem(STORAGE_KEY, lang);
+        } catch(e) {}
         langButtons.forEach(function(btn) {
             btn.classList.toggle('active', btn.dataset.lang === lang);
         });
@@ -25,6 +32,8 @@ document.addEventListener('DOMContentLoaded', function() {
             applyLang(btn.dataset.lang);
         });
     });
+
+    applyLang(currentLang);
 
     // ---------- checkpoint terminal rotator (dynamic) ----------
     var terminal = document.getElementById('qisTerminal');

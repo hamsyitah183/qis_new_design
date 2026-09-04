@@ -95,8 +95,18 @@
                                                         'Submitted', 'Clerk Verified' => 'bg-info',
                                                         default => 'bg-primary',
                                                     };
+                                                    $bmStatus = match($application->status ?? 'Pending') {
+                                                        'Completed' => 'Selesai',
+                                                        'Approved' => 'Diluluskan',
+                                                        'Pending' => 'Menunggu',
+                                                        'Draft' => 'Draf',
+                                                        'Rejected', 'Clerk Rejected' => 'Ditolak',
+                                                        'Submitted' => 'Telah Dihantar',
+                                                        'Clerk Verified' => 'Disahkan Kerani',
+                                                        default => $application->status ?? 'Pending',
+                                                    };
                                                 @endphp
-                                                <span class="badge {{ $statusClass }}">{{ $application->status }}</span>
+                                                <span class="badge {{ $statusClass }}" data-en="{{ $application->status }}" data-bm="{{ $bmStatus }}">{{ $application->status }}</span>
                                             </td>
                                             <td>
                                                 <a href="{{ route('viewApplication', $application->application_id) }}"
@@ -155,8 +165,18 @@
                                                         'Submitted', 'Clerk Verified' => 'bg-info',
                                                         default => 'bg-primary',
                                                     };
+                                                    $bmStatus = match($application->status ?? 'Pending') {
+                                                        'Completed' => 'Selesai',
+                                                        'Approved' => 'Diluluskan',
+                                                        'Pending' => 'Menunggu',
+                                                        'Draft' => 'Draf',
+                                                        'Rejected', 'Clerk Rejected' => 'Ditolak',
+                                                        'Submitted' => 'Telah Dihantar',
+                                                        'Clerk Verified' => 'Disahkan Kerani',
+                                                        default => $application->status ?? 'Pending',
+                                                    };
                                                 @endphp
-                                                <span class="badge {{ $statusClass }}">{{ $application->status }}</span>
+                                                <span class="badge {{ $statusClass }}" data-en="{{ $application->status }}" data-bm="{{ $bmStatus }}">{{ $application->status }}</span>
                                             </td>
                                             <td>
                                                 <a href="{{ route('inspection.view_details', $application->application_id) }}"
@@ -215,8 +235,18 @@
                                                         'Submitted', 'Clerk Verified' => 'bg-info',
                                                         default => 'bg-primary',
                                                     };
+                                                    $bmStatus = match($application->status ?? 'Pending') {
+                                                        'Completed' => 'Selesai',
+                                                        'Approved' => 'Diluluskan',
+                                                        'Pending' => 'Menunggu',
+                                                        'Draft' => 'Draf',
+                                                        'Rejected', 'Clerk Rejected' => 'Ditolak',
+                                                        'Submitted' => 'Telah Dihantar',
+                                                        'Clerk Verified' => 'Disahkan Kerani',
+                                                        default => $application->status ?? 'Pending',
+                                                    };
                                                 @endphp
-                                                <span class="badge {{ $statusClass }}">{{ $application->status }}</span>
+                                                <span class="badge {{ $statusClass }}" data-en="{{ $application->status }}" data-bm="{{ $bmStatus }}">{{ $application->status }}</span>
                                             </td>
                                             <td>
                                                 <a href="{{ url('/view_consignment/' . $application->application_id) }}"

@@ -209,11 +209,19 @@
 
 <script>
     (function () {
+        var STORAGE_KEY = 'qis_lang';
         var currentLang = 'en';
+        try {
+            currentLang = localStorage.getItem(STORAGE_KEY) || 'en';
+        } catch(e) {}
+
         var langButtons = document.querySelectorAll('.qis-lang-btn');
 
         function applyLang(lang) {
             currentLang = lang;
+            try {
+                localStorage.setItem(STORAGE_KEY, lang);
+            } catch(e) {}
             langButtons.forEach(function (btn) {
                 btn.classList.toggle('active', btn.dataset.lang === lang);
             });
@@ -231,6 +239,8 @@
         langButtons.forEach(function (btn) {
             btn.addEventListener('click', function () { applyLang(btn.dataset.lang); });
         });
+
+        applyLang(currentLang);
 
         function setBilingual(el, en, bm) {
             if (!el) return;

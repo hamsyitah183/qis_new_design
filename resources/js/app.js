@@ -342,29 +342,30 @@ export function fetchApplicationCount() {
                 (data.permit || 0) +
                 (data.inspection || 0) +
                 (data.consignment || 0);
+            const lang = getCurrentLang();
 
             if (data.permit > 0) {
                 $("#importPermitCount").html(
-                    `<span class="sidebar-count-row"><span>Import Permit</span><span class="badge bg-success text-white sidebar-nav-count-badge">${data.permit}</span></span>`,
+                    `<span class="sidebar-count-row"><span data-en="Import Permit" data-bm="Permit Import">${lang === 'bm' ? 'Permit Import' : 'Import Permit'}</span><span class="badge bg-success text-white sidebar-nav-count-badge">${data.permit}</span></span>`,
                 );
             } else {
-                $("#importPermitCount").text("Import Permit");
+                $("#importPermitCount").html(`<span data-en="Import Permit" data-bm="Permit Import">${lang === 'bm' ? 'Permit Import' : 'Import Permit'}</span>`);
             }
 
             if (data.inspection > 0) {
                 $("#inspectionAppCount").html(
-                    `<span class="sidebar-count-row"><span>Inspection Certificate</span><span class="badge bg-success text-white sidebar-nav-count-badge">${data.inspection}</span></span>`,
+                    `<span class="sidebar-count-row"><span data-en="Inspection Certificate" data-bm="Sijil Pemeriksaan">${lang === 'bm' ? 'Sijil Pemeriksaan' : 'Inspection Certificate'}</span><span class="badge bg-success text-white sidebar-nav-count-badge">${data.inspection}</span></span>`,
                 );
             } else {
-                $("#inspectionAppCount").text("Inspection Certificate");
+                $("#inspectionAppCount").html(`<span data-en="Inspection Certificate" data-bm="Sijil Pemeriksaan">${lang === 'bm' ? 'Sijil Pemeriksaan' : 'Inspection Certificate'}</span>`);
             }
 
             if (data.consignment > 0) {
                 $("#consignmentAppCount").html(
-                    `<span class="sidebar-count-row"><span>Consignment Certificate</span><span class="badge bg-success text-white sidebar-nav-count-badge">${data.consignment}</span></span>`,
+                    `<span class="sidebar-count-row"><span data-en="Consignment Certificate" data-bm="Sijil Konsainan">${lang === 'bm' ? 'Sijil Konsainan' : 'Consignment Certificate'}</span><span class="badge bg-success text-white sidebar-nav-count-badge">${data.consignment}</span></span>`,
                 );
             } else {
-                $("#consignmentAppCount").text("Consignment Certificate");
+                $("#consignmentAppCount").html(`<span data-en="Consignment Certificate" data-bm="Sijil Konsainan">${lang === 'bm' ? 'Sijil Konsainan' : 'Consignment Certificate'}</span>`);
             }
 
             if (total > 0) {
@@ -396,7 +397,6 @@ export function generateUUID() {
 function languange() {
     (function () {
         var STORAGE_KEY = "qis_lang";
-        var buttons = document.querySelectorAll(".lang-btn");
         function setLang(lang) {
             document.querySelectorAll("[data-en]").forEach(function (el) {
                 // --- Handle data-title ---
@@ -404,11 +404,17 @@ function languange() {
                     el.hasAttribute("data-title-en") &&
                     el.hasAttribute("data-title-bm")
                 ) {
-                    el.setAttribute("data-title", text);
+                    var titleText =
+                        el.getAttribute("data-title-" + lang) ||
+                        el.getAttribute("data-" + lang + "-title") ||
+                        el.getAttribute("data-title-en");
+                    if (titleText) {
+                        el.setAttribute("data-title", titleText);
+                    }
 
                     // Update wizard navigation if this is a wizard step
                     var stepIndex = el.getAttribute("data-step");
-                    if (stepIndex !== null) {
+                    if (stepIndex !== null && titleText) {
                         // Support both .wz-nav and .wizard-nav classes
                         var navSteps = document.querySelectorAll(
                             ".wz-nav .wz-step, .wizard-nav .wizard-step",
@@ -421,18 +427,12 @@ function languange() {
                                 // Find the span that contains the text (second span, after the dot)
                                 var spans = navStep.querySelectorAll("span");
                                 if (spans.length > 1) {
-                                    spans[1].innerHTML = text;
+                                    spans[1].innerHTML = titleText;
                                 } else if (spans.length === 1) {
-                                    spans[0].innerHTML = text;
+                                    spans[0].innerHTML = titleText;
                                 }
                             }
                         });
-                    }
-                    var titleText =
-                        el.getAttribute("data-" + lang + "-title") ||
-                        el.getAttribute("data-title-en");
-                    if (titleText) {
-                        el.setAttribute("data-title", titleText);
                     }
                 }
 
@@ -479,11 +479,9 @@ function languange() {
 
             updateWizardButtons(lang);
 
-            buttons.forEach(function (btn) {
-                btn.classList.toggle(
-                    "active",
-                    btn.getAttribute("data-lang") === lang,
-                );
+            document.querySelectorAll(".lang-btn, .qis-lang-btn").forEach(function (btn) {
+                var btnLang = btn.getAttribute("data-lang") || btn.dataset.lang;
+                btn.classList.toggle("active", btnLang === lang);
             });
 
             document.documentElement.setAttribute(
@@ -498,9 +496,10 @@ function languange() {
             document.dispatchEvent(new CustomEvent("lang-changed", { detail: { lang: lang } }));
         }
 
-        buttons.forEach(function (btn) {
+        document.querySelectorAll(".lang-btn, .qis-lang-btn").forEach(function (btn) {
             btn.addEventListener("click", function () {
-                setLang(btn.getAttribute("data-lang"));
+                var btnLang = btn.getAttribute("data-lang") || btn.dataset.lang;
+                setLang(btnLang);
             });
         });
 

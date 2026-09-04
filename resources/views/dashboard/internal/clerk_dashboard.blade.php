@@ -5,8 +5,8 @@
 <div class="row">
     <div class="col-xl-12 d-flex justify-content-between align-items-center mb-4">
         <h4 class="page-title fw-semibold fs-18 mb-0"></h4>
-        <a href="{{ route('profile') }}" class="btn btn-primary btn-wave">
-            <i class="ti ti-user me-1"></i> My Profile
+        <a href="{{ route('profile') }}" class="btn btn-primary btn-wave" data-en="My Profile" data-bm="Profil Saya">
+            <i class="ti ti-user me-1"></i> <span data-en="My Profile" data-bm="Profil Saya">My Profile</span>
         </a>
     </div>
 </div>
@@ -134,12 +134,12 @@
                     <table class="table table-bordered text-nowrap mt-2">
                         <thead>
                             <tr>
-                                <th scope="col">Type</th>
-                                <th scope="col">Application ID</th>
-                                <th scope="col">Submitter</th>
-                                <th scope="col">Received Date</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Action</th>
+                                <th scope="col" data-en="Type" data-bm="Jenis">Type</th>
+                                <th scope="col" data-en="Application ID" data-bm="ID Permohonan">Application ID</th>
+                                <th scope="col" data-en="Submitter" data-bm="Penghantar">Submitter</th>
+                                <th scope="col" data-en="Received Date" data-bm="Tarikh Diterima">Received Date</th>
+                                <th scope="col" data-en="Status" data-bm="Status">Status</th>
+                                <th scope="col" data-en="Action" data-bm="Tindakan">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -168,11 +168,23 @@
                                                 'Clerk Review In-Progress', 'Clerk review in-progress' => 'bg-primary',
                                                 'Clerk Verified' => 'bg-info',
                                                 'Clerk Rejected', 'Rejected' => 'bg-danger',
-                                                'Officer Verification Completed' => 'bg-success',
+                                                'Officer Verification Completed', 'Completed' => 'bg-success',
                                                 default => 'bg-warning'
                                             };
+                                            $bmStatus = match($app->status) {
+                                                'Completed' => 'Selesai',
+                                                'Approved' => 'Diluluskan',
+                                                'Draft' => 'Draf',
+                                                'Clerk Review In-Progress', 'Clerk review in-progress' => 'Semakan Kerani Dalam Proses',
+                                                'Clerk Verified' => 'Disahkan Kerani',
+                                                'Clerk Rejected' => 'Ditolak Kerani',
+                                                'Rejected' => 'Ditolak',
+                                                'Officer Verification Completed' => 'Pengesahan Pegawai Selesai',
+                                                'Pending' => 'Menunggu',
+                                                default => $app->status
+                                            };
                                         @endphp
-                                        <span class="badge {{ $badgeClass }}">{{ $app->status }}</span>
+                                        <span class="badge {{ $badgeClass }}" data-en="{{ $app->status }}" data-bm="{{ $bmStatus }}">{{ $app->status }}</span>
                                     </td>
                                     <td>
                                         @php
@@ -183,14 +195,14 @@
                                                 default => '#'
                                             };
                                         @endphp
-                                        <a href="{{ $viewUrl }}" class="btn btn-sm btn-primary">
-                                            <i class="ti ti-eye me-1"></i> View & Verify
+                                        <a href="{{ $viewUrl }}" class="btn btn-sm btn-primary" data-en="View & Verify" data-bm="Lihat & Sahkan">
+                                            <i class="ti ti-eye me-1"></i> <span data-en="View & Verify" data-bm="Lihat & Sahkan">View & Verify</span>
                                         </a>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-center">No pending applications found.</td>
+                                    <td colspan="6" class="text-center" data-en="No pending applications found." data-bm="Tiada permohonan tertunggak ditemui.">No pending applications found.</td>
                                 </tr>
                             @endforelse
                         </tbody>
