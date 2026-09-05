@@ -13,18 +13,23 @@ class PaymentReceiptMail extends Mailable
     public $order;
     public $paymentData;
     public $permitNumbers;
+    public $locale;
 
-    public function __construct($order, $paymentData, $permitNumbers)
+    public function __construct($order, $paymentData, $permitNumbers, $locale = null)
     {
         $this->order = $order;
         $this->paymentData = $paymentData;
         $this->permitNumbers = $permitNumbers;
+        $this->locale = $locale ?: app()->getLocale();
     }
 
     public function build()
     {
-        return $this->subject('Payment Receipt - Order ' . $this->order->order_number)
-            ->view('email.payment_receipt')
+        $viewName = $this->locale === 'bm' ? 'email.payment_receipt_bm' : 'email.payment_receipt_en';
+        $subject = $this->locale === 'bm' ? 'Resit Pembayaran - Pesanan ' . $this->order->order_number : 'Payment Receipt - Order ' . $this->order->order_number;
+
+        return $this->subject($subject)
+            ->view($viewName)
             ->with([
                 'orderNumber' => $this->order->order_number,
                 'fpxReference' => $this->paymentData['fpx_seller_reference'] ?? $this->paymentData['seller_ref'] ?? '-',

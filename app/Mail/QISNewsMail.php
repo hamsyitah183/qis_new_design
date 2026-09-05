@@ -19,12 +19,14 @@ class QISNewsMail extends Mailable
 
     public $title; 
     public $news;
+    public $locale;
 
-    public function __construct($title, $news)
+    public function __construct($title, $news, $locale = null)
     {
         //
         $this->title = $title;
         $this->news = $news;
+        $this->locale = $locale ?: app()->getLocale();
     }
 
     /**
@@ -32,8 +34,9 @@ class QISNewsMail extends Mailable
      */
     public function envelope(): Envelope
     {
+        $subject = $this->locale === 'bm' ? 'Berita QIS' : 'QIS News';
         return new Envelope(
-            subject: 'QIS News',
+            subject: $subject,
         );
     }
 
@@ -42,8 +45,9 @@ class QISNewsMail extends Mailable
      */
     public function content(): Content
     {
+        $viewName = $this->locale === 'bm' ? 'email.qis_news_bm' : 'email.qis_news_en';
         return new Content(
-            view: 'email.qis_news',
+            view: $viewName,
             with: ([
                 'title' => $this->title,
                 'news' => $this->news

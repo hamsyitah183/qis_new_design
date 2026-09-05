@@ -15,13 +15,15 @@ class AnnouncementMail extends Mailable
 
     public Announcement $announcement;
     public ?string $imagePath;
+    public $locale;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(Announcement $announcement)
+    public function __construct(Announcement $announcement, $locale = null)
     {
         $this->announcement = $announcement;
+        $this->locale = $locale ?: app()->getLocale();
 
         // Embed announcement image path
         $firstAttachment = $announcement->attachments->first();
@@ -42,8 +44,12 @@ class AnnouncementMail extends Mailable
      */
     public function envelope(): Envelope
     {
+        $subject = $this->locale === 'bm' 
+            ? '[Pengumuman QIS] ' . $this->announcement->title
+            : '[QIS Announcement] ' . $this->announcement->title;
+
         return new Envelope(
-            subject: '[QIS Announcement] ' . $this->announcement->title,
+            subject: $subject,
         );
     }
 
@@ -52,8 +58,10 @@ class AnnouncementMail extends Mailable
      */
     public function content(): Content
     {
+        $viewName = $this->locale === 'bm' ? 'email.announcement_email_bm' : 'email.announcement_email_en';
+
         return new Content(
-            view: 'email.announcement_email',
+            view: $viewName,
             with: [
                 'announcement' => $this->announcement,
                 'imagePath'    => $this->imagePath,

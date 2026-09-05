@@ -34,8 +34,16 @@ class ResetPassNotification extends Notification
             'type' => $this->type,
         ], false));
 
+        if (method_exists($notifiable, 'getLocale')) {
+            app()->setLocale($notifiable->getLocale());
+        }
+
+        $locale = app()->getLocale();
+        $viewName = $locale === 'bm' ? 'email.reset_password_bm' : 'email.reset_password_en';
+        $subject = $locale === 'bm' ? 'Permohonan Tetapan Semula Kata Laluan' : 'Reset Password Request';
+
         return (new MailMessage)
-            ->subject('Reset Password Request')
-            ->view('email.reset_password', ['resetUrl' => $resetUrl]);
+            ->subject($subject)
+            ->view($viewName, ['resetUrl' => $resetUrl]);
     }
 }

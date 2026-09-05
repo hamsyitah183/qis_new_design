@@ -34,8 +34,16 @@ class SetupPasswordNotification extends Notification
             'type'  => $this->type,
         ]);
 
+        if (method_exists($notifiable, 'getLocale')) {
+            app()->setLocale($notifiable->getLocale());
+        }
+
+        $locale = app()->getLocale();
+        $viewName = $locale === 'bm' ? 'email.setup_password_bm' : 'email.setup_password_en';
+        $subject = $locale === 'bm' ? 'Tetapkan Kata Laluan Anda - QIS' : 'Set Up Your Password - QIS';
+
         return (new MailMessage)
-            ->subject('Set Up Your Password - QIS')
-            ->view('email.setup_password', ['setupUrl' => $url]);
+            ->subject($subject)
+            ->view($viewName, ['setupUrl' => $url]);
     }
 }

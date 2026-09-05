@@ -18,12 +18,14 @@ class ApplicationMail extends Mailable
      */
     public $title; 
     public $news;
+    public $locale;
 
-    public function __construct($title, $news)
+    public function __construct($title, $news, $locale = null)
     {
         //
         $this->title = $title;
         $this->news = $news;
+        $this->locale = $locale ?: app()->getLocale();
     }
 
 
@@ -32,8 +34,9 @@ class ApplicationMail extends Mailable
      */
      public function envelope(): Envelope
     {
+        $subject = $this->locale === 'bm' ? 'Berita QIS' : 'QIS News';
         return new Envelope(
-            subject: 'QIS News',
+            subject: $subject,
         );
     }
     /**
@@ -41,8 +44,9 @@ class ApplicationMail extends Mailable
      */
     public function content(): Content
     {
+        $viewName = $this->locale === 'bm' ? 'email.application_email_bm' : 'email.application_email_en';
         return new Content(
-            view: 'email.application_email',
+            view: $viewName,
             with: ([
                 'title' => $this->title,
                 'news' => $this->news

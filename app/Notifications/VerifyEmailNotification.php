@@ -35,10 +35,14 @@ class VerifyEmailNotification extends Notification
             app()->setLocale($notifiable->getLocale());
         }
 
+        $locale = app()->getLocale();
+        $viewName = $locale === 'bm' ? 'email.verify_bm' : 'email.verify_en';
+        $subject = $locale === 'bm' ? 'Sahkan Alamat E-mel Anda' : 'Verify Your Email Address';
+
         // Use the custom view
         return (new MailMessage)
-            ->subject(Lang::get('Verify Your Email Address'))
-            ->view('email.verify', [
+            ->subject($subject)
+            ->view($viewName, [
                 'url' => $url,
                 'user' => $notifiable,
             ]);
